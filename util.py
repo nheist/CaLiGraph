@@ -38,7 +38,7 @@ def get_config(path: str):
 
 
 with open('config.yaml', 'r') as config_file:
-    __CONFIG__ = yaml.parse(config_file)
+    __CONFIG__ = yaml.load(config_file)
 
 
 # LOGGING
