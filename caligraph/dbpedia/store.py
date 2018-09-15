@@ -45,6 +45,9 @@ __TRANSITIVE_SUPERTYPE_MAPPING__ = defaultdict(set)
 __TRANSITIVE_SUBTYPE_MAPPING__ = defaultdict(set)
 
 
+__RESOURCE_TYPE_MAPPING__ = None
+
+
 def _get_resource_type_mapping():
     global __RESOURCE_TYPE_MAPPING__
     if not __RESOURCE_TYPE_MAPPING__:
