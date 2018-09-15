@@ -12,6 +12,7 @@ ujson = "*"
 wikitextparser = "*"
 lxml = "*"
 spacy = "*"
+pyyaml = "*"
 
 [dev-packages]
 

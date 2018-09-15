@@ -1,0 +1,4 @@
+logging:
+  level: 'DEBUG'
+  to_file: True
+  filename: 'log_test'
