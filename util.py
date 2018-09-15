@@ -42,7 +42,7 @@ def get_results_file(config_path: str) -> str:
 
 
 # CACHING
-def from_cache(cache_identifier: str, init_func: function):
+def from_cache(cache_identifier: str, init_func):
     cache_config = get_config('cache' + cache_identifier)
     cache_path = Path(os.path.join(get_root_path(), 'data', 'cache', cache_config['filename'].format(cache_config['version'])))
     if cache_path.exists():
