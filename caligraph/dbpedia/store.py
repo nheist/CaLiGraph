@@ -51,7 +51,7 @@ __RESOURCE_TYPE_MAPPING__ = None
 def _get_resource_type_mapping():
     global __RESOURCE_TYPE_MAPPING__
     if not __RESOURCE_TYPE_MAPPING__:
-        __RESOURCE_TYPE_MAPPING__ = util.from_cache('resource_type_mapping', _create_resource_type_mapping)
+        __RESOURCE_TYPE_MAPPING__ = util.from_cache('dbpedia_resource_type_mapping', _create_resource_type_mapping)
     return __RESOURCE_TYPE_MAPPING__
 
 
