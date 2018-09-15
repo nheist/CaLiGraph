@@ -2,3 +2,19 @@ logging:
   level: 'DEBUG'
   to_file: True
   filename: 'log_test'
+
+files:
+  dbpedia:
+    pages: 'pages_articles_en.xml.bz2'
+    taxonomy: 'dbpedia_2016-10.nt'
+    categories: 'skos_categories_en.ttl.bz2'
+    topical_concepts: 'topical_concepts_en.ttl.bz2'
+    category_redirects: 'category_redirects_en.ttl.bz2'
+    article_categories: 'article_categories_en.ttl.bz2'
+    instance_types: 'instance_types_en.ttl.bz2'
+    transitive_instance_types: 'instance_types_transitive_en.ttl.bz2'
+
+cache:
+  dbpedia_resource_type_mapping:
+    filename: 'dbpedia-resource-type-mapping_v{}.pkl'
+    version: '1'
