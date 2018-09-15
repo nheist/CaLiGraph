@@ -4,7 +4,14 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-rdflib = "*"
+nltk = "*"
+numpy = "*"
+inflection = "*"
+pandas = "*"
+ujson = "*"
+wikitextparser = "*"
+lxml = "*"
+spacy = "*"
 
 [dev-packages]
 

@@ -5,5 +5,6 @@
 __pycache__/
 
 # Project
-data/
-results/
+data/*
+results/*
+logs/*
