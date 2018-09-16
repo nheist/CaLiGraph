@@ -42,17 +42,27 @@ def get_results_file(config_path: str) -> str:
 
 
 # CACHING
-def from_cache(cache_identifier: str, init_func):
-    cache_config = get_config('cache.' + cache_identifier)
-    cache_path = Path(os.path.join(get_root_path(), 'data', 'cache', cache_config['filename'].format(cache_config['version'])))
-    if cache_path.exists():
-        with cache_path.open(mode='rb') as cache_file:
-            return pickle.load(cache_file)
-    else:
+def load_or_create_cache(cache_identifier: str, init_func):
+    cache_obj = load_cache(cache_identifier)
+    if cache_obj is None:
         cache_obj = init_func()
-        with cache_path.open(mode='wb') as cache_file:
+        with _get_cache_path(cache_identifier).open(mode='wb') as cache_file:
             pickle.dump(cache_obj, cache_file)
-        return cache_obj
+    return cache_obj
+
+
+def load_cache(cache_identifier: str):
+    cache_path = _get_cache_path(cache_identifier)
+    if not cache_path.exists():
+        return None
+    with cache_path.open(mode='rb') as cache_file:
+        return pickle.load(cache_file)
+
+
+def _get_cache_path(cache_identifier: str) -> Path:
+    config = get_config('cache.' + cache_identifier)
+    filename = config['filename'].format(config['version'])
+    return Path(os.path.join(get_root_path(), 'data', 'cache', filename))
 
 
 # LOGGING
