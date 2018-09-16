@@ -46,11 +46,11 @@ def from_cache(cache_identifier: str, init_func):
     cache_config = get_config('cache.' + cache_identifier)
     cache_path = Path(os.path.join(get_root_path(), 'data', 'cache', cache_config['filename'].format(cache_config['version'])))
     if cache_path.exists():
-        with cache_path.open(encoding='utf-8', mode='rb') as cache_file:
+        with cache_path.open(mode='rb') as cache_file:
             return pickle.load(cache_file)
     else:
         cache_obj = init_func()
-        with cache_path.open(encoding='utf-8', mode='wb') as cache_file:
+        with cache_path.open(mode='wb') as cache_file:
             pickle.dump(cache_obj, cache_file)
         return cache_obj
 
