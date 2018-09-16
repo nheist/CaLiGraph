@@ -9,7 +9,7 @@ def create_relation_frame_from_rdf(filepaths: list, predicate: str) -> pd.DataFr
         for triple in rdf_util.parse_triples_from_file(fp):
             if triple.pred == predicate:
                 data_dict[triple.sub].append(triple.obj)
-    return create_value_frame(data_dict, predicate)
+    return create_relation_frame(data_dict)
 
 
 def create_value_frame_from_rdf(filepaths: list, predicate: str) -> pd.DataFrame:
