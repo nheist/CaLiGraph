@@ -3,6 +3,10 @@ import caligraph.util.rdf as rdf_util
 from collections import defaultdict
 
 
+def get_active_columns(df: pd.DataFrame, valid_indices: set) -> set:
+    return set(df.columns[df[df.index.isin(valid_indices)].any()])
+
+
 def create_relation_frame_from_rdf(filepaths: list, predicate: str) -> pd.DataFrame:
     data_dict = defaultdict(list)
     for fp in filepaths:
