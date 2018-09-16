@@ -7,7 +7,7 @@ import pandas as pd
 
 def get_types_for_resource(dbp_resource: str) -> set:
     rtm = _get_resource_type_mapping()
-    return set(rtm.columns[rtm.loc[dbp_resource]])
+    return set(rtm.columns[rtm.loc[dbp_resource].to_dense()])
 
 
 def get_supertypes(dbp_type: str) -> set:
