@@ -3,6 +3,7 @@ import logging
 import os
 import datetime
 import pickle
+import bz2
 from pathlib import Path
 
 
@@ -46,7 +47,7 @@ def load_or_create_cache(cache_identifier: str, init_func):
     cache_obj = load_cache(cache_identifier)
     if cache_obj is None:
         cache_obj = init_func()
-        with _get_cache_path(cache_identifier).open(mode='wb') as cache_file:
+        with bz2.open(_get_cache_path(cache_identifier), mode='wb') as cache_file:
             pickle.dump(cache_obj, cache_file)
     return cache_obj
 
@@ -55,13 +56,13 @@ def load_cache(cache_identifier: str):
     cache_path = _get_cache_path(cache_identifier)
     if not cache_path.exists():
         return None
-    with cache_path.open(mode='rb') as cache_file:
+    with bz2.open(cache_path, mode='rb') as cache_file:
         return pickle.load(cache_file)
 
 
 def _get_cache_path(cache_identifier: str) -> Path:
     config = get_config('cache.' + cache_identifier)
-    filename = config['filename'].format(config['version'])
+    filename = '{}_v{}.pkl.bz2'.format(config['filename'], config['version'])
     return Path(os.path.join(get_root_path(), 'data', 'cache', filename))
 
 
