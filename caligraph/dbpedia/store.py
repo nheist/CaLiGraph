@@ -5,9 +5,9 @@ import caligraph.util.dataframe as df_util
 import pandas as pd
 
 
-def get_types_for_resource(dbp_resource: str) -> set:
+def get_types(dbp_resources: set) -> set:
     rtm = _get_resource_type_mapping()
-    return set(rtm.columns[rtm.loc[dbp_resource].to_dense()])
+    return set(rtm.columns[rtm[rtm.index.isin(dbp_resources)].any()])
 
 
 def get_supertypes(dbp_type: str) -> set:
