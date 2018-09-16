@@ -1,6 +1,7 @@
 from collections import defaultdict
 import util
 import caligraph.util.rdf as rdfutil
+import pandas as pd
 
 
 def get_types_for_resource(dbp_resource: str) -> set:
@@ -55,7 +56,7 @@ def _get_resource_type_mapping():
     return __RESOURCE_TYPE_MAPPING__
 
 
-def _create_resource_type_mapping() -> defaultdict:
+def _create_resource_type_mapping():
     resource_type_mapping = defaultdict(list)
     for triple in rdfutil.parse_triples_from_file(util.get_data_file('files.dbpedia.instance_types')):
         if triple.pred == rdfutil.PREDICATE_TYPE:
@@ -63,7 +64,11 @@ def _create_resource_type_mapping() -> defaultdict:
     for triple in rdfutil.parse_triples_from_file(util.get_data_file('files.dbpedia.transitive_instance_types')):
         if triple.pred == rdfutil.PREDICATE_TYPE:
             resource_type_mapping[triple.sub].append(triple.obj)
-    return resource_type_mapping
+
+    index = resource_type_mapping.keys()
+    columns = list({t for types in resource_type_mapping.values() for t in types})
+    data = [[c in resource_type_mapping[i] for c in columns] for i in index]
+    return pd.SparseDataFrame(data=data, index=index, columns=columns, dtype=bool)
 
 
 __SUBTYPE_MAPPING__ = None

@@ -17,4 +17,4 @@ files:
 cache:
   dbpedia_resource_type_mapping:
     filename: 'dbpedia-resource-type-mapping_v{}.pkl'
-    version: '1'
+    version: '2'
