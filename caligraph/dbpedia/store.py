@@ -53,56 +53,28 @@ __TRANSITIVE_SUPERTYPE_MAPPING__ = defaultdict(set)
 __TRANSITIVE_SUBTYPE_MAPPING__ = defaultdict(set)
 
 
-__RESOURCE_TYPE_MAPPING__ = None
-
-
 def _get_resource_type_mapping() -> pd.DataFrame:
-    global __RESOURCE_TYPE_MAPPING__
-    if __RESOURCE_TYPE_MAPPING__ is None:
+    if '__RESOURCE_TYPE_MAPPING__' not in globals():
         type_files = [util.get_data_file('files.dbpedia.instance_types'), util.get_data_file('files.dbpedia.transitive_instance_types')]
         initializer = lambda: df_util.create_relation_frame_from_rdf(type_files, rdf_util.PREDICATE_TYPE)
+        global __RESOURCE_TYPE_MAPPING__
         __RESOURCE_TYPE_MAPPING__ = util.load_or_create_cache('dbpedia_resource_type_mapping', initializer)
     return __RESOURCE_TYPE_MAPPING__
 
 
-# TODO: convert taxonomy to dataframes
-__SUBTYPE_MAPPING__ = None
-__SUPERTYPE_MAPPING__ = None
-__EQUIVALENT_TYPE_MAPPING__ = None
-
-
-def _get_subtype_mapping():
-    if not __SUBTYPE_MAPPING__:
-        _initialize_taxonomy()
-    return __SUBTYPE_MAPPING__
-
-
-def _get_supertype_mapping():
-    if not __SUPERTYPE_MAPPING__:
-        _initialize_taxonomy()
+def _get_supertype_mapping() -> pd.DataFrame:
+    if '__SUPERTYPE_MAPPING__' not in globals():
+        global __SUPERTYPE_MAPPING__
+        __SUPERTYPE_MAPPING__ = df_util.create_relation_frame_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_SUBCLASS_OF)
     return __SUPERTYPE_MAPPING__
 
 
-def _get_equivalent_type_mapping():
-    global __EQUIVALENT_TYPE_MAPPING__
-    if __EQUIVALENT_TYPE_MAPPING__ is None:
+def _get_subtype_mapping() -> pd.DataFrame:
+    return _get_supertype_mapping().transpose()
+
+
+def _get_equivalent_type_mapping() -> pd.DataFrame:
+    if '__EQUIVALENT_TYPE_MAPPING__' not in globals():
+        global __EQUIVALENT_TYPE_MAPPING__
         __EQUIVALENT_TYPE_MAPPING__ = df_util.create_relation_frame_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_EQUIVALENT_CLASS)
     return __EQUIVALENT_TYPE_MAPPING__
-
-
-def _initialize_taxonomy():
-    global __SUBTYPE_MAPPING__
-    __SUBTYPE_MAPPING__ = defaultdict(set)
-    global __SUPERTYPE_MAPPING__
-    __SUPERTYPE_MAPPING__ = defaultdict(set)
-    global __EQUIVALENT_TYPE_MAPPING__
-    __EQUIVALENT_TYPE_MAPPING__ = defaultdict(set)
-    for triple in rdf_util.parse_triples_from_file(util.get_data_file('files.dbpedia.taxonomy')):
-        if triple.pred == rdf_util.PREDICATE_SUBCLASS_OF:
-            child, parent = triple.sub, triple.obj
-            __SUBTYPE_MAPPING__[parent].add(child)
-            __SUPERTYPE_MAPPING__[child].add(parent)
-        elif triple.pred == rdf_util.PREDICATE_EQUIVALENT_CLASS:
-            type_a, type_b = triple.sub, triple.obj
-            __EQUIVALENT_TYPE_MAPPING__[type_a].add(type_b)
-            __EQUIVALENT_TYPE_MAPPING__[type_b].add(type_a)
