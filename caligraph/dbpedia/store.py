@@ -45,7 +45,7 @@ def get_independent_types(dbp_types: set) -> set:
 
 def get_equivalent_types(dbp_types: set) -> set:
     etm = _get_equivalent_type_mapping()
-    return dbp_types | set(etm.columns[etm[etm.index in dbp_types].any()])
+    return dbp_types | set(etm.columns[etm[etm.index.isin(dbp_types)].any()])
 
 
 # BASIC GETTERS + INITIALIZERS
