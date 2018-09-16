@@ -62,6 +62,8 @@ def _get_supertype_mapping() -> pd.DataFrame:
     if '__SUPERTYPE_MAPPING__' not in globals():
         global __SUPERTYPE_MAPPING__
         __SUPERTYPE_MAPPING__ = df_util.create_relation_frame_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_SUBCLASS_OF)
+        # completing the supertypes of each type with the supertypes of its equivalent types
+        __SUPERTYPE_MAPPING__.apply(lambda row: __SUPERTYPE_MAPPING__[__SUPERTYPE_MAPPING__.index.isin(get_equivalent_types({row.index}))].any(), axis=1, result_type='broadcast')
     return __SUPERTYPE_MAPPING__
 
 
