@@ -43,6 +43,11 @@ def get_independent_types(dbp_types: set) -> set:
     return dbp_types.difference({st for t in dbp_types for st in get_transitive_supertypes(t)})
 
 
+def get_equivalent_types(dbp_types: set) -> set:
+    etm = _get_equivalent_type_mapping()
+    return dbp_types | set(etm.columns[etm[etm.index in dbp_types].any()])
+
+
 # BASIC GETTERS + INITIALIZERS
 __TRANSITIVE_SUPERTYPE_MAPPING__ = defaultdict(set)
 __TRANSITIVE_SUBTYPE_MAPPING__ = defaultdict(set)
@@ -60,6 +65,7 @@ def _get_resource_type_mapping() -> pd.DataFrame:
     return __RESOURCE_TYPE_MAPPING__
 
 
+# TODO: convert taxonomy to dataframes
 __SUBTYPE_MAPPING__ = None
 __SUPERTYPE_MAPPING__ = None
 __EQUIVALENT_TYPE_MAPPING__ = None
@@ -78,8 +84,9 @@ def _get_supertype_mapping():
 
 
 def _get_equivalent_type_mapping():
-    if not __EQUIVALENT_TYPE_MAPPING__:
-        _initialize_taxonomy()
+    global __EQUIVALENT_TYPE_MAPPING__
+    if __EQUIVALENT_TYPE_MAPPING__ is None:
+        __EQUIVALENT_TYPE_MAPPING__ = df_util.create_relation_frame_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_EQUIVALENT_CLASS)
     return __EQUIVALENT_TYPE_MAPPING__
 
 

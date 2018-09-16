@@ -32,12 +32,6 @@ def get_data_file(config_path: str) -> str:
     return os.path.join(get_root_path(), 'data', get_config(config_path))
 
 
-def get_cache_file(config_path: str) -> str:
-    cache_file_config = get_config(config_path)
-    filename = cache_file_config['filename'].format(cache_file_config['version'])
-    return os.path.join(get_root_path(), 'data', 'cache', filename)
-
-
 def get_results_file(config_path: str) -> str:
     return os.path.join(get_root_path(), 'results', get_config(config_path))
 
@@ -61,7 +55,7 @@ def load_cache(cache_identifier: str):
 
 
 def _get_cache_path(cache_identifier: str) -> Path:
-    config = get_config('cache.' + cache_identifier)
+    config = get_config('cache.{}'.format(cache_identifier))
     filename = '{}_v{}.pkl.bz2'.format(config['filename'], config['version'])
     return Path(os.path.join(get_root_path(), 'data', 'cache', filename))
 
