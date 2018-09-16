@@ -1,6 +1,6 @@
 logging:
   level: 'DEBUG'
-  to_file: True
+  to_file: False
   filename: 'log_test'
 
 files:
