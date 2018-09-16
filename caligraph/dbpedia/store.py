@@ -5,8 +5,8 @@ import caligraph.util.dataframe as df_util
 import pandas as pd
 
 
-def get_types(dbp_resources: set) -> set:
-    return df_util.get_active_columns(_get_resource_type_mapping(), dbp_resources)
+def get_types(dbp_resource: str) -> set:
+    return df_util.get_active_columns(_get_resource_type_mapping(), {dbp_resource})
 
 
 def get_supertypes(dbp_types: set) -> set:

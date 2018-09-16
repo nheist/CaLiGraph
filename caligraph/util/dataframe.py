@@ -4,6 +4,9 @@ from collections import defaultdict
 
 
 def get_active_columns(df: pd.DataFrame, valid_indices: set) -> set:
+    if len(valid_indices) == 1:
+        return set(df.columns[df.loc[valid_indices.pop()]])
+
     return set(df.columns[df[df.index.isin(valid_indices)].any()])
 
 
