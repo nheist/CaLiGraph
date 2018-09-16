@@ -1,7 +1,7 @@
 from collections import defaultdict
 import util
-import caligraph.util.rdf as rdfutil
-import pandas as pd
+import caligraph.util.rdf as rdf_util
+import caligraph.util.dataframe as df_util
 
 
 def get_types_for_resource(dbp_resource: str) -> set:
@@ -51,24 +51,20 @@ __RESOURCE_TYPE_MAPPING__ = None
 
 def _get_resource_type_mapping():
     global __RESOURCE_TYPE_MAPPING__
-    if not __RESOURCE_TYPE_MAPPING__:
+    if __RESOURCE_TYPE_MAPPING__ is None:
         __RESOURCE_TYPE_MAPPING__ = util.load_or_create_cache('dbpedia_resource_type_mapping', _create_resource_type_mapping)
     return __RESOURCE_TYPE_MAPPING__
 
 
 def _create_resource_type_mapping():
     resource_type_mapping = defaultdict(list)
-    for triple in rdfutil.parse_triples_from_file(util.get_data_file('files.dbpedia.instance_types')):
-        if triple.pred == rdfutil.PREDICATE_TYPE:
+    for triple in rdf_util.parse_triples_from_file(util.get_data_file('files.dbpedia.instance_types')):
+        if triple.pred == rdf_util.PREDICATE_TYPE:
             resource_type_mapping[triple.sub].append(triple.obj)
-    for triple in rdfutil.parse_triples_from_file(util.get_data_file('files.dbpedia.transitive_instance_types')):
-        if triple.pred == rdfutil.PREDICATE_TYPE:
+    for triple in rdf_util.parse_triples_from_file(util.get_data_file('files.dbpedia.transitive_instance_types')):
+        if triple.pred == rdf_util.PREDICATE_TYPE:
             resource_type_mapping[triple.sub].append(triple.obj)
-
-    index = resource_type_mapping.keys()
-    columns = list({t for types in resource_type_mapping.values() for t in types})
-    data = [[c in resource_type_mapping[i] for c in columns] for i in index]
-    return pd.SparseDataFrame(data=data, index=index, columns=columns, dtype=bool)
+    return df_util.create_relation_frame(resource_type_mapping)
 
 
 __SUBTYPE_MAPPING__ = None
@@ -101,12 +97,12 @@ def _initialize_taxonomy():
     __SUPERTYPE_MAPPING__ = defaultdict(set)
     global __EQUIVALENT_TYPE_MAPPING__
     __EQUIVALENT_TYPE_MAPPING__ = defaultdict(set)
-    for triple in rdfutil.parse_triples_from_file(util.get_data_file('files.dbpedia.taxonomy')):
-        if triple.pred == rdfutil.PREDICATE_SUBCLASS_OF:
+    for triple in rdf_util.parse_triples_from_file(util.get_data_file('files.dbpedia.taxonomy')):
+        if triple.pred == rdf_util.PREDICATE_SUBCLASS_OF:
             child, parent = triple.sub, triple.obj
             __SUBTYPE_MAPPING__[parent].add(child)
             __SUPERTYPE_MAPPING__[child].add(parent)
-        elif triple.pred == rdfutil.PREDICATE_EQUIVALENT_CLASS:
+        elif triple.pred == rdf_util.PREDICATE_EQUIVALENT_CLASS:
             type_a, type_b = triple.sub, triple.obj
             __EQUIVALENT_TYPE_MAPPING__[type_a].add(type_b)
             __EQUIVALENT_TYPE_MAPPING__[type_b].add(type_a)
