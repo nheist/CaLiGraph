@@ -2,6 +2,7 @@ from collections import defaultdict
 import util
 import caligraph.util.rdf as rdf_util
 import caligraph.util.dataframe as df_util
+import pandas as pd
 
 
 def get_types_for_resource(dbp_resource: str) -> set:
@@ -49,22 +50,13 @@ __TRANSITIVE_SUBTYPE_MAPPING__ = defaultdict(set)
 __RESOURCE_TYPE_MAPPING__ = None
 
 
-def _get_resource_type_mapping():
+def _get_resource_type_mapping() -> pd.DataFrame:
     global __RESOURCE_TYPE_MAPPING__
     if __RESOURCE_TYPE_MAPPING__ is None:
-        __RESOURCE_TYPE_MAPPING__ = util.load_or_create_cache('dbpedia_resource_type_mapping', _create_resource_type_mapping)
+        type_files = [util.get_data_file('files.dbpedia.instance_types'), util.get_data_file('files.dbpedia.transitive_instance_types')]
+        initializer = lambda: df_util.create_relation_frame_from_rdf(type_files, rdf_util.PREDICATE_TYPE)
+        __RESOURCE_TYPE_MAPPING__ = util.load_or_create_cache('dbpedia_resource_type_mapping', initializer)
     return __RESOURCE_TYPE_MAPPING__
-
-
-def _create_resource_type_mapping():
-    resource_type_mapping = defaultdict(list)
-    for triple in rdf_util.parse_triples_from_file(util.get_data_file('files.dbpedia.instance_types')):
-        if triple.pred == rdf_util.PREDICATE_TYPE:
-            resource_type_mapping[triple.sub].append(triple.obj)
-    for triple in rdf_util.parse_triples_from_file(util.get_data_file('files.dbpedia.transitive_instance_types')):
-        if triple.pred == rdf_util.PREDICATE_TYPE:
-            resource_type_mapping[triple.sub].append(triple.obj)
-    return df_util.create_relation_frame(resource_type_mapping)
 
 
 __SUBTYPE_MAPPING__ = None
