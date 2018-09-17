@@ -1,16 +1,16 @@
-# namespaces
+import caligraph.util.rdf as rdf_util
+
 NAMESPACE_DBP_ONTOLOGY = 'http://dbpedia.org/ontology/'
 NAMESPACE_DBP_RESOURCE = 'http://dbpedia.org/resource/'
-NAMESPACE_DBP_CATEGORY = NAMESPACE_DBP_RESOURCE + 'Category:'
 
 
-def label2resource(label: str) -> str:
-    return NAMESPACE_DBP_RESOURCE + label.replace(' ', '_')
+def name2resource(name: str) -> str:
+    return rdf_util.name2uri(name, NAMESPACE_DBP_RESOURCE)
 
 
-def resource2label(resource: str) -> str:
-    return resource[len(NAMESPACE_DBP_RESOURCE):].replace('_', ' ')
+def resource2name(resource: str) -> str:
+    return rdf_util.uri2name(resource, NAMESPACE_DBP_RESOURCE)
 
 
-def type2label(dbp_type: str) -> str:
-    return dbp_type[len(NAMESPACE_DBP_ONTOLOGY):]
+def type2name(dbp_type: str) -> str:
+    return rdf_util.uri2name(dbp_type, NAMESPACE_DBP_ONTOLOGY)

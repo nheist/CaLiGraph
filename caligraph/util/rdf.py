@@ -13,6 +13,7 @@ PREDICATE_LABEL = 'http://www.w3.org/2004/02/skos/core#prefLabel'
 PREDICATE_SUBJECT = 'http://purl.org/dc/terms/subject'
 PREDICATE_SUBCLASS_OF = 'http://www.w3.org/2000/01/rdf-schema#subClassOf'
 PREDICATE_DISJOINT_WITH = 'http://www.w3.org/2002/07/owl#disjointWith'
+PREDICATE_REDIRECTS = 'http://dbpedia.org/ontology/wikiPageRedirects'
 
 # classes
 CLASS_OWL_THING = 'http://www.w3.org/2002/07/owl#Thing'
@@ -20,6 +21,14 @@ CLASS_OWL_THING = 'http://www.w3.org/2002/07/owl#Thing'
 # auxiliary structures
 Triple = namedtuple('Triple', 'sub pred obj')
 DirectedEdge = namedtuple('DirectedEdge', 'parent child')
+
+
+def uri2name(uri: str, prefix: str) -> str:
+    return uri[len(prefix):].replace('_', ' ')
+
+
+def name2uri(name: str, prefix: str) -> str:
+    return prefix + name.replace(' ', '_')
 
 
 def get_literal_value(literal_string: str) -> str:
