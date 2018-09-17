@@ -2,6 +2,7 @@ from collections import namedtuple
 import bz2
 import re
 import util
+from collections import defaultdict
 
 # predicates
 PREDICATE_EQUIVALENT_CLASS = 'http://www.w3.org/2002/07/owl#equivalentClass'
@@ -54,3 +55,27 @@ def parse_triples_from_file(filepath: str) -> list:
                 util.get_logger().debug('rdfutil: could not parse line: {}'.format(line))
 
     return triples
+
+
+def create_multi_val_dict_from_rdf(filepaths: list, predicate: str, reverse_key=False) -> dict:
+    data_dict = defaultdict(set)
+    for fp in filepaths:
+        for triple in parse_triples_from_file(fp):
+            if triple.pred == predicate:
+                if reverse_key:
+                    data_dict[triple.obj].add(triple.sub)
+                else:
+                    data_dict[triple.sub].add(triple.obj)
+    return data_dict
+
+
+def create_single_val_dict_from_rdf(filepaths: list, predicate: str, reverse_key=False) -> dict:
+    data_dict = {}
+    for fp in filepaths:
+        for triple in parse_triples_from_file(fp):
+            if triple.pred == predicate:
+                if reverse_key:
+                    data_dict[triple.obj] = triple.sub
+                else:
+                    data_dict[triple.sub] = triple.obj
+    return data_dict
