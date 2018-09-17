@@ -66,25 +66,25 @@ def parse_triples_from_file(filepath: str) -> list:
     return triples
 
 
-def create_multi_val_dict_from_rdf(filepaths: list, predicate: str, reverse_key=False) -> dict:
+def create_multi_val_dict_from_rdf(filepaths: list, predicate: str, reverse_key=False, reflexive=False) -> dict:
     data_dict = defaultdict(set)
     for fp in filepaths:
         for triple in parse_triples_from_file(fp):
             if triple.pred == predicate:
-                if reverse_key:
+                if reflexive or reverse_key:
                     data_dict[triple.obj].add(triple.sub)
-                else:
+                elif reflexive or not reverse_key:
                     data_dict[triple.sub].add(triple.obj)
     return data_dict
 
 
-def create_single_val_dict_from_rdf(filepaths: list, predicate: str, reverse_key=False) -> dict:
+def create_single_val_dict_from_rdf(filepaths: list, predicate: str, reverse_key=False, reflexive=False) -> dict:
     data_dict = {}
     for fp in filepaths:
         for triple in parse_triples_from_file(fp):
             if triple.pred == predicate:
-                if reverse_key:
+                if reflexive or reverse_key:
                     data_dict[triple.obj] = triple.sub
-                else:
+                elif reflexive or not reverse_key:
                     data_dict[triple.sub] = triple.obj
     return data_dict
