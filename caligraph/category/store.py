@@ -5,8 +5,9 @@ import util
 
 def get_all_cats() -> set:
     if '__CATEGORIES__' not in globals():
+        initializer = lambda: set(rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.categories')], rdf_util.PREDICATE_TYPE))
         global __CATEGORIES__
-        __CATEGORIES__ = set(rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.categories')], rdf_util.PREDICATE_TYPE))
+        __CATEGORIES__ = util.load_or_create_cache('dbpedia_categories', initializer)
 
     return __CATEGORIES__
 
@@ -25,16 +26,18 @@ def get_label(category: str) -> str:
 
 def get_resources(category: str) -> set:
     if '__RESOURCES__' not in globals():
+        initializer = lambda: rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.article_categories')], rdf_util.PREDICATE_SUBJECT, reverse_key=True)
         global __RESOURCES__
-        __RESOURCES__ = rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.article_categories')], rdf_util.PREDICATE_SUBJECT, reverse_key=True)
+        __RESOURCES__ = util.load_or_create_cache('dbpedia_category_resources', initializer)
 
     return __RESOURCES__[category]
 
 
 def get_parents(category: str) -> set:
     if '__PARENTS__' not in globals():
+        initializer = lambda: rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.categories')], rdf_util.PREDICATE_BROADER)
         global __PARENTS__
-        __PARENTS__ = rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.categories')], rdf_util.PREDICATE_BROADER)
+        __PARENTS__ = util.load_or_create_cache('dbpedia_category_parents', initializer)
 
     return __PARENTS__[category]
 
@@ -52,8 +55,9 @@ def get_transitive_parents(category: str) -> set:
 
 def get_children(category: str) -> set:
     if '__CHILDREN__' not in globals():
+        initializer = lambda: rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.categories')], rdf_util.PREDICATE_BROADER, reverse_key=True)
         global __CHILDREN__
-        __CHILDREN__ = rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.categories')], rdf_util.PREDICATE_BROADER, reverse_key=True)
+        __CHILDREN__ = util.load_or_create_cache('dbpedia_category_children', initializer)
 
     return __CHILDREN__[category]
 

@@ -1,3 +1,8 @@
+caligraph:
+  category:
+    root_node: 'http://dbpedia.org/resource/Category:Main_topic_classifications'
+
+
 logging:
   level: 'DEBUG'
   to_file: False
@@ -17,4 +22,16 @@ files:
 cache:
   dbpedia_resource_type_mapping:
     filename: 'dbpedia-resource-type-mapping'
+    version: '1'
+  dbpedia_categories:
+    filename: 'dbpedia-categories'
+    version: '1'
+  dbpedia_category_resources:
+    filename: 'dbpedia-category-resources'
+    version: '1'
+  dbpedia_category_parents:
+    filename: 'dbpedia-category-parents'
+    version: '1'
+  dbpedia_category_children:
+    filename: 'dbpedia-category-children'
     version: '1'
