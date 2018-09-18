@@ -13,6 +13,7 @@ wikitextparser = "*"
 lxml = "*"
 spacy = "*"
 pyyaml = "*"
+networkx = "*"
 
 [dev-packages]
 

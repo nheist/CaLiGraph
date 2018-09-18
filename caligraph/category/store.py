@@ -1,4 +1,4 @@
-import caligraph.category.util as cat_util
+from . import util as cat_util
 import caligraph.util.rdf as rdf_util
 import util
 
