@@ -60,7 +60,7 @@ def parse_triples_from_file(filepath: str) -> list:
             if literal_triple is not None:
                 [sub, pred, obj] = literal_triple.groups()
                 triples.append(Triple(sub=sub, pred=pred, obj=obj))
-            else:
+            elif not line.startswith('#'):
                 util.get_logger().debug('rdfutil: could not parse line: {}'.format(line))
 
     return triples
