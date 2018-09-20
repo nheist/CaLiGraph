@@ -16,10 +16,14 @@ files:
     topical_concepts: 'topical_concepts_en.ttl.bz2'
     category_redirects: 'category_redirects_en.ttl.bz2'
     article_categories: 'article_categories_en.ttl.bz2'
+    maintenance_categories: 'maintenance_categories.ttl.bz2'
     instance_types: 'instance_types_en.ttl.bz2'
     transitive_instance_types: 'instance_types_transitive_en.ttl.bz2'
 
 cache:
+  spacy_docs:
+    filename: 'spacy-docs'
+    version: '1'
   dbpedia_resource_type_mapping:
     filename: 'dbpedia-resource-type-mapping'
     version: '1'

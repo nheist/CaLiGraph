@@ -87,3 +87,11 @@ def get_topics(category: str) -> set:
         __TOPICS__ = rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.topical_concepts')], rdf_util.PREDICATE_SUBJECT)
 
     return __TOPICS__[category]
+
+
+def get_maintenance_cats() -> set:
+    if '__MAINTENANCE_CATS__' not in globals():
+        global __MAINTENANCE_CATS__
+        __MAINTENANCE_CATS__ = set(rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.maintenance_categories')], rdf_util.PREDICATE_TYPE))
+
+    return __MAINTENANCE_CATS__

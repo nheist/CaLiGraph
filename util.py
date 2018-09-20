@@ -41,8 +41,7 @@ def load_or_create_cache(cache_identifier: str, init_func):
     cache_obj = load_cache(cache_identifier)
     if cache_obj is None:
         cache_obj = init_func()
-        with bz2.open(_get_cache_path(cache_identifier), mode='wb') as cache_file:
-            pickle.dump(cache_obj, cache_file)
+        update_cache(cache_identifier, cache_obj)
     return cache_obj
 
 
@@ -52,6 +51,11 @@ def load_cache(cache_identifier: str):
         return None
     with bz2.open(cache_path, mode='rb') as cache_file:
         return pickle.load(cache_file)
+
+
+def update_cache(cache_identifier: str, cache_obj):
+    with bz2.open(_get_cache_path(cache_identifier), mode='wb') as cache_file:
+        pickle.dump(cache_obj, cache_file)
 
 
 def _get_cache_path(cache_identifier: str) -> Path:
