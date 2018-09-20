@@ -11,7 +11,7 @@ cache = util.load_or_create_cache(SPACY_CACHE_ID, lambda: dict())
 
 
 def parse(text: str, skip_cache=False) -> Doc:
-    text_hash = hashlib.md5(text)
+    text_hash = hashlib.md5(text.encode('utf-8'))
     if text_hash in cache:
         return cache[text_hash]
 
