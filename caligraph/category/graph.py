@@ -25,7 +25,8 @@ class CategoryGraph:
         return set(self.graph.successors(node))
 
     def remove_unconnected(self):
-        return CategoryGraph(nx.bfs_tree(self.graph, self.root_node), self.root_node)
+        valid_nodes = list(nx.bfs_tree(self.graph, self.root_node))
+        return CategoryGraph(self.graph.subgraph(valid_nodes), self.root_node)
 
     def append_unconnected(self):
         unconnected_root_nodes = {node for node in self.graph.nodes if len(self.predecessors(node)) == 0 and node != self.root_node}
