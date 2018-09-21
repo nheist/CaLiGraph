@@ -50,6 +50,6 @@ class CategoryGraph:
 
     @classmethod
     def create_from_dbpedia(cls, root_node=None):
-        edges = [(node, child) for node in cat_store.get_all_cats() for child in cat_store.get_children(node)]
+        edges = [(node, child) for node in cat_store.get_all_cats() for child in cat_store.get_children(node) if node != child]
         root_node = root_node if root_node else util.get_config('caligraph.category.root_node')
         return CategoryGraph(nx.DiGraph(incoming_graph_data=edges), root_node)
