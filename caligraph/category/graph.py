@@ -18,8 +18,19 @@ class CategoryGraph:
     def edge_count(self) -> int:
         return self.graph.number_of_edges()
 
-    def get_connected_graph(self):
+    def predecessors(self, node: str) -> set:
+        return set(self.graph.predecessors(node))
+
+    def successors(self, node: str) -> set:
+        return set(self.graph.successors(node))
+
+    def remove_unconnected(self):
         return CategoryGraph(nx.bfs_tree(self.graph, self.root_node), self.root_node)
+
+    def append_unconnected(self):
+        unconnected_root_nodes = {node for node in self.graph.nodes if len(self.predecessors(node)) == 0 and node != self.root_node}
+        new_edges = [(self.root_node, node) for node in unconnected_root_nodes]
+        return CategoryGraph(nx.DiGraph(incoming_graph_data=(list(self.graph.edges) + new_edges)), self.root_node)
 
     def get_conceptual_graph(self):
         categories = set(self.graph.nodes)
