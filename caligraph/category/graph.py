@@ -3,6 +3,9 @@ from . import store as cat_store
 from . import nlp as cat_nlp
 import caligraph.util.nlp as nlp_util
 import util
+import numpy as np
+
+# note: use nx.simple_paths for depth measures
 
 
 class CategoryGraph:
@@ -12,13 +15,18 @@ class CategoryGraph:
 
     @property
     def statistics(self) -> str:
+        node_count = self.graph.number_of_nodes()
+        edge_count = self.graph.number_of_edges()
+        avg_indegree = np.mean(d for _, d in self.graph.in_degree)
+        avg_outdegree = np.mean(d for _, d in self.graph.out_degree)
+
         return '\n'.join([
-            '{:^40}'.format('CATEGORY GRAPH'),
+            '{:^40}'.format('CATEGORY GRAPH STATISTICS'),
             '=' * 40,
-            '{:>18} | {:>19}'.format('nodes', self.graph.number_of_nodes()),
-            '{:>18} | {:>19}'.format('edges', self.graph.number_of_edges()),
-            '{:>18} | {:>19}'.format('in-degree', self.graph.in_degree),
-            '{:>18} | {:>19}'.format('out-degree', self.graph.out_degree)
+            '{:>18} | {:>19}'.format('nodes', node_count),
+            '{:>18} | {:>19}'.format('edges', edge_count),
+            '{:>18} | {:>19}'.format('in-degree', avg_indegree),
+            '{:>18} | {:>19}'.format('out-degree', avg_outdegree)
         ])
 
     def predecessors(self, node: str) -> set:
@@ -50,6 +58,9 @@ class CategoryGraph:
 
         self._remove_all_nodes_except(categories | {self.root_node})
         return self
+
+    def remove_cycles(self):
+        pass
 
     def _remove_all_nodes_except(self, valid_nodes: set):
         invalid_nodes = set(self.graph.nodes).difference(valid_nodes)
