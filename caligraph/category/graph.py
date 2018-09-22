@@ -17,8 +17,8 @@ class CategoryGraph:
     def statistics(self) -> str:
         node_count = self.graph.number_of_nodes()
         edge_count = self.graph.number_of_edges()
-        avg_indegree = np.mean(d for _, d in self.graph.in_degree)
-        avg_outdegree = np.mean(d for _, d in self.graph.out_degree)
+        avg_indegree = np.mean([d for _, d in self.graph.in_degree])
+        avg_outdegree = np.mean([d for _, d in self.graph.out_degree])
 
         return '\n'.join([
             '{:^40}'.format('CATEGORY GRAPH STATISTICS'),
