@@ -35,6 +35,9 @@ class CategoryGraph:
     def successors(self, node: str) -> set:
         return set(self.graph.successors(node))
 
+    def depth(self, node: str) -> int:
+        return nx.shortest_path_length(self.graph, source=self.root_node, target=node)
+
     def remove_unconnected(self):
         valid_nodes = set(nx.bfs_tree(self.graph, self.root_node))
         self._remove_all_nodes_except(valid_nodes)
@@ -59,10 +62,35 @@ class CategoryGraph:
         self._remove_all_nodes_except(categories | {self.root_node})
         return self
 
-    def remove_cycles(self):
-        # remove all edges N1-->N2 with depth(N1) > depth(N2)
-        pass
-        # remove all edges N1-->N2 with depth(N1) = depth(N2)
+    def resolve_cycles(self):
+        # remove all edges N1-->N2 of a cycle with depth(N1) > depth(N2)
+        util.get_logger().debug('Removing edges N1-->N2 with depth(N1)>depth(N2)..')
+        cycles_removed = True
+        while cycles_removed:
+            util.get_logger().debug('Starting new iteration..')
+            cycles_removed = self._remove_cycle_edges_by_node_depth(lambda x, y: x > y)
+        # remove all edges N1-->N2 of a cycle with depth(N1) >= depth(N2)
+        util.get_logger().debug('Removing edges N1-->N2 with depth(N1)>=depth(N2)..')
+        cycles_removed = True
+        while cycles_removed:
+            util.get_logger().debug('Starting new iteration..')
+            cycles_removed = self._remove_cycle_edges_by_node_depth(lambda x, y: x >= y)
+        return self
+
+    def _remove_cycle_edges_by_node_depth(self, comparator) -> bool:
+        edges_to_remove = set()
+        for cycle in nx.simple_cycles(self.graph):
+            node_depths = {node: self.depth(node) for node in cycle}
+            for i in range(len(cycle)):
+                current_edge = (cycle[i], cycle[(i+1) % len(cycle)])
+                if comparator(node_depths[current_edge[0]], node_depths[current_edge[1]]):
+                    edges_to_remove.add(current_edge)
+                    util.get_logger().debug('Removing edge {}\nfrom cycle {}'.format(current_edge, cycle))
+
+        if not edges_to_remove:
+            return False
+        self.graph.remove_edges_from(edges_to_remove)
+        return True
 
     def _remove_all_nodes_except(self, valid_nodes: set):
         invalid_nodes = set(self.graph.nodes).difference(valid_nodes)
