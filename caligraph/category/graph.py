@@ -25,8 +25,8 @@ class CategoryGraph:
             '=' * 40,
             '{:>18} | {:>19}'.format('nodes', node_count),
             '{:>18} | {:>19}'.format('edges', edge_count),
-            '{:>18} | {:>19}'.format('in-degree', avg_indegree),
-            '{:>18} | {:>19}'.format('out-degree', avg_outdegree)
+            '{:>18} | {:>19.2f}'.format('in-degree', avg_indegree),
+            '{:>18} | {:>19.2f}'.format('out-degree', avg_outdegree)
         ])
 
     def predecessors(self, node: str) -> set:
@@ -60,7 +60,9 @@ class CategoryGraph:
         return self
 
     def remove_cycles(self):
+        # remove all edges N1-->N2 with depth(N1) > depth(N2)
         pass
+        # remove all edges N1-->N2 with depth(N1) = depth(N2)
 
     def _remove_all_nodes_except(self, valid_nodes: set):
         invalid_nodes = set(self.graph.nodes).difference(valid_nodes)
