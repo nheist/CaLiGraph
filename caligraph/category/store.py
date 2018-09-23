@@ -22,10 +22,6 @@ def get_all_cats() -> set:
     return __CATEGORIES__
 
 
-def get_leaf_cats() -> set:
-    return {cat for cat in get_all_cats() if not get_children(cat)}
-
-
 def get_label(category: str) -> str:
     if '__LABELS__' not in globals():
         global __LABELS__
@@ -41,6 +37,15 @@ def get_resources(category: str) -> set:
         __RESOURCES__ = util.load_or_create_cache('dbpedia_category_resources', initializer)
 
     return __RESOURCES__[category]
+
+
+def get_cats_for_resource(dbp_resource: str) -> set:
+    if '__RESOURCE_CATEGORIES__' not in globals():
+        initializer = lambda: rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.article_categories')], rdf_util.PREDICATE_SUBJECT)
+        global __RESOURCE_CATEGORIES__
+        __RESOURCE_CATEGORIES__ = util.load_or_create_cache('dbpedia_resource_categories', initializer)
+
+    return __RESOURCE_CATEGORIES__[dbp_resource]
 
 
 def get_parents(category: str) -> set:

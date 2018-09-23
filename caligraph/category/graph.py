@@ -110,6 +110,8 @@ class CategoryGraph:
         self.graph.remove_edges_from(edges_to_remove)
 
     # dbp-types
+    RESOURCE_TYPE_THRESHOLD = .5
+    CHILDREN_TYPE_THRESHOLD = .5
 
     def compute_dbp_types(self):
         node_queue = [node for node in self.graph.nodes if not self.successors(node)]
@@ -124,13 +126,13 @@ class CategoryGraph:
             return self.dbp_types(node)
 
         resource_type_distribution = cat_store.get_resource_type_distribution(node)
-        resource_types = {t for t, probability in resource_type_distribution.items() if probability >= .5}
+        resource_types = {t for t, probability in resource_type_distribution.items() if probability >= self.RESOURCE_TYPE_THRESHOLD}
 
         children = self.successors(node)
         if children:
             child_type_count = sum([Counter(self._compute_dbp_types_for_node(c, node_queue)) for c in children], Counter())
             child_type_distribution = {t: count / len(children) for t, count in child_type_count.items()}
-            child_types = {t for t, probability in child_type_distribution.items() if probability > .5}
+            child_types = {t for t, probability in child_type_distribution.items() if probability > self.CHILDREN_TYPE_THRESHOLD}
             node_types = resource_types.intersection(child_types)
         else:
             node_types = resource_types
