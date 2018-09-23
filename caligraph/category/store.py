@@ -68,7 +68,7 @@ def get_transitive_children(category: str) -> set:
         __TRANSITIVE_CHILDREN__ = dict()
     if category not in __TRANSITIVE_CHILDREN__:
         children = get_children(category)
-        __TRANSITIVE_CHILDREN__[category] = children | {tc for c in children for tc in get_transitive_children(p)}
+        __TRANSITIVE_CHILDREN__[category] = children | {tc for c in children for tc in get_transitive_children(c)}
 
     return __TRANSITIVE_PARENTS__[category]
 
