@@ -1,6 +1,16 @@
 from . import util as cat_util
 import caligraph.util.rdf as rdf_util
+import caligraph.dbpedia.store as dbp_store
 import util
+from collections import Counter
+
+
+def get_resource_type_distribution(category: str) -> dict:
+    resources = get_resources(category)
+    type_counts = Counter()
+    for resource in resources:
+        type_counts += Counter(dbp_store.get_transitive_types(resource))
+    return {t: count / len(resources) for t, count in type_counts.items()}
 
 
 def get_all_cats() -> set:
