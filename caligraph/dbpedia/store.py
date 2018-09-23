@@ -7,6 +7,11 @@ def get_independent_types(dbp_types: set) -> set:
     return dbp_types.difference({st for t in dbp_types for st in get_transitive_supertypes(t)})
 
 
+def get_transitive_types(dbp_resource: str) -> set:
+    types = get_types(dbp_resource)
+    return types | {st for t in types for st in get_transitive_supertypes(t)}
+
+
 def get_types(dbp_resource: str) -> set:
     if '__RESOURCE_TYPE_MAPPING__' not in globals():
         type_files = [util.get_data_file('files.dbpedia.instance_types'), util.get_data_file('files.dbpedia.transitive_instance_types')]
