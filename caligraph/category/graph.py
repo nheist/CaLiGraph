@@ -79,13 +79,15 @@ class CategoryGraph:
         return self
 
     def _remove_cycle_edges_by_node_depth(self, comparator):
+        edges_to_remove = set()
         for cycle in nx.simple_cycles(self.graph):
             node_depths = {node: self.depth(node) for node in cycle}
             for i in range(len(cycle)):
                 current_edge = (cycle[i], cycle[(i+1) % len(cycle)])
                 if comparator(node_depths[current_edge[0]], node_depths[current_edge[1]]):
                     util.get_logger().debug('Removing edge {}\nfrom cycle {}'.format(current_edge, cycle))
-                    self.graph.remove_edge(*current_edge)
+                    edges_to_remove.add(current_edge)
+        self.graph.remove_edges_from(edges_to_remove)
 
     def compute_dbp_types(self):
         node_queue = [node for node in self.graph.nodes if not self.successors(node)]
