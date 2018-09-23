@@ -20,16 +20,20 @@ class CategoryGraph:
         edge_count = self.graph.number_of_edges()
         avg_indegree = np.mean([d for _, d in self.graph.in_degree])
         avg_outdegree = np.mean([d for _, d in self.graph.out_degree])
-        dbp_typed_nodes_count = len({n for n in self.graph.nodes if self.dbp_types(n)})
+
+        dbp_typed_nodes = {n for n in self.graph.nodes if self.dbp_types(n)}
+        dbp_typed_node_count = len(dbp_typed_nodes)
+        avg_dbp_types = np.mean([len(self.dbp_types(n)) for n in dbp_typed_nodes])
 
         return '\n'.join([
             '{:^40}'.format('CATEGORY GRAPH STATISTICS'),
             '=' * 40,
-            '{:>18} | {:>19}'.format('nodes', node_count),
-            '{:>18} | {:>19}'.format('edges', edge_count),
-            '{:>18} | {:>19.2f}'.format('in-degree', avg_indegree),
-            '{:>18} | {:>19.2f}'.format('out-degree', avg_outdegree),
-            '{:>18} | {:>19}'.format('dbp-typed nodes', dbp_typed_nodes_count),
+            '{:<30} | {:>7}'.format('nodes', node_count),
+            '{:<30} | {:>7}'.format('edges', edge_count),
+            '{:<30} | {:>7.2f}'.format('in-degree', avg_indegree),
+            '{:<30} | {:>7.2f}'.format('out-degree', avg_outdegree),
+            '{:<30} | {:>7}'.format('dbp-typed nodes', dbp_typed_node_count),
+            '{:<30} | {:>7.2f}'.format('dbp-types per node', avg_dbp_types)
         ])
 
     def predecessors(self, node: str) -> set:
@@ -47,6 +51,14 @@ class CategoryGraph:
     def set_dbp_types(self, node: str, dbp_types: set):
         self.graph.nodes[node][self.__DBP_TYPES_PROPERTY__] = dbp_types
 
+    @classmethod
+    def create_from_dbpedia(cls, root_node=None):
+        edges = [(node, child) for node in cat_store.get_all_cats() for child in cat_store.get_children(node) if node != child]
+        root_node = root_node if root_node else util.get_config('caligraph.category.root_node')
+        return CategoryGraph(nx.DiGraph(incoming_graph_data=edges), root_node)
+
+    # connectivity
+
     def remove_unconnected(self):
         valid_nodes = set(nx.bfs_tree(self.graph, self.root_node))
         self._remove_all_nodes_except(valid_nodes)
@@ -56,6 +68,8 @@ class CategoryGraph:
         unconnected_root_nodes = {node for node in self.graph.nodes if not self.predecessors(node) and node != self.root_node}
         self.graph.add_edges_from([(self.root_node, node) for node in unconnected_root_nodes])
         return self
+
+    # conceptual categories
 
     def make_conceptual(self):
         categories = set(self.graph.nodes)
@@ -70,6 +84,12 @@ class CategoryGraph:
 
         self._remove_all_nodes_except(categories | {self.root_node})
         return self
+
+    def _remove_all_nodes_except(self, valid_nodes: set):
+        invalid_nodes = set(self.graph.nodes).difference(valid_nodes)
+        self.graph.remove_nodes_from(invalid_nodes)
+
+    # cycles
 
     def resolve_cycles(self):
         # remove all edges N1-->N2 of a cycle with depth(N1) > depth(N2)
@@ -88,6 +108,8 @@ class CategoryGraph:
                     util.get_logger().debug('Removing edge {}\nfrom cycle {}'.format(current_edge, cycle))
                     edges_to_remove.add(current_edge)
         self.graph.remove_edges_from(edges_to_remove)
+
+    # dbp-types
 
     def compute_dbp_types(self):
         node_queue = [node for node in self.graph.nodes if not self.successors(node)]
@@ -118,13 +140,3 @@ class CategoryGraph:
 
         self.set_dbp_types(node, node_types)
         return node_types
-
-    def _remove_all_nodes_except(self, valid_nodes: set):
-        invalid_nodes = set(self.graph.nodes).difference(valid_nodes)
-        self.graph.remove_nodes_from(invalid_nodes)
-
-    @classmethod
-    def create_from_dbpedia(cls, root_node=None):
-        edges = [(node, child) for node in cat_store.get_all_cats() for child in cat_store.get_children(node) if node != child]
-        root_node = root_node if root_node else util.get_config('caligraph.category.root_node')
-        return CategoryGraph(nx.DiGraph(incoming_graph_data=edges), root_node)
