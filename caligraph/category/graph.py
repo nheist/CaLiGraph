@@ -29,7 +29,7 @@ class CategoryGraph:
             '{:>18} | {:>19}'.format('edges', edge_count),
             '{:>18} | {:>19.2f}'.format('in-degree', avg_indegree),
             '{:>18} | {:>19.2f}'.format('out-degree', avg_outdegree),
-            '{:>18} | {:>19.2f}'.format('dbp-typed nodes', dbp_typed_nodes_count),
+            '{:>18} | {:>19}'.format('dbp-typed nodes', dbp_typed_nodes_count),
         ])
 
     def predecessors(self, node: str) -> set:

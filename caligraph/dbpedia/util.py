@@ -14,3 +14,7 @@ def resource2name(resource: str) -> str:
 
 def type2name(dbp_type: str) -> str:
     return rdf_util.uri2name(dbp_type, NAMESPACE_DBP_ONTOLOGY)
+
+
+def is_dbp_type(dbp_type: str) -> bool:
+    return dbp_type.startswith(NAMESPACE_DBP_ONTOLOGY)

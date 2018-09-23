@@ -1,5 +1,6 @@
 import util
 import caligraph.util.rdf as rdf_util
+from . import util as dbp_util
 
 
 def get_independent_types(dbp_types: set) -> set:
@@ -19,7 +20,7 @@ def get_types(dbp_resource: str) -> set:
         global __RESOURCE_TYPE_MAPPING__
         __RESOURCE_TYPE_MAPPING__ = util.load_or_create_cache('dbpedia_resource_type_mapping', initializer)
 
-    return __RESOURCE_TYPE_MAPPING__[dbp_resource]
+    return {t for t in __RESOURCE_TYPE_MAPPING__[dbp_resource] if dbp_util.is_dbp_type(t)}
 
 
 def get_supertypes(dbp_type: str) -> set:
