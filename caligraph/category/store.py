@@ -39,13 +39,13 @@ def get_resources(category: str) -> set:
     return __RESOURCES__[category]
 
 
-def get_cats_for_resource(dbp_resource: str) -> set:
+def get_resource_to_cats_mapping() -> dict:
     if '__RESOURCE_CATEGORIES__' not in globals():
         initializer = lambda: rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.article_categories')], rdf_util.PREDICATE_SUBJECT)
         global __RESOURCE_CATEGORIES__
         __RESOURCE_CATEGORIES__ = util.load_or_create_cache('dbpedia_resource_categories', initializer)
 
-    return __RESOURCE_CATEGORIES__[dbp_resource]
+    return __RESOURCE_CATEGORIES__
 
 
 def get_parents(category: str) -> set:
