@@ -33,6 +33,9 @@ cache:
   dbpedia_category_resources:
     filename: 'dbpedia-category-resources'
     version: '1'
+  dbpedia_resource_categories:
+    filename: 'dbpedia-resource-categories'
+    version: '1'
   dbpedia_category_parents:
     filename: 'dbpedia-category-parents'
     version: '1'
