@@ -113,7 +113,6 @@ class CategoryGraph:
             for i in range(len(cycle)):
                 current_edge = (cycle[i], cycle[(i+1) % len(cycle)])
                 if comparator(node_depths[current_edge[0]], node_depths[current_edge[1]]):
-                    util.get_logger().debug('Removing edge {}\nfrom cycle {}'.format(current_edge, cycle))
                     edges_to_remove.add(current_edge)
         self.graph.remove_edges_from(edges_to_remove)
 
