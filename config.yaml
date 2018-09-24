@@ -24,6 +24,9 @@ cache:
   conceptual_categories:
     filename: 'conceptual-categories'
     version: 1
+  singularized_categories:
+    filename: 'singularized-categories'
+    version: 1
   spacy_docs:
     filename: 'spacy-docs'
     version: 1
