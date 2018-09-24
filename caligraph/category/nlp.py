@@ -2,7 +2,7 @@ import caligraph.util.nlp as nlp_util
 import caligraph.category.store as cat_store
 import util
 
-CONCEPTUAL_CATEGORIES_CACHE_ID = 'conceptual-categories'
+CONCEPTUAL_CATEGORIES_CACHE_ID = 'conceptual_categories'
 
 
 def is_conceptual(category: str) -> bool:
