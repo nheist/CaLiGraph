@@ -170,7 +170,7 @@ class CategoryGraph:
             resource_type_distribution = self._compute_resource_type_distribution(node)
             self._set_attr(node, self.__RESOURCE_TYPE_DISTRIBUTION_PROPERTY__, resource_type_distribution)
 
-            dbp_types = {t for t in resource_type_distribution if t >= self.RESOURCE_TYPE_THRESHOLD}
+            dbp_types = {t for t, probability in resource_type_distribution.items() if probability >= self.RESOURCE_TYPE_THRESHOLD}
             self._set_attr(node, self.__DBP_TYPES_PROPERTY__, dbp_types)
 
     def _compute_resource_type_distribution(self, node: str) -> dict:
