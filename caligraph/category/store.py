@@ -1,16 +1,6 @@
 from . import util as cat_util
 import caligraph.util.rdf as rdf_util
-import caligraph.dbpedia.store as dbp_store
 import util
-from collections import Counter
-
-
-def get_resource_type_distribution(category: str) -> dict:
-    resources = get_resources(category)
-    type_counts = Counter()
-    for resource in resources:
-        type_counts += Counter(dbp_store.get_transitive_types(resource))
-    return {t: count / len(resources) for t, count in type_counts.items()}
 
 
 def get_all_cats() -> set:
@@ -37,15 +27,6 @@ def get_resources(category: str) -> set:
         __RESOURCES__ = util.load_or_create_cache('dbpedia_category_resources', initializer)
 
     return __RESOURCES__[category]
-
-
-def get_resource_to_cats_mapping() -> dict:
-    if '__RESOURCE_CATEGORIES__' not in globals():
-        initializer = lambda: rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.article_categories')], rdf_util.PREDICATE_SUBJECT)
-        global __RESOURCE_CATEGORIES__
-        __RESOURCE_CATEGORIES__ = util.load_or_create_cache('dbpedia_resource_categories', initializer)
-
-    return __RESOURCE_CATEGORIES__
 
 
 def get_parents(category: str) -> set:

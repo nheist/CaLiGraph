@@ -1,6 +1,7 @@
 import networkx as nx
 from . import store as cat_store
 from . import nlp as cat_nlp
+import caligraph.dbpedia.store as dbp_store
 import caligraph.dbpedia.util as dbp_util
 import util
 import numpy as np
@@ -9,6 +10,7 @@ from collections import Counter
 
 class CategoryGraph:
     __DBP_TYPES_PROPERTY__ = 'dbp_types'
+    __RESOURCE_TYPE_DISTRIBUTION_PROPERTY__ = 'resource_type_distribution'
 
     def __init__(self, graph: nx.DiGraph, root_node: str):
         self.graph = graph
@@ -46,10 +48,13 @@ class CategoryGraph:
         return nx.shortest_path_length(self.graph, source=self.root_node, target=node)
 
     def dbp_types(self, node: str) -> set:
-        return self.graph.nodes(data=self.__DBP_TYPES_PROPERTY__)[node]
+        return self._get_attr(node, self.__DBP_TYPES_PROPERTY__)
 
-    def set_dbp_types(self, node: str, dbp_types: set):
-        self.graph.nodes[node][self.__DBP_TYPES_PROPERTY__] = dbp_types
+    def _get_attr(self, node, attr):
+        return self.graph.nodes(data=attr)[node]
+
+    def _set_attr(self, node, attr, val):
+        self.graph.nodes[node][attr] = val
 
     def copy(self):
         return CategoryGraph(self.graph.copy(), self.root_node)
@@ -114,6 +119,7 @@ class CategoryGraph:
 
     # dbp-types
     RESOURCE_TYPE_THRESHOLD = .5
+    EXCLUDE_UNTYPED_RESOURCES = False
     CHILDREN_TYPE_THRESHOLD = .5
     EXCLUDE_UNTYPED_CHILDREN = False
 
@@ -129,7 +135,7 @@ class CategoryGraph:
         if self.dbp_types(node) is not None:
             return self.dbp_types(node)
 
-        resource_type_distribution = cat_store.get_resource_type_distribution(node)
+        resource_type_distribution = self._compute_resource_type_distribution(node)
         resource_types = {t for t, probability in resource_type_distribution.items() if probability >= self.RESOURCE_TYPE_THRESHOLD}
 
         children = self.successors(node)
@@ -157,5 +163,19 @@ class CategoryGraph:
                 *["  {}: {}".format(cat_store.get_label(c), d) for c, d in child_type_distribution.items()]
             ]))
 
-        self.set_dbp_types(node, node_types)
+        self._set_attr(node, self.__DBP_TYPES_PROPERTY__, node_types)
         return node_types
+
+    def assign_dbp_types(self):
+        for node in self.graph.nodes:
+            resource_type_distribution = self._compute_resource_type_distribution(node)
+            self._set_attr(node, self.__RESOURCE_TYPE_DISTRIBUTION_PROPERTY__, resource_type_distribution)
+
+            dbp_types = {t for t in resource_type_distribution if t >= self.RESOURCE_TYPE_THRESHOLD}
+            self._set_attr(node, self.__DBP_TYPES_PROPERTY__, dbp_types)
+
+    def _compute_resource_type_distribution(self, node: str) -> dict:
+        resources_types = {r: dbp_store.get_transitive_types(r) for r in cat_store.get_resources(node)}
+        resource_count = len({r for r, types in resources_types.items() if types} if self.EXCLUDE_UNTYPED_RESOURCES else resources_types)
+        resource_type_count = sum({Counter(types) for r, types in resources_types.items()}, Counter())
+        return {t: count / resource_count for t, count in resource_type_count.items()}
