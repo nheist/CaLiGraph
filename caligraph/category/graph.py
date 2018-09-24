@@ -2,6 +2,7 @@ import networkx as nx
 from . import store as cat_store
 from . import nlp as cat_nlp
 import caligraph.util.nlp as nlp_util
+import caligraph.dbpedia.util as dbp_util
 import util
 import numpy as np
 from collections import Counter
@@ -50,6 +51,9 @@ class CategoryGraph:
 
     def set_dbp_types(self, node: str, dbp_types: set):
         self.graph.nodes[node][self.__DBP_TYPES_PROPERTY__] = dbp_types
+
+    def copy(self):
+        return CategoryGraph(self.graph.copy(), self.root_node)
 
     @classmethod
     def create_from_dbpedia(cls, root_node=None):
@@ -112,6 +116,7 @@ class CategoryGraph:
     # dbp-types
     RESOURCE_TYPE_THRESHOLD = .5
     CHILDREN_TYPE_THRESHOLD = .5
+    EXCLUDE_UNTYPED_CHILDREN = False
 
     def compute_dbp_types(self):
         node_queue = [node for node in self.graph.nodes if not self.successors(node)]
@@ -129,16 +134,29 @@ class CategoryGraph:
         resource_types = {t for t, probability in resource_type_distribution.items() if probability >= self.RESOURCE_TYPE_THRESHOLD}
 
         children = self.successors(node)
+        children_types = {c: self._compute_dbp_types_for_node(c, node_queue) for c in children}
+        child_count = len({c for c, types in children_types.items() if types} if self.EXCLUDE_UNTYPED_CHILDREN else children)
         if children:
-            child_type_count = sum([Counter(self._compute_dbp_types_for_node(c, node_queue)) for c in children], Counter())
-            child_type_distribution = {t: count / len(children) for t, count in child_type_count.items()}
+            child_type_count = sum([Counter(types) for types in children_types.values()], Counter())
+            child_type_distribution = {t: count / child_count for t, count in child_type_count.items()}
             child_types = {t for t, probability in child_type_distribution.items() if probability > self.CHILDREN_TYPE_THRESHOLD}
-            node_types = resource_types.intersection(child_types)
+            node_types = resource_types.intersection(child_types) if resource_types else child_types
         else:
+            child_type_distribution = {}  # todo: remove - only for error analysis
             node_types = resource_types
 
         if node_types:
             node_queue.extend(self.predecessors(node))
+        else:
+            print('\n'.join([
+                "====== DID NOT FIND TYPES ======",
+                "CATEGORY: {}".format(cat_store.get_label(node)),
+                "TYPE DISTRI:",
+                *["  {}: {}".format(dbp_util.type2name(t), d) for t, d in resource_type_distribution.items()],
+                "CHILDREN: {}".format({cat_store.get_label(c) for c in children}),
+                "CHILD DISTRI:",
+                *["  {}: {}".format(cat_store.get_label(c), d) for c, d in child_type_distribution.items()]
+            ]))
 
         self.set_dbp_types(node, node_types)
         return node_types
