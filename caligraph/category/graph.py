@@ -1,7 +1,6 @@
 import networkx as nx
 from . import store as cat_store
 from . import nlp as cat_nlp
-import caligraph.util.nlp as nlp_util
 import caligraph.dbpedia.util as dbp_util
 import util
 import numpy as np
@@ -84,7 +83,7 @@ class CategoryGraph:
         # filtering non-conceptual categories
         categories = {cat for cat in categories if cat_nlp.is_conceptual(cat)}
         # persisting spacy cache so that parsed categories are cached
-        nlp_util.persist_cache()
+        cat_nlp.persist_cache()
 
         self._remove_all_nodes_except(categories | {self.root_node})
         return self

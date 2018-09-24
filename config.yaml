@@ -21,24 +21,27 @@ files:
     transitive_instance_types: 'instance_types_transitive_en.ttl.bz2'
 
 cache:
+  conceptual_categories:
+    filename: 'conceptual-categories'
+    version: 1
   spacy_docs:
     filename: 'spacy-docs'
-    version: '1'
+    version: 1
   dbpedia_resource_type_mapping:
     filename: 'dbpedia-resource-type-mapping'
-    version: '1'
+    version: 1
   dbpedia_categories:
     filename: 'dbpedia-categories'
-    version: '1'
+    version: 1
   dbpedia_category_resources:
     filename: 'dbpedia-category-resources'
-    version: '1'
+    version: 1
   dbpedia_resource_categories:
     filename: 'dbpedia-resource-categories'
-    version: '1'
+    version: 1
   dbpedia_category_parents:
     filename: 'dbpedia-category-parents'
-    version: '1'
+    version: 1
   dbpedia_category_children:
     filename: 'dbpedia-category-children'
-    version: '1'
+    version: 1
