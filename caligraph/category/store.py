@@ -4,43 +4,43 @@ import util
 
 
 def get_all_cats() -> set:
+    global __CATEGORIES__
     if '__CATEGORIES__' not in globals():
         initializer = lambda: set(rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.categories')], rdf_util.PREDICATE_TYPE))
-        global __CATEGORIES__
         __CATEGORIES__ = util.load_or_create_cache('dbpedia_categories', initializer)
 
     return __CATEGORIES__
 
 
 def get_label(category: str) -> str:
+    global __LABELS__
     if '__LABELS__' not in globals():
-        global __LABELS__
         __LABELS__ = rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.categories')], rdf_util.PREDICATE_LABEL)
 
     return __LABELS__[category] if category in __LABELS__ else cat_util.category2name(category)
 
 
 def get_resources(category: str) -> set:
+    global __RESOURCES__
     if '__RESOURCES__' not in globals():
         initializer = lambda: rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.article_categories')], rdf_util.PREDICATE_SUBJECT, reverse_key=True)
-        global __RESOURCES__
         __RESOURCES__ = util.load_or_create_cache('dbpedia_category_resources', initializer)
 
     return __RESOURCES__[category]
 
 
 def get_parents(category: str) -> set:
+    global __PARENTS__
     if '__PARENTS__' not in globals():
         initializer = lambda: rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.categories')], rdf_util.PREDICATE_BROADER)
-        global __PARENTS__
         __PARENTS__ = util.load_or_create_cache('dbpedia_category_parents', initializer)
 
     return __PARENTS__[category]
 
 
 def get_transitive_parents(category: str) -> set:
+    global __TRANSITIVE_PARENTS__
     if '__TRANSITIVE_PARENTS__' not in globals():
-        global __TRANSITIVE_PARENTS__
         __TRANSITIVE_PARENTS__ = dict()
     if category not in __TRANSITIVE_PARENTS__:
         parents = get_parents(category)
@@ -50,17 +50,17 @@ def get_transitive_parents(category: str) -> set:
 
 
 def get_children(category: str) -> set:
+    global __CHILDREN__
     if '__CHILDREN__' not in globals():
         initializer = lambda: rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.categories')], rdf_util.PREDICATE_BROADER, reverse_key=True)
-        global __CHILDREN__
         __CHILDREN__ = util.load_or_create_cache('dbpedia_category_children', initializer)
 
     return __CHILDREN__[category]
 
 
 def get_transitive_children(category: str) -> set:
+    global __TRANSITIVE_CHILDREN__
     if '__TRANSITIVE_CHILDREN__' not in globals():
-        global __TRANSITIVE_CHILDREN__
         __TRANSITIVE_CHILDREN__ = dict()
     if category not in __TRANSITIVE_CHILDREN__:
         children = get_children(category)
@@ -70,24 +70,24 @@ def get_transitive_children(category: str) -> set:
 
 
 def get_redirects(category: str) -> set:
+    global __REDIRECTS__
     if '__REDIRECTS__' not in globals():
-        global __REDIRECTS__
         __REDIRECTS__ = rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.category_redirects')], rdf_util.PREDICATE_REDIRECTS)
 
     return __REDIRECTS__[category]
 
 
 def get_topics(category: str) -> set:
+    global __TOPICS__
     if '__TOPICS__' not in globals():
-        global __TOPICS__
         __TOPICS__ = rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.topical_concepts')], rdf_util.PREDICATE_SUBJECT)
 
     return __TOPICS__[category]
 
 
 def get_maintenance_cats() -> set:
+    global __MAINTENANCE_CATS__
     if '__MAINTENANCE_CATS__' not in globals():
-        global __MAINTENANCE_CATS__
         __MAINTENANCE_CATS__ = set(rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.maintenance_categories')], rdf_util.PREDICATE_TYPE))
 
     return __MAINTENANCE_CATS__

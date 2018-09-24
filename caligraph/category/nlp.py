@@ -8,8 +8,8 @@ SINGULARIZED_CATEGORIES_CACHE_ID = 'singularized_categories'
 
 
 def is_conceptual(category: str) -> bool:
+    global __CONCEPTUAL_CATEGORIES__
     if '__CONCEPTUAL_CATEGORIES__' not in globals():
-        global __CONCEPTUAL_CATEGORIES__
         __CONCEPTUAL_CATEGORIES__ = util.load_or_create_cache(CONCEPTUAL_CATEGORIES_CACHE_ID, lambda: dict())
 
     if category not in __CONCEPTUAL_CATEGORIES__:
@@ -21,8 +21,8 @@ def is_conceptual(category: str) -> bool:
 
 
 def singularize(category: str) -> str:
+    global __SINGULARIZED_CATEGORIES__
     if '__SINGULARIZED_CATEGORIES__' not in globals():
-        global __SINGULARIZED_CATEGORIES__
         __SINGULARIZED_CATEGORIES__ = util.load_or_create_cache(SINGULARIZED_CATEGORIES_CACHE_ID, lambda: dict())
 
     if category not in __SINGULARIZED_CATEGORIES__:

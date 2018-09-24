@@ -15,18 +15,18 @@ def get_transitive_types(dbp_resource: str) -> set:
 
 
 def get_types(dbp_resource: str) -> set:
+    global __RESOURCE_TYPE_MAPPING__
     if '__RESOURCE_TYPE_MAPPING__' not in globals():
         type_files = [util.get_data_file('files.dbpedia.instance_types'), util.get_data_file('files.dbpedia.transitive_instance_types')]
         initializer = lambda: rdf_util.create_multi_val_dict_from_rdf(type_files, rdf_util.PREDICATE_TYPE)
-        global __RESOURCE_TYPE_MAPPING__
         __RESOURCE_TYPE_MAPPING__ = util.load_or_create_cache('dbpedia_resource_type_mapping', initializer)
 
     return {t for t in __RESOURCE_TYPE_MAPPING__[dbp_resource] if dbp_util.is_dbp_type(t)}
 
 
 def get_supertypes(dbp_type: str) -> set:
+    global __SUPERTYPE_MAPPING__
     if '__SUPERTYPE_MAPPING__' not in globals():
-        global __SUPERTYPE_MAPPING__
         __SUPERTYPE_MAPPING__ = rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_SUBCLASS_OF)
         # completing the supertypes of each type with the supertypes of its equivalent types
         for t in __SUPERTYPE_MAPPING__:
@@ -36,8 +36,8 @@ def get_supertypes(dbp_type: str) -> set:
 
 
 def get_transitive_supertypes(dbp_type: str) -> set:
+    global __TRANSITIVE_SUPERTYPE_MAPPING__
     if '__TRANSITIVE_SUPERTYPE_MAPPING__' not in globals():
-        global __TRANSITIVE_SUPERTYPE_MAPPING__
         __TRANSITIVE_SUPERTYPE_MAPPING__ = dict()
     if dbp_type not in __TRANSITIVE_SUPERTYPE_MAPPING__:
         direct_supertypes = get_supertypes(dbp_type)
@@ -48,8 +48,8 @@ def get_transitive_supertypes(dbp_type: str) -> set:
 
 
 def get_subtypes(dbp_type: str) -> set:
+    global __SUBTYPE_MAPPING__
     if '__SUBTYPE_MAPPING__' not in globals():
-        global __SUBTYPE_MAPPING__
         __SUBTYPE_MAPPING__ = rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_SUBCLASS_OF, reverse_key=True)
         # completing the subtypes of each type with the subtypes of its equivalent types
         for t in __SUBTYPE_MAPPING__:
@@ -59,8 +59,8 @@ def get_subtypes(dbp_type: str) -> set:
 
 
 def get_transitive_subtypes(dbp_type: str) -> set:
+    global __TRANSITIVE_SUBTYPE_MAPPING__
     if '__TRANSITIVE_SUBTYPE_MAPPING__' not in globals():
-        global __TRANSITIVE_SUBTYPE_MAPPING__
         __TRANSITIVE_SUBTYPE_MAPPING__ = dict()
     if dbp_type not in __TRANSITIVE_SUBTYPE_MAPPING__:
         subtypes = get_subtypes(dbp_type)
@@ -70,8 +70,8 @@ def get_transitive_subtypes(dbp_type: str) -> set:
 
 
 def get_equivalent_types(dbp_type: str) -> set:
+    global __EQUIVALENT_TYPE_MAPPING__
     if '__EQUIVALENT_TYPE_MAPPING__' not in globals():
-        global __EQUIVALENT_TYPE_MAPPING__
         __EQUIVALENT_TYPE_MAPPING__ = rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_EQUIVALENT_CLASS, reflexive=True)
 
     return {dbp_type} | __EQUIVALENT_TYPE_MAPPING__[dbp_type]
