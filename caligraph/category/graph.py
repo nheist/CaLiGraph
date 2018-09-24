@@ -146,21 +146,10 @@ class CategoryGraph:
             child_types = {t for t, probability in child_type_distribution.items() if probability > self.CHILDREN_TYPE_THRESHOLD}
             node_types = resource_types.intersection(child_types) if resource_types else child_types
         else:
-            child_type_distribution = {}  # todo: remove - only for error analysis
             node_types = resource_types
 
         if node_types:
             node_queue.extend(self.predecessors(node))
-        else:
-            print('\n'.join([
-                "====== DID NOT FIND TYPES ======",
-                "CATEGORY: {}".format(cat_store.get_label(node)),
-                "TYPE DISTRI:",
-                *["  {}: {}".format(dbp_util.type2name(t), d) for t, d in resource_type_distribution.items()],
-                "CHILDREN: {}".format({cat_store.get_label(c) for c in children}),
-                "CHILD DISTRI:",
-                *["  {}: {}".format(cat_store.get_label(c), d) for c, d in child_type_distribution.items()]
-            ]))
 
         self._set_attr(node, self.__DBP_TYPES_PROPERTY__, node_types)
         return node_types
