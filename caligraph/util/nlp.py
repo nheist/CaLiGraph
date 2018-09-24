@@ -27,7 +27,7 @@ def parse(text: str, skip_cache=False) -> Doc:
 
 
 def persist_cache():
-    global __NLP_CACHE_CHANGED__
-    if __NLP_CACHE_CHANGED__:
+    if '__NLP_CACHE_CHANGED__' in globals() and __NLP_CACHE_CHANGED__:
         util.update_cache(SPACY_CACHE_ID, __NLP_CACHE__)
+        global __NLP_CACHE_CHANGED__
         __NLP_CACHE_CHANGED__ = False
