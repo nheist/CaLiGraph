@@ -173,6 +173,8 @@ class CategoryGraph:
             dbp_types = {t for t, probability in resource_type_distribution.items() if probability >= self.RESOURCE_TYPE_THRESHOLD}
             self._set_attr(node, self.__DBP_TYPES_PROPERTY__, dbp_types)
 
+        return self
+
     def _compute_resource_type_distribution(self, node: str) -> dict:
         resources_types = {r: dbp_store.get_transitive_types(r) for r in cat_store.get_resources(node)}
         resource_count = len({r for r, types in resources_types.items() if types} if self.EXCLUDE_UNTYPED_RESOURCES else resources_types)
