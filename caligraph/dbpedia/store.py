@@ -10,7 +10,8 @@ def get_independent_types(dbp_types: set) -> set:
 
 def get_transitive_types(dbp_resource: str) -> set:
     types = get_types(dbp_resource)
-    return types | {st for t in types for st in get_transitive_supertypes(t)}
+    transitive_types = types | {st for t in types for st in get_transitive_supertypes(t)}
+    return {t for t in transitive_types if dbp_util.is_dbp_type(t)}
 
 
 def get_types(dbp_resource: str) -> set:
