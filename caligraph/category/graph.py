@@ -24,7 +24,7 @@ class CategoryGraph:
 
         dbp_typed_nodes = {n for n in self.graph.nodes if self.dbp_types(n)}
         dbp_typed_node_count = len(dbp_typed_nodes)
-        avg_dbp_types = np.mean([len(self.dbp_types(n)) for n in dbp_typed_nodes])
+        avg_dbp_types = np.mean([len(self.dbp_types(n)) for n in dbp_typed_nodes]) if dbp_typed_nodes else '-'
 
         return '\n'.join([
             '{:^40}'.format('CATEGORY GRAPH STATISTICS'),
