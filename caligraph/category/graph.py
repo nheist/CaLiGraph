@@ -8,8 +8,8 @@ from collections import Counter
 
 
 class CategoryGraph:
-    __DBP_TYPES_PROPERTY__ = 'dbp_types'
-    __RESOURCE_TYPE_DISTRIBUTION_PROPERTY__ = 'resource_type_distribution'
+    PROPERTY_DBP_TYPES = 'dbp_types'
+    PROPERTY_RESOURCE_TYPE_COUNTS = 'resource_type_counts'
 
     def __init__(self, graph: nx.DiGraph, root_node: str):
         self.graph = graph
@@ -47,7 +47,7 @@ class CategoryGraph:
         return nx.shortest_path_length(self.graph, source=self.root_node, target=node)
 
     def dbp_types(self, node: str) -> set:
-        return self._get_attr(node, self.__DBP_TYPES_PROPERTY__)
+        return self._get_attr(node, self.PROPERTY_DBP_TYPES)
 
     def _get_attr(self, node, attr):
         return self.graph.nodes(data=attr)[node]
@@ -118,12 +118,15 @@ class CategoryGraph:
         self.graph.remove_edges_from(edges_to_remove)
 
     # dbp-types
-    RESOURCE_TYPE_THRESHOLD = .5
+    RESOURCE_TYPE_RATIO_THRESHOLD = .5
+    RESOURCE_TYPE_COUNT_THRESHOLD = 1
     EXCLUDE_UNTYPED_RESOURCES = False
-    CHILDREN_TYPE_THRESHOLD = .5
+    CHILDREN_TYPE_RATIO_THRESHOLD = .5
     EXCLUDE_UNTYPED_CHILDREN = False
+    TRY_PARENT_TYPES = False
 
-    def compute_dbp_types(self):
+    def assign_dbp_types(self):
+        self._assign_resource_type_counts()
         node_queue = [node for node in self.graph.nodes if not self.successors(node)]
         while node_queue:
             node = node_queue.pop(0)
@@ -131,42 +134,50 @@ class CategoryGraph:
 
         return self
 
+    def _assign_resource_type_counts(self):
+        nodes = {n for n in self.graph.nodes if not self._get_attr(n, self.PROPERTY_RESOURCE_TYPE_COUNTS)}
+        for n in nodes:
+            resources_types = {r: dbp_store.get_transitive_types(r) for r in cat_store.get_resources(n)}
+            resource_count = len(resources_types)
+            typed_resource_count = len({r for r, types in resources_types.items() if types})
+            types_count = sum([Counter(types) for _, types in resources_types.items()], Counter())
+            self._set_attr(n, self.PROPERTY_RESOURCE_TYPE_COUNTS, {'count': resource_count, 'typed_count': typed_resource_count, 'types': types_count})
+
     def _compute_dbp_types_for_node(self, node: str, node_queue: list) -> set:
         if self.dbp_types(node) is not None:
             return self.dbp_types(node)
 
-        resource_type_distribution = self._compute_resource_type_distribution(node)
-        resource_types = {t for t, probability in resource_type_distribution.items() if probability >= self.RESOURCE_TYPE_THRESHOLD}
+        resource_types = self._compute_resource_types_for_node(node)
 
-        children = self.successors(node)
-        children_types = {c: self._compute_dbp_types_for_node(c, node_queue) for c in children}
-        child_count = len({c for c, types in children_types.items() if types} if self.EXCLUDE_UNTYPED_CHILDREN else children)
-        if children:
-            child_type_count = sum([Counter(types) for types in children_types.values()], Counter())
-            child_type_distribution = {t: count / child_count for t, count in child_type_count.items()}
-            child_types = {t for t, probability in child_type_distribution.items() if probability > self.CHILDREN_TYPE_THRESHOLD}
-            node_types = resource_types.intersection(child_types) if resource_types else child_types
-        else:
+        # compare with child types
+        children_with_types = {c: self._compute_dbp_types_for_node(c, node_queue) for c in self.successors(node)}
+        if len(children_with_types) == 0:
             node_types = resource_types
+        else:
+            child_type_counts = sum([Counter(types) for types in children_with_types.values()], Counter())
+            child_types = set(child_type_counts.keys())
+            if resource_types:
+                node_types = resource_types.intersection(child_types)
+            else:
+                child_count = len({c for c, types in children_with_types.items() if types} if self.EXCLUDE_UNTYPED_CHILDREN else children)
+                child_type_distribution = {t: count / child_count for t, count in child_type_counts.items()}
+                node_types = {t for t, probability in child_type_distribution.items() if probability > self.CHILDREN_TYPE_RATIO_THRESHOLD}
+
+                if self.TRY_PARENT_TYPES and not node_types:  # todo: remove if not working well
+                    parent_types = set.union(*[t for p in self.predecessors(node) for t in self._compute_resource_types_for_node(p)])
+                    matched_types = parent_types.intersection(child_types)
+                    if matched_types:
+                        util.get_logger().debug('Category: {}\nAssigning types via parenting: {}'.format(node, matched_types))
+                        node_types = matched_types
 
         if node_types:
             node_queue.extend(self.predecessors(node))
 
-        self._set_attr(node, self.__DBP_TYPES_PROPERTY__, node_types)
+        self._set_attr(node, self.PROPERTY_DBP_TYPES, node_types)
         return node_types
 
-    def assign_dbp_types(self):
-        for node in self.graph.nodes:
-            resource_type_distribution = self._compute_resource_type_distribution(node)
-            self._set_attr(node, self.__RESOURCE_TYPE_DISTRIBUTION_PROPERTY__, resource_type_distribution)
-
-            dbp_types = {t for t, probability in resource_type_distribution.items() if probability >= self.RESOURCE_TYPE_THRESHOLD}
-            self._set_attr(node, self.__DBP_TYPES_PROPERTY__, dbp_types)
-
-        return self
-
-    def _compute_resource_type_distribution(self, node: str) -> dict:
-        resources_types = {r: dbp_store.get_transitive_types(r) for r in cat_store.get_resources(node)}
-        resource_count = len({r for r, types in resources_types.items() if types} if self.EXCLUDE_UNTYPED_RESOURCES else resources_types)
-        resource_type_count = sum([Counter(types) for r, types in resources_types.items()], Counter())
-        return {t: count / resource_count for t, count in resource_type_count.items()}
+    def _compute_resource_types_for_node(self, node: str) -> set:
+        resource_type_counts = self._get_attr(node, self.PROPERTY_RESOURCE_TYPE_COUNTS)
+        resource_count = resource_type_counts['typed_count' if self.EXCLUDE_UNTYPED_RESOURCES else 'count']
+        resource_type_distribution = {t: t_count / resource_count for t, t_count in resource_type_counts['types'] if t_count >= self.RESOURCE_TYPE_COUNT_THRESHOLD}
+        return {t for t, probability in resource_type_distribution if probability >= self.RESOURCE_TYPE_RATIO_THRESHOLD}
