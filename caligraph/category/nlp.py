@@ -3,8 +3,8 @@ import caligraph.category.store as cat_store
 import util
 import inflection
 
-CONCEPTUAL_CATEGORIES_CACHE_ID = 'conceptual_categories'
-SINGULARIZED_CATEGORIES_CACHE_ID = 'singularized_categories'
+CONCEPTUAL_CATEGORIES_CACHE_ID = 'categories_conceptual'
+SINGULARIZED_CATEGORIES_CACHE_ID = 'categories_singularized'
 
 
 def is_conceptual(category: str) -> bool:

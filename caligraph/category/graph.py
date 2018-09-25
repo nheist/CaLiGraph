@@ -2,7 +2,6 @@ import networkx as nx
 from . import store as cat_store
 from . import nlp as cat_nlp
 import caligraph.dbpedia.store as dbp_store
-import caligraph.dbpedia.util as dbp_util
 import util
 import numpy as np
 from collections import Counter
@@ -89,8 +88,10 @@ class CategoryGraph:
         categories = {cat for cat in categories if cat_nlp.is_conceptual(cat)}
         # persisting spacy cache so that parsed categories are cached
         cat_nlp.persist_cache()
-
+        # clearing the graph of any invalid nodes
         self._remove_all_nodes_except(categories | {self.root_node})
+        # appending all loose categories to the root node and removing the remaining self-referencing circular graphs
+        self.append_unconnected().remove_unconnected()
         return self
 
     def _remove_all_nodes_except(self, valid_nodes: set):

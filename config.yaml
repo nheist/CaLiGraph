@@ -21,11 +21,17 @@ files:
     transitive_instance_types: 'instance_types_transitive_en.ttl.bz2'
 
 cache:
-  conceptual_categories:
-    filename: 'conceptual-categories'
+  catgraph_conceptual:
+    filename: 'catgraph-conceptual'
     version: 1
-  singularized_categories:
-    filename: 'singularized-categories'
+  catgraph_cyclefree:
+    filename: 'catgraph-cyclefree'
+    version: 1
+  categories_conceptual:
+    filename: 'categories-conceptual'
+    version: 1
+  categories_singularized:
+    filename: 'categories-singularized'
     version: 1
   spacy_docs:
     filename: 'spacy-docs'
