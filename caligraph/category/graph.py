@@ -179,5 +179,5 @@ class CategoryGraph:
     def _compute_resource_types_for_node(self, node: str) -> set:
         resource_type_counts = self._get_attr(node, self.PROPERTY_RESOURCE_TYPE_COUNTS)
         resource_count = resource_type_counts['typed_count' if self.EXCLUDE_UNTYPED_RESOURCES else 'count']
-        resource_type_distribution = {t: t_count / resource_count for t, t_count in resource_type_counts['types'] if t_count >= self.RESOURCE_TYPE_COUNT_THRESHOLD}
+        resource_type_distribution = {t: t_count / resource_count for t, t_count in resource_type_counts['types'].items() if t_count >= self.RESOURCE_TYPE_COUNT_THRESHOLD}
         return {t for t, probability in resource_type_distribution if probability >= self.RESOURCE_TYPE_RATIO_THRESHOLD}
