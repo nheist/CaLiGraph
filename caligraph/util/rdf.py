@@ -48,7 +48,7 @@ def parse_triples_from_file(filepath: str) -> list:
 
     triples = []
     object_pattern = re.compile('\<(.*)\> \<(.*)\> \<(.*)\> \.\\n')
-    literal_pattern = re.compile('\<(.*)\> \<(.*)\> "(.*)"(?:\^\^|@).* \.\\n')
+    literal_pattern = re.compile('\<(.*)\> \<(.*)\> "(.*)"(?:\^\^|@)?.* \.\\n')
 
     for line in triple_lines:
         object_triple = object_pattern.match(line)
