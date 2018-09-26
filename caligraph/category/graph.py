@@ -159,7 +159,7 @@ class CategoryGraph:
             if resource_types:
                 node_types = resource_types.intersection(child_types)
             else:
-                child_count = len({c for c, types in children_with_types.items() if types} if self.EXCLUDE_UNTYPED_CHILDREN else children)
+                child_count = len({c for c, types in children_with_types.items() if types} if self.EXCLUDE_UNTYPED_CHILDREN else children_with_types)
                 child_type_distribution = {t: count / child_count for t, count in child_type_counts.items()}
                 node_types = {t for t, probability in child_type_distribution.items() if probability > self.CHILDREN_TYPE_RATIO_THRESHOLD}
 
