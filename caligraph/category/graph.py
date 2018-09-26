@@ -164,7 +164,7 @@ class CategoryGraph:
                 node_types = {t for t, probability in child_type_distribution.items() if probability > self.CHILDREN_TYPE_RATIO_THRESHOLD}
 
                 if self.TRY_PARENT_TYPES and not node_types:  # todo: remove if not working well
-                    parent_types = set.union(*[t for p in self.predecessors(node) for t in self._compute_resource_types_for_node(p)])
+                    parent_types = {t for p in self.predecessors(node) for t in self._compute_resource_types_for_node(p)}
                     matched_types = parent_types.intersection(child_types)
                     if matched_types:
                         util.get_logger().debug('Category: {}\nAssigning types via parenting: {}'.format(node, matched_types))
