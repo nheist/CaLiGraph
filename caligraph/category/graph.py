@@ -119,11 +119,12 @@ class CategoryGraph:
 
     # dbp-types
     RESOURCE_TYPE_RATIO_THRESHOLD = .5
-    RESOURCE_TYPE_COUNT_THRESHOLD = 1
-    EXCLUDE_UNTYPED_RESOURCES = False
+    RESOURCE_TYPE_COUNT_THRESHOLD = 1  # >1 leads to high loss in recall and only moderate increase of precision
+    EXCLUDE_UNTYPED_RESOURCES = True  # False leads to a moderate loss of precision and a high loss of recall
     CHILDREN_TYPE_RATIO_THRESHOLD = .5
-    EXCLUDE_UNTYPED_CHILDREN = False
+    EXCLUDE_UNTYPED_CHILDREN = False  # True leads to a high loss of precision while increasing recall only slightly
     TRY_PARENT_TYPES = False
+    REMOVE_DISJOINT_TYPES = False
 
     def assign_dbp_types(self):
         self._assign_resource_type_counts()
@@ -169,6 +170,9 @@ class CategoryGraph:
                     if matched_types:
                         util.get_logger().debug('Category: {}\nAssigning types via parenting: {}'.format(node, matched_types))
                         node_types = matched_types
+
+        if self.REMOVE_DISJOINT_TYPES:
+            node_types = node_types.difference({dt for t in node_types for dt in dbp_store.get_disjoint_types(t)})
 
         if node_types:
             node_queue.extend(self.predecessors(node))

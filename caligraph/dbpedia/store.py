@@ -75,3 +75,14 @@ def get_equivalent_types(dbp_type: str) -> set:
         __EQUIVALENT_TYPE_MAPPING__ = rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_EQUIVALENT_CLASS, reflexive=True)
 
     return {dbp_type} | __EQUIVALENT_TYPE_MAPPING__[dbp_type]
+
+
+def get_disjoint_types(dbp_type: str) -> set:
+    global __DISJOINT_TYPE_MAPPING__
+    if '__DISJOINT_TYPE_MAPPING__' not in globals():
+        __DISJOINT_TYPE_MAPPING__ = rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_DISJOINT_WITH, reflexive=True)
+        # completing the subtype of each type with the subtypes of its disjoint types
+        for t in __DISJOINT_TYPE_MAPPING__:
+            __DISJOINT_TYPE_MAPPING__[t] = {st for dt in __DISJOINT_TYPE_MAPPING__[t] for st in get_transitive_subtypes(dt)}
+
+    return __DISJOINT_TYPE_MAPPING__[dbp_type]
