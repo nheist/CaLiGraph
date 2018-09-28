@@ -47,6 +47,6 @@ def _get_recall(graph_resource_types: dict) -> float:
 
 def _get_graph_resource_type_mapping(graph: CategoryGraph) -> dict:
     resources = dbp_store.get_resources()
-    category_type_mapping = defaultdict(set, {cat: graph.dbp_types(cat) for cat in graph.categories})
+    category_type_mapping = defaultdict(set, {cat: graph.dbp_types(cat) or set() for cat in graph.categories})
     resource_category_mapping = cat_store.get_resource_to_cats_mapping()
     return {res: {t for cat in resource_category_mapping[res] for t in category_type_mapping[cat]} for res in resources}
