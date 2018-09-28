@@ -27,8 +27,7 @@ def get_supertypes(dbp_type: str) -> set:
     if '__SUPERTYPE_MAPPING__' not in globals():
         __SUPERTYPE_MAPPING__ = rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_SUBCLASS_OF)
         # completing the supertypes of each type with the supertypes of its equivalent types
-        for t in __SUPERTYPE_MAPPING__:
-            __SUPERTYPE_MAPPING__[t] = {st for et in get_equivalent_types(t) for st in __SUPERTYPE_MAPPING__[et]}
+        __SUPERTYPE_MAPPING__ = {t: {st for et in get_equivalent_types(t) for st in __SUPERTYPE_MAPPING__[et]} for t in __SUPERTYPE_MAPPING__}
 
     return __SUPERTYPE_MAPPING__[dbp_type]
 
@@ -50,8 +49,7 @@ def get_subtypes(dbp_type: str) -> set:
     if '__SUBTYPE_MAPPING__' not in globals():
         __SUBTYPE_MAPPING__ = rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_SUBCLASS_OF, reverse_key=True)
         # completing the subtypes of each type with the subtypes of its equivalent types
-        for t in __SUBTYPE_MAPPING__:
-            __SUBTYPE_MAPPING__[t] = {st for et in get_equivalent_types(t) for st in __SUBTYPE_MAPPING__[et]}
+        __SUBTYPE_MAPPING__ = {t: {st for et in get_equivalent_types(t) for st in __SUBTYPE_MAPPING__[et]} for t in __SUBTYPE_MAPPING__}
 
     return __SUBTYPE_MAPPING__[dbp_type]
 
@@ -80,8 +78,7 @@ def get_disjoint_types(dbp_type: str) -> set:
     if '__DISJOINT_TYPE_MAPPING__' not in globals():
         __DISJOINT_TYPE_MAPPING__ = rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_DISJOINT_WITH, reflexive=True)
         # completing the subtype of each type with the subtypes of its disjoint types
-        for t in __DISJOINT_TYPE_MAPPING__:
-            __DISJOINT_TYPE_MAPPING__[t] = {st for dt in __DISJOINT_TYPE_MAPPING__[t] for st in get_transitive_subtypes(dt)}
+        __DISJOINT_TYPE_MAPPING__ = {t: {st for dt in disjoint_types for st in get_transitive_subtypes(dt)} for t, disjoint_types in __DISJOINT_TYPE_MAPPING__.items()}
 
     return __DISJOINT_TYPE_MAPPING__[dbp_type]
 
