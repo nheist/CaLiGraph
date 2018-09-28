@@ -28,7 +28,7 @@ def get_supertypes(dbp_type: str) -> set:
     if '__SUPERTYPE_MAPPING__' not in globals():
         __SUPERTYPE_MAPPING__ = rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_SUBCLASS_OF)
         # completing the supertypes of each type with the supertypes of its equivalent types
-        __SUPERTYPE_MAPPING__ = defaultdict(set, {t: {st for et in get_equivalent_types(t) for st in __SUPERTYPE_MAPPING__[et]} for t in __SUPERTYPE_MAPPING__})
+        __SUPERTYPE_MAPPING__ = defaultdict(set, {t: {st for et in get_equivalent_types(t) for st in __SUPERTYPE_MAPPING__[et]} for t in set(__SUPERTYPE_MAPPING__.keys())})
 
     return __SUPERTYPE_MAPPING__[dbp_type]
 
@@ -50,7 +50,7 @@ def get_subtypes(dbp_type: str) -> set:
     if '__SUBTYPE_MAPPING__' not in globals():
         __SUBTYPE_MAPPING__ = rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_SUBCLASS_OF, reverse_key=True)
         # completing the subtypes of each type with the subtypes of its equivalent types
-        __SUBTYPE_MAPPING__ = defaultdict(set, {t: {st for et in get_equivalent_types(t) for st in __SUBTYPE_MAPPING__[et]} for t in __SUBTYPE_MAPPING__})
+        __SUBTYPE_MAPPING__ = defaultdict(set, {t: {st for et in get_equivalent_types(t) for st in __SUBTYPE_MAPPING__[et]} for t in set(__SUBTYPE_MAPPING__.keys())})
 
     return __SUBTYPE_MAPPING__[dbp_type]
 
