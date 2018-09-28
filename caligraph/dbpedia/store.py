@@ -3,6 +3,10 @@ import caligraph.util.rdf as rdf_util
 from . import util as dbp_util
 
 
+def get_resources() -> set:
+    return set(_get_resource_type_mapping())
+
+
 def get_independent_types(dbp_types: set) -> set:
     """Returns only types that are independent, i.e. there are no two types T, T' with T transitiveSupertypeOf T'"""
     return dbp_types.difference({st for t in dbp_types for st in get_transitive_supertypes(t)})
@@ -15,13 +19,7 @@ def get_transitive_types(dbp_resource: str) -> set:
 
 
 def get_types(dbp_resource: str) -> set:
-    global __RESOURCE_TYPE_MAPPING__
-    if '__RESOURCE_TYPE_MAPPING__' not in globals():
-        type_files = [util.get_data_file('files.dbpedia.instance_types'), util.get_data_file('files.dbpedia.transitive_instance_types')]
-        initializer = lambda: rdf_util.create_multi_val_dict_from_rdf(type_files, rdf_util.PREDICATE_TYPE)
-        __RESOURCE_TYPE_MAPPING__ = util.load_or_create_cache('dbpedia_resource_type_mapping', initializer)
-
-    return {t for t in __RESOURCE_TYPE_MAPPING__[dbp_resource] if dbp_util.is_dbp_type(t)}
+    return {t for t in _get_resource_type_mapping()[dbp_resource] if dbp_util.is_dbp_type(t)}
 
 
 def get_supertypes(dbp_type: str) -> set:
@@ -86,3 +84,13 @@ def get_disjoint_types(dbp_type: str) -> set:
             __DISJOINT_TYPE_MAPPING__[t] = {st for dt in __DISJOINT_TYPE_MAPPING__[t] for st in get_transitive_subtypes(dt)}
 
     return __DISJOINT_TYPE_MAPPING__[dbp_type]
+
+
+def _get_resource_type_mapping() -> dict:
+    global __RESOURCE_TYPE_MAPPING__
+    if '__RESOURCE_TYPE_MAPPING__' not in globals():
+        type_files = [util.get_data_file('files.dbpedia.instance_types'), util.get_data_file('files.dbpedia.transitive_instance_types')]
+        initializer = lambda: rdf_util.create_multi_val_dict_from_rdf(type_files, rdf_util.PREDICATE_TYPE)
+        __RESOURCE_TYPE_MAPPING__ = util.load_or_create_cache('dbpedia_resource_type_mapping', initializer)
+
+    return __RESOURCE_TYPE_MAPPING__
