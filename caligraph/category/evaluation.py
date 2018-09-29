@@ -7,7 +7,7 @@ from typing import Tuple
 
 def get_metrics(graph: CategoryGraph) -> Tuple[float, float, float, float]:
     graph_resource_types = _get_graph_resource_type_mapping(graph)
-    return _get_correctness(graph_resource_types), _get_accordance(graph_resource_types), _get_recall(graph_resource_types), _get_completeness(graph)
+    return _get_correctness(graph_resource_types), _get_accordance(graph_resource_types), _get_recall(graph_resource_types), _get_coverage(graph)
 
 
 def _get_correctness(graph_resource_types: dict) -> float:
@@ -45,7 +45,7 @@ def _get_recall(graph_resource_types: dict) -> float:
     return found_types / overall_types
 
 
-def _get_completeness(graph: CategoryGraph) -> float:
+def _get_coverage(graph: CategoryGraph) -> float:
     categories = graph.categories
     return len({cat for cat in categories if graph.dbp_types(cat)}) / len(categories)
 
