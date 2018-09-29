@@ -73,7 +73,7 @@ def create_multi_val_dict_from_rdf(filepaths: list, predicate: str, reverse_key=
             if triple.pred == predicate:
                 if reflexive or reverse_key:
                     data_dict[triple.obj].add(triple.sub)
-                elif reflexive or not reverse_key:
+                if reflexive or not reverse_key:
                     data_dict[triple.sub].add(triple.obj)
     return data_dict
 
