@@ -65,7 +65,7 @@ class CategoryGraph:
     @classmethod
     def create_from_dbpedia(cls, root_category=None):
         edges = [(cat, subcat) for cat in cat_store.get_all_cats() for subcat in cat_store.get_children(cat) if cat != subcat]
-        root_category = root_category if root_category else util.get_config('caligraph.category.root_category')
+        root_category = root_category or util.get_config('caligraph.category.root_category')
         return CategoryGraph(nx.DiGraph(incoming_graph_data=edges), root_category)
 
     # connectivity
@@ -126,9 +126,6 @@ class CategoryGraph:
     RESOURCE_TYPE_COUNT_THRESHOLD = 1  # >1 leads to high loss in recall and only moderate increase of precision
     EXCLUDE_UNTYPED_RESOURCES = True  # False leads to a moderate loss of precision and a high loss of recall
     CHILDREN_TYPE_RATIO_THRESHOLD = .5
-    EXCLUDE_UNTYPED_CHILDREN = False  # True leads to a high loss of precision while increasing recall only slightly
-    TRY_PARENT_TYPES = False
-    REMOVE_DISJOINT_TYPES = False
 
     def assign_dbp_types(self):
         self._assign_resource_type_counts()
@@ -160,23 +157,15 @@ class CategoryGraph:
             category_types = resource_types
         else:
             child_type_counts = sum([Counter(types) for types in children_with_types.values()], Counter())
-            child_types = set(child_type_counts.keys())
             if resource_types:
+                child_types = set(child_type_counts.keys())
                 category_types = resource_types.intersection(child_types)
             else:
-                child_count = len({c for c, types in children_with_types.items() if types} if self.EXCLUDE_UNTYPED_CHILDREN else children_with_types)
-                child_type_distribution = {t: count / child_count for t, count in child_type_counts.items()}
+                child_type_distribution = {t: count / len(children_with_types) for t, count in child_type_counts.items()}
                 category_types = {t for t, probability in child_type_distribution.items() if probability > self.CHILDREN_TYPE_RATIO_THRESHOLD}
 
-                if self.TRY_PARENT_TYPES and not category_types:  # todo: remove if not working well
-                    parent_types = {t for p in self.predecessors(cat) for t in self._compute_resource_types_for_category(p)}
-                    matched_types = parent_types.intersection(child_types)
-                    if matched_types:
-                        util.get_logger().debug('Category: {}\nAssigning types via parenting: {}'.format(cat, matched_types))
-                        category_types = matched_types
-
-        if self.REMOVE_DISJOINT_TYPES:
-            category_types = category_types.difference({dt for t in category_types for dt in dbp_store.get_disjoint_types(t)})
+        # remove any disjoint type assignments
+        category_types = category_types.difference({dt for t in category_types for dt in dbp_store.get_disjoint_types(t)})
 
         if category_types:
             category_queue.extend(self.predecessors(cat))
