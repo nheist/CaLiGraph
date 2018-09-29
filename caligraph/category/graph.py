@@ -5,6 +5,7 @@ import caligraph.dbpedia.store as dbp_store
 import util
 import numpy as np
 from collections import Counter
+import math
 
 
 class CategoryGraph:
@@ -41,23 +42,8 @@ class CategoryGraph:
     def categories(self) -> set:
         return set(self.graph.nodes)
 
-    def predecessors(self, category: str) -> set:
-        return set(self.graph.predecessors(category))
-
-    def successors(self, category: str) -> set:
-        return set(self.graph.successors(category))
-
-    def depth(self, category: str) -> int:
-        return nx.shortest_path_length(self.graph, source=self.root_category, target=category)
-
     def dbp_types(self, category: str) -> set:
         return self._get_attr(category, self.PROPERTY_DBP_TYPES)
-
-    def _get_attr(self, category, attr):
-        return self.graph.nodes(data=attr)[category]
-
-    def _set_attr(self, category, attr, val):
-        self.graph.nodes[category][attr] = val
 
     def copy(self):
         return CategoryGraph(self.graph.copy(), self.root_category)
@@ -68,15 +54,30 @@ class CategoryGraph:
         root_category = root_category or util.get_config('caligraph.category.root_category')
         return CategoryGraph(nx.DiGraph(incoming_graph_data=edges), root_category)
 
+    def _predecessors(self, category: str) -> set:
+        return set(self.graph.predecessors(category))
+
+    def _successors(self, category: str) -> set:
+        return set(self.graph.successors(category))
+
+    def _depth(self, category: str) -> int:
+        return nx.shortest_path_length(self.graph, source=self.root_category, target=category)
+
+    def _get_attr(self, category, attr):
+        return self.graph.nodes(data=attr)[category]
+
+    def _set_attr(self, category, attr, val):
+        self.graph.nodes[category][attr] = val
+
     # connectivity
 
     def remove_unconnected(self):
-        valid_categories = set(nx.bfs_tree(self.graph, self.root_category))
+        valid_categories = {self.root_category} | nx.descendants(self.graph, self.root_category)
         self._remove_all_categories_except(valid_categories)
         return self
 
     def append_unconnected(self):
-        unconnected_root_categories = {cat for cat in self.categories if not self.predecessors(cat) and cat != self.root_category}
+        unconnected_root_categories = {cat for cat in self.categories if not self._predecessors(cat) and cat != self.root_category}
         self.graph.add_edges_from([(self.root_category, cat) for cat in unconnected_root_categories])
         return self
 
@@ -114,7 +115,7 @@ class CategoryGraph:
     def _remove_cycle_edges_by_node_depth(self, comparator):
         edges_to_remove = set()
         for cycle in nx.simple_cycles(self.graph):
-            node_depths = {node: self.depth(node) for node in cycle}
+            node_depths = {node: self._depth(node) for node in cycle}
             for i in range(len(cycle)):
                 current_edge = (cycle[i], cycle[(i+1) % len(cycle)])
                 if comparator(node_depths[current_edge[0]], node_depths[current_edge[1]]):
@@ -123,13 +124,13 @@ class CategoryGraph:
 
     # dbp-types
     RESOURCE_TYPE_RATIO_THRESHOLD = .5
-    RESOURCE_TYPE_COUNT_THRESHOLD = 1  # >1 leads to high loss in recall and only moderate increase of precision
+    RESOURCE_TYPE_COUNT_THRESHOLD = 1  # >1 leads to high loss in recall and only moderate increase of precision -> measure is too restrictive
     EXCLUDE_UNTYPED_RESOURCES = True  # False leads to a moderate loss of precision and a high loss of recall
     CHILDREN_TYPE_RATIO_THRESHOLD = .5
 
     def assign_dbp_types(self):
         self._assign_resource_type_counts()
-        category_queue = [cat for cat in self.categories if not self.successors(cat)]
+        category_queue = [cat for cat in self.categories if not self._successors(cat)]
         while category_queue:
             cat = category_queue.pop(0)
             self._compute_dbp_types_for_category(cat, category_queue)
@@ -152,7 +153,7 @@ class CategoryGraph:
         resource_types = self._compute_resource_types_for_category(cat)
 
         # compare with child types
-        children_with_types = {cat: self._compute_dbp_types_for_category(cat, category_queue) for cat in self.successors(cat)}
+        children_with_types = {cat: self._compute_dbp_types_for_category(cat, category_queue) for cat in self._successors(cat)}
         if len(children_with_types) == 0:
             category_types = resource_types
         else:
@@ -168,7 +169,7 @@ class CategoryGraph:
         category_types = category_types.difference({dt for t in category_types for dt in dbp_store.get_disjoint_types(t)})
 
         if category_types:
-            category_queue.extend(self.predecessors(cat))
+            category_queue.extend(self._predecessors(cat))
 
         self._set_attr(cat, self.PROPERTY_DBP_TYPES, category_types)
         return category_types
