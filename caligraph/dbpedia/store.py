@@ -25,7 +25,8 @@ def get_types(dbp_resource: str) -> set:
 
 
 def get_supertypes(dbp_type: str) -> set:
-    return set(_get_type_graph().predecessors(dbp_type))
+    type_graph = _get_type_graph()
+    return set(type_graph.predecessors(dbp_type)) if dbp_type in type_graph else set()
 
 
 def get_transitive_supertypes(dbp_type: str) -> set:
@@ -33,13 +34,15 @@ def get_transitive_supertypes(dbp_type: str) -> set:
     if '__TRANSITIVE_SUPERTYPE_MAPPING__' not in globals():
         __TRANSITIVE_SUPERTYPE_MAPPING__ = dict()
     if dbp_type not in __TRANSITIVE_SUPERTYPE_MAPPING__:
-        __TRANSITIVE_SUPERTYPE_MAPPING__[dbp_type] = nx.ancestors(_get_type_graph(), dbp_type)
+        type_graph = _get_type_graph()
+        __TRANSITIVE_SUPERTYPE_MAPPING__[dbp_type] = nx.ancestors(type_graph, dbp_type) if dbp_type in type_graph else set()
 
     return __TRANSITIVE_SUPERTYPE_MAPPING__[dbp_type]
 
 
 def get_subtypes(dbp_type: str) -> set:
-    return set(_get_type_graph().successors(dbp_type))
+    type_graph = _get_type_graph()
+    return set(type_graph.successors(dbp_type)) if dbp_type in type_graph else set()
 
 
 def get_transitive_subtypes(dbp_type: str) -> set:
@@ -47,7 +50,8 @@ def get_transitive_subtypes(dbp_type: str) -> set:
     if '__TRANSITIVE_SUBTYPE_MAPPING__' not in globals():
         __TRANSITIVE_SUBTYPE_MAPPING__ = dict()
     if dbp_type not in __TRANSITIVE_SUBTYPE_MAPPING__:
-        __TRANSITIVE_SUBTYPE_MAPPING__[dbp_type] = nx.descendants(_get_type_graph(), dbp_type)
+        type_graph = _get_type_graph()
+        __TRANSITIVE_SUBTYPE_MAPPING__[dbp_type] = nx.descendants(type_graph, dbp_type) if dbp_type in type_graph else set()
 
     return __TRANSITIVE_SUBTYPE_MAPPING__[dbp_type]
 
@@ -71,11 +75,12 @@ def get_disjoint_types(dbp_type: str) -> set:
 
 
 def get_type_depth(dbp_type: str) -> int:
+    type_graph = _get_type_graph()
     global __TYPE_DEPTH__
     if '__TYPE_DEPTH__' not in globals():
-        __TYPE_DEPTH__ = nx.shortest_path_length(_get_type_graph(), source=rdf_util.CLASS_OWL_THING)
+        __TYPE_DEPTH__ = nx.shortest_path_length(type_graph, source=rdf_util.CLASS_OWL_THING)
 
-    return __TYPE_DEPTH__[dbp_type]
+    return __TYPE_DEPTH__[dbp_type] if dbp_type in type_graph else 0
 
 
 def _get_resource_type_mapping() -> dict:
