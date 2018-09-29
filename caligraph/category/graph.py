@@ -126,6 +126,7 @@ class CategoryGraph:
     RESOURCE_TYPE_RATIO_THRESHOLD = .5
     RESOURCE_TYPE_COUNT_THRESHOLD = 1  # >1 leads to high loss in recall and only moderate increase of precision -> measure is too restrictive
     EXCLUDE_UNTYPED_RESOURCES = True  # False leads to a moderate loss of precision and a high loss of recall
+    FILTER_LOW_EVIDENCE_TYPES = False
     CHILDREN_TYPE_RATIO_THRESHOLD = .5
 
     def assign_dbp_types(self):
@@ -176,6 +177,12 @@ class CategoryGraph:
 
     def _compute_resource_types_for_category(self, cat: str) -> set:
         resource_type_counts = self._get_attr(cat, self.PROPERTY_RESOURCE_TYPE_COUNTS)
+        # filter types due to absolute counts
+        resource_type_counts['types'] = {t: t_count for t, t_count in resource_type_counts['types'].items() if t_count >= self.RESOURCE_TYPE_COUNT_THRESHOLD}
+        # filter types due to counts relative to ontology depth
+        if self.FILTER_LOW_EVIDENCE_TYPES:
+            resource_type_counts['types'] = {t: t_count for t, t_count in resource_type_counts['types'].items() if t_count >= math.log2(dbp_store.get_type_depth(t))}
+
         resource_count = resource_type_counts['typed_count' if self.EXCLUDE_UNTYPED_RESOURCES else 'count']
-        resource_type_distribution = {t: t_count / resource_count for t, t_count in resource_type_counts['types'].items() if t_count >= self.RESOURCE_TYPE_COUNT_THRESHOLD}
-        return {t for t, probability in resource_type_distribution.items() if probability >= self.RESOURCE_TYPE_RATIO_THRESHOLD}
+        resource_type_distribution = {t: t_count / resource_count for t, t_count in resource_type_counts['types'].items()}
+        return {t for t, probability in resource_type_distribution.items() if probability > self.RESOURCE_TYPE_RATIO_THRESHOLD}
