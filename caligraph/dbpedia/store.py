@@ -2,6 +2,7 @@ import util
 import caligraph.util.rdf as rdf_util
 from . import util as dbp_util
 from collections import defaultdict
+import networkx as nx
 
 
 def get_resources() -> set:
@@ -24,13 +25,7 @@ def get_types(dbp_resource: str) -> set:
 
 
 def get_supertypes(dbp_type: str) -> set:
-    global __SUPERTYPE_MAPPING__
-    if '__SUPERTYPE_MAPPING__' not in globals():
-        __SUPERTYPE_MAPPING__ = rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_SUBCLASS_OF)
-        # completing the supertypes of each type with the supertypes of its equivalent types
-        __SUPERTYPE_MAPPING__ = defaultdict(set, {t: {st for et in get_equivalent_types(t) for st in __SUPERTYPE_MAPPING__[et]} for t in set(__SUPERTYPE_MAPPING__.keys())})
-
-    return __SUPERTYPE_MAPPING__[dbp_type]
+    return set(_get_type_graph().predecessors(dbp_type))
 
 
 def get_transitive_supertypes(dbp_type: str) -> set:
@@ -38,21 +33,13 @@ def get_transitive_supertypes(dbp_type: str) -> set:
     if '__TRANSITIVE_SUPERTYPE_MAPPING__' not in globals():
         __TRANSITIVE_SUPERTYPE_MAPPING__ = dict()
     if dbp_type not in __TRANSITIVE_SUPERTYPE_MAPPING__:
-        direct_supertypes = get_supertypes(dbp_type)
-        indirect_supertypes = {tst for dst in direct_supertypes for tst in get_transitive_supertypes(dst)}
-        __TRANSITIVE_SUPERTYPE_MAPPING__[dbp_type] = direct_supertypes | indirect_supertypes
+        __TRANSITIVE_SUPERTYPE_MAPPING__[dbp_type] = nx.ancestors(_get_type_graph(), dbp_type)
 
     return __TRANSITIVE_SUPERTYPE_MAPPING__[dbp_type]
 
 
 def get_subtypes(dbp_type: str) -> set:
-    global __SUBTYPE_MAPPING__
-    if '__SUBTYPE_MAPPING__' not in globals():
-        __SUBTYPE_MAPPING__ = rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_SUBCLASS_OF, reverse_key=True)
-        # completing the subtypes of each type with the subtypes of its equivalent types
-        __SUBTYPE_MAPPING__ = defaultdict(set, {t: {st for et in get_equivalent_types(t) for st in __SUBTYPE_MAPPING__[et]} for t in set(__SUBTYPE_MAPPING__.keys())})
-
-    return __SUBTYPE_MAPPING__[dbp_type]
+    return set(_get_type_graph().successors(dbp_type))
 
 
 def get_transitive_subtypes(dbp_type: str) -> set:
@@ -60,8 +47,7 @@ def get_transitive_subtypes(dbp_type: str) -> set:
     if '__TRANSITIVE_SUBTYPE_MAPPING__' not in globals():
         __TRANSITIVE_SUBTYPE_MAPPING__ = dict()
     if dbp_type not in __TRANSITIVE_SUBTYPE_MAPPING__:
-        subtypes = get_subtypes(dbp_type)
-        __TRANSITIVE_SUBTYPE_MAPPING__[dbp_type] = subtypes | {tst for dst in subtypes for tst in get_transitive_subtypes(dst)}
+        __TRANSITIVE_SUBTYPE_MAPPING__[dbp_type] = nx.descendants(_get_type_graph(), dbp_type)
 
     return __TRANSITIVE_SUBTYPE_MAPPING__[dbp_type]
 
@@ -84,6 +70,14 @@ def get_disjoint_types(dbp_type: str) -> set:
     return __DISJOINT_TYPE_MAPPING__[dbp_type]
 
 
+def get_type_depth(dbp_type: str) -> int:
+    global __TYPE_DEPTH__
+    if '__TYPE_DEPTH__' not in globals():
+        __TYPE_DEPTH__ = nx.shortest_path_length(_get_type_graph(), source=rdf_util.CLASS_OWL_THING)
+
+    return __TYPE_DEPTH__[dbp_type]
+
+
 def _get_resource_type_mapping() -> dict:
     global __RESOURCE_TYPE_MAPPING__
     if '__RESOURCE_TYPE_MAPPING__' not in globals():
@@ -92,3 +86,14 @@ def _get_resource_type_mapping() -> dict:
         __RESOURCE_TYPE_MAPPING__ = util.load_or_create_cache('dbpedia_resource_type_mapping', initializer)
 
     return __RESOURCE_TYPE_MAPPING__
+
+
+def _get_type_graph() -> nx.DiGraph:
+    global __TYPE_GRAPH__
+    if '__TYPE_GRAPH__' not in globals():
+        subtype_mapping = rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_SUBCLASS_OF, reverse_key=True)
+        # completing subtypes with subtypes of equivalent types
+        subtype_mapping = {t: {st for et in get_equivalent_types(t) for st in subtype_mapping[et]} for t in set(subtype_mapping)}
+        __TYPE_GRAPH__ = nx.DiGraph(incoming_graph_data={(parent, child) for parent, children in subtype_mapping.items() for child in children})
+
+    return __TYPE_GRAPH__
