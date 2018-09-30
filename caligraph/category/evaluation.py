@@ -11,8 +11,7 @@ import util
 
 def test_settings(graph: CategoryGraph):
     columns = ['exclude_untyped_resources', 'resource_type_ratio', 'child_type_ratio', 'correctness', 'accordance', 'recall', 'coverage']
-    # data = list(itertools.product([True, False], np.linspace(0.1, 1, 10), np.linspace(0.1, 1, 10), [0.0], [0.0], [0.0], [0.0]))
-    data = list(itertools.product([True, False], [.5], [.5], [0.0], [0.0], [0.0], [0.0]))
+    data = list(itertools.product([True, False], np.linspace(0.1, 1, 10), np.linspace(0.1, 1, 10), [0.0], [0.0], [0.0], [0.0]))
     df = pd.DataFrame(data=data, columns=columns)
 
     for row in df.itertuples():
