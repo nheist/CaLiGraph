@@ -126,7 +126,8 @@ class CategoryGraph:
     RESOURCE_TYPE_RATIO_THRESHOLD = .5
     RESOURCE_TYPE_COUNT_THRESHOLD = 1  # >1 leads to high loss in recall and only moderate increase of precision -> measure is too restrictive
     EXCLUDE_UNTYPED_RESOURCES = True  # False leads to a moderate loss of precision and a high loss of recall
-    FILTER_LOW_EVIDENCE_TYPES = False
+    ONTOLOGY_DEPTH_SMOOTHING = False
+    FREQUENCY_SMOOTHING = False
     CHILDREN_TYPE_RATIO_THRESHOLD = .5
 
     def assign_dbp_types(self):
@@ -180,8 +181,11 @@ class CategoryGraph:
         # filter types due to absolute counts
         resource_type_counts['types'] = {t: t_count for t, t_count in resource_type_counts['types'].items() if t_count >= self.RESOURCE_TYPE_COUNT_THRESHOLD}
         # filter types due to counts relative to ontology depth
-        if self.FILTER_LOW_EVIDENCE_TYPES:
+        if self.ONTOLOGY_DEPTH_SMOOTHING:
             resource_type_counts['types'] = {t: t_count for t, t_count in resource_type_counts['types'].items() if t_count >= math.log2(dbp_store.get_type_depth(t))}
+        # filter types due to relative frequency
+        if self.FREQUENCY_SMOOTHING:
+            resource_type_counts['types'] = {t: t_count for t, t_count in resource_type_counts['types'].items() if t_count >= (-1 * math.log10(dbp_store.get_type_frequency(t)))}
 
         resource_count = resource_type_counts['typed_count' if self.EXCLUDE_UNTYPED_RESOURCES else 'count']
         resource_type_distribution = {t: t_count / resource_count for t, t_count in resource_type_counts['types'].items()}

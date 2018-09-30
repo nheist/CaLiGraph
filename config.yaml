@@ -36,6 +36,9 @@ cache:
   spacy_docs:
     filename: 'spacy-docs'
     version: 1
+  dbpedia_resource_type_frequency:
+    filename: 'dbpedia-resource-type-frequency'
+    version: 1
   dbpedia_resource_type_mapping:
     filename: 'dbpedia-resource-type-mapping'
     version: 1

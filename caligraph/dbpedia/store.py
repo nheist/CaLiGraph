@@ -1,7 +1,7 @@
 import util
 import caligraph.util.rdf as rdf_util
 from . import util as dbp_util
-from collections import defaultdict
+from collections import defaultdict, Counter
 import networkx as nx
 
 
@@ -80,7 +80,20 @@ def get_type_depth(dbp_type: str) -> int:
     if '__TYPE_DEPTH__' not in globals():
         __TYPE_DEPTH__ = nx.shortest_path_length(type_graph, source=rdf_util.CLASS_OWL_THING)
 
-    return __TYPE_DEPTH__[dbp_type] if dbp_type in type_graph else 0
+    return __TYPE_DEPTH__[dbp_type] if dbp_type in __TYPE_DEPTH__ else 1
+
+
+def get_type_frequency(dbp_type: str) -> float:
+    global __TYPE_FREQUENCY__
+    if '__TYPE_FREQUENCY__' not in globals():
+        __TYPE_FREQUENCY__ = util.load_or_create_cache('dbpedia_resource_type_frequency', _compute_type_frequency)
+
+    return __TYPE_FREQUENCY__[dbp_type] if dbp_type in __TYPE_FREQUENCY__ else 0
+
+
+def _compute_type_frequency() -> dict:
+    type_counts = sum([Counter(types) for types in _get_resource_type_mapping().values()], Counter())
+    return {t: t_count / len(_get_resource_type_mapping()) for t, t_count in type_counts.items()}
 
 
 def _get_resource_type_mapping() -> dict:
