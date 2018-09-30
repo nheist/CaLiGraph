@@ -1,6 +1,11 @@
 caligraph:
   category:
     root_category: 'http://dbpedia.org/resource/Category:Main_topic_classifications'
+    dbp_types:
+      exclude_untyped_resources: True
+      apply_type_depth_smoothing: True
+      resource_type_ratio: 0.5
+      child_type_ratio: 0.5
 
 
 logging:

@@ -3,6 +3,33 @@ import caligraph.dbpedia.store as dbp_store
 import caligraph.category.store as cat_store
 from collections import defaultdict
 from typing import Tuple
+import itertools
+import pandas as pd
+import numpy as np
+import util
+
+
+def test_settings(graph: CategoryGraph):
+    columns = ['exclude_untyped_resources', 'resource_type_ratio', 'child_type_ratio', 'correctness', 'accordance', 'recall', 'coverage']
+    # data = list(itertools.product([True, False], np.linspace(0.1, 1, 10), np.linspace(0.1, 1, 10), [0], [0], [0], [0]))
+    data = list(itertools.product([True, False], [.5], [.5], [0], [0], [0], [0]))
+    df = pd.DataFrame(data=data, columns=columns)
+
+    for row in df.itertuples():
+        util.set_config('caligraph.category.dbp_types.exclude_untyped_resources', row.exclude_untyped_resources)
+        util.set_config('caligraph.category.dbp_types.resource_type_ratio', row.resource_type_ratio)
+        util.set_config('caligraph.category.dbp_types.child_type_ratio', row.child_type_ratio)
+
+        eval_graph = graph.copy()
+        eval_graph.assign_dbp_types()
+        correctness, accordance, recall, coverage = get_metrics(eval_graph)
+
+        df.at[row.Index, 'correctness'] = correctness
+        df.at[row.Index, 'accordance'] = accordance
+        df.at[row.Index, 'recall'] = recall
+        df.at[row.Index, 'coverage'] = coverage
+
+    df.to_csv('catgraph_evaluation.csv')
 
 
 def get_metrics(graph: CategoryGraph) -> Tuple[float, float, float, float]:

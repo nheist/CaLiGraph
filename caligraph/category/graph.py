@@ -123,12 +123,6 @@ class CategoryGraph:
         self.graph.remove_edges_from(edges_to_remove)
 
     # dbp-types
-    RESOURCE_TYPE_RATIO_THRESHOLD = .5
-    RESOURCE_TYPE_COUNT_THRESHOLD = 1  # >1 leads to high loss in recall and only moderate increase of precision -> measure is too restrictive
-    EXCLUDE_UNTYPED_RESOURCES = True  # False leads to a moderate loss of precision and a high loss of recall
-    ONTOLOGY_DEPTH_SMOOTHING = False
-    FREQUENCY_SMOOTHING = False
-    CHILDREN_TYPE_RATIO_THRESHOLD = .5
 
     def assign_dbp_types(self):
         self._assign_resource_type_counts()
@@ -165,7 +159,8 @@ class CategoryGraph:
                 category_types = resource_types.intersection(child_types)
             else:
                 child_type_distribution = {t: count / len(children_with_types) for t, count in child_type_counts.items()}
-                category_types = {t for t, probability in child_type_distribution.items() if probability > self.CHILDREN_TYPE_RATIO_THRESHOLD}
+                child_type_ratio = util.get_config('caligraph.category.dbp_types.child_type_ratio')
+                category_types = {t for t, probability in child_type_distribution.items() if probability > child_type_ratio}
 
         # remove any disjoint type assignments
         category_types = category_types.difference({dt for t in category_types for dt in dbp_store.get_disjoint_types(t)})
@@ -178,15 +173,11 @@ class CategoryGraph:
 
     def _compute_resource_types_for_category(self, cat: str) -> set:
         resource_type_counts = self._get_attr(cat, self.PROPERTY_RESOURCE_TYPE_COUNTS)
-        # filter types due to absolute counts
-        resource_type_counts['types'] = {t: t_count for t, t_count in resource_type_counts['types'].items() if t_count >= self.RESOURCE_TYPE_COUNT_THRESHOLD}
-        # filter types due to counts relative to ontology depth
-        if self.ONTOLOGY_DEPTH_SMOOTHING:
+        # filter type counts relative to ontology depth
+        if util.get_config('caligraph.category.dbp_types.apply_type_depth_smoothing'):
             resource_type_counts['types'] = {t: t_count for t, t_count in resource_type_counts['types'].items() if t_count >= math.log2(dbp_store.get_type_depth(t))}
-        # filter types due to relative frequency
-        if self.FREQUENCY_SMOOTHING:
-            resource_type_counts['types'] = {t: t_count for t, t_count in resource_type_counts['types'].items() if t_count >= (-1 * math.log10(dbp_store.get_type_frequency(t)))}
 
-        resource_count = resource_type_counts['typed_count' if self.EXCLUDE_UNTYPED_RESOURCES else 'count']
+        resource_count = resource_type_counts['typed_count' if util.get_config('caligraph.category.dbp_types.exclude_untyped_resources') else 'count']
         resource_type_distribution = {t: t_count / resource_count for t, t_count in resource_type_counts['types'].items()}
-        return {t for t, probability in resource_type_distribution.items() if probability > self.RESOURCE_TYPE_RATIO_THRESHOLD}
+        resource_type_ratio = util.get_config('caligraph.category.dbp_types.resource_type_ratio')
+        return {t for t, probability in resource_type_distribution.items() if probability > resource_type_ratio}
