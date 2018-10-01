@@ -54,6 +54,8 @@ def _compute_property_frequency_distribution() -> dict:
     for properties in _get_resource_property_mapping().values():
         for property, value in properties:
             property_frequency_distribution[property][value] += 1
+    for prop, value_counts in property_frequency_distribution.items():
+        property_frequency_distribution[prop]['_sum'] = sum(value_counts.values())
     return property_frequency_distribution
 
 
