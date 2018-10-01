@@ -24,6 +24,8 @@ files:
     maintenance_categories: 'maintenance_categories.ttl.bz2'
     instance_types: 'instance_types_en.ttl.bz2'
     transitive_instance_types: 'instance_types_transitive_en.ttl.bz2'
+    mappingbased_literals: 'mappingbased_literals_en.ttl.bz2'
+    mappingbased_objects: 'mappingbased_objects_en.ttl.bz2'
 
 cache:
   catgraph_conceptual:
@@ -47,11 +49,14 @@ cache:
   dbpedia_resource_type_mapping:
     filename: 'dbpedia-resource-type-mapping'
     version: 1
-  dbpedia_categories:
-    filename: 'dbpedia-categories'
-    version: 1
   dbpedia_resource_categories:
     filename: 'dbpedia-resource-categories'
+    version: 1
+  dbpedia_resource_properties:
+    filename: 'dbpedia-resource-properties'
+    version: 1
+  dbpedia_categories:
+    filename: 'dbpedia-categories'
     version: 1
   dbpedia_category_resources:
     filename: 'dbpedia-category-resources'
@@ -61,4 +66,7 @@ cache:
     version: 1
   dbpedia_category_children:
     filename: 'dbpedia-category-children'
+    version: 1
+  dbpedia_property_frequency_distribution:
+    filename: 'dbpedia-property-frequency-distribution'
     version: 1

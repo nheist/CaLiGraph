@@ -14,6 +14,7 @@ PREDICATE_SUBJECT = 'http://purl.org/dc/terms/subject'
 PREDICATE_SUBCLASS_OF = 'http://www.w3.org/2000/01/rdf-schema#subClassOf'
 PREDICATE_DISJOINT_WITH = 'http://www.w3.org/2002/07/owl#disjointWith'
 PREDICATE_REDIRECTS = 'http://dbpedia.org/ontology/wikiPageRedirects'
+PREDICATE_DOMAIN = 'http://www.w3.org/2000/01/rdf-schema#domain'
 
 # classes
 CLASS_OWL_THING = 'http://www.w3.org/2002/07/owl#Thing'
@@ -87,4 +88,12 @@ def create_single_val_dict_from_rdf(filepaths: list, predicate: str, reverse_key
                     data_dict[triple.obj] = triple.sub
                 elif reflexive or not reverse_key:
                     data_dict[triple.sub] = triple.obj
+    return data_dict
+
+
+def create_tuple_dict_from_rdf(filepaths: list) -> dict:
+    data_dict = defaultdict(set)
+    for fp in filepaths:
+        for triple in parse_triples_from_file(fp):
+            data_dict[triple.sub].add((triple.pred, triple.obj))
     return data_dict
