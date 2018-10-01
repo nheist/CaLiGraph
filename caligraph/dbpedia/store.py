@@ -4,6 +4,7 @@ from . import util as dbp_util
 from collections import defaultdict, Counter
 import networkx as nx
 from typing import Optional
+import functools
 
 
 # DBpedia resources
@@ -49,7 +50,7 @@ def get_property_frequency_distribution(dbp_property: str) -> dict:
 
 
 def _compute_property_frequency_distribution() -> dict:
-    property_frequency_distribution = defaultdict(lambda: defaultdict(lambda: 0))
+    property_frequency_distribution = defaultdict(functools.partial(defaultdict, int))
     for properties in _get_resource_property_mapping().values():
         for property, value in properties:
             property_frequency_distribution[property][value] += 1
