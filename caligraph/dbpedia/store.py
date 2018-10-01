@@ -18,6 +18,16 @@ def get_types(dbp_resource: str) -> set:
     return {t for t in _get_resource_type_mapping()[dbp_resource] if dbp_util.is_dbp_type(t)}
 
 
+def _get_resource_type_mapping() -> dict:
+    global __RESOURCE_TYPE_MAPPING__
+    if '__RESOURCE_TYPE_MAPPING__' not in globals():
+        type_files = [util.get_data_file('files.dbpedia.instance_types'), util.get_data_file('files.dbpedia.transitive_instance_types')]
+        initializer = lambda: rdf_util.create_multi_val_dict_from_rdf(type_files, rdf_util.PREDICATE_TYPE)
+        __RESOURCE_TYPE_MAPPING__ = util.load_or_create_cache('dbpedia_resource_type_mapping', initializer)
+
+    return __RESOURCE_TYPE_MAPPING__
+
+
 def get_transitive_types(dbp_resource: str) -> set:
     types = get_types(dbp_resource)
     transitive_types = types | {st for t in types for st in get_transitive_supertypes(t)}
@@ -28,14 +38,13 @@ def get_properties(dbp_resource: str) -> set:
     return _get_resource_property_mapping()[dbp_resource]
 
 
-def _get_resource_type_mapping() -> dict:
-    global __RESOURCE_TYPE_MAPPING__
-    if '__RESOURCE_TYPE_MAPPING__' not in globals():
-        type_files = [util.get_data_file('files.dbpedia.instance_types'), util.get_data_file('files.dbpedia.transitive_instance_types')]
-        initializer = lambda: rdf_util.create_multi_val_dict_from_rdf(type_files, rdf_util.PREDICATE_TYPE)
-        __RESOURCE_TYPE_MAPPING__ = util.load_or_create_cache('dbpedia_resource_type_mapping', initializer)
+def get_interlanguage_links(dbp_resource: str) -> set:
+    global __RESOURCE_INTERLANGUAGE_LINKS__
+    if '__RESOURCE_INTERLANGUAGE_LINKS__' not in globals():
+        initializer = lambda: rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.interlanguage_links')], rdf_util.PREDICATE_SAME_AS)
+        __RESOURCE_INTERLANGUAGE_LINKS__ = util.load_or_create_cache('dbpedia_resource_interlanguage_links', initializer)
 
-    return __RESOURCE_TYPE_MAPPING__
+    return __RESOURCE_INTERLANGUAGE_LINKS__[dbp_resource]
 
 
 # DBpedia property
@@ -69,12 +78,20 @@ def _get_resource_property_mapping() -> dict:
     return __RESOURCE_PROPERTY_MAPPING__
 
 
-def _get_domain(dbp_property: str) -> Optional[str]:
+def get_domain(dbp_property: str) -> Optional[str]:
     global __PROPERTY_DOMAIN__
     if '__PROPERTY_DOMAIN__' not in globals():
         __PROPERTY_DOMAIN__ = rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_DOMAIN)
 
     return __PROPERTY_DOMAIN__[dbp_property] if dbp_property in __PROPERTY_DOMAIN__ else None
+
+
+def get_equivalent_properties(dbp_property: str) -> set:
+    global __EQUIVALENT_PROPERTY__
+    if '__EQUIVALENT_PROPERTY__' not in globals():
+        __EQUIVALENT_PROPERTY__ = rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_EQUIVALENT_PROPERTY)
+
+    return __EQUIVALENT_PROPERTY__[dbp_property]
 
 
 # DBpedia types

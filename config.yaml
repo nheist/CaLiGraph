@@ -26,6 +26,9 @@ files:
     transitive_instance_types: 'instance_types_transitive_en.ttl.bz2'
     mappingbased_literals: 'mappingbased_literals_en.ttl.bz2'
     mappingbased_objects: 'mappingbased_objects_en.ttl.bz2'
+    interlanguage_links: 'interlanguage_links_en.ttl.bz2'
+  wikidata:
+    resource_properties: 'wikidata_resource_properties.nt.bz2'
 
 cache:
   catgraph_conceptual:
@@ -55,6 +58,9 @@ cache:
   dbpedia_resource_properties:
     filename: 'dbpedia-resource-properties'
     version: 1
+  dbpedia_resource_interlanguage_links:
+    filename: 'dbpedia-resource-interlanguage-links'
+    version: 1
   dbpedia_categories:
     filename: 'dbpedia-categories'
     version: 1
@@ -69,4 +75,7 @@ cache:
     version: 1
   dbpedia_property_frequency_distribution:
     filename: 'dbpedia-property-frequency-distribution'
+    version: 1
+  wikidata_dbpedia_resource_mapping:
+    filename: 'wikidata-dbpedia-resource-mapping'
     version: 1
