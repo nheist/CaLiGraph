@@ -1,6 +1,7 @@
 from collections import Counter, defaultdict
 import datetime
 import caligraph.category.store as cat_store
+from caligraph.category.graph import CategoryGraph
 import caligraph.dbpedia.store as dbp_store
 import util
 
@@ -24,7 +25,7 @@ def evaluate_category_relations():
     property_counter = 0
     instance_counter = 0
 
-    categories = cat_store.get_all_cats()
+    categories = CategoryGraph.create_from_dbpedia().remove_unconnected().nodes
     for idx, cat in enumerate(categories):
         util.get_logger().debug(f'Checking category {cat}..')
         resources = cat_store.get_resources(cat)
