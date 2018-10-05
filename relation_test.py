@@ -26,6 +26,7 @@ def evaluate_category_relations():
 
     categories = cat_store.get_all_cats()
     for idx, cat in enumerate(categories):
+        util.get_logger().debug(f'Checking category {cat}..')
         resources = cat_store.get_resources(cat)
         cat_property_count = sum([Counter(dbp_store.get_properties(res)) for res in resources], Counter())
         cat_property_value_count = _get_property_value_count(cat_property_count.keys())
