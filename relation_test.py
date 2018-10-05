@@ -25,7 +25,7 @@ def evaluate_category_relations():
     property_counter = 0
     instance_counter = 0
 
-    categories = CategoryGraph.create_from_dbpedia().remove_unconnected().nodes
+    categories = CategoryGraph.create_from_dbpedia().remove_unconnected().categories
     for idx, cat in enumerate(categories):
         util.get_logger().debug(f'Checking category {cat}..')
         resources = cat_store.get_resources(cat)
