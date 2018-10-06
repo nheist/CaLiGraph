@@ -72,4 +72,4 @@ class CaLiGraph(BaseGraph):
 
 def _category_to_clg_type(category: str) -> str:
     singularized_category_identifier = cat_util.remove_category_prefix(cat_nlp.singularize(category))
-    return util.get_config('caligraph.namspace') + singularized_category_identifier
+    return util.get_config('caligraph.namespace') + singularized_category_identifier

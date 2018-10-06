@@ -12,7 +12,7 @@ def get_config(path: str):
     try:
         value = __CONFIG__
         for part in path.split('.'):
-            value = value.get(part)
+            value = value[part]
     except KeyError:
         raise KeyError('Could not find configuration value for path "{}"!'.format(path))
 
@@ -24,7 +24,7 @@ def set_config(path: str, val):
         current = __CONFIG__
         path_segments = path.split('.')
         for s in path_segments[:-1]:
-            current = current.get(s)
+            current = current[s]
         current[path_segments[-1]] = val
     except KeyError:
         raise KeyError('Could not find configuration value for path "{}"!'.format(path))
