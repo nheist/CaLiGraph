@@ -7,7 +7,7 @@ import util
 
 
 MIN_CAT_PROPERTY_COUNT = 3  # OK
-MIN_CAT_PROPERTY_FREQ = .8  # OK
+MIN_CAT_PROPERTY_FREQ = .6  # OK
 # MIN_CAT_PROPERTY_DIFF = .8 # -> exclude for now; if we have other property values, we dismiss.
 MAX_OVERALL_PROPERTY_FREQ = 1  # might not even need that
 
@@ -35,7 +35,6 @@ def evaluate_category_relations():
 
     categories = CategoryGraph.create_from_dbpedia().remove_unconnected().categories
     for idx, cat in enumerate(categories):
-        util.get_logger().debug(f'Checking category {cat}..')
         resources = cat_store.get_resources(cat)
         cat_property_count = _get_property_count(resources)
         cat_property_value_count = _get_property_value_count(cat_property_count.keys())
