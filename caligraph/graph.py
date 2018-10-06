@@ -19,7 +19,7 @@ class CaLiGraph(BaseGraph):
         super().__init__(graph, rdf_util.CLASS_OWL_THING)
 
     def dbp_types(self, clg_type: str) -> set:
-        return self._get_attr(clg_type, self.PROPERTY_DBP_TYPES)
+        return self._get_attr(clg_type, self.PROPERTY_DBP_TYPES) or set()
 
     @property
     def statistics(self) -> str:
