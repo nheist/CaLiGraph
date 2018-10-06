@@ -1,4 +1,4 @@
-from collections import Counter, defaultdict
+from collections import defaultdict
 import datetime
 import caligraph.category.store as cat_store
 from caligraph.category.graph import CategoryGraph
@@ -10,6 +10,14 @@ MIN_CAT_PROPERTY_COUNT = 3  # OK
 MIN_CAT_PROPERTY_FREQ = .8  # OK
 # MIN_CAT_PROPERTY_DIFF = .8 # -> exclude for now; if we have other property values, we dismiss.
 MAX_OVERALL_PROPERTY_FREQ = 1  # might not even need that
+
+
+def _get_property_count(resources: set) -> dict:
+    cat_property_count = defaultdict(int)
+    for res in resources:
+        for prop in dbp_store.get_properties(res):
+            cat_property_count[prop] += 1
+    return cat_property_count
 
 
 def _get_property_value_count(property_tuples) -> dict:
@@ -29,17 +37,12 @@ def evaluate_category_relations():
     for idx, cat in enumerate(categories):
         util.get_logger().debug(f'Checking category {cat}..')
         resources = cat_store.get_resources(cat)
-        cat_property_count = sum([Counter(dbp_store.get_properties(res)) for res in resources], Counter())
+        cat_property_count = _get_property_count(resources)
         cat_property_value_count = _get_property_value_count(cat_property_count.keys())
         cat_property_freq = {p: p_count / len(resources) for p, p_count in cat_property_count.items()}
-        overall_property_freq = {p: (dbp_store.get_property_frequency_distribution(p[0])[p[1]] - p_count + 1) / (
-                    dbp_store.get_property_frequency_distribution(p[0])['_sum'] - p_count + 1) for p, p_count in
-                                 cat_property_count.items()}
+        overall_property_freq = {p: (dbp_store.get_property_frequency_distribution(p[0])[p[1]] - p_count + 1) / (dbp_store.get_property_frequency_distribution(p[0])['_sum'] - p_count + 1) for p, p_count in cat_property_count.items()}
 
-        valid_properties = {p for p in cat_property_count if
-                            cat_property_value_count[p[0]] > 1 and cat_property_count[p] >= MIN_CAT_PROPERTY_COUNT and
-                            cat_property_freq[p] >= MIN_CAT_PROPERTY_FREQ and overall_property_freq[
-                                p] <= MAX_OVERALL_PROPERTY_FREQ}
+        valid_properties = {p for p in cat_property_count if cat_property_value_count[p[0]] > 1 and cat_property_count[p] >= MIN_CAT_PROPERTY_COUNT and cat_property_freq[p] >= MIN_CAT_PROPERTY_FREQ and overall_property_freq[p] <= MAX_OVERALL_PROPERTY_FREQ}
 
         if valid_properties:
             cat_counter += 1
