@@ -29,13 +29,17 @@ def singularize(category: str) -> str:
         label = cat_store.get_label(category)
         label_chunks = list(nlp_util.parse(label).noun_chunks)
         chunk_to_singularize = label_chunks[0]
-        if len(chunk_to_singularize) > 1 and chunk_to_singularize[-2] == 'and':
-            chunk_part = '_'.join(chunk_to_singularize[-3:])
-            singularized_chunk_part = '_'.join([inflection.singularize(chunk_to_singularize[-3]), 'or', inflection.singularize(chunk_to_singularize[-1])])
-        else:
-            chunk_part = chunk_to_singularize[-1]
-            singularized_chunk_part = inflection.singularize(chunk_to_singularize[-1])
-        __SINGULARIZED_CATEGORIES__[category] = category.replace(chunk_part, singularized_chunk_part)
+        try:
+            if len(chunk_to_singularize) > 1 and chunk_to_singularize[-2] == 'and':
+                chunk_part = '_'.join(chunk_to_singularize[-3:])
+                singularized_chunk_part = '_'.join([inflection.singularize(chunk_to_singularize[-3]), 'or', inflection.singularize(chunk_to_singularize[-1])])
+            else:
+                chunk_part = chunk_to_singularize[-1]
+                singularized_chunk_part = inflection.singularize(chunk_part)
+            __SINGULARIZED_CATEGORIES__[category] = category.replace(chunk_part, singularized_chunk_part)
+        except TypeError:
+            util.get_logger().debug('Could not find singularized label for "{}"'.format(label))
+            __SINGULARIZED_CATEGORIES__[category] = category
 
     return __SINGULARIZED_CATEGORIES__[category]
 

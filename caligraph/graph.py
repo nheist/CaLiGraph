@@ -60,6 +60,7 @@ class CaLiGraph(BaseGraph):
         # create basic graph
         caligraph_types = [(_category_to_clg_type(cat), {CaLiGraph.PROPERTY_CATEGORY: cat, CaLiGraph.PROPERTY_DBP_TYPES: catgraph.dbp_types(cat)}) for cat in typed_cats]
         caligraph_edges = [(_category_to_clg_type(parent), _category_to_clg_type(child)) for parent, child in catgraph.graph.edges if catgraph.dbp_types(parent).intersection(catgraph.dbp_types(child))]
+        cat_nlp.persist_cache()  # persisting created singularization-cache
         graph = nx.DiGraph()
         graph.add_nodes_from(caligraph_types)
         graph.add_edges_from(caligraph_edges)
