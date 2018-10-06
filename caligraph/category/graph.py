@@ -2,28 +2,25 @@ import networkx as nx
 from . import store as cat_store
 from . import nlp as cat_nlp
 import caligraph.dbpedia.store as dbp_store
+from caligraph.util.base_graph import BaseGraph
+import caligraph.util.rdf as rdf_util
 import util
 import numpy as np
-from collections import Counter
 import math
 
 
-class CategoryGraph:
+class CategoryGraph(BaseGraph):
     PROPERTY_DBP_TYPES = 'dbp_types'
     PROPERTY_RESOURCE_TYPE_COUNTS = 'resource_type_counts'
 
-    def __init__(self, graph: nx.DiGraph, root_category: str):
-        self.graph = graph
-        self.root_category = root_category
-
     @property
     def statistics(self) -> str:
-        category_count = len(self.categories)
-        edge_count = self.graph.number_of_edges()
+        category_count = len(self.nodes)
+        edge_count = len(self.edges)
         avg_indegree = np.mean([d for _, d in self.graph.in_degree])
         avg_outdegree = np.mean([d for _, d in self.graph.out_degree])
 
-        dbp_typed_categories = {cat for cat in self.categories if self.dbp_types(cat)}
+        dbp_typed_categories = {cat for cat in self.nodes if self.dbp_types(cat)}
         dbp_typed_category_count = len(dbp_typed_categories)
         avg_dbp_types = np.mean([len(self.dbp_types(c)) for c in dbp_typed_categories]) if dbp_typed_categories else 0
 
@@ -37,54 +34,32 @@ class CategoryGraph:
             '{:<30} | {:>7}'.format('dbp-typed categories', dbp_typed_category_count),
             '{:<30} | {:>7.2f}'.format('dbp-types per category', avg_dbp_types)
         ])
-    
-    @property
-    def categories(self) -> set:
-        return set(self.graph.nodes)
 
     def dbp_types(self, category: str) -> set:
         return self._get_attr(category, self.PROPERTY_DBP_TYPES)
 
-    def copy(self):
-        return CategoryGraph(self.graph.copy(), self.root_category)
-
     @classmethod
-    def create_from_dbpedia(cls, root_category=None):
+    def create_from_dbpedia(cls, root_node=None):
         edges = [(cat, subcat) for cat in cat_store.get_all_cats() for subcat in cat_store.get_children(cat) if cat != subcat]
-        root_category = root_category or util.get_config('caligraph.category.root_category')
-        return CategoryGraph(nx.DiGraph(incoming_graph_data=edges), root_category)
-
-    def _predecessors(self, category: str) -> set:
-        return set(self.graph.predecessors(category))
-
-    def _successors(self, category: str) -> set:
-        return set(self.graph.successors(category))
-
-    def _depth(self, category: str) -> int:
-        return nx.shortest_path_length(self.graph, source=self.root_category, target=category)
-
-    def _get_attr(self, category, attr):
-        return self.graph.nodes(data=attr)[category]
-
-    def _set_attr(self, category, attr, val):
-        self.graph.nodes[category][attr] = val
+        root_node = root_node or util.get_config('caligraph.category.root_category')
+        return CategoryGraph(nx.DiGraph(incoming_graph_data=edges), root_node)
 
     # connectivity
 
     def remove_unconnected(self):
-        valid_categories = {self.root_category} | nx.descendants(self.graph, self.root_category)
+        valid_categories = {self.root_node} | nx.descendants(self.graph, self.root_node)
         self._remove_all_categories_except(valid_categories)
         return self
 
     def append_unconnected(self):
-        unconnected_root_categories = {cat for cat in self.categories if not self._predecessors(cat) and cat != self.root_category}
-        self.graph.add_edges_from([(self.root_category, cat) for cat in unconnected_root_categories])
+        unconnected_root_categories = {cat for cat in self.nodes if not self._predecessors(cat) and cat != self.root_node}
+        self.graph.add_edges_from([(self.root_node, cat) for cat in unconnected_root_categories])
         return self
 
     # conceptual categories
 
     def make_conceptual(self):
-        categories = self.categories
+        categories = self.nodes
         # filtering maintenance categories
         categories = categories.difference(cat_store.get_maintenance_cats())
         # filtering administrative categories
@@ -94,13 +69,13 @@ class CategoryGraph:
         # persisting spacy cache so that parsed categories are cached
         cat_nlp.persist_cache()
         # clearing the graph of any invalid nodes
-        self._remove_all_categories_except(categories | {self.root_category})
+        self._remove_all_categories_except(categories | {self.root_node})
         # appending all loose categories to the root node and removing the remaining self-referencing circular graphs
         self.append_unconnected().remove_unconnected()
         return self
 
     def _remove_all_categories_except(self, valid_categories: set):
-        invalid_categories = self.categories.difference(valid_categories)
+        invalid_categories = self.nodes.difference(valid_categories)
         self.graph.remove_nodes_from(invalid_categories)
 
     # cycles
@@ -126,7 +101,7 @@ class CategoryGraph:
 
     def assign_dbp_types(self):
         self._assign_resource_type_counts()
-        category_queue = [cat for cat in self.categories if not self._successors(cat)]
+        category_queue = [cat for cat in self.nodes if not self._successors(cat)]
         while category_queue:
             cat = category_queue.pop(0)
             self._compute_dbp_types_for_category(cat, category_queue)
@@ -134,12 +109,12 @@ class CategoryGraph:
         return self
 
     def _assign_resource_type_counts(self):
-        categories = {cat for cat in self.categories if not self._get_attr(cat, self.PROPERTY_RESOURCE_TYPE_COUNTS)}
+        categories = {cat for cat in self.nodes if not self._get_attr(cat, self.PROPERTY_RESOURCE_TYPE_COUNTS)}
         for cat in categories:
             resources_types = {r: dbp_store.get_transitive_types(r) for r in cat_store.get_resources(cat)}
             resource_count = len(resources_types)
             typed_resource_count = len({r for r, types in resources_types.items() if types})
-            types_count = sum([Counter(types) for _, types in resources_types.items()], Counter())
+            types_count = rdf_util.create_count_dict(resources_types.values())
             self._set_attr(cat, self.PROPERTY_RESOURCE_TYPE_COUNTS, {'count': resource_count, 'typed_count': typed_resource_count, 'types': types_count})
 
     def _compute_dbp_types_for_category(self, cat: str, category_queue: list) -> set:
@@ -153,7 +128,7 @@ class CategoryGraph:
         if len(children_with_types) == 0:
             category_types = resource_types
         else:
-            child_type_counts = sum([Counter(types) for types in children_with_types.values()], Counter())
+            child_type_counts = rdf_util.create_count_dict(children_with_types.values())
             if resource_types:
                 child_types = set(child_type_counts.keys())
                 category_types = resource_types.intersection(child_types)

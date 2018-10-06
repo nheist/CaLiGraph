@@ -1,7 +1,7 @@
 import util
 import caligraph.util.rdf as rdf_util
 from . import util as dbp_util
-from collections import defaultdict, Counter
+from collections import defaultdict
 import networkx as nx
 from typing import Optional
 import functools
@@ -170,7 +170,7 @@ def get_type_frequency(dbp_type: str) -> float:
 
 
 def _compute_type_frequency() -> dict:
-    type_counts = sum([Counter(types) for types in _get_resource_type_mapping().values()], Counter())
+    type_counts = rdf_util.create_count_dict(_get_resource_type_mapping().values())
     return {t: t_count / len(_get_resource_type_mapping()) for t, t_count in type_counts.items()}
 
 

@@ -23,7 +23,6 @@ CLASS_OWL_THING = 'http://www.w3.org/2002/07/owl#Thing'
 
 # auxiliary structures
 Triple = namedtuple('Triple', 'sub pred obj')
-DirectedEdge = namedtuple('DirectedEdge', 'parent child')
 
 
 def uri2name(uri: str, prefix: str) -> str:
@@ -99,3 +98,11 @@ def create_tuple_dict_from_rdf(filepaths: list) -> dict:
         for triple in parse_triples_from_file(fp):
             data_dict[triple.sub].add((triple.pred, triple.obj))
     return data_dict
+
+
+def create_count_dict(iterables) -> dict:
+    count_dict = defaultdict(int)
+    for i in iterables:
+        for entry in i:
+            count_dict[entry] += 1
+    return count_dict

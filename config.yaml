@@ -1,4 +1,5 @@
 caligraph:
+  namespace: 'http://data.informatik.uni-mannheim.de/caligraph#'
   category:
     root_category: 'http://dbpedia.org/resource/Category:Main_topic_classifications'
     dbp_types:
@@ -36,6 +37,9 @@ cache:
     version: 1
   catgraph_cyclefree:
     filename: 'catgraph-cyclefree'
+    version: 1
+  catgraph_dbp_typed:
+    filename: 'catgraph-dbp-typed'
     version: 1
   categories_conceptual:
     filename: 'categories-conceptual'
