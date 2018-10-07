@@ -41,7 +41,7 @@ def get_properties(dbp_resource: str) -> set:
 def get_interlanguage_links(dbp_resource: str) -> set:
     global __RESOURCE_INTERLANGUAGE_LINKS__
     if '__RESOURCE_INTERLANGUAGE_LINKS__' not in globals():
-        initializer = lambda: rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.interlanguage_links')], rdf_util.PREDICATE_SAME_AS)
+        initializer = lambda: rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.interlanguage_links')], rdf_util.PREDICATE_SAME_AS, reflexive=True)
         __RESOURCE_INTERLANGUAGE_LINKS__ = util.load_or_create_cache('dbpedia_resource_interlanguage_links', initializer)
 
     return __RESOURCE_INTERLANGUAGE_LINKS__[dbp_resource]

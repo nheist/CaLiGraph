@@ -16,24 +16,6 @@ def get_properties(wikidata_resource: str) -> set:
     return __WIKIDATA_RESOURCE_PROPERTIES__[wikidata_resource]
 
 
-def dbp_resource2wikidata(dbp_resource: str) -> Optional[str]:
-    global __DBP_WIKIDATA_RESOURCE_MAPPING__
-    if '__DBP_WIKIDATA_RESOURCE_MAPPING__' not in globals():
-        __DBP_WIKIDATA_RESOURCE_MAPPING__ = util.load_or_create_cache('wikidata_dbpedia_resource_mapping', _create_dbp_wikidata_resource_mapping)
-
-    return __DBP_WIKIDATA_RESOURCE_MAPPING__[dbp_resource] if dbp_resource in __DBP_WIKIDATA_RESOURCE_MAPPING__ else None
-
-
-def _create_dbp_wikidata_resource_mapping() -> dict:
-    dbp_wikidata_resource_mapping = {}
-    for dbp_res in dbp_store.get_resources():
-        for lang_link in dbp_store.get_interlanguage_links(dbp_res):
-            if lang_link.startswith(NAMESPACE_WIKIDATA):
-                dbp_wikidata_resource_mapping[dbp_res] = lang_link
-                break
-    return dbp_wikidata_resource_mapping
-
-
 def dbp_property2wikidata(dbp_property: str) -> Optional[str]:
     global __DBP_WIKIDATA_PROPERTY_MAPPING__
     if '__DBP_WIKIDATA_PROPERTY_MAPPING__' not in globals():
@@ -56,3 +38,21 @@ def dbp_type2wikidata(dbp_type: str) -> Optional[str]:
         __DBP_WIKIDATA_TYPE_MAPPING__[dbp_type] = wikidata_equivalents[0] if wikidata_equivalents else None
 
     return __DBP_WIKIDATA_TYPE_MAPPING__[dbp_type]
+
+
+def dbp_resource2wikidata(dbp_resource: str) -> Optional[str]:
+    global __DBP_WIKIDATA_RESOURCE_MAPPING__
+    if '__DBP_WIKIDATA_RESOURCE_MAPPING__' not in globals():
+        __DBP_WIKIDATA_RESOURCE_MAPPING__ = util.load_or_create_cache('wikidata_dbpedia_resource_mapping', _create_dbp_wikidata_resource_mapping)
+
+    return __DBP_WIKIDATA_RESOURCE_MAPPING__[dbp_resource] if dbp_resource in __DBP_WIKIDATA_RESOURCE_MAPPING__ else None
+
+
+def _create_dbp_wikidata_resource_mapping() -> dict:
+    dbp_wikidata_resource_mapping = {}
+    for dbp_res in dbp_store.get_resources():
+        for lang_link in dbp_store.get_interlanguage_links(dbp_res):
+            if lang_link.startswith(NAMESPACE_WIKIDATA):
+                dbp_wikidata_resource_mapping[dbp_res] = lang_link
+                break
+    return dbp_wikidata_resource_mapping
