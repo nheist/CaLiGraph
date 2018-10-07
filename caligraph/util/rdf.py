@@ -3,6 +3,7 @@ import bz2
 import re
 import util
 from collections import defaultdict
+import functools
 
 # predicates
 PREDICATE_EQUIVALENT_CLASS = 'http://www.w3.org/2002/07/owl#equivalentClass'
@@ -92,11 +93,12 @@ def create_single_val_dict_from_rdf(filepaths: list, predicate: str, reverse_key
     return data_dict
 
 
-def create_tuple_dict_from_rdf(filepaths: list) -> dict:
-    data_dict = defaultdict(set)
+def create_dict_from_rdf(filepaths: list, valid_predicates: set = None) -> dict:
+    data_dict = defaultdict(functools.partial(defaultdict, set))
     for fp in filepaths:
         for triple in parse_triples_from_file(fp):
-            data_dict[triple.sub].add((triple.pred, triple.obj))
+            if not valid_predicates or triple.pred in valid_predicates:
+                data_dict[triple.sub][triple.pred].add(triple.obj)
     return data_dict
 
 

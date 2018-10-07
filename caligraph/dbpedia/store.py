@@ -29,12 +29,11 @@ def _get_resource_type_mapping() -> dict:
 
 
 def get_transitive_types(dbp_resource: str) -> set:
-    types = get_types(dbp_resource)
-    transitive_types = types | {st for t in types for st in get_transitive_supertypes(t)}
+    transitive_types = {tt for t in get_types(dbp_resource) for tt in get_transitive_supertype_closure(t)}
     return {t for t in transitive_types if dbp_util.is_dbp_type(t)}
 
 
-def get_properties(dbp_resource: str) -> set:
+def get_properties(dbp_resource: str) -> dict:
     return _get_resource_property_mapping()[dbp_resource]
 
 
@@ -50,19 +49,20 @@ def get_interlanguage_links(dbp_resource: str) -> set:
 # DBpedia property
 
 
-def get_property_frequency_distribution(dbp_property: str) -> dict:
+def get_property_frequency_distribution(dbp_predicate: str) -> dict:
     global __PROPERTY_FREQUENCY_DISTRIBUTION__
     if '__PROPERTY_FREQUENCY_DISTRIBUTION__' not in globals():
         __PROPERTY_FREQUENCY_DISTRIBUTION__ = util.load_or_create_cache('dbpedia_property_frequency_distribution', _compute_property_frequency_distribution)
 
-    return __PROPERTY_FREQUENCY_DISTRIBUTION__[dbp_property]
+    return __PROPERTY_FREQUENCY_DISTRIBUTION__[dbp_predicate]
 
 
 def _compute_property_frequency_distribution() -> dict:
     property_frequency_distribution = defaultdict(functools.partial(defaultdict, int))
     for properties in _get_resource_property_mapping().values():
-        for property, value in properties:
-            property_frequency_distribution[property][value] += 1
+        for prop, values in properties.items():
+            for val in values:
+                property_frequency_distribution[prop][val] += 1
     for prop, value_counts in property_frequency_distribution.items():
         property_frequency_distribution[prop]['_sum'] = sum(value_counts.values())
     return property_frequency_distribution
@@ -72,26 +72,26 @@ def _get_resource_property_mapping() -> dict:
     global __RESOURCE_PROPERTY_MAPPING__
     if '__RESOURCE_PROPERTY_MAPPING__' not in globals():
         property_files = [util.get_data_file('files.dbpedia.mappingbased_literals'), util.get_data_file('files.dbpedia.mappingbased_objects')]
-        initializer = lambda: rdf_util.create_tuple_dict_from_rdf(property_files)
+        initializer = lambda: rdf_util.create_dict_from_rdf(property_files)
         __RESOURCE_PROPERTY_MAPPING__ = util.load_or_create_cache('dbpedia_resource_properties', initializer)
 
     return __RESOURCE_PROPERTY_MAPPING__
 
 
-def get_domain(dbp_property: str) -> Optional[str]:
-    global __PROPERTY_DOMAIN__
-    if '__PROPERTY_DOMAIN__' not in globals():
-        __PROPERTY_DOMAIN__ = rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_DOMAIN)
+def get_domain(dbp_predicate: str) -> Optional[str]:
+    global __PREDICATE_DOMAIN__
+    if '__PREDICATE_DOMAIN__' not in globals():
+        __PREDICATE_DOMAIN__ = rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_DOMAIN)
 
-    return __PROPERTY_DOMAIN__[dbp_property] if dbp_property in __PROPERTY_DOMAIN__ else None
+    return __PREDICATE_DOMAIN__[dbp_predicate] if dbp_predicate in __PREDICATE_DOMAIN__ else None
 
 
-def get_equivalent_properties(dbp_property: str) -> set:
-    global __EQUIVALENT_PROPERTY__
-    if '__EQUIVALENT_PROPERTY__' not in globals():
-        __EQUIVALENT_PROPERTY__ = rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_EQUIVALENT_PROPERTY)
+def get_equivalent_predicates(dbp_predicate: str) -> set:
+    global __EQUIVALENT_PREDICATE__
+    if '__EQUIVALENT_PREDICATE__' not in globals():
+        __EQUIVALENT_PREDICATE__ = rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_EQUIVALENT_PROPERTY)
 
-    return __EQUIVALENT_PROPERTY__[dbp_property]
+    return __EQUIVALENT_PREDICATE__[dbp_predicate]
 
 
 # DBpedia types
@@ -118,6 +118,10 @@ def get_transitive_supertypes(dbp_type: str) -> set:
     return __TRANSITIVE_SUPERTYPE_MAPPING__[dbp_type]
 
 
+def get_transitive_supertype_closure(dbp_type: str) -> set:
+    return {dbp_type} | get_transitive_supertypes(dbp_type)
+
+
 def get_subtypes(dbp_type: str) -> set:
     type_graph = _get_type_graph()
     return set(type_graph.successors(dbp_type)) if dbp_type in type_graph else set()
@@ -132,6 +136,10 @@ def get_transitive_subtypes(dbp_type: str) -> set:
         __TRANSITIVE_SUBTYPE_MAPPING__[dbp_type] = nx.descendants(type_graph, dbp_type) if dbp_type in type_graph else set()
 
     return __TRANSITIVE_SUBTYPE_MAPPING__[dbp_type]
+
+
+def get_transitive_subtype_closure(dbp_type: str) -> set:
+    return {dbp_type} | get_transitive_subtypes(dbp_type)
 
 
 def get_equivalent_types(dbp_type: str) -> set:

@@ -15,8 +15,9 @@ MAX_OVERALL_PROPERTY_FREQ = 1  # might not even need that
 def _get_property_count(resources: set) -> dict:
     cat_property_count = defaultdict(int)
     for res in resources:
-        for prop in dbp_store.get_properties(res):
-            cat_property_count[prop] += 1
+        for prop, values in dbp_store.get_properties(res).items():
+            for val in values:
+                cat_property_count[(prop, val)] += 1
     return cat_property_count
 
 
