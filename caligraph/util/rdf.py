@@ -45,21 +45,21 @@ def format_object_triple(sub, pred, obj):
 
 
 def parse_triples_from_file(filepath: str) -> Iterator[Triple]:
-    object_pattern = re.compile('\<(.*)\> \<(.*)\> \<(.*)\> \.\\n')
-    literal_pattern = re.compile('\<(.*)\> \<(.*)\> "(.*)"(?:\^\^.*|@en.*)? \.\\n')
+    object_pattern = re.compile(b'\<(.*)\> \<(.*)\> \<(.*)\> \.\\n')
+    literal_pattern = re.compile(b'\<(.*)\> \<(.*)\> "(.*)"(?:\^\^.*|@en.*)? \.\\n')
 
     open_file = bz2.open if filepath.endswith('bz2') else open
-    with open_file(filepath, mode="rt", encoding="utf-8") as file_reader:
+    with open_file(filepath, mode="rb") as file_reader:
         for line in file_reader:
             object_triple = object_pattern.match(line)
             if object_triple:
                 [sub, pred, obj] = object_triple.groups()
-                yield Triple(sub=sub, pred=pred, obj=obj)
+                yield Triple(sub=sub.decode('utf-8'), pred=pred.decode('utf-8'), obj=obj.decode('utf-8'))
             else:
                 literal_triple = literal_pattern.match(line)
                 if literal_triple:
                     [sub, pred, obj] = literal_triple.groups()
-                    yield Triple(sub=sub, pred=pred, obj=obj)
+                    yield Triple(sub=sub.decode('utf-8'), pred=pred.decode('utf-8'), obj=obj.decode('utf-8'))
 
 
 def create_multi_val_dict_from_rdf(filepaths: list, predicate: str, reverse_key=False, reflexive=False) -> dict:
