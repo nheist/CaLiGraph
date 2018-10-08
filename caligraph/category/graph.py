@@ -13,8 +13,8 @@ class CategoryGraph(BaseGraph):
     PROPERTY_DBP_TYPES = 'dbp_types'
     PROPERTY_RESOURCE_TYPE_COUNTS = 'resource_type_counts'
 
-    def __init__(self, graph: nx.DiGraph):
-        super().__init__(graph, util.get_config('caligraph.category.root_category'))
+    def __init__(self, graph: nx.DiGraph, root_node: str = None):
+        super().__init__(graph, root_node or util.get_config('caligraph.category.root_category'))
 
     @property
     def statistics(self) -> str:

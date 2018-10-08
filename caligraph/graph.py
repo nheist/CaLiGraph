@@ -15,8 +15,8 @@ class CaLiGraph(BaseGraph):
     PROPERTY_DBP_TYPES = 'dbp_types'
     PROPERTY_CATEGORY = 'category'
 
-    def __init__(self, graph: nx.DiGraph):
-        super().__init__(graph, rdf_util.CLASS_OWL_THING)
+    def __init__(self, graph: nx.DiGraph, root_node: str = None):
+        super().__init__(graph, root_node or rdf_util.CLASS_OWL_THING)
 
     def dbp_types(self, clg_type: str) -> set:
         return self._get_attr(clg_type, self.PROPERTY_DBP_TYPES) or set()
