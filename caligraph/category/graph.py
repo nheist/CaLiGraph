@@ -140,6 +140,9 @@ class CategoryGraph(BaseGraph):
         # remove any disjoint type assignments
         category_types = category_types.difference({dt for t in category_types for dt in dbp_store.get_disjoint_types(t)})
 
+        if util.get_config('caligraph.category.dbp_types.apply_impure_type_filtering'):
+            category_types = self._filter_impure_types(cat, category_types)
+
         if category_types:
             category_queue.extend(self._predecessors(cat))
 
@@ -156,3 +159,18 @@ class CategoryGraph(BaseGraph):
         resource_type_distribution = {t: t_count / resource_count for t, t_count in resource_type_counts['types'].items()}
         resource_type_ratio = util.get_config('caligraph.category.dbp_types.resource_type_ratio')
         return {t for t, probability in resource_type_distribution.items() if probability > resource_type_ratio}
+
+    def _filter_impure_types(self, category: str, category_types: set) -> set:
+        resources_with_types = {r: dbp_store.get_transitive_types(r) for r in cat_store.get_resources(category)}
+        for t in category_types:
+            valid_types = {t} | dbp_store.get_transitive_supertypes(t) | dbp_store.get_transitive_subtypes(t)
+            impure_resource_candidates = {r: types for r, types in resources_with_types.items() if t not in types}
+            impure_resources_with_types = {r: types.difference(valid_types) for r, types in impure_resource_candidates.items()}
+            impure_resources_with_types = {r: types for r, types in impure_resources_with_types.items() if types}
+            if impure_resources_with_types:
+                print('=' * 30)
+                print(f'Category: {category} -- Type: {t} -- Purity: {1 - (len(impure_resources_with_types) / len(resources_with_types))}')
+                for r, types in impure_resources_with_types.items():
+                    print(f'  Resource: {r} -- Impure types: {types}')
+
+        return category_types
