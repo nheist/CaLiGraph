@@ -1,7 +1,7 @@
 from collections import namedtuple
 import bz2
 import re
-import util
+from typing import Iterator
 from collections import defaultdict
 import functools
 
@@ -44,8 +44,7 @@ def format_object_triple(sub, pred, obj):
     return '<{}> <{}> <{}> .\n'.format(sub, pred, obj)
 
 
-def parse_triples_from_file(filepath: str) -> list:
-    triples = []
+def parse_triples_from_file(filepath: str) -> Iterator[Triple]:
     object_pattern = re.compile('\<(.*)\> \<(.*)\> \<(.*)\> \.\\n')
     literal_pattern = re.compile('\<(.*)\> \<(.*)\> "(.*)"(?:\^\^.*|@en.*)? \.\\n')
 
@@ -53,16 +52,14 @@ def parse_triples_from_file(filepath: str) -> list:
     with open_file(filepath, mode="rt", encoding="utf-8") as file_reader:
         for line in file_reader:
             object_triple = object_pattern.match(line)
-            if object_triple is not None:
+            if object_triple:
                 [sub, pred, obj] = object_triple.groups()
-                triples.append(Triple(sub=sub, pred=pred, obj=obj))
+                yield Triple(sub=sub, pred=pred, obj=obj)
             else:
                 literal_triple = literal_pattern.match(line)
-                if literal_triple is not None:
+                if literal_triple:
                     [sub, pred, obj] = literal_triple.groups()
-                    triples.append(Triple(sub=sub, pred=pred, obj=obj))
-
-    return triples
+                    yield Triple(sub=sub, pred=pred, obj=obj)
 
 
 def create_multi_val_dict_from_rdf(filepaths: list, predicate: str, reverse_key=False, reflexive=False) -> dict:
