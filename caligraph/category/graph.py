@@ -165,9 +165,7 @@ class CategoryGraph(BaseGraph):
     def _filter_impure_types(self, category: str, category_types: set) -> set:
         resources_with_types = {r: dbp_store.get_transitive_types(r) for r in cat_store.get_resources(category)}
         for t in category_types:
-            valid_types = {t} | dbp_store.get_transitive_supertypes(t) | dbp_store.get_transitive_subtypes(t)
-            impure_resource_candidates = {r: types for r, types in resources_with_types.items() if t not in types}
-            impure_resources_with_types = {r: types.difference(valid_types) for r, types in impure_resource_candidates.items()}
+            impure_resources_with_types = {r: {rt for rt in types if dbp_store.get_cooccurrence_frequency(t, rt) == 0} for r, types in resources_with_types.items()}
             impure_resources_with_types = {r: types for r, types in impure_resources_with_types.items() if types}
             if impure_resources_with_types:
                 print('=' * 30)
