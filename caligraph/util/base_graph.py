@@ -2,12 +2,12 @@ import networkx as nx
 
 
 class BaseGraph:
-    def __init__(self, graph: nx.DiGraph, root_node: str):
+    def __init__(self, graph: nx.DiGraph, root_node: str = None):
         self.graph = graph
         self.root_node = root_node
 
     def copy(self):
-        return self.__class__(self.graph.copy(), self.root_node)
+        return self.__class__(self.graph.copy(), root_node=self.root_node)
 
     @property
     def nodes(self) -> set:
