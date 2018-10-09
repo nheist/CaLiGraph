@@ -168,9 +168,9 @@ class CategoryGraph(BaseGraph):
             impure_resources_with_types = {r: {rt for rt in types if dbp_store.get_cooccurrence_frequency(t, rt) == 0} for r, types in resources_with_types.items()}
             impure_resources_with_types = {r: types for r, types in impure_resources_with_types.items() if types}
             if impure_resources_with_types:
-                print('=' * 30)
-                print(f'Category: {category} -- Type: {t} -- Purity: {1 - (len(impure_resources_with_types) / len(resources_with_types))}')
+                util.get_logger().debug('=' * 30)
+                util.get_logger().debug(f'Category: {category} -- Type: {t} -- Purity: {1 - (len(impure_resources_with_types) / len(resources_with_types))}')
                 for r, types in impure_resources_with_types.items():
-                    print(f'  Resource: {r} -- Impure types: {types}')
+                    util.get_logger().debug(f'  Resource: {r} -- Impure types: {types}')
 
         return category_types

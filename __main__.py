@@ -1,13 +1,12 @@
 import relation_test
-from caligraph.category.base import get_cycle_free_category_graph
+import caligraph.category.base as cat_base
 import caligraph.wikidata.store as wikidata_store
-
+import util
 
 if __name__ == '__main__':
     # relation_test.evaluate_category_relations()
 
-    # G = get_cycle_free_category_graph()
-    # G.assign_dbp_types()
-    # print(G.statistics)
+    G = cat_base.get_dbp_typed_category_graph()
+    util.get_logger().info(G.statistics)
 
-    print('RESULT: {}'.format(wikidata_store.resource_has_type('http://dbpedia.org/resource/Cristiano_Ronaldo', 'http://dbpedia.org/ontology/Person')))
+    # print('RESULT: {}'.format(wikidata_store.resource_has_type('http://dbpedia.org/resource/Cristiano_Ronaldo', 'http://dbpedia.org/ontology/Person')))

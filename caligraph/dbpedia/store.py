@@ -22,7 +22,12 @@ def get_types(dbp_resource: str) -> set:
 def _get_resource_type_mapping() -> dict:
     global __RESOURCE_TYPE_MAPPING__
     if '__RESOURCE_TYPE_MAPPING__' not in globals():
-        type_files = [util.get_data_file('files.dbpedia.instance_types'), util.get_data_file('files.dbpedia.transitive_instance_types')]
+        type_files = [
+            util.get_data_file('files.dbpedia.instance_types'),
+            util.get_data_file('files.dbpedia.transitive_instance_types'),
+            util.get_data_file('files.dbpedia.instance_types_sdtyped'),
+            util.get_data_file('files.dbpedia.instance_types_lhd'),
+        ]
         initializer = lambda: rdf_util.create_multi_val_dict_from_rdf(type_files, rdf_util.PREDICATE_TYPE)
         __RESOURCE_TYPE_MAPPING__ = util.load_or_create_cache('dbpedia_resource_type_mapping', initializer)
 

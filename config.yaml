@@ -3,7 +3,7 @@ caligraph:
   category:
     root_category: 'http://dbpedia.org/resource/Category:Main_topic_classifications'
     dbp_types:
-      exclude_untyped_resources: False
+      exclude_untyped_resources: True
       apply_type_depth_smoothing: True
       apply_impure_type_filtering: True
       resource_type_ratio: 0.5
@@ -12,8 +12,8 @@ caligraph:
 
 logging:
   level: 'DEBUG'
-  to_file: False
-  filename: 'log_test'
+  to_file: True
+  filename: 'category_graph_impurity'
 
 files:
   dbpedia:
@@ -26,6 +26,8 @@ files:
     maintenance_categories: 'maintenance_categories.ttl.bz2'
     instance_types: 'instance_types_en.ttl.bz2'
     transitive_instance_types: 'instance_types_transitive_en.ttl.bz2'
+    instance_types_sdtyped: 'instance_types_sdtyped_en.ttl.bz2'
+    instance_types_lhd: 'instance_types_lhd_en.ttl.bz2'
     mappingbased_literals: 'mappingbased_literals_en.ttl.bz2'
     mappingbased_objects: 'mappingbased_objects_en.ttl.bz2'
     interlanguage_links: 'interlanguage_links_en.ttl.bz2'
@@ -33,15 +35,16 @@ files:
     resource_properties: 'wikidata_resource_properties.nt.bz2'
 
 cache:
+  # version 2: added resource types from sdtyped + lhd
   catgraph_conceptual:
     filename: 'catgraph-conceptual'
-    version: 1
+    version: 2
   catgraph_cyclefree:
     filename: 'catgraph-cyclefree'
-    version: 1
+    version: 2
   catgraph_dbp_typed:
     filename: 'catgraph-dbp-typed'
-    version: 1
+    version: 2
   categories_conceptual:
     filename: 'categories-conceptual'
     version: 1
@@ -53,13 +56,13 @@ cache:
     version: 1
   dbpedia_resource_type_cooccurrence_matrix:
     filename: 'dbpedia-resource-type-cooccurrence-matrix'
-    version: 1
+    version: 2
   dbpedia_resource_type_frequency:
     filename: 'dbpedia-resource-type-frequency'
-    version: 1
+    version: 2
   dbpedia_resource_type_mapping:
     filename: 'dbpedia-resource-type-mapping'
-    version: 1
+    version: 2
   dbpedia_resource_categories:
     filename: 'dbpedia-resource-categories'
     version: 1
