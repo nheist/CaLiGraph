@@ -6,13 +6,14 @@ caligraph:
       exclude_untyped_resources: True
       apply_type_depth_smoothing: True
       apply_impure_type_filtering: True
+      type_purity_threshold: 0.9
       resource_type_ratio: 0.5
       child_type_ratio: 0.5
 
 
 logging:
   level: 'DEBUG'
-  to_file: True
+  to_file: False
   filename: 'category_graph_impurity'
 
 files:

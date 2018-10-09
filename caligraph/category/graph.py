@@ -163,14 +163,11 @@ class CategoryGraph(BaseGraph):
         return {t for t, probability in resource_type_distribution.items() if probability > resource_type_ratio}
 
     def _filter_impure_types(self, category: str, category_types: set) -> set:
+        pure_category_types = set()
         resources_with_types = {r: dbp_store.get_transitive_types(r) for r in cat_store.get_resources(category)}
-        for t in category_types:
-            impure_resources_with_types = {r: {rt for rt in types if dbp_store.get_cooccurrence_frequency(t, rt) == 0} for r, types in resources_with_types.items()}
-            impure_resources_with_types = {r: types for r, types in impure_resources_with_types.items() if types}
-            if impure_resources_with_types:
-                util.get_logger().debug('=' * 30)
-                util.get_logger().debug(f'Category: {category} -- Type: {t} -- Purity: {1 - (len(impure_resources_with_types) / len(resources_with_types))}')
-                for r, types in impure_resources_with_types.items():
-                    util.get_logger().debug(f'  Resource: {r} -- Impure types: {types}')
+        for cat_type in category_types:
+            impure_resource_count = len({r for r, types in resources_with_types.items() if any(dbp_store.get_cooccurrence_frequency(cat_type, t) == 0 for t in types)})
+            if (1 - impure_resource_count / len(resources_with_types)) >= util.get_config('caligraph.category.dbp_types.type_purity_threshold'):
+                pure_category_types.add(cat_type)
 
-        return category_types
+        return pure_category_types
