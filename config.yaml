@@ -12,7 +12,7 @@ caligraph:
 
 logging:
   level: 'DEBUG'
-  to_file: False
+  to_file: True
   filename: 'category_graph_impurity'
 
 files:
