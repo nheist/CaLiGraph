@@ -95,6 +95,14 @@ def get_equivalent_predicates(dbp_predicate: str) -> set:
     return __EQUIVALENT_PREDICATE__[dbp_predicate]
 
 
+def get_all_predicates() -> set:
+    global __PREDICATES__
+    if '__PREDICATES__' not in globals():
+        __PREDICATES__ = set(rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_TYPE))
+
+    return __PREDICATES__
+
+
 # DBpedia types
 
 

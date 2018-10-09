@@ -7,6 +7,7 @@ from caligraph.util.enum_match import Match
 
 
 __NAMESPACE_WIKIDATA__ = 'http://www.wikidata.org/entity/'
+__NAMESPACE_WIKIDATA_PREDICATE__ = 'http://www.wikidata.org/prop/direct/'
 
 
 def resource_has_type(dbp_resource: str, dbp_type: str) -> Match:
@@ -50,7 +51,8 @@ def resource_has_property(dbp_resource: str, dbp_predicate: str, value: str) -> 
 def _get_property_values(wikidata_resource: str, wikidata_predicates: set) -> set:
     global __WIKIDATA_RESOURCE_PROPERTIES__
     if '__WIKIDATA_RESOURCE_PROPERTIES__' not in globals():
-        initializer = lambda: rdf_util.create_dict_from_rdf([util.get_data_file('files.wikidata.resource_properties')])
+        valid_predicates = {_dbp_predicate2wikidata(dbp_predicate) for dbp_predicate in dbp_store.get_all_predicates()} | {rdf_util.PREDICATE_TYPE}
+        initializer = lambda: rdf_util.create_dict_from_rdf([util.get_data_file('files.wikidata.resource_properties')], valid_predicates=valid_predicates)
         __WIKIDATA_RESOURCE_PROPERTIES__ = util.load_or_create_cache('wikidata_resource_properties', initializer)
 
     return {val for pred in wikidata_predicates for val in __WIKIDATA_RESOURCE_PROPERTIES__[wikidata_resource][pred]}
@@ -62,9 +64,14 @@ def _dbp_predicate2wikidata(dbp_predicate: str) -> set:
         __DBP_WIKIDATA_PREDICATE_MAPPING__ = {}
 
     if dbp_predicate not in __DBP_WIKIDATA_PREDICATE_MAPPING__:
-        __DBP_WIKIDATA_PREDICATE_MAPPING__[dbp_predicate] = {p for p in dbp_store.get_equivalent_predicates(dbp_predicate) if p.startswith(__NAMESPACE_WIKIDATA__)}
+        wikidata_predicates = {_convert_to_predicate_namespace(p) for p in dbp_store.get_equivalent_predicates(dbp_predicate) if p.startswith(__NAMESPACE_WIKIDATA__)}
+        __DBP_WIKIDATA_PREDICATE_MAPPING__[dbp_predicate] = wikidata_predicates
 
     return __DBP_WIKIDATA_PREDICATE_MAPPING__[dbp_predicate]
+
+
+def _convert_to_predicate_namespace(wikidata_predicate: str) -> str:
+    return __NAMESPACE_WIKIDATA_PREDICATE__ + wikidata_predicate[len(__NAMESPACE_WIKIDATA__):]
 
 
 def _dbp_type2wikidata(dbp_type: str) -> set:
