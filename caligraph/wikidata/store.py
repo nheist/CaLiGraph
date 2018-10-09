@@ -51,7 +51,7 @@ def resource_has_property(dbp_resource: str, dbp_predicate: str, value: str) -> 
 def _get_property_values(wikidata_resource: str, wikidata_predicates: set) -> set:
     global __WIKIDATA_RESOURCE_PROPERTIES__
     if '__WIKIDATA_RESOURCE_PROPERTIES__' not in globals():
-        valid_predicates = {_dbp_predicate2wikidata(dbp_predicate) for dbp_predicate in dbp_store.get_all_predicates()} | {rdf_util.PREDICATE_TYPE}
+        valid_predicates = {wp for dbp_predicate in dbp_store.get_all_predicates() for wp in _dbp_predicate2wikidata(dbp_predicate)} | {rdf_util.PREDICATE_TYPE}
         initializer = lambda: rdf_util.create_dict_from_rdf([util.get_data_file('files.wikidata.resource_properties')], valid_predicates=valid_predicates)
         __WIKIDATA_RESOURCE_PROPERTIES__ = util.load_or_create_cache('wikidata_resource_properties', initializer)
 
