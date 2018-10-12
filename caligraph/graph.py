@@ -46,8 +46,9 @@ class CaLiGraph(BaseGraph):
             for res in self._resources(clg_type):
                 existing_types = dbp_store.get_transitive_types(res)
                 new_resource_types = self.dbp_types(clg_type).difference(existing_types)
-                if new_resource_types:
-                    new_dbp_types[res].update(new_resource_types)
+                for new_type in new_resource_types:
+                    if all(dbp_store.get_cooccurrence_frequency(new_type, existing_type) > 0 for existing_type in existing_types):
+                        new_dbp_types[res].update(new_resource_types)
         return new_dbp_types
 
     def _resources(self, clg_type):
