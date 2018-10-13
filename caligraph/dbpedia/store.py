@@ -12,7 +12,21 @@ import numpy as np
 
 
 def get_resources() -> set:
-    return set(_get_resource_type_mapping())
+    return set(_get_label_mapping())
+
+
+def get_label(dbp_resource: str) -> str:
+    labels = _get_label_mapping()
+    return labels[dbp_resource] if dbp_resource in labels else dbp_util.resource2name(dbp_resource)
+
+
+def _get_label_mapping() -> dict:
+    global __RESOURCE_LABEL_MAPPING__
+    if '__RESOURCE_LABEL_MAPPING__' not in globals():
+        initializer = lambda: rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.labels')], rdf_util.PREDICATE_LABEL)
+        __RESOURCE_LABEL_MAPPING__ = util.load_or_create_cache('dbpedia_resource_labels', initializer)
+
+    return __RESOURCE_LABEL_MAPPING__
 
 
 def get_types(dbp_resource: str) -> set:

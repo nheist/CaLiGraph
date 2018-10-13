@@ -20,6 +20,7 @@ files:
   dbpedia:
     pages: 'pages_articles_en.xml.bz2'
     taxonomy: 'dbpedia_2016-10.nt'
+    labels: 'labels_en.ttl.bz2'
     categories: 'skos_categories_en.ttl.bz2'
     topical_concepts: 'topical_concepts_en.ttl.bz2'
     category_redirects: 'category_redirects_en.ttl.bz2'
@@ -64,6 +65,9 @@ cache:
   dbpedia_resource_type_mapping:
     filename: 'dbpedia-resource-type-mapping'
     version: 2
+  dbpedia_resource_labels:
+    filename: 'dbpedia-resource-labels'
+    version: 1
   dbpedia_resource_categories:
     filename: 'dbpedia-resource-categories'
     version: 1
