@@ -88,6 +88,12 @@ cache:
   dbpedia_property_frequency_distribution:
     filename: 'dbpedia-property-frequency-distribution'
     version: 1
+  dbpedia_list_equivalents:
+    filename: 'dbpedia-list-equivalents'
+    version: 1
+  dbpedia_list_children:
+    filename: 'dbpedia-list-children'
+    version: 1
   wikidata_dbpedia_resource_mapping:
     filename: 'wikidata-dbpedia-resource-mapping'
     version: 1
