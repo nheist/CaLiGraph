@@ -15,7 +15,7 @@ def get_all_cats() -> set:
 def get_label(category: str) -> str:
     global __LABELS__
     if '__LABELS__' not in globals():
-        __LABELS__ = rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.categories')], rdf_util.PREDICATE_LABEL)
+        __LABELS__ = rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.categories')], rdf_util.PREDICATE_SKOS_LABEL)
 
     return __LABELS__[category] if category in __LABELS__ else cat_util.category2name(category)
 
