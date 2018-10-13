@@ -15,7 +15,7 @@ def resource_has_type(dbp_resource: str, dbp_type: str) -> Match:
     if not wikidata_resource:
         return Match.MISSING
 
-    actual_wikidata_types = _get_property_values(wikidata_resource, _dbp_predicate2wikidata(rdf_util.PREDICATE_TYPE))
+    actual_wikidata_types = _get_property_values(wikidata_resource, {rdf_util.PREDICATE_TYPE})
     if not actual_wikidata_types:
         return Match.MISSING
 
