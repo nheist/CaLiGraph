@@ -41,7 +41,7 @@ def _compute_metrics(resource_property_assignments: dict):
     correct_assignments = 0
     incorrect_assignments = 0
     for r in dbp_store.get_resources():
-        for pred, actual_values in dbp_store.get_properties(r):
+        for pred, actual_values in dbp_store.get_properties(r).items():
             assigned_values = resource_property_assignments[r][pred]
             correct_assignments += len(assigned_values.intersection(actual_values))
             incorrect_assignments += len(assigned_values.difference(actual_values)) if pred in resource_property_assignments[r] else 0
