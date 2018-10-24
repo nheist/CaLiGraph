@@ -36,6 +36,21 @@ def _get_property_value_count(property_tuples) -> dict:
     return {pred: len(vals) for pred, vals in property_value_count.items()}
 
 
+def _compute_metrics(resource_property_assignments: dict):
+    all_assignments = sum(len(values) for properties in resource_property_assignments.values() for values in properties.values())
+    correct_assignments = 0
+    incorrect_assignments = 0
+    for r in dbp_store.get_resources():
+        for pred, actual_values in dbp_store.get_properties(r):
+            assigned_values = resource_property_assignments[r][pred]
+            correct_assignments += len(assigned_values.intersection(actual_values))
+            incorrect_assignments += len(assigned_values.difference(actual_values)) if pred in resource_property_assignments[r] else 0
+
+    precision = correct_assignments / (correct_assignments + incorrect_assignments)
+    recall = correct_assignments / all_assignments
+    return precision, recall
+
+
 def evaluate_category_relations():
     starttime = datetime.datetime.now().replace(microsecond=0)
     cat_counter = 0
@@ -43,6 +58,7 @@ def evaluate_category_relations():
     instance_counter = 0
 
     categories = CategoryGraph.create_from_dbpedia().remove_unconnected().nodes
+    resource_property_assignments = defaultdict(lambda: defaultdict(set))
     for idx, cat in enumerate(categories):
         resources = cat_store.get_resources(cat)
         cat_property_count = _get_property_count(resources)
@@ -60,6 +76,10 @@ def evaluate_category_relations():
             for p in valid_properties:
                 property_counter += 1
                 instance_counter += len(resources) - cat_property_count[p]
+
+                for r in resources:
+                    resource_property_assignments[r][p[0]].add(p[1])
+
                 util.get_logger().debug('Property: {} ({} / {} / {:.3f} / {:.3f})'.format(p, len(resources), cat_property_count[p], cat_property_freq[p], overall_property_freq[p]))
 
         if idx % 1000 == 0:
@@ -67,3 +87,6 @@ def evaluate_category_relations():
             util.get_logger().debug('Processed {} of {} categories in {}.'.format(idx, len(categories), (datetime.datetime.now().replace(microsecond=0) - starttime)))
 
     util.get_logger().debug(f'CATS: {cat_counter} -- PROPERTIES: {property_counter} -- INSTANCES: {instance_counter}')
+
+    precision, recall = _compute_metrics(resource_property_assignments)
+    util.get_logger().debug('Precision: {:.3f}; Recall: {:.3f}'.format(precision, recall))
