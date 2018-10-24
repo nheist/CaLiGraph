@@ -40,7 +40,7 @@ def evaluate_category_relations():
     property_counter = 0
     instance_counter = 0
 
-    categories = CategoryGraph.create_from_dbpedia().remove_unconnected().categories
+    categories = CategoryGraph.create_from_dbpedia().remove_unconnected().nodes
     for idx, cat in enumerate(categories):
         resources = cat_store.get_resources(cat)
         cat_property_count = _get_property_count(resources)
