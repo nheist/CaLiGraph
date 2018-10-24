@@ -17,6 +17,8 @@ MAX_OVERALL_PROPERTY_FREQ = 1  # might not even need that
 # todo: also look for incoming relation instances!
 # todo: treat functional (single-valued) vs. non-functional (multi-valued) relations differently
 # todo: evaluation not via wikidata -> a) hold-out set; b) instance-based manual/mturk c) category-based manual/mturk
+# todo: check whether a relation can be "generalized" over the complete category by checking whether other categories with this relation have instances with differing values
+# --> not if we find categories where we have equally distributed values, but others (e.g. categories where we have sth. like 80/20
 
 def _get_property_count(resources: set) -> dict:
     cat_property_count = defaultdict(int)
@@ -29,9 +31,9 @@ def _get_property_count(resources: set) -> dict:
 
 def _get_property_value_count(property_tuples) -> dict:
     property_value_count = defaultdict(set)
-    for prop, val in property_tuples:
-        property_value_count[prop].add(val)
-    return {prop: len(vals) for prop, vals in property_value_count.items()}
+    for pred, val in property_tuples:
+        property_value_count[pred].add(val)
+    return {pred: len(vals) for pred, vals in property_value_count.items()}
 
 
 def evaluate_category_relations():
@@ -48,7 +50,7 @@ def evaluate_category_relations():
         cat_property_freq = {p: p_count / len(resources) for p, p_count in cat_property_count.items()}
         overall_property_freq = {p: (dbp_store.get_property_frequency_distribution(p[0])[p[1]] - p_count + 1) / (dbp_store.get_property_frequency_distribution(p[0])['_sum'] - p_count + 1) for p, p_count in cat_property_count.items()}
 
-        valid_properties = {p for p in cat_property_count if cat_property_value_count[p[0]] > 1 and cat_property_count[p] >= MIN_CAT_PROPERTY_COUNT and cat_property_freq[p] >= MIN_CAT_PROPERTY_FREQ and overall_property_freq[p] <= MAX_OVERALL_PROPERTY_FREQ}
+        valid_properties = {p for p in cat_property_count if cat_property_count[p] >= MIN_CAT_PROPERTY_COUNT and cat_property_freq[p] >= MIN_CAT_PROPERTY_FREQ and overall_property_freq[p] <= MAX_OVERALL_PROPERTY_FREQ}
 
         if valid_properties:
             cat_counter += 1
