@@ -10,6 +10,9 @@ __NAMESPACE_WIKIDATA__ = 'http://www.wikidata.org/entity/'
 __NAMESPACE_WIKIDATA_PREDICATE__ = 'http://www.wikidata.org/prop/direct/'
 
 
+# todo: not working correctly, yet.
+
+
 def resource_has_type(dbp_resource: str, dbp_type: str) -> Match:
     wikidata_resource = _dbp_resource2wikidata(dbp_resource)
     if not wikidata_resource:

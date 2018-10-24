@@ -13,8 +13,8 @@ caligraph:
 
 logging:
   level: 'DEBUG'
-  to_file: False
-  filename: 'category_graph_impurity'
+  to_file: True
+  filename: 'relation_test_3_60'
 
 files:
   dbpedia:

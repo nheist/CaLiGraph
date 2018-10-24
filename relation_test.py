@@ -12,6 +12,12 @@ MIN_CAT_PROPERTY_FREQ = .6  # OK
 MAX_OVERALL_PROPERTY_FREQ = 1  # might not even need that
 
 
+# todo: comparison of relation-instances with sibling-categories and parent-categories (if they have it, too, it can't be that special to this category)
+# todo: use surface-forms of objects to find similar object values within categories
+# todo: also look for incoming relation instances!
+# todo: treat functional (single-valued) vs. non-functional (multi-valued) relations differently
+# todo: evaluation not via wikidata -> a) hold-out set; b) instance-based manual/mturk c) category-based manual/mturk
+
 def _get_property_count(resources: set) -> dict:
     cat_property_count = defaultdict(int)
     for res in resources:
@@ -46,19 +52,16 @@ def evaluate_category_relations():
 
         if valid_properties:
             cat_counter += 1
+            util.get_logger().debug('='*20)
+            util.get_logger().debug('Category: {}'.format(cat[37:]))
 
-        for p in valid_properties:
-            property_counter += 1
-            instance_counter += len(resources) - cat_property_count[p]
-        #    print('='*20)
-        #    print('Category: {}'.format(cat[37:]))
-        #    print('Property: {}'.format(p))
-        #    print('ResourceCount: {} -- CatPropertyCount: {}'.format(len(resources), cat_property_count[p]))
-        #    print('CatPropertyFreq: {:.3f} -- OverallPropertyFreq: {:.3f}'.format(cat_property_freq[p], overall_property_freq[p]))
+            for p in valid_properties:
+                property_counter += 1
+                instance_counter += len(resources) - cat_property_count[p]
+                util.get_logger().debug('Property: {} ({} / {} / {:.3f} / {:.3f})'.format(p, len(resources), cat_property_count[p], cat_property_freq[p], overall_property_freq[p]))
 
         if idx % 1000 == 0:
             util.get_logger().debug('=' * 20)
             util.get_logger().debug('Processed {} of {} categories in {}.'.format(idx, len(categories), (datetime.datetime.now().replace(microsecond=0) - starttime)))
-            util.get_logger().debug('FOUND RELATIONS FOR -> Categories: {} -- Properties: {} -- Instances: {}'.format(cat_counter, property_counter, instance_counter))
 
     util.get_logger().debug(f'CATS: {cat_counter} -- PROPERTIES: {property_counter} -- INSTANCES: {instance_counter}')
