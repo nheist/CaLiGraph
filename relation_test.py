@@ -4,6 +4,8 @@ import caligraph.category.store as cat_store
 from caligraph.category.graph import CategoryGraph
 import caligraph.dbpedia.store as dbp_store
 import util
+import pandas as pd
+import random
 
 
 MIN_CAT_PROPERTY_COUNT = 3  # OK
@@ -37,18 +39,27 @@ def _get_property_value_count(property_tuples) -> dict:
 
 
 def _compute_metrics(resource_property_assignments: dict):
-    all_assignments = sum(len(values) for properties in resource_property_assignments.values() for values in properties.values())
+    all_assignments = 0
     correct_assignments = 0
     incorrect_assignments = 0
     for r in dbp_store.get_resources():
         for pred, actual_values in dbp_store.get_properties(r).items():
             assigned_values = resource_property_assignments[r][pred]
+            all_assignments += len(assigned_values)
             correct_assignments += len(assigned_values.intersection(actual_values))
             incorrect_assignments += len(assigned_values.difference(actual_values)) if pred in resource_property_assignments[r] else 0
 
     precision = correct_assignments / (correct_assignments + incorrect_assignments)
     recall = correct_assignments / all_assignments
     return precision, recall
+
+
+def _create_evaluation_dump(resource_property_assignments: dict, size: int):
+    filename = 'relations_base_{}_{}_{}'.format(size, MIN_CAT_PROPERTY_COUNT, MIN_CAT_PROPERTY_FREQ)
+    unclear_assignments = [(r, pred, val) for r in resource_property_assignments for pred in resource_property_assignments[r] for val in resource_property_assignments[r][pred] if pred not in dbp_store.get_properties(r)]
+
+    df = pd.DataFrame(data=random.sample(unclear_assignments, size), columns=['sub', 'pred', 'val'])
+    df.to_csv(filename)
 
 
 def evaluate_category_relations():
@@ -90,3 +101,5 @@ def evaluate_category_relations():
 
     precision, recall = _compute_metrics(resource_property_assignments)
     util.get_logger().debug('Precision: {:.3f}; Recall: {:.3f}'.format(precision, recall))
+
+    _create_evaluation_dump(resource_property_assignments, 200)
