@@ -8,8 +8,8 @@ import pandas as pd
 import random
 
 
-MIN_CAT_PROPERTY_COUNT = 5  # OK
-MIN_CAT_PROPERTY_FREQ = .9  # OK
+MIN_CAT_PROPERTY_COUNT = 3  # OK
+MIN_CAT_PROPERTY_FREQ = .6  # OK
 # MIN_CAT_PROPERTY_DIFF = .8 # -> exclude for now; if we have other property values, we dismiss.
 MAX_OVERALL_PROPERTY_FREQ = 1  # might not even need that
 
@@ -57,7 +57,7 @@ def _compute_metrics(resource_property_assignments: dict):
 
 
 def _create_evaluation_dump(resource_property_assignments: dict, size: int):
-    filename = 'relations-base_{}_{}_{}.csv'.format(size, MIN_CAT_PROPERTY_COUNT, MIN_CAT_PROPERTY_FREQ*100)
+    filename = 'relations-base_{}_{}_{}.csv'.format(size, MIN_CAT_PROPERTY_COUNT, int(MIN_CAT_PROPERTY_FREQ*100))
     unclear_assignments = [(r, pred, val) for r in resource_property_assignments for pred in resource_property_assignments[r] for val in resource_property_assignments[r][pred] if pred not in dbp_store.get_properties(r)]
 
     df = pd.DataFrame(data=random.sample(unclear_assignments, size), columns=['sub', 'pred', 'val'])
