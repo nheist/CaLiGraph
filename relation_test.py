@@ -21,6 +21,8 @@ MAX_OVERALL_PROPERTY_FREQ = 1  # might not even need that
 # todo: evaluation not via wikidata -> a) hold-out set; b) instance-based manual/mturk c) category-based manual/mturk
 # todo: check whether a relation can be "generalized" over the complete category by checking whether other categories with this relation have instances with differing values
 # --> not if we find categories where we have equally distributed values, but others (e.g. categories where we have sth. like 80/20
+# todo: exclude lists
+# todo: do not create properties for invalid domain / range
 
 def _get_property_count(resources: set) -> dict:
     cat_property_count = defaultdict(int)
@@ -45,7 +47,7 @@ def _compute_metrics(resource_property_assignments: dict):
     for r in dbp_store.get_resources():
         for pred, actual_values in dbp_store.get_properties(r).items():
             assigned_values = resource_property_assignments[r][pred]
-            all_assignments += len(assigned_values)
+            all_assignments += len(actual_values)
             correct_assignments += len(assigned_values.intersection(actual_values))
             incorrect_assignments += len(assigned_values.difference(actual_values)) if pred in resource_property_assignments[r] else 0
 
