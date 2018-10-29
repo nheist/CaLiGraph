@@ -57,11 +57,11 @@ def _compute_metrics(resource_property_assignments: dict):
 
 
 def _create_evaluation_dump(resource_property_assignments: dict, size: int):
-    filename = 'relations_base_{}_{}_{}.csv'.format(size, MIN_CAT_PROPERTY_COUNT, MIN_CAT_PROPERTY_FREQ*100)
+    filename = 'relations-base_{}_{}_{}.csv'.format(size, MIN_CAT_PROPERTY_COUNT, MIN_CAT_PROPERTY_FREQ*100)
     unclear_assignments = [(r, pred, val) for r in resource_property_assignments for pred in resource_property_assignments[r] for val in resource_property_assignments[r][pred] if pred not in dbp_store.get_properties(r)]
 
     df = pd.DataFrame(data=random.sample(unclear_assignments, size), columns=['sub', 'pred', 'val'])
-    df.to_csv(filename)
+    df.to_csv(filename, index=False, encoding='utf-8')
 
 
 def evaluate_category_relations():
