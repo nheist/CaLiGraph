@@ -8,8 +8,8 @@ import pandas as pd
 import random
 
 
-MIN_CAT_PROPERTY_COUNT = 3  # OK
-MIN_CAT_PROPERTY_FREQ = .6  # OK
+MIN_CAT_PROPERTY_COUNT = 5  # OK
+MIN_CAT_PROPERTY_FREQ = .9  # OK
 # MIN_CAT_PROPERTY_DIFF = .8 # -> exclude for now; if we have other property values, we dismiss.
 MAX_OVERALL_PROPERTY_FREQ = 1  # might not even need that
 
