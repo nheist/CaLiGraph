@@ -88,16 +88,20 @@ def evaluate_category_relations():
             for prop in valid_properties:
                 predicate, val = prop
                 domain = dbp_store.get_domain(predicate)
+                invalid_domain_types = dbp_store.get_disjoint_types(domain) if domain else set()
                 range = dbp_store.get_range(predicate)  # todo: for ingoing properties
-                for r in resources:
-                    if not domain or domain in dbp_store.get_transitive_types(r):
+                invalid_range_types = dbp_store.get_disjoint_types(range) if range else set()
+                valid_resources = {r for r in resources if not invalid_domain_types.intersection(dbp_store.get_types(r))} if invalid_domain_types else resources
+                if valid_resources:
+                    for r in valid_resources:
                         resource_property_assignments[r][predicate].add(val)
-                    else:
-                        util.get_logger().debug('Invalid domain: {}'.format(prop))
 
-                property_counter += 1
-                instance_counter += len(resources) - cat_property_count[prop]
-                util.get_logger().debug('Property: {} ({} / {} / {:.3f} / {:.3f})'.format(prop, len(resources), cat_property_count[prop], cat_property_freq[prop], overall_property_freq[prop]))
+                    property_counter += 1
+                    instance_counter += len(resources) - cat_property_count[prop]
+                    util.get_logger().debug('Property: {} ({} / {} / {:.3f} / {:.3f})'.format(prop, len(resources), cat_property_count[prop], cat_property_freq[prop], overall_property_freq[prop]))
+
+                if len(resources) > len(valid_resources):
+                    util.get_logger().debug('Removed {} invalid fact assignments due to domain/range violation.'.format(len(resources) - len(valid_resources)))
 
         if idx % 1000 == 0:
             util.get_logger().debug('=' * 20)
