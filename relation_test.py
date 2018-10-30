@@ -8,8 +8,8 @@ import pandas as pd
 import random
 
 
-MIN_CAT_PROPERTY_COUNT = 1  # OK
-MIN_CAT_PROPERTY_FREQ = .5  # OK
+MIN_CAT_PROPERTY_COUNT = 3  # OK
+MIN_CAT_PROPERTY_FREQ = .6  # OK
 # MIN_CAT_PROPERTY_DIFF = .8 # -> exclude for now; if we have other property values, we dismiss.
 MAX_OVERALL_PROPERTY_FREQ = 1  # might not even need that
 
@@ -56,7 +56,7 @@ def _compute_metrics(resource_property_assignments: dict):
 
 
 def _create_evaluation_dump(resource_property_assignments: dict, size: int):
-    filename = 'results/relations-v1_{}_{}_{}.csv'.format(size, MIN_CAT_PROPERTY_COUNT, int(MIN_CAT_PROPERTY_FREQ*100))
+    filename = 'results/relations-v2_{}_{}_{}.csv'.format(size, MIN_CAT_PROPERTY_COUNT, int(MIN_CAT_PROPERTY_FREQ*100))
     unclear_assignments = [(r, pred, val) for r in resource_property_assignments for pred in resource_property_assignments[r] for val in resource_property_assignments[r][pred] if pred not in dbp_store.get_properties(r)]
 
     df = pd.DataFrame(data=random.sample(unclear_assignments, size), columns=['sub', 'pred', 'val'])
@@ -90,10 +90,10 @@ def evaluate_category_relations():
                 domain = dbp_store.get_domain(predicate)
                 range = dbp_store.get_range(predicate)  # todo: for ingoing properties
                 for r in resources:
-                    # if not domain or domain in dbp_store.get_transitive_types(r):
+                    if not domain or domain in dbp_store.get_transitive_types(r):
                         resource_property_assignments[r][predicate].add(val)
-                    # else:
-                    #     util.get_logger().debug('Invalid domain: {}'.format(prop))
+                    else:
+                        util.get_logger().debug('Invalid domain: {}'.format(prop))
 
                 property_counter += 1
                 instance_counter += len(resources) - cat_property_count[prop]
