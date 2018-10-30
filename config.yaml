@@ -14,7 +14,7 @@ caligraph:
 logging:
   level: 'DEBUG'
   to_file: True
-  filename: 'relation_test_5_90'
+  filename: 'relations-v1_1_50'
 
 files:
   dbpedia:
