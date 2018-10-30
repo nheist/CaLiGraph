@@ -17,6 +17,7 @@ PREDICATE_SUBCLASS_OF = 'http://www.w3.org/2000/01/rdf-schema#subClassOf'
 PREDICATE_DISJOINT_WITH = 'http://www.w3.org/2002/07/owl#disjointWith'
 PREDICATE_REDIRECTS = 'http://dbpedia.org/ontology/wikiPageRedirects'
 PREDICATE_DOMAIN = 'http://www.w3.org/2000/01/rdf-schema#domain'
+PREDICATE_RANGE = 'http://www.w3.org/2000/01/rdf-schema#range'
 PREDICATE_SAME_AS = 'http://www.w3.org/2002/07/owl#sameAs'
 PREDICATE_EQUIVALENT_PROPERTY = 'http://www.w3.org/2002/07/owl#equivalentProperty'
 

@@ -22,7 +22,6 @@ MAX_OVERALL_PROPERTY_FREQ = 1  # might not even need that
 # todo: check whether a relation can be "generalized" over the complete category by checking whether other categories with this relation have instances with differing values
 # --> not if we find categories where we have equally distributed values, but others (e.g. categories where we have sth. like 80/20
 # todo: exclude lists
-# todo: do not create properties for invalid domain / range
 
 def _get_property_count(resources: set) -> dict:
     cat_property_count = defaultdict(int)
@@ -86,14 +85,19 @@ def evaluate_category_relations():
             util.get_logger().debug('='*20)
             util.get_logger().debug('Category: {}'.format(cat[37:]))
 
-            for p in valid_properties:
-                property_counter += 1
-                instance_counter += len(resources) - cat_property_count[p]
-
+            for prop in valid_properties:
+                predicate, val = prop
+                domain = dbp_store.get_domain(predicate)
+                range = dbp_store.get_range(predicate)  # todo: for ingoing properties
                 for r in resources:
-                    resource_property_assignments[r][p[0]].add(p[1])
+                    if not domain or domain in dbp_store.get_transitive_types(r):
+                        resource_property_assignments[r][predicate].add(val)
+                    else:
+                        util.get_logger().debug('Invalid domain: {}'.format(prop))
 
-                util.get_logger().debug('Property: {} ({} / {} / {:.3f} / {:.3f})'.format(p, len(resources), cat_property_count[p], cat_property_freq[p], overall_property_freq[p]))
+                property_counter += 1
+                instance_counter += len(resources) - cat_property_count[prop]
+                util.get_logger().debug('Property: {} ({} / {} / {:.3f} / {:.3f})'.format(prop, len(resources), cat_property_count[prop], cat_property_freq[prop], overall_property_freq[prop]))
 
         if idx % 1000 == 0:
             util.get_logger().debug('=' * 20)

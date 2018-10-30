@@ -106,6 +106,14 @@ def get_domain(dbp_predicate: str) -> Optional[str]:
     return __PREDICATE_DOMAIN__[dbp_predicate] if dbp_predicate in __PREDICATE_DOMAIN__ else None
 
 
+def get_range(dbp_predicate: str) -> Optional[str]:
+    global __PREDICATE_RANGE__
+    if '__PREDICATE_RANGE__' not in globals():
+        __PREDICATE_RANGE__ = rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_RANGE)
+
+    return __PREDICATE_RANGE__[dbp_predicate] if dbp_predicate in __PREDICATE_RANGE__ else None
+
+
 def get_equivalent_predicates(dbp_predicate: str) -> set:
     global __EQUIVALENT_PREDICATE__
     if '__EQUIVALENT_PREDICATE__' not in globals():
