@@ -14,7 +14,6 @@ MIN_CAT_PROPERTY_FREQ = .6
 
 # todo: comparison of relation-instances with sibling-categories and parent-categories (if they have it, too, it can't be that special to this category)
 # todo: !!! use surface-forms of objects to find similar object values within categories --> not relevant enough
-# todo: !!! also look for incoming relation instances!
 # todo: !!! treat functional (single-valued) vs. non-functional (multi-valued) relations differently
 # todo: evaluation not via wikidata -> a) hold-out set; b) instance-based manual/mturk c) category-based manual/mturk
 # todo: check whether a relation can be "generalized" over the complete category by checking whether other categories with this relation have instances with differing values
@@ -73,7 +72,7 @@ def evaluate_category_relations():
     util.get_logger().debug('Precision: {:.3f}; Recall: {:.3f}'.format(precision_out, recall_out))
     _create_evaluation_dump(outgoing_property_assignments, 200, 'out')
 
-    util.get_logger().info('-- INCOMING PROPERTIES --')
+    util.get_logger().info('-- INGOING PROPERTIES --')
     invalid_pred_types = {p: dbp_store.get_disjoint_types(dbp_store.get_range(p)) for p in dbp_store.get_all_predicates()}
     inverse_ingoing_property_assignments = _assign_resource_properties(categories, dbp_store.get_inverse_resource_property_mapping(), invalid_pred_types)
     ingoing_property_assignments = defaultdict(lambda: defaultdict(set))

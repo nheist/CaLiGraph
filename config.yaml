@@ -74,6 +74,9 @@ cache:
   dbpedia_resource_properties:
     filename: 'dbpedia-resource-properties'
     version: 1
+  dbpedia_inverse_resource_properties:
+    filename: 'dbpedia-inverse-resource-properties'
+    version: 1
   dbpedia_resource_interlanguage_links:
     filename: 'dbpedia-resource-interlanguage-links'
     version: 1
