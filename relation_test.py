@@ -22,10 +22,10 @@ MIN_CAT_PROPERTY_FREQ = .6
 # todo: exclude lists
 # todo: use purity of types instead of disjointness for domain/range constraints
 
-def _get_property_count(resources: set) -> dict:
+def _get_property_count(resources: set, property_mapping: dict) -> dict:
     cat_property_count = defaultdict(int)
     for res in resources:
-        for prop, values in dbp_store.get_properties(res).items():
+        for prop, values in property_mapping[res].items():
             for val in values:
                 cat_property_count[(prop, val)] += 1
     return cat_property_count
@@ -66,31 +66,40 @@ def evaluate_category_relations():
     categories = CategoryGraph.create_from_dbpedia().remove_unconnected().nodes
 
     util.get_logger().info('-- OUTGOING PROPERTIES --')
-    outgoing_resource_property_assignments = _assign_resource_properties(categories, False)
+    invalid_pred_types = {p: dbp_store.get_disjoint_types(dbp_store.get_domain(p)) for p in dbp_store.get_all_predicates()}
+    outgoing_property_assignments = _assign_resource_properties(categories, dbp_store.get_resource_property_mapping(), invalid_pred_types)
 
-    precision_out, recall_out = _compute_metrics(outgoing_resource_property_assignments)
+    precision_out, recall_out = _compute_metrics(outgoing_property_assignments)
     util.get_logger().debug('Precision: {:.3f}; Recall: {:.3f}'.format(precision_out, recall_out))
-    _create_evaluation_dump(outgoing_resource_property_assignments, 200, 'out')
+    _create_evaluation_dump(outgoing_property_assignments, 200, 'out')
 
     util.get_logger().info('-- INCOMING PROPERTIES --')
-    outgoing_resource_property_assignments = _assign_resource_properties(categories, True)  # todo: implement inverse
+    invalid_pred_types = {p: dbp_store.get_disjoint_types(dbp_store.get_range(p)) for p in dbp_store.get_all_predicates()}
+    inverse_ingoing_property_assignments = _assign_resource_properties(categories, dbp_store.get_inverse_resource_property_mapping(), invalid_pred_types)
+    ingoing_property_assignments = defaultdict(lambda: defaultdict(set))
+    for sub in inverse_ingoing_property_assignments:
+        for pred in inverse_ingoing_property_assignments[sub]:
+            for obj in inverse_ingoing_property_assignments[sub][pred]:
+                ingoing_property_assignments[obj][pred].add(sub)
+
+    precision_in, recall_in = _compute_metrics(ingoing_property_assignments)
+    util.get_logger().debug('Precision: {:.3f}; Recall: {:.3f}'.format(precision_in, recall_in))
+    _create_evaluation_dump(ingoing_property_assignments, 200, 'in')
 
 
-def _assign_resource_properties(categories: set, invert_properties: bool):
+def _assign_resource_properties(categories: set, property_mapping: dict, invalid_pred_types: dict) -> dict:
     starttime = datetime.datetime.now().replace(microsecond=0)
     cat_counter = 0
     property_counter = 0
     instance_counter = 0
 
-    resource_property_assignments = defaultdict(lambda: defaultdict(set))
+    property_assignments = defaultdict(lambda: defaultdict(set))
     for idx, cat in enumerate(categories):
         resources = cat_store.get_resources(cat)
-        cat_property_count = _get_property_count(resources)
+        cat_property_count = _get_property_count(resources, property_mapping)
         cat_property_freq = {p: p_count / len(resources) for p, p_count in cat_property_count.items()}
 
-        valid_properties = {p for p in cat_property_count if
-                            cat_property_count[p] >= MIN_CAT_PROPERTY_COUNT and cat_property_freq[
-                                p] >= MIN_CAT_PROPERTY_FREQ}
+        valid_properties = {p for p in cat_property_count if cat_property_count[p] >= MIN_CAT_PROPERTY_COUNT and cat_property_freq[p] >= MIN_CAT_PROPERTY_FREQ}
 
         if valid_properties:
             cat_counter += 1
@@ -99,14 +108,11 @@ def _assign_resource_properties(categories: set, invert_properties: bool):
 
             for prop in valid_properties:
                 predicate, val = prop
-                domain = dbp_store.get_domain(predicate)
-                invalid_domain_types = dbp_store.get_disjoint_types(domain) if domain else set()
-                range = dbp_store.get_range(predicate)  # todo: for ingoing properties
-                invalid_range_types = dbp_store.get_disjoint_types(range) if range else set()
-                valid_resources = {r for r in resources if not invalid_domain_types.intersection(dbp_store.get_types(r))} if invalid_domain_types else resources
+                invalid_types = invalid_pred_types[predicate]
+                valid_resources = {r for r in resources if not invalid_types.intersection(dbp_store.get_types(r))} if invalid_types else resources
                 if valid_resources:
                     for r in valid_resources:
-                        resource_property_assignments[r][predicate].add(val)
+                        property_assignments[r][predicate].add(val)
 
                     property_counter += 1
                     instance_counter += len(resources) - cat_property_count[prop]
@@ -120,4 +126,4 @@ def _assign_resource_properties(categories: set, invert_properties: bool):
             util.get_logger().debug('Processed {} of {} categories in {}.'.format(idx, len(categories), (datetime.datetime.now().replace(microsecond=0) - starttime)))
 
     util.get_logger().debug(f'CATS: {cat_counter} -- PROPERTIES: {property_counter} -- INSTANCES: {instance_counter}')
-    return resource_property_assignments
+    return property_assignments

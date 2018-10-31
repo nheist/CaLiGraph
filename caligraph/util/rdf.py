@@ -88,12 +88,13 @@ def create_single_val_dict_from_rdf(filepaths: list, predicate: str, reverse_key
     return data_dict
 
 
-def create_dict_from_rdf(filepaths: list, valid_predicates: set = None) -> dict:
+def create_dict_from_rdf(filepaths: list, valid_predicates: set = None, reverse_key=False) -> dict:
     data_dict = defaultdict(functools.partial(defaultdict, set))
     for fp in filepaths:
         for triple in parse_triples_from_file(fp):
-            if not valid_predicates or triple.pred in valid_predicates:
-                data_dict[triple.sub][triple.pred].add(triple.obj)
+            sub, pred, obj = triple
+            if not valid_predicates or pred in valid_predicates:
+                data_dict[obj][pred].add(sub) if reverse_key else data_dict[sub][pred].add(obj)
     return data_dict
 
 

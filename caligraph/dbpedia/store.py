@@ -54,7 +54,7 @@ def get_transitive_types(dbp_resource: str) -> set:
 
 
 def get_properties(dbp_resource: str) -> dict:
-    return _get_resource_property_mapping()[dbp_resource]
+    return get_resource_property_mapping()[dbp_resource]
 
 
 def get_interlanguage_links(dbp_resource: str) -> set:
@@ -79,7 +79,7 @@ def get_property_frequency_distribution(dbp_predicate: str) -> dict:
 
 def _compute_property_frequency_distribution() -> dict:
     property_frequency_distribution = defaultdict(functools.partial(defaultdict, int))
-    for properties in _get_resource_property_mapping().values():
+    for properties in get_resource_property_mapping().values():
         for prop, values in properties.items():
             for val in values:
                 property_frequency_distribution[prop][val] += 1
@@ -88,7 +88,7 @@ def _compute_property_frequency_distribution() -> dict:
     return property_frequency_distribution
 
 
-def _get_resource_property_mapping() -> dict:
+def get_resource_property_mapping() -> dict:
     global __RESOURCE_PROPERTY_MAPPING__
     if '__RESOURCE_PROPERTY_MAPPING__' not in globals():
         property_files = [util.get_data_file('files.dbpedia.mappingbased_literals'), util.get_data_file('files.dbpedia.mappingbased_objects')]
@@ -96,6 +96,15 @@ def _get_resource_property_mapping() -> dict:
         __RESOURCE_PROPERTY_MAPPING__ = util.load_or_create_cache('dbpedia_resource_properties', initializer)
 
     return __RESOURCE_PROPERTY_MAPPING__
+
+
+def get_inverse_resource_property_mapping() -> dict:
+    global __INVERSE_RESOURCE_PROPERTY_MAPPING__
+    if '__INVERSE_RESOURCE_PROPERTY_MAPPING__' not in globals():
+        initializer = lambda: rdf_util.create_dict_from_rdf([util.get_data_file('files.dbpedia.mappingbased_objects')], reverse_key=True)
+        __INVERSE_RESOURCE_PROPERTY_MAPPING__ = util.load_or_create_cache('dbpedia_inverse_resource_properties', initializer)
+
+    return __INVERSE_RESOURCE_PROPERTY_MAPPING__
 
 
 def get_domain(dbp_predicate: str) -> Optional[str]:
