@@ -35,7 +35,7 @@ def get_surface_forms(dbp_resource: str) -> dict:
         initializer = lambda: rdf_util.create_multi_val_freq_dict_from_rdf([util.get_data_file('files.dbpedia.anchor_texts')], rdf_util.PREDICATE_ANCHOR_TEXT)
         __RESOURCE_SURFACE_FORMS__ = util.load_or_create_cache('dbpedia_resource_surface_forms', initializer)
 
-    return __RESOURCE_SURFACE_FORMS__
+    return __RESOURCE_SURFACE_FORMS__[dbp_resource]
 
 
 def get_types(dbp_resource: str) -> set:
