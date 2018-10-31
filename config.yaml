@@ -14,7 +14,7 @@ caligraph:
 logging:
   level: 'DEBUG'
   to_file: True
-  filename: 'relations-v2_3_60'
+  filename: 'relations-v3'
 
 files:
   dbpedia:
@@ -33,6 +33,7 @@ files:
     mappingbased_literals: 'mappingbased_literals_en.ttl.bz2'
     mappingbased_objects: 'mappingbased_objects_en.ttl.bz2'
     interlanguage_links: 'interlanguage_links_en.ttl.bz2'
+    anchor_texts: 'anchor_text_en.ttl.bz2'
   wikidata:
     resource_properties: 'wikidata_resource_properties.nt.bz2'
 
@@ -67,6 +68,9 @@ cache:
     version: 2
   dbpedia_resource_labels:
     filename: 'dbpedia-resource-labels'
+    version: 1
+  dbpedia_resource_surface_forms:
+    filename: 'dbpedia-resource-surface-forms'
     version: 1
   dbpedia_resource_categories:
     filename: 'dbpedia-resource-categories'

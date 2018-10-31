@@ -29,6 +29,15 @@ def _get_label_mapping() -> dict:
     return __RESOURCE_LABEL_MAPPING__
 
 
+def get_surface_forms(dbp_resource: str) -> dict:
+    global __RESOURCE_SURFACE_FORMS__
+    if '__RESOURCE_SURFACE_FORMS__' not in globals():
+        initializer = lambda: rdf_util.create_multi_val_freq_dict_from_rdf([util.get_data_file('files.dbpedia.anchor_texts')], rdf_util.PREDICATE_ANCHOR_TEXT)
+        __RESOURCE_SURFACE_FORMS__ = util.load_or_create_cache('dbpedia_resource_surface_forms', initializer)
+
+    return __RESOURCE_SURFACE_FORMS__
+
+
 def get_types(dbp_resource: str) -> set:
     return {t for t in _get_resource_type_mapping()[dbp_resource] if dbp_util.is_dbp_type(t)}
 

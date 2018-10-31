@@ -10,15 +10,24 @@ import random
 
 MIN_CAT_PROPERTY_COUNT = 3
 MIN_CAT_PROPERTY_FREQ = .6
+# classifier erstmal zweitrangig
+# todo: train classifier to predict these values?
+# todo: attribute - do i find a surface form in the category name
+# todo: attribute - negative example for disjoint domain
 
+# TODO: --- GENERAL ---
+# TODO: nach F1 evaluieren und optimale Parameterkonstellation finden
+# TODO: Profiling: Welche Subject-Types/Properties findet man gut/schlecht
+
+# TODO: Heiko an Paper zu empiric domains/ranges erinnern
 
 # todo: comparison of relation-instances with sibling-categories and parent-categories (if they have it, too, it can't be that special to this category)
 # todo: !!! use surface-forms of objects to find similar object values within categories --> not relevant enough
 # todo: !!! treat functional (single-valued) vs. non-functional (multi-valued) relations differently
-# todo: evaluation not via wikidata -> a) hold-out set; b) instance-based manual/mturk c) category-based manual/mturk
+# todo: evaluation a) hold-out set (DONE); b) instance-based manual/mturk (DONE); c) category-based manual/mturk
 # todo: check whether a relation can be "generalized" over the complete category by checking whether other categories with this relation have instances with differing values
 # --> not if we find categories where we have equally distributed values, but others (e.g. categories where we have sth. like 80/20
-# todo: exclude lists
+# todo: exclude lists / evtl. exclude entities that are lowercased in wordnet
 # todo: use purity of types instead of disjointness for domain/range constraints
 
 def _get_property_count(resources: set, property_mapping: dict) -> dict:
@@ -72,18 +81,18 @@ def evaluate_category_relations():
     util.get_logger().debug('Precision: {:.3f}; Recall: {:.3f}'.format(precision_out, recall_out))
     _create_evaluation_dump(outgoing_property_assignments, 200, 'out')
 
-    util.get_logger().info('-- INGOING PROPERTIES --')
-    invalid_pred_types = defaultdict(set, {p: dbp_store.get_disjoint_types(dbp_store.get_range(p)) for p in dbp_store.get_all_predicates()})
-    inverse_ingoing_property_assignments = _assign_resource_properties(categories, dbp_store.get_inverse_resource_property_mapping(), invalid_pred_types)
-    ingoing_property_assignments = defaultdict(lambda: defaultdict(set))
-    for sub in inverse_ingoing_property_assignments:
-        for pred in inverse_ingoing_property_assignments[sub]:
-            for obj in inverse_ingoing_property_assignments[sub][pred]:
-                ingoing_property_assignments[obj][pred].add(sub)
-
-    precision_in, recall_in = _compute_metrics(ingoing_property_assignments)
-    util.get_logger().debug('Precision: {:.3f}; Recall: {:.3f}'.format(precision_in, recall_in))
-    _create_evaluation_dump(ingoing_property_assignments, 200, 'in')
+    # util.get_logger().info('-- INGOING PROPERTIES --')
+    # invalid_pred_types = defaultdict(set, {p: dbp_store.get_disjoint_types(dbp_store.get_range(p)) for p in dbp_store.get_all_predicates()})
+    # inverse_ingoing_property_assignments = _assign_resource_properties(categories, dbp_store.get_inverse_resource_property_mapping(), invalid_pred_types)
+    # ingoing_property_assignments = defaultdict(lambda: defaultdict(set))
+    # for sub in inverse_ingoing_property_assignments:
+    #     for pred in inverse_ingoing_property_assignments[sub]:
+    #         for obj in inverse_ingoing_property_assignments[sub][pred]:
+    #             ingoing_property_assignments[obj][pred].add(sub)
+    #
+    # precision_in, recall_in = _compute_metrics(ingoing_property_assignments)
+    # util.get_logger().debug('Precision: {:.3f}; Recall: {:.3f}'.format(precision_in, recall_in))
+    # _create_evaluation_dump(ingoing_property_assignments, 200, 'in')
 
 
 def _assign_resource_properties(categories: set, property_mapping: dict, invalid_pred_types: dict) -> dict:
@@ -98,7 +107,8 @@ def _assign_resource_properties(categories: set, property_mapping: dict, invalid
         cat_property_count = _get_property_count(resources, property_mapping)
         cat_property_freq = {p: p_count / len(resources) for p, p_count in cat_property_count.items()}
 
-        valid_properties = {p for p in cat_property_count if cat_property_count[p] >= MIN_CAT_PROPERTY_COUNT and cat_property_freq[p] >= MIN_CAT_PROPERTY_FREQ}
+        # valid_properties = {p for p in cat_property_count if cat_property_count[p] >= MIN_CAT_PROPERTY_COUNT and cat_property_freq[p] >= MIN_CAT_PROPERTY_FREQ}
+        valid_properties = {p for p in cat_property_count if any(surf in cat_store.get_label(cat).lower() for surf in dbp_store.get_surface_forms(p[1]))}
 
         if valid_properties:
             cat_counter += 1

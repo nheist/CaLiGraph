@@ -20,6 +20,7 @@ PREDICATE_DOMAIN = 'http://www.w3.org/2000/01/rdf-schema#domain'
 PREDICATE_RANGE = 'http://www.w3.org/2000/01/rdf-schema#range'
 PREDICATE_SAME_AS = 'http://www.w3.org/2002/07/owl#sameAs'
 PREDICATE_EQUIVALENT_PROPERTY = 'http://www.w3.org/2002/07/owl#equivalentProperty'
+PREDICATE_ANCHOR_TEXT = 'http://dbpedia.org/ontology/wikiPageWikiLinkText'
 
 # classes
 CLASS_OWL_THING = 'http://www.w3.org/2002/07/owl#Thing'
@@ -64,35 +65,44 @@ def parse_triples_from_file(filepath: str) -> Iterator[Triple]:
                     yield Triple(sub=sub.decode('utf-8'), pred=pred.decode('utf-8'), obj=obj.decode('utf-8'))
 
 
-def create_multi_val_dict_from_rdf(filepaths: list, predicate: str, reverse_key=False, reflexive=False) -> dict:
+def create_multi_val_dict_from_rdf(filepaths: list, valid_pred: str, reverse_key=False, reflexive=False) -> dict:
     data_dict = defaultdict(set)
     for fp in filepaths:
-        for triple in parse_triples_from_file(fp):
-            if triple.pred == predicate:
+        for sub, pred, obj in parse_triples_from_file(fp):
+            if pred == valid_pred:
                 if reflexive or reverse_key:
-                    data_dict[triple.obj].add(triple.sub)
+                    data_dict[obj].add(sub)
                 if reflexive or not reverse_key:
-                    data_dict[triple.sub].add(triple.obj)
+                    data_dict[sub].add(obj)
     return data_dict
 
 
-def create_single_val_dict_from_rdf(filepaths: list, predicate: str, reverse_key=False, reflexive=False) -> dict:
+def create_multi_val_freq_dict_from_rdf(filepaths: list, valid_pred: str) -> dict:
+    data_dict = defaultdict(functools.partial(defaultdict, float))
+    for fp in filepaths:
+        for sub, pred, obj in parse_triples_from_file(fp):
+            if pred == valid_pred:
+                data_dict[sub][obj.lower()] += 1
+
+    return {sub: {obj: count / sum(data_dict[sub].values()) for obj, count in data_dict[sub].items()} for sub in data_dict}
+
+
+def create_single_val_dict_from_rdf(filepaths: list, valid_pred: str, reverse_key=False, reflexive=False) -> dict:
     data_dict = {}
     for fp in filepaths:
-        for triple in parse_triples_from_file(fp):
-            if triple.pred == predicate:
+        for sub, pred, obj in parse_triples_from_file(fp):
+            if pred == valid_pred:
                 if reflexive or reverse_key:
-                    data_dict[triple.obj] = triple.sub
+                    data_dict[obj] = sub
                 elif reflexive or not reverse_key:
-                    data_dict[triple.sub] = triple.obj
+                    data_dict[sub] = obj
     return data_dict
 
 
 def create_dict_from_rdf(filepaths: list, valid_predicates: set = None, reverse_key=False) -> dict:
     data_dict = defaultdict(functools.partial(defaultdict, set))
     for fp in filepaths:
-        for triple in parse_triples_from_file(fp):
-            sub, pred, obj = triple
+        for sub, pred, obj in parse_triples_from_file(fp):
             if not valid_predicates or pred in valid_predicates:
                 data_dict[obj][pred].add(sub) if reverse_key else data_dict[sub][pred].add(obj)
     return data_dict
