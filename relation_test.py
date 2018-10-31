@@ -65,7 +65,7 @@ def evaluate_category_relations():
     categories = CategoryGraph.create_from_dbpedia().remove_unconnected().nodes
 
     util.get_logger().info('-- OUTGOING PROPERTIES --')
-    invalid_pred_types = {p: dbp_store.get_disjoint_types(dbp_store.get_domain(p)) for p in dbp_store.get_all_predicates()}
+    invalid_pred_types = defaultdict(set, {p: dbp_store.get_disjoint_types(dbp_store.get_domain(p)) for p in dbp_store.get_all_predicates()})
     outgoing_property_assignments = _assign_resource_properties(categories, dbp_store.get_resource_property_mapping(), invalid_pred_types)
 
     precision_out, recall_out = _compute_metrics(outgoing_property_assignments)
@@ -73,7 +73,7 @@ def evaluate_category_relations():
     _create_evaluation_dump(outgoing_property_assignments, 200, 'out')
 
     util.get_logger().info('-- INGOING PROPERTIES --')
-    invalid_pred_types = {p: dbp_store.get_disjoint_types(dbp_store.get_range(p)) for p in dbp_store.get_all_predicates()}
+    invalid_pred_types = defaultdict(set, {p: dbp_store.get_disjoint_types(dbp_store.get_range(p)) for p in dbp_store.get_all_predicates()})
     inverse_ingoing_property_assignments = _assign_resource_properties(categories, dbp_store.get_inverse_resource_property_mapping(), invalid_pred_types)
     ingoing_property_assignments = defaultdict(lambda: defaultdict(set))
     for sub in inverse_ingoing_property_assignments:
