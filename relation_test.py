@@ -21,14 +21,13 @@ MIN_CAT_PROPERTY_FREQ = .6
 
 # TODO: Heiko an Paper zu empiric domains/ranges erinnern
 
-# todo: comparison of relation-instances with sibling-categories and parent-categories (if they have it, too, it can't be that special to this category)
-# todo: !!! use surface-forms of objects to find similar object values within categories --> not relevant enough
 # todo: !!! treat functional (single-valued) vs. non-functional (multi-valued) relations differently
 # todo: evaluation a) hold-out set (DONE); b) instance-based manual/mturk (DONE); c) category-based manual/mturk
-# todo: check whether a relation can be "generalized" over the complete category by checking whether other categories with this relation have instances with differing values
+# todo: (OPTIONAL) check whether a relation can be "generalized" over the complete category by checking whether other categories with this relation have instances with differing values
 # --> not if we find categories where we have equally distributed values, but others (e.g. categories where we have sth. like 80/20
 # todo: exclude lists / evtl. exclude entities that are lowercased in wordnet
 # todo: use purity of types instead of disjointness for domain/range constraints
+
 
 def _get_property_count(resources: set, property_mapping: dict) -> dict:
     cat_property_count = defaultdict(int)
@@ -63,7 +62,7 @@ def _compute_metrics(resource_property_assignments: dict):
 
 
 def _create_evaluation_dump(resource_property_assignments: dict, size: int, relation_type: str):
-    filename = 'results/relations-{}-v2_{}_{}_{}.csv'.format(size, relation_type, MIN_CAT_PROPERTY_COUNT, int(MIN_CAT_PROPERTY_FREQ*100))
+    filename = 'results/relations-{}-v3_{}_{}_{}.csv'.format(size, relation_type, MIN_CAT_PROPERTY_COUNT, int(MIN_CAT_PROPERTY_FREQ*100))
     unclear_assignments = [(r, pred, val) for r in resource_property_assignments for pred in resource_property_assignments[r] for val in resource_property_assignments[r][pred] if pred not in dbp_store.get_properties(r)]
 
     df = pd.DataFrame(data=random.sample(unclear_assignments, size), columns=['sub', 'pred', 'val'])
@@ -107,8 +106,7 @@ def _assign_resource_properties(categories: set, property_mapping: dict, invalid
         cat_property_count = _get_property_count(resources, property_mapping)
         cat_property_freq = {p: p_count / len(resources) for p, p_count in cat_property_count.items()}
 
-        # valid_properties = {p for p in cat_property_count if cat_property_count[p] >= MIN_CAT_PROPERTY_COUNT and cat_property_freq[p] >= MIN_CAT_PROPERTY_FREQ}
-        valid_properties = {p for p in cat_property_count if any(surf in cat_store.get_label(cat).lower() for surf in dbp_store.get_surface_forms(p[1]))}
+        valid_properties = {p for p in cat_property_count if cat_property_count[p] >= MIN_CAT_PROPERTY_COUNT and cat_property_freq[p] >= MIN_CAT_PROPERTY_FREQ and any(surf in cat_store.get_label(cat).lower() for surf in dbp_store.get_surface_forms(p[1]))}
 
         if valid_properties:
             cat_counter += 1
