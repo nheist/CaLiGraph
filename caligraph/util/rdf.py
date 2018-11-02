@@ -84,7 +84,7 @@ def create_multi_val_freq_dict_from_rdf(filepaths: list, valid_pred: str) -> dic
             if pred == valid_pred:
                 data_dict[sub][obj.lower()] += 1
 
-    return {sub: {obj: count / sum(data_dict[sub].values()) for obj, count in data_dict[sub].items()} for sub in data_dict}
+    return defaultdict(dict, {sub: {obj: count / sum(data_dict[sub].values()) for obj, count in data_dict[sub].items()} for sub in data_dict})
 
 
 def create_single_val_dict_from_rdf(filepaths: list, valid_pred: str, reverse_key=False, reflexive=False) -> dict:
