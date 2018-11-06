@@ -72,13 +72,13 @@ def _create_evaluation_dump(resource_property_assignments: dict, size: int, rela
 def evaluate_parameters():
     evaluation_results = []
     for min_cat_property_count in [1, 2, 3, 4, 5]:
-        for min_cat_property_freq in [.5, .6, .7, .8, .9]:
+        for min_cat_property_freq in [.1, .2, .3, .4]:
             util.get_logger().info('Evaluating params: {} / {:.3f}'.format(min_cat_property_count, min_cat_property_freq))
             precision, recall = evaluate_category_relations(min_cat_property_count, min_cat_property_freq)
             util.get_logger().info('Precision: {:.3f}; Recall: {:.3f}'.format(precision, recall))
             evaluation_results.append({'min_cat_property_count': min_cat_property_count, 'min_cat_property_freq': min_cat_property_freq, 'precision': precision, 'recall': recall})
     results = pd.DataFrame(data=evaluation_results)
-    results.to_csv('results/relations-v3_parameter-optimization.csv')
+    results.to_csv('results/relations-v3_parameter-optimization_low.csv')
 
 
 def evaluate_category_relations(min_cat_property_count: int = MIN_CAT_PROPERTY_COUNT, min_cat_property_freq: float = MIN_CAT_PROPERTY_FREQ) -> tuple:
