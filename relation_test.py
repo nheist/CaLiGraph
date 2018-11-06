@@ -25,7 +25,7 @@ MIN_CAT_PROPERTY_FREQ = .6
 # todo: evaluation a) hold-out set (DONE); b) instance-based manual/mturk (DONE); c) category-based manual/mturk
 # todo: (OPTIONAL) check whether a relation can be "generalized" over the complete category by checking whether other categories with this relation have instances with differing values
 # --> not if we find categories where we have equally distributed values, but others (e.g. categories where we have sth. like 80/20
-# todo: exclude lists / evtl. exclude entities that are lowercased in wordnet
+# todo: exclude lists / remove reflexive functions / evtl. exclude entities that are lowercased in wordnet
 # todo: use purity of types instead of disjointness for domain/range constraints
 
 
@@ -69,12 +69,24 @@ def _create_evaluation_dump(resource_property_assignments: dict, size: int, rela
     df.to_csv(filename, index=False, encoding='utf-8')
 
 
-def evaluate_category_relations():
+def evaluate_parameters():
+    evaluation_results = []
+    for min_cat_property_count in [1, 2, 3, 4, 5]:
+        for min_cat_property_freq in [.5, .6, .7, .8, .9]:
+            util.get_logger().info('Evaluating params: {} / {:.3f}'.format(min_cat_property_count, min_cat_property_freq))
+            precision, recall = evaluate_category_relations(min_cat_property_count, min_cat_property_freq)
+            util.get_logger().info('Precision: {:.3f}; Recall: {:.3f}'.format(precision, recall))
+            evaluation_results.append({'min_cat_property_count': min_cat_property_count, 'min_cat_property_freq': min_cat_property_freq, 'precision': precision, 'recall': recall})
+    results = pd.DataFrame(data=evaluation_results)
+    results.to_csv('results/relations-v3_parameter-optimization.csv')
+
+
+def evaluate_category_relations(min_cat_property_count: int = MIN_CAT_PROPERTY_COUNT, min_cat_property_freq: float = MIN_CAT_PROPERTY_FREQ) -> tuple:
     categories = CategoryGraph.create_from_dbpedia().remove_unconnected().nodes
 
-    util.get_logger().info('-- OUTGOING PROPERTIES --')
+    # util.get_logger().info('-- OUTGOING PROPERTIES --')
     invalid_pred_types = defaultdict(set, {p: dbp_store.get_disjoint_types(dbp_store.get_domain(p)) for p in dbp_store.get_all_predicates()})
-    outgoing_property_assignments = _assign_resource_properties(categories, dbp_store.get_resource_property_mapping(), invalid_pred_types)
+    outgoing_property_assignments = _assign_resource_properties(categories, dbp_store.get_resource_property_mapping(), invalid_pred_types, min_cat_property_count, min_cat_property_freq)
 
     precision_out, recall_out = _compute_metrics(outgoing_property_assignments)
     util.get_logger().debug('Precision: {:.3f}; Recall: {:.3f}'.format(precision_out, recall_out))
@@ -93,8 +105,10 @@ def evaluate_category_relations():
     # util.get_logger().debug('Precision: {:.3f}; Recall: {:.3f}'.format(precision_in, recall_in))
     # _create_evaluation_dump(ingoing_property_assignments, 200, 'in')
 
+    return precision_out, recall_out
 
-def _assign_resource_properties(categories: set, property_mapping: dict, invalid_pred_types: dict) -> dict:
+
+def _assign_resource_properties(categories: set, property_mapping: dict, invalid_pred_types: dict, min_cat_property_count: int, min_cat_property_freq: float) -> dict:
     starttime = datetime.datetime.now().replace(microsecond=0)
     cat_counter = 0
     property_counter = 0
@@ -106,7 +120,7 @@ def _assign_resource_properties(categories: set, property_mapping: dict, invalid
         cat_property_count = _get_property_count(resources, property_mapping)
         cat_property_freq = {p: p_count / len(resources) for p, p_count in cat_property_count.items()}
 
-        valid_properties = {p for p in cat_property_count if cat_property_count[p] >= MIN_CAT_PROPERTY_COUNT and cat_property_freq[p] >= MIN_CAT_PROPERTY_FREQ and any(surf in cat_store.get_label(cat).lower() for surf in dbp_store.get_surface_forms(p[1]))}
+        valid_properties = {p for p in cat_property_count if cat_property_count[p] >= min_cat_property_count and cat_property_freq[p] >= min_cat_property_freq and any(surf in cat_store.get_label(cat).lower() for surf in dbp_store.get_surface_forms(p[1]))}
 
         if valid_properties:
             cat_counter += 1
@@ -132,5 +146,5 @@ def _assign_resource_properties(categories: set, property_mapping: dict, invalid
             util.get_logger().debug('=' * 20)
             util.get_logger().debug('Processed {} of {} categories in {}.'.format(idx, len(categories), (datetime.datetime.now().replace(microsecond=0) - starttime)))
 
-    util.get_logger().debug(f'CATS: {cat_counter} -- PROPERTIES: {property_counter} -- INSTANCES: {instance_counter}')
+    util.get_logger().info(f'CATS: {cat_counter} -- PROPERTIES: {property_counter} -- INSTANCES: {instance_counter}')
     return property_assignments
