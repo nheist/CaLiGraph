@@ -14,7 +14,7 @@ caligraph:
 logging:
   level: 'INFO'
   to_file: True
-  filename: 'relations-v3_optimal-parameters'
+  filename: 'relations-v4_optimal-parameters'
 
 files:
   dbpedia:
@@ -83,6 +83,9 @@ cache:
     version: 1
   dbpedia_resource_interlanguage_links:
     filename: 'dbpedia-resource-interlanguage-links'
+    version: 1
+  dbpedia_functional_predicates:
+    filename: 'dbpedia-functional-predicates'
     version: 1
   dbpedia_categories:
     filename: 'dbpedia-categories'

@@ -140,6 +140,25 @@ def get_equivalent_predicates(dbp_predicate: str) -> set:
     return __EQUIVALENT_PREDICATE__[dbp_predicate]
 
 
+def is_functional(dbp_predicate: str) -> bool:
+    global __PREDICATE_FUNCTIONAL__
+    if '__PREDICATE_FUNCTIONAL__' not in globals():
+        __PREDICATE_FUNCTIONAL__ = util.load_or_create_cache('dbpedia_functional_predicates', _create_functional_predicate_dict())
+
+    return __PREDICATE_FUNCTIONAL__[dbp_predicate]
+
+
+def _create_functional_predicate_dict():
+    predicate_functionality = {pred: False for pred in get_all_predicates()}
+    resource_property_mapping = get_resource_property_mapping()
+    for r in resource_property_mapping:
+        for pred in resource_property_mapping[r]:
+            if len(resource_property_mapping[r][pred]) > 1:
+                predicate_functionality[pred] = True
+
+    return predicate_functionality
+
+
 def get_all_predicates() -> set:
     global __PREDICATES__
     if '__PREDICATES__' not in globals():
