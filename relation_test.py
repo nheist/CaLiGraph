@@ -22,8 +22,6 @@ MIN_CAT_PROPERTY_FREQ = .6
 
 # TODO: Heiko an Paper zu empiric domains/ranges erinnern
 
-# todo: (OPTIONAL) check whether a relation can be "generalized" over the complete category by checking whether other categories with this relation have instances with differing values
-# --> not if we find categories where we have equally distributed values, but others (e.g. categories where we have sth. like 80/20
 # todo: use purity of types instead of disjointness for domain/range constraints ( -> HEIKO Paper)
 
 
@@ -44,20 +42,23 @@ def _get_property_value_count(property_tuples) -> dict:
 
 
 def _compute_metrics(resource_property_assignments: dict):
-    all_assignments = 0
+    existing_assignments = 0
     new_assignments = 0
     correct_assignments = 0
     incorrect_assignments = 0
+
     for r in dbp_store.get_resources():
-        for pred, actual_values in dbp_store.get_properties(r).items():
-            assigned_values = resource_property_assignments[r][pred]
-            all_assignments += len(actual_values)
-            new_assignments += len(assigned_values)
-            correct_assignments += len(assigned_values.intersection(actual_values))
-            incorrect_assignments += len(assigned_values.difference(actual_values)) if pred in resource_property_assignments[r] else 0
+        existing_properties = dbp_store.get_properties(r)
+        existing_assignments += sum({len(vals) for vals in existing_properties.values()})
+
+        for pred, new_values in resource_property_assignments[r].items():
+            existing_values = existing_properties[pred]
+            new_assignments += len(new_values)
+            correct_assignments += len(new_values.intersection(existing_values))
+            incorrect_assignments += len(new_values.difference(existing_values)) if existing_values else 0
 
     precision = correct_assignments / (correct_assignments + incorrect_assignments)
-    recall = correct_assignments / all_assignments
+    recall = correct_assignments / existing_assignments
     count_new = new_assignments - correct_assignments - incorrect_assignments
     return precision, recall, count_new
 
