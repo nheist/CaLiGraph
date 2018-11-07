@@ -45,18 +45,21 @@ def _get_property_value_count(property_tuples) -> dict:
 
 def _compute_metrics(resource_property_assignments: dict):
     all_assignments = 0
+    new_assignments = 0
     correct_assignments = 0
     incorrect_assignments = 0
     for r in dbp_store.get_resources():
         for pred, actual_values in dbp_store.get_properties(r).items():
             assigned_values = resource_property_assignments[r][pred]
             all_assignments += len(actual_values)
+            new_assignments += len(assigned_values)
             correct_assignments += len(assigned_values.intersection(actual_values))
             incorrect_assignments += len(assigned_values.difference(actual_values)) if pred in resource_property_assignments[r] else 0
 
     precision = correct_assignments / (correct_assignments + incorrect_assignments)
     recall = correct_assignments / all_assignments
-    return precision, recall
+    count_new = new_assignments - correct_assignments - incorrect_assignments
+    return precision, recall, count_new
 
 
 def _create_evaluation_dump(resource_property_assignments: dict, size: int, relation_type: str):
@@ -73,9 +76,9 @@ def evaluate_parameters():
     for min_cat_property_count in [1, 2, 3, 4, 5]:
         for min_cat_property_freq in [.1, .2, .3, .4, .5, .6, .7, .8, .9]:
             util.get_logger().info('Evaluating params: {} / {:.3f}'.format(min_cat_property_count, min_cat_property_freq))
-            precision, recall = evaluate_category_relations(min_cat_property_count, min_cat_property_freq)
+            precision, recall, count_new = evaluate_category_relations(min_cat_property_count, min_cat_property_freq)
             util.get_logger().info('Precision: {:.3f}; Recall: {:.3f}'.format(precision, recall))
-            evaluation_results.append({'min_cat_property_count': min_cat_property_count, 'min_cat_property_freq': min_cat_property_freq, 'precision': precision, 'recall': recall})
+            evaluation_results.append({'min_cat_property_count': min_cat_property_count, 'min_cat_property_freq': min_cat_property_freq, 'precision': precision, 'recall': recall, 'count_new': count_new})
     results = pd.DataFrame(data=evaluation_results)
     results.to_csv('results/relations-v4_parameter-optimization.csv')
 
@@ -87,8 +90,8 @@ def evaluate_category_relations(min_cat_property_count: int = MIN_CAT_PROPERTY_C
     invalid_pred_types = defaultdict(set, {p: dbp_store.get_disjoint_types(dbp_store.get_domain(p)) for p in dbp_store.get_all_predicates()})
     outgoing_property_assignments = _assign_resource_properties(categories, dbp_store.get_resource_property_mapping(), invalid_pred_types, min_cat_property_count, min_cat_property_freq)
 
-    precision_out, recall_out = _compute_metrics(outgoing_property_assignments)
-    util.get_logger().debug('Precision: {:.3f}; Recall: {:.3f}'.format(precision_out, recall_out))
+    precision_out, recall_out, count_out = _compute_metrics(outgoing_property_assignments)
+    util.get_logger().debug('Precision: {:.3f}; Recall: {:.3f}; New-Count: {}'.format(precision_out, recall_out, count_out))
     _create_evaluation_dump(outgoing_property_assignments, 200, 'out')
 
     # util.get_logger().info('-- INGOING PROPERTIES --')
@@ -104,7 +107,7 @@ def evaluate_category_relations(min_cat_property_count: int = MIN_CAT_PROPERTY_C
     # util.get_logger().debug('Precision: {:.3f}; Recall: {:.3f}'.format(precision_in, recall_in))
     # _create_evaluation_dump(ingoing_property_assignments, 200, 'in')
 
-    return precision_out, recall_out
+    return precision_out, recall_out, count_out
 
 
 def _assign_resource_properties(categories: set, property_mapping: dict, invalid_pred_types: dict, min_cat_property_count: int, min_cat_property_freq: float) -> dict:
