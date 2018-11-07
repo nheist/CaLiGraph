@@ -143,7 +143,7 @@ def get_equivalent_predicates(dbp_predicate: str) -> set:
 def is_functional(dbp_predicate: str) -> bool:
     global __PREDICATE_FUNCTIONAL__
     if '__PREDICATE_FUNCTIONAL__' not in globals():
-        __PREDICATE_FUNCTIONAL__ = util.load_or_create_cache('dbpedia_functional_predicates', _create_functional_predicate_dict())
+        __PREDICATE_FUNCTIONAL__ = util.load_or_create_cache('dbpedia_functional_predicates', _create_functional_predicate_dict)
 
     return __PREDICATE_FUNCTIONAL__[dbp_predicate]
 
