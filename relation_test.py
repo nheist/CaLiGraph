@@ -6,7 +6,6 @@ import caligraph.dbpedia.store as dbp_store
 import util
 import pandas as pd
 import random
-from nltk.stem import PorterStemmer
 
 
 MIN_CAT_PROPERTY_COUNT = 1
@@ -79,34 +78,35 @@ def evaluate_parameters():
             util.get_logger().info('Precision: {:.3f}; Recall: {:.3f}'.format(precision, recall))
             evaluation_results.append({'min_cat_property_count': min_cat_property_count, 'min_cat_property_freq': min_cat_property_freq, 'precision': precision, 'recall': recall, 'count_new': count_new})
     results = pd.DataFrame(data=evaluation_results)
-    results.to_csv('results/relations-v4_parameter-optimization.csv')
+    results.to_csv('results/relations-v4-in_parameter-optimization.csv')
 
 
 def evaluate_category_relations(min_cat_property_count: int = MIN_CAT_PROPERTY_COUNT, min_cat_property_freq: float = MIN_CAT_PROPERTY_FREQ) -> tuple:
     categories = CategoryGraph.create_from_dbpedia().remove_unconnected().nodes
 
     # util.get_logger().info('-- OUTGOING PROPERTIES --')
-    invalid_pred_types = defaultdict(set, {p: dbp_store.get_disjoint_types(dbp_store.get_domain(p)) for p in dbp_store.get_all_predicates()})
-    outgoing_property_assignments = _assign_resource_properties(categories, dbp_store.get_resource_property_mapping(), invalid_pred_types, min_cat_property_count, min_cat_property_freq)
-
-    precision_out, recall_out, count_out = _compute_metrics(outgoing_property_assignments)
-    util.get_logger().debug('Precision: {:.3f}; Recall: {:.3f}; New-Count: {}'.format(precision_out, recall_out, count_out))
-    _create_evaluation_dump(outgoing_property_assignments, 200, 'out')
-
-    # util.get_logger().info('-- INGOING PROPERTIES --')
-    # invalid_pred_types = defaultdict(set, {p: dbp_store.get_disjoint_types(dbp_store.get_range(p)) for p in dbp_store.get_all_predicates()})
-    # inverse_ingoing_property_assignments = _assign_resource_properties(categories, dbp_store.get_inverse_resource_property_mapping(), invalid_pred_types)
-    # ingoing_property_assignments = defaultdict(lambda: defaultdict(set))
-    # for sub in inverse_ingoing_property_assignments:
-    #     for pred in inverse_ingoing_property_assignments[sub]:
-    #         for obj in inverse_ingoing_property_assignments[sub][pred]:
-    #             ingoing_property_assignments[obj][pred].add(sub)
+    # invalid_pred_types = defaultdict(set, {p: dbp_store.get_disjoint_types(dbp_store.get_domain(p)) for p in dbp_store.get_all_predicates()})
+    # outgoing_property_assignments = _assign_resource_properties(categories, dbp_store.get_resource_property_mapping(), invalid_pred_types, min_cat_property_count, min_cat_property_freq)
     #
-    # precision_in, recall_in = _compute_metrics(ingoing_property_assignments)
-    # util.get_logger().debug('Precision: {:.3f}; Recall: {:.3f}'.format(precision_in, recall_in))
-    # _create_evaluation_dump(ingoing_property_assignments, 200, 'in')
+    # precision_out, recall_out, count_out = _compute_metrics(outgoing_property_assignments)
+    # util.get_logger().debug('Precision: {:.3f}; Recall: {:.3f}; New-Count: {}'.format(precision_out, recall_out, count_out))
+    # _create_evaluation_dump(outgoing_property_assignments, 200, 'out')
 
-    return precision_out, recall_out, count_out
+    util.get_logger().info('-- INGOING PROPERTIES --')
+    invalid_pred_types = defaultdict(set, {p: dbp_store.get_disjoint_types(dbp_store.get_range(p)) for p in dbp_store.get_all_predicates()})
+    inverse_ingoing_property_assignments = _assign_resource_properties(categories, dbp_store.get_inverse_resource_property_mapping(), invalid_pred_types, min_cat_property_count, min_cat_property_freq)
+    ingoing_property_assignments = defaultdict(lambda: defaultdict(set))
+    for sub in inverse_ingoing_property_assignments:
+        for pred in inverse_ingoing_property_assignments[sub]:
+            for obj in inverse_ingoing_property_assignments[sub][pred]:
+                ingoing_property_assignments[obj][pred].add(sub)
+
+    precision_in, recall_in, count_in = _compute_metrics(ingoing_property_assignments)
+    util.get_logger().debug('Precision: {:.3f}; Recall: {:.3f}'.format(precision_in, recall_in))
+    _create_evaluation_dump(ingoing_property_assignments, 200, 'in')
+
+    # return precision_out, recall_out, count_out
+    return precision_in, recall_in, count_in
 
 
 def _assign_resource_properties(categories: set, property_mapping: dict, invalid_pred_types: dict, min_cat_property_count: int, min_cat_property_freq: float) -> dict:
@@ -121,12 +121,10 @@ def _assign_resource_properties(categories: set, property_mapping: dict, invalid
         cat_property_count = _get_property_count(resources, property_mapping)
         cat_property_freq = {p: p_count / len(resources) for p, p_count in cat_property_count.items()}
 
-        ps = PorterStemmer()
-        stemmed_cat_label = ' '.join({ps.stem(word) for word in cat_store.get_label(cat).split(' ')})
         valid_properties = {p for p in cat_property_count
                             if cat_property_count[p] >= min_cat_property_count
                             and cat_property_freq[p] >= min_cat_property_freq
-                            and any(ps.stem(surf) in stemmed_cat_label for surf in dbp_store.get_surface_forms(p[1]))}
+                            and any(surf in cat_store.get_label(cat).lower() for surf in dbp_store.get_surface_forms(p[1]))}
 
         if valid_properties:
             cat_counter += 1
