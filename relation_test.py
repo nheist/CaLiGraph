@@ -6,6 +6,7 @@ import caligraph.dbpedia.store as dbp_store
 import util
 import pandas as pd
 import random
+from nltk.stem import PorterStemmer
 
 
 MIN_CAT_PROPERTY_COUNT = 1
@@ -65,7 +66,7 @@ def _compute_metrics(resource_property_assignments: dict):
 
 
 def _create_evaluation_dump(resource_property_assignments: dict, size: int, relation_type: str):
-    filename = 'results/relations-{}-v4_{}_{}_{}.csv'.format(size, relation_type, MIN_CAT_PROPERTY_COUNT, int(MIN_CAT_PROPERTY_FREQ*100))
+    filename = 'results/relations-v4-{}_{}_{}_{}.csv'.format(size, relation_type, MIN_CAT_PROPERTY_COUNT, int(MIN_CAT_PROPERTY_FREQ*100))
     unclear_assignments = [(r, pred, val) for r in resource_property_assignments for pred in resource_property_assignments[r] for val in resource_property_assignments[r][pred] if not dbp_store.get_properties(r)[pred]]
 
     size = len(unclear_assignments) if len(unclear_assignments) < size else size
@@ -124,10 +125,12 @@ def _assign_resource_properties(categories: set, property_mapping: dict, invalid
         cat_property_count = _get_property_count(resources, property_mapping)
         cat_property_freq = {p: p_count / len(resources) for p, p_count in cat_property_count.items()}
 
+        ps = PorterStemmer()
+        stemmed_cat_label = ' '.join({ps.stem(word) for word in cat_store.get_label(cat).split(' ')})
         valid_properties = {p for p in cat_property_count
                             if cat_property_count[p] >= min_cat_property_count
                             and cat_property_freq[p] >= min_cat_property_freq
-                            and any(surf in cat_store.get_label(cat).lower() for surf in dbp_store.get_surface_forms(p[1]))}
+                            and any(ps.stem(surf) in stemmed_cat_label for surf in dbp_store.get_surface_forms(p[1]))}
 
         if valid_properties:
             cat_counter += 1
