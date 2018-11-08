@@ -16,15 +16,11 @@ MIN_CAT_PROPERTY_FREQ = .2
 # todo: attribute - do i find a surface form in the category name
 # todo: attribute - negative example for disjoint domain
 
-# TODO: --- GENERAL ---
-# todo: evaluation a) hold-out set (DONE); b) instance-based manual/mturk (DONE); c) category-based manual/mturk
-# TODO: nach F1 evaluieren und optimale Parameterkonstellation finden
-# TODO: Profiling: Welche Subject-Types/Properties findet man gut/schlecht
-
-# TODO: Heiko an Paper zu empiric domains/ranges erinnern
-
-# todo: surface forms (stemming -> category + surface) // bei literals direkt gegen kategorie checken (mit stemming)
+# todo: --- GENERAL ---
 # todo: use purity of types instead of disjointness for domain/range constraints ( -> HEIKO Paper)
+# todo: nach F1 evaluieren und optimale Parameterkonstellation finden
+# todo: evaluation a) hold-out set (DONE); b) instance-based manual/mturk (DONE); c) category-based manual/mturk
+# todo: Profiling: Welche Subject-Types/Properties findet man gut/schlecht (Aufstellung bis FREITAG, was wichtig ist)
 
 
 def _get_property_count(resources: set, property_mapping: dict) -> dict:
