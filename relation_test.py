@@ -8,8 +8,8 @@ import pandas as pd
 import random
 
 
-MIN_CAT_PROPERTY_COUNT = 5
-MIN_CAT_PROPERTY_FREQ = .9
+MIN_CAT_PROPERTY_COUNT = 1
+MIN_CAT_PROPERTY_FREQ = .2
 # classifier erstmal zweitrangig
 # todo: train classifier to predict these values?
 # todo: attribute - do i find a surface form in the category name
@@ -22,6 +22,7 @@ MIN_CAT_PROPERTY_FREQ = .9
 
 # TODO: Heiko an Paper zu empiric domains/ranges erinnern
 
+# todo: surface forms (stemming -> category + surface) // bei literals direkt gegen kategorie checken (mit stemming)
 # todo: use purity of types instead of disjointness for domain/range constraints ( -> HEIKO Paper)
 
 
