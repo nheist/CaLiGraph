@@ -12,9 +12,9 @@ caligraph:
 
 
 logging:
-  level: 'INFO'
+  level: 'DEBUG'
   to_file: True
-  filename: 'relations-v4_optimal-parameters'
+  filename: 'relations-v4_5-90_test'
 
 files:
   dbpedia:

@@ -8,8 +8,8 @@ import pandas as pd
 import random
 
 
-MIN_CAT_PROPERTY_COUNT = 3
-MIN_CAT_PROPERTY_FREQ = .6
+MIN_CAT_PROPERTY_COUNT = 5
+MIN_CAT_PROPERTY_FREQ = .9
 # classifier erstmal zweitrangig
 # todo: train classifier to predict these values?
 # todo: attribute - do i find a surface form in the category name
@@ -65,7 +65,7 @@ def _compute_metrics(resource_property_assignments: dict):
 
 def _create_evaluation_dump(resource_property_assignments: dict, size: int, relation_type: str):
     filename = 'results/relations-{}-v4_{}_{}_{}.csv'.format(size, relation_type, MIN_CAT_PROPERTY_COUNT, int(MIN_CAT_PROPERTY_FREQ*100))
-    unclear_assignments = [(r, pred, val) for r in resource_property_assignments for pred in resource_property_assignments[r] for val in resource_property_assignments[r][pred] if pred not in dbp_store.get_properties(r)]
+    unclear_assignments = [(r, pred, val) for r in resource_property_assignments for pred in resource_property_assignments[r] for val in resource_property_assignments[r][pred] if not dbp_store.get_properties(r)[pred]]
 
     size = len(unclear_assignments) if len(unclear_assignments) < size else size
     df = pd.DataFrame(data=random.sample(unclear_assignments, size), columns=['sub', 'pred', 'val'])
