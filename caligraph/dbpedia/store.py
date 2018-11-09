@@ -93,11 +93,11 @@ def get_property_frequency_distribution(dbp_predicate: str) -> dict:
 def _compute_property_frequency_distribution() -> dict:
     property_frequency_distribution = defaultdict(functools.partial(defaultdict, int))
     for properties in get_resource_property_mapping().values():
-        for prop, values in properties.items():
+        for pred, values in properties.items():
             for val in values:
-                property_frequency_distribution[prop][val] += 1
-    for prop, value_counts in property_frequency_distribution.items():
-        property_frequency_distribution[prop]['_sum'] = sum(value_counts.values())
+                property_frequency_distribution[pred][val] += 1
+    for pred, value_counts in property_frequency_distribution.items():
+        property_frequency_distribution[pred]['_sum'] = sum(value_counts.values())
     return property_frequency_distribution
 
 
