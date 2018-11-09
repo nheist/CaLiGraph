@@ -160,7 +160,7 @@ def _split_assignments(property_assignments: dict) -> Tuple[set, set, set]:
 
 
 def _compute_metrics(true_facts: set, false_facts: set) -> Tuple[float, float]:
-    existing_facts_count = sum({len(vals) for r in dbp_store.get_resources() for vals in dbp_store.get_properties(r).values()})
+    existing_facts_count = sum([len(vals) for r in dbp_store.get_resources() for vals in dbp_store.get_properties(r).values()])
     true_facts_count, false_facts_count = len(true_facts), len(false_facts)
 
     precision = true_facts_count / (true_facts_count + false_facts_count)
