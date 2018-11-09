@@ -4,7 +4,7 @@ import caligraph.dbpedia.store as dbp_store
 from collections import defaultdict
 
 # implementing heuristics from Töpper et al. 2012 - DBpedia Ontology Enrichment for Inconsistency Detection
-DOMAIN_THRESHOLD = .90
+DOMAIN_THRESHOLD = .96
 DISJOINT_THRESHOLD = .17
 
 
@@ -21,15 +21,16 @@ def _compute_domains() -> dict:
     resource_property_mapping = dbp_store.get_resource_property_mapping()
     for r in resource_property_mapping:
         for pred in resource_property_mapping[r]:
+            triple_count = len(resource_property_mapping[r][pred])
+            predicate_type_distribution[pred]['_sum'] += triple_count
             for t in dbp_store.get_transitive_types(r):
-                predicate_type_distribution[pred][t] += 1
+                predicate_type_distribution[pred][t] += triple_count
 
     predicate_domains = {}
     for pred in predicate_type_distribution:
-        t_sum = sum(predicate_type_distribution[pred].values())
-        t_scores = {t: t_count / t_sum for t, t_count in predicate_type_distribution[pred].items()}
+        t_sum = predicate_type_distribution[pred]['_sum']
+        t_scores = {t: t_count / t_sum for t, t_count in predicate_type_distribution[pred].items() if t != '_sum'}
         t_score_max = max(t_scores.values())
-        print(f'{pred}: {t_score_max}')
         if t_score_max >= DOMAIN_THRESHOLD:
             valid_domains = {t for t, t_score in t_scores.items() if t_score == t_score_max}
             if len(valid_domains) > 1:
@@ -50,5 +51,23 @@ def get_disjoint_types(dbp_type) -> set:
 
 
 def _compute_disjoint_types() -> dict:
+    disjoint_types = defaultdict(set)
+
+    type_property_weights = _compute_type_property_weights()
+    dbp_types = {t for types in dbp_store._get_resource_type_mapping().values() for t in types}
+    while len(dbp_types) > 0:
+        dbp_type = dbp_types.pop()
+        for other_dbp_type in dbp_types:
+            if _compute_type_similarity(dbp_type, other_dbp_type, type_property_weights) <= DISJOINT_THRESHOLD:
+                disjoint_types[dbp_type].add(other_dbp_type)
+                disjoint_types[other_dbp_type].add(dbp_type)
+
+    return disjoint_types  # todo: check whether transitive types are included
+
+
+def _compute_type_property_weights() -> dict:
     pass
-    # dbp_types = dbp_store.get_types()
+
+
+def _compute_type_similarity(type_a: str, type_b: str, type_property_weights: dict) -> float:
+    pass
