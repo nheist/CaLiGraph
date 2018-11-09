@@ -14,7 +14,7 @@ caligraph:
 logging:
   level: 'INFO'
   to_file: True
-  filename: 'relations-v6_param-optimization'
+  filename: 'relations-v5_param-optimization'
 
 files:
   dbpedia:
