@@ -12,7 +12,7 @@ def get_domain(dbp_predicate) -> Optional[str]:
     global __DOMAINS__
     if '__DOMAINS__' not in globals():
         __DOMAINS__ = util.load_or_create_cache('dbpedia_heuristic_domains', _compute_domains)
-    return __DOMAINS__[dbp_predicate]
+    return __DOMAINS__[dbp_predicate] if dbp_predicate in __DOMAINS__ else None
 
 
 def _compute_domains() -> dict:
@@ -24,7 +24,7 @@ def _compute_domains() -> dict:
             for t in dbp_store.get_transitive_types(r):
                 predicate_type_distribution[pred][t] += 1
 
-    predicate_domains = defaultdict(lambda: None)
+    predicate_domains = {}
     for pred in predicate_type_distribution:
         t_sum = sum(predicate_type_distribution[pred].values())
         t_scores = {t: t_count / t_sum for t, t_count in predicate_type_distribution[pred].items()}
