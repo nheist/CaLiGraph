@@ -39,7 +39,7 @@ def get_surface_forms(value: str) -> dict:
     elif value.startswith(dbp_util.NAMESPACE_DBP_ONTOLOGY):
         return {value[len(dbp_util.NAMESPACE_DBP_ONTOLOGY):].lower(): 1}
     else:
-        return {val: 1 for val in value.split(' ')}
+        return {value.lower(): 1}
 
 
 def get_types(dbp_resource: str) -> set:
