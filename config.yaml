@@ -87,6 +87,12 @@ cache:
   dbpedia_functional_predicates:
     filename: 'dbpedia-functional-predicates'
     version: 1
+  dbpedia_heuristic_domains:
+    filename: 'dbpedia-heuristic-domains'
+    version: 1
+  dbpedia_heuristic_disjoint_types:
+    filename: 'dbpedia-heuristic-disjoint-types'
+    version: 1
   dbpedia_categories:
     filename: 'dbpedia-categories'
     version: 1
