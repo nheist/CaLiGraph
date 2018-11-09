@@ -6,20 +6,25 @@ import caligraph.dbpedia.store as dbp_store
 import util
 import pandas as pd
 import random
+from typing import Tuple
+from collections import namedtuple
 
+Property = namedtuple('Property', 'p o')
+Fact = namedtuple('Fact', 's p o')
+
+PROPERTY_INGOING = 'ingoing'
+PROPERTY_OUTGOING = 'outgoing'
 
 MIN_CAT_PROPERTY_COUNT = 1
 MIN_CAT_PROPERTY_FREQ = .2
-# classifier erstmal zweitrangig
-# todo: train classifier to predict these values?
-# todo: attribute - do i find a surface form in the category name
-# todo: attribute - negative example for disjoint domain
 
 # todo: --- GENERAL ---
 # todo: use purity of types instead of disjointness for domain/range constraints ( -> HEIKO Paper)
-# todo: nach F1 evaluieren und optimale Parameterkonstellation finden
 # todo: evaluation a) hold-out set (DONE); b) instance-based manual/mturk (DONE); c) category-based manual/mturk
 # todo: Profiling: Welche Subject-Types/Properties findet man gut/schlecht (Aufstellung bis FREITAG, was wichtig ist)
+
+# todo: --- REFACTOR ---
+# todo: 'Property' einbauen
 
 
 def _get_property_count(resources: set, property_mapping: dict) -> dict:
@@ -31,82 +36,91 @@ def _get_property_count(resources: set, property_mapping: dict) -> dict:
     return cat_property_count
 
 
-def _get_property_value_count(property_tuples) -> dict:
-    property_value_count = defaultdict(set)
-    for pred, val in property_tuples:
-        property_value_count[pred].add(val)
-    return {pred: len(vals) for pred, vals in property_value_count.items()}
-
-
-def _compute_metrics(resource_property_assignments: dict):
-    existing_assignments = 0
-    new_assignments = 0
-    correct_assignments = 0
-    incorrect_assignments = 0
+def _split_assignments(property_assignments: dict) -> Tuple[set, set, set]:
+    true_facts = set()
+    false_facts = set()
+    unknown_facts = set()
 
     for r in dbp_store.get_resources():
         existing_properties = dbp_store.get_properties(r)
-        existing_assignments += sum({len(vals) for vals in existing_properties.values()})
-
-        for pred, new_values in resource_property_assignments[r].items():
+        for pred, new_values in property_assignments[r].items():
             existing_values = existing_properties[pred]
-            new_assignments += len(new_values)
-            correct_assignments += len(new_values.intersection(existing_values))
-            incorrect_assignments += len(new_values.difference(existing_values)) if existing_values else 0
+            if existing_values:
+                true_facts.update({Fact(s=r, p=pred, o=val) for val in new_values.intersection(existing_values)})
+                false_facts.update({Fact(s=r, p=pred, o=val) for val in new_values.difference(existing_values)})
+            else:
+                unknown_facts.update({Fact(s=r, p=pred, o=val) for val in new_values})
 
-    precision = correct_assignments / (correct_assignments + incorrect_assignments)
-    recall = correct_assignments / existing_assignments
-    count_new = new_assignments - correct_assignments - incorrect_assignments
-    return precision, recall, count_new
+    return true_facts, false_facts, unknown_facts
 
 
-def _create_evaluation_dump(resource_property_assignments: dict, size: int, relation_type: str):
-    filename = 'results/relations-v5-{}_{}_{}_{}.csv'.format(size, relation_type, MIN_CAT_PROPERTY_COUNT, int(MIN_CAT_PROPERTY_FREQ*100))
-    unclear_assignments = [(r, pred, val) for r in resource_property_assignments for pred in resource_property_assignments[r] for val in resource_property_assignments[r][pred] if not dbp_store.get_properties(r)[pred]]
+def _compute_metrics(true_facts: set, false_facts: set) -> Tuple[float, float]:
+    existing_facts_count = sum({len(vals) for r in dbp_store.get_resources() for vals in dbp_store.get_properties(r).values()})
+    true_facts_count, false_facts_count = len(true_facts), len(false_facts)
 
-    size = len(unclear_assignments) if len(unclear_assignments) < size else size
-    df = pd.DataFrame(data=random.sample(unclear_assignments, size), columns=['sub', 'pred', 'val'])
+    precision = true_facts_count / (true_facts_count + false_facts_count)
+    recall = true_facts_count / existing_facts_count
+    return precision, recall
+
+
+def _create_evaluation_dump(unknown_facts: set, size: int, relation_type: str):
+    filename = 'results/relations-v5-{}-{}_{}_{}.csv'.format(relation_type, size, MIN_CAT_PROPERTY_COUNT, int(MIN_CAT_PROPERTY_FREQ*100))
+
+    size = len(unknown_facts) if len(unknown_facts) < size else size
+    df = pd.DataFrame(data=random.sample(unknown_facts, size), columns=['sub', 'pred', 'obj'])
     df.to_csv(filename, index=False, encoding='utf-8')
 
 
 def evaluate_parameters():
     evaluation_results = []
-    for min_cat_property_count in [1, 2, 3, 4, 5]:
-        for min_cat_property_freq in [.1, .2, .3, .4, .5, .6, .7, .8, .9]:
-            util.get_logger().info('Evaluating params: {} / {:.3f}'.format(min_cat_property_count, min_cat_property_freq))
-            precision, recall, count_new = evaluate_category_relations(min_cat_property_count, min_cat_property_freq)
-            util.get_logger().info('Precision: {:.3f}; Recall: {:.3f}'.format(precision, recall))
-            evaluation_results.append({'min_cat_property_count': min_cat_property_count, 'min_cat_property_freq': min_cat_property_freq, 'precision': precision, 'recall': recall, 'count_new': count_new})
+    for min_count in [1, 2, 3, 4, 5]:
+        for min_freq in [.1, .2, .3, .4, .5, .6, .7, .8, .9]:
+            util.get_logger().info('Evaluating params: {} / {:.3f}'.format(min_count, min_freq))
+            result = evaluate_category_relations(min_count, min_freq)
+            result['count_min'] = min_count
+            result['freq_min'] = min_freq
+            evaluation_results.append(result)
     results = pd.DataFrame(data=evaluation_results)
-    results.to_csv('results/relations-v4-in_parameter-optimization.csv')
+    results.to_csv('results/relations-v5_parameter-optimization.csv', index=False, encoding='utf-8')
 
 
-def evaluate_category_relations(min_cat_property_count: int = MIN_CAT_PROPERTY_COUNT, min_cat_property_freq: float = MIN_CAT_PROPERTY_FREQ) -> tuple:
+def evaluate_category_relations(min_cat_property_count: int = MIN_CAT_PROPERTY_COUNT, min_cat_property_freq: float = MIN_CAT_PROPERTY_FREQ) -> dict:
     categories = CategoryGraph.create_from_dbpedia().remove_unconnected().nodes
+    result = {}
 
-    # util.get_logger().info('-- OUTGOING PROPERTIES --')
-    # invalid_pred_types = defaultdict(set, {p: dbp_store.get_disjoint_types(dbp_store.get_domain(p)) for p in dbp_store.get_all_predicates()})
-    # outgoing_property_assignments = _assign_resource_properties(categories, dbp_store.get_resource_property_mapping(), invalid_pred_types, min_cat_property_count, min_cat_property_freq)
-    #
-    # precision_out, recall_out, count_out = _compute_metrics(outgoing_property_assignments)
-    # util.get_logger().debug('Precision: {:.3f}; Recall: {:.3f}; New-Count: {}'.format(precision_out, recall_out, count_out))
-    # _create_evaluation_dump(outgoing_property_assignments, 200, 'out')
+    util.get_logger().info('-- OUTGOING PROPERTIES --')
+    invalid_pred_types = defaultdict(set, {p: dbp_store.get_disjoint_types(dbp_store.get_domain(p)) for p in dbp_store.get_all_predicates()})
+    out_property_assignments = _assign_resource_properties(categories, dbp_store.get_resource_property_mapping(), invalid_pred_types, min_cat_property_count, min_cat_property_freq)
+    out_true, out_false, out_unknown = _split_assignments(out_property_assignments)
+    out_precision, out_recall = _compute_metrics(out_true, out_false)
+
+    util.get_logger().info('Precision: {:.3f}; Recall: {:.3f}; New-Count: {}'.format(out_precision, out_recall, len(out_unknown)))
+    _create_evaluation_dump(out_unknown, 200, PROPERTY_OUTGOING)
+    result[f'{PROPERTY_OUTGOING}_precision'] = out_precision
+    result[f'{PROPERTY_OUTGOING}_recall'] = out_recall
+    result[f'{PROPERTY_OUTGOING}_F1'] = (2 * out_precision * out_recall) / (out_precision + out_recall)
+    result[f'{PROPERTY_OUTGOING}_new-count'] = len(out_unknown)
 
     util.get_logger().info('-- INGOING PROPERTIES --')
     invalid_pred_types = defaultdict(set, {p: dbp_store.get_disjoint_types(dbp_store.get_range(p)) for p in dbp_store.get_all_predicates()})
     inverse_ingoing_property_assignments = _assign_resource_properties(categories, dbp_store.get_inverse_resource_property_mapping(), invalid_pred_types, min_cat_property_count, min_cat_property_freq)
-    ingoing_property_assignments = defaultdict(lambda: defaultdict(set))
+    in_property_assignments = defaultdict(lambda: defaultdict(set))
     for sub in inverse_ingoing_property_assignments:
         for pred in inverse_ingoing_property_assignments[sub]:
             for obj in inverse_ingoing_property_assignments[sub][pred]:
-                ingoing_property_assignments[obj][pred].add(sub)
+                in_property_assignments[obj][pred].add(sub)
 
-    precision_in, recall_in, count_in = _compute_metrics(ingoing_property_assignments)
-    util.get_logger().debug('Precision: {:.3f}; Recall: {:.3f}'.format(precision_in, recall_in))
-    _create_evaluation_dump(ingoing_property_assignments, 200, 'in')
+    in_true, in_false, in_unknown = _split_assignments(in_property_assignments)
+    in_precision, in_recall = _compute_metrics(in_true, in_false)
 
-    # return precision_out, recall_out, count_out
-    return precision_in, recall_in, count_in
+    util.get_logger().info('Precision: {:.3f}; Recall: {:.3f}; New-Count: {}'.format(in_precision, in_recall, len(in_unknown)))
+    _create_evaluation_dump(in_unknown, 200, PROPERTY_INGOING)
+    result[f'{PROPERTY_INGOING}_precision'] = in_precision
+    result[f'{PROPERTY_INGOING}_recall'] = in_recall
+    result[f'{PROPERTY_INGOING}_F1'] = (2 * in_precision * in_recall) / (in_precision + in_recall)
+    result[f'{PROPERTY_INGOING}_new-count'] = len(in_unknown)
+
+    return result
 
 
 def _assign_resource_properties(categories: set, property_mapping: dict, invalid_pred_types: dict, min_cat_property_count: int, min_cat_property_freq: float) -> dict:
@@ -133,7 +147,6 @@ def _assign_resource_properties(categories: set, property_mapping: dict, invalid
 
             for prop in valid_properties:
                 predicate, val = prop
-                invalid_types = invalid_pred_types[predicate]
 
                 # filter out reflexive relations
                 valid_resources = {r for r in resources if r != val}
@@ -142,6 +155,7 @@ def _assign_resource_properties(categories: set, property_mapping: dict, invalid
                 # filter out functional relations with existing values
                 valid_resources = {r for r in valid_resources if not dbp_store.get_properties(r)[predicate]} if dbp_store.is_functional(predicate) else valid_resources
                 # filter out invalid domains / ranges
+                invalid_types = invalid_pred_types[predicate]
                 valid_resources = {r for r in valid_resources if not invalid_types.intersection(dbp_store.get_types(r))} if invalid_types else valid_resources
 
                 if valid_resources:
