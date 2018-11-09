@@ -1,5 +1,4 @@
 from collections import defaultdict
-import datetime
 import caligraph.category.store as cat_store
 from caligraph.category.graph import CategoryGraph
 import caligraph.dbpedia.store as dbp_store
@@ -9,6 +8,7 @@ import random
 from typing import Tuple
 from collections import namedtuple
 
+Property = namedtuple('Property', 'p o')
 Fact = namedtuple('Fact', 's p o')
 
 PROPERTY_INGOING = 'ingoing'
@@ -35,7 +35,7 @@ def evaluate_parameters():
             result['freq_min'] = min_freq
             evaluation_results.append(result)
     results = pd.DataFrame(data=evaluation_results)
-    results.to_csv('results/relations-v5_parameter-optimization.csv', index=False, encoding='utf-8')
+    results.to_csv('results/relations-v7_parameter-optimization.csv', index=False, encoding='utf-8')
 
 
 def evaluate_category_relations(min_count: int = MIN_CAT_PROPERTY_COUNT, min_freq: float = MIN_CAT_PROPERTY_FREQ) -> dict:
@@ -44,46 +44,56 @@ def evaluate_category_relations(min_count: int = MIN_CAT_PROPERTY_COUNT, min_fre
 
     util.get_logger().info('-- OUTGOING PROPERTIES --')
     invalid_pred_types = defaultdict(set, {p: dbp_store.get_disjoint_types(dbp_store.get_domain(p)) for p in dbp_store.get_all_predicates()})
-    out_property_assignments = _assign_resource_properties(categories, dbp_store.get_resource_property_mapping(), invalid_pred_types, min_count, min_freq)
-    out_true, out_false, out_unknown = _split_assignments(out_property_assignments)
+    out_cat_assignments, out_fact_assignments = _compute_assignments(categories, dbp_store.get_resource_property_mapping(), invalid_pred_types, min_count, min_freq)
+    out_true, out_false, out_unknown = _split_assignments(out_fact_assignments)
     out_precision, out_recall = _compute_metrics(out_true, out_false)
 
     util.get_logger().info('Precision: {:.3f}; Recall: {:.3f}; New-Count: {}'.format(out_precision, out_recall, len(out_unknown)))
     _create_evaluation_dump(out_unknown, 200, PROPERTY_OUTGOING, min_count, min_freq)
-    result[f'{PROPERTY_OUTGOING}_precision'] = out_precision
-    result[f'{PROPERTY_OUTGOING}_recall'] = out_recall
-    result[f'{PROPERTY_OUTGOING}_F1'] = (2 * out_precision * out_recall) / (out_precision + out_recall)
-    result[f'{PROPERTY_OUTGOING}_new-count'] = len(out_unknown)
+    result.update({
+        f'{PROPERTY_OUTGOING}_cat-count': len(out_cat_assignments),
+        f'{PROPERTY_OUTGOING}_pred-count': sum([len(out_cat_assignments[cat]) for cat in out_cat_assignments]),
+        f'{PROPERTY_OUTGOING}_inst-count': sum([len(out_cat_assignments[cat][pred]) for cat in out_cat_assignments for pred in out_cat_assignments[cat]]),
+        f'{PROPERTY_OUTGOING}_true-count': len(out_true),
+        f'{PROPERTY_OUTGOING}_false-count': len(out_false),
+        f'{PROPERTY_OUTGOING}_new-count': len(out_unknown),
+        f'{PROPERTY_OUTGOING}_precision': out_precision,
+        f'{PROPERTY_OUTGOING}_recall': out_recall,
+        f'{PROPERTY_OUTGOING}_F1': (2 * out_precision * out_recall) / (out_precision + out_recall)
+    })
 
     util.get_logger().info('-- INGOING PROPERTIES --')
     invalid_pred_types = defaultdict(set, {p: dbp_store.get_disjoint_types(dbp_store.get_range(p)) for p in dbp_store.get_all_predicates()})
-    inverse_ingoing_property_assignments = _assign_resource_properties(categories, dbp_store.get_inverse_resource_property_mapping(), invalid_pred_types, min_count, min_freq)
-    in_property_assignments = defaultdict(lambda: defaultdict(set))
-    for sub in inverse_ingoing_property_assignments:
-        for pred in inverse_ingoing_property_assignments[sub]:
-            for obj in inverse_ingoing_property_assignments[sub][pred]:
-                in_property_assignments[obj][pred].add(sub)
+    in_cat_assignments, in_inverse_fact_assignments = _compute_assignments(categories, dbp_store.get_inverse_resource_property_mapping(), invalid_pred_types, min_count, min_freq)
+    in_fact_assignments = defaultdict(lambda: defaultdict(set))
+    for sub in in_inverse_fact_assignments:
+        for pred in in_inverse_fact_assignments[sub]:
+            for obj in in_inverse_fact_assignments[sub][pred]:
+                in_fact_assignments[obj][pred].add(sub)
 
-    in_true, in_false, in_unknown = _split_assignments(in_property_assignments)
+    in_true, in_false, in_unknown = _split_assignments(in_fact_assignments)
     in_precision, in_recall = _compute_metrics(in_true, in_false)
 
     util.get_logger().info('Precision: {:.3f}; Recall: {:.3f}; New-Count: {}'.format(in_precision, in_recall, len(in_unknown)))
     _create_evaluation_dump(in_unknown, 200, PROPERTY_INGOING, min_count, min_freq)
-    result[f'{PROPERTY_INGOING}_precision'] = in_precision
-    result[f'{PROPERTY_INGOING}_recall'] = in_recall
-    result[f'{PROPERTY_INGOING}_F1'] = (2 * in_precision * in_recall) / (in_precision + in_recall)
-    result[f'{PROPERTY_INGOING}_new-count'] = len(in_unknown)
+    result.update({
+        f'{PROPERTY_INGOING}_cat-count': len(in_cat_assignments),
+        f'{PROPERTY_INGOING}_pred-count': sum([len(in_cat_assignments[cat]) for cat in in_cat_assignments]),
+        f'{PROPERTY_INGOING}_inst-count': sum([len(in_cat_assignments[cat][pred]) for cat in in_cat_assignments for pred in in_cat_assignments[cat]]),
+        f'{PROPERTY_INGOING}_true-count': len(in_true),
+        f'{PROPERTY_INGOING}_false-count': len(in_false),
+        f'{PROPERTY_INGOING}_new-count': len(in_unknown),
+        f'{PROPERTY_INGOING}_precision': in_precision,
+        f'{PROPERTY_INGOING}_recall': in_recall,
+        f'{PROPERTY_INGOING}_F1': (2 * in_precision * in_recall) / (in_precision + in_recall)
+    })
 
     return result
 
 
-def _assign_resource_properties(categories: set, property_mapping: dict, invalid_pred_types: dict, min_cat_property_count: int, min_cat_property_freq: float) -> dict:
-    starttime = datetime.datetime.now().replace(microsecond=0)
-    cat_counter = 0
-    property_counter = 0
-    instance_counter = 0
-
-    property_assignments = defaultdict(lambda: defaultdict(set))
+def _compute_assignments(categories: set, property_mapping: dict, invalid_pred_types: dict, min_cat_property_count: int, min_cat_property_freq: float) -> Tuple[dict, dict]:
+    cat_assignments = defaultdict(lambda: defaultdict(set))
+    fact_assignments = defaultdict(lambda: defaultdict(set))
     for idx, cat in enumerate(categories):
         resources = cat_store.get_resources(cat)
         cat_property_count = _get_property_count(resources, property_mapping)
@@ -92,16 +102,16 @@ def _assign_resource_properties(categories: set, property_mapping: dict, invalid
         valid_properties = {p for p in cat_property_count
                             if cat_property_count[p] >= min_cat_property_count
                             and cat_property_freq[p] >= min_cat_property_freq
-                            and any(surf in cat_store.get_label(cat).lower() for surf in dbp_store.get_surface_forms(p[1]))}
+                            and any(surf in cat_store.get_label(cat).lower() for surf in dbp_store.get_surface_forms(p.o))}
 
         if valid_properties:
-            cat_counter += 1
             util.get_logger().debug('=' * 20)
             util.get_logger().debug('Category: {}'.format(cat[37:]))
 
             for prop in valid_properties:
                 predicate, val = prop
 
+                cat_assignments[cat][predicate].add(val)
                 # filter out reflexive relations
                 valid_resources = {r for r in resources if r != val}
                 # filter out list pages
@@ -114,21 +124,10 @@ def _assign_resource_properties(categories: set, property_mapping: dict, invalid
 
                 if valid_resources:
                     for r in valid_resources:
-                        property_assignments[r][predicate].add(val)
-
-                    property_counter += 1
-                    instance_counter += len(resources) - cat_property_count[prop]
+                        fact_assignments[r][predicate].add(val)
                     util.get_logger().debug('Property: {} ({} / {} / {:.3f})'.format(prop, len(resources), cat_property_count[prop], cat_property_freq[prop]))
 
-                if len(resources) > len(valid_resources):
-                    util.get_logger().debug('Removed {} invalid fact assignments due to domain/range violation.'.format( len(resources) - len(valid_resources)))
-
-        if idx % 1000 == 0:
-            util.get_logger().debug('=' * 20)
-            util.get_logger().debug('Processed {} of {} categories in {}.'.format(idx, len(categories), (datetime.datetime.now().replace(microsecond=0) - starttime)))
-
-    util.get_logger().info(f'CATS: {cat_counter} -- PROPERTIES: {property_counter} -- INSTANCES: {instance_counter}')
-    return property_assignments
+    return cat_assignments, fact_assignments
 
 
 def _get_property_count(resources: set, property_mapping: dict) -> dict:
@@ -136,7 +135,7 @@ def _get_property_count(resources: set, property_mapping: dict) -> dict:
     for res in resources:
         for prop, values in property_mapping[res].items():
             for val in values:
-                cat_property_count[(prop, val)] += 1
+                cat_property_count[Property(p=prop, o=val)] += 1
     return cat_property_count
 
 
@@ -152,7 +151,7 @@ def _split_assignments(property_assignments: dict) -> Tuple[set, set, set]:
             if existing_values:
                 true_facts.update({Fact(s=r, p=pred, o=val) for val in new_values.intersection(existing_values)})
                 other_facts = {Fact(s=r, p=pred, o=val) for val in new_values.difference(existing_values)}
-                false_facts.update(other_facts)  # if dbp_store.is_functional(pred) else unknown_facts.update(other_facts)
+                false_facts.update(other_facts)
             else:
                 unknown_facts.update({Fact(s=r, p=pred, o=val) for val in new_values})
 
@@ -169,7 +168,7 @@ def _compute_metrics(true_facts: set, false_facts: set) -> Tuple[float, float]:
 
 
 def _create_evaluation_dump(unknown_facts: set, size: int, relation_type: str, min_count: int, min_freq: float):
-    filename = 'results/relations-v5-{}-{}_{}_{}.csv'.format(relation_type, size, min_count, int(min_freq*100))
+    filename = 'results/relations-v7-{}-{}_{}_{}.csv'.format(relation_type, size, min_count, int(min_freq*100))
 
     size = len(unknown_facts) if len(unknown_facts) < size else size
     df = pd.DataFrame(data=random.sample(unknown_facts, size), columns=['sub', 'pred', 'obj'])
