@@ -49,7 +49,8 @@ def evaluate_category_relations(min_count: int = MIN_CAT_PROPERTY_COUNT, min_fre
     out_precision, out_recall = _compute_metrics(out_true, out_false)
 
     util.get_logger().info('Precision: {:.3f}; Recall: {:.3f}; New-Count: {}'.format(out_precision, out_recall, len(out_unknown)))
-    _create_evaluation_dump(out_unknown, 200, PROPERTY_OUTGOING, min_count, min_freq)
+    _create_evaluation_dump({(cat, pred, obj) for cat in out_cat_assignments for pred in out_cat_assignments[cat] for obj in out_cat_assignments[cat][pred]}, 200, f'cats-{PROPERTY_OUTGOING}', min_count, min_freq)
+    _create_evaluation_dump(out_unknown, 200, f'facts-{PROPERTY_OUTGOING}', min_count, min_freq)
     result.update({
         f'{PROPERTY_OUTGOING}_cat-count': len(out_cat_assignments),
         f'{PROPERTY_OUTGOING}_pred-count': sum([len(out_cat_assignments[cat]) for cat in out_cat_assignments]),
@@ -75,7 +76,8 @@ def evaluate_category_relations(min_count: int = MIN_CAT_PROPERTY_COUNT, min_fre
     in_precision, in_recall = _compute_metrics(in_true, in_false)
 
     util.get_logger().info('Precision: {:.3f}; Recall: {:.3f}; New-Count: {}'.format(in_precision, in_recall, len(in_unknown)))
-    _create_evaluation_dump(in_unknown, 200, PROPERTY_INGOING, min_count, min_freq)
+    _create_evaluation_dump({(cat, pred, obj) for cat in in_cat_assignments for pred in in_cat_assignments[cat] for obj in in_cat_assignments[cat][pred]}, 200, f'cats-{PROPERTY_INGOING}', min_count, min_freq)
+    _create_evaluation_dump(in_unknown, 200, f'facts-{PROPERTY_INGOING}', min_count, min_freq)
     result.update({
         f'{PROPERTY_INGOING}_cat-count': len(in_cat_assignments),
         f'{PROPERTY_INGOING}_pred-count': sum([len(in_cat_assignments[cat]) for cat in in_cat_assignments]),
@@ -167,9 +169,9 @@ def _compute_metrics(true_facts: set, false_facts: set) -> Tuple[float, float]:
     return precision, recall
 
 
-def _create_evaluation_dump(unknown_facts: set, size: int, relation_type: str, min_count: int, min_freq: float):
+def _create_evaluation_dump(data: set, size: int, relation_type: str, min_count: int, min_freq: float):
     filename = 'results/relations-v7-{}-{}_{}_{}.csv'.format(relation_type, size, min_count, int(min_freq*100))
 
-    size = len(unknown_facts) if len(unknown_facts) < size else size
-    df = pd.DataFrame(data=random.sample(unknown_facts, size), columns=['sub', 'pred', 'obj'])
+    size = len(data) if len(data) < size else size
+    df = pd.DataFrame(data=random.sample(data, size), columns=['sub', 'pred', 'obj'])
     df.to_csv(filename, index=False, encoding='utf-8')
