@@ -29,6 +29,7 @@ def _compute_domains() -> dict:
         t_sum = sum(predicate_type_distribution[pred].values())
         t_scores = {t: t_count / t_sum for t, t_count in predicate_type_distribution[pred].items()}
         t_score_max = max(t_scores.values())
+        print(f'{pred}: {t_score_max}')
         if t_score_max >= DOMAIN_THRESHOLD:
             valid_domains = {t for t, t_score in t_scores.items() if t_score == t_score_max}
             if len(valid_domains) > 1:
@@ -50,3 +51,4 @@ def get_disjoint_types(dbp_type) -> set:
 
 def _compute_disjoint_types() -> dict:
     pass
+    # dbp_types = dbp_store.get_types()
