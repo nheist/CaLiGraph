@@ -4,7 +4,7 @@ import caligraph.dbpedia.store as dbp_store
 from collections import defaultdict
 
 # implementing heuristics from Töpper et al. 2012 - DBpedia Ontology Enrichment for Inconsistency Detection
-DOMAIN_THRESHOLD = .96
+DOMAIN_THRESHOLD = .90
 DISJOINT_THRESHOLD = .17
 
 
