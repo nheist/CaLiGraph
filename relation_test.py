@@ -47,7 +47,8 @@ def _split_assignments(property_assignments: dict) -> Tuple[set, set, set]:
             existing_values = existing_properties[pred]
             if existing_values:
                 true_facts.update({Fact(s=r, p=pred, o=val) for val in new_values.intersection(existing_values)})
-                false_facts.update({Fact(s=r, p=pred, o=val) for val in new_values.difference(existing_values)})
+                other_facts = {Fact(s=r, p=pred, o=val) for val in new_values.difference(existing_values)}
+                false_facts.update(other_facts) if dbp_store.is_functional(pred) else unknown_facts.update(other_facts)
             else:
                 unknown_facts.update({Fact(s=r, p=pred, o=val) for val in new_values})
 
@@ -64,7 +65,7 @@ def _compute_metrics(true_facts: set, false_facts: set) -> Tuple[float, float]:
 
 
 def _create_evaluation_dump(unknown_facts: set, size: int, relation_type: str):
-    filename = 'results/relations-v5-{}-{}_{}_{}.csv'.format(relation_type, size, MIN_CAT_PROPERTY_COUNT, int(MIN_CAT_PROPERTY_FREQ*100))
+    filename = 'results/relations-v6-{}-{}_{}_{}.csv'.format(relation_type, size, MIN_CAT_PROPERTY_COUNT, int(MIN_CAT_PROPERTY_FREQ*100))
 
     size = len(unknown_facts) if len(unknown_facts) < size else size
     df = pd.DataFrame(data=random.sample(unknown_facts, size), columns=['sub', 'pred', 'obj'])
@@ -81,7 +82,7 @@ def evaluate_parameters():
             result['freq_min'] = min_freq
             evaluation_results.append(result)
     results = pd.DataFrame(data=evaluation_results)
-    results.to_csv('results/relations-v5_parameter-optimization.csv', index=False, encoding='utf-8')
+    results.to_csv('results/relations-v6_parameter-optimization.csv', index=False, encoding='utf-8')
 
 
 def evaluate_category_relations(min_cat_property_count: int = MIN_CAT_PROPERTY_COUNT, min_cat_property_freq: float = MIN_CAT_PROPERTY_FREQ) -> dict:
