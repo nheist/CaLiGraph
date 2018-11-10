@@ -54,7 +54,8 @@ def evaluate_category_relations(min_count: int = MIN_CAT_PROPERTY_COUNT, min_fre
     result.update({
         f'{PROPERTY_OUTGOING}_cat-count': len(out_cat_assignments),
         f'{PROPERTY_OUTGOING}_pred-count': sum([len(out_cat_assignments[cat]) for cat in out_cat_assignments]),
-        f'{PROPERTY_OUTGOING}_inst-count': sum([len(out_cat_assignments[cat][pred]) for cat in out_cat_assignments for pred in out_cat_assignments[cat]]),
+        f'{PROPERTY_OUTGOING}_axiom-count': sum([len(out_cat_assignments[cat][pred]) for cat in out_cat_assignments for pred in out_cat_assignments[cat]]),
+        f'{PROPERTY_OUTGOING}_inst-count': sum([len(out_fact_assignments[cat][pred]) for cat in out_fact_assignments for pred in out_fact_assignments[cat]]),
         f'{PROPERTY_OUTGOING}_true-count': len(out_true),
         f'{PROPERTY_OUTGOING}_false-count': len(out_false),
         f'{PROPERTY_OUTGOING}_new-count': len(out_unknown),
@@ -81,7 +82,8 @@ def evaluate_category_relations(min_count: int = MIN_CAT_PROPERTY_COUNT, min_fre
     result.update({
         f'{PROPERTY_INGOING}_cat-count': len(in_cat_assignments),
         f'{PROPERTY_INGOING}_pred-count': sum([len(in_cat_assignments[cat]) for cat in in_cat_assignments]),
-        f'{PROPERTY_INGOING}_inst-count': sum([len(in_cat_assignments[cat][pred]) for cat in in_cat_assignments for pred in in_cat_assignments[cat]]),
+        f'{PROPERTY_INGOING}_axiom-count': sum([len(in_cat_assignments[cat][pred]) for cat in in_cat_assignments for pred in in_cat_assignments[cat]]),
+        f'{PROPERTY_INGOING}_inst-count': sum([len(in_fact_assignments[cat][pred]) for cat in in_fact_assignments for pred in in_fact_assignments[cat]]),
         f'{PROPERTY_INGOING}_true-count': len(in_true),
         f'{PROPERTY_INGOING}_false-count': len(in_false),
         f'{PROPERTY_INGOING}_new-count': len(in_unknown),
@@ -152,8 +154,7 @@ def _split_assignments(property_assignments: dict) -> Tuple[set, set, set]:
             existing_values = existing_properties[pred]
             if existing_values:
                 true_facts.update({Fact(s=r, p=pred, o=val) for val in new_values.intersection(existing_values)})
-                other_facts = {Fact(s=r, p=pred, o=val) for val in new_values.difference(existing_values)}
-                false_facts.update(other_facts)
+                false_facts.update({Fact(s=r, p=pred, o=val) for val in new_values.difference(existing_values)})
             else:
                 unknown_facts.update({Fact(s=r, p=pred, o=val) for val in new_values})
 
