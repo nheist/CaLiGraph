@@ -2,6 +2,7 @@ import util
 from typing import Optional
 import caligraph.dbpedia.store as dbp_store
 from collections import defaultdict
+import math
 
 # implementing heuristics from Töpper et al. 2012 - DBpedia Ontology Enrichment for Inconsistency Detection
 DOMAIN_THRESHOLD = .96
@@ -66,8 +67,29 @@ def _compute_disjoint_types() -> dict:
 
 
 def _compute_type_property_weights() -> dict:
-    pass
+    type_property_weights = {}
+
+    inverse_type_frequencies = {pred: _compute_inverse_type_frequency(pred) for pred in dbp_store.get_all_predicates()}
+    for dbp_type in dbp_store.get_all_types():
+        for dbp_pred in inverse_type_frequencies:
+            type_property_weights[dbp_type][dbp_pred] = _compute_property_frequency(dbp_type, dbp_pred) * inverse_type_frequencies[dbp_pred]
+    return type_property_weights
+
+
+def _compute_property_frequency(dbp_type: str, dbp_predicate: str) -> int:
+    pf = len({r for r in dbp_store.get_resources() if dbp_type in dbp_store.get_transitive_types(r) and dbp_predicate in dbp_store.get_properties(r)})
+    return 1 + math.log2(pf) if pf > 0 else 0
+
+
+def _compute_inverse_type_frequency(dbp_predicate: str) -> float:
+    types = dbp_store.get_all_types()
+    predicate_types = len({t for t in types if any(dbp_predicate in dbp_store.get_properties(r) for r in dbp_store.get_resources())})
+    return math.log2(len(types) / predicate_types)
 
 
 def _compute_type_similarity(type_a: str, type_b: str, type_property_weights: dict) -> float:
-    pass
+    numerator = sum(type_property_weights[type_a][pred] * type_property_weights[type_b][pred] for pred in type_property_weights[type_a])
+    denominator_a = math.sqrt(sum([w ** 2 for pred in type_property_weights[type_a] for w in type_property_weights[type_a][pred]]))
+    denominator_b = math.sqrt(sum([w ** 2 for pred in type_property_weights[type_b] for w in type_property_weights[type_a][pred]]))
+    return numerator / (denominator_a * denominator_b)
+
