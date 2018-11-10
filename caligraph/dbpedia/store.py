@@ -173,6 +173,9 @@ def get_all_predicates() -> set:
 
 # DBpedia types
 
+def get_all_types() -> set:
+    return set(_get_type_graph().nodes)
+
 
 def get_cooccurrence_frequency(dbp_type: str, another_dbp_type: str) -> float:
     global __TYPE_COOCCURRENCE_FREQUENCY_MATRIX__, __TYPE_MATRIX_DICT__
@@ -188,7 +191,7 @@ def get_cooccurrence_frequency(dbp_type: str, another_dbp_type: str) -> float:
 
 
 def _create_resource_type_cooccurrence_matrix() -> Tuple[np.array, dict]:
-    types = set(_get_type_graph().nodes)
+    types = get_all_types()
     type_count = len(types)
     type_dict = {t: i for t, i in zip(types, range(type_count))}
     type_cooccurrence_matrix = np.zeros((type_count, type_count), dtype=np.int32)
@@ -252,6 +255,10 @@ def get_equivalent_types(dbp_type: str) -> set:
     return {dbp_type} | __EQUIVALENT_TYPE_MAPPING__[dbp_type]
 
 
+def are_equivalent_types(dbp_types: set) -> bool:
+    return dbp_types == get_equivalent_types(list(dbp_types)[0])
+
+
 def get_disjoint_types(dbp_type: str) -> set:
     global __DISJOINT_TYPE_MAPPING__
     if '__DISJOINT_TYPE_MAPPING__' not in globals():
@@ -263,9 +270,9 @@ def get_disjoint_types(dbp_type: str) -> set:
 
 
 def get_type_depth(dbp_type: str) -> int:
-    type_graph = _get_type_graph()
     global __TYPE_DEPTH__
     if '__TYPE_DEPTH__' not in globals():
+        type_graph = _get_type_graph()
         __TYPE_DEPTH__ = nx.shortest_path_length(type_graph, source=rdf_util.CLASS_OWL_THING)
 
     return __TYPE_DEPTH__[dbp_type] if dbp_type in __TYPE_DEPTH__ else 1

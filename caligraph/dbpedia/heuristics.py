@@ -30,15 +30,15 @@ def _compute_domains() -> dict:
     for pred in predicate_type_distribution:
         t_sum = predicate_type_distribution[pred]['_sum']
         t_scores = {t: t_count / t_sum for t, t_count in predicate_type_distribution[pred].items() if t != '_sum'}
-        t_score_max = max(t_scores.values())
-        if t_score_max >= DOMAIN_THRESHOLD:
-            valid_domains = {t for t, t_score in t_scores.items() if t_score == t_score_max}
-            if len(valid_domains) > 1:
-                valid_domains = {t for t in valid_domains if not valid_domains.intersection(dbp_store.get_transitive_subtypes(t))}
+        if t_scores:
+            t_score_max = max(t_scores.values())
+            if t_score_max >= DOMAIN_THRESHOLD:
+                valid_domains = {t for t, t_score in t_scores.items() if t_score == t_score_max}
+                if len(valid_domains) > 1:
+                    valid_domains = {t for t in valid_domains if not valid_domains.intersection(dbp_store.get_transitive_subtypes(t))}
 
-            if len(valid_domains) > 1:
-                print(f'SOMETHING IS GOING WRONG WHILE RETRIEVING DOMAIN FOR {pred}: {valid_domains}')
-            predicate_domains[pred] = valid_domains.pop()
+                if len(valid_domains) == 1 or dbp_store.are_equivalent_types(valid_domains):
+                    predicate_domains[pred] = valid_domains.pop()
 
     return predicate_domains
 
