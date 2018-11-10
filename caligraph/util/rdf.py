@@ -24,6 +24,7 @@ PREDICATE_ANCHOR_TEXT = 'http://dbpedia.org/ontology/wikiPageWikiLinkText'
 
 # classes
 CLASS_OWL_THING = 'http://www.w3.org/2002/07/owl#Thing'
+CLASS_OWL_CLASS = 'http://www.w3.org/2002/07/owl#Class'
 
 # auxiliary structures
 Triple = namedtuple('Triple', 'sub pred obj')
@@ -63,6 +64,15 @@ def parse_triples_from_file(filepath: str) -> Iterator[Triple]:
                 if literal_triple:
                     [sub, pred, obj] = literal_triple.groups()
                     yield Triple(sub=sub.decode('utf-8'), pred=pred.decode('utf-8'), obj=obj.decode('utf-8'))
+
+
+def create_set_from_rdf(filepaths: list, valid_pred: str, valid_obj: str) -> set:
+    data_set = set()
+    for fp in filepaths:
+        for sub, pred, obj in parse_triples_from_file(fp):
+            if pred == valid_pred and obj == valid_obj:
+                data_set.add(sub)
+    return data_set
 
 
 def create_multi_val_dict_from_rdf(filepaths: list, valid_pred: str, reverse_key=False, reflexive=False) -> dict:

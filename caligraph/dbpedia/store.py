@@ -288,8 +288,11 @@ def _get_type_graph() -> nx.DiGraph:
     global __TYPE_GRAPH__
     if '__TYPE_GRAPH__' not in globals():
         subtype_mapping = rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_SUBCLASS_OF, reverse_key=True)
+        # add missing types (i.e. those, that do not have subclasses at all)
+        all_types = rdf_util.create_set_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_TYPE, rdf_util.CLASS_OWL_CLASS)
+        subtype_mapping.update({t: set() for t in all_types if t not in subtype_mapping})
         # completing subtypes with subtypes of equivalent types
-        subtype_mapping = {t: {est for et in get_equivalent_types(t) for st in subtype_mapping[et] for est in get_equivalent_types(st)} for t in set(subtype_mapping)}
-        __TYPE_GRAPH__ = nx.DiGraph(incoming_graph_data=[(cat, subcat) for cat, subcats in subtype_mapping.items() for subcat in subcats])
+        subtype_mapping = {t: {est for et in get_equivalent_types(t) for st in subtype_mapping[et] for est in get_equivalent_types(st)} for t in subtype_mapping}
+        __TYPE_GRAPH__ = nx.DiGraph(incoming_graph_data=[(t, st) for t, sts in subtype_mapping.items() for st in sts])
 
     return __TYPE_GRAPH__
