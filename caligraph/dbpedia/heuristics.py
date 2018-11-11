@@ -84,7 +84,7 @@ def _compute_property_frequency(dbp_type: str, dbp_predicate: str) -> int:
 def _compute_inverse_type_frequency(dbp_predicate: str) -> float:
     types = dbp_store.get_all_types()
     predicate_types = len({t for t in types if any(dbp_predicate in dbp_store.get_properties(r) for r in dbp_store.get_resources())})
-    return math.log2(len(types) / predicate_types)
+    return math.log2(len(types) / (predicate_types + 1))
 
 
 def _compute_type_similarity(type_a: str, type_b: str, type_property_weights: dict) -> float:
