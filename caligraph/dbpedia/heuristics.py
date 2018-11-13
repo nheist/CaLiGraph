@@ -108,7 +108,7 @@ def _compute_inverse_type_frequencies() -> dict:
 
 def _compute_type_similarity(type_a: str, type_b: str, type_property_weights: dict) -> float:
     numerator = sum(type_property_weights[type_a][pred] * type_property_weights[type_b][pred] for pred in type_property_weights[type_a])
-    denominator_a = math.sqrt(sum([w ** 2 for pred in type_property_weights[type_a] for w in type_property_weights[type_a][pred]]))
-    denominator_b = math.sqrt(sum([w ** 2 for pred in type_property_weights[type_b] for w in type_property_weights[type_a][pred]]))
+    denominator_a = math.sqrt(sum([type_property_weights[type_a][pred] ** 2 for pred in type_property_weights[type_a]]))
+    denominator_b = math.sqrt(sum([type_property_weights[type_b][pred] ** 2 for pred in type_property_weights[type_b]]))
     return numerator / (denominator_a * denominator_b)
 
