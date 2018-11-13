@@ -99,7 +99,7 @@ def _compute_inverse_type_frequencies() -> dict:
     predicate_types = defaultdict(set)
     for r in dbp_store.get_resources():
         for pred in dbp_store.get_properties(r):
-            predicate_types[pred].add(dbp_store.get_transitive_types(r))
+            predicate_types[pred].update(dbp_store.get_transitive_types(r))
 
     overall_type_count = len(dbp_store.get_all_types())
     util.get_logger().debug('computed inverse type frequencies.')
