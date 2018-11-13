@@ -91,7 +91,7 @@ def _compute_property_frequencies() -> dict:
                 property_frequencies[t][pred] += len(values)
 
     util.get_logger().debug('computed property frequencies.')
-    return defaultdict(lambda: defaultdict(float), {t: {pred: (1 + math.log2(count) if count > 0 else 0) for pred, count in property_frequencies[t].items()} for t in property_frequencies})
+    return defaultdict(lambda: defaultdict(float), {t: defaultdict(float, {pred: (1 + math.log2(count) if count > 0 else 0) for pred, count in property_frequencies[t].items()}) for t in property_frequencies})
 
 
 def _compute_inverse_type_frequencies() -> dict:
@@ -103,7 +103,7 @@ def _compute_inverse_type_frequencies() -> dict:
 
     overall_type_count = len(dbp_store.get_all_types())
     util.get_logger().debug('computed inverse type frequencies.')
-    return defaultdict(float, {pred: math.log2(overall_type_count / (len(predicate_types[pred]) + 1)) for pred in dbp_store.get_all_predicates()})
+    return {pred: math.log2(overall_type_count / (len(predicate_types[pred]) + 1)) for pred in dbp_store.get_all_predicates()}
 
 
 def _compute_type_similarity(type_a: str, type_b: str, type_property_weights: dict) -> float:
