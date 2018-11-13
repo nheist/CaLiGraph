@@ -91,7 +91,7 @@ def _compute_property_frequencies() -> dict:
                 property_frequencies[t][pred] += len(values)
 
     util.get_logger().debug('computed property frequencies.')
-    return {t: {pred: (1 + math.log2(count) if count > 0 else 0) for pred, count in property_frequencies[t].items()} for t in property_frequencies}
+    return defaultdict(lambda: defaultdict(int), {t: {pred: (1 + math.log2(count) if count > 0 else 0) for pred, count in property_frequencies[t].items()} for t in property_frequencies})
 
 
 def _compute_inverse_type_frequencies() -> dict:
