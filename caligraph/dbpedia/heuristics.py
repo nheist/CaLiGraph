@@ -103,7 +103,7 @@ def _compute_inverse_type_frequencies() -> dict:
 
     overall_type_count = len(dbp_store.get_all_types())
     util.get_logger().debug('computed inverse type frequencies.')
-    return {pred: math.log2(overall_type_count / len(predicate_types[pred])) for pred in dbp_store.get_all_predicates()}
+    return {pred: math.log2(overall_type_count / (len(predicate_types[pred]) + 1)) for pred in dbp_store.get_all_predicates()}
 
 
 def _compute_type_similarity(type_a: str, type_b: str, type_property_weights: dict) -> float:
