@@ -166,7 +166,7 @@ def _create_functional_predicate_dict():
 def get_all_predicates() -> set:
     global __PREDICATES__
     if '__PREDICATES__' not in globals():
-        __PREDICATES__ = set(rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_TYPE))
+        __PREDICATES__ = {pred for props in get_resource_property_mapping().values() for pred in props}
 
     return __PREDICATES__
 
