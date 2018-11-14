@@ -1,6 +1,7 @@
 import yaml
 import logging
 import os
+import sys
 import datetime
 import pickle
 import bz2
@@ -82,7 +83,7 @@ def get_logger():
 
 log_format = '%(asctime)s %(levelname)s: %(message)s'
 log_level = get_config('logging.level')
-if get_config('logging.to_file') and __name__ == '__main__':
+if get_config('logging.to_file') and 'ipykernel' not in sys.modules:
     log_filename = '{}_{}.log'.format(datetime.datetime.now().strftime('%Y%m%d-%H%M%S'), get_config('logging.filename'))
     log_filepath = os.path.join(get_root_path(), 'logs', log_filename)
     log_file_handler = logging.FileHandler(log_filepath, 'a', 'utf-8')
