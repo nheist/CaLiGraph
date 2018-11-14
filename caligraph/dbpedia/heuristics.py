@@ -7,10 +7,11 @@ import math
 
 # implementing heuristics from Töpper et al. 2012 - DBpedia Ontology Enrichment for Inconsistency Detection
 DOMAIN_THRESHOLD = .96
+RANGE_THRESHOLD = .77
 DISJOINT_THRESHOLD = .17
 
 
-def get_domain(dbp_predicate) -> Optional[str]:
+def get_domain(dbp_predicate: str) -> Optional[str]:
     global __DOMAINS__
     if '__DOMAINS__' not in globals():
         __DOMAINS__ = util.load_or_create_cache('dbpedia_heuristic_domains', _compute_domains)
@@ -18,31 +19,43 @@ def get_domain(dbp_predicate) -> Optional[str]:
 
 
 def _compute_domains() -> dict:
-    predicate_type_distribution = defaultdict(lambda: defaultdict(int))
+    return _compute_predicate_types(dbp_store.get_resource_property_mapping(), DOMAIN_THRESHOLD)
 
-    resource_property_mapping = dbp_store.get_resource_property_mapping()
+
+def get_range(dbp_predicate: str) -> Optional[str]:
+    global __RANGES__
+    if '__RANGES__' not in globals():
+        __RANGES__ = util.load_or_create_cache('dbpedia_heuristic_ranges', _compute_ranges)
+    return __RANGES__[dbp_predicate] if dbp_predicate in __RANGES__ else None
+
+
+def _compute_ranges() -> dict:
+    return _compute_predicate_types(dbp_store.get_inverse_resource_property_mapping(), RANGE_THRESHOLD)
+
+
+def _compute_predicate_types(resource_property_mapping: dict, threshold: float) -> dict:
+    predicate_type_distribution = defaultdict(lambda: defaultdict(int))
     for r in resource_property_mapping:
-        for pred in resource_property_mapping[r]:
-            triple_count = len(resource_property_mapping[r][pred])
+        for pred, values in resource_property_mapping[r].items():
+            triple_count = len(values)
             predicate_type_distribution[pred]['_sum'] += triple_count
             for t in dbp_store.get_transitive_types(r):
                 predicate_type_distribution[pred][t] += triple_count
 
-    predicate_domains = {}
+    matching_types = {}
     for pred in predicate_type_distribution:
         t_sum = predicate_type_distribution[pred]['_sum']
         t_scores = {t: t_count / t_sum for t, t_count in predicate_type_distribution[pred].items() if t != '_sum'}
         if t_scores:
             t_score_max = max(t_scores.values())
-            if t_score_max >= DOMAIN_THRESHOLD:
-                valid_domains = {t for t, t_score in t_scores.items() if t_score == t_score_max}
-                if len(valid_domains) > 1:
-                    valid_domains = {t for t in valid_domains if not valid_domains.intersection(dbp_store.get_transitive_subtypes(t))}
+            if t_score_max >= threshold:
+                type_candidates = {t for t, t_score in t_scores.items() if t_score == t_score_max}
+                if len(type_candidates) > 1:
+                    type_candidates = {t for t in type_candidates if not type_candidates.intersection(dbp_store.get_transitive_subtypes(t))}
 
-                if len(valid_domains) == 1 or dbp_store.are_equivalent_types(valid_domains):
-                    predicate_domains[pred] = valid_domains.pop()
-
-    return predicate_domains
+                if len(type_candidates) == 1 or dbp_store.are_equivalent_types(type_candidates):
+                    matching_types[pred] = type_candidates.pop()
+    return matching_types
 
 
 def get_disjoint_types(dbp_type) -> set:

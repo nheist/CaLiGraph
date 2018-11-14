@@ -91,6 +91,9 @@ cache:
   dbpedia_heuristic_domains:
     filename: 'dbpedia-heuristic-domains'
     version: 1
+  dbpedia_heuristic_ranges:
+    filename: 'dbpedia-heuristic-ranges'
+    version: 1
   dbpedia_heuristic_disjoint_types:
     filename: 'dbpedia-heuristic-disjoint-types'
     version: 1
