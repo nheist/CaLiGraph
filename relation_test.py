@@ -167,7 +167,7 @@ def _get_invalid_predicate_types():
 
 
 def _compute_property_counts(categories: set, property_mapping: dict) -> dict:
-    property_counts = defaultdict(lambda: defaultdict(int))
+    property_counts = defaultdict(functools.partial(defaultdict, int))
     for cat in categories:
         for res in cat_store.get_resources(cat):
             for prop, values in property_mapping[res].items():
@@ -177,7 +177,7 @@ def _compute_property_counts(categories: set, property_mapping: dict) -> dict:
 
 
 def _compute_type_counts(categories: set) -> dict:
-    type_counts = defaultdict(lambda: defaultdict(int))
+    type_counts = defaultdict(functools.partial(defaultdict, int))
     for cat in categories:
         for res in cat_store.get_resources(cat):
             for t in dbp_store.get_transitive_types(res):
