@@ -17,6 +17,12 @@ logging:
   # filename: 'heuristics_disjoint-domains'
   filename: 'relations-v8_param-optimization'
 
+mailer:
+  sender: 'errors.nheist@gmail.com'
+  password: 'Asdf1234!'
+  receiver: 'nico@informatik.uni-mannheim.de'
+  subject: 'Error: CaLiGraph'
+
 files:
   dbpedia:
     pages: 'pages_articles_en.xml.bz2'
