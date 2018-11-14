@@ -124,7 +124,7 @@ def _compute_assignments(categories: set, property_mapping: dict, invalid_pred_t
                 # filter out functional relations with existing values
                 valid_resources = {r for r in valid_resources if not dbp_store.get_properties(r)[predicate]} if dbp_store.is_functional(predicate) else valid_resources
                 # filter out invalid domains / ranges
-                invalid_types = invalid_pred_types[predicate]
+                invalid_types = {tt for t in invalid_pred_types[predicate] for tt in dbp_store.get_transitive_subtype_closure(t)}
                 valid_resources = {r for r in valid_resources if not invalid_types.intersection(dbp_store.get_types(r))} if invalid_types else valid_resources
 
                 if valid_resources:
