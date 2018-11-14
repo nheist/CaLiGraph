@@ -1,5 +1,6 @@
 import util
 from typing import Optional
+import caligraph.util.rdf as rdf_util
 import caligraph.dbpedia.store as dbp_store
 from collections import defaultdict
 import math
@@ -55,7 +56,7 @@ def _compute_disjoint_types() -> dict:
     disjoint_types = defaultdict(set)
 
     type_property_weights = _compute_type_property_weights()
-    dbp_types = {t for types in dbp_store._get_resource_type_mapping().values() for t in types}
+    dbp_types = dbp_store.get_all_types().difference({rdf_util.CLASS_OWL_THING})
     util.get_logger().debug('computing type similarities..')
     while len(dbp_types) > 0:
         dbp_type = dbp_types.pop()
