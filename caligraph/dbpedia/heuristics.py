@@ -62,7 +62,7 @@ def get_disjoint_types(dbp_type) -> set:
     global __DISJOINT_TYPES__
     if '__DISJOINT_TYPES__' not in globals():
         __DISJOINT_TYPES__ = util.load_or_create_cache('dbpedia_heuristic_disjoint_types', _compute_disjoint_types)
-    return __DISJOINT_TYPES__[dbp_type] if dbp_type in __DISJOINT_TYPES__ else set()
+    return __DISJOINT_TYPES__[dbp_type]
 
 
 def _compute_disjoint_types() -> dict:
@@ -70,22 +70,16 @@ def _compute_disjoint_types() -> dict:
 
     type_property_weights = _compute_type_property_weights()
     dbp_types = dbp_store.get_all_types().difference({rdf_util.CLASS_OWL_THING})
-    util.get_logger().debug('computing type similarities..')
     while len(dbp_types) > 0:
         dbp_type = dbp_types.pop()
         for other_dbp_type in dbp_types:
             if _compute_type_similarity(dbp_type, other_dbp_type, type_property_weights) <= DISJOINT_THRESHOLD:
                 disjoint_types[dbp_type].add(other_dbp_type)
                 disjoint_types[other_dbp_type].add(dbp_type)
-
-    # remove subtypes from disjoint types
-    disjoint_types = {t: {dt for dt in dts if not dbp_store.get_transitive_supertypes(dt).intersection(dts)} for t, dts in disjoint_types.items()}
-    util.get_logger().debug('computed type similarities.')
     return disjoint_types
 
 
 def _compute_type_property_weights() -> dict:
-    util.get_logger().debug('computing type property weights..')
     type_property_weights = defaultdict(lambda: defaultdict(float))
 
     property_frequencies = _compute_property_frequencies()
@@ -93,32 +87,26 @@ def _compute_type_property_weights() -> dict:
     for dbp_type in dbp_store.get_all_types():
         for dbp_pred in inverse_type_frequencies:
             type_property_weights[dbp_type][dbp_pred] = property_frequencies[dbp_type][dbp_pred] * inverse_type_frequencies[dbp_pred]
-    util.get_logger().debug('computed type property weights.')
     return type_property_weights
 
 
 def _compute_property_frequencies() -> dict:
-    util.get_logger().debug('computing property frequencies..')
     property_frequencies = defaultdict(lambda: defaultdict(int))
     for r in dbp_store.get_resources():
         types = dbp_store.get_transitive_types(r)
         for pred, values in dbp_store.get_properties(r).items():
             for t in types:
                 property_frequencies[t][pred] += len(values)
-
-    util.get_logger().debug('computed property frequencies.')
     return defaultdict(lambda: defaultdict(float), {t: defaultdict(float, {pred: (1 + math.log2(count) if count > 0 else 0) for pred, count in property_frequencies[t].items()}) for t in property_frequencies})
 
 
 def _compute_inverse_type_frequencies() -> dict:
-    util.get_logger().debug('computing inverse type frequencies..')
     predicate_types = defaultdict(set)
     for r in dbp_store.get_resources():
         for pred in dbp_store.get_properties(r):
             predicate_types[pred].update(dbp_store.get_transitive_types(r))
 
     overall_type_count = len(dbp_store.get_all_types())
-    util.get_logger().debug('computed inverse type frequencies.')
     return {pred: math.log2(overall_type_count / (len(predicate_types[pred]) + 1)) for pred in dbp_store.get_all_predicates()}
 
 
