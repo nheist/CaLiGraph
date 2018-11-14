@@ -2,6 +2,7 @@ from collections import defaultdict
 import caligraph.category.store as cat_store
 from caligraph.category.graph import CategoryGraph
 import caligraph.dbpedia.store as dbp_store
+import caligraph.dbpedia.heuristics as dbp_heuristics
 import util
 import pandas as pd
 import random
@@ -16,11 +17,12 @@ PROPERTY_OUTGOING = 'outgoing'
 
 MIN_CAT_PROPERTY_COUNT = 1
 MIN_CAT_PROPERTY_FREQ = .2
+USE_HEURISTIC_DISJOINTNESS = True
 
 # todo: --- GENERAL ---
-# todo: use purity of types instead of disjointness for domain/range constraints ( -> HEIKO Paper)
+# todo: output true/false/new triples with respective categories (and other relevant information)
+# todo: Profiling!
 # todo: evaluation a) hold-out set (DONE); b) instance-based manual/mturk (DONE); c) category-based manual/mturk
-# todo: Profiling: Welche Subject-Types/Properties findet man gut/schlecht (Aufstellung bis FREITAG, was wichtig ist)
 
 # todo: --- REFACTOR ---
 
@@ -35,16 +37,16 @@ def evaluate_parameters():
             result['freq_min'] = min_freq
             evaluation_results.append(result)
     results = pd.DataFrame(data=evaluation_results)
-    results.to_csv('results/relations-v7_parameter-optimization.csv', index=False, encoding='utf-8')
+    results.to_csv('results/relations-v8_parameter-optimization.csv', index=False, encoding='utf-8')
 
 
 def evaluate_category_relations(min_count: int = MIN_CAT_PROPERTY_COUNT, min_freq: float = MIN_CAT_PROPERTY_FREQ) -> dict:
     categories = CategoryGraph.create_from_dbpedia().remove_unconnected().nodes
+    invalid_predicate_types = _get_invalid_predicate_types()
     result = {}
 
     util.get_logger().info('-- OUTGOING PROPERTIES --')
-    invalid_pred_types = defaultdict(set, {p: dbp_store.get_disjoint_types(dbp_store.get_domain(p)) for p in dbp_store.get_all_predicates()})
-    out_cat_assignments, out_fact_assignments = _compute_assignments(categories, dbp_store.get_resource_property_mapping(), invalid_pred_types, min_count, min_freq)
+    out_cat_assignments, out_fact_assignments = _compute_assignments(categories, dbp_store.get_resource_property_mapping(), invalid_predicate_types['domain'], min_count, min_freq)
     out_true, out_false, out_unknown = _split_assignments(out_fact_assignments)
     out_precision, out_recall = _compute_metrics(out_true, out_false)
 
@@ -65,8 +67,7 @@ def evaluate_category_relations(min_count: int = MIN_CAT_PROPERTY_COUNT, min_fre
     })
 
     util.get_logger().info('-- INGOING PROPERTIES --')
-    invalid_pred_types = defaultdict(set, {p: dbp_store.get_disjoint_types(dbp_store.get_range(p)) for p in dbp_store.get_all_predicates()})
-    in_cat_assignments, in_inverse_fact_assignments = _compute_assignments(categories, dbp_store.get_inverse_resource_property_mapping(), invalid_pred_types, min_count, min_freq)
+    in_cat_assignments, in_inverse_fact_assignments = _compute_assignments(categories, dbp_store.get_inverse_resource_property_mapping(), invalid_predicate_types['range'], min_count, min_freq)
     in_fact_assignments = defaultdict(lambda: defaultdict(set))
     for sub in in_inverse_fact_assignments:
         for pred in in_inverse_fact_assignments[sub]:
@@ -134,6 +135,20 @@ def _compute_assignments(categories: set, property_mapping: dict, invalid_pred_t
     return cat_assignments, fact_assignments
 
 
+def _get_invalid_predicate_types():
+    predicates = dbp_store.get_all_predicates()
+    if USE_HEURISTIC_DISJOINTNESS:
+        return {
+            'domain': defaultdict(set, {p: dbp_heuristics.get_disjoint_types(dbp_heuristics.get_domain(p)) for p in predicates}),
+            'range': defaultdict(set, {p: dbp_heuristics.get_disjoint_types(dbp_heuristics.get_range(p)) for p in predicates})
+        }
+    else:
+        return {
+            'domain': defaultdict(set, {p: dbp_store.get_disjoint_types(dbp_store.get_domain(p)) for p in predicates}),
+            'range': defaultdict(set, {p: dbp_store.get_disjoint_types(dbp_store.get_range(p)) for p in predicates})
+        }
+
+
 def _get_property_count(resources: set, property_mapping: dict) -> dict:
     cat_property_count = defaultdict(int)
     for res in resources:
@@ -171,7 +186,7 @@ def _compute_metrics(true_facts: set, false_facts: set) -> Tuple[float, float]:
 
 
 def _create_evaluation_dump(data: set, size: int, relation_type: str, min_count: int, min_freq: float):
-    filename = 'results/relations-v7-{}-{}_{}_{}.csv'.format(relation_type, size, min_count, int(min_freq*100))
+    filename = 'results/relations-v8-{}-{}_{}_{}.csv'.format(relation_type, size, min_count, int(min_freq*100))
 
     size = len(data) if len(data) < size else size
     df = pd.DataFrame(data=random.sample(data, size), columns=['sub', 'pred', 'obj'])
