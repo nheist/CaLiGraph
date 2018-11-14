@@ -124,3 +124,15 @@ cache:
   wikidata_resource_properties:
     filename: 'wikidata-resource-properties'
     version: 1
+  relations_property_counts:
+    filename: 'relations-property-counts'
+    version: 1
+  relations_inverse_property_counts:
+    filename: 'relations-inverse-property-counts'
+    version: 1
+  relations_type_counts:
+    filename: 'relations-type-counts'
+    version: 1
+  relations_surface_property_values:
+    filename: 'relations-surface-property-values'
+    version: 1

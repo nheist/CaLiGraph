@@ -18,3 +18,7 @@ def type2name(dbp_type: str) -> str:
 
 def is_dbp_type(dbp_type: str) -> bool:
     return dbp_type.startswith(NAMESPACE_DBP_ONTOLOGY)
+
+
+def is_dbp_resource(dbp_resource: str) -> bool:
+    return dbp_resource.startswith(NAMESPACE_DBP_RESOURCE)

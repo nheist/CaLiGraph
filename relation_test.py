@@ -8,6 +8,7 @@ import pandas as pd
 import random
 from typing import Tuple
 from collections import namedtuple
+import functools
 
 Property = namedtuple('Property', 'p o')
 Fact = namedtuple('Fact', 's p o')
@@ -48,14 +49,15 @@ def evaluate_parameters():
 
 def evaluate_category_relations(min_count: int = MIN_PROPERTY_COUNT, min_freq: float = MIN_PROPERTY_FREQ, max_invalid_type_count: int = MAX_INVALID_TYPE_COUNT, max_invalid_type_freq: float = MAX_INVALID_TYPE_FREQ) -> dict:
     categories = CategoryGraph.create_from_dbpedia().remove_unconnected().nodes
-    property_counts = _compute_property_counts(categories, dbp_store.get_resource_property_mapping())
-    inverse_property_counts = _compute_property_counts(categories, dbp_store.get_inverse_resource_property_mapping())
-    type_counts = _compute_type_counts(categories)
+    property_counts = util.load_or_create_cache('relations_property_counts', functools.partial(_compute_property_counts, categories, dbp_store.get_resource_property_mapping()))
+    inverse_property_counts = util.load_or_create_cache('relations_inverse_property_counts', functools.partial(_compute_property_counts, categories, dbp_store.get_inverse_resource_property_mapping()))
+    type_counts = util.load_or_create_cache('relations_type_counts', functools.partial(_compute_type_counts, categories))
     invalid_predicate_types = _get_invalid_predicate_types()
+    surface_property_values = util.load_or_create_cache('relations_surface_property_values', functools.partial(_compute_surface_property_values, categories))
     result = {}
 
     util.get_logger().info('-- OUTGOING PROPERTIES --')
-    out_cat_assignments, out_fact_assignments = _compute_assignments(categories, property_counts, type_counts, invalid_predicate_types['domain'], min_count, min_freq, max_invalid_type_count, max_invalid_type_freq)
+    out_cat_assignments, out_fact_assignments = _compute_assignments(categories, property_counts, type_counts, invalid_predicate_types['domain'], surface_property_values, min_count, min_freq, max_invalid_type_count, max_invalid_type_freq)
     out_true, out_false, out_unknown = _split_assignments(out_fact_assignments)
     out_precision, out_recall = _compute_metrics(out_true, out_false)
 
@@ -77,7 +79,7 @@ def evaluate_category_relations(min_count: int = MIN_PROPERTY_COUNT, min_freq: f
     })
 
     util.get_logger().info('-- INGOING PROPERTIES --')
-    in_cat_assignments, in_inverse_fact_assignments = _compute_assignments(categories, inverse_property_counts, type_counts, invalid_predicate_types['range'], min_count, min_freq, max_invalid_type_count, max_invalid_type_freq)
+    in_cat_assignments, in_inverse_fact_assignments = _compute_assignments(categories, inverse_property_counts, type_counts, invalid_predicate_types['range'], surface_property_values, min_count, min_freq, max_invalid_type_count, max_invalid_type_freq)
     in_fact_assignments = defaultdict(lambda: defaultdict(set))
     for sub in in_inverse_fact_assignments:
         for pred in in_inverse_fact_assignments[sub]:
@@ -107,10 +109,10 @@ def evaluate_category_relations(min_count: int = MIN_PROPERTY_COUNT, min_freq: f
     return result
 
 
-def _compute_assignments(categories: set, property_counts: dict, type_counts: dict, invalid_pred_types: dict, min_property_count: int, min_property_freq: float, max_invalid_type_count: int, max_invalid_type_freq: float) -> Tuple[dict, dict]:
+def _compute_assignments(categories: set, property_counts: dict, type_counts: dict, invalid_pred_types: dict, surface_property_values: dict, min_property_count: int, min_property_freq: float, max_invalid_type_count: int, max_invalid_type_freq: float) -> Tuple[dict, dict]:
     cat_assignments = defaultdict(lambda: defaultdict(set))
     fact_assignments = defaultdict(lambda: defaultdict(set))
-    for idx, cat in enumerate(categories):
+    for cat in categories:
         resources = cat_store.get_resources(cat)
         property_count = property_counts[cat]
         property_freq = {p: p_count / len(resources) for p, p_count in property_count.items()}
@@ -118,11 +120,11 @@ def _compute_assignments(categories: set, property_counts: dict, type_counts: di
         type_freq = {t: t_count / len(resources) for t, t_count in type_count.items()}
 
         valid_properties = {p for p in property_count
-                            if property_count[p] >= min_property_count
+                            if p.o in surface_property_values
+                            and property_count[p] >= min_property_count
                             and property_freq[p] >= min_property_freq
                             and all(type_count[t] <= max_invalid_type_count for t in invalid_pred_types[p])
-                            and all(type_freq[t] <= max_invalid_type_freq for t in invalid_pred_types[p])
-                            and any(surf in cat_store.get_label(cat).lower() for surf in dbp_store.get_surface_forms(p.o))}
+                            and all(type_freq[t] <= max_invalid_type_freq for t in invalid_pred_types[p])}
 
         if valid_properties:
             util.get_logger().debug('=' * 20)
@@ -139,7 +141,8 @@ def _compute_assignments(categories: set, property_counts: dict, type_counts: di
                 # filter out functional relations with existing values
                 valid_resources = {r for r in valid_resources if not dbp_store.get_properties(r)[predicate]} if dbp_store.is_functional(predicate) else valid_resources
                 # filter out invalid domains / ranges
-                valid_resources = {r for r in valid_resources if not invalid_pred_types[predicate].intersection(dbp_store.get_types(r))} if invalid_pred_types[predicate] else valid_resources
+                invalid_types = {tt for t in invalid_pred_types[predicate] for tt in dbp_store.get_transitive_subtype_closure(t)}
+                valid_resources = {r for r in valid_resources if not invalid_types.intersection(dbp_store.get_types(r))} if invalid_types else valid_resources
 
                 if valid_resources:
                     for r in valid_resources:
@@ -180,6 +183,16 @@ def _compute_type_counts(categories: set) -> dict:
             for t in dbp_store.get_transitive_types(res):
                 type_counts[cat][t] += 1
     return type_counts
+
+
+def _compute_surface_property_values(categories: set) -> dict:
+    surface_property_values = defaultdict(set)
+    for cat in categories:
+        possible_values = {val for r in cat_store.get_resources(cat) for values in dbp_store.get_properties(r).values() for val in values}
+        for val in possible_values:
+            if any(surf in cat_store.get_label(cat).lower() for surf in dbp_store.get_surface_forms(val)):
+                surface_property_values[cat].add(val)
+    return surface_property_values
 
 
 def _split_assignments(property_assignments: dict) -> Tuple[set, set, set]:
