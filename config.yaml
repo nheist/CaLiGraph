@@ -12,7 +12,7 @@ caligraph:
 
 
 logging:
-  level: 'INFO'
+  level: 'DEBUG'
   to_file: True
   # filename: 'heuristics_disjoint-domains'
   filename: 'relations-v8_param-optimization'
