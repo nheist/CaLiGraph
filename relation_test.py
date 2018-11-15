@@ -16,7 +16,7 @@ PROPERTY_INGOING = 'ingoing'
 PROPERTY_OUTGOING = 'outgoing'
 
 MIN_PROPERTY_COUNT = 1
-MIN_PROPERTY_FREQ = 0
+MIN_PROPERTY_FREQ = .1
 MAX_INVALID_TYPE_COUNT = 1
 MAX_INVALID_TYPE_FREQ = .1
 USE_HEURISTIC_DISJOINTNESS = True
@@ -32,7 +32,7 @@ USE_HEURISTIC_DISJOINTNESS = True
 def evaluate_parameters():
     evaluation_results = []
     for min_count in [1]:  # [1, 2, 3, 4, 5]:
-        for min_freq in [0]:  # [.1, .2, .3, .4, .5, .6, .7, .8, .9]:
+        for min_freq in [.1]:  # [.1, .2, .3, .4, .5, .6, .7, .8, .9]:
             for max_invalid_type_count in [1, 2, 3, 4, 5]:
                 for max_invalid_type_freq in [0, .1, .2, .3, .4, .5]:
                     util.get_logger().info('Evaluating params: {} / {:.3f} / {} / {:.3f}'.format(min_count, min_freq, max_invalid_type_count, max_invalid_type_freq))
@@ -112,8 +112,8 @@ def _compute_assignments(categories: set, property_counts: dict, type_counts: di
     util.get_logger().debug('computing assignments..')
     cat_assignments = defaultdict(lambda: defaultdict(set))
     fact_assignments = defaultdict(lambda: defaultdict(set))
-    for cat in categories:
-        util.get_logger().debug(f'checking category {cat}..')
+    for idx, cat in enumerate(categories):
+        util.get_logger().debug(f'checking category {cat} ({idx}/{len(categories)})..')
         resources = cat_store.get_resources(cat)
         property_count = property_counts[cat]
         property_freq = {p: p_count / len(resources) for p, p_count in property_count.items()}
