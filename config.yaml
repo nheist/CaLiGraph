@@ -133,13 +133,13 @@ cache:
   wikidata_resource_properties:
     filename: 'wikidata-resource-properties'
     version: 1
-  relations_property_counts:
+  relations_property_stats:
     filename: 'relations-property-stats'
     version: 1
-  relations_inverse_property_counts:
+  relations_inverse_property_stats:
     filename: 'relations-inverse-property-stats'
     version: 1
-  relations_type_counts:
+  relations_type_stats:
     filename: 'relations-type-stats'
     version: 1
   relations_surface_property_values:
