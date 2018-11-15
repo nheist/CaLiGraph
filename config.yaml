@@ -15,7 +15,7 @@ logging:
   level: 'INFO'
   to_file: True
   # filename: 'heuristics_disjoint-domains'
-  filename: 'relations-v8_param-optimization'
+  filename: 'relations-v9_test'
 
 mailer:
   sender: 'errors.nheist@gmail.com'
@@ -144,4 +144,7 @@ cache:
     version: 1
   relations_surface_property_values:
     filename: 'relations-surface-property-values'
+    version: 1
+  relations_probabilities:
+    filename: 'relations-probabilities'
     version: 1
