@@ -20,7 +20,7 @@ logging:
 mailer:
   sender: 'errors.nheist@gmail.com'
   password: 'Asdf1234!'
-  receiver: 'nico@informatik.uni-mannheim.de'
+  receiver: 'nico.heist@gmail.com'
   subject: 'Error: CaLiGraph'
 
 files:
