@@ -49,9 +49,9 @@ def evaluate_parameters():
 
 def evaluate_category_relations(min_count: int = MIN_PROPERTY_COUNT, min_freq: float = MIN_PROPERTY_FREQ, max_invalid_type_count: int = MAX_INVALID_TYPE_COUNT, max_invalid_type_freq: float = MAX_INVALID_TYPE_FREQ) -> dict:
     categories = CategoryGraph.create_from_dbpedia().remove_unconnected().nodes
-    property_counts, property_freqs = util.load_or_create_cache('relations_property_counts', functools.partial(_compute_property_stats, categories, dbp_store.get_resource_property_mapping()))
-    inverse_property_counts, inverse_property_freqs = util.load_or_create_cache('relations_inverse_property_counts', functools.partial(_compute_property_stats, categories, dbp_store.get_inverse_resource_property_mapping()))
-    type_counts, type_freqs = util.load_or_create_cache('relations_type_counts', functools.partial(_compute_type_stats, categories))
+    property_counts, property_freqs = util.load_or_create_cache('relations_property_stats', functools.partial(_compute_property_stats, categories, dbp_store.get_resource_property_mapping()))
+    inverse_property_counts, inverse_property_freqs = util.load_or_create_cache('relations_inverse_property_stats', functools.partial(_compute_property_stats, categories, dbp_store.get_inverse_resource_property_mapping()))
+    type_counts, type_freqs = util.load_or_create_cache('relations_type_stats', functools.partial(_compute_type_stats, categories))
     invalid_predicate_types = _get_invalid_predicate_types()
     surface_property_values = util.load_or_create_cache('relations_surface_property_values', functools.partial(_compute_surface_property_values, categories))
     result = {}
