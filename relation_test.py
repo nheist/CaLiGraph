@@ -61,9 +61,9 @@ def evaluate_category_relations(min_count: int = MIN_PROPERTY_COUNT, min_freq: f
     out_precision, out_recall = _compute_metrics(out_true, out_false)
 
     util.get_logger().info('Precision: {:.3f}; Recall: {:.3f}; New-Count: {}'.format(out_precision, out_recall, len(out_unknown)))
-    _create_evaluation_dump({(cat, pred, obj) for cat in out_cat_assignments for pred in out_cat_assignments[cat] for obj in out_cat_assignments[cat][pred]}, 200, f'cats-{PROPERTY_OUTGOING}', min_count, min_freq)
-    _create_evaluation_dump(out_unknown, 200, f'facts-{PROPERTY_OUTGOING}', min_count, min_freq)
-    _create_evaluation_dump(out_false, 200, f'false-facts-{PROPERTY_OUTGOING}', min_count, min_freq)
+    _create_evaluation_dump({(cat, pred, obj) for cat in out_cat_assignments for pred in out_cat_assignments[cat] for obj in out_cat_assignments[cat][pred]}, 200, f'cats-{PROPERTY_OUTGOING}', min_count, min_freq, max_invalid_type_count, max_invalid_type_freq)
+    _create_evaluation_dump(out_unknown, 200, f'facts-{PROPERTY_OUTGOING}', min_count, min_freq, max_invalid_type_count, max_invalid_type_freq)
+    _create_evaluation_dump(out_false, 200, f'false-facts-{PROPERTY_OUTGOING}', min_count, min_freq, max_invalid_type_count, max_invalid_type_freq)
     result.update({
         f'{PROPERTY_OUTGOING}_cat-count': len(out_cat_assignments),
         f'{PROPERTY_OUTGOING}_pred-count': sum([len(out_cat_assignments[cat]) for cat in out_cat_assignments]),
@@ -89,9 +89,9 @@ def evaluate_category_relations(min_count: int = MIN_PROPERTY_COUNT, min_freq: f
     in_precision, in_recall = _compute_metrics(in_true, in_false)
 
     util.get_logger().info('Precision: {:.3f}; Recall: {:.3f}; New-Count: {}'.format(in_precision, in_recall, len(in_unknown)))
-    _create_evaluation_dump({(cat, pred, obj) for cat in in_cat_assignments for pred in in_cat_assignments[cat] for obj in in_cat_assignments[cat][pred]}, 200, f'cats-{PROPERTY_INGOING}', min_count, min_freq)
-    _create_evaluation_dump(in_unknown, 200, f'facts-{PROPERTY_INGOING}', min_count, min_freq)
-    _create_evaluation_dump(in_false, 200, f'false-facts-{PROPERTY_INGOING}', min_count, min_freq)
+    _create_evaluation_dump({(cat, pred, obj) for cat in in_cat_assignments for pred in in_cat_assignments[cat] for obj in in_cat_assignments[cat][pred]}, 200, f'cats-{PROPERTY_INGOING}', min_count, min_freq, max_invalid_type_count, max_invalid_type_freq)
+    _create_evaluation_dump(in_unknown, 200, f'facts-{PROPERTY_INGOING}', min_count, min_freq, max_invalid_type_count, max_invalid_type_freq)
+    _create_evaluation_dump(in_false, 200, f'false-facts-{PROPERTY_INGOING}', min_count, min_freq, max_invalid_type_count, max_invalid_type_freq)
     result.update({
         f'{PROPERTY_INGOING}_cat-count': len(in_cat_assignments),
         f'{PROPERTY_INGOING}_pred-count': sum([len(in_cat_assignments[cat]) for cat in in_cat_assignments]),
