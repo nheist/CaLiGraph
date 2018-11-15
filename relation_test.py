@@ -11,6 +11,7 @@ from collections import namedtuple
 import functools
 
 Fact = namedtuple('Fact', 's p o')
+CategoryProperty = namedtuple('CategoryProperty', 'cat pred obj prob inv')
 
 PROPERTY_INGOING = 'ingoing'
 PROPERTY_OUTGOING = 'outgoing'
@@ -48,9 +49,9 @@ def evaluate_parameters():
 
 def evaluate_category_relations(min_count: int = MIN_PROPERTY_COUNT, min_freq: float = MIN_PROPERTY_FREQ, max_invalid_type_count: int = MAX_INVALID_TYPE_COUNT, max_invalid_type_freq: float = MAX_INVALID_TYPE_FREQ) -> dict:
     categories = CategoryGraph.create_from_dbpedia().remove_unconnected().nodes
-    property_counts = util.load_or_create_cache('relations_property_counts', functools.partial(_compute_property_counts, categories, dbp_store.get_resource_property_mapping()))
-    inverse_property_counts = util.load_or_create_cache('relations_inverse_property_counts', functools.partial(_compute_property_counts, categories, dbp_store.get_inverse_resource_property_mapping()))
-    type_counts = util.load_or_create_cache('relations_type_counts', functools.partial(_compute_type_counts, categories))
+    property_counts, property_freqs = util.load_or_create_cache('relations_property_counts', functools.partial(_compute_property_stats, categories, dbp_store.get_resource_property_mapping()))
+    inverse_property_counts, inverse_property_freqs = util.load_or_create_cache('relations_inverse_property_counts', functools.partial(_compute_property_stats, categories, dbp_store.get_inverse_resource_property_mapping()))
+    type_counts, type_freqs = util.load_or_create_cache('relations_type_counts', functools.partial(_compute_type_stats, categories))
     invalid_predicate_types = _get_invalid_predicate_types()
     surface_property_values = util.load_or_create_cache('relations_surface_property_values', functools.partial(_compute_surface_property_values, categories))
     result = {}
@@ -106,6 +107,14 @@ def evaluate_category_relations(min_count: int = MIN_PROPERTY_COUNT, min_freq: f
     })
 
     return result
+
+
+def _compute_property_probabilites(categories: set, property_counts: dict, type_counts: dict, invalid_pred_types:dict, surface_property_values: dict) -> set:
+    cat_properties = set()
+    for idx, cat in enumerate(categories):
+        util.get_logger().debug(f'checking category {cat} ({idx}/{len(categories)})..')
+
+    return cat_properties
 
 
 def _compute_assignments(categories: set, property_counts: dict, type_counts: dict, invalid_pred_types: dict, surface_property_values: dict, min_property_count: int, min_property_freq: float, max_invalid_type_count: int, max_invalid_type_freq: float) -> Tuple[dict, dict]:
@@ -168,23 +177,33 @@ def _get_invalid_predicate_types():
         }
 
 
-def _compute_property_counts(categories: set, property_mapping: dict) -> dict:
+def _compute_property_stats(categories: set, property_mapping: dict) -> Tuple[dict, dict]:
     property_counts = defaultdict(functools.partial(defaultdict, int))
+    property_frequencies = defaultdict(functools.partial(defaultdict, float))
+
     for cat in categories:
-        for res in cat_store.get_resources(cat):
+        resources = cat_store.get_resources(cat)
+        for res in resources:
             for pred, values in property_mapping[res].items():
                 for val in values:
                     property_counts[cat][(pred, val)] += 1
-    return property_counts
+        property_frequencies[cat] = defaultdict(float, {prop: p_count / len(resources) for prop, p_count in property_counts[cat].items()})
+
+    return property_counts, property_frequencies
 
 
-def _compute_type_counts(categories: set) -> dict:
+def _compute_type_stats(categories: set) -> Tuple[dict, dict]:
     type_counts = defaultdict(functools.partial(defaultdict, int))
+    type_frequencies = defaultdict(functools.partial(defaultdict, float))
+
     for cat in categories:
-        for res in cat_store.get_resources(cat):
+        resources = cat_store.get_resources(cat)
+        for res in resources:
             for t in dbp_store.get_transitive_types(res):
                 type_counts[cat][t] += 1
-    return type_counts
+        type_frequencies[cat] = defaultdict(float, {t: t_count / len(resources) for t, t_count in type_counts[cat].items()})
+
+    return type_counts, type_frequencies
 
 
 def _compute_surface_property_values(categories: set) -> dict:
