@@ -122,11 +122,11 @@ def _compute_assignments(categories: set, property_counts: dict, type_counts: di
 
         util.get_logger().debug('computing valid properties..')
         valid_properties = {p for p in property_count
-                            if p[1] in surface_property_values[cat]
-                            and property_count[p] >= min_property_count
+                            if property_count[p] >= min_property_count
                             and property_freq[p] >= min_property_freq
                             and all(type_count[t] <= max_invalid_type_count for t in invalid_pred_types[p[0]])
-                            and all(type_freq[t] <= max_invalid_type_freq for t in invalid_pred_types[p[0]])}
+                            and all(type_freq[t] <= max_invalid_type_freq for t in invalid_pred_types[p[0]])
+                            and p[1] in surface_property_values[cat]}
 
         if valid_properties:
             util.get_logger().debug('=' * 20)
