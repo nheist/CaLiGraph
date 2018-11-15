@@ -13,6 +13,6 @@ def send_error(error_msg: str):
 
     server = smtplib.SMTP('smtp.gmail.com', 587)
     server.starttls()
-    server.login(util.get_config('mailer.sender'), util.get_config('mail.password'))
+    server.login(util.get_config('mailer.sender'), util.get_config('mailer.password'))
     server.send_message(msg)
     server.quit()
