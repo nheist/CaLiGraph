@@ -109,15 +109,18 @@ def evaluate_category_relations(min_count: int = MIN_PROPERTY_COUNT, min_freq: f
 
 
 def _compute_assignments(categories: set, property_counts: dict, type_counts: dict, invalid_pred_types: dict, surface_property_values: dict, min_property_count: int, min_property_freq: float, max_invalid_type_count: int, max_invalid_type_freq: float) -> Tuple[dict, dict]:
+    util.get_logger().debug('computing assignments..')
     cat_assignments = defaultdict(lambda: defaultdict(set))
     fact_assignments = defaultdict(lambda: defaultdict(set))
     for cat in categories:
+        util.get_logger().debug(f'checking category {cat}..')
         resources = cat_store.get_resources(cat)
         property_count = property_counts[cat]
         property_freq = {p: p_count / len(resources) for p, p_count in property_count.items()}
         type_count = type_counts[cat]
         type_freq = defaultdict(float, {t: t_count / len(resources) for t, t_count in type_count.items()})
 
+        util.get_logger().debug('computing valid properties..')
         valid_properties = {p for p in property_count
                             if p[1] in surface_property_values[cat]
                             and property_count[p] >= min_property_count
