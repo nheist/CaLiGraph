@@ -1,3 +1,4 @@
+import traceback
 import util
 import mailer
 import relation_test
@@ -17,7 +18,7 @@ if __name__ == '__main__':
 
         util.get_logger().info('Finished CaLiGraph extraction.')
     except Exception as e:
-        error_msg = str(e)
+        error_msg = traceback.format_exc()
         mailer.send_error(error_msg)
         util.get_logger().error(error_msg)
         raise e
