@@ -116,7 +116,7 @@ def _compute_assignments(categories: set, property_counts: dict, type_counts: di
         property_count = property_counts[cat]
         property_freq = {p: p_count / len(resources) for p, p_count in property_count.items()}
         type_count = type_counts[cat]
-        type_freq = {t: t_count / len(resources) for t, t_count in type_count.items()}
+        type_freq = defaultdict(float, {t: t_count / len(resources) for t, t_count in type_count.items()})
 
         valid_properties = {p for p in property_count
                             if p[1] in surface_property_values[cat]
