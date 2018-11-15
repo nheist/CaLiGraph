@@ -10,7 +10,6 @@ from typing import Tuple
 from collections import namedtuple
 import functools
 
-Property = namedtuple('Property', 'p o')
 Fact = namedtuple('Fact', 's p o')
 
 PROPERTY_INGOING = 'ingoing'
@@ -120,11 +119,11 @@ def _compute_assignments(categories: set, property_counts: dict, type_counts: di
         type_freq = {t: t_count / len(resources) for t, t_count in type_count.items()}
 
         valid_properties = {p for p in property_count
-                            if p.o in surface_property_values
+                            if p[1] in surface_property_values[cat]
                             and property_count[p] >= min_property_count
                             and property_freq[p] >= min_property_freq
-                            and all(type_count[t] <= max_invalid_type_count for t in invalid_pred_types[p])
-                            and all(type_freq[t] <= max_invalid_type_freq for t in invalid_pred_types[p])}
+                            and all(type_count[t] <= max_invalid_type_count for t in invalid_pred_types[p[0]])
+                            and all(type_freq[t] <= max_invalid_type_freq for t in invalid_pred_types[p[0]])}
 
         if valid_properties:
             util.get_logger().debug('=' * 20)
@@ -170,9 +169,9 @@ def _compute_property_counts(categories: set, property_mapping: dict) -> dict:
     property_counts = defaultdict(functools.partial(defaultdict, int))
     for cat in categories:
         for res in cat_store.get_resources(cat):
-            for prop, values in property_mapping[res].items():
+            for pred, values in property_mapping[res].items():
                 for val in values:
-                    property_counts[cat][Property(p=prop, o=val)] += 1
+                    property_counts[cat][(pred, val)] += 1
     return property_counts
 
 
