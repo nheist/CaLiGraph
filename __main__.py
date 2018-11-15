@@ -16,6 +16,7 @@ if __name__ == '__main__':
         # G = cat_base.get_dbp_typed_category_graph()
         # util.get_logger().info(G.statistics)
 
+        mailer.send_success()
         util.get_logger().info('Finished CaLiGraph extraction.')
     except Exception as e:
         error_msg = traceback.format_exc()

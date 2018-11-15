@@ -21,7 +21,10 @@ mailer:
   sender: 'errors.nheist@gmail.com'
   password: 'Asdf1234!'
   receiver: 'nico.heist@gmail.com'
-  subject: 'Error: CaLiGraph'
+  subject: 'CaLiGraph | '
+  enable:
+    success: True
+    error: True
 
 files:
   dbpedia:
