@@ -12,7 +12,7 @@ import functools
 import operator
 
 Fact = namedtuple('Fact', 's p o')
-CategoryProperty = namedtuple('CategoryProperty', 'cat pred obj prob inv')
+CategoryProperty = namedtuple('CategoryProperty', 'cat pred obj prob count inv')
 
 PROPERTY_INGOING = 'ingoing'
 PROPERTY_OUTGOING = 'outgoing'
@@ -112,17 +112,17 @@ def evaluate_category_relations(min_count: int = MIN_PROPERTY_COUNT, min_freq: f
 
 def evaluate_probabilistic_category_relations():
     categories = CategoryGraph.create_from_dbpedia().remove_unconnected().nodes
-    _, property_freqs = util.load_or_create_cache('relations_property_stats', functools.partial(_compute_property_stats, categories, dbp_store.get_resource_property_mapping()))
-    _, inverse_property_freqs = util.load_or_create_cache('relations_inverse_property_stats', functools.partial(_compute_property_stats, categories, dbp_store.get_inverse_resource_property_mapping()))
+    property_counts, property_freqs = util.load_or_create_cache('relations_property_stats', functools.partial(_compute_property_stats, categories, dbp_store.get_resource_property_mapping()))
+    inverse_property_counts, inverse_property_freqs = util.load_or_create_cache('relations_inverse_property_stats', functools.partial(_compute_property_stats, categories, dbp_store.get_inverse_resource_property_mapping()))
     _, type_freqs = util.load_or_create_cache('relations_type_stats', functools.partial(_compute_type_stats, categories))
     invalid_predicate_types = _get_invalid_predicate_types()
     surface_property_values = util.load_or_create_cache('relations_surface_property_values', functools.partial(_compute_surface_property_values, categories))
 
-    property_probabilities = util.load_or_create_cache('relations_probabilities', lambda: _compute_property_probabilites(categories, property_freqs, type_freqs, invalid_predicate_types['domain'], surface_property_values, False) | _compute_property_probabilites(categories, inverse_property_freqs, type_freqs, invalid_predicate_types['range'], surface_property_values, True))
+    property_probabilities = util.load_or_create_cache('relations_probabilities', lambda: _compute_property_probabilites(categories, property_counts, property_freqs, type_freqs, invalid_predicate_types['domain'], surface_property_values, False) | _compute_property_probabilites(categories, inverse_property_counts, inverse_property_freqs, type_freqs, invalid_predicate_types['range'], surface_property_values, True))
     return property_probabilities
 
 
-def _compute_property_probabilites(categories: set, property_freqs: dict, type_freqs: dict, invalid_pred_types: dict, surface_property_values: dict, is_inv: bool) -> set:
+def _compute_property_probabilites(categories: set, property_counts: dict, property_freqs: dict, type_freqs: dict, invalid_pred_types: dict, surface_property_values: dict, is_inv: bool) -> set:
     cat_properties = set()
     for idx, cat in enumerate(categories):
         util.get_logger().debug(f'checking category {cat} ({idx}/{len(categories)})..')
@@ -130,12 +130,12 @@ def _compute_property_probabilites(categories: set, property_freqs: dict, type_f
             p = surface_property_values[cat][val]
             c_given_p = property_freqs[cat][pred]
             not_p = 1 - p
-            c_given_not_p = max(type_freqs[cat][t] for t in invalid_pred_types[pred])
+            c_given_not_p = max({type_freqs[cat][t] for t in invalid_pred_types[pred]}, default=0)
 
             c = c_given_p * p + c_given_not_p * not_p
             p_given_c = c_given_p * p / c if c > 0 else 0
             if p_given_c > 0:
-                cat_properties.add(CategoryProperty(cat=cat, pred=pred, obj=val, prob=p_given_c, inv=is_inv))
+                cat_properties.add(CategoryProperty(cat=cat, pred=pred, obj=val, prob=p_given_c, count=property_counts[cat][(pred, val)], inv=is_inv))
 
     return cat_properties
 
