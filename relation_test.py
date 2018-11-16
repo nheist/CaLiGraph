@@ -51,8 +51,8 @@ def evaluate_parameters():
 
 def evaluate_category_relations(min_count: int = MIN_PROPERTY_COUNT, min_freq: float = MIN_PROPERTY_FREQ, max_invalid_type_count: int = MAX_INVALID_TYPE_COUNT, max_invalid_type_freq: float = MAX_INVALID_TYPE_FREQ) -> dict:
     categories = CategoryGraph.create_from_dbpedia().remove_unconnected().nodes
-    property_counts, property_freqs = util.load_or_create_cache('relations_property_stats', functools.partial(_compute_property_stats, categories, dbp_store.get_resource_property_mapping()))
-    inverse_property_counts, inverse_property_freqs = util.load_or_create_cache('relations_inverse_property_stats', functools.partial(_compute_property_stats, categories, dbp_store.get_inverse_resource_property_mapping()))
+    property_counts, property_freqs, predicate_instances = util.load_or_create_cache('relations_property_stats', functools.partial(_compute_property_stats, categories, dbp_store.get_resource_property_mapping()))
+    inverse_property_counts, inverse_property_freqs, inverse_predicate_instances = util.load_or_create_cache('relations_inverse_property_stats', functools.partial(_compute_property_stats, categories, dbp_store.get_inverse_resource_property_mapping()))
     type_counts, type_freqs = util.load_or_create_cache('relations_type_stats', functools.partial(_compute_type_stats, categories))
     invalid_predicate_types = _get_invalid_predicate_types()
     surface_property_values = util.load_or_create_cache('relations_surface_property_values', functools.partial(_compute_surface_property_values, categories))
@@ -113,25 +113,27 @@ def evaluate_category_relations(min_count: int = MIN_PROPERTY_COUNT, min_freq: f
 
 def evaluate_probabilistic_category_relations():
     categories = CategoryGraph.create_from_dbpedia().remove_unconnected().nodes
-    property_counts, property_freqs = util.load_or_create_cache('relations_property_stats', functools.partial(_compute_property_stats, categories, dbp_store.get_resource_property_mapping()))
-    inverse_property_counts, inverse_property_freqs = util.load_or_create_cache('relations_inverse_property_stats', functools.partial(_compute_property_stats, categories, dbp_store.get_inverse_resource_property_mapping()))
+    property_counts, property_freqs, predicate_instances = util.load_or_create_cache('relations_property_stats', functools.partial(_compute_property_stats, categories, dbp_store.get_resource_property_mapping()))
+    inverse_property_counts, inverse_property_freqs, inverse_predicate_instances = util.load_or_create_cache('relations_inverse_property_stats', functools.partial(_compute_property_stats, categories, dbp_store.get_inverse_resource_property_mapping()))
     _, type_freqs = util.load_or_create_cache('relations_type_stats', functools.partial(_compute_type_stats, categories))
     invalid_predicate_types = _get_invalid_predicate_types()
     surface_property_values = util.load_or_create_cache('relations_surface_property_values', functools.partial(_compute_surface_property_values, categories))
 
-    property_probabilities = util.load_or_create_cache('relations_probabilities', lambda: _compute_property_probabilites(categories, property_counts, property_freqs, type_freqs, invalid_predicate_types['domain'], surface_property_values, False) | _compute_property_probabilites(categories, inverse_property_counts, inverse_property_freqs, type_freqs, invalid_predicate_types['range'], surface_property_values, True))
+    property_probabilities = util.load_or_create_cache('relations_probabilities', lambda: _compute_property_probabilites(categories, property_counts, property_freqs, predicate_instances, type_freqs, invalid_predicate_types['domain'], surface_property_values, False) | _compute_property_probabilites(categories, inverse_property_counts, inverse_property_freqs, inverse_predicate_instances, type_freqs, invalid_predicate_types['range'], surface_property_values, True))
     return property_probabilities
 
 
-def _compute_property_probabilites(categories: set, property_counts: dict, property_freqs: dict, type_freqs: dict, invalid_pred_types: dict, surface_property_values: dict, is_inv: bool) -> set:
+def _compute_property_probabilites(categories: set, property_counts: dict, property_freqs: dict, predicate_instances: dict, type_freqs: dict, invalid_pred_types: dict, surface_property_values: dict, is_inv: bool) -> set:
     cat_properties = set()
     for idx, cat in enumerate(categories):
         util.get_logger().debug(f'checking category {cat} ({idx}/{len(categories)})..')
+        resources = cat_store.get_resources(cat)
         for pred, val in property_freqs[cat].keys():
             p = surface_property_values[cat][val]
             c_given_p = property_freqs[cat][(pred, val)]
             not_p = 1 - p
-            c_given_not_p = max({type_freqs[cat][t] for t in invalid_pred_types[pred]}, default=0) + sum(freq for (p, v), freq in property_freqs[cat].items() if p == pred and v != val)
+            # c_given_not_p = max({type_freqs[cat][t] for t in invalid_pred_types[pred]}, default=0) + sum(freq for (p, v), freq in property_freqs[cat].items() if p == pred and v != val)
+            c_given_not_p = len({r for r in resources if dbp_store.get_transitive_types(r).intersection(invalid_pred_types[pred]) or (dbp_store.get_properties(r)[pred] and val not in dbp_store.get_properties(r)[pred])}) / len(resources)
 
             c = c_given_p * p + c_given_not_p * not_p
             p_given_c = c_given_p * p / c if c > 0 else 0
@@ -204,16 +206,18 @@ def _get_invalid_predicate_types():
 def _compute_property_stats(categories: set, property_mapping: dict) -> Tuple[dict, dict]:
     property_counts = defaultdict(functools.partial(defaultdict, int))
     property_frequencies = defaultdict(functools.partial(defaultdict, float))
+    predicate_instances = defaultdict(functools.partial(defaultdict(int)))
 
     for cat in categories:
         resources = cat_store.get_resources(cat)
         for res in resources:
             for pred, values in property_mapping[res].items():
+                predicate_instances[cat][pred] += 1
                 for val in values:
                     property_counts[cat][(pred, val)] += 1
         property_frequencies[cat] = defaultdict(float, {prop: p_count / len(resources) for prop, p_count in property_counts[cat].items()})
 
-    return property_counts, property_frequencies
+    return property_counts, property_frequencies, predicate_instances
 
 
 def _compute_type_stats(categories: set) -> Tuple[dict, dict]:
