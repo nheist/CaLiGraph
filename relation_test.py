@@ -237,7 +237,7 @@ def _compute_surface_property_values(categories: set) -> dict:
             cat_label = cat_store.get_label(cat).lower()
             surface_forms = dbp_store.get_surface_forms(val)
             total_mentions = sum(surface_forms.values())
-            for surf, mentions in sorted(surface_forms, key=operator.itemgetter(1), reverse=True):
+            for surf, mentions in sorted(surface_forms.items(), key=operator.itemgetter(1), reverse=True):
                 if surf in cat_label:
                     surface_property_values[cat][val] = mentions / total_mentions
                     break
