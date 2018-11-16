@@ -126,9 +126,9 @@ def _compute_property_probabilites(categories: set, property_counts: dict, prope
     cat_properties = set()
     for idx, cat in enumerate(categories):
         util.get_logger().debug(f'checking category {cat} ({idx}/{len(categories)})..')
-        for pred, val in property_freqs[cat]:
+        for pred, val in property_freqs[cat].keys():
             p = surface_property_values[cat][val]
-            c_given_p = property_freqs[cat][pred]
+            c_given_p = property_freqs[cat][(pred, val)]
             not_p = 1 - p
             c_given_not_p = max({type_freqs[cat][t] for t in invalid_pred_types[pred]}, default=0)
 
