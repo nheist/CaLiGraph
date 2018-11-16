@@ -203,10 +203,10 @@ def _get_invalid_predicate_types():
         }
 
 
-def _compute_property_stats(categories: set, property_mapping: dict) -> Tuple[dict, dict]:
+def _compute_property_stats(categories: set, property_mapping: dict) -> Tuple[dict, dict, dict]:
     property_counts = defaultdict(functools.partial(defaultdict, int))
     property_frequencies = defaultdict(functools.partial(defaultdict, float))
-    predicate_instances = defaultdict(functools.partial(defaultdict(int)))
+    predicate_instances = defaultdict(functools.partial(defaultdict, int))
 
     for cat in categories:
         resources = cat_store.get_resources(cat)
