@@ -133,7 +133,7 @@ def _compute_property_probabilites(categories: set, property_counts: dict, prope
             c_given_p = property_freqs[cat][(pred, val)]
             not_p = 1 - p
             # c_given_not_p = max({type_freqs[cat][t] for t in invalid_pred_types[pred]}, default=0) + sum(freq for (p, v), freq in property_freqs[cat].items() if p == pred and v != val)
-            c_given_not_p = len({r for r in resources if dbp_store.get_transitive_types(r).intersection(invalid_pred_types[pred]) or (dbp_store.get_properties(r)[pred] and val not in dbp_store.get_properties(r)[pred])}) / len(resources)
+            c_given_not_p = len({r for r in resources if (dbp_store.get_properties(r)[pred] and val not in dbp_store.get_properties(r)[pred]) or dbp_store.get_types(r).intersection(invalid_pred_types[pred])}) / len(resources)
 
             c = c_given_p * p + c_given_not_p * not_p
             p_given_c = c_given_p * p / c if c > 0 else 0
