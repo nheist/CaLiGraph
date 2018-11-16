@@ -24,6 +24,7 @@ MAX_INVALID_TYPE_FREQ = .1
 USE_HEURISTIC_DISJOINTNESS = True
 
 # todo: --- GENERAL ---
+# todo: baseline (majority vote?)
 # todo: output true/false/new triples with respective categories (and other relevant information)
 # todo: Profiling!
 # todo: evaluation a) hold-out set (DONE); b) instance-based manual/mturk (DONE); c) category-based manual/mturk
@@ -130,7 +131,7 @@ def _compute_property_probabilites(categories: set, property_counts: dict, prope
             p = surface_property_values[cat][val]
             c_given_p = property_freqs[cat][(pred, val)]
             not_p = 1 - p
-            c_given_not_p = max({type_freqs[cat][t] for t in invalid_pred_types[pred]}, default=0)
+            c_given_not_p = max({type_freqs[cat][t] for t in invalid_pred_types[pred]}, default=0) + sum(freq for (p, v), freq in property_freqs[cat].items() if p == pred and v != val)
 
             c = c_given_p * p + c_given_not_p * not_p
             p_given_c = c_given_p * p / c if c > 0 else 0
