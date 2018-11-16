@@ -127,18 +127,19 @@ def _compute_property_probabilites(categories: set, property_counts: dict, prope
     cat_properties = set()
     for idx, cat in enumerate(categories):
         util.get_logger().debug(f'checking category {cat} ({idx}/{len(categories)})..')
-        resources = cat_store.get_resources(cat)
+        # resources = cat_store.get_resources(cat)
         for pred, val in property_freqs[cat].keys():
             p = surface_property_values[cat][val]
             c_given_p = property_freqs[cat][(pred, val)]
-            not_p = 1 - p
-            # c_given_not_p = max({type_freqs[cat][t] for t in invalid_pred_types[pred]}, default=0) + sum(freq for (p, v), freq in property_freqs[cat].items() if p == pred and v != val)
-            c_given_not_p = len({r for r in resources if (dbp_store.get_properties(r)[pred] and val not in dbp_store.get_properties(r)[pred]) or dbp_store.get_types(r).intersection(invalid_pred_types[pred])}) / len(resources)
+            if p * c_given_p > 0:
+                not_p = 1 - p
+                c_given_not_p = sum([type_freqs[cat][t] for t in invalid_pred_types[pred]]) + (1 - (property_counts[cat][(pred, val)] / predicate_instances[cat][pred])) # sum(freq for (p, v), freq in property_freqs[cat].items() if p == pred and v != val)
+                # c_given_not_p = len({r for r in resources if (dbp_store.get_properties(r)[pred] and val not in dbp_store.get_properties(r)[pred]) or dbp_store.get_types(r).intersection(invalid_pred_types[pred])}) / len(resources)
 
-            c = c_given_p * p + c_given_not_p * not_p
-            p_given_c = c_given_p * p / c if c > 0 else 0
-            if p_given_c > 0:
-                cat_properties.add(CategoryProperty(cat=cat, pred=pred, obj=val, prob=p_given_c, count=property_counts[cat][(pred, val)], inv=is_inv))
+                c = c_given_p * p + c_given_not_p * not_p
+                p_given_c = c_given_p * p / c if c > 0 else 0
+                if p_given_c > 0:
+                    cat_properties.add(CategoryProperty(cat=cat, pred=pred, obj=val, prob=p_given_c, count=property_counts[cat][(pred, val)], inv=is_inv))
 
     return cat_properties
 
