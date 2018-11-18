@@ -151,4 +151,4 @@ cache:
     version: 2 # 2 = with resolved redirects
   relations_probabilities:
     filename: 'relations-probabilities'
-    version: 2 # 1 = v8 (base) / 2 = v9 (surface-literals) / 3 = v10 (with resolved redirects)
+    version: 3 # 1 = v8 (base) / 2 = v9 (surface-literals) / 3 = v10 (with resolved redirects)
