@@ -57,8 +57,8 @@ def load_or_create_cache(cache_identifier: str, init_func):
     return cache_obj
 
 
-def load_cache(cache_identifier: str):
-    cache_path = _get_cache_path(cache_identifier)
+def load_cache(cache_identifier: str, version: int = None):
+    cache_path = _get_cache_path(cache_identifier, version)
     if not cache_path.exists():
         return None
     with bz2.open(cache_path, mode='rb') as cache_file:
@@ -70,9 +70,9 @@ def update_cache(cache_identifier: str, cache_obj):
         pickle.dump(cache_obj, cache_file)
 
 
-def _get_cache_path(cache_identifier: str) -> Path:
+def _get_cache_path(cache_identifier: str, version: int = None) -> Path:
     config = get_config('cache.{}'.format(cache_identifier))
-    filename = '{}_v{}.pkl.bz2'.format(config['filename'], config['version'])
+    filename = '{}_v{}.pkl.bz2'.format(config['filename'], version or config['version'])
     return Path(os.path.join(get_root_path(), 'data', 'cache', filename))
 
 

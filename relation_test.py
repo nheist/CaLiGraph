@@ -58,7 +58,7 @@ def _compute_property_probabilites(categories: set, property_counts: dict, prope
             c_given_p = property_freqs[cat][(pred, val)]
             if p * c_given_p > 0:
                 not_p = 1 - p
-                c_given_not_p = sum([type_freqs[cat][t] for t in invalid_pred_types[pred]]) + (1 - (property_counts[cat][(pred, val)] / predicate_instances[cat][pred])) # sum(freq for (p, v), freq in property_freqs[cat].items() if p == pred and v != val)
+                c_given_not_p = sum([type_freqs[cat][t] for t in invalid_pred_types[pred]]) + (1 - (property_counts[cat][(pred, val)] / predicate_instances[cat][pred]))
 
                 c = c_given_p * p + c_given_not_p * not_p
                 p_given_c = c_given_p * p / c if c > 0 else 0
@@ -92,7 +92,7 @@ def _compute_property_stats(categories: set, property_mapping: dict) -> Tuple[di
         for res in resources:
             for pred, values in property_mapping[res].items():
                 predicate_instances[cat][pred] += 1
-                for val in values:
+                for val in {dbp_store.resolve_redirect(v) for v in values}:
                     property_counts[cat][(pred, val)] += 1
         property_frequencies[cat] = defaultdict(float, {prop: p_count / len(resources) for prop, p_count in property_counts[cat].items()})
 
@@ -119,11 +119,12 @@ def _compute_surface_property_values(categories: set) -> dict:
         possible_values = {val for r in cat_store.get_resources(cat) for values in dbp_store.get_properties(r).values() for val in values}
         for val in possible_values:
             cat_label = cat_store.get_label(cat).lower()
-            surface_forms = dbp_store.get_surface_forms(val)
+            redirected_val = dbp_store.resolve_redirect(val)
+            surface_forms = {**dbp_store.get_surface_forms(val), **dbp_store.get_surface_forms(redirected_val)}
             total_mentions = sum(surface_forms.values())
             for surf, mentions in sorted(surface_forms.items(), key=operator.itemgetter(1), reverse=True):
                 if surf in cat_label:
-                    surface_property_values[cat][val] = mentions / total_mentions
+                    surface_property_values[cat][redirected_val] = mentions / total_mentions
                     break
     return surface_property_values
 

@@ -79,6 +79,15 @@ def get_interlanguage_links(dbp_resource: str) -> set:
     return __RESOURCE_INTERLANGUAGE_LINKS__[dbp_resource]
 
 
+def resolve_redirect(dbp_resource: str) -> str:
+    global __REDIRECTS__
+    if '__REDIRECTS__' not in globals():
+        initializer = lambda: rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.redirects')], rdf_util.PREDICATE_REDIRECTS)
+        __REDIRECTS__ = util.load_or_create_cache('dbpedia_resource_redirects', initializer)
+
+    return resolve_redirect(__REDIRECTS__[dbp_resource]) if dbp_resource in __REDIRECTS__ else dbp_resource
+
+
 # DBpedia property
 
 

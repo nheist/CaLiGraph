@@ -15,7 +15,7 @@ logging:
   level: 'INFO'
   to_file: True
   # filename: 'heuristics_disjoint-domains'
-  filename: 'relations-v9_test'
+  filename: 'relations-v10_test'
 
 mailer:
   sender: 'errors.nheist@gmail.com'
@@ -44,6 +44,7 @@ files:
     mappingbased_objects: 'mappingbased_objects_en.ttl.bz2'
     interlanguage_links: 'interlanguage_links_en.ttl.bz2'
     anchor_texts: 'anchor_text_en.ttl.bz2'
+    redirects: 'redirects_en.ttl.bz2'
   wikidata:
     resource_properties: 'wikidata_resource_properties.nt.bz2'
 
@@ -94,6 +95,9 @@ cache:
   dbpedia_resource_interlanguage_links:
     filename: 'dbpedia-resource-interlanguage-links'
     version: 1
+  dbpedia_resource_redirects:
+    filename: 'dbpedia-resource-redirects'
+    version: 1
   dbpedia_functional_predicates:
     filename: 'dbpedia-functional-predicates'
     version: 1
@@ -135,16 +139,16 @@ cache:
     version: 1
   relations_property_stats:
     filename: 'relations-property-stats'
-    version: 1
+    version: 2 # 2 = with resolved redirects
   relations_inverse_property_stats:
     filename: 'relations-inverse-property-stats'
-    version: 1
+    version: 2 # 2 = with resolved redirects
   relations_type_stats:
     filename: 'relations-type-stats'
     version: 1
   relations_surface_property_values:
     filename: 'relations-surface-property-values'
-    version: 1
+    version: 2 # 2 = with resolved redirects
   relations_probabilities:
     filename: 'relations-probabilities'
-    version: 2 # 1 = v8 / 2 = v9
+    version: 2 # 1 = v8 (base) / 2 = v9 (surface-literals) / 3 = v10 (with resolved redirects)
