@@ -12,7 +12,7 @@ caligraph:
 
 
 logging:
-  level: 'DEBUG'
+  level: 'INFO'
   to_file: True
   # filename: 'heuristics_disjoint-domains'
   filename: 'relations-v9_test'
@@ -147,4 +147,4 @@ cache:
     version: 1
   relations_probabilities:
     filename: 'relations-probabilities'
-    version: 1
+    version: 2 # 1 = v8 / 2 = v9

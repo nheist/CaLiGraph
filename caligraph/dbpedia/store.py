@@ -30,13 +30,13 @@ def _get_label_mapping() -> dict:
 
 
 def get_surface_forms(value: str) -> dict:
-    if value.startswith(dbp_util.NAMESPACE_DBP_RESOURCE):
+    if dbp_util.is_dbp_resource(value):
         global __RESOURCE_SURFACE_FORMS__
         if '__RESOURCE_SURFACE_FORMS__' not in globals():
             initializer = lambda: rdf_util.create_multi_val_freq_dict_from_rdf([util.get_data_file('files.dbpedia.anchor_texts')], rdf_util.PREDICATE_ANCHOR_TEXT)
             __RESOURCE_SURFACE_FORMS__ = util.load_or_create_cache('dbpedia_resource_surface_forms', initializer)
         return __RESOURCE_SURFACE_FORMS__[value]
-    elif value.startswith(dbp_util.NAMESPACE_DBP_ONTOLOGY):
+    elif dbp_util.is_dbp_type(value):
         return {value[len(dbp_util.NAMESPACE_DBP_ONTOLOGY):].lower(): 1}
     else:
         return {value.lower(): 1}
