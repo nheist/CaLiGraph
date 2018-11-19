@@ -25,6 +25,7 @@ MAX_INVALID_TYPE_FREQ = .1
 USE_HEURISTIC_DISJOINTNESS = True
 
 # todo: --- GENERAL ---
+# todo: reverse p and c_given_p
 # todo: baseline (majority vote?)
 
 # todo: --- REFACTOR ---
@@ -56,6 +57,10 @@ def _compute_property_probabilites(categories: set, property_counts: dict, prope
                 surface_form = list(dbp_store.get_surface_forms(val))[0]
                 p = len(surface_form) / len(cat_label) if surface_form in cat_label else 0
             c_given_p = property_freqs[cat][(pred, val)]
+
+            # todo: evaluate performance of reversal
+            p, c_given_p = c_given_p, p
+
             if p * c_given_p > 0:
                 not_p = 1 - p
                 c_given_not_p = sum([type_freqs[cat][t] for t in invalid_pred_types[pred]]) + (1 - (property_counts[cat][(pred, val)] / predicate_instances[cat][pred]))

@@ -14,8 +14,7 @@ caligraph:
 logging:
   level: 'INFO'
   to_file: True
-  # filename: 'heuristics_disjoint-domains'
-  filename: 'relations-v10_test'
+  filename: 'relations-v11_test'
 
 mailer:
   sender: 'errors.nheist@gmail.com'
@@ -109,7 +108,7 @@ cache:
     version: 1
   dbpedia_heuristic_disjoint_types:
     filename: 'dbpedia-heuristic-disjoint-types'
-    version: 1 # -> version 2 is with tranisitve types
+    version: 1 # -> version 2 is with transitive types
   dbpedia_categories:
     filename: 'dbpedia-categories'
     version: 1
@@ -151,4 +150,4 @@ cache:
     version: 2 # 2 = with resolved redirects
   relations_probabilities:
     filename: 'relations-probabilities'
-    version: 3 # 1 = v8 (base) / 2 = v9 (surface-literals) / 3 = v10 (with resolved redirects)
+    version: 4 # 1 = v8 (base) / 2 = v9 (surface-literals) / 3 = v10 (with resolved redirects) / 4 = v11 (reversal of p and c_given_p)
