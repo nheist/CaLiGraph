@@ -25,7 +25,6 @@ MAX_INVALID_TYPE_FREQ = .1
 USE_HEURISTIC_DISJOINTNESS = True
 
 # todo: --- GENERAL ---
-# todo: reverse p and c_given_p
 # todo: baseline (majority vote?)
 
 # todo: --- REFACTOR ---
