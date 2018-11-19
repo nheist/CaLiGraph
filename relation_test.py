@@ -50,11 +50,11 @@ def _compute_property_probabilites(categories: set, property_counts: dict, prope
         cat_label = cat_store.get_label(cat).lower()
         for pred, val in property_freqs[cat].keys():
             # different probabilities for literal/ontology objects as we cannot estimate p via surface mentions
-            if dbp_util.is_dbp_resource(val):
-                p = surface_property_values[cat][val]
-            else:
-                surface_form = list(dbp_store.get_surface_forms(val))[0]
-                p = len(surface_form) / len(cat_label) if surface_form in cat_label else 0
+            # if dbp_util.is_dbp_resource(val):
+            p = surface_property_values[cat][val]
+            # else:
+            #     surface_form = list(dbp_store.get_surface_forms(val))[0]
+            #     p = len(surface_form) / len(cat_label) if surface_form in cat_label else 0
             c_given_p = property_freqs[cat][(pred, val)]
 
             # todo: evaluate performance of reversal
