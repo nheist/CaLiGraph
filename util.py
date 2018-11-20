@@ -49,28 +49,28 @@ def get_results_file(config_path: str) -> str:
 
 
 # CACHING
-def load_or_create_cache(cache_identifier: str, init_func):
-    cache_obj = load_cache(cache_identifier)
+def load_or_create_cache(cache_identifier: str, init_func, version=None):
+    cache_obj = load_cache(cache_identifier, version=version)
     if cache_obj is None:
         cache_obj = init_func()
-        update_cache(cache_identifier, cache_obj)
+        update_cache(cache_identifier, cache_obj, version=version)
     return cache_obj
 
 
-def load_cache(cache_identifier: str, version: int = None):
-    cache_path = _get_cache_path(cache_identifier, version)
+def load_cache(cache_identifier: str, version=None):
+    cache_path = _get_cache_path(cache_identifier, version=version)
     if not cache_path.exists():
         return None
     with bz2.open(cache_path, mode='rb') as cache_file:
         return pickle.load(cache_file)
 
 
-def update_cache(cache_identifier: str, cache_obj):
-    with bz2.open(_get_cache_path(cache_identifier), mode='wb') as cache_file:
+def update_cache(cache_identifier: str, cache_obj, version=None):
+    with bz2.open(_get_cache_path(cache_identifier, version=version), mode='wb') as cache_file:
         pickle.dump(cache_obj, cache_file)
 
 
-def _get_cache_path(cache_identifier: str, version: int = None) -> Path:
+def _get_cache_path(cache_identifier: str, version=None) -> Path:
     config = get_config('cache.{}'.format(cache_identifier))
     filename = '{}_v{}.pkl.bz2'.format(config['filename'], version or config['version'])
     return Path(os.path.join(get_root_path(), 'data', 'cache', filename))

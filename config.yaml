@@ -150,4 +150,4 @@ cache:
     version: 2 # 2 = with resolved redirects
   relations_probabilities:
     filename: 'relations-probabilities'
-    version: 5 # 1 = v8 (base) / 2 = v9 (surface-literals) / 3 = v10 (with resolved redirects) / 4 = v11 (reversal of p and c_given_p) / 5 = v12 (same as 4 but no surface-literals)
+    version: 'baseline' # 1 = v8 (bayesian B) / 2 = v9 (+surface-literals SL) / 3 = v10 (+resolved redirects R) / 4 = v11 (+reversal of p and c_given_p) / 5 = v12 (-SL)

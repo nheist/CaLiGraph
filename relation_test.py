@@ -2,7 +2,6 @@ from collections import defaultdict
 import caligraph.category.store as cat_store
 from caligraph.category.graph import CategoryGraph
 import caligraph.dbpedia.store as dbp_store
-import caligraph.dbpedia.util as dbp_util
 import caligraph.dbpedia.heuristics as dbp_heuristics
 import util
 import pandas as pd
@@ -12,23 +11,11 @@ from collections import namedtuple
 import functools
 import operator
 
-Fact = namedtuple('Fact', 's p o')
+COMPUTE_BASELINE = True
+USE_HEURISTIC_CONSTRAINTS = True
+USE_RESOLVED_REDIRECTS = True
+
 CategoryProperty = namedtuple('CategoryProperty', 'cat pred obj prob count inv')
-
-PROPERTY_INGOING = 'ingoing'
-PROPERTY_OUTGOING = 'outgoing'
-
-MIN_PROPERTY_COUNT = 1
-MIN_PROPERTY_FREQ = .1
-MAX_INVALID_TYPE_COUNT = 1
-MAX_INVALID_TYPE_FREQ = .1
-USE_HEURISTIC_DISJOINTNESS = True
-
-# todo: --- GENERAL ---
-# todo: baseline (majority vote?)
-
-# todo: --- REFACTOR ---
-# todo: disambiguation resource resolution
 
 
 def evaluate_probabilistic_category_relations():
@@ -47,34 +34,26 @@ def _compute_property_probabilites(categories: set, property_counts: dict, prope
     cat_properties = set()
     for idx, cat in enumerate(categories):
         util.get_logger().debug(f'checking category {cat} ({idx}/{len(categories)})..')
-        cat_label = cat_store.get_label(cat).lower()
         for pred, val in property_freqs[cat].keys():
-            # different probabilities for literal/ontology objects as we cannot estimate p via surface mentions
-            # if dbp_util.is_dbp_resource(val):
-            p = surface_property_values[cat][val]
-            # else:
-            #     surface_form = list(dbp_store.get_surface_forms(val))[0]
-            #     p = len(surface_form) / len(cat_label) if surface_form in cat_label else 0
-            c_given_p = property_freqs[cat][(pred, val)]
-
-            # todo: evaluate performance of reversal
-            p, c_given_p = c_given_p, p
-
-            if p * c_given_p > 0:
-                not_p = 1 - p
-                c_given_not_p = sum([type_freqs[cat][t] for t in invalid_pred_types[pred]]) + (1 - (property_counts[cat][(pred, val)] / predicate_instances[cat][pred]))
-
-                c = c_given_p * p + c_given_not_p * not_p
-                p_given_c = c_given_p * p / c if c > 0 else 0
-                if p_given_c > 0:
-                    cat_properties.add(CategoryProperty(cat=cat, pred=pred, obj=val, prob=p_given_c, count=property_counts[cat][(pred, val)], inv=is_inv))
+            p = property_freqs[cat][(pred, val)]
+            if COMPUTE_BASELINE:
+                if p > .5:
+                    cat_properties.add(CategoryProperty(cat=cat, pred=pred, obj=val, prob=p, count=property_counts[cat][(pred, val)], inv=is_inv))
+            else:
+                c_given_p = surface_property_values[cat][val]
+                if p * c_given_p > 0:
+                    c_given_not_p = sum([type_freqs[cat][t] for t in invalid_pred_types[pred]]) + (1 - (property_counts[cat][(pred, val)] / predicate_instances[cat][pred]))
+                    c = c_given_p * p + c_given_not_p * (1 - p)
+                    p_given_c = c_given_p * p / c if c > 0 else 0
+                    if p_given_c > 0:
+                        cat_properties.add(CategoryProperty(cat=cat, pred=pred, obj=val, prob=p_given_c, count=property_counts[cat][(pred, val)], inv=is_inv))
 
     return cat_properties
 
 
 def _get_invalid_predicate_types():
     predicates = dbp_store.get_all_predicates()
-    if USE_HEURISTIC_DISJOINTNESS:
+    if USE_HEURISTIC_CONSTRAINTS:
         return {
             'domain': defaultdict(set, {p: dbp_heuristics.get_disjoint_types(dbp_heuristics.get_domain(p)) for p in predicates}),
             'range': defaultdict(set, {p: dbp_heuristics.get_disjoint_types(dbp_heuristics.get_range(p)) for p in predicates})
@@ -134,6 +113,17 @@ def _compute_surface_property_values(categories: set) -> dict:
 
 
 # --- DEPRECATED ---
+Fact = namedtuple('Fact', 's p o')
+
+PROPERTY_INGOING = 'ingoing'
+PROPERTY_OUTGOING = 'outgoing'
+
+MIN_PROPERTY_COUNT = 1
+MIN_PROPERTY_FREQ = .1
+MAX_INVALID_TYPE_COUNT = 1
+MAX_INVALID_TYPE_FREQ = .1
+
+
 def evaluate_parameters():
     evaluation_results = []
     for min_count in [1]:  # [1, 2, 3, 4, 5]:
