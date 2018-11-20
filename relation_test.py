@@ -30,10 +30,11 @@ def evaluate_probabilistic_category_relations():
     inv_property_counts, inv_property_freqs, inv_predicate_instances = util.load_or_create_cache('relations_inverse_property_stats', functools.partial(_compute_property_stats, categories, inv_property_mapping), version=('RR' if USE_RESOLVED_REDIRECTS else None))
     inv_surface_property_values = util.load_or_create_cache('relations_inverse_surface_property_values', functools.partial(_compute_surface_property_values, categories, inv_property_mapping), version=('RR' if USE_RESOLVED_REDIRECTS else None))
 
-    compute_out_probabilities = lambda: _compute_property_probabilites(categories, property_counts, property_freqs, predicate_instances, type_freqs, _get_invalid_domains(), surface_property_values, False)
-    compute_in_probabilities = lambda: _compute_property_probabilites(categories, inv_property_counts, inv_property_freqs, inv_predicate_instances, type_freqs, _get_invalid_ranges(), inv_surface_property_values, True)
-    property_probabilities = util.load_or_create_cache('relations_probabilities', lambda: compute_out_probabilities() | compute_in_probabilities())
-    return property_probabilities
+    out_probabilities = _compute_property_probabilites(categories, property_counts, property_freqs, predicate_instances, type_freqs, _get_invalid_domains(), surface_property_values, False)
+    in_probabilities = _compute_property_probabilites(categories, inv_property_counts, inv_property_freqs, inv_predicate_instances, type_freqs, _get_invalid_ranges(), inv_surface_property_values, True)
+    relations_probabilities = out_probabilities | in_probabilities
+    util.update_cache('relations_probabilities', relations_probabilities)
+    return relations_probabilities
 
 
 def _compute_property_probabilites(categories: set, property_counts: dict, property_freqs: dict, predicate_instances: dict, type_freqs: dict, invalid_pred_types: dict, surface_property_values: dict, is_inv: bool) -> set:
