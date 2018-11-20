@@ -12,21 +12,27 @@ import functools
 import operator
 
 COMPUTE_BASELINE = True
-USE_HEURISTIC_CONSTRAINTS = True
-USE_RESOLVED_REDIRECTS = True
+USE_HEURISTIC_CONSTRAINTS = True  # HC
+USE_RESOLVED_REDIRECTS = True  # RR
 
 CategoryProperty = namedtuple('CategoryProperty', 'cat pred obj prob count inv')
 
 
 def evaluate_probabilistic_category_relations():
     categories = CategoryGraph.create_from_dbpedia().remove_unconnected().nodes
-    property_counts, property_freqs, predicate_instances = util.load_or_create_cache('relations_property_stats', functools.partial(_compute_property_stats, categories, dbp_store.get_resource_property_mapping()))
-    inverse_property_counts, inverse_property_freqs, inverse_predicate_instances = util.load_or_create_cache('relations_inverse_property_stats', functools.partial(_compute_property_stats, categories, dbp_store.get_inverse_resource_property_mapping()))
-    _, type_freqs = util.load_or_create_cache('relations_type_stats', functools.partial(_compute_type_stats, categories))
-    invalid_predicate_types = _get_invalid_predicate_types()
-    surface_property_values = util.load_or_create_cache('relations_surface_property_values', functools.partial(_compute_surface_property_values, categories))
+    type_freqs = util.load_or_create_cache('relations_type_frequencies', functools.partial(_compute_type_frequencies, categories))
 
-    property_probabilities = util.load_or_create_cache('relations_probabilities', lambda: _compute_property_probabilites(categories, property_counts, property_freqs, predicate_instances, type_freqs, invalid_predicate_types['domain'], surface_property_values, False) | _compute_property_probabilites(categories, inverse_property_counts, inverse_property_freqs, inverse_predicate_instances, type_freqs, invalid_predicate_types['range'], surface_property_values, True))
+    property_mapping = dbp_store.get_resource_property_mapping()
+    property_counts, property_freqs, predicate_instances = util.load_or_create_cache('relations_property_stats', functools.partial(_compute_property_stats, categories, property_mapping), version=('RR' if USE_RESOLVED_REDIRECTS else None))
+    surface_property_values = util.load_or_create_cache('relations_surface_property_values', functools.partial(_compute_surface_property_values, categories, property_mapping), version=('RR' if USE_RESOLVED_REDIRECTS else None))
+
+    inv_property_mapping = dbp_store.get_inverse_resource_property_mapping()
+    inv_property_counts, inv_property_freqs, inv_predicate_instances = util.load_or_create_cache('relations_inverse_property_stats', functools.partial(_compute_property_stats, categories, inv_property_mapping), version=('RR' if USE_RESOLVED_REDIRECTS else None))
+    inv_surface_property_values = util.load_or_create_cache('relations_inverse_surface_property_values', functools.partial(_compute_surface_property_values, categories, inv_property_mapping), version=('RR' if USE_RESOLVED_REDIRECTS else None))
+
+    compute_out_probabilities = lambda: _compute_property_probabilites(categories, property_counts, property_freqs, predicate_instances, type_freqs, _get_invalid_domains(), surface_property_values, False)
+    compute_in_probabilities = lambda: _compute_property_probabilites(categories, inv_property_counts, inv_property_freqs, inv_predicate_instances, type_freqs, _get_invalid_ranges(), inv_surface_property_values, True)
+    property_probabilities = util.load_or_create_cache('relations_probabilities', lambda: compute_out_probabilities() | compute_in_probabilities())
     return property_probabilities
 
 
@@ -51,18 +57,20 @@ def _compute_property_probabilites(categories: set, property_counts: dict, prope
     return cat_properties
 
 
-def _get_invalid_predicate_types():
+def _get_invalid_domains():
     predicates = dbp_store.get_all_predicates()
     if USE_HEURISTIC_CONSTRAINTS:
-        return {
-            'domain': defaultdict(set, {p: dbp_heuristics.get_disjoint_types(dbp_heuristics.get_domain(p)) for p in predicates}),
-            'range': defaultdict(set, {p: dbp_heuristics.get_disjoint_types(dbp_heuristics.get_range(p)) for p in predicates})
-        }
+        return defaultdict(set, {p: dbp_heuristics.get_disjoint_types(dbp_heuristics.get_domain(p)) for p in predicates})
     else:
-        return {
-            'domain': defaultdict(set, {p: dbp_store.get_disjoint_types(dbp_store.get_domain(p)) for p in predicates}),
-            'range': defaultdict(set, {p: dbp_store.get_disjoint_types(dbp_store.get_range(p)) for p in predicates})
-        }
+        return defaultdict(set, {p: dbp_store.get_disjoint_types(dbp_store.get_domain(p)) for p in predicates})
+
+
+def _get_invalid_ranges():
+    predicates = dbp_store.get_all_predicates()
+    if USE_HEURISTIC_CONSTRAINTS:
+        return defaultdict(set, {p: dbp_heuristics.get_disjoint_types(dbp_heuristics.get_range(p)) for p in predicates})
+    else:
+        return defaultdict(set, {p: dbp_store.get_disjoint_types(dbp_store.get_range(p)) for p in predicates})
 
 
 def _compute_property_stats(categories: set, property_mapping: dict) -> Tuple[dict, dict, dict]:
@@ -75,14 +83,15 @@ def _compute_property_stats(categories: set, property_mapping: dict) -> Tuple[di
         for res in resources:
             for pred, values in property_mapping[res].items():
                 predicate_instances[cat][pred] += 1
-                for val in {dbp_store.resolve_redirect(v) for v in values}:
+                values = {dbp_store.resolve_redirect(v) for v in values} if USE_RESOLVED_REDIRECTS else values
+                for val in values:
                     property_counts[cat][(pred, val)] += 1
         property_frequencies[cat] = defaultdict(float, {prop: p_count / len(resources) for prop, p_count in property_counts[cat].items()})
 
     return property_counts, property_frequencies, predicate_instances
 
 
-def _compute_type_stats(categories: set) -> Tuple[dict, dict]:
+def _compute_type_frequencies(categories: set) -> dict:
     type_counts = defaultdict(functools.partial(defaultdict, int))
     type_frequencies = defaultdict(functools.partial(defaultdict, float))
 
@@ -93,21 +102,21 @@ def _compute_type_stats(categories: set) -> Tuple[dict, dict]:
                 type_counts[cat][t] += 1
         type_frequencies[cat] = defaultdict(float, {t: t_count / len(resources) for t, t_count in type_counts[cat].items()})
 
-    return type_counts, type_frequencies
+    return type_frequencies
 
 
-def _compute_surface_property_values(categories: set) -> dict:
+def _compute_surface_property_values(categories: set, property_mapping: dict) -> dict:
     surface_property_values = defaultdict(functools.partial(defaultdict, float))
     for cat in categories:
-        possible_values = {val for r in cat_store.get_resources(cat) for values in dbp_store.get_properties(r).values() for val in values}
+        possible_values = {val for r in cat_store.get_resources(cat) for values in property_mapping[r].values() for val in values}
         for val in possible_values:
             cat_label = cat_store.get_label(cat).lower()
-            redirected_val = dbp_store.resolve_redirect(val)
-            surface_forms = {**dbp_store.get_surface_forms(val), **dbp_store.get_surface_forms(redirected_val)}
+            target_val = dbp_store.resolve_redirect(val) if USE_RESOLVED_REDIRECTS else val
+            surface_forms = {**dbp_store.get_surface_forms(val), **dbp_store.get_surface_forms(target_val)}
             total_mentions = sum(surface_forms.values())
             for surf, mentions in sorted(surface_forms.items(), key=operator.itemgetter(1), reverse=True):
                 if surf in cat_label:
-                    surface_property_values[cat][redirected_val] = mentions / total_mentions
+                    surface_property_values[cat][target_val] = mentions / total_mentions
                     break
     return surface_property_values
 
@@ -145,8 +154,8 @@ def evaluate_category_relations(min_count: int = MIN_PROPERTY_COUNT, min_freq: f
     categories = CategoryGraph.create_from_dbpedia().remove_unconnected().nodes
     property_counts, property_freqs, predicate_instances = util.load_or_create_cache('relations_property_stats', functools.partial(_compute_property_stats, categories, dbp_store.get_resource_property_mapping()))
     inverse_property_counts, inverse_property_freqs, inverse_predicate_instances = util.load_or_create_cache('relations_inverse_property_stats', functools.partial(_compute_property_stats, categories, dbp_store.get_inverse_resource_property_mapping()))
-    type_counts, type_freqs = util.load_or_create_cache('relations_type_stats', functools.partial(_compute_type_stats, categories))
-    invalid_predicate_types = _get_invalid_predicate_types()
+    type_counts, type_freqs = util.load_or_create_cache('relations_type_stats', functools.partial(_compute_type_frequencies, categories))
+    invalid_predicate_types = _get_invalid_domains()
     surface_property_values = util.load_or_create_cache('relations_surface_property_values', functools.partial(_compute_surface_property_values, categories))
     result = {}
 

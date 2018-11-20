@@ -138,16 +138,19 @@ cache:
     version: 1
   relations_property_stats:
     filename: 'relations-property-stats'
-    version: 2 # 2 = with resolved redirects
+    version: 1
   relations_inverse_property_stats:
     filename: 'relations-inverse-property-stats'
-    version: 2 # 2 = with resolved redirects
-  relations_type_stats:
-    filename: 'relations-type-stats'
+    version: 1
+  relations_type_frequencies:
+    filename: 'relations-type-frequencies'
     version: 1
   relations_surface_property_values:
     filename: 'relations-surface-property-values'
-    version: 2 # 2 = with resolved redirects
+    version: 1
+  relations_inverse_surface_property_values:
+    filename: 'relations-inverse-surface-property-values'
+    version: 1
   relations_probabilities:
     filename: 'relations-probabilities'
     version: 'baseline' # 1 = v8 (bayesian B) / 2 = v9 (+surface-literals SL) / 3 = v10 (+resolved redirects R) / 4 = v11 (+reversal of p and c_given_p) / 5 = v12 (-SL)
