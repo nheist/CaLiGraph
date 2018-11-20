@@ -12,8 +12,8 @@ import functools
 import operator
 
 COMPUTE_BASELINE = False
-USE_HEURISTIC_CONSTRAINTS = True  # HC
-USE_RESOLVED_REDIRECTS = False  # RR
+USE_HEURISTIC_CONSTRAINTS = False  # HC
+USE_RESOLVED_REDIRECTS = True  # RR
 
 CategoryProperty = namedtuple('CategoryProperty', 'cat pred obj prob count inv')
 
