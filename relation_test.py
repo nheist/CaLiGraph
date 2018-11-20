@@ -11,9 +11,9 @@ from collections import namedtuple
 import functools
 import operator
 
-COMPUTE_BASELINE = True
+COMPUTE_BASELINE = False
 USE_HEURISTIC_CONSTRAINTS = False  # HC
-USE_RESOLVED_REDIRECTS = True  # RR
+USE_RESOLVED_REDIRECTS = False  # RR
 
 CategoryProperty = namedtuple('CategoryProperty', 'cat pred obj prob count inv')
 
