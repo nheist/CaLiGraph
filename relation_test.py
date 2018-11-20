@@ -13,7 +13,7 @@ import operator
 
 COMPUTE_BASELINE = True
 USE_HEURISTIC_CONSTRAINTS = False  # HC
-USE_RESOLVED_REDIRECTS = True  # RR
+USE_RESOLVED_REDIRECTS = False  # RR
 
 CategoryProperty = namedtuple('CategoryProperty', 'cat pred obj prob count inv')
 
@@ -44,7 +44,8 @@ def _compute_property_probabilites(categories: set, property_counts: dict, prope
         for pred, val in property_freqs[cat].keys():
             p = property_freqs[cat][(pred, val)]
             if COMPUTE_BASELINE:
-                cat_properties.add(CategoryProperty(cat=cat, pred=pred, obj=val, prob=p, count=property_counts[cat][(pred, val)], inv=is_inv))
+                if p >= 0.1:
+                    cat_properties.add(CategoryProperty(cat=cat, pred=pred, obj=val, prob=p, count=property_counts[cat][(pred, val)], inv=is_inv))
             else:
                 c_given_p = surface_property_values[cat][val]
                 if p * c_given_p > 0:
