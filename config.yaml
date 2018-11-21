@@ -12,7 +12,7 @@ caligraph:
 
 
 logging:
-  level: 'INFO'
+  level: 'DEBUG'
   to_file: True
   filename: 'relations-v12_test'
 
