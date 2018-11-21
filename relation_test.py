@@ -31,7 +31,7 @@ def evaluate_classification_category_relations():
     category_data = util.load_or_create_cache('relations_category_data', _compute_category_data)
 
     y = _load_labels()
-    X = pd.merge([y, category_data], how='left').drop(columns='label')
+    X = pd.merge(y, category_data, how='left').drop(columns='label')
 
     estimators = {'Naive Bayes': GaussianNB(), 'k-NN': KNeighborsClassifier(), 'SVM': SVC(), 'Random Forest': RandomForestClassifier(), 'XG-Boost': XGBClassifier(), 'Neural Net': MLPClassifier()}
     for e_name, e in estimators.items():
