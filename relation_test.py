@@ -53,7 +53,7 @@ def _compute_category_data() -> pd.DataFrame:
 
     outgoing_data = _get_samples(categories, property_counts, property_freqs, predicate_instances, type_freqs, _get_invalid_domains(), surface_property_values, False)
     ingoing_data = _get_samples(categories, inv_property_counts, inv_property_freqs, inv_predicate_instances, type_freqs, _get_invalid_ranges(), inv_surface_property_values, True)
-    return pd.DataFrame(data=[*outgoing_data, *ingoing_data], index=['cat', 'pred', 'val'])
+    return pd.DataFrame(data=[*outgoing_data, *ingoing_data]).set_index(['cat', 'pred', 'val'])
 
 
 def _get_samples(categories: set, property_counts: dict, property_freqs: dict, predicate_instances: dict, type_freqs: dict, invalid_pred_types: dict, surface_property_values: dict, is_inv: bool) -> list:
