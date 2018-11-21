@@ -65,7 +65,7 @@ def _get_samples(categories: set, property_counts: dict, property_freqs: dict, p
                 samples.append({
                     'cat': cat,
                     'pred': pred,
-                    'val': val,
+                    'obj': val,
                     'is_inv': is_inv,
                     'count': property_counts[cat][prop],
                     'freq': property_freqs[cat][prop],
