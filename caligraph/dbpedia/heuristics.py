@@ -15,7 +15,7 @@ def get_domain(dbp_predicate: str) -> Optional[str]:
     global __DOMAINS__
     if '__DOMAINS__' not in globals():
         __DOMAINS__ = defaultdict(lambda: None, util.load_or_create_cache('dbpedia_heuristic_domains', _compute_domains))
-    return dbp_store.get_domain(dbp_predicate) | __DOMAINS__[dbp_predicate]
+    return dbp_store.get_domain(dbp_predicate) or __DOMAINS__[dbp_predicate]
 
 
 def _compute_domains() -> dict:
@@ -26,7 +26,7 @@ def get_range(dbp_predicate: str) -> Optional[str]:
     global __RANGES__
     if '__RANGES__' not in globals():
         __RANGES__ = defaultdict(lambda: None, util.load_or_create_cache('dbpedia_heuristic_ranges', _compute_ranges))
-    return dbp_store.get_range(dbp_predicate) | __RANGES__[dbp_predicate]
+    return dbp_store.get_range(dbp_predicate) or __RANGES__[dbp_predicate]
 
 
 def _compute_ranges() -> dict:
