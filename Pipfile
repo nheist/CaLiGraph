@@ -15,6 +15,7 @@ spacy = "*"
 pyyaml = "*"
 networkx = "*"
 sklearn = "*"
+xgboost = "*"
 
 [dev-packages]
 
