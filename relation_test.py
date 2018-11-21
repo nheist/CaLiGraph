@@ -2,20 +2,81 @@ from collections import defaultdict
 import caligraph.category.store as cat_store
 from caligraph.category.graph import CategoryGraph
 import caligraph.dbpedia.store as dbp_store
+import caligraph.dbpedia.util as dbp_util
 import caligraph.dbpedia.heuristics as dbp_heuristics
 import util
 import pandas as pd
+import numpy as np
 import random
 from typing import Tuple
 from collections import namedtuple
 import functools
 import operator
+from sklearn.model_selection import cross_val_score, StratifiedKFold
+from sklearn.naive_bayes import GaussianNB
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.svm import SVC
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.neural_network import MLPClassifier
+from xgboost import XGBClassifier
 
 COMPUTE_BASELINE = True
 USE_HEURISTIC_CONSTRAINTS = False  # HC
 USE_RESOLVED_REDIRECTS = True  # RR
 
 CategoryProperty = namedtuple('CategoryProperty', 'cat pred obj prob count inv')
+
+
+def evaluate_classification_category_relations():
+    category_data = util.load_or_create_cache('relations_category_data', _compute_category_data)
+
+    y = _load_labels()
+    X = pd.merge([y, category_data], how='left').drop(columns='label')
+
+    estimators = {'Naive Bayes': GaussianNB(), 'k-NN': KNeighborsClassifier(), 'SVM': SVC(), 'Random Forest': RandomForestClassifier(), 'XG-Boost': XGBClassifier(), 'Neural Net': MLPClassifier()}
+    for e_name, e in estimators.items():
+        f1_scores = cross_val_score(e, X, y, scoring='f1_binary', cv=StratifiedKFold(n_splits=10, random_state=42))
+        util.get_logger().info(f'{e_name}: {np.mean(f1_scores)}')
+
+
+def _compute_category_data() -> pd.DataFrame:
+    categories = CategoryGraph.create_from_dbpedia().remove_unconnected().nodes
+    type_freqs = util.load_or_create_cache('relations_type_frequencies', functools.partial(_compute_type_frequencies, categories))
+
+    property_mapping = dbp_store.get_resource_property_mapping()
+    property_counts, property_freqs, predicate_instances = util.load_or_create_cache('relations_property_stats', functools.partial(_compute_property_stats, categories, property_mapping), version=('RR' if USE_RESOLVED_REDIRECTS else None))
+    surface_property_values = util.load_or_create_cache('relations_surface_property_values', functools.partial(_compute_surface_property_values, categories, property_mapping), version=('RR' if USE_RESOLVED_REDIRECTS else None))
+
+    inv_property_mapping = dbp_store.get_inverse_resource_property_mapping()
+    inv_property_counts, inv_property_freqs, inv_predicate_instances = util.load_or_create_cache('relations_inverse_property_stats', functools.partial(_compute_property_stats, categories, inv_property_mapping), version=('RR' if USE_RESOLVED_REDIRECTS else None))
+    inv_surface_property_values = util.load_or_create_cache('relations_inverse_surface_property_values', functools.partial(_compute_surface_property_values, categories, inv_property_mapping), version=('RR' if USE_RESOLVED_REDIRECTS else None))
+
+    outgoing_data = _get_samples(categories, property_counts, property_freqs, predicate_instances, type_freqs, _get_invalid_domains(), surface_property_values, False)
+    ingoing_data = _get_samples(categories, inv_property_counts, inv_property_freqs, inv_predicate_instances, type_freqs, _get_invalid_ranges(), inv_surface_property_values, True)
+    return pd.DataFrame(data=[*outgoing_data, *ingoing_data], index=['cat', 'pred', 'val'])
+
+
+def _get_samples(categories: set, property_counts: dict, property_freqs: dict, predicate_instances: dict, type_freqs: dict, invalid_pred_types: dict, surface_property_values: dict, is_inv: bool) -> list:
+    samples = []
+    for cat in categories:
+        for prop in property_counts[cat].keys():
+            pred, val = prop
+            if surface_property_values[cat][val]:
+                samples.append({
+                    'cat': cat,
+                    'pred': pred,
+                    'val': val,
+                    'is_inv': is_inv,
+                    'count': property_counts[cat][prop],
+                    'freq': property_freqs[cat][prop],
+                    'surf': surface_property_values[cat][val],
+                    'neg': sum([type_freqs[cat][t] for t in invalid_pred_types[pred]]) + (1 - (property_counts[cat][(pred, val)] / predicate_instances[cat][pred]))
+                })
+    return samples
+
+
+def _load_labels() -> pd.Series:
+    return pd.read_csv(util.get_data_file('files.evaluation.category_properties'), index_col=['cat', 'pred', 'obj'])['label']
 
 
 def evaluate_probabilistic_category_relations():

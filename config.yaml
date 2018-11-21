@@ -14,7 +14,7 @@ caligraph:
 logging:
   level: 'INFO'
   to_file: True
-  filename: 'relations-v12_test'
+  filename: 'relations-classification'
 
 mailer:
   sender: 'errors.nheist@gmail.com'
@@ -46,6 +46,8 @@ files:
     redirects: 'redirects_en.ttl.bz2'
   wikidata:
     resource_properties: 'wikidata_resource_properties.nt.bz2'
+  evaluation:
+    category_properties: 'category-property_labels.csv'
 
 cache:
   # version 2: added resource types from sdtyped + lhd
@@ -154,3 +156,6 @@ cache:
   relations_probabilities:
     filename: 'relations-probabilities'
     version: 'baseline+RR+Test' # 1 = v8 (bayesian B) / 2 = v9 (+surface-literals SL) / 3 = v10 (+resolved redirects R) / 4 = v11 (+reversal of p and c_given_p) / 5 = v12 (-SL)
+  relations_category_data:
+    filename: 'relations-category-data'
+    version: 1
