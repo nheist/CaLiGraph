@@ -35,7 +35,7 @@ def evaluate_classification_category_relations():
 
     estimators = {'Naive Bayes': GaussianNB(), 'k-NN': KNeighborsClassifier(), 'SVM': SVC(), 'Random Forest': RandomForestClassifier(), 'XG-Boost': XGBClassifier(), 'Neural Net': MLPClassifier()}
     for e_name, e in estimators.items():
-        f1_scores = cross_val_score(e, X, y, scoring='f1_binary', cv=StratifiedKFold(n_splits=10, random_state=42), n_jobs=10)
+        f1_scores = cross_val_score(e, X, y, scoring='f1', cv=StratifiedKFold(n_splits=10, random_state=42), n_jobs=10)
         util.get_logger().info(f'{e_name}: {np.mean(f1_scores)}')
 
 
