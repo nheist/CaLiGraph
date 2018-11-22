@@ -16,6 +16,7 @@ import operator
 from sklearn.model_selection import cross_validate, StratifiedKFold
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.naive_bayes import GaussianNB
+from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
 from sklearn.ensemble import RandomForestClassifier
@@ -48,7 +49,7 @@ def evaluate_classification_category_relations():
     data = get_category_data()
     X, y = get_goldstandard(data)
 
-    estimators = {'Baseline': BaselineEstimator(), 'Naive Bayes': GaussianNB(), 'k-NN': KNeighborsClassifier(), 'SVM': SVC(random_state=42), 'Random Forest': RandomForestClassifier(random_state=42), 'XG-Boost': XGBClassifier(random_state=42), 'Neural Net': MLPClassifier(random_state=42)}
+    estimators = {'Baseline': BaselineEstimator(), 'Naive Bayes': GaussianNB(), 'LogReg': LogisticRegression(random_state=42), 'k-NN': KNeighborsClassifier(), 'SVM': SVC(random_state=42), 'Random Forest': RandomForestClassifier(random_state=42), 'XG-Boost': XGBClassifier(random_state=42), 'Neural Net': MLPClassifier(random_state=42)}
     scoring = {'F1': 'f1', 'P': 'precision', 'R': 'recall', 'ACC': 'accuracy', 'ROC': 'roc_auc'}
     for e_name, e in estimators.items():
         scores = cross_validate(e, X, y, scoring=scoring, cv=StratifiedKFold(n_splits=10, random_state=42), n_jobs=10)
@@ -69,7 +70,7 @@ def get_category_data(version=None) -> pd.DataFrame:
 
 def get_goldstandard(category_data: pd.DataFrame) -> Tuple[pd.DataFrame, pd.Series]:
     y = _load_labels()
-    X = pd.merge(y.to_frame(), category_data, how='left', on=['cat', 'pred', 'obj', 'is_inv']).drop(columns='label')
+    X = pd.merge(y.to_frame(), category_data, how='inner', on=['cat', 'pred', 'obj', 'is_inv']).drop(columns='label')
     return X, y
 
 
