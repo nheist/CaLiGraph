@@ -14,6 +14,7 @@ from collections import namedtuple
 import functools
 import operator
 from sklearn.model_selection import cross_validate, StratifiedKFold
+from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.naive_bayes import GaussianNB
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
@@ -28,6 +29,21 @@ USE_RESOLVED_REDIRECTS = True  # RR
 CategoryProperty = namedtuple('CategoryProperty', 'cat pred obj prob count inv')
 
 
+class BaselineEstimator(BaseEstimator, ClassifierMixin):
+    def __init__(self):
+        self.estimator = GaussianNB()
+
+    def fit(self, X, y, sample_weight=None):
+        self.estimator.fit(X[['freq']], y, sample_weight)
+        return self
+
+    def predict_proba(self, X):
+        return self.estimator.predict_proba(X[['freq']])
+
+    def predict(self, X):
+        return self.estimator.predict(X[['freq']])
+
+
 def evaluate_classification_category_relations():
     category_data = util.load_or_create_cache('relations_category_data', _compute_category_data)
 
@@ -39,7 +55,7 @@ def evaluate_classification_category_relations():
     y = _load_labels()
     X = pd.merge(y.to_frame(), category_data, how='left', on=['cat', 'pred', 'obj', 'is_inv']).drop(columns='label')
 
-    estimators = {'Naive Bayes': GaussianNB(), 'k-NN': KNeighborsClassifier(), 'SVM': SVC(), 'Random Forest': RandomForestClassifier(), 'XG-Boost': XGBClassifier(), 'Neural Net': MLPClassifier()}
+    estimators = {'Baseline': BaselineEstimator(), 'Naive Bayes': GaussianNB(), 'k-NN': KNeighborsClassifier(), 'SVM': SVC(), 'Random Forest': RandomForestClassifier(), 'XG-Boost': XGBClassifier(), 'Neural Net': MLPClassifier()}
     scoring = {'F1': 'f1', 'P': 'precision', 'R': 'recall', 'ACC': 'accuracy', 'ROC': 'roc_auc'}
     for e_name, e in estimators.items():
         scores = cross_validate(e, X, y, scoring=scoring, cv=StratifiedKFold(n_splits=10, random_state=42), n_jobs=10)
