@@ -31,7 +31,7 @@ def evaluate_classification_category_relations():
     category_data = util.load_or_create_cache('relations_category_data', _compute_category_data)
 
     y = _load_labels()
-    X = pd.merge(y.to_frame(), category_data, how='left').drop(columns='label')
+    X = pd.merge(y.to_frame(), category_data, how='left', on=['cat', 'pred', 'obj', 'is_inv']).drop(columns='label')
 
     estimators = {'Naive Bayes': GaussianNB(), 'k-NN': KNeighborsClassifier(), 'SVM': SVC(), 'Random Forest': RandomForestClassifier(), 'XG-Boost': XGBClassifier(), 'Neural Net': MLPClassifier()}
     for e_name, e in estimators.items():
@@ -53,7 +53,7 @@ def _compute_category_data() -> pd.DataFrame:
 
     outgoing_data = _get_samples(categories, property_counts, property_freqs, predicate_instances, type_freqs, _get_invalid_domains(), surface_property_values, False)
     ingoing_data = _get_samples(categories, inv_property_counts, inv_property_freqs, inv_predicate_instances, type_freqs, _get_invalid_ranges(), inv_surface_property_values, True)
-    return pd.DataFrame(data=[*outgoing_data, *ingoing_data]).set_index(['cat', 'pred', 'obj'])
+    return pd.DataFrame(data=[*outgoing_data, *ingoing_data]).set_index(['cat', 'pred', 'obj', 'is_inv'], drop=False).drop(columns=['cat', 'pred', 'obj'])
 
 
 def _get_samples(categories: set, property_counts: dict, property_freqs: dict, predicate_instances: dict, type_freqs: dict, invalid_pred_types: dict, surface_property_values: dict, is_inv: bool) -> list:
@@ -76,7 +76,7 @@ def _get_samples(categories: set, property_counts: dict, property_freqs: dict, p
 
 
 def _load_labels() -> pd.Series:
-    return pd.read_csv(util.get_data_file('files.evaluation.category_properties'), index_col=['cat', 'pred', 'obj'])['label']
+    return pd.read_csv(util.get_data_file('files.evaluation.category_properties'), index_col=['cat', 'pred', 'obj', 'is_inv'])['label']
 
 
 def evaluate_probabilistic_category_relations():
