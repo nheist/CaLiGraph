@@ -1,5 +1,6 @@
 from collections import defaultdict
 import caligraph.category.store as cat_store
+import caligraph.category.base as cat_base
 from caligraph.category.graph import CategoryGraph
 import caligraph.dbpedia.store as dbp_store
 import caligraph.dbpedia.util as dbp_util
@@ -30,6 +31,11 @@ CategoryProperty = namedtuple('CategoryProperty', 'cat pred obj prob count inv')
 def evaluate_classification_category_relations():
     category_data = util.load_or_create_cache('relations_category_data', _compute_category_data)
 
+    if 'domain' in category_data.columns:
+        category_data = category_data.join(pd.get_dummies(category_data['domain'])).drop(columns='domain')
+    if 'range' in category_data.columns:
+        category_data = category_data.join(pd.get_dummies(category_data['range'])).drop(columns='range')
+
     y = _load_labels()
     X = pd.merge(y.to_frame(), category_data, how='left', on=['cat', 'pred', 'obj', 'is_inv']).drop(columns='label')
 
@@ -59,6 +65,7 @@ def _compute_category_data() -> pd.DataFrame:
 
 
 def _get_samples(categories: set, property_counts: dict, property_freqs: dict, predicate_instances: dict, type_freqs: dict, invalid_pred_types: dict, surface_property_values: dict, is_inv: bool) -> list:
+    conceptual_cats = cat_base.get_conceptual_category_graph().nodes
     samples = []
     for cat in categories:
         for prop in property_counts[cat].keys():
@@ -72,7 +79,12 @@ def _get_samples(categories: set, property_counts: dict, property_freqs: dict, p
                     'count': property_counts[cat][prop],
                     'freq': property_freqs[cat][prop],
                     'surf': surface_property_values[cat][val],
-                    'neg': sum([type_freqs[cat][t] for t in invalid_pred_types[pred]]) + (1 - (property_counts[cat][(pred, val)] / predicate_instances[cat][pred]))
+                    'neg': sum([type_freqs[cat][t] for t in invalid_pred_types[pred]]) + (1 - (property_counts[cat][(pred, val)] / predicate_instances[cat][pred])),
+                    'is_functional': int(dbp_store.is_functional(pred)),
+                    'is_conceptual': int(cat in conceptual_cats),
+                    'is_object': int(dbp_util.is_dbp_resource(val)),
+                    'domain': dbp_heuristics.get_domain(pred),
+                    'range': dbp_heuristics.get_range(pred)
                 })
     return samples
 
