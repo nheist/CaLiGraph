@@ -45,22 +45,32 @@ class BaselineEstimator(BaseEstimator, ClassifierMixin):
 
 
 def evaluate_classification_category_relations():
-    category_data = util.load_or_create_cache('relations_category_data', _compute_category_data)
+    data = get_category_data()
+    X, y = get_goldstandard(data)
+
+    estimators = {'Baseline': BaselineEstimator(), 'Naive Bayes': GaussianNB(), 'k-NN': KNeighborsClassifier(), 'SVM': SVC(random_state=42), 'Random Forest': RandomForestClassifier(random_state=42), 'XG-Boost': XGBClassifier(random_state=42), 'Neural Net': MLPClassifier(random_state=42)}
+    scoring = {'F1': 'f1', 'P': 'precision', 'R': 'recall', 'ACC': 'accuracy', 'ROC': 'roc_auc'}
+    for e_name, e in estimators.items():
+        scores = cross_validate(e, X, y, scoring=scoring, cv=StratifiedKFold(n_splits=10, random_state=42), n_jobs=10)
+        f1, prec, rec, acc, roc = scores['test_F1'], scores['test_P'], scores['test_R'], scores['test_ACC'], scores['test_ROC']
+        util.get_logger().info('{}: F1={:.2f} P={:.2f} R={:.2f} ACC={:.2f} ROC={:.2f}'.format(e_name, *[np.mean(val) * 100 for val in [f1, prec, rec, acc, roc]]))
+
+
+def get_category_data(version=None) -> pd.DataFrame:
+    category_data = util.load_or_create_cache('relations_category_data', _compute_category_data, version=version)
 
     if 'domain' in category_data.columns:
         category_data = category_data.join(pd.get_dummies(category_data['domain'], prefix='domain')).drop(columns='domain')
     if 'range' in category_data.columns:
         category_data = category_data.join(pd.get_dummies(category_data['range'], prefix='range')).drop(columns='range')
 
+    return category_data
+
+
+def get_goldstandard(category_data: pd.DataFrame) -> Tuple[pd.DataFrame, pd.Series]:
     y = _load_labels()
     X = pd.merge(y.to_frame(), category_data, how='left', on=['cat', 'pred', 'obj', 'is_inv']).drop(columns='label')
-
-    estimators = {'Baseline': BaselineEstimator(), 'Naive Bayes': GaussianNB(), 'k-NN': KNeighborsClassifier(), 'SVM': SVC(), 'Random Forest': RandomForestClassifier(), 'XG-Boost': XGBClassifier(), 'Neural Net': MLPClassifier()}
-    scoring = {'F1': 'f1', 'P': 'precision', 'R': 'recall', 'ACC': 'accuracy', 'ROC': 'roc_auc'}
-    for e_name, e in estimators.items():
-        scores = cross_validate(e, X, y, scoring=scoring, cv=StratifiedKFold(n_splits=10, random_state=42), n_jobs=10)
-        f1, prec, rec, acc, roc = scores['test_F1'], scores['test_P'], scores['test_R'], scores['test_ACC'], scores['test_ROC']
-        util.get_logger().info('{}: F1={:.2f} P={:.2f} R={:.2f} ACC={:.2f} ROC={:.2f}'.format(e_name, *[np.mean(val) * 100 for val in [f1, prec, rec, acc, roc]]))
+    return X, y
 
 
 def _compute_category_data() -> pd.DataFrame:
