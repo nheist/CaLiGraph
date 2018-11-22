@@ -48,9 +48,9 @@ def evaluate_classification_category_relations():
     category_data = util.load_or_create_cache('relations_category_data', _compute_category_data)
 
     if 'domain' in category_data.columns:
-        category_data = category_data.join(pd.get_dummies(category_data['domain'])).drop(columns='domain')
+        category_data = category_data.join(pd.get_dummies(category_data['domain'], prefix='domain')).drop(columns='domain')
     if 'range' in category_data.columns:
-        category_data = category_data.join(pd.get_dummies(category_data['range'])).drop(columns='range')
+        category_data = category_data.join(pd.get_dummies(category_data['range'], prefix='range')).drop(columns='range')
 
     y = _load_labels()
     X = pd.merge(y.to_frame(), category_data, how='left', on=['cat', 'pred', 'obj', 'is_inv']).drop(columns='label')
