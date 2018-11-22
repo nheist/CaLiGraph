@@ -37,7 +37,7 @@ def evaluate_classification_category_relations():
     scoring = {'F1': 'f1', 'P': 'precision', 'R': 'recall', 'ACC': 'accuracy'}
     for e_name, e in estimators.items():
         scores = cross_validate(e, X, y, scoring=scoring, cv=StratifiedKFold(n_splits=10, random_state=42), n_jobs=10)
-        f1, prec, rec, acc = scores['test_F1'], scores['test_P'], scores['test_R'], scores['test_A']
+        f1, prec, rec, acc = scores['test_F1'], scores['test_P'], scores['test_R'], scores['test_ACC']
         util.get_logger().info('{}: F1={:.2f} P={:.2f} R={:.2f} ACC={:.2f}'.format(e_name, *[np.mean(val) * 100 for val in [f1, prec, rec, acc]]))
 
 
