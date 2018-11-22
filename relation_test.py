@@ -12,7 +12,7 @@ from typing import Tuple
 from collections import namedtuple
 import functools
 import operator
-from sklearn.model_selection import cross_val_score, StratifiedKFold
+from sklearn.model_selection import cross_validate, StratifiedKFold
 from sklearn.naive_bayes import GaussianNB
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
@@ -34,9 +34,11 @@ def evaluate_classification_category_relations():
     X = pd.merge(y.to_frame(), category_data, how='left', on=['cat', 'pred', 'obj', 'is_inv']).drop(columns='label')
 
     estimators = {'Naive Bayes': GaussianNB(), 'k-NN': KNeighborsClassifier(), 'SVM': SVC(), 'Random Forest': RandomForestClassifier(), 'XG-Boost': XGBClassifier(), 'Neural Net': MLPClassifier()}
+    scoring = {'F1': 'f1', 'P': 'precision', 'R': 'recall', 'ACC': 'accuracy'}
     for e_name, e in estimators.items():
-        f1_scores = cross_val_score(e, X, y, scoring='f1', cv=StratifiedKFold(n_splits=10, random_state=42), n_jobs=10)
-        util.get_logger().info(f'{e_name}: {np.mean(f1_scores)}')
+        scores = cross_validate(e, X, y, scoring=scoring, cv=StratifiedKFold(n_splits=10, random_state=42), n_jobs=10)
+        f1, prec, rec, acc = scores['test_F1'], scores['test_P'], scores['test_R'], scores['test_A']
+        util.get_logger().info('{}: F1={:.2f} P={:.2f} R={:.2f} ACC={:.2f}'.format(e_name, *[np.mean(val) * 100 for val in [f1, prec, rec, acc]]))
 
 
 def _compute_category_data() -> pd.DataFrame:
