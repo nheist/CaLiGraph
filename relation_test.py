@@ -24,7 +24,7 @@ from sklearn.neural_network import MLPClassifier
 from xgboost import XGBClassifier
 
 COMPUTE_BASELINE = True
-USE_HEURISTIC_CONSTRAINTS = True  # HC
+USE_HEURISTIC_CONSTRAINTS = False  # HC
 USE_RESOLVED_REDIRECTS = True  # RR
 
 CategoryProperty = namedtuple('CategoryProperty', 'cat pred obj prob count inv')
@@ -108,12 +108,14 @@ def _get_samples(categories: set, property_counts: dict, property_freqs: dict, p
                     'count': property_counts[cat][prop],
                     'freq': property_freqs[cat][prop],
                     'surf': surface_property_values[cat][val],
-                    'neg': sum([type_freqs[cat][t] for t in invalid_pred_types[pred]]) + (1 - (property_counts[cat][(pred, val)] / predicate_instances[cat][pred])),
-                    'is_functional': int(dbp_store.is_functional(pred)),
-                    'is_conceptual': int(cat in conceptual_cats),
-                    'is_object': int(dbp_util.is_dbp_resource(val)),
-                    'domain': dbp_heuristics.get_domain(pred),
-                    'range': dbp_heuristics.get_range(pred)
+                    'neg_freq': 1 - (property_counts[cat][(pred, val)] / predicate_instances[cat][pred]),
+                    'invalid_freq': sum([type_freqs[cat][t] for t in invalid_pred_types[pred]]),
+                    # 'neg': sum([type_freqs[cat][t] for t in invalid_pred_types[pred]]) + (1 - (property_counts[cat][(pred, val)] / predicate_instances[cat][pred])),
+                    # 'is_functional': int(dbp_store.is_functional(pred)),
+                    # 'is_conceptual': int(cat in conceptual_cats),
+                    # 'is_object': int(dbp_util.is_dbp_resource(val)),
+                    # 'domain': dbp_heuristics.get_domain(pred),
+                    # 'range': dbp_heuristics.get_range(pred)
                 })
     return samples
 
