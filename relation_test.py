@@ -69,8 +69,10 @@ def get_category_data(version=None) -> pd.DataFrame:
 
 
 def get_goldstandard(category_data: pd.DataFrame) -> Tuple[pd.DataFrame, pd.Series]:
-    y = _load_labels()
-    X = pd.merge(y.to_frame(), category_data, how='inner', on=['cat', 'pred', 'obj', 'is_inv']).drop(columns='label')
+    labels = pd.read_csv(util.get_data_file('files.evaluation.category_properties'), index_col=['cat', 'pred', 'obj', 'is_inv'])
+    goldstandard = pd.merge(category_data, labels, how='inner', on=['cat', 'pred', 'obj', 'is_inv'])
+    y = goldstandard['label']
+    X = goldstandard.drop(columns='label')
     return X, y
 
 
@@ -114,10 +116,6 @@ def _get_samples(categories: set, property_counts: dict, property_freqs: dict, p
                     'range': dbp_heuristics.get_range(pred)
                 })
     return samples
-
-
-def _load_labels() -> pd.Series:
-    return pd.read_csv(util.get_data_file('files.evaluation.category_properties'), index_col=['cat', 'pred', 'obj', 'is_inv'])['label']
 
 
 def evaluate_probabilistic_category_relations():
