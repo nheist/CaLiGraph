@@ -47,7 +47,7 @@ class BaselineEstimator(BaseEstimator, ClassifierMixin):
 
 def evaluate_classification_category_relations():
     data = get_category_data()
-    X, y = get_goldstandard(data)
+    goldstandard, X, y = get_goldstandard(data)
 
     estimators = {'Baseline': BaselineEstimator(), 'Naive Bayes': GaussianNB(), 'LogReg': LogisticRegression(random_state=42), 'k-NN': KNeighborsClassifier(), 'SVM': SVC(random_state=42), 'Random Forest': RandomForestClassifier(random_state=42), 'XG-Boost': XGBClassifier(random_state=42), 'Neural Net': MLPClassifier(random_state=42)}
     scoring = {'F1': 'f1', 'P': 'precision', 'R': 'recall', 'ACC': 'accuracy', 'ROC': 'roc_auc'}
@@ -68,12 +68,12 @@ def get_category_data(version=None) -> pd.DataFrame:
     return category_data
 
 
-def get_goldstandard(category_data: pd.DataFrame) -> Tuple[pd.DataFrame, pd.Series]:
+def get_goldstandard(category_data: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame, pd.Series]:
     labels = pd.read_csv(util.get_data_file('files.evaluation.category_properties'), index_col=['cat', 'pred', 'obj', 'is_inv'])
     goldstandard = pd.merge(category_data, labels, how='inner', on=['cat', 'pred', 'obj', 'is_inv'])
     y = goldstandard['label']
     X = goldstandard.drop(columns='label')
-    return X, y
+    return goldstandard, X, y
 
 
 def _compute_category_data() -> pd.DataFrame:
