@@ -109,7 +109,6 @@ def _get_samples(categories: set, property_counts: dict, property_freqs: dict, p
                     'ingoing': int(is_inv),  # duplicate feature as it should be used as index and as column
                     'count': property_counts[cat][prop],
                     'freq': property_freqs[cat][prop],
-                    'abs_freq': property_counts[cat][prop] / len(cat_store.get_resources(cat)),
                     'surf': surface_property_values[cat][val],
                     'neg': sum([type_freqs[cat][t] for t in invalid_pred_types[pred]]) + (1 - (property_counts[cat][prop] / predicate_instances[cat][pred])),
                     # 'neg_freq': 1 - (property_counts[cat][(pred, val)] / predicate_instances[cat][pred]),
