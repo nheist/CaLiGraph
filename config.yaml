@@ -158,4 +158,4 @@ cache:
     version: 'baseline+RR+Test' # 1 = v8 (bayesian B) / 2 = v9 (+surface-literals SL) / 3 = v10 (+resolved redirects R) / 4 = v11 (+reversal of p and c_given_p) / 5 = v12 (-SL)
   relations_category_data:
     filename: 'relations-category-data'
-    version: 1 # 2 = +HC // 3 = with additional attributes (is_functional, is_conceptual, is_object, domain, range) // 4 = split negative evidence (no HC) // 5 = 4+HC
+    version: 2 # 2 = +abs_freq
