@@ -95,7 +95,7 @@ def _compute_category_data() -> pd.DataFrame:
 
 
 def _get_samples(categories: set, property_counts: dict, property_freqs: dict, predicate_instances: dict, type_freqs: dict, invalid_pred_types: dict, surface_property_values: dict, is_inv: bool) -> list:
-    # conceptual_cats = cat_base.get_conceptual_category_graph().nodes
+    conceptual_cats = cat_base.get_conceptual_category_graph().nodes
     samples = []
     for cat in categories:
         for prop in property_counts[cat].keys():
@@ -111,6 +111,7 @@ def _get_samples(categories: set, property_counts: dict, property_freqs: dict, p
                     'freq': property_freqs[cat][prop],
                     'surf': surface_property_values[cat][val],
                     'neg': sum([type_freqs[cat][t] for t in invalid_pred_types[pred]]) + (1 - (property_counts[cat][prop] / predicate_instances[cat][pred])),
+                    'is_set': int(cat in conceptual_cats)
                     # 'neg_freq': 1 - (property_counts[cat][(pred, val)] / predicate_instances[cat][pred]),
                     # 'invalid_freq': sum([type_freqs[cat][t] for t in invalid_pred_types[pred]]),
                     # 'is_functional': int(dbp_store.is_functional(pred)),
