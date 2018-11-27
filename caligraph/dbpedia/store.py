@@ -15,9 +15,9 @@ def get_resources() -> set:
     return set(_get_label_mapping())
 
 
-def get_label(dbp_resource: str) -> str:
+def get_label(dbp_object: str) -> str:
     labels = _get_label_mapping()
-    return labels[dbp_resource] if dbp_resource in labels else dbp_util.resource2name(dbp_resource)
+    return labels[dbp_object] if dbp_object in labels else dbp_util.object2name(dbp_object)
 
 
 def _get_label_mapping() -> dict:
