@@ -82,19 +82,19 @@ def _compute_category_data() -> pd.DataFrame:
     type_freqs = util.load_or_create_cache('relations_type_frequencies', functools.partial(_compute_type_frequencies, categories))
 
     property_mapping = dbp_store.get_resource_property_mapping()
-    property_counts, property_freqs, predicate_instances = util.load_or_create_cache('relations_property_stats', functools.partial(_compute_property_stats, categories, property_mapping), version=('RR' if USE_RESOLVED_REDIRECTS else None))
+    property_counts, property_freqs, predicate_instances, value_instances = util.load_or_create_cache('relations_property_stats', functools.partial(_compute_property_stats, categories, property_mapping), version=('RR' if USE_RESOLVED_REDIRECTS else None))
     surface_property_values = util.load_or_create_cache('relations_surface_property_values', functools.partial(_compute_surface_property_values, categories, property_mapping), version=('RR' if USE_RESOLVED_REDIRECTS else None))
 
     inv_property_mapping = dbp_store.get_inverse_resource_property_mapping()
-    inv_property_counts, inv_property_freqs, inv_predicate_instances = util.load_or_create_cache('relations_inverse_property_stats', functools.partial(_compute_property_stats, categories, inv_property_mapping), version=('RR' if USE_RESOLVED_REDIRECTS else None))
+    inv_property_counts, inv_property_freqs, inv_predicate_instances, inv_value_instances = util.load_or_create_cache('relations_inverse_property_stats', functools.partial(_compute_property_stats, categories, inv_property_mapping), version=('RR' if USE_RESOLVED_REDIRECTS else None))
     inv_surface_property_values = util.load_or_create_cache('relations_inverse_surface_property_values', functools.partial(_compute_surface_property_values, categories, inv_property_mapping), version=('RR' if USE_RESOLVED_REDIRECTS else None))
 
-    outgoing_data = _get_samples(categories, property_counts, property_freqs, predicate_instances, type_freqs, _get_invalid_domains(), surface_property_values, False)
-    ingoing_data = _get_samples(categories, inv_property_counts, inv_property_freqs, inv_predicate_instances, type_freqs, _get_invalid_ranges(), inv_surface_property_values, True)
+    outgoing_data = _get_samples(categories, property_counts, property_freqs, predicate_instances, value_instances, type_freqs, _get_invalid_domains(), surface_property_values, False)
+    ingoing_data = _get_samples(categories, inv_property_counts, inv_property_freqs, inv_predicate_instances, inv_value_instances, type_freqs, _get_invalid_ranges(), inv_surface_property_values, True)
     return pd.DataFrame(data=[*outgoing_data, *ingoing_data]).set_index(['cat', 'pred', 'obj', 'is_inv'])
 
 
-def _get_samples(categories: set, property_counts: dict, property_freqs: dict, predicate_instances: dict, type_freqs: dict, invalid_pred_types: dict, surface_property_values: dict, is_inv: bool) -> list:
+def _get_samples(categories: set, property_counts: dict, property_freqs: dict, predicate_instances: dict, value_instances: dict, type_freqs: dict, invalid_pred_types: dict, surface_property_values: dict, is_inv: bool) -> list:
     conceptual_cats = cat_base.get_conceptual_category_graph().nodes
     samples = []
     for cat in categories:
@@ -110,15 +110,11 @@ def _get_samples(categories: set, property_counts: dict, property_freqs: dict, p
                     'count': property_counts[cat][prop],
                     'freq': property_freqs[cat][prop],
                     'surf': surface_property_values[cat][val],
-                    'neg': sum([type_freqs[cat][t] for t in invalid_pred_types[pred]]) + (1 - (property_counts[cat][prop] / predicate_instances[cat][pred])),
+                    'disjoint': sum([type_freqs[cat][t] for t in invalid_pred_types[pred]]),
+                    'lcwa': 1 - (property_counts[cat][prop] / predicate_instances[cat][pred]),
+                    'alt_lcwa': 1 - (property_counts[cat][prop] / value_instances[cat][val]),
+                    'com_lcwa': 1 - (property_counts[cat][prop] / (predicate_instances[cat][pred] + value_instances[cat][val] - property_counts[cat][prop])),
                     'is_set': int(cat in conceptual_cats)
-                    # 'neg_freq': 1 - (property_counts[cat][(pred, val)] / predicate_instances[cat][pred]),
-                    # 'invalid_freq': sum([type_freqs[cat][t] for t in invalid_pred_types[pred]]),
-                    # 'is_functional': int(dbp_store.is_functional(pred)),
-                    # 'is_conceptual': int(cat in conceptual_cats),
-                    # 'is_object': int(dbp_util.is_dbp_resource(val)),
-                    # 'domain': dbp_heuristics.get_domain(pred),
-                    # 'range': dbp_heuristics.get_range(pred)
                 })
     return samples
 
@@ -182,22 +178,27 @@ def _get_invalid_ranges():
         return defaultdict(set, {p: dbp_store.get_disjoint_types(dbp_store.get_range(p)) for p in predicates})
 
 
-def _compute_property_stats(categories: set, property_mapping: dict) -> Tuple[dict, dict, dict]:
+def _compute_property_stats(categories: set, property_mapping: dict) -> Tuple[dict, dict, dict, dict]:
     property_counts = defaultdict(functools.partial(defaultdict, int))
     property_frequencies = defaultdict(functools.partial(defaultdict, float))
     predicate_instances = defaultdict(functools.partial(defaultdict, int))
+    value_instances = defaultdict(functools.partial(defaultdict, int))
 
     for cat in categories:
         resources = cat_store.get_resources(cat)
         for res in resources:
+            resource_values = set()
             for pred, values in property_mapping[res].items():
                 predicate_instances[cat][pred] += 1
                 values = {dbp_store.resolve_redirect(v) for v in values} if USE_RESOLVED_REDIRECTS else values
                 for val in values:
                     property_counts[cat][(pred, val)] += 1
+                    resource_values.add(val)
+            for val in resource_values:
+                value_instances[cat][val] += 1
         property_frequencies[cat] = defaultdict(float, {prop: p_count / len(resources) for prop, p_count in property_counts[cat].items()})
 
-    return property_counts, property_frequencies, predicate_instances
+    return property_counts, property_frequencies, predicate_instances, value_instances
 
 
 def _compute_type_frequencies(categories: set) -> dict:
