@@ -47,7 +47,7 @@ files:
   wikidata:
     resource_properties: 'wikidata_resource_properties.nt.bz2'
   evaluation:
-    category_properties: 'category-property_labels_v3.csv'
+    category_properties: 'category-property_labels_v4.csv'
 
 cache:
   # version 2: added resource types from sdtyped + lhd
