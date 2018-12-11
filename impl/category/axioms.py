@@ -49,7 +49,7 @@ def get_category_axioms() -> pd.DataFrame:
 
 def _compute_correct_axioms(axiom_estimator: RandomForestClassifier, candidate_axioms: pd.DataFrame) -> pd.DataFrame:
     candidate_axioms['prediction'] = axiom_estimator.predict(candidate_axioms)
-    return candidate_axioms[candidate_axioms['prediction']].reset_index()[['cat', 'pred', 'val', 'is_inv']]
+    return candidate_axioms[candidate_axioms['prediction'] == True].reset_index()[['cat', 'pred', 'val', 'is_inv']]
 
 
 def _create_goldstandard(category_data: pd.DataFrame) -> Tuple[pd.DataFrame, pd.Series]:
