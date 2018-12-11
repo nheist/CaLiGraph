@@ -1,5 +1,5 @@
-import caligraph.util.nlp as nlp_util
-import caligraph.category.store as cat_store
+import impl.util.nlp as nlp_util
+import impl.category.store as cat_store
 import util
 import inflection
 

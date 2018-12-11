@@ -78,7 +78,7 @@ def _get_cache_path(cache_identifier: str, version=None) -> Path:
 
 # LOGGING
 def get_logger():
-    return logging.getLogger('caligraph')
+    return logging.getLogger('impl')
 
 
 log_format = '%(asctime)s %(levelname)s: %(message)s'

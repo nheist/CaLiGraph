@@ -1,9 +1,9 @@
 import networkx as nx
 from . import store as cat_store
 from . import nlp as cat_nlp
-import caligraph.dbpedia.store as dbp_store
-from caligraph.util.base_graph import BaseGraph
-import caligraph.util.rdf as rdf_util
+import impl.dbpedia.store as dbp_store
+from impl.util.base_graph import BaseGraph
+import impl.util.rdf as rdf_util
 import util
 import numpy as np
 import math
@@ -14,7 +14,7 @@ class CategoryGraph(BaseGraph):
     PROPERTY_RESOURCE_TYPE_COUNTS = 'resource_type_counts'
 
     def __init__(self, graph: nx.DiGraph, root_node: str = None):
-        super().__init__(graph, root_node or util.get_config('caligraph.category.root_category'))
+        super().__init__(graph, root_node or util.get_config('category.root_category'))
 
     @property
     def statistics(self) -> str:
@@ -136,13 +136,13 @@ class CategoryGraph(BaseGraph):
                 category_types = resource_types.intersection(child_types)
             else:
                 child_type_distribution = {t: count / len(children_with_types) for t, count in child_type_counts.items()}
-                child_type_ratio = util.get_config('caligraph.category.dbp_types.child_type_ratio')
+                child_type_ratio = util.get_config('category.dbp_types.child_type_ratio')
                 category_types = {t for t, probability in child_type_distribution.items() if probability > child_type_ratio}
 
         # remove any disjoint type assignments
         category_types = category_types.difference({dt for t in category_types for dt in dbp_store.get_disjoint_types(t)})
 
-        if util.get_config('caligraph.category.dbp_types.apply_impure_type_filtering'):
+        if util.get_config('category.dbp_types.apply_impure_type_filtering'):
             category_types = self._filter_impure_types(cat, category_types)
 
         if category_types:
@@ -154,12 +154,12 @@ class CategoryGraph(BaseGraph):
     def _compute_resource_types_for_category(self, cat: str) -> set:
         resource_type_counts = self._get_attr(cat, self.PROPERTY_RESOURCE_TYPE_COUNTS)
         # filter type counts relative to ontology depth
-        if util.get_config('caligraph.category.dbp_types.apply_type_depth_smoothing'):
+        if util.get_config('category.dbp_types.apply_type_depth_smoothing'):
             resource_type_counts['types'] = {t: t_count for t, t_count in resource_type_counts['types'].items() if t_count >= math.log2(dbp_store.get_type_depth(t))}
 
-        resource_count = resource_type_counts['typed_count' if util.get_config('caligraph.category.dbp_types.exclude_untyped_resources') else 'count']
+        resource_count = resource_type_counts['typed_count' if util.get_config('category.dbp_types.exclude_untyped_resources') else 'count']
         resource_type_distribution = {t: t_count / resource_count for t, t_count in resource_type_counts['types'].items()}
-        resource_type_ratio = util.get_config('caligraph.category.dbp_types.resource_type_ratio')
+        resource_type_ratio = util.get_config('category.dbp_types.resource_type_ratio')
         return {t for t, probability in resource_type_distribution.items() if probability > resource_type_ratio}
 
     def _filter_impure_types(self, category: str, category_types: set) -> set:
@@ -168,7 +168,7 @@ class CategoryGraph(BaseGraph):
             return category_types
 
         pure_category_types = set()
-        type_purity_threshold = util.get_config('caligraph.category.dbp_types.type_purity_threshold')
+        type_purity_threshold = util.get_config('category.dbp_types.type_purity_threshold')
         for cat_type in category_types:
             impure_resource_count = len({r for r, types in resources_with_types.items() if any(dbp_store.get_cooccurrence_frequency(cat_type, t) == 0 for t in types)})
             if (1 - impure_resource_count / len(resources_with_types)) >= type_purity_threshold:

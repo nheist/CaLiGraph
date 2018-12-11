@@ -1,6 +1,6 @@
 from .graph import CategoryGraph
-import caligraph.dbpedia.store as dbp_store
-import caligraph.category.store as cat_store
+import impl.dbpedia.store as dbp_store
+import impl.category.store as cat_store
 from collections import defaultdict
 from typing import Tuple
 import itertools
@@ -15,9 +15,9 @@ def test_settings(graph: CategoryGraph):
     df = pd.DataFrame(data=data, columns=columns)
 
     for row in df.itertuples():
-        util.set_config('caligraph.category.dbp_types.exclude_untyped_resources', row.exclude_untyped_resources)
-        util.set_config('caligraph.category.dbp_types.resource_type_ratio', row.resource_type_ratio)
-        util.set_config('caligraph.category.dbp_types.child_type_ratio', row.child_type_ratio)
+        util.set_config('category.dbp_types.exclude_untyped_resources', row.exclude_untyped_resources)
+        util.set_config('category.dbp_types.resource_type_ratio', row.resource_type_ratio)
+        util.set_config('category.dbp_types.child_type_ratio', row.child_type_ratio)
 
         eval_graph = graph.copy()
         eval_graph.assign_dbp_types()

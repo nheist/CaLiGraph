@@ -2,8 +2,8 @@ import traceback
 import util
 import mailer
 import relation_test
-import caligraph.category.base as cat_base
-import caligraph.dbpedia.heuristics as dbp_heuristics
+import impl.category.base as cat_base
+import impl.dbpedia.heuristics as dbp_heuristics
 
 if __name__ == '__main__':
     try:

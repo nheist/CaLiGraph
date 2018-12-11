@@ -1,14 +1,16 @@
 caligraph:
   namespace: 'http://data.informatik.uni-mannheim.de/caligraph#'
-  category:
-    root_category: 'http://dbpedia.org/resource/Category:Main_topic_classifications'
-    dbp_types:
-      exclude_untyped_resources: False
-      apply_type_depth_smoothing: True
-      apply_impure_type_filtering: True
-      type_purity_threshold: 0.95
-      resource_type_ratio: 0.5
-      child_type_ratio: 0.5
+category:
+  root_category: 'http://dbpedia.org/resource/Category:Main_topic_classifications'
+  axioms:
+    pos_weight: 14
+  dbp_types:
+    exclude_untyped_resources: False
+    apply_type_depth_smoothing: True
+    apply_impure_type_filtering: True
+    type_purity_threshold: 0.95
+    resource_type_ratio: 0.5
+    child_type_ratio: 0.5
 
 
 logging:
@@ -47,7 +49,7 @@ files:
   wikidata:
     resource_properties: 'wikidata_resource_properties.nt.bz2'
   evaluation:
-    category_properties: 'category-property_labels_v3.csv'
+    category_properties: 'cataxioms_labels.csv'
 
 cache:
   # version 2: added resource types from sdtyped + lhd
@@ -102,15 +104,6 @@ cache:
   dbpedia_functional_predicates:
     filename: 'dbpedia-functional-predicates'
     version: 1
-  dbpedia_heuristic_domains:
-    filename: 'dbpedia-heuristic-domains'
-    version: 1
-  dbpedia_heuristic_ranges:
-    filename: 'dbpedia-heuristic-ranges'
-    version: 1
-  dbpedia_heuristic_disjoint_types:
-    filename: 'dbpedia-heuristic-disjoint-types'
-    version: 1 # -> version 2 is with transitive types
   dbpedia_categories:
     filename: 'dbpedia-categories'
     version: 1
@@ -119,9 +112,6 @@ cache:
     version: 1
   dbpedia_category_parents:
     filename: 'dbpedia-category-parents'
-    version: 1
-  dbpedia_category_children:
-    filename: 'dbpedia-category-children'
     version: 1
   dbpedia_property_frequency_distribution:
     filename: 'dbpedia-property-frequency-distribution'
@@ -138,24 +128,21 @@ cache:
   wikidata_resource_properties:
     filename: 'wikidata-resource-properties'
     version: 1
-  relations_property_stats:
-    filename: 'relations-property-stats'
+  cataxioms_property_stats:
+    filename: 'cataxioms-property-stats'
     version: 1
-  relations_inverse_property_stats:
-    filename: 'relations-inverse-property-stats'
+  cataxioms_inverse_property_stats:
+    filename: 'cataxioms-inverse-property-stats'
     version: 1
-  relations_type_frequencies:
-    filename: 'relations-type-frequencies'
+  cataxioms_type_frequencies:
+    filename: 'cataxioms-type-frequencies'
     version: 1
-  relations_surface_property_values:
-    filename: 'relations-surface-property-values'
+  cataxioms_surface_property_values:
+    filename: 'cataxioms-surface-property-values'
     version: 1
-  relations_inverse_surface_property_values:
-    filename: 'relations-inverse-surface-property-values'
+  cataxioms_inverse_surface_property_values:
+    filename: 'cataxioms-inverse-surface-property-values'
     version: 1
-  relations_probabilities:
-    filename: 'relations-probabilities'
-    version: 'baseline+RR+Test' # 1 = v8 (bayesian B) / 2 = v9 (+surface-literals SL) / 3 = v10 (+resolved redirects R) / 4 = v11 (+reversal of p and c_given_p) / 5 = v12 (-SL)
-  relations_category_data:
-    filename: 'relations-category-data'
-    version: 2  # 2 = multiple LCWA-parameters
+  cataxioms_candidates:
+    filename: 'cataxioms-candidates'
+    version: 1

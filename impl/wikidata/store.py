@@ -1,9 +1,9 @@
 from typing import Optional
 import util
-import caligraph.util.rdf as rdf_util
-import caligraph.dbpedia.store as dbp_store
-import caligraph.dbpedia.util as dbp_util
-from caligraph.util.enum_match import Match
+import impl.util.rdf as rdf_util
+import impl.dbpedia.store as dbp_store
+import impl.dbpedia.util as dbp_util
+from impl.util.enum_match import Match
 
 
 __NAMESPACE_WIKIDATA__ = 'http://www.wikidata.org/entity/'

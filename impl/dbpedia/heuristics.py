@@ -1,7 +1,7 @@
 import util
 from typing import Optional
-import caligraph.util.rdf as rdf_util
-import caligraph.dbpedia.store as dbp_store
+import impl.util.rdf as rdf_util
+import impl.dbpedia.store as dbp_store
 from collections import defaultdict
 import math
 

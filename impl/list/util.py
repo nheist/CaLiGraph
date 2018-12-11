@@ -1,4 +1,4 @@
-import caligraph.dbpedia.util as dbp_util
+import impl.dbpedia.util as dbp_util
 
 NAMESPACE_DBP_LIST = dbp_util.NAMESPACE_DBP_RESOURCE + 'List_of_'
 

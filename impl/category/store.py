@@ -1,5 +1,5 @@
 from . import util as cat_util
-import caligraph.util.rdf as rdf_util
+import impl.util.rdf as rdf_util
 import util
 
 
@@ -38,26 +38,6 @@ def get_resource_to_cats_mapping() -> dict:
     return __RESOURCE_CATEGORIES__
 
 
-def get_parents(category: str) -> set:
-    global __PARENTS__
-    if '__PARENTS__' not in globals():
-        initializer = lambda: rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.categories')], rdf_util.PREDICATE_BROADER)
-        __PARENTS__ = util.load_or_create_cache('dbpedia_category_parents', initializer)
-
-    return __PARENTS__[category]
-
-
-def get_transitive_parents(category: str) -> set:
-    global __TRANSITIVE_PARENTS__
-    if '__TRANSITIVE_PARENTS__' not in globals():
-        __TRANSITIVE_PARENTS__ = dict()
-    if category not in __TRANSITIVE_PARENTS__:
-        parents = get_parents(category)
-        __TRANSITIVE_PARENTS__[category] = parents | {tp for p in parents for tp in get_transitive_parents(p)}
-
-    return __TRANSITIVE_PARENTS__[category]
-
-
 def get_children(category: str) -> set:
     global __CHILDREN__
     if '__CHILDREN__' not in globals():
@@ -65,17 +45,6 @@ def get_children(category: str) -> set:
         __CHILDREN__ = util.load_or_create_cache('dbpedia_category_children', initializer)
 
     return __CHILDREN__[category]
-
-
-def get_transitive_children(category: str) -> set:
-    global __TRANSITIVE_CHILDREN__
-    if '__TRANSITIVE_CHILDREN__' not in globals():
-        __TRANSITIVE_CHILDREN__ = dict()
-    if category not in __TRANSITIVE_CHILDREN__:
-        children = get_children(category)
-        __TRANSITIVE_CHILDREN__[category] = children | {tc for c in children for tc in get_transitive_children(c)}
-
-    return __TRANSITIVE_PARENTS__[category]
 
 
 def get_redirects(category: str) -> set:

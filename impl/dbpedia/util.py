@@ -1,4 +1,4 @@
-import caligraph.util.rdf as rdf_util
+import impl.util.rdf as rdf_util
 
 NAMESPACE_DBP_ONTOLOGY = 'http://dbpedia.org/ontology/'
 NAMESPACE_DBP_RESOURCE = 'http://dbpedia.org/resource/'

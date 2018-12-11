@@ -1,10 +1,10 @@
 from collections import defaultdict
-import caligraph.category.store as cat_store
-import caligraph.category.base as cat_base
-from caligraph.category.graph import CategoryGraph
-import caligraph.dbpedia.store as dbp_store
-import caligraph.dbpedia.util as dbp_util
-import caligraph.dbpedia.heuristics as dbp_heuristics
+import impl.category.store as cat_store
+import impl.category.base as cat_base
+from impl.category.graph import CategoryGraph
+import impl.dbpedia.store as dbp_store
+import impl.dbpedia.util as dbp_util
+import impl.dbpedia.heuristics as dbp_heuristics
 import util
 import pandas as pd
 import numpy as np
@@ -58,7 +58,7 @@ def evaluate_classification_category_relations():
 
 
 def get_category_data(version=None) -> pd.DataFrame:
-    category_data = util.load_or_create_cache('relations_category_data', _compute_category_data, version=version)
+    category_data = util.load_or_create_cache('cataxioms_candidates', _compute_category_data, version=version)
 
     if 'domain' in category_data.columns:
         category_data = category_data.join(pd.get_dummies(category_data['domain'], prefix='domain')).drop(columns='domain')
@@ -79,15 +79,15 @@ def get_goldstandard(category_data: pd.DataFrame) -> Tuple[pd.DataFrame, pd.Data
 def _compute_category_data() -> pd.DataFrame:
     categories = CategoryGraph.create_from_dbpedia().remove_unconnected().nodes
     categories = {cat for cat in categories if 'List_of_' not in cat and 'Lists_of_' not in cat}
-    type_freqs = util.load_or_create_cache('relations_type_frequencies', functools.partial(_compute_type_frequencies, categories))
+    type_freqs = util.load_or_create_cache('cataxioms_type_frequencies', functools.partial(_compute_type_frequencies, categories))
 
     property_mapping = dbp_store.get_resource_property_mapping()
-    property_counts, property_freqs, predicate_instances, value_instances = util.load_or_create_cache('relations_property_stats', functools.partial(_compute_property_stats, categories, property_mapping), version=('RR' if USE_RESOLVED_REDIRECTS else None))
-    surface_property_values = util.load_or_create_cache('relations_surface_property_values', functools.partial(_compute_surface_property_values, categories, property_mapping), version=('RR' if USE_RESOLVED_REDIRECTS else None))
+    property_counts, property_freqs, predicate_instances, value_instances = util.load_or_create_cache('cataxioms_property_stats', functools.partial(_compute_property_stats, categories, property_mapping), version=('RR' if USE_RESOLVED_REDIRECTS else None))
+    surface_property_values = util.load_or_create_cache('cataxioms_surface_property_values', functools.partial(_compute_surface_property_values, categories, property_mapping), version=('RR' if USE_RESOLVED_REDIRECTS else None))
 
     inv_property_mapping = dbp_store.get_inverse_resource_property_mapping()
-    inv_property_counts, inv_property_freqs, inv_predicate_instances, inv_value_instances = util.load_or_create_cache('relations_inverse_property_stats', functools.partial(_compute_property_stats, categories, inv_property_mapping), version=('RR' if USE_RESOLVED_REDIRECTS else None))
-    inv_surface_property_values = util.load_or_create_cache('relations_inverse_surface_property_values', functools.partial(_compute_surface_property_values, categories, inv_property_mapping), version=('RR' if USE_RESOLVED_REDIRECTS else None))
+    inv_property_counts, inv_property_freqs, inv_predicate_instances, inv_value_instances = util.load_or_create_cache('cataxioms_inverse_property_stats', functools.partial(_compute_property_stats, categories, inv_property_mapping), version=('RR' if USE_RESOLVED_REDIRECTS else None))
+    inv_surface_property_values = util.load_or_create_cache('cataxioms_inverse_surface_property_values', functools.partial(_compute_surface_property_values, categories, inv_property_mapping), version=('RR' if USE_RESOLVED_REDIRECTS else None))
 
     outgoing_data = _get_samples(categories, property_counts, property_freqs, predicate_instances, value_instances, type_freqs, _get_invalid_domains(), surface_property_values, False)
     ingoing_data = _get_samples(categories, inv_property_counts, inv_property_freqs, inv_predicate_instances, inv_value_instances, type_freqs, _get_invalid_ranges(), inv_surface_property_values, True)
@@ -121,15 +121,15 @@ def _get_samples(categories: set, property_counts: dict, property_freqs: dict, p
 
 def evaluate_probabilistic_category_relations():
     categories = CategoryGraph.create_from_dbpedia().remove_unconnected().nodes
-    type_freqs = util.load_or_create_cache('relations_type_frequencies', functools.partial(_compute_type_frequencies, categories))
+    type_freqs = util.load_or_create_cache('cataxioms_type_frequencies', functools.partial(_compute_type_frequencies, categories))
 
     property_mapping = dbp_store.get_resource_property_mapping()
-    property_counts, property_freqs, predicate_instances = util.load_or_create_cache('relations_property_stats', functools.partial(_compute_property_stats, categories, property_mapping), version=('RR' if USE_RESOLVED_REDIRECTS else None))
-    surface_property_values = util.load_or_create_cache('relations_surface_property_values', functools.partial(_compute_surface_property_values, categories, property_mapping), version=('RR' if USE_RESOLVED_REDIRECTS else None))
+    property_counts, property_freqs, predicate_instances = util.load_or_create_cache('cataxioms_property_stats', functools.partial(_compute_property_stats, categories, property_mapping), version=('RR' if USE_RESOLVED_REDIRECTS else None))
+    surface_property_values = util.load_or_create_cache('cataxioms_surface_property_values', functools.partial(_compute_surface_property_values, categories, property_mapping), version=('RR' if USE_RESOLVED_REDIRECTS else None))
 
     inv_property_mapping = dbp_store.get_inverse_resource_property_mapping()
-    inv_property_counts, inv_property_freqs, inv_predicate_instances = util.load_or_create_cache('relations_inverse_property_stats', functools.partial(_compute_property_stats, categories, inv_property_mapping), version=('RR' if USE_RESOLVED_REDIRECTS else None))
-    inv_surface_property_values = util.load_or_create_cache('relations_inverse_surface_property_values', functools.partial(_compute_surface_property_values, categories, inv_property_mapping), version=('RR' if USE_RESOLVED_REDIRECTS else None))
+    inv_property_counts, inv_property_freqs, inv_predicate_instances = util.load_or_create_cache('cataxioms_inverse_property_stats', functools.partial(_compute_property_stats, categories, inv_property_mapping), version=('RR' if USE_RESOLVED_REDIRECTS else None))
+    inv_surface_property_values = util.load_or_create_cache('cataxioms_inverse_surface_property_values', functools.partial(_compute_surface_property_values, categories, inv_property_mapping), version=('RR' if USE_RESOLVED_REDIRECTS else None))
 
     in_probabilities = _compute_property_probabilites(categories, inv_property_counts, inv_property_freqs, inv_predicate_instances, type_freqs, _get_invalid_ranges(), inv_surface_property_values, True)
     out_probabilities = _compute_property_probabilites(categories, property_counts, property_freqs, predicate_instances, type_freqs, _get_invalid_domains(), surface_property_values, False)
@@ -262,11 +262,11 @@ def evaluate_parameters():
 
 def evaluate_category_relations(min_count: int = MIN_PROPERTY_COUNT, min_freq: float = MIN_PROPERTY_FREQ, max_invalid_type_count: int = MAX_INVALID_TYPE_COUNT, max_invalid_type_freq: float = MAX_INVALID_TYPE_FREQ) -> dict:
     categories = CategoryGraph.create_from_dbpedia().remove_unconnected().nodes
-    property_counts, property_freqs, predicate_instances = util.load_or_create_cache('relations_property_stats', functools.partial(_compute_property_stats, categories, dbp_store.get_resource_property_mapping()))
-    inverse_property_counts, inverse_property_freqs, inverse_predicate_instances = util.load_or_create_cache('relations_inverse_property_stats', functools.partial(_compute_property_stats, categories, dbp_store.get_inverse_resource_property_mapping()))
+    property_counts, property_freqs, predicate_instances = util.load_or_create_cache('cataxioms_property_stats', functools.partial(_compute_property_stats, categories, dbp_store.get_resource_property_mapping()))
+    inverse_property_counts, inverse_property_freqs, inverse_predicate_instances = util.load_or_create_cache('cataxioms_inverse_property_stats', functools.partial(_compute_property_stats, categories, dbp_store.get_inverse_resource_property_mapping()))
     type_counts, type_freqs = util.load_or_create_cache('relations_type_stats', functools.partial(_compute_type_frequencies, categories))
     invalid_predicate_types = _get_invalid_domains()
-    surface_property_values = util.load_or_create_cache('relations_surface_property_values', functools.partial(_compute_surface_property_values, categories))
+    surface_property_values = util.load_or_create_cache('cataxioms_surface_property_values', functools.partial(_compute_surface_property_values, categories))
     result = {}
 
     util.get_logger().info('-- OUTGOING PROPERTIES --')

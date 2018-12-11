@@ -1,5 +1,5 @@
 import util
-import caligraph.util.rdf as rdf_util
+import impl.util.rdf as rdf_util
 from . import util as dbp_util
 from collections import defaultdict
 import networkx as nx

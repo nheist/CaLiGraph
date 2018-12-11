@@ -1,13 +1,13 @@
 import networkx as nx
 import numpy as np
 import util
-from caligraph.util.base_graph import BaseGraph
-import caligraph.util.rdf as rdf_util
-import caligraph.category.base as cat_base
-import caligraph.category.store as cat_store
-import caligraph.category.util as cat_util
-import caligraph.category.nlp as cat_nlp
-import caligraph.dbpedia.store as dbp_store
+from impl.util.base_graph import BaseGraph
+import impl.util.rdf as rdf_util
+import impl.category.base as cat_base
+import impl.category.store as cat_store
+import impl.category.util as cat_util
+import impl.category.nlp as cat_nlp
+import impl.dbpedia.store as dbp_store
 from collections import defaultdict
 
 
@@ -74,4 +74,4 @@ class CaLiGraph(BaseGraph):
 
 def _category_to_clg_type(category: str) -> str:
     singularized_category_identifier = cat_util.remove_category_prefix(cat_nlp.singularize(category))
-    return util.get_config('caligraph.namespace') + singularized_category_identifier
+    return util.get_config('impl.namespace') + singularized_category_identifier

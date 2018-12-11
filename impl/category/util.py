@@ -1,5 +1,5 @@
-import caligraph.util.rdf as rdf_util
-from caligraph.dbpedia.util import NAMESPACE_DBP_RESOURCE
+import impl.util.rdf as rdf_util
+from impl.dbpedia.util import NAMESPACE_DBP_RESOURCE
 
 NAMESPACE_DBP_CATEGORY = NAMESPACE_DBP_RESOURCE + 'Category:'
 
