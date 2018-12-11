@@ -28,15 +28,15 @@ def _compute_new_relation_assertions(category_axioms: pd.DataFrame) -> pd.DataFr
             if is_inv:
                 sub, val = val, sub
             properties = dbp_store.get_properties(sub)
-            if sub in properties and val in properties[sub]:
+            if pred in properties and val in properties[pred]:
                 continue  # assertion already in KG
             if sub == val:
                 continue  # no reflexive assertions
             if sub.startswith('List_of_'):
                 continue  # no assertions for organisational resources
-            relation_assertions.add((sub, pred, val))
+            relation_assertions.add((sub, pred, val, pred not in properties))
 
-    return pd.DataFrame(data=list(relation_assertions), columns=['sub', 'pred', 'val'])
+    return pd.DataFrame(data=list(relation_assertions), columns=['sub', 'pred', 'val', 'lcwa-true'])
 
 
 def get_category_axioms() -> pd.DataFrame:
