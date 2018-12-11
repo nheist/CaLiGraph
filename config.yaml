@@ -110,8 +110,8 @@ cache:
   dbpedia_category_resources:
     filename: 'dbpedia-category-resources'
     version: 1
-  dbpedia_category_parents:
-    filename: 'dbpedia-category-parents'
+  dbpedia_category_children:
+    filename: 'dbpedia-category-children'
     version: 1
   dbpedia_property_frequency_distribution:
     filename: 'dbpedia-property-frequency-distribution'
