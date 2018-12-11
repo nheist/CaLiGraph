@@ -6,22 +6,32 @@ TODO: Intro-Text
 todo
 
 ## Configuration
+### Prerequisites
+- Python 3
+- pipenv (https://pipenv.readthedocs.io/en/latest/)
+
 ### Setup
 
-- Install pipenv (tbd) and install packages
-- Run download script (create in order to download dbpedia resources)
-- Download spacy corpus:
+- Create virtual environment with pipenv
+```
+pipenv install
+```
+
+- Download the spacy corpus:
 ```
 pipenv run python -m spacy download en_core_web_lg
 ```
 
 ### Basic Configuration Options
 
-- see config file
+Use `config.yaml` for configuration of the application.
 
 ## Usage
 
-- Run with pipenv
+- Run the application with pipenv:
+```
+pipenv run .
+```
 
 ## License
 MIT.

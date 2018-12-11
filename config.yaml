@@ -29,27 +29,63 @@ mailer:
 
 files:
   dbpedia:
-    pages: 'pages_articles_en.xml.bz2'
-    taxonomy: 'dbpedia_2016-10.nt'
-    labels: 'labels_en.ttl.bz2'
-    categories: 'skos_categories_en.ttl.bz2'
-    topical_concepts: 'topical_concepts_en.ttl.bz2'
-    category_redirects: 'category_redirects_en.ttl.bz2'
-    article_categories: 'article_categories_en.ttl.bz2'
-    maintenance_categories: 'maintenance_categories.ttl.bz2'
-    instance_types: 'instance_types_en.ttl.bz2'
-    transitive_instance_types: 'instance_types_transitive_en.ttl.bz2'
-    instance_types_sdtyped: 'instance_types_sdtyped_dbo_en.ttl.bz2'
-    instance_types_lhd: 'instance_types_lhd_dbo_en.ttl.bz2'
-    mappingbased_literals: 'mappingbased_literals_en.ttl.bz2'
-    mappingbased_objects: 'mappingbased_objects_en.ttl.bz2'
-    interlanguage_links: 'interlanguage_links_en.ttl.bz2'
-    anchor_texts: 'anchor_text_en.ttl.bz2'
-    redirects: 'redirects_en.ttl.bz2'
+    pages:
+      filename: 'pages_articles_en.xml.bz2'
+      url: 'http://downloads.dbpedia.org/2016-10/core-i18n/en/pages_articles_en.xml.bz2'
+    taxonomy:
+      filename: 'dbpedia_2016-10.nt'
+      url: 'http://downloads.dbpedia.org/2016-10/dbpedia_2016-10.nt'
+    labels:
+      filename: 'labels_en.ttl.bz2'
+      url: 'http://downloads.dbpedia.org/2016-10/core-i18n/en/labels_en.ttl.bz2'
+    categories:
+      filename: 'skos_categories_en.ttl.bz2'
+      url: 'http://downloads.dbpedia.org/2016-10/core-i18n/en/skos_categories_en.ttl.bz2'
+    topical_concepts:
+      filename: 'topical_concepts_en.ttl.bz2'
+      url: 'http://downloads.dbpedia.org/2016-10/core-i18n/en/topical_concepts_en.ttl.bz2'
+    category_redirects:
+      filename: 'category_redirects_en.ttl.bz2'
+      url: 'http://downloads.dbpedia.org/2016-10/core-i18n/en/redirects_en.ttl.bz2'
+    article_categories:
+      filename: 'article_categories_en.ttl.bz2'
+      url: 'http://downloads.dbpedia.org/2016-10/core-i18n/en/article_categories_en.ttl.bz2'
+    instance_types:
+      filename: 'instance_types_en.ttl.bz2'
+      url: 'http://downloads.dbpedia.org/2016-10/core-i18n/en/instance_types_en.ttl.bz2'
+    transitive_instance_types:
+      filename: 'instance_types_transitive_en.ttl.bz2'
+      url: 'http://downloads.dbpedia.org/2016-10/core-i18n/en/instance_types_transitive_en.ttl.bz2'
+    instance_types_sdtyped:
+      filename: 'instance_types_sdtyped_dbo_en.ttl.bz2'
+      url: 'http://downloads.dbpedia.org/2016-10/core-i18n/en/instance_types_sdtyped_dbo_en.ttl.bz2'
+    instance_types_lhd:
+      filename: 'instance_types_lhd_dbo_en.ttl.bz2'
+      url: 'http://downloads.dbpedia.org/2016-10/core/instance_types_lhd_dbo_en.ttl.bz2'
+    mappingbased_literals:
+      filename: 'mappingbased_literals_en.ttl.bz2'
+      url: 'http://downloads.dbpedia.org/2016-10/core-i18n/en/mappingbased_literals_en.ttl.bz2'
+    mappingbased_objects:
+      filename: 'mappingbased_objects_en.ttl.bz2'
+      url: 'http://downloads.dbpedia.org/2016-10/core-i18n/en/mappingbased_objects_en.ttl.bz2'
+    interlanguage_links:
+      filename: 'interlanguage_links_en.ttl.bz2'
+      url: 'http://downloads.dbpedia.org/2016-10/core-i18n/en/interlanguage_links_en.ttl.bz2'
+    anchor_texts:
+      filename: 'anchor_text_en.ttl.bz2'
+      url: 'http://downloads.dbpedia.org/2016-10/core-i18n/en/anchor_text_en.ttl.bz2'
+    redirects:
+      filename: 'redirects_en.ttl.bz2'
+      url: 'http://downloads.dbpedia.org/2016-10/core-i18n/en/redirects_en.ttl.bz2'
+    maintenance_categories:
+      filename: 'maintenance_categories.ttl.bz2'
   wikidata:
-    resource_properties: 'wikidata_resource_properties.nt.bz2'
+    resource_properties:
+      filename: 'wikidata_resource_properties.nt.bz2'
+      url: ~
   evaluation:
-    category_properties: 'cataxioms_labels.csv'
+    category_properties:
+      filename: 'cataxioms_labels.csv'
 
 cache:
   # version 2: added resource types from sdtyped + lhd

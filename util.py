@@ -6,6 +6,7 @@ import datetime
 import pickle
 import bz2
 from pathlib import Path
+import urllib.request
 
 
 # CONFIGURATION
@@ -41,7 +42,17 @@ def get_root_path() -> str:
 
 
 def get_data_file(config_path: str) -> str:
-    return os.path.join(get_root_path(), 'data', get_config(config_path))
+    file_config = get_config(config_path)
+
+    # download file if not existing
+    filepath = os.path.join(get_root_path(), 'data', file_config['filename'])
+    if not os.path.isfile(filepath):
+        url = file_config['url']
+        get_logger().info(f'Download file from {url}..')
+        urllib.request.urlretrieve(url, filepath)
+        get_logger().info(f'Finished downloading from {url}')
+
+    return filepath
 
 
 def get_results_file(config_path: str) -> str:
