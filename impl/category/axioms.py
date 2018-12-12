@@ -49,7 +49,7 @@ def _serialize_relation_assertions(data: pd.DataFrame, destination: str):
             rdf_graph.add((URIRef(sub), URIRef(pred), URIRef(obj)))
         else:
             rdf_graph.add((URIRef(sub), URIRef(pred), Literal(obj)))
-        rdf_graph.serialize(destination=destination, format='nt')
+    rdf_graph.serialize(destination=destination, format='nt')
 
 
 def get_category_axioms() -> pd.DataFrame:
