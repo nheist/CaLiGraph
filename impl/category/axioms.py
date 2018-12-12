@@ -34,7 +34,7 @@ def _compute_new_relation_assertions(category_axioms: pd.DataFrame) -> pd.DataFr
                 continue  # assertion already in KG
             if sub == val:
                 continue  # no reflexive assertions
-            if sub.startswith('List_of_'):
+            if 'List_of_' in sub:
                 continue  # no assertions for organisational resources
             relation_assertions.add((sub, pred, val, pred not in properties))
 
