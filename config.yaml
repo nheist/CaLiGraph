@@ -3,6 +3,7 @@ caligraph:
 category:
   root_category: 'http://dbpedia.org/resource/Category:Main_topic_classifications'
   axioms:
+    use_materialized_category_graph: True
     pos_weight: 14
   dbp_types:
     exclude_untyped_resources: False
@@ -95,6 +96,7 @@ results:
 
 cache:
   # version 2: added resource types from sdtyped + lhd
+  # version 3: cataxioms with materialized category graph
   catgraph_conceptual:
     filename: 'catgraph-conceptual'
     version: 1
@@ -178,13 +180,13 @@ cache:
     version: 1
   cataxioms_property_stats:
     filename: 'cataxioms-property-stats'
-    version: 1
+    version: 3
   cataxioms_inverse_property_stats:
     filename: 'cataxioms-inverse-property-stats'
-    version: 1
+    version: 3
   cataxioms_type_frequencies:
     filename: 'cataxioms-type-frequencies'
-    version: 1
+    version: 3
   cataxioms_candidates:
     filename: 'cataxioms-candidates'
-    version: 1
+    version: 3

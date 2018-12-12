@@ -1,6 +1,5 @@
 import util
 import functools
-import operator
 import pandas as pd
 from typing import Tuple
 from collections import defaultdict
@@ -26,7 +25,8 @@ def _compute_new_relation_assertions(category_axioms: pd.DataFrame) -> pd.DataFr
     relation_assertions = set()
     for _, row in category_axioms.iterrows():
         cat, pred, val, is_inv = row['cat'], row['pred'], row['val'], row['is_inv']
-        for sub in cat_store.get_resources(cat):
+        subjects = cat_base.get_taxonomic_category_graph().get_materialized_resources(cat) if util.get_config('category.axioms.use_materialized_category_graph') else cat_store.get_resources(cat)
+        for sub in subjects:
             if is_inv:
                 sub, val = val, sub
             properties = dbp_store.get_properties(sub)
@@ -94,7 +94,7 @@ def _compute_type_frequencies(categories: set) -> dict:
     type_frequencies = defaultdict(functools.partial(defaultdict, float))
 
     for cat in categories:
-        resources = cat_store.get_resources(cat)
+        resources = cat_base.get_taxonomic_category_graph().get_materialized_resources(cat) if util.get_config('category.axioms.use_materialized_category_graph') else cat_store.get_resources(cat)
         for res in resources:
             for t in dbp_store.get_transitive_types(res):
                 type_counts[cat][t] += 1
@@ -109,7 +109,7 @@ def _compute_property_stats(categories: set, property_mapping: dict) -> Tuple[di
     predicate_instances = defaultdict(functools.partial(defaultdict, int))
 
     for cat in categories:
-        resources = cat_store.get_resources(cat)
+        resources = cat_base.get_taxonomic_category_graph().get_materialized_resources(cat) if util.get_config('category.axioms.use_materialized_category_graph') else cat_store.get_resources(cat)
         for res in resources:
             resource_values = set()
             for pred, values in property_mapping[res].items():

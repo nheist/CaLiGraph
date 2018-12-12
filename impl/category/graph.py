@@ -10,8 +10,9 @@ import math
 
 
 class CategoryGraph(BaseGraph):
-    PROPERTY_DBP_TYPES = 'dbp_types'
     PROPERTY_RESOURCE_TYPE_COUNTS = 'resource_type_counts'
+    PROPERTY_DBP_TYPES = 'dbp_types'
+    PROPERTY_MATERIALIZED_RESOURCES = 'materialized_resources'
 
     def __init__(self, graph: nx.DiGraph, root_node: str = None):
         super().__init__(graph, root_node or util.get_config('category.root_category'))
@@ -41,6 +42,12 @@ class CategoryGraph(BaseGraph):
     def dbp_types(self, category: str) -> set:
         return self._get_attr(category, self.PROPERTY_DBP_TYPES)
 
+    def get_materialized_resources(self, category: str) -> set:
+        if not self._get_attr(category, self.PROPERTY_MATERIALIZED_RESOURCES):
+            materialized_resources = cat_store.get_resources(category) | {r for cat in self.successors(category) for resources in self.get_materialized_resources(cat) for r in resources}
+            self._set_attr(category, self.PROPERTY_MATERIALIZED_RESOURCES, materialized_resources)
+        return self._get_attr(category, self.PROPERTY_MATERIALIZED_RESOURCES)
+
     @classmethod
     def create_from_dbpedia(cls):
         edges = [(cat, subcat) for cat in cat_store.get_all_cats() for subcat in cat_store.get_children(cat) if cat != subcat]
@@ -54,7 +61,7 @@ class CategoryGraph(BaseGraph):
         return self
 
     def append_unconnected(self):
-        unconnected_root_categories = {cat for cat in self.nodes if not self._predecessors(cat) and cat != self.root_node}
+        unconnected_root_categories = {cat for cat in self.nodes if not self.predecessors(cat) and cat != self.root_node}
         self.graph.add_edges_from([(self.root_node, cat) for cat in unconnected_root_categories])
         return self
 
@@ -103,7 +110,7 @@ class CategoryGraph(BaseGraph):
 
     def assign_dbp_types(self):
         self._assign_resource_type_counts()
-        category_queue = [cat for cat in self.nodes if not self._successors(cat)]
+        category_queue = [cat for cat in self.nodes if not self.successors(cat)]
         while category_queue:
             cat = category_queue.pop(0)
             self._compute_dbp_types_for_category(cat, category_queue)
@@ -126,7 +133,7 @@ class CategoryGraph(BaseGraph):
         resource_types = self._compute_resource_types_for_category(cat)
 
         # compare with child types
-        children_with_types = {cat: self._compute_dbp_types_for_category(cat, category_queue) for cat in self._successors(cat)}
+        children_with_types = {cat: self._compute_dbp_types_for_category(cat, category_queue) for cat in self.successors(cat)}
         if len(children_with_types) == 0:
             category_types = resource_types
         else:
@@ -146,7 +153,7 @@ class CategoryGraph(BaseGraph):
             category_types = self._filter_impure_types(cat, category_types)
 
         if category_types:
-            category_queue.extend(self._predecessors(cat))
+            category_queue.extend(self.predecessors(cat))
 
         self._set_attr(cat, self.PROPERTY_DBP_TYPES, category_types)
         return category_types

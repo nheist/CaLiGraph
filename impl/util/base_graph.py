@@ -17,11 +17,11 @@ class BaseGraph:
     def edges(self) -> set:
         return set(self.graph.edges)
 
-    def _predecessors(self, node: str) -> set:
-        return set(self.graph.predecessors(node))
+    def predecessors(self, node: str) -> set:
+        return set(self.graph.predecessors(node)) if self.graph.has_node(node) else set()
 
-    def _successors(self, node: str) -> set:
-        return set(self.graph.successors(node))
+    def successors(self, node: str) -> set:
+        return set(self.graph.successors(node)) if self.graph.has_node(node) else set()
 
     def _depth(self, node: str) -> int:
         return nx.shortest_path_length(self.graph, source=self.root_node, target=node)
