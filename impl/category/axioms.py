@@ -6,18 +6,20 @@ from typing import Tuple
 from collections import defaultdict
 from impl.category.graph import CategoryGraph
 import impl.dbpedia.store as dbp_store
+import impl.dbpedia.util as dbp_util
 import impl.category.base as cat_base
 import impl.category.store as cat_store
 from sklearn.ensemble import RandomForestClassifier
+from rdflib import Graph, URIRef, Literal
 
 
 def extract_axioms_and_relation_assertions():
     category_axioms = get_category_axioms()
-    category_axioms.to_csv('results/category-axioms.csv', index=False)
+    category_axioms.to_csv(util.get_results_file('results.cataxioms.category_axioms'), index=False)
 
     relation_assertions = _compute_new_relation_assertions(category_axioms)
-    relation_assertions.to_csv('results/relation-assertions.csv', index=False)
-    # todo: generate ttl files
+    _serialize_relation_assertions(relation_assertions[relation_assertions['lcwa-true']], util.get_results_file('results.cataxioms.relation_assertions_lcwa_true'))
+    _serialize_relation_assertions(relation_assertions[~relation_assertions['lcwa-true']], util.get_results_file('results.cataxioms.relation_assertions_lcwa_false'))
 
 
 def _compute_new_relation_assertions(category_axioms: pd.DataFrame) -> pd.DataFrame:
@@ -37,6 +39,17 @@ def _compute_new_relation_assertions(category_axioms: pd.DataFrame) -> pd.DataFr
             relation_assertions.add((sub, pred, val, pred not in properties))
 
     return pd.DataFrame(data=list(relation_assertions), columns=['sub', 'pred', 'val', 'lcwa-true'])
+
+
+def _serialize_relation_assertions(data: pd.DataFrame, destination: str):
+    rdf_graph = Graph()
+    for _, row in data.iterrows():
+        sub, pred, obj = row['sub'], row['pred'], row['val']
+        if dbp_util.is_dbp_resource(obj) or dbp_util.is_dbp_type(obj):
+            rdf_graph.add((URIRef(sub), URIRef(pred), URIRef(obj)))
+        else:
+            rdf_graph.add((URIRef(sub), URIRef(pred), Literal(obj)))
+        rdf_graph.serialize(destination=destination, format='nt')
 
 
 def get_category_axioms() -> pd.DataFrame:

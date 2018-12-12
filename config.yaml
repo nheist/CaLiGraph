@@ -87,6 +87,12 @@ files:
     category_properties:
       filename: 'cataxioms_labels.csv'
 
+results:
+  cataxioms:
+    category_axioms: 'category-axioms.csv'
+    relation_assertions_lcwa_true: 'relation-assertions_lcwa-true.nt'
+    relation_assertions_lcwa_false: 'relation-assertions_lcwa-false.nt'
+
 cache:
   # version 2: added resource types from sdtyped + lhd
   catgraph_conceptual:
