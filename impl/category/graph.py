@@ -43,6 +43,9 @@ class CategoryGraph(BaseGraph):
         return self._get_attr(category, self.PROPERTY_DBP_TYPES)
 
     def get_materialized_resources(self, category: str) -> set:
+        if category not in self.nodes:
+            return cat_store.get_resources(category)
+
         if not self._get_attr(category, self.PROPERTY_MATERIALIZED_RESOURCES):
             materialized_resources = cat_store.get_resources(category) | {r for cat in self.successors(category) for resources in self.get_materialized_resources(cat) for r in resources}
             self._set_attr(category, self.PROPERTY_MATERIALIZED_RESOURCES, materialized_resources)
