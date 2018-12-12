@@ -128,6 +128,9 @@ cache:
   dbpedia_resource_surface_forms:
     filename: 'dbpedia-resource-surface-forms'
     version: 1
+  dbpedia_resource_surface_scores:
+    filename: 'dbpedia-resource-surface-scores'
+    version: 1
   dbpedia_resource_categories:
     filename: 'dbpedia-resource-categories'
     version: 1
@@ -178,12 +181,6 @@ cache:
     version: 1
   cataxioms_type_frequencies:
     filename: 'cataxioms-type-frequencies'
-    version: 1
-  cataxioms_surface_property_values:
-    filename: 'cataxioms-surface-property-values'
-    version: 1
-  cataxioms_inverse_surface_property_values:
-    filename: 'cataxioms-inverse-surface-property-values'
     version: 1
   cataxioms_candidates:
     filename: 'cataxioms-candidates'

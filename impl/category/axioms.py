@@ -80,14 +80,12 @@ def _compute_candidate_axioms() -> pd.DataFrame:
 
     property_mapping = dbp_store.get_resource_property_mapping()
     property_counts, property_freqs, predicate_instances = util.load_or_create_cache('cataxioms_property_stats', functools.partial(_compute_property_stats, categories, property_mapping))
-    surface_property_values = util.load_or_create_cache('cataxioms_surface_property_values', functools.partial(_compute_surface_property_values, categories, property_mapping))
 
     inv_property_mapping = dbp_store.get_inverse_resource_property_mapping()
     inv_property_counts, inv_property_freqs, inv_predicate_instances = util.load_or_create_cache('cataxioms_inverse_property_stats', functools.partial(_compute_property_stats, categories, inv_property_mapping))
-    inv_surface_property_values = util.load_or_create_cache('cataxioms_inverse_surface_property_values', functools.partial(_compute_surface_property_values, categories, inv_property_mapping))
 
-    outgoing_data = _get_candidates(categories, property_counts, property_freqs, predicate_instances, type_freqs, _get_invalid_domains(), surface_property_values, False)
-    ingoing_data = _get_candidates(categories, inv_property_counts, inv_property_freqs, inv_predicate_instances, type_freqs, _get_invalid_ranges(), inv_surface_property_values, True)
+    outgoing_data = _get_candidates(categories, property_counts, property_freqs, predicate_instances, type_freqs, _get_invalid_domains(), False)
+    ingoing_data = _get_candidates(categories, inv_property_counts, inv_property_freqs, inv_predicate_instances, type_freqs, _get_invalid_ranges(), True)
     return pd.DataFrame(data=[*outgoing_data, *ingoing_data]).set_index(['cat', 'pred', 'val', 'is_inv'])
 
 
@@ -124,22 +122,6 @@ def _compute_property_stats(categories: set, property_mapping: dict) -> Tuple[di
     return property_counts, property_frequencies, predicate_instances
 
 
-def _compute_surface_property_values(categories: set, property_mapping: dict) -> dict:
-    surface_property_values = defaultdict(functools.partial(defaultdict, float))
-    for cat in categories:
-        possible_values = {val for r in cat_store.get_resources(cat) for values in property_mapping[r].values() for val in values}
-        for val in possible_values:
-            cat_label = cat_store.get_label(cat).lower()
-            redirect_val = dbp_store.resolve_redirect(val)
-            surface_forms = {**dbp_store.get_surface_forms(val), **dbp_store.get_surface_forms(redirect_val)}
-            total_mentions = sum(surface_forms.values())
-            for surf, mentions in sorted(surface_forms.items(), key=operator.itemgetter(1), reverse=True):
-                if surf in cat_label:
-                    surface_property_values[cat][redirect_val] = mentions / total_mentions
-                    break
-    return surface_property_values
-
-
 def _get_invalid_domains() -> dict:
     return defaultdict(set, {p: dbp_store.get_disjoint_types(dbp_store.get_domain(p)) for p in dbp_store.get_all_predicates()})
 
@@ -148,13 +130,14 @@ def _get_invalid_ranges() -> dict:
     return defaultdict(set, {p: dbp_store.get_disjoint_types(dbp_store.get_range(p)) for p in dbp_store.get_all_predicates()})
 
 
-def _get_candidates(categories: set, property_counts: dict, property_freqs: dict, predicate_instances: dict, type_freqs: dict, invalid_pred_types: dict, surface_property_values: dict, is_inv: bool) -> list:
+def _get_candidates(categories: set, property_counts: dict, property_freqs: dict, predicate_instances: dict, type_freqs: dict, invalid_pred_types: dict, is_inv: bool) -> list:
     conceptual_cats = cat_base.get_conceptual_category_graph().nodes
     candidates = []
     for cat in categories:
         for prop in property_counts[cat].keys():
             pred, val = prop
-            if surface_property_values[cat][val]:
+            lex_score = dbp_store.get_surface_score(val, cat_store.get_label(cat))
+            if lex_score > 0:
                 candidates.append({
                     'cat': cat,
                     'pred': pred,
@@ -162,7 +145,7 @@ def _get_candidates(categories: set, property_counts: dict, property_freqs: dict
                     'is_inv': int(is_inv),
                     'pv_count': property_counts[cat][prop],
                     'pv_freq': property_freqs[cat][prop],
-                    'lex_score': surface_property_values[cat][val],
+                    'lex_score': lex_score,
                     'conflict_score': sum([type_freqs[cat][t] for t in invalid_pred_types[pred]]) + (1 - (property_counts[cat][prop] / predicate_instances[cat][pred])),
                     'conceptual_category': int(cat in conceptual_cats)
                 })

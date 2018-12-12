@@ -1,4 +1,5 @@
 import util
+import operator
 import impl.util.rdf as rdf_util
 from . import util as dbp_util
 from collections import defaultdict
@@ -29,17 +30,40 @@ def _get_label_mapping() -> dict:
     return __RESOURCE_LABEL_MAPPING__
 
 
-def get_surface_forms(value: str) -> dict:
-    if dbp_util.is_dbp_resource(value):
-        global __RESOURCE_SURFACE_FORMS__
-        if '__RESOURCE_SURFACE_FORMS__' not in globals():
-            initializer = lambda: rdf_util.create_multi_val_freq_dict_from_rdf([util.get_data_file('files.dbpedia.anchor_texts')], rdf_util.PREDICATE_ANCHOR_TEXT)
-            __RESOURCE_SURFACE_FORMS__ = util.load_or_create_cache('dbpedia_resource_surface_forms', initializer)
-        return __RESOURCE_SURFACE_FORMS__[value]
-    elif dbp_util.is_dbp_type(value):
-        return {value[len(dbp_util.NAMESPACE_DBP_ONTOLOGY):].lower(): 1}
+def get_surface_score(surface_resource: str, dependent_resource: str) -> float:
+    global __RESOURCE_SURFACE_SCORES__
+    if '__RESOURCE_SURFACE_SCORES__' not in globals():
+        __RESOURCE_SURFACE_SCORES__ = util.load_or_create_cache('dbpedia_resource_surface_scores', _compute_resource_surface_scores)
+
+    if dbp_util.is_dbp_resource(surface_resource):
+        for surface_form, score in sorted(__RESOURCE_SURFACE_SCORES__[surface_resource].items(), key=operator.itemgetter(1), reverse=True):
+            if surface_form in dependent_resource.lower():
+                return score
+    elif dbp_util.is_dbp_type(surface_resource):
+        if surface_resource[len(dbp_util.NAMESPACE_DBP_ONTOLOGY):].lower() in dependent_resource:
+            return 1
     else:
-        return {value.lower(): 1}
+        if surface_resource in dependent_resource:
+            return 1
+    return 0
+
+
+def _compute_resource_surface_scores() -> dict:
+    surface_scores = defaultdict(dict)
+    for res in get_resources():
+        redirect_res = resolve_redirect(res)
+        surface_forms = {**get_surface_forms(res), **get_surface_forms(redirect_res)}
+        total_mentions = sum(surface_forms.values())
+        surface_scores[res] = {sf: mentions / total_mentions for sf, mentions in surface_forms.items()}
+    return surface_scores
+
+
+def get_surface_forms(dbp_resource: str) -> dict:
+    global __RESOURCE_SURFACE_FORMS__
+    if '__RESOURCE_SURFACE_FORMS__' not in globals():
+        initializer = lambda: rdf_util.create_multi_val_freq_dict_from_rdf([util.get_data_file('files.dbpedia.anchor_texts')], rdf_util.PREDICATE_ANCHOR_TEXT)
+        __RESOURCE_SURFACE_FORMS__ = util.load_or_create_cache('dbpedia_resource_surface_forms', initializer)
+    return __RESOURCE_SURFACE_FORMS__[dbp_resource]
 
 
 def get_types(dbp_resource: str) -> set:
