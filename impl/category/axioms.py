@@ -93,7 +93,9 @@ def _compute_type_frequencies(categories: set) -> dict:
     type_counts = defaultdict(functools.partial(defaultdict, int))
     type_frequencies = defaultdict(functools.partial(defaultdict, float))
 
-    for cat in categories:
+    for idx, cat in enumerate(categories):
+        if idx % 1000:
+            util.get_logger().debug(f'Computing type frequencies for categories: {idx} / {len(categories)}')
         resources = cat_base.get_taxonomic_category_graph().get_materialized_resources(cat) if util.get_config('category.axioms.use_materialized_category_graph') else cat_store.get_resources(cat)
         for res in resources:
             for t in dbp_store.get_transitive_types(res):
@@ -108,7 +110,9 @@ def _compute_property_stats(categories: set, property_mapping: dict) -> Tuple[di
     property_frequencies = defaultdict(functools.partial(defaultdict, float))
     predicate_instances = defaultdict(functools.partial(defaultdict, int))
 
-    for cat in categories:
+    for idx, cat in enumerate(categories):
+        if idx % 1000:
+            util.get_logger().debug(f'Computing property stats for categories: {idx} / {len(categories)}')
         resources = cat_base.get_taxonomic_category_graph().get_materialized_resources(cat) if util.get_config('category.axioms.use_materialized_category_graph') else cat_store.get_resources(cat)
         for res in resources:
             resource_values = set()

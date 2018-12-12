@@ -15,9 +15,9 @@ category:
 
 
 logging:
-  level: 'INFO'
+  level: 'DEBUG'
   to_file: True
-  filename: 'cataxioms_v1'
+  filename: 'cataxioms-materialized_v1'
 
 mailer:
   sender: 'errors.nheist@gmail.com'
