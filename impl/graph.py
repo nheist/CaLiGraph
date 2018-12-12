@@ -57,6 +57,7 @@ class CaLiGraph(BaseGraph):
 
     @staticmethod
     def create_from_category_graph():
+        # todo: use new taxonomic graph!
         catgraph = cat_base.get_dbp_typed_category_graph()
         typed_cats = {cat for cat in catgraph.nodes if catgraph.dbp_types(cat)}
         # create basic graph
@@ -74,4 +75,4 @@ class CaLiGraph(BaseGraph):
 
 def _category_to_clg_type(category: str) -> str:
     singularized_category_identifier = cat_util.remove_category_prefix(cat_nlp.singularize(category))
-    return util.get_config('impl.namespace') + singularized_category_identifier
+    return util.get_config('caligraph.namespace') + singularized_category_identifier

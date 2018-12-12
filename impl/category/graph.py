@@ -175,3 +175,15 @@ class CategoryGraph(BaseGraph):
                 pure_category_types.add(cat_type)
 
         return pure_category_types
+
+    # taxonomy
+
+    def make_taxonomy(self):
+        # remove nodes / edges with missing type / type mismatch
+        self.graph.remove_nodes_from({node for node in self.nodes if not self.dbp_types(node)})
+        self.graph.remove_edges_from({e for e in self.graph.edges if not self.dbp_types(e[0]).intersection(self.dbp_types(e[1]))})
+        # reinsert root node and connect with top-level nodes
+        self.graph.add_node(self.root_node)
+        self.graph.add_edges_from({(self.root_node, node) for node in self.graph.nodes if not self.graph.predecessors(node)})
+
+        return self

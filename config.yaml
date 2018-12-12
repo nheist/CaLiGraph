@@ -104,6 +104,9 @@ cache:
   catgraph_dbp_typed:
     filename: 'catgraph-dbp-typed'
     version: 2
+  catgraph_taxonomic:
+    filename: 'catgraph-taxonomic'
+    version: 2
   categories_conceptual:
     filename: 'categories-conceptual'
     version: 1
