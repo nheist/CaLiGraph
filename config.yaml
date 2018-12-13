@@ -178,14 +178,8 @@ cache:
   wikidata_resource_properties:
     filename: 'wikidata-resource-properties'
     version: 1
-  cataxioms_property_stats:
-    filename: 'cataxioms-property-stats'
-    version: 3
-  cataxioms_inverse_property_stats:
-    filename: 'cataxioms-inverse-property-stats'
-    version: 3
-  cataxioms_type_frequencies:
-    filename: 'cataxioms-type-frequencies'
+  cataxioms_category_statistics:
+    filename: 'cataxioms-category-statistics'
     version: 3
   cataxioms_candidates:
     filename: 'cataxioms-candidates'

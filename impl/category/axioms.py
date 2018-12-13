@@ -1,5 +1,4 @@
 import util
-import functools
 import pandas as pd
 from typing import Tuple
 from collections import defaultdict
@@ -76,54 +75,63 @@ def _create_goldstandard(category_data: pd.DataFrame) -> Tuple[pd.DataFrame, pd.
 def _compute_candidate_axioms() -> pd.DataFrame:
     categories = CategoryGraph.create_from_dbpedia().remove_unconnected().nodes
     categories = {cat for cat in categories if 'List_of_' not in cat and 'Lists_of_' not in cat}
-    type_freqs = util.load_or_create_cache('cataxioms_type_frequencies', functools.partial(_compute_type_frequencies, categories))
+    category_statistics = util.load_or_create_cache('cataxioms_category_statistics', _compute_category_statistics(categories))
 
-    property_mapping = dbp_store.get_resource_property_mapping()
-    property_counts, property_freqs, predicate_instances = util.load_or_create_cache('cataxioms_property_stats', functools.partial(_compute_property_stats, categories, property_mapping))
-
-    inv_property_mapping = dbp_store.get_inverse_resource_property_mapping()
-    inv_property_counts, inv_property_freqs, inv_predicate_instances = util.load_or_create_cache('cataxioms_inverse_property_stats', functools.partial(_compute_property_stats, categories, inv_property_mapping))
-
-    outgoing_data = _get_candidates(categories, property_counts, property_freqs, predicate_instances, type_freqs, _get_invalid_domains(), False)
-    ingoing_data = _get_candidates(categories, inv_property_counts, inv_property_freqs, inv_predicate_instances, type_freqs, _get_invalid_ranges(), True)
+    outgoing_data = _get_candidates(categories, category_statistics, _get_invalid_domains(), False)
+    ingoing_data = _get_candidates(categories, category_statistics, _get_invalid_ranges(), True)
     return pd.DataFrame(data=[*outgoing_data, *ingoing_data]).set_index(['cat', 'pred', 'val', 'is_inv'])
 
 
-def _compute_type_frequencies(categories: set) -> dict:
-    type_counts = defaultdict(functools.partial(defaultdict, int))
-    type_frequencies = defaultdict(functools.partial(defaultdict, float))
-
+def _compute_category_statistics(categories: set) -> dict:
+    category_statistics = {}
     for idx, cat in enumerate(categories):
-        if idx % 1000:
-            util.get_logger().debug(f'Computing type frequencies for categories: {idx} / {len(categories)}')
+        if idx % 1000 == 0:
+            util.get_logger().debug(f'Computing category statistics: {idx} / {len(categories)}')
+        type_counts = defaultdict(int)
+        property_counts = defaultdict(int)
+        property_counts_inv = defaultdict(int)
+        predicate_counts = defaultdict(int)
+        predicate_counts_inv = defaultdict(int)
+
         resources = cat_base.get_taxonomic_category_graph().get_materialized_resources(cat) if util.get_config('category.axioms.use_materialized_category_graph') else cat_store.get_resources(cat)
         for res in resources:
-            for t in dbp_store.get_transitive_types(res):
-                type_counts[cat][t] += 1
-        type_frequencies[cat] = defaultdict(float, {t: t_count / len(resources) for t, t_count in type_counts[cat].items()})
+            resource_statistics = _compute_resource_statistics(res)
+            for t in resource_statistics['types']:
+                type_counts[t] += 1
+            for prop in resource_statistics['properties']:
+                property_counts[prop] += 1
+            for prop in resource_statistics['properties_inv']:
+                property_counts_inv[prop] += 1
+            for pred in resource_statistics['predicates']:
+                predicate_counts[pred] += 1
+            for pred in resource_statistics['predicates_inv']:
+                predicate_counts_inv[pred] += 1
+        category_statistics[cat] = {
+            'type_counts': type_counts,
+            'type_frequencies': defaultdict(float, {t: t_count / len(resources) for t, t_count in type_counts.items()}),
+            'property_counts': property_counts,
+            'property_counts_inv': property_counts_inv,
+            'property_frequencies': defaultdict(float, {prop: p_count / len(resources) for prop, p_count in property_counts.items()}),
+            'property_frequencies_inv': defaultdict(float, {prop: p_count / len(resources) for prop, p_count in property_counts_inv.items()}),
+            'predicate_counts': predicate_counts,
+            'predicate_counts_inv': predicate_counts_inv
+        }
+    return category_statistics
 
-    return type_frequencies
 
-
-def _compute_property_stats(categories: set, property_mapping: dict) -> Tuple[dict, dict, dict]:
-    property_counts = defaultdict(functools.partial(defaultdict, int))
-    property_frequencies = defaultdict(functools.partial(defaultdict, float))
-    predicate_instances = defaultdict(functools.partial(defaultdict, int))
-
-    for idx, cat in enumerate(categories):
-        if idx % 1000:
-            util.get_logger().debug(f'Computing property stats for categories: {idx} / {len(categories)}')
-        resources = cat_base.get_taxonomic_category_graph().get_materialized_resources(cat) if util.get_config('category.axioms.use_materialized_category_graph') else cat_store.get_resources(cat)
-        for res in resources:
-            resource_values = set()
-            for pred, values in property_mapping[res].items():
-                predicate_instances[cat][pred] += 1
-                for val in {dbp_store.resolve_redirect(v) for v in values}:
-                    property_counts[cat][(pred, val)] += 1
-                    resource_values.add(val)
-        property_frequencies[cat] = defaultdict(float, {prop: p_count / len(resources) for prop, p_count in property_counts[cat].items()})
-
-    return property_counts, property_frequencies, predicate_instances
+def _compute_resource_statistics(dbp_resource: str) -> dict:
+    global __RESOURCE_STATISTICS__
+    if '__RESOURCE_STATISTICS__' not in globals():
+        __RESOURCE_STATISTICS__ = {}
+    if dbp_resource not in __RESOURCE_STATISTICS__:
+        __RESOURCE_STATISTICS__[dbp_resource] = {
+            'types': dbp_store.get_transitive_types(dbp_resource),
+            'properties': {(pred, val) for pred, values in dbp_store.get_properties(dbp_resource).items() for val in values},
+            'properties_inv': {(pred, val) for pred, values in dbp_store.get_inverse_properties(dbp_resource).items() for val in values},
+            'predicates': {pred for pred in dbp_store.get_properties(dbp_resource)},
+            'predicates_inv': {pred for pred in dbp_store.get_inverse_properties(dbp_resource)},
+        }
+    return __RESOURCE_STATISTICS__[dbp_resource]
 
 
 def _get_invalid_domains() -> dict:
@@ -134,10 +142,16 @@ def _get_invalid_ranges() -> dict:
     return defaultdict(set, {p: dbp_store.get_disjoint_types(dbp_store.get_range(p)) for p in dbp_store.get_all_predicates()})
 
 
-def _get_candidates(categories: set, property_counts: dict, property_freqs: dict, predicate_instances: dict, type_freqs: dict, invalid_pred_types: dict, is_inv: bool) -> list:
+def _get_candidates(categories: set, category_statistics: dict, invalid_pred_types: dict, is_inv: bool) -> list:
     conceptual_cats = cat_base.get_conceptual_category_graph().nodes
     candidates = []
     for cat in categories:
+        type_frequencies = category_statistics['type_frequencies']
+        if is_inv:
+            property_counts, property_frequencies, predicate_counts = category_statistics['property_counts_inv'], category_statistics['property_frequencies_inv'], category_statistics['predicate_counts_inv']
+        else:
+            property_counts, property_frequencies, predicate_counts = category_statistics['property_counts'], category_statistics['property_frequencies'], category_statistics['predicate_counts']
+
         for prop in property_counts[cat].keys():
             pred, val = prop
             lex_score = dbp_store.get_surface_score(val, cat_store.get_label(cat))
@@ -148,9 +162,9 @@ def _get_candidates(categories: set, property_counts: dict, property_freqs: dict
                     'val': val,
                     'is_inv': int(is_inv),
                     'pv_count': property_counts[cat][prop],
-                    'pv_freq': property_freqs[cat][prop],
+                    'pv_freq': property_frequencies[cat][prop],
                     'lex_score': lex_score,
-                    'conflict_score': sum([type_freqs[cat][t] for t in invalid_pred_types[pred]]) + (1 - (property_counts[cat][prop] / predicate_instances[cat][pred])),
+                    'conflict_score': sum([type_frequencies[cat][t] for t in invalid_pred_types[pred]]) + (1 - (property_counts[cat][prop] / predicate_counts[cat][pred])),
                     'conceptual_category': int(cat in conceptual_cats)
                 })
     return candidates

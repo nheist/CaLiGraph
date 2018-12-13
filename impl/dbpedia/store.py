@@ -94,6 +94,10 @@ def get_properties(dbp_resource: str) -> dict:
     return get_resource_property_mapping()[dbp_resource]
 
 
+def get_inverse_properties(dbp_resource: str) -> dict:
+    return get_inverse_resource_property_mapping()[dbp_resource]
+
+
 def get_interlanguage_links(dbp_resource: str) -> set:
     global __RESOURCE_INTERLANGUAGE_LINKS__
     if '__RESOURCE_INTERLANGUAGE_LINKS__' not in globals():
