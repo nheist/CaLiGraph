@@ -75,7 +75,7 @@ def _create_goldstandard(category_data: pd.DataFrame) -> Tuple[pd.DataFrame, pd.
 def _compute_candidate_axioms() -> pd.DataFrame:
     categories = CategoryGraph.create_from_dbpedia().remove_unconnected().nodes
     categories = {cat for cat in categories if 'List_of_' not in cat and 'Lists_of_' not in cat}
-    category_statistics = util.load_or_create_cache('cataxioms_category_statistics', _compute_category_statistics(categories))
+    category_statistics = util.load_or_create_cache('cataxioms_category_statistics', lambda: _compute_category_statistics(categories))
 
     outgoing_data = _get_candidates(categories, category_statistics, _get_invalid_domains(), False)
     ingoing_data = _get_candidates(categories, category_statistics, _get_invalid_ranges(), True)
