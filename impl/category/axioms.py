@@ -147,11 +147,11 @@ def _get_candidates(categories: set, category_statistics: dict, invalid_pred_typ
     conceptual_cats = cat_base.get_conceptual_category_graph().nodes
     candidates = []
     for cat in categories:
-        type_frequencies = category_statistics['type_frequencies']
+        type_frequencies = category_statistics[cat]['type_frequencies']
         if is_inv:
-            property_counts, property_frequencies, predicate_counts = category_statistics['property_counts_inv'], category_statistics['property_frequencies_inv'], category_statistics['predicate_counts_inv']
+            property_counts, property_frequencies, predicate_counts = category_statistics[cat]['property_counts_inv'], category_statistics[cat]['property_frequencies_inv'], category_statistics[cat]['predicate_counts_inv']
         else:
-            property_counts, property_frequencies, predicate_counts = category_statistics['property_counts'], category_statistics['property_frequencies'], category_statistics['predicate_counts']
+            property_counts, property_frequencies, predicate_counts = category_statistics[cat]['property_counts'], category_statistics[cat]['property_frequencies'], category_statistics[cat]['predicate_counts']
 
         for prop in property_counts[cat].keys():
             pred, val = prop
