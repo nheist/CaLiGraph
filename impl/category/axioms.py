@@ -1,6 +1,5 @@
 import util
 import pandas as pd
-import random
 from typing import Tuple
 from collections import defaultdict
 from impl.category.graph import CategoryGraph
@@ -74,7 +73,7 @@ def _create_goldstandard(category_data: pd.DataFrame) -> Tuple[pd.DataFrame, pd.
 
 
 def _compute_candidate_axioms() -> pd.DataFrame:
-    categories = random.sample(CategoryGraph.create_from_dbpedia().remove_unconnected().nodes, 50)
+    categories = CategoryGraph.create_from_dbpedia().remove_unconnected().nodes
     categories = {cat for cat in categories if 'List_of_' not in cat and 'Lists_of_' not in cat}
     category_statistics = util.load_or_create_cache('cataxioms_category_statistics', lambda: _compute_category_statistics(categories))
 
