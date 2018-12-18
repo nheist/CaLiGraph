@@ -113,7 +113,10 @@ def resolve_redirect(dbp_resource: str) -> str:
         initializer = lambda: rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.redirects')], rdf_util.PREDICATE_REDIRECTS)
         __REDIRECTS__ = util.load_or_create_cache('dbpedia_resource_redirects', initializer)
 
-    return resolve_redirect(__REDIRECTS__[dbp_resource]) if dbp_resource in __REDIRECTS__ else dbp_resource
+    if dbp_resource in __REDIRECTS__:
+        if dbp_resource != __REDIRECTS__[dbp_resource]:
+            return resolve_redirect(__REDIRECTS__[dbp_resource])
+    return dbp_resource
 
 
 # DBpedia property
