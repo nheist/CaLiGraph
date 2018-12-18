@@ -152,7 +152,7 @@ def _get_candidates(categories: set, category_statistics: dict, invalid_pred_typ
         else:
             property_counts, property_frequencies, predicate_counts = category_statistics[cat]['property_counts'], category_statistics[cat]['property_frequencies'], category_statistics[cat]['predicate_counts']
 
-        for prop in property_counts[cat].keys():
+        for prop in property_counts:
             pred, val = prop
             lex_score = dbp_store.get_surface_score(val, cat_store.get_label(cat))
             if lex_score > 0:
@@ -161,10 +161,10 @@ def _get_candidates(categories: set, category_statistics: dict, invalid_pred_typ
                     'pred': pred,
                     'val': val,
                     'is_inv': int(is_inv),
-                    'pv_count': property_counts[cat][prop],
-                    'pv_freq': property_frequencies[cat][prop],
+                    'pv_count': property_counts[prop],
+                    'pv_freq': property_frequencies[prop],
                     'lex_score': lex_score,
-                    'conflict_score': sum([type_frequencies[cat][t] for t in invalid_pred_types[pred]]) + (1 - (property_counts[cat][prop] / predicate_counts[cat][pred])),
+                    'conflict_score': sum([type_frequencies[t] for t in invalid_pred_types[pred]]) + (1 - (property_counts[prop] / predicate_counts[pred])),
                     'conceptual_category': int(cat in conceptual_cats)
                 })
     return candidates
