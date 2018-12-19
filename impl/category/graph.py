@@ -47,7 +47,7 @@ class CategoryGraph(BaseGraph):
             return cat_store.get_resources(category)
 
         if not self._get_attr(category, self.PROPERTY_MATERIALIZED_RESOURCES):
-            materialized_resources = cat_store.get_resources(category) | {r for cat in self.successors(category) for resources in self.get_materialized_resources(cat) for r in resources}
+            materialized_resources = cat_store.get_resources(category) | {res for cat in self.successors(category) for res in self.get_materialized_resources(cat)}
             self._set_attr(category, self.PROPERTY_MATERIALIZED_RESOURCES, materialized_resources)
         return self._get_attr(category, self.PROPERTY_MATERIALIZED_RESOURCES)
 
