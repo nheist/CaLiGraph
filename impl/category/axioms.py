@@ -156,7 +156,8 @@ def _get_candidates(categories: set, category_statistics: dict, invalid_pred_typ
             pred, val = prop
             lex_score = dbp_store.get_surface_score(val, cat_store.get_label(cat))
             if lex_score > 0:
-                candidates.append({
+                pred_type = dbp_store.get_range(pred) if is_inv else dbp_store.get_domain(pred)
+                candidate = {
                     'cat': cat,
                     'pred': pred,
                     'val': val,
@@ -165,6 +166,15 @@ def _get_candidates(categories: set, category_statistics: dict, invalid_pred_typ
                     'pv_freq': property_frequencies[prop],
                     'lex_score': lex_score,
                     'conflict_score': sum([type_frequencies[t] for t in invalid_pred_types[pred]]) + (1 - (property_counts[prop] / predicate_counts[pred])),
-                    'conceptual_category': int(cat in conceptual_cats)
-                })
+                    'conceptual_category': int(cat in conceptual_cats),
+                    'match_score': type_frequencies[pred_type] if pred_type else 1
+                }
+
+                if util.get_config('category.axioms.use_materialized_category_graph'):
+                    graphtypes = cat_base.get_taxonomic_category_graph().dbp_types(cat)
+                    candidate['graphtype_fit'] = int(pred_type in graphtypes)
+                    candidate['graphtype_conflict'] = int(bool(graphtypes.intersection(invalid_pred_types)))
+                    candidate['pv_coverage'] = property_counts[prop] / dbp_store.get_property_frequency_distribution(pred)[val]
+
+                candidates.append(candidate)
     return candidates

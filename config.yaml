@@ -97,6 +97,7 @@ results:
 cache:
   # version 2: added resource types from sdtyped + lhd
   # version 3: cataxioms with materialized category graph
+  # version 4: additional attributes for cataxioms (match_score, graphtype_fit, graphtype_conflict, pv_coverage)
   catgraph_conceptual:
     filename: 'catgraph-conceptual'
     version: 1
@@ -183,4 +184,4 @@ cache:
     version: 3
   cataxioms_candidates:
     filename: 'cataxioms-candidates'
-    version: 3
+    version: 4
