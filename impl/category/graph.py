@@ -7,6 +7,7 @@ import impl.util.rdf as rdf_util
 import util
 import numpy as np
 import math
+import pandas as pd
 
 
 class CategoryGraph(BaseGraph):
@@ -185,6 +186,14 @@ class CategoryGraph(BaseGraph):
                 pure_category_types.add(cat_type)
 
         return pure_category_types
+
+    # dbp-types (supervised)
+
+    def create_dbp_type_sample(self):
+        self._assign_resource_type_counts()
+        dbp_type_candidates = [{'cat': cat, 'dbp_type': dbp_type} for cat in self.nodes for dbp_type in self._get_attr(cat, self.PROPERTY_RESOURCE_TYPE_COUNTS)['types']]
+        df = pd.DataFrame(data=dbp_type_candidates)
+        df.sample(n=1000).to_csv(util.get_results_file('results.catgraph.dbp_type_sample'))
 
     # taxonomy
 

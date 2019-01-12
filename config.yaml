@@ -89,6 +89,8 @@ files:
       filename: 'cataxioms_labels.csv'
 
 results:
+  catgraph:
+    dbp_type_sample: 'dbp-type-sample.csv'
   cataxioms:
     category_axioms: 'category-axioms.csv'
     relation_assertions_lcwa_true: 'relation-assertions_lcwa-true.nt'
