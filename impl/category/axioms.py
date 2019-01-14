@@ -143,6 +143,8 @@ def _get_invalid_ranges() -> dict:
 
 
 def _get_candidates(categories: set, category_statistics: dict, invalid_pred_types: dict, is_inv: bool) -> list:
+    use_materialized_category_graph = util.get_config('category.axioms.use_materialized_category_graph')
+
     conceptual_cats = cat_base.get_conceptual_category_graph().nodes
     candidates = []
     for idx, cat in enumerate(categories):
@@ -154,6 +156,9 @@ def _get_candidates(categories: set, category_statistics: dict, invalid_pred_typ
             property_counts, property_frequencies, predicate_counts = category_statistics[cat]['property_counts_inv'], category_statistics[cat]['property_frequencies_inv'], category_statistics[cat]['predicate_counts_inv']
         else:
             property_counts, property_frequencies, predicate_counts = category_statistics[cat]['property_counts'], category_statistics[cat]['property_frequencies'], category_statistics[cat]['predicate_counts']
+
+        if use_materialized_category_graph:
+            graphtypes = cat_base.get_taxonomic_category_graph().dbp_types(cat)
 
         for prop in property_counts:
             pred, val = prop
@@ -171,10 +176,10 @@ def _get_candidates(categories: set, category_statistics: dict, invalid_pred_typ
                     'conflict_score': sum([type_frequencies[t] for t in invalid_pred_types[pred]]) + (1 - (property_counts[prop] / predicate_counts[pred])),
                     'conceptual_category': int(cat in conceptual_cats),
                     'match_score': type_frequencies[pred_type] if pred_type else 1
+                    # count of types of resources in a category
                 }
 
-                if util.get_config('category.axioms.use_materialized_category_graph'):
-                    graphtypes = cat_base.get_taxonomic_category_graph().dbp_types(cat)
+                if use_materialized_category_graph:
                     candidate['graphtype_fit'] = int(pred_type in graphtypes)
                     candidate['graphtype_conflict'] = int(bool(graphtypes.intersection(invalid_pred_types[pred])))
                     candidate['pv_coverage'] = property_counts[prop] / dbp_store.get_property_frequency_distribution(pred)[val]
