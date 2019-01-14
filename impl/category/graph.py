@@ -8,6 +8,7 @@ import util
 import numpy as np
 import math
 import pandas as pd
+import random
 
 
 class CategoryGraph(BaseGraph):
@@ -191,9 +192,9 @@ class CategoryGraph(BaseGraph):
 
     def create_dbp_type_sample(self):
         self._assign_resource_type_counts()
-        dbp_type_candidates = [{'cat': cat, 'dbp_type': dbp_type} for cat in self.nodes for dbp_type in self._get_attr(cat, self.PROPERTY_RESOURCE_TYPE_COUNTS)['types']]
-        df = pd.DataFrame(data=dbp_type_candidates)
-        df.sample(n=1000).to_csv(util.get_results_file('results.catgraph.dbp_type_sample'))
+        category_sample = random.sample(self.nodes, 1000)
+        category_types = [{'cat': cat, 'dbp_type': dbp_type} for cat in category_sample for dbp_type in self._get_attr(cat, self.PROPERTY_RESOURCE_TYPE_COUNTS)['types']]
+        pd.DataFrame(data=category_types).to_csv(util.get_results_file('results.catgraph.dbp_type_sample'), index=False)
 
     # taxonomy
 
