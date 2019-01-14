@@ -145,7 +145,10 @@ def _get_invalid_ranges() -> dict:
 def _get_candidates(categories: set, category_statistics: dict, invalid_pred_types: dict, is_inv: bool) -> list:
     conceptual_cats = cat_base.get_conceptual_category_graph().nodes
     candidates = []
-    for cat in categories:
+    for idx, cat in enumerate(categories):
+        if idx % 1000 == 0:
+            util.get_logger().debug(f'Processed {idx} of {len(categories)} categories.')
+
         type_frequencies = category_statistics[cat]['type_frequencies']
         if is_inv:
             property_counts, property_frequencies, predicate_counts = category_statistics[cat]['property_counts_inv'], category_statistics[cat]['property_frequencies_inv'], category_statistics[cat]['predicate_counts_inv']
@@ -173,7 +176,7 @@ def _get_candidates(categories: set, category_statistics: dict, invalid_pred_typ
                 if util.get_config('category.axioms.use_materialized_category_graph'):
                     graphtypes = cat_base.get_taxonomic_category_graph().dbp_types(cat)
                     candidate['graphtype_fit'] = int(pred_type in graphtypes)
-                    candidate['graphtype_conflict'] = int(bool(graphtypes.intersection(invalid_pred_types)))
+                    candidate['graphtype_conflict'] = int(bool(graphtypes.intersection(invalid_pred_types[pred])))
                     candidate['pv_coverage'] = property_counts[prop] / dbp_store.get_property_frequency_distribution(pred)[val]
 
                 candidates.append(candidate)
