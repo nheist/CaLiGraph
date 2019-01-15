@@ -7,6 +7,7 @@ category:
     pos_weight: 14
   dbp_types:
     exclude_untyped_resources: False
+    prefer_resource_types: True
     apply_type_depth_smoothing: True
     apply_impure_type_filtering: True
     type_purity_threshold: 0.95

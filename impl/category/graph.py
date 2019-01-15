@@ -143,7 +143,7 @@ class CategoryGraph(BaseGraph):
             category_types = resource_types
         else:
             child_type_counts = rdf_util.create_count_dict(children_with_types.values())
-            if resource_types:
+            if util.get_config('category.dbp_types.prefer_resource_types') and resource_types:
                 child_types = set(child_type_counts.keys())
                 category_types = resource_types.intersection(child_types)
             else:
@@ -188,7 +188,7 @@ class CategoryGraph(BaseGraph):
 
         return pure_category_types
 
-    # dbp-types (supervised)
+    # dbp-types (evaluation)
 
     def create_dbp_type_sample(self):
         self._assign_resource_type_counts()
