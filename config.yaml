@@ -85,7 +85,9 @@ files:
       filename: 'wikidata_resource_properties.nt.bz2'
       url: ~
   evaluation:
-    category_properties:
+    catgraph_dbptypes:
+      filename: 'catgraph-dbptype_labels.csv'
+    cataxioms:
       filename: 'cataxioms_labels.csv'
 
 results:

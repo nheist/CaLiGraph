@@ -65,7 +65,7 @@ def _compute_correct_axioms(axiom_estimator: RandomForestClassifier, candidate_a
 
 
 def _create_goldstandard(category_data: pd.DataFrame) -> Tuple[pd.DataFrame, pd.Series]:
-    labels = pd.read_csv(util.get_data_file('files.evaluation.category_properties'), index_col=['cat', 'pred', 'val', 'is_inv'])
+    labels = pd.read_csv(util.get_data_file('files.evaluation.cataxioms'), index_col=['cat', 'pred', 'val', 'is_inv'])
     goldstandard = pd.merge(category_data, labels, how='inner', on=['cat', 'pred', 'val', 'is_inv'])
     y = goldstandard['label']
     X = goldstandard.drop(columns='label')
