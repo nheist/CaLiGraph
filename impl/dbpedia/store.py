@@ -123,6 +123,25 @@ def resolve_redirect(dbp_resource: str, visited=None) -> str:
 # DBpedia property
 
 
+def get_inverse_property_frequency_distribution(dbp_predicate: str) -> dict:
+    global __INVERSE_PROPERTY_FREQUENCY_DISTRIBUTION__
+    if '__INVERSE_PROPERTY_FREQUENCY_DISTRIBUTION__' not in globals():
+        __INVERSE_PROPERTY_FREQUENCY_DISTRIBUTION__ = util.load_or_create_cache('dbpedia_inverse_property_frequency_distribution', _compute_inverse_property_frequency_distribution)
+
+    return __INVERSE_PROPERTY_FREQUENCY_DISTRIBUTION__[dbp_predicate]
+
+
+def _compute_inverse_property_frequency_distribution() -> dict:
+    inverse_property_frequency_distribution = defaultdict(functools.partial(defaultdict, int))
+    for properties in get_inverse_resource_property_mapping().values():
+        for pred, values in properties.items():
+            for val in values:
+                inverse_property_frequency_distribution[pred][val] += 1
+    for pred, value_counts in inverse_property_frequency_distribution.items():
+        inverse_property_frequency_distribution[pred]['_sum'] = sum(value_counts.values())
+    return inverse_property_frequency_distribution
+
+
 def get_property_frequency_distribution(dbp_predicate: str) -> dict:
     global __PROPERTY_FREQUENCY_DISTRIBUTION__
     if '__PROPERTY_FREQUENCY_DISTRIBUTION__' not in globals():

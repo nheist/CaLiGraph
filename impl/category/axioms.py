@@ -180,9 +180,10 @@ def _get_candidates(categories: set, category_statistics: dict, invalid_pred_typ
                 }
 
                 if use_materialized_category_graph:
+                    property_frequency = dbp_store.get_inverse_property_frequency_distribution(pred)[val] if is_inv else dbp_store.get_property_frequency_distribution(pred)[val]
+                    candidate['pv_coverage'] = property_counts[prop] / property_frequency
                     candidate['graphtype_fit'] = int(pred_type in graphtypes)
                     candidate['graphtype_conflict'] = int(bool(graphtypes.intersection(invalid_pred_types[pred])))
-                    candidate['pv_coverage'] = property_counts[prop] / dbp_store.get_property_frequency_distribution(pred)[val]
 
                 candidates.append(candidate)
     return candidates
