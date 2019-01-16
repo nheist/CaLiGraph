@@ -10,6 +10,8 @@ import util
 
 
 def test_metrics(graph: CategoryGraph):
+    util.get_logger().debug('Running evaluation of parameters for dbp-type extraction..')
+
     columns = ['exclude_untyped_resources', 'prefer_resource_types', 'apply_type_depth_smoothing', 'apply_impure_type_filtering', 'resource_type_ratio', 'child_type_ratio', 'precision', 'recall', 'F1']
     data = list(itertools.product([True, False], [True, False], [True, False], [True, False], np.linspace(0.1, 1, 10), np.linspace(0.1, 1, 10), [0.0], [0.0], [0.0]))
     df = pd.DataFrame(data=data, columns=columns)
@@ -29,9 +31,10 @@ def test_metrics(graph: CategoryGraph):
         df.at[row.Index, 'precision'] = precision
         df.at[row.Index, 'recall'] = recall
         df.at[row.Index, 'F1'] = f1
-        print(f'RUN {idx}/{len(df.index)}: P={precision*100:.2f} R={recall*100:.2f} F1={f1*100:.2f}')
+        util.get_logger().debug(f'RUN {idx}/{len(df.index)}: P={precision*100:.2f} R={recall*100:.2f} F1={f1*100:.2f}')
 
     df.to_csv('catgraph-dbptype_evaluation.csv')
+    util.get_logger().debug('Finished evaluation of parameters for dbp-type extraction.')
 
 
 def _get_metrics(graph: CategoryGraph):
