@@ -9,12 +9,12 @@ if __name__ == '__main__':
         util.get_logger().info('Starting CaLiGraph extraction..')
 
         # TASK: extraction of category axioms
-        cat_axioms.extract_axioms_and_relation_assertions()
+        # cat_axioms.extract_axioms_and_relation_assertions()
 
         # TASK: evaluation of assigned dbp-types to catgraph
-        # graph = util.load_cache('catgraph_cyclefree')
-        # graph._assign_resource_type_counts()
-        # test_metrics(graph)
+        graph = util.load_cache('catgraph_cyclefree')
+        graph._assign_resource_type_counts()
+        test_metrics(graph)
 
         mailer.send_success()
         util.get_logger().info('Finished CaLiGraph extraction.')

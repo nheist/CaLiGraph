@@ -12,15 +12,14 @@ import util
 def test_metrics(graph: CategoryGraph):
     util.get_logger().debug('Running evaluation of parameters for dbp-type extraction..')
 
-    columns = ['exclude_untyped_resources', 'prefer_resource_types', 'apply_type_depth_smoothing', 'apply_impure_type_filtering', 'resource_type_ratio', 'child_type_ratio', 'precision', 'recall', 'F1']
-    data = list(itertools.product([True, False], [True, False], [True, False], [True, False], np.linspace(0.4, 1, 7), np.linspace(0.4, 1, 7), [0.0], [0.0], [0.0]))
+    columns = ['exclude_untyped_resources', 'prefer_resource_types', 'apply_type_depth_smoothing', 'resource_type_ratio', 'child_type_ratio', 'precision', 'recall', 'F1']
+    data = list(itertools.product([True, False], [True, False], [True, False], np.linspace(0.3, 1, 8), np.linspace(0.3, 1, 8), [0.0], [0.0], [0.0]))
     df = pd.DataFrame(data=data, columns=columns)
 
     for idx, row in enumerate(df.itertuples()):
         util.set_config('category.dbp_types.exclude_untyped_resources', row.exclude_untyped_resources)
         util.set_config('category.dbp_types.prefer_resource_types', row.prefer_resource_types)
         util.set_config('category.dbp_types.apply_type_depth_smoothing', row.apply_type_depth_smoothing)
-        util.set_config('category.dbp_types.apply_impure_type_filtering', row.apply_impure_type_filtering)
         util.set_config('category.dbp_types.resource_type_ratio', row.resource_type_ratio)
         util.set_config('category.dbp_types.child_type_ratio', row.child_type_ratio)
 

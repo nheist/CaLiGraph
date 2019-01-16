@@ -9,7 +9,7 @@ category:
     exclude_untyped_resources: False
     prefer_resource_types: True
     apply_type_depth_smoothing: True
-    apply_impure_type_filtering: True
+    apply_impure_type_filtering: False
     type_purity_threshold: 0.95
     resource_type_ratio: 0.5
     child_type_ratio: 0.5
@@ -18,7 +18,7 @@ category:
 logging:
   level: 'DEBUG'
   to_file: True
-  filename: 'cataxioms-materialized_v4' # 'dbptype-evaluation'
+  filename: 'dbptype-evaluation' # 'cataxioms-materialized_v4' #
 
 mailer:
   sender: 'errors.nheist@gmail.com'
