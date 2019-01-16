@@ -12,7 +12,7 @@ def get_equivalent_list(category: str) -> str:
 
 
 def _create_equivalent_list_mapping() -> dict:
-    categories = cat_store.get_all_cats()
+    categories = cat_store.get_all_cats()   
 
     # 1) find equivalent lists by matching category/list names exactly
 

@@ -13,7 +13,7 @@ def test_metrics(graph: CategoryGraph):
     util.get_logger().debug('Running evaluation of parameters for dbp-type extraction..')
 
     columns = ['exclude_untyped_resources', 'prefer_resource_types', 'apply_type_depth_smoothing', 'apply_impure_type_filtering', 'resource_type_ratio', 'child_type_ratio', 'precision', 'recall', 'F1']
-    data = list(itertools.product([True, False], [True, False], [True, False], [True, False], np.linspace(0.1, 1, 10), np.linspace(0.1, 1, 10), [0.0], [0.0], [0.0]))
+    data = list(itertools.product([True, False], [True, False], [True, False], [True, False], np.linspace(0.4, 1, 7), np.linspace(0.4, 1, 7), [0.0], [0.0], [0.0]))
     df = pd.DataFrame(data=data, columns=columns)
 
     for idx, row in enumerate(df.itertuples()):
