@@ -12,14 +12,16 @@ import util
 def test_metrics(graph: CategoryGraph):
     util.get_logger().debug('Running evaluation of parameters for dbp-type extraction..')
 
-    columns = ['exclude_untyped_resources', 'prefer_resource_types', 'apply_type_depth_smoothing', 'resource_type_ratio', 'child_type_ratio', 'precision', 'recall', 'F1']
-    data = list(itertools.product([True, False], [True, False], [True, False], np.linspace(0.3, 1, 8), np.linspace(0.3, 1, 8), [0.0], [0.0], [0.0]))
+    #columns = ['exclude_untyped_resources', 'prefer_resource_types', 'apply_type_depth_smoothing', 'resource_type_ratio', 'child_type_ratio', 'precision', 'recall', 'F1']
+    columns = ['resource_type_ratio', 'child_type_ratio', 'precision', 'recall', 'F1']
+    #data = list(itertools.product([True, False], [True, False], [True, False], np.linspace(.5, .9, 3), np.linspace(.5, .9, 3), [0.0], [0.0], [0.0]))
+    data = list(itertools.product(np.linspace(.5, .9, 3), np.linspace(.5, .9, 3), [0.0], [0.0], [0.0]))
     df = pd.DataFrame(data=data, columns=columns)
 
     for idx, row in enumerate(df.itertuples()):
-        util.set_config('category.dbp_types.exclude_untyped_resources', row.exclude_untyped_resources)
-        util.set_config('category.dbp_types.prefer_resource_types', row.prefer_resource_types)
-        util.set_config('category.dbp_types.apply_type_depth_smoothing', row.apply_type_depth_smoothing)
+        #util.set_config('category.dbp_types.exclude_untyped_resources', row.exclude_untyped_resources)
+        #util.set_config('category.dbp_types.prefer_resource_types', row.prefer_resource_types)
+        #util.set_config('category.dbp_types.apply_type_depth_smoothing', row.apply_type_depth_smoothing)
         util.set_config('category.dbp_types.resource_type_ratio', row.resource_type_ratio)
         util.set_config('category.dbp_types.child_type_ratio', row.child_type_ratio)
 
@@ -32,7 +34,7 @@ def test_metrics(graph: CategoryGraph):
         df.at[row.Index, 'F1'] = f1
         util.get_logger().debug(f'RUN {idx}/{len(df.index)}: P={precision*100:.2f} R={recall*100:.2f} F1={f1*100:.2f}')
 
-    df.to_csv('catgraph-dbptype_evaluation.csv')
+    df.to_csv('catgraph-dbptype_evaluation-basic.csv')
     util.get_logger().debug('Finished evaluation of parameters for dbp-type extraction.')
 
 

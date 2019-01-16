@@ -135,7 +135,6 @@ class CategoryGraph(BaseGraph):
         if self.dbp_types(cat) is not None:
             return self.dbp_types(cat)
 
-        util.get_logger().debug(f'Computing dbp-types for category {cat}..')
         resource_types = self._compute_resource_types_for_category(cat)
 
         # compare with child types
