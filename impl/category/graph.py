@@ -131,14 +131,14 @@ class CategoryGraph(BaseGraph):
             types_count = rdf_util.create_count_dict(resources_types.values())
             self._set_attr(cat, self.PROPERTY_RESOURCE_TYPE_COUNTS, {'count': resource_count, 'typed_count': typed_resource_count, 'types': types_count})
 
-    def _compute_dbp_types_for_category(self, cat: str, category_queue: list) -> set:
+    def _compute_dbp_types_for_category(self, cat: str, category_queue: list, processed_cats=0) -> set:
         if self.dbp_types(cat) is not None:
             return self.dbp_types(cat)
 
         resource_types = self._compute_resource_types_for_category(cat)
 
         # compare with child types
-        children_with_types = {cat: self._compute_dbp_types_for_category(cat, category_queue) for cat in self.successors(cat)}
+        children_with_types = {cat: self._compute_dbp_types_for_category(cat, category_queue, processed_cats) for cat in self.successors(cat)}
         if len(children_with_types) == 0:
             category_types = resource_types
         else:
@@ -161,6 +161,10 @@ class CategoryGraph(BaseGraph):
             category_queue.extend(self.predecessors(cat))
 
         self._set_attr(cat, self.PROPERTY_DBP_TYPES, category_types)
+
+        processed_cats += 1
+        if processed_cats % 100 == 0:
+            util.get_logger().debug(f'DBP-TYPE-ASSIGNMENT: Processed {processed_cats} categories.')
         return category_types
 
     def _compute_resource_types_for_category(self, cat: str) -> set:
