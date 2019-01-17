@@ -114,15 +114,12 @@ class CategoryGraph(BaseGraph):
     # dbp-types
 
     def assign_dbp_types(self):
-        util.get_logger().debug('DBP-TYPE-ASSIGNMENT: Assigning resource type counts..')
         self._assign_resource_type_counts()
 
-        util.get_logger().debug('DBP-TYPE-ASSIGNMENT: Assigning types to categories..')
-        processed_cats = 0
         category_queue = [cat for cat in self.nodes if not self.successors(cat)]
         while category_queue:
             cat = category_queue.pop(0)
-            self._compute_dbp_types_for_category(cat, category_queue, processed_cats)
+            self._compute_dbp_types_for_category(cat, category_queue)
 
         return self
 
@@ -135,18 +132,13 @@ class CategoryGraph(BaseGraph):
             types_count = rdf_util.create_count_dict(resources_types.values())
             self._set_attr(cat, self.PROPERTY_RESOURCE_TYPE_COUNTS, {'count': resource_count, 'typed_count': typed_resource_count, 'types': types_count})
 
-    def _compute_dbp_types_for_category(self, cat: str, category_queue: list, processed_cats: int) -> set:
+    def _compute_dbp_types_for_category(self, cat: str, category_queue: list) -> set:
         if self.dbp_types(cat) is not None:
             return self.dbp_types(cat)
 
-        util.get_logger().debug(f'DBP-TYPE-ASSIGNMENT: processing category {cat}..')
-
-        util.get_logger().debug(f'DBP-TYPE-ASSIGNMENT: fetch resource types..')
         resource_types = self._compute_resource_types_for_category(cat)
-
         # compare with child types
-        util.get_logger().debug(f'DBP-TYPE-ASSIGNMENT: compare with child types..')
-        children_with_types = {cat: self._compute_dbp_types_for_category(cat, category_queue, processed_cats) for cat in self.successors(cat)}
+        children_with_types = {cat: self._compute_dbp_types_for_category(cat, category_queue) for cat in self.successors(cat)}
         if len(children_with_types) == 0:
             category_types = resource_types
         else:
@@ -160,22 +152,15 @@ class CategoryGraph(BaseGraph):
                 category_types = {t for t, probability in child_type_distribution.items() if probability > child_type_ratio}
 
         # remove any disjoint type assignments
-        util.get_logger().debug(f'DBP-TYPE-ASSIGNMENT: remove disjoint types..')
         category_types = category_types.difference({dt for t in category_types for dt in dbp_store.get_disjoint_types(t)})
 
         if util.get_config('category.dbp_types.apply_impure_type_filtering'):
             category_types = self._filter_impure_types(cat, category_types)
 
-        util.get_logger().debug(f'DBP-TYPE-ASSIGNMENT: extending queue..')
         if category_types:
             category_queue.extend(self.predecessors(cat))
 
-        util.get_logger().debug(f'DBP-TYPE-ASSIGNMENT: finalizing..')
         self._set_attr(cat, self.PROPERTY_DBP_TYPES, category_types)
-
-        processed_cats += 1
-        if processed_cats % 100 == 0:
-            util.get_logger().debug(f'DBP-TYPE-ASSIGNMENT: Processed {processed_cats} categories.')
         return category_types
 
     def _compute_resource_types_for_category(self, cat: str) -> set:
