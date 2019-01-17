@@ -139,9 +139,13 @@ class CategoryGraph(BaseGraph):
         if self.dbp_types(cat) is not None:
             return self.dbp_types(cat)
 
+        util.get_logger().debug(f'DBP-TYPE-ASSIGNMENT: processing category {cat}..')
+
+        util.get_logger().debug(f'DBP-TYPE-ASSIGNMENT: fetch resource types..')
         resource_types = self._compute_resource_types_for_category(cat)
 
         # compare with child types
+        util.get_logger().debug(f'DBP-TYPE-ASSIGNMENT: compare with child types..')
         children_with_types = {cat: self._compute_dbp_types_for_category(cat, category_queue, processed_cats) for cat in self.successors(cat)}
         if len(children_with_types) == 0:
             category_types = resource_types
@@ -156,14 +160,17 @@ class CategoryGraph(BaseGraph):
                 category_types = {t for t, probability in child_type_distribution.items() if probability > child_type_ratio}
 
         # remove any disjoint type assignments
+        util.get_logger().debug(f'DBP-TYPE-ASSIGNMENT: remove disjoint types..')
         category_types = category_types.difference({dt for t in category_types for dt in dbp_store.get_disjoint_types(t)})
 
         if util.get_config('category.dbp_types.apply_impure_type_filtering'):
             category_types = self._filter_impure_types(cat, category_types)
 
+        util.get_logger().debug(f'DBP-TYPE-ASSIGNMENT: extending queue..')
         if category_types:
             category_queue.extend(self.predecessors(cat))
 
+        util.get_logger().debug(f'DBP-TYPE-ASSIGNMENT: finalizing..')
         self._set_attr(cat, self.PROPERTY_DBP_TYPES, category_types)
 
         processed_cats += 1
