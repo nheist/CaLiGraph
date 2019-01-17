@@ -114,11 +114,15 @@ class CategoryGraph(BaseGraph):
     # dbp-types
 
     def assign_dbp_types(self):
+        util.get_logger().debug('DBP-TYPE-ASSIGNMENT: Assigning resource type counts..')
         self._assign_resource_type_counts()
+
+        util.get_logger().debug('DBP-TYPE-ASSIGNMENT: Assigning types to categories..')
+        processed_cats = 0
         category_queue = [cat for cat in self.nodes if not self.successors(cat)]
         while category_queue:
             cat = category_queue.pop(0)
-            self._compute_dbp_types_for_category(cat, category_queue)
+            self._compute_dbp_types_for_category(cat, category_queue, processed_cats)
 
         return self
 
@@ -131,7 +135,7 @@ class CategoryGraph(BaseGraph):
             types_count = rdf_util.create_count_dict(resources_types.values())
             self._set_attr(cat, self.PROPERTY_RESOURCE_TYPE_COUNTS, {'count': resource_count, 'typed_count': typed_resource_count, 'types': types_count})
 
-    def _compute_dbp_types_for_category(self, cat: str, category_queue: list, processed_cats=0) -> set:
+    def _compute_dbp_types_for_category(self, cat: str, category_queue: list, processed_cats: int) -> set:
         if self.dbp_types(cat) is not None:
             return self.dbp_types(cat)
 
