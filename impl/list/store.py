@@ -3,6 +3,7 @@ import impl.category.store as cat_store
 import impl.category.util as cat_util
 import impl.dbpedia.store as dbp_store
 import util
+import impl.util.nlp as nlp_util
 
 
 def get_equivalent_listpage(category: str) -> str:
@@ -20,24 +21,29 @@ def _create_equivalent_listpage_mapping() -> dict:
     cat_to_lp_mapping = {}
 
     # 1) find equivalent lists by matching category/list names exactly
-    name_to_category_mapping = {cat_util.remove_category_prefix(cat): cat for cat in categories}
-    name_to_list_mapping = {list_util.remove_listpage_prefix(lp): lp for lp in get_listpages()}
+    name_to_category_mapping = {cat_util.remove_category_prefix(cat).lower(): cat for cat in categories}
+    name_to_list_mapping = {list_util.remove_listpage_prefix(lp).lower(): lp for lp in get_listpages()}
     equal_pagenames = set(name_to_category_mapping).intersection(set(name_to_list_mapping))
     cat_to_lp_mapping.update({name_to_category_mapping[name]: name_to_list_mapping[name] for name in equal_pagenames})
+    util.get_logger().debug(f'Found {len(cat_to_lp_mapping)} equivalent matches.')
 
-    # 2) find equivalent lists by using topical concepts of categories
+    # 2) find equivalent lists by using topical concepts of categories and categories containing exactly one list
     for cat in categories.difference(set(cat_to_lp_mapping)):
-        listpage_topics = {topic for topic in cat_store.get_topics(cat) if list_util.is_listpage(topic)}
-        if len(listpage_topics) == 1:
-            cat_to_lp_mapping[cat] = listpage_topics.pop()
-            util.get_logger().debug(f'Mapping via topical concept: {cat} -> {cat_to_lp_mapping[cat]}')
+        # topical concepts
+        candidates = {topic for topic in cat_store.get_topics(cat) if list_util.is_listpage(topic)}
+        # categories with exactly one list
+        candidates.update({page for page in cat_store.get_resources(cat) if list_util.is_listpage(page)})
 
-    # 3) find equivalent lists by looking for categories containing exactly one list
-    for cat in categories.difference(set(cat_to_lp_mapping)):
-        listpage_members = {page for page in cat_store.get_resources(cat) if list_util.is_listpage(page)}
-        if len(listpage_members) == 1:
-            cat_to_lp_mapping[cat] = listpage_members.pop()
-            util.get_logger().debug(f'Mapping via contained list: {cat} -> {cat_to_lp_mapping[cat]}')
+        cat_lemmas = nlp_util.filter_important_words(cat_util.remove_category_prefix(cat))
+        for lp in candidates:
+            listpage_lemmas = nlp_util.filter_important_words(list_util.remove_listpage_prefix(lp))
+            if cat_lemmas == listpage_lemmas:
+                cat_to_lp_mapping[cat] = lp
+                util.get_logger().debug(f'Mapping: {cat} -> {lp}')
+                break
+            else:
+                util.get_logger().debug(f'No map: {cat} -> {lp}')
+    util.get_logger().debug(f'Found {len(cat_to_lp_mapping)} overall matches.')
 
     return cat_to_lp_mapping
 

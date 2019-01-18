@@ -9,6 +9,10 @@ SPACY_CACHE_ID = 'spacy_docs'
 parser = spacy.load('en_core_web_lg')
 
 
+def filter_important_words(text: str) -> set:
+    return {word.lemma_ for word in parse(text, skip_cache=True) if not word.is_stop}
+
+
 def parse(text: str, skip_cache=False) -> Doc:
     global __NLP_CACHE__, __NLP_CACHE_CHANGED__
     if '__NLP_CACHE__' not in globals():
