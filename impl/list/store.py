@@ -2,8 +2,10 @@ from . import util as list_util
 import impl.category.store as cat_store
 import impl.category.util as cat_util
 import impl.dbpedia.store as dbp_store
+import impl.dbpedia.util as dbp_util
 import util
 import impl.util.nlp as nlp_util
+from lxml import etree
 
 
 def get_equivalent_listpage(category: str) -> str:
@@ -59,8 +61,8 @@ def _create_child_listpages_mapping() -> dict:
     util.get_logger().info('CACHE: Creating child-listpage mapping')
 
     # find child lists by looking for categories containing multiple lists
-
-    pass
+    # TODO
+    raise NotImplementedError()
 
 
 def get_listpages() -> set:
@@ -70,3 +72,57 @@ def get_listpages() -> set:
         __LISTPAGES__ = util.load_or_create_cache('dbpedia_listpages', initializer)
 
     return __LISTPAGES__
+
+
+def get_listpage_markup(listpage: str) -> str:
+    global __LISTPAGE_MARKUP__
+    if '__LISTPAGE_MARKUP__' not in globals():
+        __LISTPAGE_MARKUP__ = util.load_or_create_cache('dbpedia_listpage_markup', _parse_listpage_markup)
+
+    return __LISTPAGE_MARKUP__[listpage]
+
+
+def _parse_listpage_markup():
+    util.get_logger().info('CACHE: Parsing listpage markup')
+    parser = etree.XMLParser(target=WikiListpageParser())
+    list_markup = etree.parse(util.get_data_file('files.dbpedia.pages'), parser)
+    return {dbp_util.name2resource(lp): markup for lp, markup in list_markup.items()}
+
+
+class WikiListpageParser:
+    def __init__(self):
+        self.processed_pages = 0
+        self.list_markup = {}
+
+        self.title = None
+        self.namespace = None
+
+        self.tag_content = ''
+
+    def start(self, tag, _):
+        if tag.endswith('}page'):
+            self.title = None
+            self.namespace = None
+
+            self.processed_pages += 1
+            if self.processed_pages % 1000 == 0:
+                config.get_logger().debug('list_integration (parse_markup): processed {} pages'.format(self.processed_pages))
+
+    def end(self, tag):
+        if tag.endswith('}title'):
+            self.title = self.tag_content.strip()
+        elif tag.endswith('}ns'):
+            self.namespace = self.tag_content.strip()
+        elif tag.endswith('}text') and self._valid_page():
+            self.list_markup[self.title] = self.tag_content.strip()
+
+        self.tag_content = ''
+
+    def data(self, chars):
+        self.tag_content += chars
+
+    def close(self) -> dict:
+        return self.list_markup
+
+    def _valid_page(self) -> bool:
+        return self.namespace == '0' and self.title.startswith('List of ')
