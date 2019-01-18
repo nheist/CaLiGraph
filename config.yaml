@@ -18,7 +18,7 @@ category:
 logging:
   level: 'DEBUG'
   to_file: True
-  filename: 'dbptype-evaluation' # 'cataxioms-materialized_v4' #
+  filename: 'cataxioms-materialized_v4' # 'dbptype-evaluation' #
 
 mailer:
   sender: 'errors.nheist@gmail.com'

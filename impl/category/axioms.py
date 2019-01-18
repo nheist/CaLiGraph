@@ -159,7 +159,7 @@ def _get_candidates(categories: set, category_statistics: dict, invalid_pred_typ
 
         if use_materialized_category_graph:
             taxgraph = cat_base.get_taxonomic_category_graph()
-            graphtypes = taxgraph.dbp_types(cat) if cat in taxgraph.nodes else set()
+            graphtypes = taxgraph.dbp_types(cat) or set() if cat in taxgraph.nodes else set()
 
         for prop in property_counts:
             pred, val = prop
