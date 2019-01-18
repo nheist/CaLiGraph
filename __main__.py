@@ -3,18 +3,22 @@ import util
 import mailer
 import impl.category.axioms as cat_axioms
 from impl.category.evaluation import test_metrics
+import impl.list.store as list_store
 
 if __name__ == '__main__':
     try:
         util.get_logger().info('Starting CaLiGraph extraction..')
 
         # TASK: extraction of category axioms
-        cat_axioms.extract_axioms_and_relation_assertions()
+        # cat_axioms.extract_axioms_and_relation_assertions()
 
         # TASK: evaluation of assigned dbp-types to catgraph
         # graph = util.load_cache('catgraph_cyclefree')
         # graph._assign_resource_type_counts()
         # test_metrics(graph)
+
+        # TASK: listpage extraction
+        list_store.get_equivalent_listpage('http://dbpedia.org/resource/Category:Law_enforcement_agencies_of_Louisiana')
 
         mailer.send_success()
         util.get_logger().info('Finished CaLiGraph extraction.')
