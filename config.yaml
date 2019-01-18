@@ -175,11 +175,14 @@ cache:
   dbpedia_inverse_property_frequency_distribution:
     filename: 'dbpedia-inverse-property-frequency-distribution'
     version: 1
-  dbpedia_list_equivalents:
-    filename: 'dbpedia-list-equivalents'
+  dbpedia_listpages:
+    filename: 'dbpedia-listpages'
     version: 1
-  dbpedia_list_children:
-    filename: 'dbpedia-list-children'
+  dbpedia_listpage_equivalents:
+    filename: 'dbpedia-listpage-equivalents'
+    version: 1
+  dbpedia_listpage_children:
+    filename: 'dbpedia-listpage-children'
     version: 1
   wikidata_dbpedia_resource_mapping:
     filename: 'wikidata-dbpedia-resource-mapping'
