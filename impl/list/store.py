@@ -93,20 +93,15 @@ class WikiListpageParser:
     def __init__(self):
         self.processed_pages = 0
         self.list_markup = {}
-
         self.title = None
         self.namespace = None
-
         self.tag_content = ''
 
     def start(self, tag, _):
         if tag.endswith('}page'):
             self.title = None
             self.namespace = None
-
             self.processed_pages += 1
-            if self.processed_pages % 1000 == 0:
-                config.get_logger().debug('list_integration (parse_markup): processed {} pages'.format(self.processed_pages))
 
     def end(self, tag):
         if tag.endswith('}title'):
@@ -115,7 +110,6 @@ class WikiListpageParser:
             self.namespace = self.tag_content.strip()
         elif tag.endswith('}text') and self._valid_page():
             self.list_markup[self.title] = self.tag_content.strip()
-
         self.tag_content = ''
 
     def data(self, chars):
