@@ -14,6 +14,9 @@ def filter_important_words(text: str) -> set:
 
 
 def parse(text: str, skip_cache=False) -> Doc:
+    if skip_cache:
+        return parser(text)
+
     global __NLP_CACHE__, __NLP_CACHE_CHANGED__
     if '__NLP_CACHE__' not in globals():
         __NLP_CACHE__ = util.load_or_create_cache(SPACY_CACHE_ID, lambda: dict())
@@ -24,9 +27,8 @@ def parse(text: str, skip_cache=False) -> Doc:
         return __NLP_CACHE__[text_hash]
 
     parsed_text = parser(text)
-    if not skip_cache:
-        __NLP_CACHE__[text_hash] = parsed_text
-        __NLP_CACHE_CHANGED__ = True
+    __NLP_CACHE__[text_hash] = parsed_text
+    __NLP_CACHE_CHANGED__ = True
     return parsed_text
 
 
