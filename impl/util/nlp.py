@@ -7,6 +7,10 @@ SPACY_CACHE_ID = 'spacy_docs'
 
 # initialization
 parser = spacy.load('en_core_web_lg')
+# manually initializing stop words as they are missing in lg corpus
+for word in parser.Defaults.stop_words:
+    lex = parser.vocab[word]
+    lex.is_stop = True
 
 
 def filter_important_words(text: str) -> set:
