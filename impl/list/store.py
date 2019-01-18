@@ -25,7 +25,6 @@ def _create_equivalent_listpage_mapping() -> dict:
     name_to_list_mapping = {list_util.remove_listpage_prefix(lp).lower(): lp for lp in get_listpages()}
     equal_pagenames = set(name_to_category_mapping).intersection(set(name_to_list_mapping))
     cat_to_lp_mapping.update({name_to_category_mapping[name]: name_to_list_mapping[name] for name in equal_pagenames})
-    util.get_logger().debug(f'Found {len(cat_to_lp_mapping)} equivalent matches.')
 
     # 2) find equivalent lists by using topical concepts of categories and categories containing exactly one list
     for cat in categories.difference(set(cat_to_lp_mapping)):
@@ -43,11 +42,7 @@ def _create_equivalent_listpage_mapping() -> dict:
             listpage_lemmas = nlp_util.filter_important_words(list_util.list2name(lp))
             if cat_lemmas == listpage_lemmas:
                 cat_to_lp_mapping[cat] = lp
-                util.get_logger().debug(f'Mapping: {cat} -> {lp}')
                 break
-            else:
-                util.get_logger().debug(f'No map: {cat} -> {lp}')
-    util.get_logger().debug(f'Found {len(cat_to_lp_mapping)} overall matches.')
 
     return cat_to_lp_mapping
 
