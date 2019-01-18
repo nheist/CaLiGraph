@@ -30,9 +30,13 @@ def _create_equivalent_listpage_mapping() -> dict:
     # 2) find equivalent lists by using topical concepts of categories and categories containing exactly one list
     for cat in categories.difference(set(cat_to_lp_mapping)):
         # topical concepts
-        candidates = {topic for topic in cat_store.get_topics(cat) if list_util.is_listpage(topic)}
+        candidates = [topic for topic in cat_store.get_topics(cat) if list_util.is_listpage(topic)]
         # categories with exactly one list
-        candidates.update({page for page in cat_store.get_resources(cat) if list_util.is_listpage(page)})
+        listpage_members = {page for page in cat_store.get_resources(cat) if list_util.is_listpage(page)}
+        if len(listpage_members) == 1:
+            lp = listpage_members.pop()
+            if lp not in candidates:
+                candidates.append(lp)
 
         cat_lemmas = nlp_util.filter_important_words(cat_util.remove_category_prefix(cat))
         for lp in candidates:
