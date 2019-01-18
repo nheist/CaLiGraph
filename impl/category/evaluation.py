@@ -15,7 +15,7 @@ def test_metrics(graph: CategoryGraph):
     #columns = ['apply_impure_type_filtering', 'exclude_untyped_resources', 'prefer_resource_types', 'apply_type_depth_smoothing', 'resource_type_ratio', 'child_type_ratio', 'precision', 'recall', 'F1']
     columns = ['exclude_untyped_resources', 'prefer_resource_types', 'resource_type_ratio', 'child_type_ratio', 'precision', 'recall', 'F1']
     #data = list(itertools.product([True, False], [True, False], [True, False], [True, False], np.linspace(.4, 1, 7), np.linspace(.4, 1, 7), [0.0], [0.0], [0.0]))
-    data = list(itertools.product([True, False], [True, False], np.linspace(.4, 1, 7), np.linspace(.4, 1, 7), [0.0], [0.0], [0.0]))
+    data = list(itertools.product([False, True], [False, True], np.linspace(.4, 1, 7), np.linspace(.4, 1, 7), [0.0], [0.0], [0.0]))
     df = pd.DataFrame(data=data, columns=columns)
 
     for idx, row in enumerate(df.itertuples()):
@@ -46,7 +46,7 @@ def _get_metrics(graph: CategoryGraph):
     for cat in goldstandard['cat'].values:
         types_possible = set(goldstandard[goldstandard['cat'] == cat]['dbp_type'].values)
         types_actual = set(goldstandard[(goldstandard['cat'] == cat) & (goldstandard['label'] == 1)]['dbp_type'].values)
-        types_graph = graph.dbp_types(cat)
+        types_graph = graph.dbp_types(cat) or set()
 
         tp += len(types_actual.intersection(types_graph))
         fp += len(types_graph.difference(types_actual))
