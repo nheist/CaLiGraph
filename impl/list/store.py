@@ -38,9 +38,9 @@ def _create_equivalent_listpage_mapping() -> dict:
             if lp not in candidates:
                 candidates.append(lp)
 
-        cat_lemmas = nlp_util.filter_important_words(cat_util.remove_category_prefix(cat))
+        cat_lemmas = nlp_util.filter_important_words(cat_util.category2name(cat))
         for lp in candidates:
-            listpage_lemmas = nlp_util.filter_important_words(list_util.remove_listpage_prefix(lp))
+            listpage_lemmas = nlp_util.filter_important_words(list_util.list2name(lp))
             if cat_lemmas == listpage_lemmas:
                 cat_to_lp_mapping[cat] = lp
                 util.get_logger().debug(f'Mapping: {cat} -> {lp}')
