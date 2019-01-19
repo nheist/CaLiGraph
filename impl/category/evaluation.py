@@ -53,9 +53,9 @@ def _get_metrics(graph: CategoryGraph):
         fn += len(types_actual.difference(types_graph))
         tn += len(types_possible.difference(types_actual | types_graph))
 
-    precision = tp / (tp + fp)
-    recall = tp / (tp + fn)
-    f1 = (2 * precision * recall) / (precision + recall)
+    precision = tp / (tp + fp) if tp + fp > 0 else 0
+    recall = tp / (tp + fn) if tp + fn > 0 else 0
+    f1 = (2 * precision * recall) / (precision + recall) if precision + recall > 0 else 0
     return precision, recall, f1
 
 

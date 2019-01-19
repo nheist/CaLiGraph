@@ -18,7 +18,7 @@ category:
 logging:
   level: 'DEBUG'
   to_file: True
-  filename: 'listpage-equivalents' # 'cataxioms-materialized_v4' # 'dbptype-evaluation' #
+  filename: 'dbptype-evaluation' # 'listpage-equivalents' # 'cataxioms-materialized_v4' #
 
 mailer:
   sender: 'errors.nheist@gmail.com'
