@@ -1,9 +1,9 @@
 import traceback
 import util
 import mailer
+import impl.list.base as list_base
 # import impl.category.axioms as cat_axioms
 # from impl.category.evaluation import test_metrics
-import impl.list.base as list_base
 
 if __name__ == '__main__':
     try:
