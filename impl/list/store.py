@@ -15,7 +15,7 @@ def get_equivalent_category(listpage: str) -> str:
     if '__EQUIVALENT_CATEGORY_MAPPING__' not in globals():
         __EQUIVALENT_CATEGORY_MAPPING__ = defaultdict(lambda: None)
         get_equivalent_listpage('')  # initialise listpage mapping
-        for cat, lp in __EQUIVALENT_LISTPAGE_MAPPING__:
+        for cat, lp in __EQUIVALENT_LISTPAGE_MAPPING__.items():
             __EQUIVALENT_CATEGORY_MAPPING__[lp] = cat
 
     return __EQUIVALENT_CATEGORY_MAPPING__[listpage]
