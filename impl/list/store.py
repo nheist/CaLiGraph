@@ -7,6 +7,7 @@ import util
 import impl.util.nlp as nlp_util
 from lxml import etree
 from collections import defaultdict
+import bz2
 
 
 def get_equivalent_category(listpage: str) -> str:
@@ -97,8 +98,9 @@ def get_listpage_markup(listpage: str) -> str:
 def _fetch_listpage_markup():
     util.get_logger().info('CACHE: Parsing listpage markup')
     parser = etree.XMLParser(target=WikiListpageParser())
-    list_markup = etree.parse(util.get_data_file('files.dbpedia.pages'), parser)
-    return {dbp_util.name2resource(lp): markup for lp, markup in list_markup.items()}
+    with bz2.open(util.get_data_file('files.dbpedia.pages'), encoding='utf-8') as dbp_pages_file:
+        list_markup = etree.parse(dbp_pages_file, parser)
+        return {dbp_util.name2resource(lp): markup for lp, markup in list_markup.items()}
 
 
 class WikiListpageParser:
