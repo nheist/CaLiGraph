@@ -17,6 +17,6 @@ def _compute_parsed_listpages() -> list:
     listpage_markup = {lp: list_store.get_listpage_markup(lp) for lp in listpages}
 
     catgraph = cat_base.get_taxonomic_category_graph()
-    listpage_types = {lp: catgraph.dbp_types(list_store.get_equivalent_category(lp)) or set() for lp in listpages}
+    listpage_types = {lp: catgraph.dbp_types_maybe(list_store.get_equivalent_category(lp)) for lp in listpages}
 
     return [list_parser.parse_entries(listpage_markup[lp], listpage_types[lp]) for lp in listpages]

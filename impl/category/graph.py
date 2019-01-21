@@ -44,6 +44,9 @@ class CategoryGraph(BaseGraph):
     def dbp_types(self, category: str) -> set:
         return self._get_attr(category, self.PROPERTY_DBP_TYPES)
 
+    def dbp_types_maybe(self, category: str) -> set:
+        return self.dbp_types(category) or set() if category in self.nodes else set()
+
     def get_materialized_resources(self, category: str) -> set:
         if category not in self.nodes:
             return cat_store.get_resources(category)
