@@ -6,12 +6,24 @@ import impl.dbpedia.util as dbp_util
 import util
 import impl.util.nlp as nlp_util
 from lxml import etree
+from collections import defaultdict
+
+
+def get_equivalent_category(listpage: str) -> str:
+    global __EQUIVALENT_CATEGORY_MAPPING__
+    if '__EQUIVALENT_CATEGORY_MAPPING__' not in globals():
+        __EQUIVALENT_CATEGORY_MAPPING__ = defaultdict(lambda: None)
+        get_equivalent_listpage('')  # initialise listpage mapping
+        for cat, lp in __EQUIVALENT_LISTPAGE_MAPPING__:
+            __EQUIVALENT_CATEGORY_MAPPING__[lp] = cat
+
+    return __EQUIVALENT_CATEGORY_MAPPING__[listpage]
 
 
 def get_equivalent_listpage(category: str) -> str:
     global __EQUIVALENT_LISTPAGE_MAPPING__
     if '__EQUIVALENT_LISTPAGE_MAPPING__' not in globals():
-        __EQUIVALENT_LISTPAGE_MAPPING__ = util.load_or_create_cache('dbpedia_listpage_equivalents', _create_equivalent_listpage_mapping)
+        __EQUIVALENT_LISTPAGE_MAPPING__ = defaultdict(lambda: None, util.load_or_create_cache('dbpedia_listpage_equivalents', _create_equivalent_listpage_mapping))
 
     return __EQUIVALENT_LISTPAGE_MAPPING__[category]
 
@@ -77,12 +89,12 @@ def get_listpages() -> set:
 def get_listpage_markup(listpage: str) -> str:
     global __LISTPAGE_MARKUP__
     if '__LISTPAGE_MARKUP__' not in globals():
-        __LISTPAGE_MARKUP__ = util.load_or_create_cache('dbpedia_listpage_markup', _parse_listpage_markup)
+        __LISTPAGE_MARKUP__ = util.load_or_create_cache('dbpedia_listpage_markup', _fetch_listpage_markup)
 
     return __LISTPAGE_MARKUP__[listpage]
 
 
-def _parse_listpage_markup():
+def _fetch_listpage_markup():
     util.get_logger().info('CACHE: Parsing listpage markup')
     parser = etree.XMLParser(target=WikiListpageParser())
     list_markup = etree.parse(util.get_data_file('files.dbpedia.pages'), parser)
