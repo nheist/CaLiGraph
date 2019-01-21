@@ -3,7 +3,7 @@ import util
 import mailer
 import impl.category.axioms as cat_axioms
 from impl.category.evaluation import test_metrics
-import impl.list.store as list_store
+import impl.list.base as list_base
 
 if __name__ == '__main__':
     try:
@@ -13,14 +13,14 @@ if __name__ == '__main__':
         # cat_axioms.extract_axioms_and_relation_assertions()
 
         # TASK: evaluation of assigned dbp-types to catgraph
-        graph = util.load_cache('catgraph_cyclefree')
-        graph._assign_resource_type_counts()
-        test_metrics(graph)
+        # graph = util.load_cache('catgraph_cyclefree')
+        # graph._assign_resource_type_counts()
+        # test_metrics(graph)
 
-        # TASK: listpage extraction
-        # list_store.get_equivalent_listpage('http://dbpedia.org/resource/Category:Law_enforcement_agencies_of_Louisiana')
+        # TASK: listpage markup extraction
+        list_base.get_parsed_listpages()
 
-        mailer.send_success()
+        mailer.send_success('extracted listpage markup.')
         util.get_logger().info('Finished CaLiGraph extraction.')
     except Exception as e:
         error_msg = traceback.format_exc()
