@@ -184,6 +184,9 @@ cache:
   dbpedia_listpage_children:
     filename: 'dbpedia-listpage-children'
     version: 1
+  dbpedia_listpage_markup:
+    filename: 'dbpedia-listpage-markup'
+    version: 1
   dbpedia_listpage_parsed:
     filename: 'dbpedia-listpage-parsed'
     version: 2
