@@ -178,6 +178,7 @@ def _get_candidates(categories: set, category_statistics: dict, invalid_pred_typ
                     'conceptual_category': int(cat in conceptual_cats),
                     'match_score': type_frequencies[pred_type] if pred_type else 1
                     # count of types of resources in a category
+                    # whether predicate is functional
                 }
 
                 if use_materialized_category_graph:

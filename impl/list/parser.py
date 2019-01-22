@@ -94,7 +94,10 @@ def _convert_to_plain_text(wiki_text: WikiText) -> str:
         if tag._match is not None:
             result = result.replace(tag.string, _wrap_in_spaces(tag.contents))
     for link in wiki_text.external_links:
-        result = result.replace(link.string, _wrap_in_spaces(link.text) if link.text else ' ')
+        try:
+            result = result.replace(link.string, _wrap_in_spaces(link.text) if link.text else ' ')
+        except AttributeError:
+            result = result.replace(link.string, ' ')
     for link in wiki_text.wikilinks:
         result = result.replace(link.string, _wrap_in_spaces(link.text) if link.text else _wrap_in_spaces(link.target))
     for template in wiki_text.templates:
