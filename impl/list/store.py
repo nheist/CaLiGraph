@@ -63,6 +63,7 @@ def _create_equivalent_listpage_mapping() -> dict:
 
 
 def get_child_listpages(category: str) -> set:
+    # find child pages by looking at most common category of list items
     global __CHILD_LISTPAGES_MAPPING__
     if '__CHILD_LISTPAGES_MAPPING__' not in globals():
         __CHILD_LISTPAGES_MAPPING__ = util.load_or_create_cache('dbpedia_listpage_children', _create_child_listpages_mapping)

@@ -159,7 +159,7 @@ cache:
     version: 1
   dbpedia_functional_predicates:
     filename: 'dbpedia-functional-predicates'
-    version: 1
+    version: 2  # version 1: strict; version 2: 5% tolerance
   dbpedia_categories:
     filename: 'dbpedia-categories'
     version: 1
