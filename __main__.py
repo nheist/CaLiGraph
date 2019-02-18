@@ -10,7 +10,13 @@ if __name__ == '__main__':
         util.get_logger().info('Starting CaLiGraph extraction..')
 
         # TASK: extraction of category axioms
-        cat_axioms.extract_axioms_and_relation_assertions()
+        #cat_axioms.extract_axioms_and_relation_assertions()
+        # TASK: create cataxioms data
+        def get_data_X_y(version):
+            candidates = util.load_or_create_cache('cataxioms_candidates', cat_axioms._compute_candidate_axioms, version=version)
+            X, y = cat_axioms._create_goldstandard(candidates)
+            return candidates, X, y
+        get_data_X_y('2a')
 
         # TASK: evaluation of assigned dbp-types to catgraph
         # graph = util.load_cache('catgraph_cyclefree')
