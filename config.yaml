@@ -3,7 +3,7 @@ caligraph:
 category:
   root_category: 'http://dbpedia.org/resource/Category:Main_topic_classifications'
   axioms:
-    use_materialized_category_graph: True
+    use_materialized_category_graph: False
     pos_weight: 14
   dbp_types:
     exclude_untyped_resources: False
@@ -18,7 +18,7 @@ category:
 logging:
   level: 'DEBUG'
   to_file: True
-  filename: 'lexicalisations' # 'cataxioms-materialized_v4' # 'dbptype-evaluation' #
+  filename: 'cataxioms' # 'cataxioms-materialized_v4' # 'dbptype-evaluation' #
 
 mailer:
   sender: 'errors.nheist@gmail.com'
@@ -101,6 +101,7 @@ results:
 
 cache:
   # version 2: added resource types from sdtyped + lhd
+  # version 2a: additional attributes for cataxioms (is_func, match_score, lcwa_score)
   # version 3: cataxioms with materialized category graph
   # version 4: additional attributes for cataxioms (match_score, graphtype_fit, graphtype_conflict, pv_coverage)
   catgraph_conceptual:
@@ -198,7 +199,7 @@ cache:
     version: 1
   cataxioms_category_statistics:
     filename: 'cataxioms-category-statistics'
-    version: 3
+    version: 2
   cataxioms_candidates:
     filename: 'cataxioms-candidates'
-    version: 4
+    version: '2a'

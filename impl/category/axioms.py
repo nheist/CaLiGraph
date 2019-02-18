@@ -171,14 +171,14 @@ def _get_candidates(categories: set, category_statistics: dict, invalid_pred_typ
                     'pred': pred,
                     'val': val,
                     'is_inv': int(is_inv),
+                    'is_func': int(dbp_store.is_functional(pred)),
+                    'is_conceptual': int(cat in conceptual_cats),
                     'pv_count': property_counts[prop],
                     'pv_freq': property_frequencies[prop],
                     'lex_score': lex_score,
-                    'conflict_score': sum([type_frequencies[t] for t in invalid_pred_types[pred]]) + (1 - (property_counts[prop] / predicate_counts[pred])),
-                    'conceptual_category': int(cat in conceptual_cats),
-                    'match_score': type_frequencies[pred_type] if pred_type else 1
-                    # count of types of resources in a category
-                    # whether predicate is functional
+                    'match_score': type_frequencies[pred_type] if pred_type else 1, # how well does the domain/range of the relation fit to the resources in cat
+                    'lcwa_score': property_counts[prop] / predicate_counts[pred],
+                    'conflict_score': sum([type_frequencies[t] for t in invalid_pred_types[pred]])
                 }
 
                 if use_materialized_category_graph:

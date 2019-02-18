@@ -2,7 +2,7 @@ import traceback
 import util
 import mailer
 import impl.list.base as list_base
-# import impl.category.axioms as cat_axioms
+import impl.category.axioms as cat_axioms
 # from impl.category.evaluation import test_metrics
 
 if __name__ == '__main__':
@@ -10,7 +10,7 @@ if __name__ == '__main__':
         util.get_logger().info('Starting CaLiGraph extraction..')
 
         # TASK: extraction of category axioms
-        # cat_axioms.extract_axioms_and_relation_assertions()
+        cat_axioms.extract_axioms_and_relation_assertions()
 
         # TASK: evaluation of assigned dbp-types to catgraph
         # graph = util.load_cache('catgraph_cyclefree')
@@ -18,9 +18,9 @@ if __name__ == '__main__':
         # test_metrics(graph)
 
         # TASK: listpage markup extraction
-        list_base.get_parsed_listpages()
+        #list_base.get_parsed_listpages()
 
-        mailer.send_success('extracted listpage markup.')
+        mailer.send_success('extracted cataxioms markup.')
         util.get_logger().info('Finished CaLiGraph extraction.')
     except Exception as e:
         error_msg = traceback.format_exc()
