@@ -44,7 +44,7 @@ def get_children(category: str) -> set:
         initializer = lambda: rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.categories')], rdf_util.PREDICATE_BROADER, reverse_key=True)
         __CHILDREN__ = util.load_or_create_cache('dbpedia_category_children', initializer)
 
-    return __CHILDREN__[category]
+    return __CHILDREN__[category].difference({category})
 
 
 def get_redirects(category: str) -> set:

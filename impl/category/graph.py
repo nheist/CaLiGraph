@@ -58,7 +58,7 @@ class CategoryGraph(BaseGraph):
 
     @classmethod
     def create_from_dbpedia(cls):
-        edges = [(cat, subcat) for cat in cat_store.get_all_cats() for subcat in cat_store.get_children(cat) if cat != subcat]
+        edges = [(cat, subcat) for cat in cat_store.get_all_cats() for subcat in cat_store.get_children(cat)]
         return CategoryGraph(nx.DiGraph(incoming_graph_data=edges))
 
     # connectivity
