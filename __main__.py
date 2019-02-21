@@ -16,7 +16,7 @@ if __name__ == '__main__':
             candidates = util.load_or_create_cache('cataxioms_candidates', cat_axioms._compute_candidate_axioms, version=version)
             X, y = cat_axioms._create_goldstandard(candidates)
             return candidates, X, y
-        get_data_X_y('2a')
+        get_data_X_y('2b')
 
         # TASK: evaluation of assigned dbp-types to catgraph
         # graph = util.load_cache('catgraph_cyclefree')

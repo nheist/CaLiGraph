@@ -145,7 +145,8 @@ def _get_invalid_ranges() -> dict:
 def _get_candidates(categories: set, category_statistics: dict, invalid_pred_types: dict, is_inv: bool) -> list:
     use_materialized_category_graph = util.get_config('category.axioms.use_materialized_category_graph')
 
-    conceptual_cats = cat_base.get_conceptual_category_graph().nodes
+    cat_graph = cat_base.get_conceptual_category_graph()
+    conceptual_cats = cat_graph.nodes
     candidates = []
     for idx, cat in enumerate(categories):
         if idx % 1000 == 0:
@@ -173,6 +174,7 @@ def _get_candidates(categories: set, category_statistics: dict, invalid_pred_typ
                     'is_inv': int(is_inv),
                     'is_func': int(dbp_store.is_functional(pred)),
                     'is_conceptual': int(cat in conceptual_cats),
+                    'is_pred_in_parent': int(any(dbp_store.get_label(pred).lower() in cat_store.get_label(pc).lower() for pc in cat_graph.predecessors(cat))),
                     'pv_count': property_counts[prop],
                     'pv_freq': property_frequencies[prop],
                     'lex_score': lex_score,

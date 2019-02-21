@@ -102,6 +102,7 @@ results:
 cache:
   # version 2: added resource types from sdtyped + lhd
   # version 2a: additional attributes for cataxioms (is_func, match_score, lcwa_score)
+  # version 2b: additional attribute for cataxioms (is_pred_in_parent)
   # version 3: cataxioms with materialized category graph
   # version 4: additional attributes for cataxioms (match_score, graphtype_fit, graphtype_conflict, pv_coverage)
   catgraph_conceptual:
