@@ -177,6 +177,15 @@ cache:
   dbpedia_inverse_property_frequency_distribution:
     filename: 'dbpedia-inverse-property-frequency-distribution'
     version: 1
+  dbpedia_heuristic_domains:
+    filename: 'dbpedia-heuristic-domains'
+    version: 1
+  dbpedia_heuristic_ranges:
+    filename: 'dbpedia-heuristic-ranges'
+    version: 1
+  dbpedia_heuristic_disjoint_types:
+    filename: 'dbpedia-heuristic-disjoint-types'
+    version: 1
   dbpedia_listpages:
     filename: 'dbpedia-listpages'
     version: 1
