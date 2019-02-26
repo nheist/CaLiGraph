@@ -12,12 +12,8 @@ def get_all_cats() -> set:
     return __CATEGORIES__
 
 
-def get_label(category: str) -> str:
-    global __LABELS__
-    if '__LABELS__' not in globals():
-        __LABELS__ = rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.categories')], rdf_util.PREDICATE_SKOS_LABEL)
-
-    return __LABELS__[category] if category in __LABELS__ else cat_util.category2name(category)
+def get_usable_cats() -> set:
+    return {cat for cat in get_all_cats() if is_usable(cat)}
 
 
 def is_usable(category: str) -> bool:
@@ -30,6 +26,14 @@ def is_usable(category: str) -> bool:
     if any(indicator in lower_category for indicator in indicators):
         return False
     return True
+
+
+def get_label(category: str) -> str:
+    global __LABELS__
+    if '__LABELS__' not in globals():
+        __LABELS__ = rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.categories')], rdf_util.PREDICATE_SKOS_LABEL)
+
+    return __LABELS__[category] if category in __LABELS__ else cat_util.category2name(category)
 
 
 def get_resources(category: str) -> set:
