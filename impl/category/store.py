@@ -20,6 +20,18 @@ def get_label(category: str) -> str:
     return __LABELS__[category] if category in __LABELS__ else cat_util.category2name(category)
 
 
+def is_usable(category: str) -> bool:
+    # filtering maintenance categories
+    if category in get_maintenance_cats():
+        return False
+    # filtering other administrative categories
+    indicators = ['wikipedia', 'wikiprojects', 'lists', 'redirects', 'mediawiki', 'template', 'user', 'portal', 'categories', 'articles', 'pages', 'navigational']
+    lower_category = category.lower()
+    if any(indicator in lower_category for indicator in indicators):
+        return False
+    return True
+
+
 def get_resources(category: str) -> set:
     global __RESOURCES__
     if '__RESOURCES__' not in globals():
