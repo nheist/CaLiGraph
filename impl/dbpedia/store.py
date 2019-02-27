@@ -36,6 +36,8 @@ def get_surface_score(surface_resource: str, dependent_resource: str) -> float:
         __RESOURCE_SURFACE_SCORES__ = util.load_or_create_cache('dbpedia_resource_surface_scores', _compute_resource_surface_scores)
 
     if dbp_util.is_dbp_resource(surface_resource):
+        if get_label(surface_resource).lower() in dependent_resource.lower():
+            return 1
         for surface_form, score in sorted(__RESOURCE_SURFACE_SCORES__[surface_resource].items(), key=operator.itemgetter(1), reverse=True):
             if surface_form in dependent_resource.lower():
                 return score
