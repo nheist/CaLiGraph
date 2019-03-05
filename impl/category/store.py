@@ -21,7 +21,7 @@ def is_usable(category: str) -> bool:
     if category in get_maintenance_cats():
         return False
     # filtering other administrative categories
-    indicators = ['wikipedia', 'wikiprojects', 'lists', 'redirects', 'mediawiki', 'template', 'user', 'portal', 'categories', 'articles', 'pages', 'navigational']
+    indicators = ['wikipedia', 'wikiproject', 'lists', 'redirects', 'mediawiki', 'template', 'user', 'portal', 'categories', 'articles', 'pages', 'navigational']
     lower_category = category.lower()
     if any(indicator in lower_category for indicator in indicators):
         return False
