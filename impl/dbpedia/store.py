@@ -362,11 +362,11 @@ def _get_type_graph() -> nx.DiGraph:
         subtype_mapping = rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_SUBCLASS_OF, reverse_key=True)
         # add missing types (i.e. those, that do not have subclasses at all)
         all_types = rdf_util.create_set_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_TYPE, rdf_util.CLASS_OWL_CLASS)
-        # remove non-dbpedia types from ontology
-        all_types = {t for t in all_types if dbp_util.is_dbp_type(t) or t == rdf_util.CLASS_OWL_THING}
         subtype_mapping.update({et: set() for t in all_types for et in get_equivalent_types(t) if et not in subtype_mapping})
         # completing subtypes with subtypes of equivalent types
         subtype_mapping = {t: {est for et in get_equivalent_types(t) for st in subtype_mapping[et] for est in get_equivalent_types(st)} for t in set(subtype_mapping)}
+        # remove non-dbpedia types from ontology
+        subtype_mapping = {t: {st for st in sts if dbp_util.is_dbp_type(st) or st == rdf_util.CLASS_OWL_THING} for t, sts in subtype_mapping.items() if dbp_util.is_dbp_type(t) or t == rdf_util.CLASS_OWL_THING}
         __TYPE_GRAPH__ = nx.DiGraph(incoming_graph_data=[(t, st) for t, sts in subtype_mapping.items() for st in sts])
 
     return __TYPE_GRAPH__
