@@ -211,10 +211,13 @@ def is_object_property(dbp_predicate: str) -> bool:
     if '__OBJECT_PROPERTY__' not in globals():
         __OBJECT_PROPERTY__ = defaultdict(lambda: False)
     if dbp_predicate not in __OBJECT_PROPERTY__:
-        for props in get_resource_property_mapping().values():
-            if dbp_predicate in props:
-                __OBJECT_PROPERTY__[dbp_predicate] = dbp_util.is_dbp_resource(props[dbp_predicate].pop())
-                break
+        if get_range(dbp_predicate):
+            __OBJECT_PROPERTY__[dbp_predicate] = dbp_util.is_dbp_type(get_range(dbp_predicate))
+        else:
+            for props in get_resource_property_mapping().values():
+                if dbp_predicate in props:
+                    __OBJECT_PROPERTY__[dbp_predicate] = dbp_util.is_dbp_resource(props[dbp_predicate].pop())
+                    break
 
     return __OBJECT_PROPERTY__[dbp_predicate]
 
