@@ -206,6 +206,19 @@ def get_equivalent_predicates(dbp_predicate: str) -> set:
     return __EQUIVALENT_PREDICATE__[dbp_predicate]
 
 
+def is_object_property(dbp_predicate: str) -> bool:
+    global __OBJECT_PROPERTY__
+    if '__OBJECT_PROPERTY__' not in globals():
+        __OBJECT_PROPERTY__ = defaultdict(lambda: False)
+    if dbp_predicate not in __OBJECT_PROPERTY__:
+        for _, props in get_resource_property_mapping():
+            if dbp_predicate in props:
+                __OBJECT_PROPERTY__[dbp_predicate] = dbp_util.is_dbp_resource(props[dbp_predicate].pop())
+                break
+
+    return __OBJECT_PROPERTY__[dbp_predicate]
+
+
 def is_functional(dbp_predicate: str) -> bool:
     global __PREDICATE_FUNCTIONAL__
     if '__PREDICATE_FUNCTIONAL__' not in globals():
