@@ -13,7 +13,10 @@ import numpy as np
 
 
 def get_resources() -> set:
-    return set(_get_label_mapping())
+    global __RESOURCES__
+    if '__RESOURCES__' not in globals():
+        __RESOURCES__ = set(_get_label_mapping()) | set(get_resource_property_mapping())
+    return __RESOURCES__
 
 
 def get_label(dbp_object: str) -> str:
