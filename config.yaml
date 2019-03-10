@@ -79,6 +79,9 @@ files:
     redirects:
       filename: 'redirects_en.ttl.bz2'
       url: 'http://downloads.dbpedia.org/2016-10/core-i18n/en/redirects_en.ttl.bz2'
+    disambiguations:
+      filename: 'disambiguations_en.ttl.bz2'
+      url: 'http://downloads.dbpedia.org/2016-10/core-i18n/en/disambiguations_en.ttl.bz2'
     maintenance_categories:
       filename: 'maintenance_categories.ttl.bz2'
   wikidata:
@@ -158,6 +161,9 @@ cache:
     version: 1
   dbpedia_resource_redirects:
     filename: 'dbpedia-resource-redirects'
+    version: 1
+  dbpedia_resource_disambiguations:
+    filename: 'dbpedia-resource-disambiguations'
     version: 1
   dbpedia_functional_predicates:
     filename: 'dbpedia-functional-predicates'

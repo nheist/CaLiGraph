@@ -125,6 +125,14 @@ def resolve_redirect(dbp_resource: str, visited=None) -> str:
     return dbp_resource
 
 
+def get_disambiguations(dbp_resource: str) -> set:
+    global __DISAMBIGUATIONS__
+    if '__DISAMBIGUATIONS__' not in globals():
+        initializer = lambda: rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.disambiguations')], rdf_util.PREDICATE_DISAMBIGUATES)
+        __DISAMBIGUATIONS__ = defaultdict(set, util.load_or_create_cache('dbpedia_resource_disambiguations', initializer))
+
+    return __DISAMBIGUATIONS__[dbp_resource]
+
 # DBpedia property
 
 
