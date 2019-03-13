@@ -84,7 +84,10 @@ def _compute_inverse_surface_forms():
         for res in set(resources.keys()):
             redirect_res = resolve_redirect(res)
             if res != redirect_res:
-                inverse_surface_form_dict[surface_form][redirect_res] += inverse_surface_form_dict[surface_form][res]
+                if redirect_res in inverse_surface_form_dict[surface_form]:
+                    inverse_surface_form_dict[surface_form][redirect_res] += inverse_surface_form_dict[surface_form][res]
+                else:
+                    inverse_surface_form_dict[surface_form][redirect_res] = inverse_surface_form_dict[surface_form][res]
                 del inverse_surface_form_dict[surface_form][res]
     return inverse_surface_form_dict
 
