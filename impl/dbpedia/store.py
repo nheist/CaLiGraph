@@ -71,6 +71,14 @@ def get_surface_forms(dbp_resource: str) -> dict:
     return __RESOURCE_SURFACE_FORMS__[dbp_resource]
 
 
+def get_inverse_surface_forms(text: str) -> dict:
+    global __RESOURCE_INVERSE_SURFACE_FORMS__
+    if '__RESOURCE_INVERSE_SURFACE_FORMS__' not in globals():
+        initializer = lambda: rdf_util.create_multi_val_freq_dict_from_rdf([util.get_data_file('files.dbpedia.anchor_texts')], rdf_util.PREDICATE_ANCHOR_TEXT, reverse_key=True)
+        __RESOURCE_INVERSE_SURFACE_FORMS__ = util.load_or_create_cache('dbpedia_resource_inverse_surface_forms', initializer)
+    return __RESOURCE_INVERSE_SURFACE_FORMS__[text] if text in __RESOURCE_INVERSE_SURFACE_FORMS__ else {}
+
+
 def get_types(dbp_resource: str) -> set:
     return {t for t in _get_resource_type_mapping()[dbp_resource] if dbp_util.is_dbp_type(t)}
 

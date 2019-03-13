@@ -147,6 +147,9 @@ cache:
   dbpedia_resource_surface_scores:
     filename: 'dbpedia-resource-surface-scores'
     version: 1
+  dbpedia_resource_inverse_surface_forms:
+    filename: 'dbpedia-resource-inverse-surface-forms'
+    version: 1
   dbpedia_resource_categories:
     filename: 'dbpedia-resource-categories'
     version: 1

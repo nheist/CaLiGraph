@@ -88,14 +88,17 @@ def create_multi_val_dict_from_rdf(filepaths: list, valid_pred: str, reverse_key
     return data_dict
 
 
-def create_multi_val_freq_dict_from_rdf(filepaths: list, valid_pred: str) -> dict:
+def create_multi_val_freq_dict_from_rdf(filepaths: list, valid_pred: str, reverse_key=False) -> dict:
     data_dict = defaultdict(functools.partial(defaultdict, float))
     for fp in filepaths:
         for sub, pred, obj in parse_triples_from_file(fp):
             if pred == valid_pred:
                 cleaned_obj = ' '.join(obj.lower().split())
                 if cleaned_obj:
-                    data_dict[sub][cleaned_obj] += 1
+                    if reverse_key:
+                        data_dict[cleaned_obj][sub] += 1
+                    else:
+                        data_dict[sub][cleaned_obj] += 1
 
     return defaultdict(dict, {sub: {obj: count / sum(data_dict[sub].values()) for obj, count in data_dict[sub].items()} for sub in data_dict})
 
