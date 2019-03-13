@@ -81,7 +81,7 @@ def get_inverse_surface_forms(text: str) -> dict:
 def _compute_inverse_surface_forms():
     inverse_surface_form_dict = rdf_util.create_multi_val_freq_dict_from_rdf([util.get_data_file('files.dbpedia.anchor_texts')], rdf_util.PREDICATE_ANCHOR_TEXT, reverse_key=True)
     for surface_form, resources in inverse_surface_form_dict.items():
-        for res in resources:
+        for res in set(resources.keys()):
             redirect_res = resolve_redirect(res)
             if res != redirect_res:
                 inverse_surface_form_dict[surface_form][redirect_res] += inverse_surface_form_dict[surface_form][res]
