@@ -137,9 +137,9 @@ def resolve_redirect(dbp_resource: str, visited=None) -> str:
         __REDIRECTS__ = util.load_or_create_cache('dbpedia_resource_redirects', initializer)
 
     if dbp_resource in __REDIRECTS__:
-        if dbp_resource != __REDIRECTS__[dbp_resource] and visited and dbp_resource not in visited:
-            visited = (visited or set()) | {dbp_resource}
-            return resolve_redirect(__REDIRECTS__[dbp_resource], visited)
+        visited = visited or set()
+        if dbp_resource not in visited:
+            return resolve_redirect(__REDIRECTS__[dbp_resource], visited | {dbp_resource})
     return dbp_resource
 
 
