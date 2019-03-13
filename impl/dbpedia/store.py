@@ -74,9 +74,19 @@ def get_surface_forms(dbp_resource: str) -> dict:
 def get_inverse_surface_forms(text: str) -> dict:
     global __RESOURCE_INVERSE_SURFACE_FORMS__
     if '__RESOURCE_INVERSE_SURFACE_FORMS__' not in globals():
-        initializer = lambda: rdf_util.create_multi_val_freq_dict_from_rdf([util.get_data_file('files.dbpedia.anchor_texts')], rdf_util.PREDICATE_ANCHOR_TEXT, reverse_key=True)
-        __RESOURCE_INVERSE_SURFACE_FORMS__ = util.load_or_create_cache('dbpedia_resource_inverse_surface_forms', initializer)
+        __RESOURCE_INVERSE_SURFACE_FORMS__ = util.load_or_create_cache('dbpedia_resource_inverse_surface_forms', _compute_inverse_surface_forms)
     return __RESOURCE_INVERSE_SURFACE_FORMS__[text] if text in __RESOURCE_INVERSE_SURFACE_FORMS__ else {}
+
+
+def _compute_inverse_surface_forms():
+    inverse_surface_form_dict = rdf_util.create_multi_val_freq_dict_from_rdf([util.get_data_file('files.dbpedia.anchor_texts')], rdf_util.PREDICATE_ANCHOR_TEXT, reverse_key=True)
+    for surface_form, resources in inverse_surface_form_dict.items():
+        for res in resources:
+            redirect_res = resolve_redirect(res)
+            if res != redirect_res:
+                inverse_surface_form_dict[surface_form][redirect_res] += inverse_surface_form_dict[surface_form][res]
+                del inverse_surface_form_dict[surface_form][res]
+    return inverse_surface_form_dict
 
 
 def get_types(dbp_resource: str) -> set:
