@@ -116,10 +116,10 @@ cache:
     version: 1
   catgraph_dbp_typed:
     filename: 'catgraph-dbp-typed'
-    version: 2
+    version: 1
   catgraph_taxonomic:
     filename: 'catgraph-taxonomic'
-    version: 2
+    version: 1
   categories_conceptual:
     filename: 'categories-conceptual'
     version: 1
@@ -131,13 +131,13 @@ cache:
     version: 1
   dbpedia_resource_type_cooccurrence_matrix:
     filename: 'dbpedia-resource-type-cooccurrence-matrix'
-    version: 2
+    version: 1
   dbpedia_resource_type_frequency:
     filename: 'dbpedia-resource-type-frequency'
-    version: 2
+    version: 1
   dbpedia_resource_type_mapping:
     filename: 'dbpedia-resource-type-mapping'
-    version: 2
+    version: 1
   dbpedia_resource_labels:
     filename: 'dbpedia-resource-labels'
     version: 1
@@ -218,7 +218,7 @@ cache:
     version: 1
   cataxioms_category_statistics:
     filename: 'cataxioms-category-statistics'
-    version: 2
+    version: 1
   cataxioms_candidates:
     filename: 'cataxioms-candidates'
     version: '2a'
