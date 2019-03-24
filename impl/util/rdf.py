@@ -23,6 +23,7 @@ PREDICATE_COMMENT = 'http://www.w3.org/2000/01/rdf-schema#comment'
 PREDICATE_SAME_AS = 'http://www.w3.org/2002/07/owl#sameAs'
 PREDICATE_EQUIVALENT_PROPERTY = 'http://www.w3.org/2002/07/owl#equivalentProperty'
 PREDICATE_ANCHOR_TEXT = 'http://dbpedia.org/ontology/wikiPageWikiLinkText'
+PREDICATE_ABSTRACT = 'http://dbpedia.org/ontology/abstract'
 
 # classes
 CLASS_OWL_THING = 'http://www.w3.org/2002/07/owl#Thing'

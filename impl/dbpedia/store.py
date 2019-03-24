@@ -38,6 +38,15 @@ def _get_label_mapping() -> dict:
     return __RESOURCE_LABEL_MAPPING__
 
 
+def get_abstract(dbp_resource: str) -> str:
+    global __RESOURCE_ABSTRACTS__
+    if '__RESOURCE_ABSTRACTS__' not in globals():
+        initializer = lambda: rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.long_abstracts')], rdf_util.PREDICATE_ABSTRACT)
+        __RESOURCE_ABSTRACTS__ = util.load_or_create_cache('dbpedia_resource_abstracts', initializer)
+
+    return __RESOURCE_ABSTRACTS__[dbp_resource] if dbp_resource in __RESOURCE_ABSTRACTS__ else None
+
+
 def get_surface_score(surface_resource: str, dependent_resource: str) -> float:
     global __RESOURCE_SURFACE_SCORES__
     if '__RESOURCE_SURFACE_SCORES__' not in globals():

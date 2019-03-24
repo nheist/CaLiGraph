@@ -40,6 +40,9 @@ files:
     labels:
       filename: 'labels_en.ttl.bz2'
       url: 'http://downloads.dbpedia.org/2016-10/core-i18n/en/labels_en.ttl.bz2'
+    long_abstracts:
+      filename: 'long_abstracts_en.ttl.bz2'
+      url: 'http://downloads.dbpedia.org/2016-10/core-i18n/en/long_abstracts_en.ttl.bz2'
     categories:
       filename: 'skos_categories_en.ttl.bz2'
       url: 'http://downloads.dbpedia.org/2016-10/core-i18n/en/skos_categories_en.ttl.bz2'
@@ -140,6 +143,9 @@ cache:
     version: 1
   dbpedia_resource_labels:
     filename: 'dbpedia-resource-labels'
+    version: 1
+  dbpedia_resource_abstracts:
+    filename: 'dbpedia-resource-abstracts'
     version: 1
   dbpedia_resource_surface_forms:
     filename: 'dbpedia-resource-surface-forms'
