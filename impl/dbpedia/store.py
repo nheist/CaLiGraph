@@ -284,6 +284,13 @@ def get_all_predicates() -> set:
     return __PREDICATES__
 
 
+def get_comment(dbp_ontology_item: str) -> str:
+    global __COMMENTS__
+    if '__COMMENTS__' not in globals():
+        __COMMENTS__ = rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_COMMENT)
+
+    return __COMMENTS__[dbp_ontology_item] if dbp_ontology_item in __COMMENTS__ else ''
+
 # DBpedia types
 
 def get_all_types() -> set:
