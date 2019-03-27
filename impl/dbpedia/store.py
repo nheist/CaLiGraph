@@ -22,7 +22,7 @@ def get_resources() -> set:
 def get_label(dbp_object: str) -> str:
     global __RESOURCE_LABELS__
     if '__RESOURCE_LABELS__' not in globals():
-        __RESOURCE_LABELS__ = _get_label_mapping()
+        __RESOURCE_LABELS__ = dict(_get_label_mapping())
         __RESOURCE_LABELS__.update(rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_LABEL))
     return __RESOURCE_LABELS__[dbp_object] if dbp_object in __RESOURCE_LABELS__ else dbp_util.object2name(dbp_object)
 
