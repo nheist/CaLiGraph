@@ -20,13 +20,11 @@ def get_resources() -> set:
 
 
 def get_label(dbp_object: str) -> str:
-    resource_labels = _get_label_mapping()
-    ontology_labels = rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_LABEL)
-    if dbp_object in resource_labels:
-        return resource_labels[dbp_object]
-    if dbp_object in ontology_labels:
-        return ontology_labels[dbp_object]
-    return dbp_util.object2name(dbp_object)
+    global __RESOURCE_LABELS__
+    if '__RESOURCE_LABELS__' not in globals():
+        __RESOURCE_LABELS__ = _get_label_mapping()
+        __RESOURCE_LABELS__.update(rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_LABEL))
+    return __RESOURCE_LABELS__[dbp_object] if dbp_object in __RESOURCE_LABELS__ else dbp_util.object2name(dbp_object)
 
 
 def _get_label_mapping() -> dict:
