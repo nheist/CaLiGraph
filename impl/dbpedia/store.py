@@ -27,6 +27,20 @@ def get_label(dbp_object: str) -> str:
     return __RESOURCE_LABELS__[dbp_object] if dbp_object in __RESOURCE_LABELS__ else dbp_util.object2name(dbp_object)
 
 
+def get_label_entity(label: str) -> str:
+    global __RESOURCE_INVERSE_LABELS__
+    global __ONTOLOGY_INVERSE_LABELS__
+    if '__RESOURCE_INVERSE_LABELS__' not in globals():
+        __RESOURCE_INVERSE_LABELS__ = {v: k for k, v in _get_label_mapping().items()}
+        ontology_labels = rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_LABEL)
+        __ONTOLOGY_INVERSE_LABELS__ = {v:k for k, v in ontology_labels.items()}
+    if label in __ONTOLOGY_INVERSE_LABELS__:
+        return __ONTOLOGY_INVERSE_LABELS__[label]
+    if label in __RESOURCE_INVERSE_LABELS__:
+        return __RESOURCE_INVERSE_LABELS__[label]
+    return dbp_util.name2resource(label)
+
+
 def _get_label_mapping() -> dict:
     global __RESOURCE_LABEL_MAPPING__
     if '__RESOURCE_LABEL_MAPPING__' not in globals():

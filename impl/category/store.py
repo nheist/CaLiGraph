@@ -36,6 +36,14 @@ def get_label(category: str) -> str:
     return __LABELS__[category] if category in __LABELS__ else cat_util.category2name(category)
 
 
+def get_label_category(label: str) -> str:
+    global __INVERSE_LABELS__
+    if '__INVERSE_LABELS__' not in globals():
+        labels = rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.categories')], rdf_util.PREDICATE_SKOS_LABEL)
+        __INVERSE_LABELS__ = {v: k for k, v in labels.items()}
+    return __INVERSE_LABELS__[label] if label in __INVERSE_LABELS__ else cat_util.name2category(label)
+
+
 def get_resources(category: str) -> set:
     global __RESOURCES__
     if '__RESOURCES__' not in globals():
