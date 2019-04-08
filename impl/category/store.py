@@ -29,28 +29,28 @@ def is_usable(category: str) -> bool:
 
 
 def get_label(category: str) -> str:
-    global __LABELS__
-    if '__LABELS__' not in globals():
-        __LABELS__ = rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.categories')], rdf_util.PREDICATE_SKOS_LABEL)
+    global __CATEGORY_LABELS__
+    if '__CATEGORY_LABELS__' not in globals():
+        __CATEGORY_LABELS__ = rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.categories')], rdf_util.PREDICATE_SKOS_LABEL)
 
-    return __LABELS__[category] if category in __LABELS__ else cat_util.category2name(category)
+    return __CATEGORY_LABELS__[category] if category in __CATEGORY_LABELS__ else cat_util.category2name(category)
 
 
 def get_label_category(label: str) -> str:
-    global __INVERSE_LABELS__
-    if '__INVERSE_LABELS__' not in globals():
+    global __INVERSE_CATEGORY_LABELS__
+    if '__INVERSE_CATEGORY_LABELS__' not in globals():
         labels = rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.categories')], rdf_util.PREDICATE_SKOS_LABEL)
-        __INVERSE_LABELS__ = {v: k for k, v in labels.items()}
-    return __INVERSE_LABELS__[label] if label in __INVERSE_LABELS__ else cat_util.name2category(label)
+        __INVERSE_CATEGORY_LABELS__ = {v: k for k, v in labels.items()}
+    return __INVERSE_CATEGORY_LABELS__[label] if label in __INVERSE_CATEGORY_LABELS__ else cat_util.name2category(label)
 
 
 def get_resources(category: str) -> set:
-    global __RESOURCES__
-    if '__RESOURCES__' not in globals():
+    global __CATEGORY_RESOURCES__
+    if '__CATEGORY_RESOURCES__' not in globals():
         initializer = lambda: rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.article_categories')], rdf_util.PREDICATE_SUBJECT, reverse_key=True)
-        __RESOURCES__ = util.load_or_create_cache('dbpedia_category_resources', initializer)
+        __CATEGORY_RESOURCES__ = util.load_or_create_cache('dbpedia_category_resources', initializer)
 
-    return __RESOURCES__[category]
+    return __CATEGORY_RESOURCES__[category]
 
 
 def get_resource_to_cats_mapping() -> dict:
