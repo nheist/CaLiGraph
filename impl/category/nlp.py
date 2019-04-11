@@ -14,6 +14,7 @@ def is_conceptual(category: str) -> bool:
 
     if category not in __CONCEPTUAL_CATEGORIES__:
         label = cat_store.get_label(category)
+        label = label[0].lower() + label[1:]
         label_chunks = list(nlp_util.parse(label).noun_chunks)
         __CONCEPTUAL_CATEGORIES__[category] = label_chunks and label.startswith(label_chunks[0].text) and label_chunks[0][-1].tag_ == 'NNS'
 
