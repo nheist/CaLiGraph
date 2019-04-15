@@ -16,6 +16,7 @@ def is_conceptual(category: str) -> bool:
 
 
 def _compute_conceptual_categories() -> set:
+    util.get_logger().info('Computing conceptual categories..')
     # TODO: implement check with category sets to find remaining categories (eg. the 5k albums that we are missing out)
     conceptual_caegories = set()
     for cat in cat_store.get_all_cats():

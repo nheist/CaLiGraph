@@ -59,36 +59,6 @@ def get_abstract(dbp_resource: str) -> str:
     return __RESOURCE_ABSTRACTS__[dbp_resource] if dbp_resource in __RESOURCE_ABSTRACTS__ else None
 
 
-def get_surface_score(surface_resource: str, dependent_resource: str) -> float:
-    global __RESOURCE_SURFACE_SCORES__
-    if '__RESOURCE_SURFACE_SCORES__' not in globals():
-        __RESOURCE_SURFACE_SCORES__ = util.load_or_create_cache('dbpedia_resource_surface_scores', _compute_resource_surface_scores)
-
-    if dbp_util.is_dbp_resource(surface_resource):
-        if get_label(surface_resource).lower() in dependent_resource.lower():
-            return 1
-        for surface_form, score in sorted(__RESOURCE_SURFACE_SCORES__[surface_resource].items(), key=operator.itemgetter(1), reverse=True):
-            if surface_form in dependent_resource.lower():
-                return score
-    elif dbp_util.is_dbp_type(surface_resource):
-        if surface_resource[len(dbp_util.NAMESPACE_DBP_ONTOLOGY):].lower() in dependent_resource:
-            return 1
-    else:
-        if surface_resource in dependent_resource:
-            return 1
-    return 0
-
-
-def _compute_resource_surface_scores() -> dict:
-    surface_scores = defaultdict(dict)
-    for res in get_resources():
-        redirect_res = resolve_redirect(res)
-        surface_forms = {**get_surface_forms(res), **get_surface_forms(redirect_res)}
-        total_mentions = sum(surface_forms.values())
-        surface_scores[res] = {sf: mentions / total_mentions for sf, mentions in surface_forms.items()}
-    return surface_scores
-
-
 def get_surface_forms(dbp_resource: str) -> dict:
     global __RESOURCE_SURFACE_FORMS__
     if '__RESOURCE_SURFACE_FORMS__' not in globals():

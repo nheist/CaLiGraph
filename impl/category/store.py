@@ -106,6 +106,7 @@ def get_statistics(category: str) -> dict:
 
 
 def _compute_category_statistics() -> dict:
+    util.get_logger().info('Computing category statistics..')
     category_statistics = {}
     for cat in get_all_cats():
         type_counts = defaultdict(int)
