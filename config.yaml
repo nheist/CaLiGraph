@@ -107,10 +107,6 @@ results:
 
 cache:
   # version 2: added resource types from sdtyped + lhd
-  # version 2a: additional attributes for cataxioms (is_func, match_score, lcwa_score)
-  # version 2b: additional attribute for cataxioms (is_pred_in_parent)
-  # version 3: cataxioms with materialized category graph
-  # version 4: additional attributes for cataxioms (match_score, graphtype_fit, graphtype_conflict, pv_coverage)
   catgraph_conceptual:
     filename: 'catgraph-conceptual'
     version: 1
@@ -186,6 +182,9 @@ cache:
   dbpedia_category_children:
     filename: 'dbpedia-category-children'
     version: 1
+  dbpedia_category_statistics:
+    filename: 'dbpedia-category-statistics'
+    version: 1
   dbpedia_property_frequency_distribution:
     filename: 'dbpedia-property-frequency-distribution'
     version: 1
@@ -222,9 +221,3 @@ cache:
   wikidata_resource_properties:
     filename: 'wikidata-resource-properties'
     version: 1
-  cataxioms_category_statistics:
-    filename: 'cataxioms-category-statistics'
-    version: 1
-  cataxioms_candidates:
-    filename: 'cataxioms-candidates'
-    version: '2a'
