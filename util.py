@@ -72,19 +72,32 @@ def load_cache(cache_identifier: str, version=None):
     cache_path = _get_cache_path(cache_identifier, version=version)
     if not cache_path.exists():
         return None
-    with bz2.open(cache_path, mode='rb') as cache_file:
+    open_func = _get_cache_open_func(cache_identifier)
+    with open_func(cache_path, mode='rb') as cache_file:
         return pickle.load(cache_file)
 
 
 def update_cache(cache_identifier: str, cache_obj, version=None):
-    with bz2.open(_get_cache_path(cache_identifier, version=version), mode='wb') as cache_file:
+    open_func = _get_cache_open_func(cache_identifier)
+    with open_func(_get_cache_path(cache_identifier, version=version), mode='wb') as cache_file:
         pickle.dump(cache_obj, cache_file)
 
 
 def _get_cache_path(cache_identifier: str, version=None) -> Path:
     config = get_config('cache.{}'.format(cache_identifier))
-    filename = '{}_v{}.pkl.bz2'.format(config['filename'], version or config['version'])
-    return Path(os.path.join(get_root_path(), 'data', 'cache', filename))
+    filename = config['filename']
+    version = version or config['version']
+    fileformat = '.p' + ('.bz2' if _should_compress_cache(cache_identifier) else '')
+    return Path(os.path.join(get_root_path(), 'data', 'cache', f'{filename}_v{version}{fileformat}'))
+
+
+def _get_cache_open_func(cache_identifier: str):
+    return bz2.open if _should_compress_cache(cache_identifier) else open
+
+
+def _should_compress_cache(cache_identifier: str) -> bool:
+    config = get_config('cache.{}'.format(cache_identifier))
+    return 'compress' in config and config['compress']
 
 
 # LOGGING

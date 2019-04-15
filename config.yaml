@@ -218,6 +218,8 @@ cache:
   wikidata_dbpedia_resource_mapping:
     filename: 'wikidata-dbpedia-resource-mapping'
     version: 1
+    compress: True
   wikidata_resource_properties:
     filename: 'wikidata-resource-properties'
     version: 1
+    compress: True
