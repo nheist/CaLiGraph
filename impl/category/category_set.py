@@ -76,6 +76,10 @@ def _find_best_group(category_docs, idx):
     for d in category_docs.values():
         if len(d) > idx:
             word_counts[d[idx].text] += 1
+
+    if not word_counts:
+        return set(), None
+
     most_frequent_word = max(word_counts.items(), key=operator.itemgetter(1))[0]
     return {c for c, d in category_docs.items() if len(d) > idx and d[idx].text == most_frequent_word}, most_frequent_word
 
