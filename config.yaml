@@ -182,6 +182,9 @@ cache:
   dbpedia_category_statistics:
     filename: 'dbpedia-category-statistics'
     version: 1
+  dbpedia_category_sets:
+    filename: 'dbpedia-category-sets'
+    version: 1
   dbpedia_property_frequency_distribution:
     filename: 'dbpedia-property-frequency-distribution'
     version: 1
