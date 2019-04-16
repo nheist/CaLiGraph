@@ -31,9 +31,7 @@ def _tag_lexical_head(doc: Doc) -> Doc:
     lexhead_start = None
     for chunk in doc.noun_chunks:
         elem = chunk.root
-        if elem.text.istitle():
-            continue
-        if elem.tag_ not in ['NN', 'NNS']:
+        if elem.text.istitle() or elem.tag_ not in ['NN', 'NNS']:
             continue
         if len(doc) > elem.i + 1 and doc[elem.i+1].text in ['(', ')', '–']:
             continue
@@ -45,6 +43,7 @@ def _tag_lexical_head(doc: Doc) -> Doc:
 #            elif len(doc) > elem.i + 3 and doc[elem.i+2].pos_ == 'ADJ' and doc[elem.i+3].pos_ == 'NOUN':
 #                elem = doc[elem.i:elem.i+4]
         doc.ents = [Span(doc, lexhead_start or chunk.start, chunk.end, label=doc.vocab.strings['LH'])]
+        break
     return doc
 
 
