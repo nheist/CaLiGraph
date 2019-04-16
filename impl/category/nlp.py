@@ -33,7 +33,9 @@ def _tag_lexical_head(doc: Doc) -> Doc:
         elem = chunk.root
         if elem.text.istitle():
             continue
-        if len(doc) > elem.i + 1 and doc[elem.i+1].text in [')', '–']:
+        if elem.tag_ not in ['NN', 'NNS']:
+            continue
+        if len(doc) > elem.i + 1 and doc[elem.i+1].text in ['(', ')', '–']:
             continue
         if len(doc) > elem.i + 2 and doc[elem.i+1].text == 'and' and doc[elem.i+2] in chunk_words:
             lexhead_start = lexhead_start if lexhead_start is not None else chunk.start
