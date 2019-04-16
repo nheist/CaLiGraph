@@ -46,7 +46,7 @@ def _remove_by_phrase(doc: Doc) -> Doc:
 
 def _find_child_sets(parent, category_docs, current_pattern=((), ())):
     if len(category_docs) < 2:
-        return set()
+        return []
 
     front_grp, front_word = _find_best_group(category_docs, len(current_pattern[0]))
     back_grp, back_word = _find_best_group(category_docs, -len(current_pattern[1]) - 1)
@@ -62,13 +62,13 @@ def _find_child_sets(parent, category_docs, current_pattern=((), ())):
     score = count / len(category_docs)
     if count < 2 or score < .5:
         if current_pattern[0] or current_pattern[1]:
-            return {CategorySet(parent=parent, categories=grp, pattern=new_pattern)}
+            return [CategorySet(parent=parent, categories=grp, pattern=new_pattern)]
         else:
-            return set()
+            return []
 
     grouped_docs = {c: doc for c, doc in category_docs.items() if c in grp}
     ungrouped_docs = {c: doc for c, doc in category_docs.items() if c not in grp}
-    return _find_child_sets(parent, grouped_docs, new_pattern) | _find_child_sets(parent, ungrouped_docs, current_pattern)
+    return _find_child_sets(parent, grouped_docs, new_pattern) + _find_child_sets(parent, ungrouped_docs, current_pattern)
 
 
 def _find_best_group(category_docs, idx):
