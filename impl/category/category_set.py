@@ -45,6 +45,9 @@ def _remove_by_phrase(doc: Doc) -> Doc:
 
 
 def _find_child_sets(parent, category_docs, current_pattern=((), ())):
+    if len(category_docs) < 2:
+        return set()
+
     front_grp, front_word = _find_best_group(category_docs, len(current_pattern[0]))
     back_grp, back_word = _find_best_group(category_docs, -len(current_pattern[1]) - 1)
 
