@@ -38,11 +38,8 @@ def _tag_lexical_head(doc: Doc) -> Doc:
         if len(doc) > elem.i + 2 and doc[elem.i+1].text == 'and' and doc[elem.i+2] in chunk_words:
             lexhead_start = lexhead_start if lexhead_start is not None else chunk.start
             continue
-#            if doc[elem.i+2].pos_ == 'NOUN':
-#                elem = doc[elem.i:elem.i+3]
-#            elif len(doc) > elem.i + 3 and doc[elem.i+2].pos_ == 'ADJ' and doc[elem.i+3].pos_ == 'NOUN':
-#                elem = doc[elem.i:elem.i+4]
-        doc.ents = [Span(doc, lexhead_start or chunk.start, chunk.end, label=doc.vocab.strings['LH'])]
+        lexhead_start = lexhead_start if lexhead_start is not None else chunk.start
+        doc.ents = [Span(doc, lexhead_start, chunk.end, label=doc.vocab.strings['LH'])]
         break
     return doc
 
