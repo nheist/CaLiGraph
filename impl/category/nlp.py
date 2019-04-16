@@ -2,7 +2,7 @@ import impl.util.nlp as nlp_util
 import impl.category.store as cat_store
 import util
 import inflection
-import spacy
+from spacy.tokens import Doc, Span
 
 SINGULARIZED_CATEGORIES_CACHE_ID = 'categories_singularized'
 
@@ -18,35 +18,40 @@ def is_conceptual(category: str) -> bool:
 def _compute_conceptual_categories() -> set:
     util.get_logger().info('Computing conceptual categories..')
     # TODO: implement check with category sets to find remaining categories (eg. the 5k albums that we are missing out)
-    conceptual_caegories = set()
+    conceptual_categories = set()
     for cat in cat_store.get_all_cats():
-        lexhead = get_lexical_head(cat)
-        if lexhead:
-            main_token = lexhead if type(lexhead) == spacy.tokens.Token else lexhead[-1]
-            if main_token.tag_ == 'NNS':
-                conceptual_caegories.add(cat)
-    return conceptual_caegories
+        doc = _tag_lexical_head(_parse_category(cat))
+        if any(word.tag_ == 'NNS' and word.ent_type_ == 'LH' for word in doc):
+            conceptual_categories.add(cat)
+    return conceptual_categories
 
 
-def get_lexical_head(category: str):
+def _tag_lexical_head(doc: Doc) -> Doc:
+    chunk_words = {w for chunk in doc.noun_chunks for w in chunk}
+    lexhead_start = None
+    for chunk in doc.noun_chunks:
+        elem = chunk.root
+        if elem.text.istitle():
+            continue
+        if len(doc) > elem.i + 1 and doc[elem.i+1].text in [')', '–']:
+            continue
+        if len(doc) > elem.i + 2 and doc[elem.i+1].text == 'and' and doc[elem.i+2] in chunk_words:
+            lexhead_start = lexhead_start if lexhead_start is not None else chunk.start
+            continue
+#            if doc[elem.i+2].pos_ == 'NOUN':
+#                elem = doc[elem.i:elem.i+3]
+#            elif len(doc) > elem.i + 3 and doc[elem.i+2].pos_ == 'ADJ' and doc[elem.i+3].pos_ == 'NOUN':
+#                elem = doc[elem.i:elem.i+4]
+        doc.ents = [Span(doc, lexhead_start or chunk.start, chunk.end, label=doc.vocab.strings['LH'])]
+    return doc
+
+
+def _parse_category(category: str) -> Doc:
     label = cat_store.get_label(category)
     split_label = label.split(' ')
     if len(split_label) > 1 and not (label[1].isupper() or split_label[1][0].isupper()):
         label = label[0].lower() + label[1:]
-    doc = nlp_util.parse(label)
-    for chunk in doc.noun_chunks:
-        elem = chunk.root
-        if (elem.text.istitle() and elem != doc[0]) or elem.text == '–':
-            continue
-        if len(doc) > elem.i + 1 and doc[elem.i+1].text == ')':
-            continue
-        if len(doc) > elem.i + 2 and doc[elem.i+1].text == 'and':
-            if doc[elem.i+2].pos_ == 'NOUN':
-                elem = doc[elem.i:elem.i+3]
-            elif len(doc) > elem.i + 3 and doc[elem.i+2].pos_ == 'ADJ' and doc[elem.i+3].pos_ == 'NOUN':
-                elem = doc[elem.i:elem.i+4]
-        return elem
-    return None
+    return nlp_util.parse(label)
 
 
 def singularize(category: str) -> str:
