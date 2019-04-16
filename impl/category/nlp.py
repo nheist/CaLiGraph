@@ -21,7 +21,7 @@ def _compute_conceptual_categories() -> set:
     conceptual_categories = set()
     for cat in cat_store.get_all_cats():
         doc = _tag_lexical_head(_parse_category(cat))
-        if any(word.tag_ == 'NNS' and word.ent_type_ == 'LH' for word in doc):
+        if any(chunk.root.tag_ == 'NNS' and chunk.root.ent_type_ == 'LH' for chunk in doc.noun_chunks):
             conceptual_categories.add(cat)
     return conceptual_categories
 
