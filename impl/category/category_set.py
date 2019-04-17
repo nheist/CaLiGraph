@@ -41,6 +41,7 @@ def _remove_by_phrase(doc: Doc) -> Doc:
     word_after_by = doc[last_by_index+1]
     if word_after_by.text.istitle() or word_after_by.text == 'the' or word_after_by.tag_ == 'NNS':
         return doc
+    util.get_logger().debug(doc[:last_by_index])
     return doc[:last_by_index].as_doc()
 
 
