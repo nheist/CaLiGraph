@@ -38,6 +38,8 @@ def _remove_by_phrase(doc: Doc) -> Doc:
     if len(by_indices) == 0:
         return doc
     last_by_index = by_indices[-1]
+    if last_by_index == 0 or last_by_index == len(doc) - 1:
+        return doc
     word_after_by = doc[last_by_index+1]
     if word_after_by.text.istitle() or word_after_by.text == 'the' or word_after_by.tag_ == 'NNS':
         return doc
