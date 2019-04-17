@@ -24,6 +24,7 @@ def _tag_lexical_heads(categories) -> dict:
     plural_lexhead_cats = {cat for cat, doc in category_docs.items() if _has_plural_lexical_head(doc)}
 
     # enhanced lexical head tagging with category sets
+    added_count = 0
     all_category_sets = cat_set.get_category_sets()
     for idx, category_set in enumerate(all_category_sets):
         if idx % 1000 == 0:
@@ -42,8 +43,13 @@ def _tag_lexical_heads(categories) -> dict:
                     pre_lexhead = [w.text for w in category_docs[c] if w.ent_type_ == 'LH']
                     category_docs[c] = _tag_lexical_head(cat_nlp.parse_category(c), valid_words=pattern_words)
                     post_lexhead = [w.text for w in category_docs[c] if w.ent_type_ == 'LH']
-                    util.get_logger().debug(f'Changed lexhead for category {c} from {" ".join(pre_lexhead)} to {" ".join(post_lexhead)}')
 
+                    pre_lexhead_str, post_lexhead_str = " ".join(pre_lexhead), " ".join(post_lexhead)
+                    if pre_lexhead_str != post_lexhead_str and _has_plural_lexical_head(category_docs[c]):
+                        added_count += 1
+                        util.get_logger().debug(f'Changed lexhead for category {c} from {pre_lexhead_str} to {post_lexhead_str}')
+
+    util.get_logger().debug(f'FOUND ADDITIONAL {added_count} CONCEPTUAL CATS!')
     return category_docs
 
 
