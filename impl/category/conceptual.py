@@ -23,12 +23,8 @@ def _tag_lexical_heads(categories) -> dict:
     category_docs = {cat: _tag_lexical_head(cat_nlp.parse_category(cat)) for cat in categories}
     plural_lexhead_cats = {cat for cat, doc in category_docs.items() if _has_plural_lexical_head(doc)}
 
-    # enhanced lexical head tagging with category sets
-    added_count = 0
-    all_category_sets = cat_set.get_category_sets()
-    for idx, category_set in enumerate(all_category_sets):
-        if idx % 1000 == 0:
-            util.get_logger().debug(f'Processed {idx}/{len(all_category_sets)} category sets for LH tagging.')
+    # enhanced lexical head tagging with category sets (yields 2822 additional conceptual categories)
+    for category_set in cat_set.get_category_sets():
 
         set_cats = category_set.categories
         pattern_words = set(category_set.pattern[0] + category_set.pattern[1])
@@ -40,16 +36,8 @@ def _tag_lexical_heads(categories) -> dict:
             if all(pattern_words.issubset(plural_lexhead) for plural_lexhead in plural_lexheads):
                 other_cats = {c for c in set_cats if c not in plural_lexhead_set_cats}
                 for c in other_cats:
-                    pre_lexhead = [w.text for w in category_docs[c] if w.ent_type_ == 'LH']
                     category_docs[c] = _tag_lexical_head(cat_nlp.parse_category(c), valid_words=pattern_words)
-                    post_lexhead = [w.text for w in category_docs[c] if w.ent_type_ == 'LH']
 
-                    pre_lexhead_str, post_lexhead_str = " ".join(pre_lexhead), " ".join(post_lexhead)
-                    if pre_lexhead_str != post_lexhead_str and _has_plural_lexical_head(category_docs[c]):
-                        added_count += 1
-                        util.get_logger().debug(f'Changed lexhead for category {c} from {pre_lexhead_str} to {post_lexhead_str}')
-
-    util.get_logger().debug(f'FOUND ADDITIONAL {added_count} CONCEPTUAL CATS!')
     return category_docs
 
 
