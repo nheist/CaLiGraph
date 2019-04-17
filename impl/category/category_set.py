@@ -74,7 +74,7 @@ def _find_child_sets(parent, category_docs, current_pattern=((), ())):
 def _find_best_group(category_docs, idx):
     word_counts = defaultdict(lambda: 0)
     for d in category_docs.values():
-        if len(d) > idx:
+        if len(d) > idx and len(d) >= -idx:  # take positive and negative indices into accout
             word_counts[d[idx].text] += 1
 
     if not word_counts:
