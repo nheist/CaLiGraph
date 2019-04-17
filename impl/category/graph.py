@@ -3,6 +3,7 @@ from . import store as cat_store
 from . import nlp as cat_nlp
 import impl.dbpedia.store as dbp_store
 from impl.util.base_graph import BaseGraph
+from impl.category.conceptual import is_conceptual_category
 import impl.util.rdf as rdf_util
 import util
 import numpy as np
@@ -82,7 +83,7 @@ class CategoryGraph(BaseGraph):
         # filtering administrative categories
         categories = {cat for cat in categories if not cat.endswith(('templates', 'navigational boxes'))}
         # filtering non-conceptual categories
-        categories = {cat for cat in categories if cat_nlp.is_conceptual(cat)}
+        categories = {cat for cat in categories if is_conceptual_category(cat)}
         # persisting spacy cache so that parsed categories are cached
         cat_nlp.persist_cache()
         # clearing the graph of any invalid nodes

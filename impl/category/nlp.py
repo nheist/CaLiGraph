@@ -2,49 +2,12 @@ import impl.util.nlp as nlp_util
 import impl.category.store as cat_store
 import util
 import inflection
-from spacy.tokens import Doc, Span
+from spacy.tokens import Doc
 
 SINGULARIZED_CATEGORIES_CACHE_ID = 'categories_singularized'
 
 
-def is_conceptual(category: str) -> bool:
-    global __CONCEPTUAL_CATEGORIES__
-    if '__CONCEPTUAL_CATEGORIES__' not in globals():
-        __CONCEPTUAL_CATEGORIES__ = util.load_or_create_cache('categories_conceptual', _compute_conceptual_categories)
-
-    return category in __CONCEPTUAL_CATEGORIES__
-
-
-def _compute_conceptual_categories() -> set:
-    util.get_logger().info('Computing conceptual categories..')
-    # TODO: implement check with category sets to find remaining categories (eg. the 5k albums that we are missing out)
-    conceptual_categories = set()
-    for cat in cat_store.get_all_cats():
-        doc = _tag_lexical_head(_parse_category(cat))
-        if any(chunk.root.tag_ == 'NNS' and chunk.root.ent_type_ == 'LH' for chunk in doc.noun_chunks):
-            conceptual_categories.add(cat)
-    return conceptual_categories
-
-
-def _tag_lexical_head(doc: Doc) -> Doc:
-    chunk_words = {w for chunk in doc.noun_chunks for w in chunk}
-    lexhead_start = None
-    for chunk in doc.noun_chunks:
-        elem = chunk.root
-        if elem.text.istitle() or elem.tag_ not in ['NN', 'NNS']:
-            continue
-        if len(doc) > elem.i + 1 and doc[elem.i+1].text in ['(', ')', '–']:
-            continue
-        if len(doc) > elem.i + 2 and doc[elem.i+1].text == 'and' and doc[elem.i+2] in chunk_words:
-            lexhead_start = lexhead_start if lexhead_start is not None else chunk.start
-            continue
-        lexhead_start = lexhead_start if lexhead_start is not None else chunk.start
-        doc.ents = [Span(doc, lexhead_start, chunk.end, label=doc.vocab.strings['LH'])]
-        break
-    return doc
-
-
-def _parse_category(category: str) -> Doc:
+def parse_category(category: str) -> Doc:
     label = cat_store.get_label(category)
     split_label = label.split(' ')
     if len(split_label) > 1 and not (label[1].isupper() or split_label[1][0].isupper()):

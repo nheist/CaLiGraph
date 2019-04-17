@@ -26,7 +26,7 @@ def _compute_category_sets():
     category_sets = {}
     for cat in cat_store.get_usable_cats():
         children = {c for c in cat_store.get_children(cat) if cat_store.is_usable(c)}
-        children_docs = {c: _remove_by_phrase(cat_nlp._parse_category(c)) for c in children}
+        children_docs = {c: _remove_by_phrase(cat_nlp.parse_category(c)) for c in children}
         child_sets = _find_child_sets(cat, children_docs)
         if child_sets:
             category_sets[cat] = child_sets
