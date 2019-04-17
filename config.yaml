@@ -119,9 +119,6 @@ cache:
   catgraph_taxonomic:
     filename: 'catgraph-taxonomic'
     version: 1
-  categories_conceptual:
-    filename: 'categories-conceptual'
-    version: 1
   categories_singularized:
     filename: 'categories-singularized'
     version: 1
@@ -184,6 +181,9 @@ cache:
     version: 1
   dbpedia_category_sets:
     filename: 'dbpedia-category-sets'
+    version: 1
+  dbpedia_categories_conceptual:
+    filename: 'dbpedia-category-conceptual'
     version: 1
   dbpedia_property_frequency_distribution:
     filename: 'dbpedia-property-frequency-distribution'
