@@ -58,7 +58,7 @@ def _find_child_sets(parent, category_docs, current_pattern=((), ())):
         new_pattern = (current_pattern[0] + (front_word,), current_pattern[1])
     else:
         grp = back_grp
-        new_pattern = (current_pattern[0], current_pattern[1] + (back_word,))
+        new_pattern = (current_pattern[0], (back_word,) + current_pattern[1])
 
     count = len(grp)
     score = count / len(category_docs)
