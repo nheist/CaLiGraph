@@ -9,12 +9,16 @@ import operator
 CategorySet = namedtuple('CategorySet', ['parent', 'categories', 'pattern'])
 
 
+def get_category_sets() -> set:
+    return {cs for category_sets in _get_parent_to_category_set_mapping().values() for cs in category_sets}
+
+
 def get_category_sets_for_parent(parent_category: str) -> set:
-    category_sets = get_category_sets()
+    category_sets = _get_parent_to_category_set_mapping()
     return category_sets[parent_category] if parent_category in category_sets else set()
 
 
-def get_category_sets() -> dict:
+def _get_parent_to_category_set_mapping() -> dict:
     global __CATEGORY_SETS__
     if '__CATEGORY_SETS__' not in globals():
         __CATEGORY_SETS__ = util.load_or_create_cache('dbpedia_category_sets', _compute_category_sets)
