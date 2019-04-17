@@ -28,8 +28,8 @@ def _tag_lexical_heads(categories) -> dict:
         if idx % 1000 == 0:
             util.get_logger().debug(f'Processed {idx}/{len(cat_set.get_category_sets())} category sets for LH tagging.')
 
-        set_cats = category_set['categories']
-        pattern_words = category_set['pattern'][0] + category_set['pattern'][1]
+        set_cats = category_set.categories
+        pattern_words = category_set.pattern[0] + category_set.pattern[1]
 
         plural_lexhead_set_cats = {c for c in set_cats if c in plural_lexhead_cats}
         plural_lexhead_ratio = len(plural_lexhead_set_cats) / len(set_cats)

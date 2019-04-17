@@ -91,6 +91,10 @@ files:
     resource_properties:
       filename: 'wikidata_resource_properties.nt.bz2'
       url: ~
+  webisalod:
+    instances:
+      filename: 'webisalod-instances.nq.gz'
+      url: 'http://data.dws.informatik.uni-mannheim.de/webisa/webisalod-instances.nq.gz'
   evaluation:
     catgraph_dbptypes:
       filename: 'catgraph-dbptype_labels.csv'
