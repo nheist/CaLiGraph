@@ -24,9 +24,10 @@ def _tag_lexical_heads(categories) -> dict:
     plural_lexhead_cats = {cat for cat, doc in category_docs.items() if _has_plural_lexical_head(doc)}
 
     # enhanced lexical head tagging with category sets
-    for idx, category_set in enumerate(cat_set.get_category_sets()):
+    all_category_sets = cat_set.get_category_sets()
+    for idx, category_set in enumerate(all_category_sets):
         if idx % 1000 == 0:
-            util.get_logger().debug(f'Processed {idx}/{len(cat_set.get_category_sets())} category sets for LH tagging.')
+            util.get_logger().debug(f'Processed {idx}/{len(all_category_sets)} category sets for LH tagging.')
 
         set_cats = category_set.categories
         pattern_words = category_set.pattern[0] + category_set.pattern[1]
