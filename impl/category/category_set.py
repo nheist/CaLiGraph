@@ -64,7 +64,7 @@ def _find_child_sets(parent, category_docs, current_pattern=((), ())):
     score = count / len(category_docs)
     if count < 2 or score < .5:
         if current_pattern[0] or current_pattern[1]:
-            return [CategorySet(parent=parent, categories=grp, pattern=new_pattern)]
+            return [CategorySet(parent=parent, categories=grp, pattern=current_pattern)]
         else:
             return []
 
