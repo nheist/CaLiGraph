@@ -65,7 +65,7 @@ class CategoryGraph(BaseGraph):
     @classmethod
     def create_from_wikitaxonomy(cls):
         edges = list(util.load_cache('wikitaxonomy_edges'))
-        return CategoryGraph(nx.DiGraph(incoming_graph_data=edges)).append_unconnected()
+        return CategoryGraph(nx.DiGraph(incoming_graph_data=edges)).append_unconnected().remove_unconnected().resolve_cycles()
 
     # connectivity
 
