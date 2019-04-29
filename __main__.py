@@ -1,13 +1,15 @@
 import traceback
 import util
 import mailer
-import impl.list.base as list_base
+from impl.category import cat2ax
 
 if __name__ == '__main__':
     try:
         util.get_logger().info('Starting CaLiGraph extraction..')
 
-        mailer.send_success('WHAT WHAT WHAT')
+        cat2ax.run_extraction()
+
+        mailer.send_success('FINISHED Cat2Ax')
         util.get_logger().info('Finished CaLiGraph extraction.')
     except Exception as e:
         error_msg = traceback.format_exc()

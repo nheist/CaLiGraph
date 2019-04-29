@@ -2,6 +2,13 @@ from .graph import CategoryGraph
 import util
 
 
+def get_wikitaxonomy_graph() -> CategoryGraph:
+    global __WIKITAXONOMY_CATEGORY_GRAPH__
+    if '__WIKITAXONOMY_CATEGORY_GRAPH__' not in globals():
+        __WIKITAXONOMY_CATEGORY_GRAPH__ = util.load_or_create_cache('catgraph_wikitaxonomy', CategoryGraph.create_from_wikitaxonomy)
+    return __WIKITAXONOMY_CATEGORY_GRAPH__
+
+
 def get_conceptual_category_graph() -> CategoryGraph:
     global __CONCEPTUAL_CATEGORY_GRAPH__
     if '__CONCEPTUAL_CATEGORY_GRAPH__' not in globals():
