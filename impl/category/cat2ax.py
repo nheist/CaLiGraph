@@ -43,10 +43,12 @@ def run_extraction():
 def _extract_patterns(candidate_sets):
     patterns = defaultdict(lambda: {'preds': defaultdict(list), 'types': defaultdict(list)})
 
-    for parent, categories_with_matches, (first_words, last_words) in candidate_sets:
+    for parent, categories, (first_words, last_words) in candidate_sets:
         predicate_frequencies = defaultdict(list)
         type_frequencies = defaultdict(list)
         type_surface_scores = _get_type_surface_scores(first_words + last_words)
+
+        categories_with_matches = {cat: _get_match_for_category(cat, first_words, last_words) for cat in categories}
         for cat, match in categories_with_matches.items():
             # compute predicate frequencies
             statistics = cat_stats.get_materialized_statistics(cat) if USE_MATERIALIZED_GRAPH else cat_stats.get_statistics(cat)
@@ -74,6 +76,11 @@ def _extract_patterns(candidate_sets):
                     for t in types:
                         patterns[(tuple(first_words), tuple(last_words))]['types'][t].append(max_median)
     return patterns
+
+
+def _get_match_for_category(category: str, first_words: tuple, last_words: tuple) -> str:
+    doc = cat_set._remove_by_phrase(cat_nlp.parse_category(category))
+    return doc[len(first_words):len(doc)-len(last_words)].text
 
 
 def _get_resource_surface_scores(text):
