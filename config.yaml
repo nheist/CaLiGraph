@@ -227,3 +227,6 @@ cache:
     filename: 'wikidata-resource-properties'
     version: 1
     compress: True
+  wikitaxonomy_edges:
+    filename: 'wikitaxonomy-edges'
+    version: 1
