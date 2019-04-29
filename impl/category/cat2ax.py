@@ -92,7 +92,7 @@ def _get_resource_surface_scores(text):
 word_surface_scores = pickle.load(bz2.open(util.get_data_file('files.dbpedia.type_surface_forms'), mode='rb'))
 def _get_type_surface_scores(words):
     type_surface_scores = defaultdict(lambda: 0)
-    for word in [w.lemma_ for w in nlp_util.parse(words)]:
+    for word in [nlp_util.parse(w)[0].lemma_ for w in words]:
         if word in word_surface_scores:
             for t, score in word_surface_scores[word].items():
                 type_surface_scores[t] += score
