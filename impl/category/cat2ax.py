@@ -49,6 +49,7 @@ def _extract_patterns(candidate_sets):
         type_surface_scores = _get_type_surface_scores(first_words + last_words)
 
         categories_with_matches = {cat: _get_match_for_category(cat, first_words, last_words) for cat in categories}
+        categories_with_matches = {cat: match for cat, match in categories_with_matches.items() if match}
         for cat, match in categories_with_matches.items():
             # compute predicate frequencies
             statistics = cat_stats.get_materialized_statistics(cat) if USE_MATERIALIZED_GRAPH else cat_stats.get_statistics(cat)
