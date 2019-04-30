@@ -11,7 +11,7 @@ category:
     resource_type_ratio: 0.5
     child_type_ratio: 0.5
 cat2ax:
-  use_materialized_category_graph: True
+  use_materialized_category_graph: False
 
 
 logging:
@@ -237,4 +237,7 @@ cache:
     compress: True
   wikitaxonomy_edges:
     filename: 'wikitaxonomy-edges'
+    version: 1
+  cat2ax_axioms:
+    filename: 'cat2ax-axioms'
     version: 1

@@ -2,7 +2,6 @@ import util
 from collections import defaultdict
 import operator
 import numpy as np
-import pandas as pd
 import impl.dbpedia.store as dbp_store
 import impl.dbpedia.util as dbp_util
 import impl.category.store as cat_store
@@ -19,23 +18,68 @@ import bz2
 USE_MATERIALIZED_GRAPH = util.get_config('cat2ax.use_materialized_category_graph')
 
 
-def run_extraction():
-    util.get_logger().debug('Step 1: Candidate Selection')
+class Axiom:
+    def __init__(self, predicate: str, value: str, confidence: float):
+        self.predicate = predicate
+        self.value = value
+        self.confidence = confidence
+
+    def implies(self, other):
+        return self.predicate == other.predicate and self.value == other.value
+
+    def contradicts(self, other):
+        raise NotImplementedError("Please use the sublcasses.")
+
+
+class TypeAxiom(Axiom):
+    def __init__(self, value: str, confidence: float):
+        super().__init__(rdf_util.PREDICATE_TYPE, value, confidence)
+
+    def implies(self, other):
+        return super().implies(other) or other.value in dbp_store.get_transitive_supertype_closure(self.value)
+
+    def contradicts(self, other):
+        return other.value in dbp_store.get_disjoint_types(self.value)
+
+
+class RelationAxiom(Axiom):
+    def contradicts(self, other):
+        if self.predicate != other.predicate or not dbp_store.is_functional(self.predicate):
+            return False
+        return self.value != other.value
+
+
+def get_axioms(category: str) -> set:
+    global __CATEGORY_AXIOMS__
+    if '__CATEGORY_AXIOMS__' not in globals():
+        __CATEGORY_AXIOMS__ = util.load_or_create_cache('cat2ax_axioms', _extract_category_axioms)
+
+    return __CATEGORY_AXIOMS__[category]
+
+
+def _extract_category_axioms():
     candidate_sets = cat_set.get_category_sets()
-
-    util.get_logger().debug('Step 2: Pattern Mining')
     patterns = _extract_patterns(candidate_sets)
+    return _extract_axioms(patterns)
 
-    util.get_logger().debug('Step 3: Pattern Application')
-    relation_axioms, type_axioms = _extract_axioms(patterns)
 
-    util.get_logger().debug('Step 4: Axiom Application & Post-Filtering')
-    relation_assertions, type_assertions = _extract_assertions(relation_axioms, type_axioms)
-
-    pd.DataFrame(data=relation_axioms, columns=['cat', 'pred', 'val', 'confidence']).to_csv(util.get_results_file('results.cat2ax.relation_axioms'), sep=';', index=False)
-    pd.DataFrame(data=type_axioms, columns=['cat', 'pred', 'val', 'confidence']).to_csv(util.get_results_file('results.cat2ax.type_axioms'), sep=';', index=False)
-    pd.DataFrame(data=relation_assertions, columns=['sub', 'pred', 'val']).to_csv(util.get_results_file('results.cat2ax.relation_assertions'), sep=';', index=False)
-    pd.DataFrame(data=type_assertions, columns=['sub', 'pred', 'val']).to_csv(util.get_results_file('results.cat2ax.type_assertions'), sep=';', index=False)
+#def run_extraction():
+#    util.get_logger().debug('Step 1: Candidate Selection')
+#    candidate_sets = cat_set.get_category_sets()
+#
+#    util.get_logger().debug('Step 2: Pattern Mining')
+#    patterns = _extract_patterns(candidate_sets)
+#
+#    util.get_logger().debug('Step 3: Pattern Application')
+#    relation_axioms, type_axioms = _extract_axioms(patterns)
+#
+#    util.get_logger().debug('Step 4: Axiom Application & Post-Filtering')
+#    relation_assertions, type_assertions = _extract_assertions(relation_axioms, type_axioms)
+#
+#    pd.DataFrame(data=relation_axioms, columns=['cat', 'pred', 'val', 'confidence']).to_csv(util.get_results_file('results.cat2ax.relation_axioms'), sep=';', index=False)
+#    pd.DataFrame(data=type_axioms, columns=['cat', 'pred', 'val', 'confidence']).to_csv(util.get_results_file('results.cat2ax.type_axioms'), sep=';', index=False)
+#    pd.DataFrame(data=relation_assertions, columns=['sub', 'pred', 'val']).to_csv(util.get_results_file('results.cat2ax.relation_assertions'), sep=';', index=False)
+#    pd.DataFrame(data=type_assertions, columns=['sub', 'pred', 'val']).to_csv(util.get_results_file('results.cat2ax.type_assertions'), sep=';', index=False)
 
 
 # --- PATTERN EXTRACTION ---
@@ -113,8 +157,7 @@ PATTERN_CONF = .05
 
 
 def _extract_axioms(patterns):
-    relation_axioms = set()
-    type_axioms = set()
+    category_axioms = defaultdict(set)
 
     front_pattern_dict = {}
     for (front_pattern, back_pattern), axiom_patterns in _get_confidence_pattern_set(patterns, True, False).items():
@@ -156,16 +199,17 @@ def _extract_axioms(patterns):
             if dbp_store.is_object_property(pred):
                 res_labels = {a[2]: dbp_store.get_label(a[2]) for a in similar_prop_axioms}
                 similar_prop_axioms = {a for a in similar_prop_axioms if all(res_labels[a[2]] == val or res_labels[a[2]] not in val for val in res_labels.values())}
-            relation_axioms.add(max(similar_prop_axioms, key=operator.itemgetter(3)))
+            best_prop_axiom = max(similar_prop_axioms, key=operator.itemgetter(3))
+            category_axioms[cat].add(RelationAxiom(best_prop_axiom[1], best_prop_axiom[2], best_prop_axiom[3]))
 
         best_type_axiom = None
         for type_axiom in sorted(cat_type_axioms, key=operator.itemgetter(3), reverse=True):
             if not best_type_axiom or type_axiom[2] in dbp_store.get_transitive_subtypes(best_type_axiom[2]):
                 best_type_axiom = type_axiom
         if best_type_axiom:
-            type_axioms.add(best_type_axiom)
+            category_axioms[cat].add(TypeAxiom(best_type_axiom[2], best_type_axiom[3]))
 
-    return relation_axioms, type_axioms
+    return category_axioms
 
 
 def _get_confidence_pattern_set(pattern_set, has_front, has_back):
