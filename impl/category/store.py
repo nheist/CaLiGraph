@@ -1,8 +1,6 @@
 from . import util as cat_util
 import impl.util.rdf as rdf_util
 import util
-from collections import defaultdict
-import impl.dbpedia.store as dbp_store
 
 
 def get_all_cats() -> set:
