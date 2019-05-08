@@ -13,9 +13,20 @@ class BaseGraph:
     def nodes(self) -> set:
         return set(self.graph.nodes)
 
+    def _remove_all_nodes_except(self, valid_nodes: set):
+        invalid_nodes = self.nodes.difference(valid_nodes)
+        self.graph.remove_nodes_from(invalid_nodes)
+
     @property
     def edges(self) -> set:
         return set(self.graph.edges)
+
+    def add_edges(self, edges):
+        self.graph.add_edges_from(edges)
+
+    def _remove_all_edges_except(self, valid_edges: set):
+        invalid_edges = self.edges.difference(valid_edges)
+        self.graph.remove_edges_from(invalid_edges)
 
     def predecessors(self, node: str) -> set:
         return set(self.graph.predecessors(node)) if self.graph.has_node(node) else set()

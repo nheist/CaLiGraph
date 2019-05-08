@@ -1,6 +1,5 @@
 import networkx as nx
 from . import store as cat_store
-from . import nlp as cat_nlp
 import impl.dbpedia.store as dbp_store
 from impl.util.base_graph import BaseGraph
 from impl.category.conceptual import is_conceptual_category
@@ -10,15 +9,26 @@ import numpy as np
 import math
 import pandas as pd
 import random
+from collections import defaultdict
 
 
 class CategoryGraph(BaseGraph):
     PROPERTY_RESOURCE_TYPE_COUNTS = 'resource_type_counts'
     PROPERTY_DBP_TYPES = 'dbp_types'
     PROPERTY_MATERIALIZED_RESOURCES = 'materialized_resources'
+    PROPERTY_MATERIALIZED_STATISTICS = 'materialized_statistics'
 
     def __init__(self, graph: nx.DiGraph, root_node: str = None):
         super().__init__(graph, root_node or util.get_config('category.root_category'))
+
+    @property
+    def categories(self) -> set:
+        return self.nodes
+
+    def add_edges(self, edges):
+        # TODO: implement reset of materialized resource statistics and resources
+        raise NotImplementedError()
+        super().add_edges(edges)
 
     @property
     def statistics(self) -> str:
@@ -48,14 +58,43 @@ class CategoryGraph(BaseGraph):
     def dbp_types_maybe(self, category: str) -> set:
         return self.dbp_types(category) or set() if category in self.nodes else set()
 
-    def get_materialized_resources(self, category: str) -> set:
-        if category not in self.nodes:
-            return cat_store.get_resources(category)
+    def get_resources(self, category: str, materialized=False) -> set:
+        if category not in self.categories:
+            raise Exception(f'Category {category} not in category graph.')
+
+        resources = cat_store.get_resources(category)
+        if not materialized:
+            return resources
 
         if not self._get_attr(category, self.PROPERTY_MATERIALIZED_RESOURCES):
-            materialized_resources = cat_store.get_resources(category) | {res for cat in self.successors(category) for res in self.get_materialized_resources(cat)}
+            materialized_resources = resources | {res for cat in self.successors(category) for res in self.get_resources(cat, materialized=True)}
             self._set_attr(category, self.PROPERTY_MATERIALIZED_RESOURCES, materialized_resources)
         return self._get_attr(category, self.PROPERTY_MATERIALIZED_RESOURCES)
+
+    def get_statistics(self, category: str, materialized=False) -> dict:
+        if category not in self.categories:
+            raise Exception(f'Category {category} not in category graph.')
+
+        statistics = cat_store.get_statistics(category)
+        if not materialized:
+            return statistics
+
+        if not self._get_attr(category, self.PROPERTY_MATERIALIZED_STATISTICS):
+            resources = self.get_resources(category, materialized=True)
+            type_counts = statistics['type_counts']
+            property_counts = statistics['property_counts']
+            for cat in self.successors(category):
+                substats = self.get_statistics(cat, materialized=True)
+                type_counts += substats['type_counts']
+                property_counts += substats['property_counts']
+            materialized_statistics = {
+                'type_counts': type_counts,
+                'type_frequencies': defaultdict(float, {t: t_count / len(resources) for t, t_count in type_counts.items()}),
+                'property_counts': property_counts,
+                'property_frequencies': defaultdict(float, {prop: p_count / len(resources) for prop, p_count in property_counts.items()}),
+            }
+            self._set_attr(category, self.PROPERTY_MATERIALIZED_STATISTICS, materialized_statistics)
+        return self._get_attr(category, self.PROPERTY_MATERIALIZED_STATISTICS)
 
     @classmethod
     def create_from_dbpedia(cls):
@@ -71,7 +110,7 @@ class CategoryGraph(BaseGraph):
 
     def remove_unconnected(self):
         valid_categories = {self.root_node} | nx.descendants(self.graph, self.root_node)
-        self._remove_all_categories_except(valid_categories)
+        self._remove_all_nodes_except(valid_categories)
         return self
 
     def append_unconnected(self):
@@ -82,24 +121,12 @@ class CategoryGraph(BaseGraph):
     # conceptual categories
 
     def make_conceptual(self):
-        categories = self.nodes
-        # filtering maintenance categories
-        categories = categories.difference(cat_store.get_maintenance_cats())
-        # filtering administrative categories
-        categories = {cat for cat in categories if not cat.endswith(('templates', 'navigational boxes'))}
-        # filtering non-conceptual categories
-        categories = {cat for cat in categories if is_conceptual_category(cat)}
-        # persisting spacy cache so that parsed categories are cached
-        cat_nlp.persist_cache()
+        categories = {c for c in self.nodes if cat_store.is_usable(c) and is_conceptual_category(c)}
         # clearing the graph of any invalid nodes
-        self._remove_all_categories_except(categories | {self.root_node})
+        self._remove_all_nodes_except(categories | {self.root_node})
         # appending all loose categories to the root node and removing the remaining self-referencing circular graphs
         self.append_unconnected().remove_unconnected()
         return self
-
-    def _remove_all_categories_except(self, valid_categories: set):
-        invalid_categories = self.nodes.difference(valid_categories)
-        self.graph.remove_nodes_from(invalid_categories)
 
     # cycles
 

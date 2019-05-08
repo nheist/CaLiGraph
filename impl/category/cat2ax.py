@@ -4,11 +4,9 @@ import operator
 import numpy as np
 import impl.dbpedia.store as dbp_store
 import impl.dbpedia.util as dbp_util
-import impl.category.store as cat_store
+import impl.category.base as cat_base
 import impl.category.category_set as cat_set
 import impl.category.nlp as cat_nlp
-import impl.category.materialize as cat_mat
-import impl.category.statistics as cat_stats
 import impl.util.nlp as nlp_util
 import impl.util.rdf as rdf_util
 import pickle
@@ -16,6 +14,7 @@ import bz2
 
 
 USE_MATERIALIZED_GRAPH = util.get_config('cat2ax.use_materialized_category_graph')
+PATTERN_CONF = util.get_config('cat2ax.pattern_confidence')
 
 
 class Axiom:
@@ -52,15 +51,17 @@ class RelationAxiom(Axiom):
 def get_axioms(category: str) -> set:
     global __CATEGORY_AXIOMS__
     if '__CATEGORY_AXIOMS__' not in globals():
-        __CATEGORY_AXIOMS__ = util.load_or_create_cache('cat2ax_axioms', _extract_category_axioms)
+        category_graph = cat_base.get_cycle_free_category_graph()
+        initializer = lambda: extract_category_axioms(category_graph, PATTERN_CONF)
+        __CATEGORY_AXIOMS__ = util.load_or_create_cache('cat2ax_axioms', initializer)
 
     return __CATEGORY_AXIOMS__[category]
 
 
-def _extract_category_axioms():
+def extract_category_axioms(category_graph, pattern_confidence):
     candidate_sets = cat_set.get_category_sets()
-    patterns = _extract_patterns(candidate_sets)
-    return _extract_axioms(patterns)
+    patterns = _extract_patterns(category_graph, candidate_sets)
+    return _extract_axioms(category_graph, pattern_confidence, patterns)
 
 
 #def run_extraction():
@@ -84,7 +85,7 @@ def _extract_category_axioms():
 
 # --- PATTERN EXTRACTION ---
 
-def _extract_patterns(candidate_sets):
+def _extract_patterns(category_graph, candidate_sets):
     patterns = defaultdict(lambda: {'preds': defaultdict(list), 'types': defaultdict(list)})
 
     for parent, categories, (first_words, last_words) in candidate_sets:
@@ -96,7 +97,7 @@ def _extract_patterns(candidate_sets):
         categories_with_matches = {cat: match for cat, match in categories_with_matches.items() if match}
         for cat, match in categories_with_matches.items():
             # compute predicate frequencies
-            statistics = cat_stats.get_materialized_statistics(cat) if USE_MATERIALIZED_GRAPH else cat_stats.get_statistics(cat)
+            statistics = category_graph.get_statistics(cat, materialized=USE_MATERIALIZED_GRAPH)
             possible_vals = _get_resource_surface_scores(match)
             for (pred, val), freq in statistics['property_frequencies'].items():
                 if val in possible_vals:
@@ -153,10 +154,9 @@ def _get_type_surface_scores(words):
 
 
 # --- PATTERN APPLICATION ---
-PATTERN_CONF = .05
 
 
-def _extract_axioms(patterns):
+def _extract_axioms(category_graph, pattern_confidence, patterns):
     category_axioms = defaultdict(set)
 
     front_pattern_dict = {}
@@ -171,24 +171,24 @@ def _extract_axioms(patterns):
     for (front_pattern, back_pattern), axiom_patterns in _get_confidence_pattern_set(patterns, True, True).items():
         _fill_dict(enclosing_pattern_dict, list(front_pattern), lambda d: _fill_dict(d, list(reversed(back_pattern)), axiom_patterns))
 
-    for cat in cat_store.get_usable_cats():
+    for cat in category_graph.categories:
         cat_doc = cat_set._remove_by_phrase(cat_nlp.parse_category(cat))
         cat_prop_axioms = []
         cat_type_axioms = []
 
-        front_prop_axiom, front_type_axiom = _find_axioms(front_pattern_dict, cat, cat_doc)
+        front_prop_axiom, front_type_axiom = _find_axioms(category_graph, pattern_confidence, front_pattern_dict, cat, cat_doc)
         if front_prop_axiom:
             cat_prop_axioms.append(front_prop_axiom)
         if front_type_axiom:
             cat_type_axioms.append(front_type_axiom)
 
-        back_prop_axiom, back_type_axiom = _find_axioms(back_pattern_dict, cat, cat_doc)
+        back_prop_axiom, back_type_axiom = _find_axioms(category_graph, pattern_confidence, back_pattern_dict, cat, cat_doc)
         if back_prop_axiom:
             cat_prop_axioms.append(back_prop_axiom)
         if back_type_axiom:
             cat_type_axioms.append(back_type_axiom)
 
-        enclosing_prop_axiom, enclosing_type_axiom = _find_axioms(enclosing_pattern_dict, cat, cat_doc)
+        enclosing_prop_axiom, enclosing_type_axiom = _find_axioms(category_graph, pattern_confidence, enclosing_pattern_dict, cat, cat_doc)
         if enclosing_prop_axiom:
             cat_prop_axioms.append(enclosing_prop_axiom)
         if enclosing_type_axiom:
@@ -259,16 +259,16 @@ def _detect_pattern(pattern_dict, words):
     return None, None
 
 
-def _get_axioms_for_cat(axiom_patterns, cat, text_diff, words_same):
+def _get_axioms_for_cat(category_graph, pattern_confidence, axiom_patterns, cat, text_diff, words_same):
     prop_axiom = None
     type_axiom = None
 
-    statistics = cat_stats.get_materialized_statistics(cat) if USE_MATERIALIZED_GRAPH else cat_stats.get_statistics(cat)
+    statistics = category_graph.get_statistics(cat, materialized=USE_MATERIALIZED_GRAPH)
     pred_patterns = axiom_patterns['preds']
     possible_values = _get_resource_surface_scores(text_diff)
     props_scores = {(p, v): freq * pred_patterns[p] * possible_values[v] for (p, v), freq in statistics['property_frequencies'].items() if p in pred_patterns and v in possible_values}
     prop, max_prop_score = max(props_scores.items(), key=operator.itemgetter(1), default=((None, None), 0))
-    if max_prop_score >= PATTERN_CONF:
+    if max_prop_score >= pattern_confidence:
         pred, val = prop
         prop_axiom = (cat, pred, val, max_prop_score)
 
@@ -276,13 +276,13 @@ def _get_axioms_for_cat(axiom_patterns, cat, text_diff, words_same):
     type_surface_scores = _get_type_surface_scores(words_same)
     types_scores = {t: freq * type_patterns[t] * type_surface_scores[t] for t, freq in statistics['type_frequencies'].items() if t in type_patterns}
     t, max_type_score = max(types_scores.items(), key=operator.itemgetter(1), default=(None, 0))
-    if max_type_score >= PATTERN_CONF:
+    if max_type_score >= pattern_confidence:
         type_axiom = (cat, rdf_util.PREDICATE_TYPE, t, max_type_score)
 
     return prop_axiom, type_axiom
 
 
-def _find_axioms(pattern_dict, cat, cat_doc):
+def _find_axioms(category_graph, pattern_confidence, pattern_dict, cat, cat_doc):
     cat_words = [w.text for w in cat_doc]
     axiom_patterns, pattern_lengths = _detect_pattern(pattern_dict, cat_words)
     if axiom_patterns:
@@ -294,19 +294,18 @@ def _find_axioms(pattern_dict, cat, cat_doc):
             words_same += cat_words[:front_pattern_idx]
         if back_pattern_idx:
             words_same += cat_words[back_pattern_idx:]
-        return _get_axioms_for_cat(axiom_patterns, cat, text_diff, words_same)
+        return _get_axioms_for_cat(category_graph, pattern_confidence, axiom_patterns, cat, text_diff, words_same)
     return None, None
 
 
 # --- AXIOM APPLICATION & POST-FILTERING ---
 
-def _extract_assertions(relation_axioms, type_axioms):
-    get_cat_resources_func = cat_mat.get_materialized_resources if USE_MATERIALIZED_GRAPH else cat_store.get_resources
-    # axiom application
-    relation_assertions = {(res, pred, val) for cat, pred, val, _ in relation_axioms for res in get_cat_resources_func(cat)}
+
+def _extract_assertions(category_graph, relation_axioms, type_axioms):
+    relation_assertions = {(res, pred, val) for cat, pred, val, _ in relation_axioms for res in category_graph.get_resources(cat, materialized=USE_MATERIALIZED_GRAPH)}
     new_relation_assertions = {(res, pred, val) for res, pred, val in relation_assertions if pred not in dbp_store.get_properties(res) or val not in dbp_store.get_properties(res)[pred]}
 
-    type_assertions = {(res, rdf_util.PREDICATE_TYPE, t) for cat, pred, t, _ in type_axioms for res in get_cat_resources_func(cat)}
+    type_assertions = {(res, rdf_util.PREDICATE_TYPE, t) for cat, pred, t, _ in type_axioms for res in category_graph.get_resources(cat, materialized=USE_MATERIALIZED_GRAPH)}
     new_type_assertions = {(res, pred, t) for res, pred, t in type_assertions if t not in {tt for t in dbp_store.get_types(res) for tt in dbp_store.get_transitive_supertype_closure(t)} and t != rdf_util.CLASS_OWL_THING}
     new_type_assertions_transitive = {(res, pred, tt) for res, pred, t in new_type_assertions for tt in dbp_store.get_transitive_supertype_closure(t) if tt not in {ott for t in dbp_store.get_types(res) for ott in dbp_store.get_transitive_supertype_closure(t)} and tt != rdf_util.CLASS_OWL_THING}
 

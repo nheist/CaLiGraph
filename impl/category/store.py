@@ -1,6 +1,8 @@
 from . import util as cat_util
 import impl.util.rdf as rdf_util
+import impl.dbpedia.store as dbp_store
 import util
+from collections import defaultdict
 
 
 def get_all_cats() -> set:
@@ -93,3 +95,37 @@ def get_maintenance_cats() -> set:
         __MAINTENANCE_CATS__ = set(rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.maintenance_categories')], rdf_util.PREDICATE_TYPE))
 
     return __MAINTENANCE_CATS__
+
+
+def get_statistics(category: str) -> dict:
+    global __CATEGORY_STATISTICS__
+    if '__CATEGORY_STATISTICS__' not in globals():
+        __CATEGORY_STATISTICS__ = util.load_or_create_cache('dbpedia_category_statistics', _compute_category_statistics)
+    return __CATEGORY_STATISTICS__[category]
+
+
+def _compute_category_statistics() -> dict:
+    category_statistics = {}
+    for cat in get_all_cats():
+        type_counts = defaultdict(int)
+        property_counts = defaultdict(int)
+        #property_counts_inv = defaultdict(int)
+
+        resources = get_resources(cat)
+        for res in resources:
+            resource_statistics = dbp_store.get_statistics(res)
+            for t in resource_statistics['types']:
+                type_counts[t] += 1
+            for prop in resource_statistics['properties']:
+                property_counts[prop] += 1
+            #for prop in resource_statistics['properties_inv']:
+            #    property_counts_inv[prop] += 1
+        category_statistics[cat] = {
+            'type_counts': type_counts,
+            'type_frequencies': defaultdict(float, {t: t_count / len(resources) for t, t_count in type_counts.items()}),
+            'property_counts': property_counts,
+            'property_frequencies': defaultdict(float, {prop: p_count / len(resources) for prop, p_count in property_counts.items()}),
+            #'property_counts_inv': property_counts_inv,
+            #'property_frequencies_inv': defaultdict(float, {prop: p_count / len(resources) for prop, p_count in property_counts_inv.items()}),
+        }
+    return category_statistics

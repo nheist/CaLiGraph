@@ -12,6 +12,7 @@ category:
     child_type_ratio: 0.5
 cat2ax:
   use_materialized_category_graph: False
+  pattern_confidence: 0.05
 
 
 logging:

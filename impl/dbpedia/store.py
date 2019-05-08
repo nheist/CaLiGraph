@@ -150,6 +150,20 @@ def get_disambiguations(dbp_resource: str) -> set:
 
     return __DISAMBIGUATIONS__[dbp_resource]
 
+
+def get_statistics(dbp_resource: str) -> dict:
+    global __RESOURCE_STATISTICS__
+    if '__RESOURCE_STATISTICS__' not in globals():
+        __RESOURCE_STATISTICS__ = {}
+    if dbp_resource not in __RESOURCE_STATISTICS__:
+        __RESOURCE_STATISTICS__[dbp_resource] = {
+            'types': get_transitive_types(dbp_resource),
+            'properties': {(pred, val) for pred, values in get_properties(dbp_resource).items() for val in values},
+            #'properties_inv': {(pred, val) for pred, values in get_inverse_properties(dbp_resource).items() for val in values},
+        }
+    return __RESOURCE_STATISTICS__[dbp_resource]
+
+
 # DBpedia property
 
 
