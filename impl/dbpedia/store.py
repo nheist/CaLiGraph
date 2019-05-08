@@ -382,7 +382,7 @@ def get_disjoint_types(dbp_type: str) -> set:
     if '__DISJOINT_TYPE_MAPPING__' not in globals():
         __DISJOINT_TYPE_MAPPING__ = rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_DISJOINT_WITH, reflexive=True)
         # add/remove custom axioms
-        __DISJOINT_TYPE_MAPPING__ = {k: {v for v in values if {k, v} not in REMOVED_DISJOINTNESS_AXIOMS} for k, values in __DISJOINT_TYPE_MAPPING__.items()}
+        __DISJOINT_TYPE_MAPPING__ = defaultdict(set, {k: {v for v in values if {k, v} not in REMOVED_DISJOINTNESS_AXIOMS} for k, values in __DISJOINT_TYPE_MAPPING__.items()})
         for a, b in ADDED_DISJOINTNESS_AXIOMS:
             __DISJOINT_TYPE_MAPPING__[a].add(b)
             __DISJOINT_TYPE_MAPPING__[b].add(a)
