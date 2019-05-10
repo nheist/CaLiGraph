@@ -26,8 +26,13 @@ class CategoryGraph(BaseGraph):
         return self.nodes
 
     def add_edges(self, edges):
-        # TODO: implement reset of materialized resource statistics and resources
-        raise NotImplementedError()
+        # reset resource-dependent attributes that change due to the altered category tree structure
+        parent_categories = {e[0] for e in edges}
+        categories_to_reset = parent_categories | {a for cat in parent_categories for a in self.ancestors(cat)}
+        for cat in categories_to_reset:
+            self._reset_attr(cat, self.PROPERTY_MATERIALIZED_RESOURCES)
+            self._reset_attr(cat, self.PROPERTY_MATERIALIZED_STATISTICS)
+
         super().add_edges(edges)
 
     @property

@@ -31,8 +31,14 @@ class BaseGraph:
     def predecessors(self, node: str) -> set:
         return set(self.graph.predecessors(node)) if self.graph.has_node(node) else set()
 
+    def ancestors(self, node: str) -> set:
+        return set(nx.ancestors(self.graph, node)) if self.graph.has_node(node) else set()
+
     def successors(self, node: str) -> set:
         return set(self.graph.successors(node)) if self.graph.has_node(node) else set()
+
+    def descendants(self, node: str) -> set:
+        return set(nx.descendants(self.graph, node)) if self.graph.has_node(node) else set()
 
     def _depth(self, node: str) -> int:
         return nx.shortest_path_length(self.graph, source=self.root_node, target=node)
@@ -42,3 +48,6 @@ class BaseGraph:
 
     def _set_attr(self, node, attr, val):
         self.graph.nodes[node][attr] = val
+
+    def _reset_attr(self, node, attr):
+        del self.graph.nodes[node][attr]
