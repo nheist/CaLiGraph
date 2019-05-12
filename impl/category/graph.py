@@ -64,7 +64,7 @@ class CategoryGraph(BaseGraph):
         return self.dbp_types(category) or set() if category in self.nodes else set()
 
     def get_resources(self, category: str, materialized=False) -> set:
-        if category not in self.categories:
+        if not self.has_node(category):
             raise Exception(f'Category {category} not in category graph.')
 
         resources = cat_store.get_resources(category)
@@ -77,7 +77,7 @@ class CategoryGraph(BaseGraph):
         return self._get_attr(category, self.PROPERTY_MATERIALIZED_RESOURCES)
 
     def get_statistics(self, category: str, materialized=False) -> dict:
-        if category not in self.categories:
+        if not self.has_node(category):
             raise Exception(f'Category {category} not in category graph.')
 
         statistics = cat_store.get_statistics(category)

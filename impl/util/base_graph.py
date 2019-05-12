@@ -13,6 +13,9 @@ class BaseGraph:
     def nodes(self) -> set:
         return set(self.graph.nodes)
 
+    def has_node(self, node) -> bool:
+        return node in self.graph
+
     def _remove_all_nodes_except(self, valid_nodes: set):
         invalid_nodes = self.nodes.difference(valid_nodes)
         self.graph.remove_nodes_from(invalid_nodes)
