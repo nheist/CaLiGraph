@@ -124,7 +124,7 @@ def _tokenize_text(text: str) -> list:
 def _get_span_for_entity(doc, entity_text):
     entity_text = entity_text.strip()
     entity_tokens = entity_text.split(' ')
-    for i in range(len(doc) - len(entity_tokens)):
+    for i in range(len(doc) - len(entity_tokens) + 1):
         span = doc[i:i+len(entity_tokens)]
         if span.text == entity_text:
             return span
