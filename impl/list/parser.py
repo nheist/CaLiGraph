@@ -122,11 +122,10 @@ def _normalize_text(text: str) -> str:
 
 
 def _get_span_for_entity(doc, entity_text):
-    entity_text = entity_text.strip()
-    entity_tokens = entity_text.split(' ')
-    for i in range(len(doc) - len(entity_tokens) + 1):
-        span = doc[i:i+len(entity_tokens)]
-        if span.text == entity_text:
+    entity_doc = nlp_util.parse(entity_text, skip_cache=True)
+    for i in range(len(doc) - len(entity_doc) + 1):
+        span = doc[i:i+len(entity_doc)]
+        if span.text == entity_doc.text:
             return span
 
     raise ValueError(f'Could not find "{entity_text}" in "{doc}" for span retrieval.')
