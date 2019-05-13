@@ -53,4 +53,5 @@ class BaseGraph:
         self.graph.nodes[node][attr] = val
 
     def _reset_attr(self, node, attr):
-        del self.graph.nodes[node][attr]
+        if attr in self.graph.nodes[node]:
+            del self.graph.nodes[node][attr]
