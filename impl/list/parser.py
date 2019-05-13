@@ -82,7 +82,7 @@ def _finalize_entry(raw_entry: tuple) -> ListEntry:
     doc = nlp_util.parse(plain_text, skip_cache=True)
     entities = []
     for entity_idx, link in enumerate(wiki_text.wikilinks):
-        entity_span = _get_span_for_entity(doc, link.text or link.target)
+        entity_span = _get_span_for_entity(doc, _normalize_text(link.text or link.target))
         idx = entity_span.start
         invidx = len(doc) - entity_span.end - 1
         pn = any(w.tag_ in ['NNP', 'NNPS'] for w in entity_span)
@@ -108,17 +108,17 @@ def _convert_to_plain_text(wiki_text: WikiText) -> str:
     for comment in wiki_text.comments:
         result = result.replace(comment.string, ' ')
 
-    result = re.sub("'{2,}", '', result)
-    result = re.sub(' +', ' ', result)
-    return result.strip()
+    return _normalize_text(result)
 
 
 def _wrap_in_spaces(word: str) -> str:
     return ' ' + word + ' '
 
 
-def _tokenize_text(text: str) -> list:
-    return [t.text for t in nlp_util.parse(text, skip_cache=True)]
+def _normalize_text(text: str) -> str:
+    text = re.sub("'{2,}", '', text)
+    text = re.sub(' +', ' ', text)
+    return text.strip()
 
 
 def _get_span_for_entity(doc, entity_text):
