@@ -90,8 +90,10 @@ class CategoryGraph(BaseGraph):
             property_counts = statistics['property_counts']
             for cat in self.successors(category):
                 substats = self.get_statistics(cat, materialized=True)
-                type_counts += substats['type_counts']
-                property_counts += substats['property_counts']
+                for t, c in substats['type_counts'].items():
+                    type_counts[t] += c
+                for p, c in substats['property_counts'].items():
+                    property_counts[p] += c
             materialized_statistics = {
                 'type_counts': type_counts,
                 'type_frequencies': defaultdict(float, {t: t_count / len(resources) for t, t_count in type_counts.items()}),
