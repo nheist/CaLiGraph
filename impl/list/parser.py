@@ -85,7 +85,7 @@ def _finalize_entry(raw_entry: tuple) -> ListEntry:
         entity_span = _get_span_for_entity(doc, link.text or link.target)
         idx = entity_span.start
         invidx = len(doc) - entity_span.end - 1
-        pn = any(w.tag_ in ['NP', 'NPS'] for w in entity_span)
+        pn = any(w.tag_ in ['NNP', 'NNPS'] for w in entity_span)
         ne = any(w.ent_type_ for w in entity_span)
         entities.append(ListEntryEntity(uri=dbp_util.name2resource(link.target), idx=idx, invidx=invidx, entity_idx=entity_idx, pn=pn, ne=ne))
     return ListEntry(entities=entities, wikitext=wiki_text, depth=depth, section_name=section_name, section_idx=section_idx, section_invidx=section_invidx)
