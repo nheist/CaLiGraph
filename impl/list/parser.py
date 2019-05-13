@@ -14,11 +14,11 @@ LABEL_RESOURCE, LABEL_OTHER, LABEL_MISSING = 1, 0, -1
 NOISE_SECTIONS = ['See also', 'References', 'External links', 'Sources and external links']
 
 
-ListEntry = namedtuple('ListEntry', 'words wikitext depth section_name section_pos section_first section_last types')
-ListEntryWord = namedtuple('ListEntryWord', 'word pos ner label')
+ListEntry = namedtuple('ListEntry', 'entities wikitext depth section_name section_idx section_invidx')
+ListEntryEntity = namedtuple('ListEntryEntity', 'uri idx invidx entity_idx pn ne')
 
 
-def parse_entries(listpage_markup: str, dbp_types: set) -> list:
+def parse_entries(listpage_markup: str) -> list:
     wiki_text = wtp.parse(listpage_markup)
     cleaned_wiki_text = _convert_special_enums(wiki_text)
 
@@ -26,7 +26,7 @@ def parse_entries(listpage_markup: str, dbp_types: set) -> list:
         # TODO: implement table-lists
         return []
 
-    return [_finalize_entry(re, dbp_types) for re in _extract_raw_entries(cleaned_wiki_text)]
+    return [_finalize_entry(re) for re in _extract_raw_entries(cleaned_wiki_text)]
 
 
 def _convert_special_enums(wiki_text: WikiText) -> WikiText:
@@ -64,28 +64,31 @@ def _extract_raw_entries(wiki_text: WikiText) -> list:
     sections_total = len(sections)
     for section_idx, section in enumerate(sections):
         section_name = section.title.strip() if section.title.strip() else 'Main'
-        section_first = section_idx == 0
-        section_last = section_idx + 1 == sections_total
+        section_invidx = sections_total - section_idx - 1
         current_lists = section.lists()
         while current_lists:
-            entries.extend([(wtp.parse(text), depth, section_name, section_idx, section_first, section_last) for l in current_lists for text in l.items])
+            entries.extend([(wtp.parse(text), depth, section_name, section_idx, section_invidx) for l in current_lists for text in l.items])
             current_lists = [sl for l in current_lists for sl in l.sublists()]
             depth += 1
     return entries
 
 
-def _finalize_entry(raw_entry: tuple, dbp_types: set) -> ListEntry:
-    wiki_text, depth, section_name, section_pos, section_first, section_last = raw_entry
+def _finalize_entry(raw_entry: tuple) -> ListEntry:
+    wiki_text, depth, section_name, section_idx, section_invidx = raw_entry
 
     plain_text = _convert_to_plain_text(wiki_text)
-    if plain_text.strip():
-        tokens = _tag_text(plain_text)
-        labels = _get_labels(wiki_text, [t['word'] for t in tokens], dbp_types)
-        words = [ListEntryWord(word=token['word'], pos=token['pos'], ner=token['ner'], label=labels[idx]) for idx, token in enumerate(tokens)]
-    else:
-        words = []
-
-    return ListEntry(words=words, wikitext=wiki_text, depth=depth, section_name=section_name, section_pos=section_pos, section_first=section_first, section_last=section_last, types=dbp_types)
+    if not plain_text.strip():
+        return ListEntry(entities=[], wikitext=wiki_text, depth=depth, section_name=section_name, section_idx=section_idx, section_invidx=section_invidx)
+    doc = nlp_util.parse(plain_text, skip_cache=True)
+    entities = []
+    for entity_idx, link in enumerate(wiki_text.wikilinks):
+        entity_span = _get_span_for_entity(doc, link.text or link.target)
+        idx = entity_span.start
+        invidx = len(doc) - entity_span.end - 1
+        pn = any(w.tag_ in ['NP', 'NPS'] for w in entity_span)
+        ne = any(w.ent_type_ for w in entity_span)
+        entities.append(ListEntryEntity(uri=dbp_util.name2resource(link.target), idx=idx, invidx=invidx, entity_idx=entity_idx, pn=pn, ne=ne))
+    return ListEntry(entities=entities, wikitext=wiki_text, depth=depth, section_name=section_name, section_idx=section_idx, section_invidx=section_invidx)
 
 
 def _convert_to_plain_text(wiki_text: WikiText) -> str:
@@ -114,43 +117,16 @@ def _wrap_in_spaces(word: str) -> str:
     return ' ' + word + ' '
 
 
-def _get_labels(wiki_text: WikiText, tokenized_text: list, dbp_types: set) -> list:
-    # locate resources that belong to the list
-    resources = []
-    independent_dbp_types = dbp_store.get_independent_types(dbp_types)
-    for resource_candidate in wiki_text.wikilinks:
-        target = resource_candidate.target
-        text = resource_candidate.text if resource_candidate.text else target
-        resource_types = dbp_store.get_types(dbp_util.name2resource(target))
-        if not independent_dbp_types.difference(resource_types):
-            resources.append(_tokenize_text(text))
-
-    # return undefined labels if no resource could be found
-    if not resources:
-        return [LABEL_MISSING] * len(tokenized_text)
-
-    # return boolean labels for every tokenized word
-    labels = []
-    for i, word in enumerate(tokenized_text):
-        if len(labels) > i:
-            continue
-
-        words_found = 0
-        for res in resources:
-            if word == res[0] and res == tokenized_text[i:i+len(res)]:
-                words_found = len(res)
-
-        if words_found == 0:
-            labels.append(LABEL_OTHER)
-        else:
-            labels.extend([LABEL_RESOURCE] * words_found)
-
-    return labels
-
-
 def _tokenize_text(text: str) -> list:
     return [t.text for t in nlp_util.parse(text, skip_cache=True)]
 
 
-def _tag_text(text: str) -> list:
-    return [{'word': t.text, 'pos': t.tag_, 'ner': t.ent_type_ if t.ent_type_ else 'O'} for t in nlp_util.parse(text, skip_cache=True)]
+def _get_span_for_entity(doc, entity_text):
+    entity_text = entity_text.strip()
+    entity_tokens = entity_text.split(' ')
+    for i in range(len(doc) - len(entity_tokens)):
+        span = doc[i:i+len(entity_tokens)]
+        if span.text == entity_text:
+            return span
+
+    raise ValueError(f'Could not find "{entity_text}" in "{doc}" for span retrieval.')
