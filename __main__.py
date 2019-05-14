@@ -1,7 +1,6 @@
 import traceback
 import util
 import mailer
-from impl.category import cat2ax
 import impl.list.base as list_base
 
 if __name__ == '__main__':

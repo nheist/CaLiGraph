@@ -11,8 +11,5 @@ def get_parsed_listpages() -> list:
     return __PARSED_LISTPAGES__
 
 
-def _compute_parsed_listpages() -> list:
-    listpages = list_store.get_listpages()
-    listpage_markup = {lp: list_store.get_listpage_markup(lp) for lp in listpages}
-
-    return [list_parser.parse_entries(listpage_markup[lp]) for lp in listpages]
+def _compute_parsed_listpages() -> dict:
+    return {lp: list_parser.parse_entries(list_store.get_listpage_markup(lp)) for lp in list_store.get_listpages()}
