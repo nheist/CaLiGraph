@@ -1,7 +1,7 @@
 from collections import namedtuple
 import wikitextparser as wtp
 from wikitextparser import WikiText
-from _regex_core import error as RegexError
+from regex._regex_core import error as RegexError
 import re
 import impl.dbpedia.util as dbp_util
 import util
