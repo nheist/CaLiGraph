@@ -5,7 +5,6 @@ from _regex_core import error as RegexError
 import re
 import impl.dbpedia.util as dbp_util
 import util
-import impl.util.nlp as nlp_util
 
 
 LIST_TYPE_ENUM, LIST_TYPE_TABLE, LIST_TYPE_NONE = 'list_type_enum', 'list_type_table', 'list_type_none'
@@ -24,7 +23,7 @@ def parse_entries(listpage_markup: str) -> list:
         # TODO: implement table-lists
         return []
 
-    return [_finalize_entry(re) for re in _extract_raw_entries(cleaned_wiki_text)]
+    util.update_cache('dbpedia_listpage_parsed', _extract_entries(cleaned_wiki_text))
 
 
 def _convert_special_enums(wiki_text: WikiText) -> WikiText:
@@ -53,8 +52,7 @@ def _get_list_type(wiki_text: WikiText) -> str:
         return LIST_TYPE_NONE
 
 
-def _extract_raw_entries(wiki_text: WikiText) -> list:
-    """Return list page entries as Tuple(text: WikiText, depth: int)"""
+def _extract_entries(wiki_text: WikiText) -> list:
     entries = []
     depth = 0
 
@@ -68,25 +66,15 @@ def _extract_raw_entries(wiki_text: WikiText) -> list:
             entries.extend([(wtp.parse(text), depth, section_name, section_idx, section_invidx) for l in current_lists for text in l.items])
             current_lists = [sl for l in current_lists for sl in l.sublists()]
             depth += 1
-    return entries
+    return [_extract_entities(e) for e in entries]
 
 
-def _finalize_entry(raw_entry: tuple) -> ListEntry:
+def _extract_entities(raw_entry: tuple) -> dict:
     wiki_text, depth, section_name, section_idx, section_invidx = raw_entry
-
     plain_text = _convert_to_plain_text(wiki_text)
-    if not plain_text.strip():
-        return ListEntry(entities=[], wikitext=wiki_text, depth=depth, section_name=section_name, section_idx=section_idx, section_invidx=section_invidx)
-    doc = nlp_util.parse(plain_text, skip_cache=True)
-    entities = []
-    for entity_idx, link in enumerate(wiki_text.wikilinks):
-        entity_span = _get_span_for_entity(doc, _normalize_text(link.text or link.target))
-        idx = entity_span.start
-        invidx = len(doc) - entity_span.end - 1
-        pn = any(w.tag_ in ['NNP', 'NNPS'] for w in entity_span)
-        ne = any(w.ent_type_ for w in entity_span)
-        entities.append(ListEntryEntity(uri=dbp_util.name2resource(link.target), idx=idx, invidx=invidx, entity_idx=entity_idx, pn=pn, ne=ne))
-    return ListEntry(entities=entities, wikitext=wiki_text, depth=depth, section_name=section_name, section_idx=section_idx, section_invidx=section_invidx)
+
+    entities = [{'uri': dbp_util.name2resource(link.target), 'text': _normalize_text(link.text or link.target)} for link in wiki_text.wikilinks]
+    return {'text': plain_text, 'depth': depth, 'section_name': section_name, 'section_idx': section_idx, 'section_invidx': section_invidx, 'entities': entities}
 
 
 def _convert_to_plain_text(wiki_text: WikiText) -> str:
@@ -117,13 +105,3 @@ def _normalize_text(text: str) -> str:
     text = re.sub("'{2,}", '', text)
     text = re.sub(' +', ' ', text)
     return text.strip()
-
-
-def _get_span_for_entity(doc, entity_text):
-    entity_doc = nlp_util.parse(entity_text, skip_cache=True)
-    for i in range(len(doc) - len(entity_doc) + 1):
-        span = doc[i:i+len(entity_doc)]
-        if span.text == entity_doc.text:
-            return span
-
-    raise ValueError(f'Could not find "{entity_text}" in "{doc}" for span retrieval.')
