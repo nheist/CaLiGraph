@@ -29,6 +29,12 @@ class Axiom:
     def contradicts(self, other):
         raise NotImplementedError("Please use the sublcasses.")
 
+    def accepts_resource(self, dbp_resource: str) -> bool:
+        raise NotImplementedError("Please use the sublcasses.")
+
+    def rejects_resource(self, dbp_resource: str) -> bool:
+        raise NotImplementedError("Please use the sublcasses.")
+
 
 class TypeAxiom(Axiom):
     def __init__(self, value: str, confidence: float):
@@ -40,12 +46,28 @@ class TypeAxiom(Axiom):
     def contradicts(self, other):
         return other.value in dbp_store.get_disjoint_types(self.value)
 
+    def accepts_resource(self, dbp_resource: str) -> bool:
+        return self.value in dbp_store.get_transitive_types(dbp_resource)
+
+    def rejects_resource(self, dbp_resource: str) -> bool:
+        return self.value in {dt for t in dbp_store.get_types(dbp_resource) for dt in dbp_store.get_disjoint_types(t)}
+
 
 class RelationAxiom(Axiom):
     def contradicts(self, other):
         if self.predicate != other.predicate or not dbp_store.is_functional(self.predicate):
             return False
         return self.value != other.value
+
+    def accepts_resource(self, dbp_resource: str) -> bool:
+        props = dbp_store.get_properties(dbp_resource)
+        return self.predicate in props and self.value in props[self.predicate]
+
+    def rejects_resource(self, dbp_resource: str) -> bool:
+        if not dbp_store.is_functional(self.predicate):
+            return False
+        props = dbp_store.get_properties(dbp_resource)
+        return self.predicate in props and self.value not in props[self.predicate]
 
 
 def get_axioms(category: str) -> set:

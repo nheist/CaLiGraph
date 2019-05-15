@@ -1,4 +1,3 @@
-from collections import namedtuple
 import wikitextparser as wtp
 from wikitextparser import WikiText
 from regex._regex_core import error as RegexError
@@ -8,11 +7,6 @@ import util
 
 
 LIST_TYPE_ENUM, LIST_TYPE_TABLE, LIST_TYPE_NONE = 'list_type_enum', 'list_type_table', 'list_type_none'
-NOISE_SECTIONS = ['See also', 'References', 'External links', 'Sources and external links']
-
-
-ListEntry = namedtuple('ListEntry', 'entities wikitext depth section_name section_idx section_invidx')
-ListEntryEntity = namedtuple('ListEntryEntity', 'uri idx invidx entity_idx pn ne')
 
 
 def parse_entries(listpage_markup: str) -> list:
