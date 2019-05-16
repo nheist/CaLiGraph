@@ -65,10 +65,19 @@ def _extract_entries(wiki_text: WikiText) -> list:
 
 def _extract_entities(raw_entry: tuple) -> dict:
     wiki_text, depth, section_name, section_idx, section_invidx = raw_entry
-    plain_text = _convert_to_plain_text(wiki_text)
+    plain_text = _get_plain_text(wiki_text.string)
 
-    entities = [{'uri': dbp_util.name2resource(link.target), 'text': _convert_to_plain_text(wtp.parse(link.text or link.target))} for link in wiki_text.wikilinks]
+    entities = [{'uri': dbp_util.name2resource(link.target), 'text': _get_plain_text(link.text or link.target)} for link in wiki_text.wikilinks]
     return {'text': plain_text, 'depth': depth, 'section_name': section_name, 'section_idx': section_idx, 'section_invidx': section_invidx, 'entities': entities}
+
+
+def _get_plain_text(wiki_text: str) -> str:
+    current = None
+    new = wiki_text
+    while current != new:
+        current = new
+        new = _convert_to_plain_text(wtp.parse(current))
+    return current
 
 
 def _convert_to_plain_text(wiki_text: WikiText) -> str:
