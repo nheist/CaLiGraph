@@ -2,6 +2,7 @@ import impl.list.store as list_store
 import impl.category.cat2ax as cat_axioms
 import impl.util.nlp as nlp_util
 import pandas as pd
+import util
 
 
 # NOISE_SECTIONS = ['See also', 'References', 'External links', 'Sources and external links']
@@ -31,6 +32,9 @@ def make_entity_features(listpage_uri: str, parsed_listpage: list) -> pd.DataFra
         for entity_idx, entity in enumerate(entry['entities']):
             entity_uri = entity['uri']
             entity_span = _get_span_for_entity(entry_doc, entity['text'])
+            if not entity_span:
+                continue
+
             features = {
                 '_id': f'{listpage_uri}__{section_name}__{entry_idx}__{entity_uri}',
                 '_listpage_uri': listpage_uri,
@@ -68,4 +72,5 @@ def _get_span_for_entity(doc, entity_text):
         if span.text == entity_doc.text:
             return span
 
-    raise ValueError(f'Could not find "{entity_text}" in "{doc}" for span retrieval.')
+    util.get_logger().debug(f'Could not find "{entity_text}" in "{doc}" for span retrieval.')
+    return None
