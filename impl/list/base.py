@@ -16,7 +16,7 @@ def get_listpage_entities_trainingset() -> pd.DataFrame:
             continue
 
         lp_entities = list_features.make_entity_features(lp, parsed_lp)
-        entities = entities.append(lp_entities, ignore_index=True) if entities else lp_entities
+        entities = entities.append(lp_entities, ignore_index=True) if entities is not None else lp_entities
     return entities
 
 
