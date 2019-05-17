@@ -1,4 +1,5 @@
 import impl.list.store as list_store
+import impl.category.store as cat_store
 import impl.category.cat2ax as cat_axioms
 import impl.util.nlp as nlp_util
 import pandas as pd
@@ -17,9 +18,12 @@ import util
 
 def make_entity_features(listpage_uri: str, parsed_listpage: list) -> pd.DataFrame:
     listpage_axioms = set()
+    category_resources = set()
+
     listpage_category = list_store.get_equivalent_category(listpage_uri)
     if listpage_category:
         listpage_axioms = cat_axioms.get_axioms(listpage_category)
+        category_resources = cat_store.get_resources(listpage_category)
 
     data = []
     for entry_idx, entry in enumerate(parsed_listpage):
@@ -53,7 +57,7 @@ def make_entity_features(listpage_uri: str, parsed_listpage: list) -> pd.DataFra
                 'entity_pn': any(w.tag_ in ['NNP', 'NNPS'] for w in entity_span),
                 'entity_ne': any(w.ent_type_ for w in entity_span),
             }
-            if any(ax.accepts_resource(entity_uri) for ax in listpage_axioms):
+            if entity_uri in category_resources or any(ax.accepts_resource(entity_uri) for ax in listpage_axioms):
                 features['label'] = 1
             elif any(ax.rejects_resource(entity_uri) for ax in listpage_axioms):
                 features['label'] = 0
