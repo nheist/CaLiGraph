@@ -75,8 +75,8 @@ def _compute_disjoint_types() -> dict:
         dbp_type = dbp_types.pop()
         for other_dbp_type in dbp_types:
             if _compute_type_similarity(dbp_type, other_dbp_type, type_property_weights) <= DISJOINT_THRESHOLD:
-                disjoint_types[dbp_type].add(dbp_store.get_transitive_subtype_closure(other_dbp_type))
-                disjoint_types[other_dbp_type].add(dbp_store.get_transitive_subtype_closure(dbp_type))
+                disjoint_types[dbp_type].update(dbp_store.get_transitive_subtype_closure(other_dbp_type))
+                disjoint_types[other_dbp_type].update(dbp_store.get_transitive_subtype_closure(dbp_type))
     return disjoint_types
 
 
