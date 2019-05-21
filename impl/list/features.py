@@ -52,7 +52,7 @@ def make_entity_features(listpage_uri: str, parsed_listpage: list) -> pd.DataFra
                 'entry_invidx': len(parsed_listpage) - entry_idx - 1,
                 'entry_depth': entry_depth,
                 'entity_idx': entity_span.start,
-                'entity_invidx': len(entry_doc) - entity_span.end - 1,
+                'entity_invidx': len(entry_doc) - entity_span.end,
                 'entity_link_idx': entity_idx,
                 'entity_pn': any(w.tag_ in ['NNP', 'NNPS'] for w in entity_span),
                 'entity_ne': any(w.ent_type_ for w in entity_span),
