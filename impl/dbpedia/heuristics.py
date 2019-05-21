@@ -115,6 +115,9 @@ def _compute_inverse_type_frequencies() -> dict:
 
 
 def _compute_type_similarity(type_a: str, type_b: str, type_property_weights: dict) -> float:
+    if type_a == type_b or type_a in dbp_store.get_transitive_subtypes(type_b) or type_b in dbp_store.get_transitive_subtypes(type_a):
+        return 1
+
     numerator = sum(type_property_weights[type_a][pred] * type_property_weights[type_b][pred] for pred in type_property_weights[type_a])
     denominator_a = math.sqrt(sum([type_property_weights[type_a][pred] ** 2 for pred in type_property_weights[type_a]]))
     denominator_b = math.sqrt(sum([type_property_weights[type_b][pred] ** 2 for pred in type_property_weights[type_b]]))
