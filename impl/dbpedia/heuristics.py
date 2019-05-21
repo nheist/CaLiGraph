@@ -63,7 +63,9 @@ def get_disjoint_types(dbp_type, threshold=DISJOINT_THRESHOLD) -> set:
     global __DISJOINT_TYPES__
     if '__DISJOINT_TYPES__' not in globals():
         __DISJOINT_TYPES__ = util.load_or_create_cache('dbpedia_heuristic_disjoint_types', _compute_disjoint_types)
-    return {tp for tp, sim in __DISJOINT_TYPES__[dbp_type] if sim <= threshold}
+
+    disjoint_types = {tp for tp, sim in __DISJOINT_TYPES__[dbp_type] if sim <= threshold}
+    return {t for t in disjoint_types if not dbp_store.get_transitive_supertypes(t).intersection(disjoint_types)}
 
 
 def _compute_disjoint_types() -> dict:
