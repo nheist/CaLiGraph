@@ -4,6 +4,7 @@ import operator
 import numpy as np
 import impl.dbpedia.store as dbp_store
 import impl.dbpedia.util as dbp_util
+import impl.dbpedia.heuristics as dbp_heur
 import impl.category.base as cat_base
 import impl.category.category_set as cat_set
 import impl.category.nlp as cat_nlp
@@ -50,7 +51,7 @@ class TypeAxiom(Axiom):
         return self.value in dbp_store.get_transitive_types(dbp_resource)
 
     def rejects_resource(self, dbp_resource: str) -> bool:
-        return self.value in {dt for t in dbp_store.get_types(dbp_resource) for dt in dbp_store.get_disjoint_types(t)}
+        return self.value in {dt for t in dbp_store.get_types(dbp_resource) for dt in dbp_heur.get_disjoint_types(t)}
 
 
 class RelationAxiom(Axiom):

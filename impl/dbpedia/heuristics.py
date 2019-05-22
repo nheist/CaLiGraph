@@ -118,10 +118,5 @@ def _compute_type_similarity(type_a: str, type_b: str, type_property_weights: di
     numerator = sum(type_property_weights[type_a][pred] * type_property_weights[type_b][pred] for pred in type_property_weights[type_a])
     denominator_a = math.sqrt(sum([type_property_weights[type_a][pred] ** 2 for pred in type_property_weights[type_a]]))
     denominator_b = math.sqrt(sum([type_property_weights[type_b][pred] ** 2 for pred in type_property_weights[type_b]]))
-
-    if denominator_a * denominator_b == 0:
-        util.get_logger().debug(f'Setting similarity of {type_a} / {type_b} to 1 because of zero denominator.')
-        return 1
-
-    return numerator / (denominator_a * denominator_b)
+    return numerator / (denominator_a * denominator_b) if denominator_a * denominator_b > 0 else 1
 
