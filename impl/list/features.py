@@ -56,6 +56,11 @@ def make_entity_features(listpage_uri: str, parsed_listpage: list) -> pd.DataFra
                 'entity_link_idx': entity_idx,
                 'entity_pn': any(w.tag_ in ['NNP', 'NNPS'] for w in entity_span),
                 'entity_ne': any(w.ent_type_ for w in entity_span),
+                'prev_pos': entry_doc[entity_idx - 1].tag_ if entity_idx > 0 else 'START',
+                'prev_ne': bool(entry_doc[entity_idx - 1].ent_type_) if entity_idx > 0 else False,
+                'succ_pos': entry_doc[entity_idx + len(entity_span)].tag_ if entity_idx + len(entity_span) < len(entry_doc) else 'END',
+                'succ_ne': bool(entry_doc[entity_idx + len(entity_span)].ent_type_) if entity_idx + len(entity_span) < len(entry_doc) else False,
+                'comma_idx': len([w for w in entry_doc[0:entity_idx] if w.text == ','])
             }
             if entity_uri in category_resources or any(ax.accepts_resource(entity_uri) for ax in listpage_axioms):
                 features['label'] = 1

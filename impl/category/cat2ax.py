@@ -45,7 +45,7 @@ class TypeAxiom(Axiom):
         return super().implies(other) or other.value in dbp_store.get_transitive_supertype_closure(self.value)
 
     def contradicts(self, other):
-        return other.value in dbp_store.get_disjoint_types(self.value)
+        return other.value in dbp_heur.get_disjoint_types(self.value)
 
     def accepts_resource(self, dbp_resource: str) -> bool:
         return self.value in dbp_store.get_transitive_types(dbp_resource)
