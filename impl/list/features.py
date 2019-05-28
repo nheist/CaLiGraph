@@ -6,25 +6,13 @@ import pandas as pd
 import util
 
 
-# NOISE_SECTIONS = ['See also', 'References', 'External links', 'Sources and external links']
-
-
-# Rules for labels
-# 1) only create labels if we have axioms for list
-# 2) if entity fulfills axiom -> TRUE
-# 3) if entity contradicts axiom (for types: has type and type is not at least supertype of axiom type) -> FALSE
-# 4) else -> no label
-
-
 def make_entity_features(listpage_uri: str, parsed_listpage: list) -> pd.DataFrame:
     listpage_axioms = set()
-    listpage_type_axioms = set()
     category_resources = set()
 
     listpage_category = list_store.get_equivalent_category(listpage_uri)
     if listpage_category:
         listpage_axioms = cat_axioms.get_axioms(listpage_category)
-        listpage_type_axioms = {ax for ax in listpage_axioms if type(ax) is cat_axioms.TypeAxiom}
         category_resources = cat_store.get_resources(listpage_category)
 
     data = []
@@ -64,7 +52,7 @@ def make_entity_features(listpage_uri: str, parsed_listpage: list) -> pd.DataFra
                 'succ_ne': bool(entry_doc[entity_idx + len(entity_span)].ent_type_) if entity_idx + len(entity_span) < len(entry_doc) else False,
                 'comma_idx': len([w for w in entry_doc[0:entity_idx] if w.text == ','])
             }
-            if entity_uri in category_resources or any(ax.accepts_resource(entity_uri) for ax in listpage_type_axioms):
+            if entity_uri in category_resources or any(ax.accepts_resource(entity_uri) for ax in listpage_axioms):
                 features['label'] = 1
             elif any(ax.rejects_resource(entity_uri) for ax in listpage_axioms):
                 features['label'] = 0
