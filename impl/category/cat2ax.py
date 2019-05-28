@@ -58,17 +58,17 @@ class RelationAxiom(Axiom):
     def contradicts(self, other):
         if self.predicate != other.predicate or not dbp_store.is_functional(self.predicate):
             return False
-        return self.value != other.value
+        return dbp_store.resolve_redirect(self.value) != dbp_store.resolve_redirect(other.value)
 
     def accepts_resource(self, dbp_resource: str) -> bool:
         props = dbp_store.get_properties(dbp_resource)
-        return self.predicate in props and self.value in props[self.predicate]
+        return self.predicate in props and (self.value in props[self.predicate] or dbp_store.resolve_redirect(self.value) in props[self.predicate])
 
     def rejects_resource(self, dbp_resource: str) -> bool:
         if not dbp_store.is_functional(self.predicate):
             return False
         props = dbp_store.get_properties(dbp_resource)
-        return self.predicate in props and self.value not in props[self.predicate]
+        return self.predicate in props and self.value not in props[self.predicate] and dbp_store.resolve_redirect(self.value) not in props[self.predicate]
 
 
 def get_axioms(category: str) -> set:
