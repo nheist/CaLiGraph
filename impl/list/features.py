@@ -97,5 +97,5 @@ def _get_span_for_entity(doc, entity_text):
         if span.text == entity_doc.text:
             return span
 
-    util.get_logger().debug(f'Could not find "{entity_text}" in "{doc}" for span retrieval.')
+    #util.get_logger().debug(f'Could not find "{entity_text}" in "{doc}" for span retrieval.')
     return None

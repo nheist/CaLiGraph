@@ -42,14 +42,14 @@ def _get_list_type(wiki_text: WikiText) -> str:
         table_row_count = len([row for table in wiki_text.tables for row in table.data(span=False)])
 
         if not enum_entry_count and not table_row_count:
-            util.get_logger().debug('LIST-PARSE: found list without concrete type: {}'.format(wiki_text))
+            #util.get_logger().debug('LIST-PARSE: found list without concrete type: {}'.format(wiki_text))
             return LIST_TYPE_NONE
         elif enum_entry_count > table_row_count:
             return LIST_TYPE_ENUM
         else:
             return LIST_TYPE_TABLE
     except RegexError as reg_err:
-        util.get_logger().debug('LIST-PARSE: could not parse list due to exception "{}": {}'.format(reg_err, wiki_text))
+        #util.get_logger().debug('LIST-PARSE: could not parse list due to exception "{}": {}'.format(reg_err, wiki_text))
         return LIST_TYPE_NONE
 
 
