@@ -134,7 +134,7 @@ cache:
     version: 1
   spacy_docs:
     filename: 'spacy-docs'
-    version: 1
+    version: 2  # version 2 incl. listpages
   dbpedia_resource_type_cooccurrence_matrix:
     filename: 'dbpedia-resource-type-cooccurrence-matrix'
     version: 1

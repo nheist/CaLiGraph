@@ -9,15 +9,22 @@ import util
 LIST_TYPE_ENUM, LIST_TYPE_TABLE, LIST_TYPE_NONE = 'list_type_enum', 'list_type_table', 'list_type_none'
 
 
-def parse_entries(listpage_markup: str) -> list:
+def parse_listpage(listpage_uri: str, listpage_markup: str) -> dict:
     wiki_text = wtp.parse(listpage_markup)
     cleaned_wiki_text = _convert_special_enums(wiki_text)
 
-    if _get_list_type(cleaned_wiki_text) != LIST_TYPE_ENUM:
-        # TODO: implement table-lists
-        return []
+    list_type = _get_list_type(cleaned_wiki_text)
+    result = {
+        'uri': listpage_uri,
+        'type': list_type
+    }
 
-    return _extract_entries(cleaned_wiki_text)
+    if list_type == LIST_TYPE_ENUM:
+        result['sections'] = _extract_sections(cleaned_wiki_text)
+
+    # TODO: implement table-lists
+
+    return result
 
 
 def _convert_special_enums(wiki_text: WikiText) -> WikiText:
@@ -46,29 +53,24 @@ def _get_list_type(wiki_text: WikiText) -> str:
         return LIST_TYPE_NONE
 
 
-def _extract_entries(wiki_text: WikiText) -> list:
-    entries = []
-    depth = 0
-
-    sections = wiki_text.sections
-    sections_total = len(sections)
-    for section_idx, section in enumerate(sections):
-        section_name = section.title.strip() if section.title.strip() else 'Main'
-        section_invidx = sections_total - section_idx - 1
-        current_lists = section.lists()
-        while current_lists:
-            entries.extend([(wtp.parse(text), depth, section_name, section_idx, section_invidx) for l in current_lists for text in l.items])
-            current_lists = [sl for l in current_lists for sl in l.sublists()]
-            depth += 1
-    return [_extract_entities(e) for e in entries]
+def _extract_sections(wiki_text: WikiText) -> list:
+    return [{
+        'name': section.title.strip() if section.title.strip() else 'Main',
+        'entries': [e for l in section.lists() for e in _extract_entries_for_list(l)]
+    } for section in wiki_text.sections]
 
 
-def _extract_entities(raw_entry: tuple) -> dict:
-    wiki_text, depth, section_name, section_idx, section_invidx = raw_entry
-    plain_text = _get_plain_text(wiki_text.string)
+def _extract_entries_for_list(l: wtp.WikiList):
+    entries = [{
+        'text': _get_plain_text(item_text),
+        'depth': l.level,
+        'entities': [{'uri': dbp_util.name2resource(link.target), 'text': _get_plain_text(link.text or link.target)} for link in wtp.parse(item_text).wikilinks]
+    } for item_text in l.items]
 
-    entities = [{'uri': dbp_util.name2resource(link.target), 'text': _get_plain_text(link.text or link.target)} for link in wiki_text.wikilinks]
-    return {'text': plain_text, 'depth': depth, 'section_name': section_name, 'section_idx': section_idx, 'section_invidx': section_invidx, 'entities': entities}
+    for sl in l.sublists():
+        entries.extend(_extract_entries_for_list(sl))
+
+    return entries
 
 
 def _get_plain_text(wiki_text: str) -> str:

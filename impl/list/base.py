@@ -8,14 +8,17 @@ from . import store as list_store
 
 def get_listpage_entities_trainingset() -> pd.DataFrame:
     entities = None
-    for lp, parsed_lp in get_parsed_listpages().items():
+    for lp, lp_data in get_parsed_listpages().items():
+        if lp_data['type'] != list_parser.LIST_TYPE_ENUM:
+            continue
+
         cat = list_store.get_equivalent_category(lp)
         if not cat:
             continue
         if not cat_axioms.get_axioms(cat):
             continue
 
-        lp_entities = list_features.make_entity_features(lp, parsed_lp)
+        lp_entities = list_features.make_entity_features(lp_data)
         entities = entities.append(lp_entities, ignore_index=True) if entities is not None else lp_entities
     return entities
 
@@ -29,4 +32,4 @@ def get_parsed_listpages() -> dict:
 
 
 def _compute_parsed_listpages() -> dict:
-    return {lp: list_parser.parse_entries(list_store.get_listpage_markup(lp)) for lp in list_store.get_listpages()}
+    return {lp: list_parser.parse_listpage(lp, list_store.get_listpage_markup(lp)) for lp in list_store.get_listpages()}
