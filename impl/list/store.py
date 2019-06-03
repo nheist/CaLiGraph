@@ -37,7 +37,7 @@ def _create_equivalent_listpage_mapping() -> dict:
 
     # 1) find equivalent lists by matching category/list names exactly
     name_to_category_mapping = {cat_util.remove_category_prefix(cat).lower(): cat for cat in categories}
-    name_to_list_mapping = {list_util.remove_listpage_prefix(lp).lower(): lp for lp in get_listpages()}
+    name_to_list_mapping = {list_util.remove_listpage_prefix(lp).lower(): lp for lp in get_listpages_with_redirects()}
     equal_pagenames = set(name_to_category_mapping).intersection(set(name_to_list_mapping))
     cat_to_lp_mapping.update({name_to_category_mapping[name]: name_to_list_mapping[name] for name in equal_pagenames})
 
@@ -59,7 +59,8 @@ def _create_equivalent_listpage_mapping() -> dict:
                 cat_to_lp_mapping[cat] = lp
                 break
 
-    return cat_to_lp_mapping
+    # 3) resolve all redirects of listpages and only return those that point to listpages
+    return {cat: dbp_store.resolve_redirect(lp) for cat, lp in cat_to_lp_mapping.items() if list_util.is_listpage(dbp_store.resolve_redirect(lp))}
 
 
 def get_child_listpages(category: str) -> set:
@@ -82,10 +83,18 @@ def _create_child_listpages_mapping() -> dict:
 def get_listpages() -> set:
     global __LISTPAGES__
     if '__LISTPAGES__' not in globals():
-        initializer = lambda: {res for res in dbp_store.get_resources() if list_util.is_listpage(res)}
-        __LISTPAGES__ = util.load_or_create_cache('dbpedia_listpages', initializer)
+        __LISTPAGES__ = {dbp_store.resolve_redirect(lp) for lp in get_listpages_with_redirects() if list_util.is_listpage(dbp_store.resolve_redirect(lp))}
 
     return __LISTPAGES__
+
+
+def get_listpages_with_redirects() -> set:
+    global __LISTPAGES_WITH_REDIRECTS__
+    if '__LISTPAGES_WITH_REDIRECTS__' not in globals():
+        initializer = lambda: {res for res in dbp_store.get_resources() if list_util.is_listpage(res)}
+        __LISTPAGES_WITH_REDIRECTS__ = util.load_or_create_cache('dbpedia_listpages', initializer)
+
+    return __LISTPAGES_WITH_REDIRECTS__
 
 
 def get_listpage_markup(listpage: str) -> str:
