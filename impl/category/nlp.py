@@ -2,16 +2,13 @@ import impl.util.nlp as nlp_util
 import impl.category.store as cat_store
 import util
 import inflection
-from spacy.tokens import Doc, Span
+from spacy.tokens import Doc
 
 SINGULARIZED_CATEGORIES_CACHE_ID = 'categories_singularized'
 
 
 def parse_category(category: str) -> Doc:
     label = cat_store.get_label(category)
-    split_label = label.split(' ')
-    if len(split_label) > 1 and not (label[1].isupper() or split_label[1][0].isupper()):
-        label = label[0].lower() + label[1:]
     return nlp_util.parse(label)
 
 

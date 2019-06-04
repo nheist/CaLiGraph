@@ -19,7 +19,7 @@ def filter_important_words(text: str) -> set:
 
 def get_head_lemmas(doc: Doc) -> set:
     doc = tag_lexical_head(doc)
-    return {w.text for w in doc if w.tag_ == 'NNS' and w.ent_type_ == 'LH'}
+    return {w.lemma_ for w in doc if w.tag_ == 'NNS' and w.ent_type_ == 'LH'}
 
 
 def tag_lexical_head(doc: Doc, valid_words=None) -> Doc:
@@ -43,7 +43,12 @@ def tag_lexical_head(doc: Doc, valid_words=None) -> Doc:
     return doc
 
 
-def parse(text: str, skip_cache=False) -> Doc:
+def parse(text: str, disable_normalization=False, skip_cache=False) -> Doc:
+    if not disable_normalization:
+        split_text = text.split(' ')
+        if len(split_text) > 1 and not (text[1].isupper() or split_text[1][0].isupper()):
+            text = text[0].lower() + text[1:]
+
     if skip_cache:
         return parser(text)
 
