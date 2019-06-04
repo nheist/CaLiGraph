@@ -8,6 +8,8 @@ import impl.util.nlp as nlp_util
 from lxml import etree
 from collections import defaultdict
 import bz2
+from spacy.tokens import Doc
+from impl.category.conceptual import is_conceptual_category
 
 
 def get_equivalent_category(listpage: str) -> str:
@@ -75,9 +77,63 @@ def get_child_listpages(category: str) -> set:
 def _create_child_listpages_mapping() -> dict:
     util.get_logger().info('CACHE: Creating child-listpage mapping')
 
-    # find child lists by looking for categories containing multiple lists
-    # TODO
-    raise NotImplementedError()
+    cat_to_lp_mapping = defaultdict(set)
+    for lp in get_listpages():
+        if get_equivalent_category(lp):
+            continue
+
+        headlemmas = nlp_util.get_head_lemmas(nlp_util.parse(list_util.list2name(lp)))
+
+        lp_cats = cat_store.get_resource_to_cats_mapping()[lp]
+        # check if headlemma of lp matches with cat. if yes -> add
+        parent_category_docs = {cat: nlp_util.parse(cat_util.category2name(cat)) for cat in lp_cats if not list_util.is_listcategory(cat)}
+        matching_cats = _find_cats_with_matching_headlemmas(parent_category_docs, headlemmas)
+        if matching_cats:
+            for cat in matching_cats:
+                cat_to_lp_mapping[cat].add(lp)
+            continue
+
+        # check if headlemma of lp matches with lists-of cat. if yes -> check for lists-of cat hierarchy path. if good -> add
+        parent_listcategory_docs = {cat: nlp_util.parse(list_util.listcategory2name(cat)) for cat in lp_cats if list_util.is_listcategory(cat)}
+        if len(parent_listcategory_docs) > 1:
+            # if we have more than one listcategory, we only use those with a matching headlemma
+            parent_listcategory_docs = {cat: parent_listcategory_docs[cat] for cat in _find_cats_with_matching_headlemmas(parent_listcategory_docs, headlemmas)}
+
+        for listcat, doc in parent_listcategory_docs:
+            parent_categories = _find_listcategory_hierarchy(listcat, doc)[-1]
+            for cat in parent_categories:
+                cat_to_lp_mapping[cat].add(lp)
+
+    return cat_to_lp_mapping
+
+
+def _find_cats_with_matching_headlemmas(category_docs: dict, headlemmas: set):
+    matches = set()
+    for cat, cat_doc in category_docs.items():
+        cat_headlemmas = nlp_util.get_head_lemmas(cat_doc)
+        if headlemmas.intersection(cat_headlemmas):
+            matches.add(cat)
+    return matches
+
+
+def _find_listcategory_hierarchy(listcategory: str, listcat_doc: Doc):
+    headlemmas = nlp_util.get_head_lemmas(listcat_doc)
+
+    parent_cats = cat_store.get_parents(listcategory)
+    # check parent categories for same head lemmas
+    parent_category_docs = {cat: nlp_util.parse(cat_util.category2name(cat)) for cat in parent_cats if not list_util.is_listcategory(cat)}
+    matching_cats = {cat for cat in _find_cats_with_matching_headlemmas(parent_category_docs, headlemmas) if is_conceptual_category(cat)}
+    if matching_cats:
+        return [listcategory, set(matching_cats)]
+
+    # check parent listcategories for same head lemmas and propagate search
+    parent_listcategory_docs = {cat: nlp_util.parse(list_util.listcategory2name(cat)) for cat in parent_cats if list_util.is_listcategory(cat)}
+    parent_listcategory_docs = {cat: parent_listcategory_docs[cat] for cat in _find_cats_with_matching_headlemmas(parent_listcategory_docs, headlemmas)}
+    if parent_listcategory_docs:
+        return [listcategory] + _find_listcategory_hierarchy(*parent_listcategory_docs.popitem())
+
+    # return empty parent category as no link to the existing category hierarchy can be found
+    return [listcategory, set()]
 
 
 def get_listpages() -> set:

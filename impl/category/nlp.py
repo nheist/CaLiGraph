@@ -2,7 +2,7 @@ import impl.util.nlp as nlp_util
 import impl.category.store as cat_store
 import util
 import inflection
-from spacy.tokens import Doc
+from spacy.tokens import Doc, Span
 
 SINGULARIZED_CATEGORIES_CACHE_ID = 'categories_singularized'
 

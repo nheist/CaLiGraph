@@ -4,7 +4,6 @@ import impl.category.cat2ax as cat_axioms
 import impl.util.nlp as nlp_util
 import pandas as pd
 import numpy as np
-import util
 
 
 def make_entity_features(lp_data: dict) -> pd.DataFrame:
@@ -78,7 +77,7 @@ def make_entity_features(lp_data: dict) -> pd.DataFrame:
                     'succ_ne': bool(entry_doc[entity_idx + len(entity_span)].ent_type_) if entity_idx + len(entity_span) < len(entry_doc) else False,
                     'comma_idx': len([w for w in entry_doc[0:entity_idx] if w.text == ','])
                 }
-                if entity_uri in category_resources or any(ax.accepts_resource(entity_uri) for ax in listpage_axioms):
+                if entity_uri in category_resources:
                     features['label'] = 1
                 elif any(ax.rejects_resource(entity_uri) for ax in listpage_axioms):
                     features['label'] = 0
@@ -97,5 +96,4 @@ def _get_span_for_entity(doc, entity_text):
         if span.text == entity_doc.text:
             return span
 
-    #util.get_logger().debug(f'Could not find "{entity_text}" in "{doc}" for span retrieval.')
     return None

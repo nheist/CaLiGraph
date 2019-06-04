@@ -1,8 +1,9 @@
 import util
+import impl.util.nlp as nlp_util
 import impl.category.store as cat_store
 import impl.category.nlp as cat_nlp
 import impl.category.category_set as cat_set
-from spacy.tokens import Doc, Span
+from spacy.tokens import Doc
 
 
 def is_conceptual_category(category: str) -> bool:
@@ -20,7 +21,7 @@ def _compute_conceptual_categories() -> set:
 
 def _tag_lexical_heads(categories) -> dict:
     # basic lexical head tagging
-    category_docs = {cat: _tag_lexical_head(cat_nlp.parse_category(cat)) for cat in categories}
+    category_docs = {cat: nlp_util.tag_lexical_head(cat_nlp.parse_category(cat)) for cat in categories}
     plural_lexhead_cats = {cat for cat, doc in category_docs.items() if _has_plural_lexical_head(doc)}
 
     # enhanced lexical head tagging with category sets (yields 2822 additional conceptual categories)
@@ -36,30 +37,9 @@ def _tag_lexical_heads(categories) -> dict:
             if all(pattern_words.issubset(plural_lexhead) for plural_lexhead in plural_lexheads):
                 other_cats = {c for c in set_cats if c not in plural_lexhead_set_cats}
                 for c in other_cats:
-                    category_docs[c] = _tag_lexical_head(cat_nlp.parse_category(c), valid_words=pattern_words)
+                    category_docs[c] = nlp_util.tag_lexical_head(cat_nlp.parse_category(c), valid_words=pattern_words)
 
     return category_docs
-
-
-def _tag_lexical_head(doc: Doc, valid_words=None) -> Doc:
-    chunk_words = {w for chunk in doc.noun_chunks for w in chunk}
-    lexhead_start = None
-    for chunk in doc.noun_chunks:
-        if valid_words and all(w not in chunk.text for w in valid_words):
-            continue
-
-        elem = chunk.root
-        if elem.text.istitle() or elem.tag_ not in ['NN', 'NNS']:
-            continue
-        if len(doc) > elem.i + 1 and doc[elem.i+1].text in ['(', ')', '–']:
-            continue
-        if (len(doc) > elem.i + 1 and doc[elem.i + 1].tag_ in ['NN', 'NNS']) or (len(doc) > elem.i + 2 and doc[elem.i+1].text == 'and' and doc[elem.i+2] in chunk_words):
-            lexhead_start = lexhead_start if lexhead_start is not None else chunk.start
-            continue
-        lexhead_start = lexhead_start if lexhead_start is not None else chunk.start
-        doc.ents = [Span(doc, lexhead_start, chunk.end, label=doc.vocab.strings['LH'])]
-        break
-    return doc
 
 
 def _has_plural_lexical_head(doc: Doc) -> bool:

@@ -73,6 +73,19 @@ def get_children(category: str) -> set:
     return __CHILDREN__[category].difference({category})
 
 
+def get_parents(category: str) -> set:
+    global __PARENTS__, __CHILDREN__
+    if '__PARENTS__' not in globals():
+        get_children('')  # make sure that __CHILDREN__ is initialized
+        __PARENTS__ = defaultdict(set)
+        for child, parents in __CHILDREN__.items():
+            for parent in parents:
+                if parent != child:
+                    __PARENTS__[parent].add(child)
+
+    return __PARENTS__[category]
+
+
 def get_redirects(category: str) -> set:
     global __REDIRECTS__
     if '__REDIRECTS__' not in globals():
