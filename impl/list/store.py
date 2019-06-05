@@ -16,7 +16,7 @@ def get_equivalent_category(listpage: str) -> str:
     global __EQUIVALENT_CATEGORY_MAPPING__
     if '__EQUIVALENT_CATEGORY_MAPPING__' not in globals():
         __EQUIVALENT_CATEGORY_MAPPING__ = defaultdict(lambda: None)
-        get_equivalent_listpage('')  # initialise listpage mapping
+        get_equivalent_listpage('')  # initialise equivalent-listpage mapping
         for cat, lp in __EQUIVALENT_LISTPAGE_MAPPING__.items():
             __EQUIVALENT_CATEGORY_MAPPING__[lp] = cat
 
@@ -65,8 +65,19 @@ def _create_equivalent_listpage_mapping() -> dict:
     return {cat: dbp_store.resolve_redirect(lp) for cat, lp in cat_to_lp_mapping.items() if list_util.is_listpage(dbp_store.resolve_redirect(lp))}
 
 
+def get_parent_categories(listpage: str) -> set:
+    global __PARENT_CATEGORIES_MAPPING__
+    if '__PARENT_CATEGORIES_MAPPING__' not in globals():
+        __PARENT_CATEGORIES_MAPPING__ = defaultdict(set)
+        get_child_listpages('')  # initialise child-listpage mapping
+        for cat, lps in __CHILD_LISTPAGES_MAPPING__.items():
+            for lp in lps:
+                __PARENT_CATEGORIES_MAPPING__[lp].add(cat)
+
+    return __PARENT_CATEGORIES_MAPPING__[listpage]
+
+
 def get_child_listpages(category: str) -> set:
-    # find child pages by looking at most common category of list items
     global __CHILD_LISTPAGES_MAPPING__
     if '__CHILD_LISTPAGES_MAPPING__' not in globals():
         __CHILD_LISTPAGES_MAPPING__ = util.load_or_create_cache('dbpedia_listpage_children', _create_child_listpages_mapping)
