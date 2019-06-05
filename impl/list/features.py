@@ -50,7 +50,7 @@ def make_entity_features(lp_data: dict) -> pd.DataFrame:
 
         entries = section_data['entries']
         for entry_idx, entry_data in enumerate(entries):
-            entry_doc = nlp_util.parse(entry_data['text'])
+            entry_doc = nlp_util.parse(entry_data['text'], disable_normalization=True)
 
             entities = entry_data['entities']
             for entity_idx, entity_data in enumerate(entities):
@@ -111,7 +111,7 @@ def make_entity_features(lp_data: dict) -> pd.DataFrame:
 
 
 def _get_span_for_entity(doc, entity_text):
-    entity_doc = nlp_util.parse(entity_text, skip_cache=True)
+    entity_doc = nlp_util.parse(entity_text, skip_cache=True, disable_normalization=True)
     for i in range(len(doc) - len(entity_doc) + 1):
         span = doc[i:i+len(entity_doc)]
         if span.text == entity_doc.text:
