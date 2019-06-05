@@ -10,10 +10,10 @@ if __name__ == '__main__':
     try:
         util.get_logger().info('Starting CaLiGraph extraction..')
 
-        util.get_logger().info(list_store.get_child_listpages('http://dbpedia.org/resource/Category:Writers'))
+        util.get_logger().info(list_store.get_equivalent_listpage('http://dbpedia.org/resource/Category:Writers'))
         nlp_util.persist_cache()
 
-        mailer.send_success('FINISHED childlist extraction')
+        mailer.send_success('FINISHED equivalent list extraction')
         util.get_logger().info('Finished CaLiGraph extraction.')
     except Exception as e:
         error_msg = traceback.format_exc()
