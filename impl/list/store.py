@@ -32,6 +32,7 @@ def get_equivalent_listpage(category: str) -> str:
 
 
 def _create_equivalent_listpage_mapping() -> dict:
+    # todo: use synonyms
     util.get_logger().info('CACHE: Creating equivalent-listpage mapping')
 
     categories = cat_store.get_all_cats()
@@ -86,6 +87,8 @@ def get_child_listpages(category: str) -> set:
 
 
 def _create_child_listpages_mapping() -> dict:
+    # todo: use synonyms / hypernyms for hierarchy
+    # todo: use instances to locate best matching category
     util.get_logger().info('CACHE: Creating child-listpage mapping')
 
     cat_to_lp_mapping = defaultdict(set)

@@ -18,7 +18,7 @@ cat2ax:
 logging:
   level: 'DEBUG'
   to_file: True
-  filename: 'list-parse' # 'cataxioms-materialized_v4' # 'dbptype-evaluation' #
+  filename: 'list-feature-extraction'
 
 mailer:
   sender: 'errors.nheist@gmail.com'

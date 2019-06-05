@@ -6,14 +6,35 @@ import pandas as pd
 import numpy as np
 
 
-def make_entity_features(lp_data: dict) -> pd.DataFrame:
+def assign_entity_labels(entities: pd.DataFrame):
+    entities['label'] = entities.apply(lambda row: _compute_label_for_entity(row['_listpage_uri'], row['_entity_uri']), axis=1)
+
+
+def _compute_label_for_entity(listpage_uri: str, entity_uri: str) -> int:
     listpage_axioms = set()
     category_resources = set()
 
-    listpage_category = list_store.get_equivalent_category(lp_data['uri'])
-    if listpage_category:
-        listpage_axioms = cat_axioms.get_axioms(listpage_category)
-        category_resources = cat_store.get_resources(listpage_category)
+    listpage_categories = {list_store.get_equivalent_category(listpage_uri)} or list_store.get_parent_categories(listpage_uri)
+    for cat in listpage_categories:
+        listpage_axioms.update(cat_axioms.get_axioms(cat))
+        category_resources.update(cat_store.get_resources(cat))
+
+    if entity_uri in category_resources:
+        return 1
+    elif any(ax.rejects_resource(entity_uri) for ax in listpage_axioms):
+        return 0
+    return -1
+
+
+def make_entity_features(lp_data: dict) -> pd.DataFrame:
+    lp_uri = lp_data['uri']
+    listpage_axioms = set()
+    category_resources = set()
+
+    listpage_categories = {list_store.get_equivalent_category(lp_uri)} or list_store.get_parent_categories(lp_uri)
+    for cat in listpage_categories:
+        listpage_axioms.update(cat_axioms.get_axioms(cat))
+        category_resources.update(cat_store.get_resources(cat))
 
     data = []
     sections = lp_data['sections']
@@ -40,8 +61,8 @@ def make_entity_features(lp_data: dict) -> pd.DataFrame:
 
                 features = {
                     # ID
-                    '_id': f'{lp_data["uri"]}__{section_name}__{entry_idx}__{entity_uri}',
-                    '_listpage_uri': lp_data['uri'],
+                    '_id': f'{lp_uri}__{section_name}__{entry_idx}__{entity_uri}',
+                    '_listpage_uri': lp_uri,
                     '_section_name': section_name,
                     '_entry_idx': entry_idx,
                     '_entity_uri': entity_uri,
