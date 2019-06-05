@@ -99,7 +99,7 @@ def _create_child_listpages_mapping() -> dict:
             # if we have more than one listcategory, we only use those with a matching headlemma
             parent_listcategory_docs = {cat: parent_listcategory_docs[cat] for cat in _find_cats_with_matching_headlemmas(parent_listcategory_docs, headlemmas)}
 
-        for listcat, doc in parent_listcategory_docs:
+        for listcat, doc in parent_listcategory_docs.items():
             parent_categories = _find_listcategory_hierarchy(listcat, doc)[-1]
             for cat in parent_categories:
                 cat_to_lp_mapping[cat].add(lp)
