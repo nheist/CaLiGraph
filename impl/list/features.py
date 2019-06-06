@@ -28,13 +28,6 @@ def _compute_label_for_entity(listpage_uri: str, entity_uri: str) -> int:
 
 def make_entity_features(lp_data: dict) -> pd.DataFrame:
     lp_uri = lp_data['uri']
-    listpage_axioms = set()
-    category_resources = set()
-
-    listpage_categories = {list_store.get_equivalent_category(lp_uri)} or list_store.get_parent_categories(lp_uri)
-    for cat in listpage_categories:
-        listpage_axioms.update(cat_axioms.get_axioms(cat))
-        category_resources.update(cat_store.get_resources(cat))
 
     data = []
     sections = lp_data['sections']
@@ -92,18 +85,12 @@ def make_entity_features(lp_data: dict) -> pd.DataFrame:
                     'entity_link_idx': entity_idx,
                     'entity_pn': any(w.tag_ in ['NNP', 'NNPS'] for w in entity_span),
                     'entity_ne': any(w.ent_type_ for w in entity_span),
-                    'prev_pos': entry_doc[entity_idx - 1].pos_ if entity_idx > 0 else 'START',
-                    'prev_ne': bool(entry_doc[entity_idx - 1].ent_type_) if entity_idx > 0 else False,
-                    'succ_pos': entry_doc[entity_idx + len(entity_span)].pos_ if entity_idx + len(entity_span) < len(entry_doc) else 'END',
-                    'succ_ne': bool(entry_doc[entity_idx + len(entity_span)].ent_type_) if entity_idx + len(entity_span) < len(entry_doc) else False,
-                    'comma_idx': len([w for w in entry_doc[0:entity_idx] if w.text == ','])
+                    'prev_pos': entry_doc[entity_span.start - 1].pos_ if entity_span.start > 0 else 'START',
+                    'prev_ne': bool(entry_doc[entity_span.start - 1].ent_type_) if entity_span.start > 0 else False,
+                    'succ_pos': entry_doc[entity_span.end].pos_ if entity_span.end < len(entry_doc) else 'END',
+                    'succ_ne': bool(entry_doc[entity_span.end].ent_type_) if entity_span.end < len(entry_doc) else False,
+                    'comma_idx': len([w for w in entry_doc[0:entity_span.start] if w.text == ','])
                 }
-                if entity_uri in category_resources:
-                    features['label'] = 1
-                elif any(ax.rejects_resource(entity_uri) for ax in listpage_axioms):
-                    features['label'] = 0
-                else:
-                    features['label'] = -1
 
                 data.append(features)
 
