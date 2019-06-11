@@ -18,7 +18,7 @@ cat2ax:
 logging:
   level: 'DEBUG'
   to_file: True
-  filename: 'list-feature-extraction'
+  filename: 'wikitaxonomy-edges'
 
 mailer:
   sender: 'errors.nheist@gmail.com'
@@ -239,6 +239,9 @@ cache:
   wikitaxonomy_edges:
     filename: 'wikitaxonomy-edges'
     version: 1
+  wikitaxonomy_hypernyms:
+    filename: 'wikitaxonomy-hypernyms'
+    version: 1  # version 1 -> thresholds 10 / 100 / .4
   cat2ax_axioms:
     filename: 'cat2ax-axioms'
     version: 1

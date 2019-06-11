@@ -22,6 +22,12 @@ pipenv install
 pipenv run python -m spacy download en_core_web_lg
 ```
 
+- Download the wordnet corpus of nltk (run in python):
+```
+import nltk
+nltk.download('wordnet')
+```
+
 ### Basic Configuration Options
 
 Use `config.yaml` for configuration of the application.
