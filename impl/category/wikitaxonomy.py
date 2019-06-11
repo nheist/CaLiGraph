@@ -65,15 +65,18 @@ def _compute_hypernyms() -> dict:
     candidates = set(axiom_hypernyms) | set(wiki_hypernyms) | set(webisalod_hypernyms)
     for candidate in candidates:
         hyper_count = defaultdict(lambda: 0)
-        for word, count in axiom_hypernyms[candidate].items():
-            if count >= THRESHOLD_AXIOM:
-                hyper_count[word] += 1
-        for word, count in wiki_hypernyms[candidate].items():
-            if count >= THRESHOLD_WIKI:
-                hyper_count[word] += 1
-        for word, conf in webisalod_hypernyms[candidate].items():
-            if conf >= THRESHOLD_WEBISALOD:
-                hyper_count[word] += 1
+        if candidate in axiom_hypernyms:
+            for word, count in axiom_hypernyms[candidate].items():
+                if count >= THRESHOLD_AXIOM:
+                    hyper_count[word] += 1
+        if candidate in wiki_hypernyms:
+            for word, count in wiki_hypernyms[candidate].items():
+                if count >= THRESHOLD_WIKI:
+                    hyper_count[word] += 1
+        if candidate in webisalod_hypernyms:
+            for word, conf in webisalod_hypernyms[candidate].items():
+                if conf >= THRESHOLD_WEBISALOD:
+                    hyper_count[word] += 1
         hypernyms[candidate] = {word for word, count in hyper_count.items() if count > 1}
 
     return hypernyms
