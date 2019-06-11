@@ -74,15 +74,21 @@ def make_entity_features(lp_data: dict) -> pd.DataFrame:
                     'lp_entry_comma_avg': np.average(commas_per_entry),
                     'lp_entry_comma_std': np.std(commas_per_entry),
                     # FEATURES
-                    'section_idx': section_idx,
-                    'section_invidx': len(sections) - section_idx - 1,
+                    'section_pos': _get_relative_position(section_idx, len(sections)),
+                    'section_invpos': _get_relative_position(section_idx, len(sections), inverse=True),
                     'section_name': section_name,
-                    'entry_idx': entry_idx,
-                    'entry_invidx': len(entries) - entry_idx - 1,
+                    'entry_pos': _get_relative_position(entry_idx, len(entries)),
+                    'entry_invpos': _get_relative_position(entry_idx, len(entries), inverse=True),
                     'entry_depth': entry_data['depth'],
+                    'entity_count': len(entities),
                     'entity_idx': entity_span.start,
                     'entity_invidx': len(entry_doc) - entity_span.end,
-                    'entity_link_idx': entity_idx,
+                    'entity_pos': _get_relative_position(entity_span.start, len(entry_doc)),
+                    'entity_invpos': _get_relative_position(entity_span.end - 1, len(entry_doc), inverse=True),
+                    'entity_link_pos': _get_relative_position(entity_idx, len(entities)),
+                    'entity_link_invpos': _get_relative_position(entity_idx, len(entities), inverse=True),
+                    'entity_first': entity_idx == 0,
+                    'entity_last': (entity_idx + 1) == len(entities),
                     'entity_pn': any(w.tag_ in ['NNP', 'NNPS'] for w in entity_span),
                     'entity_ne': any(w.ent_type_ for w in entity_span),
                     'prev_pos': entry_doc[entity_span.start - 1].pos_ if entity_span.start > 0 else 'START',
@@ -105,3 +111,10 @@ def _get_span_for_entity(doc, entity_text):
             return span
 
     return None
+
+
+def _get_relative_position(idx, total, inverse=False):
+    total = total - 1
+    if total == 0:
+        return 0
+    return (total - idx) / total if inverse else idx / total

@@ -12,8 +12,8 @@ if __name__ == '__main__':
         util.get_logger().info('Starting CaLiGraph extraction..')
 
         entity_data = list_base.get_listpage_entity_data()
-        nlp_util.persist_cache()
-        entity_data.to_csv('data_caligraph/entities_train_v4.csv', index=False)
+        #nlp_util.persist_cache()
+        entity_data.to_csv('data_caligraph/entities_train_v5.csv', index=False)
 
         mailer.send_success('FINISHED feature extraction')
         util.get_logger().info('Finished CaLiGraph extraction.')
