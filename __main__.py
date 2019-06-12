@@ -16,9 +16,11 @@ if __name__ == '__main__':
         #nlp_util.persist_cache()
         #entity_data.to_csv('data_caligraph/entities_train_v5.csv', index=False)
 
-        edges_found = len(cat_wikitax.get_valid_edges())
+        #edges_found = len(cat_wikitax.get_valid_edges())
 
-        mailer.send_success(f'FINISHED wikitaxonomy edge extraction (found {edges_found} edges)')
+        list_store.get_equivalent_listpage('')
+
+        mailer.send_success(f'FINISHED equivalent listpage extraction')
         util.get_logger().info('Finished CaLiGraph extraction.')
     except Exception as e:
         error_msg = traceback.format_exc()
