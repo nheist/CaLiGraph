@@ -6,7 +6,6 @@ import impl.category.base as cat_base
 import impl.category.cat2ax as cat_axioms
 import impl.category.nlp as cat_nlp
 import impl.util.nlp as nlp_util
-from nltk.corpus import wordnet
 
 
 THRESHOLD_AXIOM = 10
@@ -35,15 +34,9 @@ def is_hypernym(hyper_word: str, hypo_word: str) -> bool:
     if '__WIKITAXONOMY_HYPERNYMS__' not in globals():
         __WIKITAXONOMY_HYPERNYMS__ = util.load_or_create_cache('wikitaxonomy_hypernyms', _compute_hypernyms)
 
-    if is_synonym(hyper_word, hypo_word):
+    if nlp_util.is_synonym(hyper_word, hypo_word):
         return True
     return hyper_word in __WIKITAXONOMY_HYPERNYMS__[hypo_word]
-
-
-def is_synonym(word: str, another_word: str) -> bool:
-    if word == another_word:
-        return True
-    return another_word in {lm.name() for syn in wordnet.synsets(word) for lm in syn.lemmas()}
 
 
 def _compute_hypernyms() -> dict:
