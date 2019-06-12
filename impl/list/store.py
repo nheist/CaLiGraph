@@ -34,7 +34,6 @@ def get_equivalent_listpage(category: str) -> str:
 
 def _create_equivalent_listpage_mapping() -> dict:
     util.get_logger().info('CACHE: Creating equivalent-listpage mapping')
-    # todo: make easier and with synonyms
     categories = cat_store.get_all_cats()
     cat_to_lp_mapping = {}
 
@@ -55,12 +54,18 @@ def _create_equivalent_listpage_mapping() -> dict:
             if lp not in candidates:
                 candidates.append(lp)
 
+        # find approximate matches of category and listpage
         cat_lemmas = nlp_util.filter_important_words(cat_util.category2name(cat))
+        identified_lps = set()
         for lp in candidates:
             listpage_lemmas = nlp_util.filter_important_words(list_util.list2name(lp))
-            if cat_lemmas == listpage_lemmas:
-                cat_to_lp_mapping[cat] = lp
-                break
+            if len(cat_lemmas) == len(listpage_lemmas):
+                if all(any(nlp_util.is_synonym(ll, cl) for ll in listpage_lemmas) for cl in cat_lemmas):
+                    if all(any(nlp_util.is_synonym(ll, cl) for cl in cat_lemmas) for ll in listpage_lemmas):
+                        identified_lps.add(lp)
+        # only accept them as match if there is a 1:1 relationship
+        if len(identified_lps) == 1:
+            cat_to_lp_mapping[cat] = identified_lps.pop()
 
     # 3) resolve all redirects of listpages and only return those that point to listpages
     return {cat: dbp_store.resolve_redirect(lp) for cat, lp in cat_to_lp_mapping.items() if list_util.is_listpage(dbp_store.resolve_redirect(lp))}
