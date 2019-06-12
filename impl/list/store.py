@@ -1,6 +1,7 @@
 from . import util as list_util
 import impl.category.store as cat_store
 import impl.category.util as cat_util
+import impl.category.wikitaxonomy as cat_wikitax
 import impl.dbpedia.store as dbp_store
 import impl.dbpedia.util as dbp_util
 import util
@@ -86,7 +87,7 @@ def get_child_listpages(category: str) -> set:
 
 
 def _create_child_listpages_mapping() -> dict:
-    # todo: use hypernyms for hierarchy
+    # todo: check performance difference of child listpages when using hypernyms
     # todo: use instances to locate best matching category
     util.get_logger().info('CACHE: Creating child-listpage mapping')
 
@@ -124,7 +125,7 @@ def _find_cats_with_matching_headlemmas(category_docs: dict, headlemmas: set):
     matches = set()
     for cat, cat_doc in category_docs.items():
         cat_headlemmas = nlp_util.get_head_lemmas(cat_doc)
-        if headlemmas.intersection(cat_headlemmas):
+        if any(cat_wikitax.is_hypernym(chl, hl) for chl in cat_headlemmas for hl in headlemmas):
             matches.add(cat)
     return matches
 

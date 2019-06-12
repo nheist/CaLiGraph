@@ -21,7 +21,7 @@ def is_synonym(word: str, another_word: str) -> bool:
 
 
 def filter_important_words(text: str) -> set:
-    return {word.lemma_ for word in parse(text, skip_cache=True) if not word.is_stop}
+    return {word.lemma_ for word in parse(text) if not word.is_stop}
 
 
 def get_head_lemmas(doc: Doc) -> set:
