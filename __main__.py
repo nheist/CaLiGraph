@@ -2,6 +2,7 @@ import traceback
 import util
 import mailer
 import impl.list.store as list_store
+import impl.list.hierarchy as list_hierarchy
 import impl.list.base as list_base
 #import impl.dbpedia.heuristics as dbp_heur
 #import impl.category.cat2ax as cat_axioms
@@ -18,7 +19,7 @@ if __name__ == '__main__':
 
         #edges_found = len(cat_wikitax.get_valid_edges())
 
-        list_store.get_equivalent_listpage('')
+        list_hierarchy.get_equivalent_listpage('')
 
         mailer.send_success(f'FINISHED equivalent listpage extraction')
         util.get_logger().info('Finished CaLiGraph extraction.')
