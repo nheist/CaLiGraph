@@ -33,7 +33,7 @@ def get_equivalent_listpage(category: str) -> str:
 
 def _create_equivalent_listpage_mapping() -> dict:
     util.get_logger().info('CACHE: Creating equivalent-listpage mapping')
-
+    # todo: make easier and with synonyms
     categories = cat_store.get_all_cats()
     cat_to_lp_mapping = {}
 

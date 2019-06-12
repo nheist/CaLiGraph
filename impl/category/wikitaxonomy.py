@@ -68,7 +68,7 @@ def _compute_hypernyms() -> dict:
         if candidate in axiom_hypernyms:
             for word, count in axiom_hypernyms[candidate].items():
                 if count >= THRESHOLD_AXIOM:
-                    hyper_count[word] += 1
+                    hyper_count[word] += 2
         if candidate in wiki_hypernyms:
             for word, count in wiki_hypernyms[candidate].items():
                 if count >= THRESHOLD_WIKI:
