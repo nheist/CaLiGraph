@@ -4,12 +4,25 @@ from regex._regex_core import error as RegexError
 import re
 import impl.dbpedia.util as dbp_util
 import util
+import impl.list.store as list_store
 
 
 LIST_TYPE_ENUM, LIST_TYPE_TABLE, LIST_TYPE_NONE = 'list_type_enum', 'list_type_table', 'list_type_none'
 
 
-def parse_listpage(listpage_uri: str, listpage_markup: str) -> dict:
+def get_parsed_listpages() -> dict:
+    global __PARSED_LISTPAGES__
+    if '__PARSED_LISTPAGES__' not in globals():
+        __PARSED_LISTPAGES__ = util.load_or_create_cache('dbpedia_listpage_parsed', _compute_parsed_listpages)
+
+    return __PARSED_LISTPAGES__
+
+
+def _compute_parsed_listpages() -> dict:
+    return {lp: _parse_listpage(lp, list_store.get_listpage_markup(lp)) for lp in list_store.get_listpages()}
+
+
+def _parse_listpage(listpage_uri: str, listpage_markup: str) -> dict:
     wiki_text = wtp.parse(listpage_markup)
     cleaned_wiki_text = _convert_special_enums(wiki_text)
 
