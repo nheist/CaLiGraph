@@ -1,12 +1,11 @@
 import wikitextparser as wtp
 from wikitextparser import WikiText
+from typing import Tuple, Optional
 from regex._regex_core import error as RegexError
 import re
 import impl.dbpedia.util as dbp_util
 import util
 import impl.list.store as list_store
-
-# TODO: parse with spacy to plaintext but annotate entities on the fly (to extract features more easy and identify entities directly)
 
 
 LIST_TYPE_ENUM, LIST_TYPE_TABLE, LIST_TYPE_NONE = 'list_type_enum', 'list_type_table', 'list_type_none'
@@ -75,13 +74,17 @@ def _extract_sections(wiki_text: WikiText) -> list:
     } for section in wiki_text.sections]
 
 
+# todo: test
 def _extract_entries_for_list(l: wtp.WikiList):
-    entries = [{
-        'text': _get_plain_text(item_text),
-        'depth': l.level,
-        'leaf': len(l.sublists()) == 0,
-        'entities': [{'uri': dbp_util.name2resource(link.target), 'text': _get_plain_text(link.text or link.target)} for link in wtp.parse(item_text).wikilinks]
-    } for item_text in l.items]
+    entries = []
+    for item_text in l.items:
+        plaintext, entities = _convert_markup(item_text)
+        entries.append({
+            'text': plaintext,
+            'depth': l.level,
+            'leaf': len(l.sublists()) == 0,
+            'entities': entities
+        })
 
     for sl in l.sublists():
         entries.extend(_extract_entries_for_list(sl))
@@ -89,16 +92,47 @@ def _extract_entries_for_list(l: wtp.WikiList):
     return entries
 
 
-def _get_plain_text(wiki_text: str) -> str:
+def _convert_markup(wiki_text: str) -> Tuple[str, list]:
+    # remove all markup except wikilinks
     current = None
     new = wiki_text
     while current != new:
         current = new
-        new = _convert_to_plain_text(wtp.parse(current))
-    return current
+        new = _remove_wikimarkup(wtp.parse(current))
+
+    # extract wikilink-entities and generate final plain text
+    entities = []
+    while True:
+        new, entity = _extract_entity(current)
+        if entity is None:
+            break
+        entities.append(entity)
+        current = new
+
+    return current, entities
 
 
-def _convert_to_plain_text(wiki_text: WikiText) -> str:
+def _extract_entity(text: str) -> Tuple[str, Optional[dict]]:
+    wiki_text = wtp.parse(text)
+    if not wiki_text.wikilinks:
+        return text, None
+
+    link = wiki_text.wikilinks[0]
+    link_text = link.text.strip() or link.target.strip()
+    link_target = link.target[0].upper() + link.target[1:] if len(link.target) > 1 else link.target.upper()
+
+    pre = text[:text.index(link.string)].strip()
+    post = text[text.index(link.string)+len(link.string):].strip()
+    plaintext = f'{pre} {link_text} {post}'
+
+    return plaintext, {
+        'uri': dbp_util.name2resource(link_target),
+        'text': link_text,
+        'idx': len(pre) + 1
+    }
+
+
+def _remove_wikimarkup(wiki_text: WikiText) -> str:
     result = wiki_text.string
     for tag in wiki_text.tags():
         if tag._match is not None:
@@ -108,8 +142,6 @@ def _convert_to_plain_text(wiki_text: WikiText) -> str:
             result = result.replace(link.string, _wrap_in_spaces(link.text) if link.text else ' ')
         except AttributeError:
             result = result.replace(link.string, ' ')
-    for link in wiki_text.wikilinks:
-        result = result.replace(link.string, _wrap_in_spaces(link.text) if link.text else _wrap_in_spaces(link.target))
     for template in wiki_text.templates:
         result = result.replace(template.string, ' ')
     for comment in wiki_text.comments:

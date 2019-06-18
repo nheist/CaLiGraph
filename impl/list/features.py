@@ -106,14 +106,13 @@ def make_entity_features(lp_data: dict) -> pd.DataFrame:
     return pd.DataFrame(data)
 
 
-def _get_span_for_entity(doc, entity_text):
-    entity_doc = nlp_util.parse(entity_text, skip_cache=True, disable_normalization=True)
-    for i in range(len(doc) - len(entity_doc) + 1):
-        span = doc[i:i+len(entity_doc)]
-        if span.text == entity_doc.text:
-            return span
+def _get_span_for_entity(doc, text, idx):
+    span = doc.char_span(idx, idx + len(text))
 
-    return None
+    if span.text != text:
+        raise ValueError(f'Trying to find "{text}" in "{doc}" starting at index {idx} but failed.')
+
+    return span
 
 
 def _get_relative_position(idx, total, inverse=False):
