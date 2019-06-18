@@ -48,13 +48,13 @@ def make_entity_features(lp_data: dict) -> pd.DataFrame:
             entities = entry_data['entities']
             for entity_idx, entity_data in enumerate(entities):
                 entity_uri = entity_data['uri']
+                entity_uri = entity_uri[:entity_uri.index('#')] if '#' in entity_uri else entity_uri
+
                 entity_span = _get_span_for_entity(entry_doc, entity_data['text'])
                 if not entity_span:
                     continue
 
                 # todo: add feature about subentries (e.g. hasSubentries)
-                # todo: feature: has noun postag
-                # todo: remove everyhing after the hash for an entity URI
                 features = {
                     # ID
                     '_id': f'{lp_uri}__{section_name}__{entry_idx}__{entity_uri}',
@@ -92,6 +92,7 @@ def make_entity_features(lp_data: dict) -> pd.DataFrame:
                     'entity_first': entity_idx == 0,
                     'entity_last': (entity_idx + 1) == len(entities),
                     'entity_pn': any(w.tag_ in ['NNP', 'NNPS'] for w in entity_span),
+                    'entity_noun': any(w.pos_ == 'NOUN' for w in entity_span),
                     'entity_ne': any(w.ent_type_ for w in entity_span),
                     'prev_pos': entry_doc[entity_span.start - 1].pos_ if entity_span.start > 0 else 'START',
                     'prev_ne': bool(entry_doc[entity_span.start - 1].ent_type_) if entity_span.start > 0 else False,
