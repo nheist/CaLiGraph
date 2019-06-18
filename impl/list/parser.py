@@ -6,6 +6,8 @@ import impl.dbpedia.util as dbp_util
 import util
 import impl.list.store as list_store
 
+# TODO: parse with spacy to plaintext but annotate entities on the fly (to extract features more easy and identify entities directly)
+
 
 LIST_TYPE_ENUM, LIST_TYPE_TABLE, LIST_TYPE_NONE = 'list_type_enum', 'list_type_table', 'list_type_none'
 

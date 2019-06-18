@@ -52,11 +52,14 @@ def make_entity_features(lp_data: dict) -> pd.DataFrame:
                 if not entity_span:
                     continue
 
+                # todo: add feature about subentries (e.g. hasSubentries)
+                # todo: feature: has noun postag
+                # todo: remove everyhing after the hash for an entity URI
                 features = {
                     # ID
                     '_id': f'{lp_uri}__{section_name}__{entry_idx}__{entity_uri}',
                     '_listpage_uri': lp_uri,
-                    '_section_name': section_name,
+                    '_section_name': section_name or '',
                     '_entry_idx': entry_idx,
                     '_entity_uri': entity_uri,
                     # LP
@@ -76,7 +79,6 @@ def make_entity_features(lp_data: dict) -> pd.DataFrame:
                     # FEATURES
                     'section_pos': _get_relative_position(section_idx, len(sections)),
                     'section_invpos': _get_relative_position(section_idx, len(sections), inverse=True),
-                    'section_name': section_name,
                     'entry_pos': _get_relative_position(entry_idx, len(entries)),
                     'entry_invpos': _get_relative_position(entry_idx, len(entries), inverse=True),
                     'entry_depth': entry_data['depth'],
