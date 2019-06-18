@@ -54,7 +54,6 @@ def make_entity_features(lp_data: dict) -> pd.DataFrame:
                 if not entity_span:
                     continue
 
-                # todo: add feature about subentries (e.g. hasSubentries)
                 features = {
                     # ID
                     '_id': f'{lp_uri}__{section_name}__{entry_idx}__{entity_uri}',
@@ -82,6 +81,7 @@ def make_entity_features(lp_data: dict) -> pd.DataFrame:
                     'entry_pos': _get_relative_position(entry_idx, len(entries)),
                     'entry_invpos': _get_relative_position(entry_idx, len(entries), inverse=True),
                     'entry_depth': entry_data['depth'],
+                    'entry_leaf': entry_data['leaf'],
                     'entity_count': len(entities),
                     'entity_idx': entity_span.start,
                     'entity_invidx': len(entry_doc) - entity_span.end,

@@ -79,6 +79,7 @@ def _extract_entries_for_list(l: wtp.WikiList):
     entries = [{
         'text': _get_plain_text(item_text),
         'depth': l.level,
+        'leaf': len(l.sublists()) == 0,
         'entities': [{'uri': dbp_util.name2resource(link.target), 'text': _get_plain_text(link.text or link.target)} for link in wtp.parse(item_text).wikilinks]
     } for item_text in l.items]
 
