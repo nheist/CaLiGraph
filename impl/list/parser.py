@@ -118,7 +118,7 @@ def _extract_entity(text: str) -> Tuple[str, Optional[dict]]:
         return text, None
 
     link = wiki_text.wikilinks[0]
-    link_text = link.text.strip() or link.target.strip()
+    link_text = (link.text.strip() if link.text else link.text) or link.target.strip()
     link_target = link.target[0].upper() + link.target[1:] if len(link.target) > 1 else link.target.upper()
 
     pre = text[:text.index(link.string)].strip()
