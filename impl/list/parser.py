@@ -122,13 +122,16 @@ def _extract_entity(text: str) -> Tuple[str, Optional[dict]]:
     link_target = link.target[0].upper() + link.target[1:] if len(link.target) > 1 else link.target.upper()
 
     pre = text[:text.index(link.string)].strip()
+    pre = pre + ' ' if pre else ''
     post = text[text.index(link.string)+len(link.string):].strip()
-    plaintext = f'{pre} {link_text} {post}'
+    post = ' ' + post if post else ''
+
+    plaintext = f'{pre}{link_text}{post}'
 
     return plaintext, {
         'uri': dbp_util.name2resource(link_target),
         'text': link_text,
-        'idx': len(pre) + 1
+        'idx': len(pre)
     }
 
 
