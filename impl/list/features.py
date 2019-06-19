@@ -50,7 +50,7 @@ def make_entity_features(lp_data: dict) -> pd.DataFrame:
                 entity_uri = entity_data['uri']
                 entity_uri = entity_uri[:entity_uri.index('#')] if '#' in entity_uri else entity_uri
 
-                entity_span = _get_span_for_entity(entry_doc, entity_data['text'])
+                entity_span = _get_span_for_entity(entry_doc, entity_data['text'], entity_data['idx'])
                 if not entity_span:
                     continue
 
