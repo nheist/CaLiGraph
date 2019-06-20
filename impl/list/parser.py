@@ -106,7 +106,8 @@ def _convert_markup(wiki_text: str) -> Tuple[str, list]:
         new, entity = _extract_entity(current)
         if entity is None:
             break
-        entities.append(entity)
+        if entity:
+            entities.append(entity)
         current = new
 
     return current, entities
@@ -121,12 +122,18 @@ def _extract_entity(text: str) -> Tuple[str, Optional[dict]]:
     link_text = (link.text.strip() if link.text else link.text) or link.target.strip()
     link_target = link.target[0].upper() + link.target[1:] if len(link.target) > 1 else link.target.upper()
 
+    if '|' in link_text:
+        link_text = link_text[link_text.rindex('|'):].strip()
+
     pre = text[:text.index(link.string)].strip()
     pre = pre + ' ' if pre else ''
     post = text[text.index(link.string)+len(link.string):].strip()
     post = ' ' + post if post else ''
 
     plaintext = f'{pre}{link_text}{post}'
+
+    if '[[' in link_text:
+        return plaintext, {}
 
     return plaintext, {
         'uri': dbp_util.name2resource(link_target),
