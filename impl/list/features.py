@@ -28,16 +28,27 @@ def _compute_label_for_entity(listpage_uri: str, entity_uri: str) -> int:
 
 def make_entity_features(lp_data: dict) -> pd.DataFrame:
     lp_uri = lp_data['uri']
-
-    data = []
     sections = lp_data['sections']
     entries_per_section = [len(section['entries']) for section in sections]
-    entities_per_entry = [len(entry['entities']) for section in sections for entry in section['entries']]
+    entries_per_section_avg = np.average(entries_per_section)
+    entries_per_section_std = np.std(entries_per_section)
     depth_per_entry = [entry['depth'] for section in sections for entry in section['entries']]
+    depth_per_entry_avg = np.average(depth_per_entry)
+    depth_per_entry_std = np.std(depth_per_entry)
+    entities_per_entry = [len(entry['entities']) for section in sections for entry in section['entries']]
+    entities_per_entry_avg = np.average(entities_per_entry)
+    entities_per_entry_std = np.std(entities_per_entry)
     words_per_entry = [len(entry['text'].split(' ')) for section in sections for entry in section['entries']]
+    words_per_entry_avg = np.average(words_per_entry)
+    words_per_entry_std = np.std(words_per_entry)
     chars_per_entry = [len(entry['text']) for section in sections for entry in section['entries']]
+    chars_per_entry_avg = np.average(chars_per_entry)
+    chars_per_entry_std = np.std(chars_per_entry)
     commas_per_entry = [entry['text'].count(',') for section in sections for entry in section['entries']]
+    commas_per_entry_avg = np.average(commas_per_entry)
+    commas_per_entry_std = np.std(commas_per_entry)
 
+    data = []
     for section_idx, section_data in enumerate(sections):
         section_name = section_data['name']
 
@@ -63,18 +74,18 @@ def make_entity_features(lp_data: dict) -> pd.DataFrame:
                     '_entity_uri': entity_uri,
                     # LP
                     'lp_section_count': len(sections),
-                    'lp_section_entry_avg': np.average(entries_per_section),
-                    'lp_section_entry_std': np.std(entries_per_section),
-                    'lp_entry_depth_avg': np.average(depth_per_entry),
-                    'lp_entry_depth_std': np.std(depth_per_entry),
-                    'lp_entry_entity_avg': np.average(entities_per_entry),
-                    'lp_entry_entity_std': np.std(entities_per_entry),
-                    'lp_entry_word_avg': np.average(words_per_entry),
-                    'lp_entry_word_std': np.std(words_per_entry),
-                    'lp_entry_char_avg': np.average(chars_per_entry),
-                    'lp_entry_char_std': np.std(chars_per_entry),
-                    'lp_entry_comma_avg': np.average(commas_per_entry),
-                    'lp_entry_comma_std': np.std(commas_per_entry),
+                    'lp_section_entry_avg': entries_per_section_avg,
+                    'lp_section_entry_std': entries_per_section_std,
+                    'lp_entry_depth_avg': depth_per_entry_avg,
+                    'lp_entry_depth_std': depth_per_entry_std,
+                    'lp_entry_entity_avg': entities_per_entry_avg,
+                    'lp_entry_entity_std': entities_per_entry_std,
+                    'lp_entry_word_avg': words_per_entry_avg,
+                    'lp_entry_word_std': words_per_entry_std,
+                    'lp_entry_char_avg': chars_per_entry_avg,
+                    'lp_entry_char_std': chars_per_entry_std,
+                    'lp_entry_comma_avg': commas_per_entry_avg,
+                    'lp_entry_comma_std': commas_per_entry_std,
                     # FEATURES
                     'section_pos': _get_relative_position(section_idx, len(sections)),
                     'section_invpos': _get_relative_position(section_idx, len(sections), inverse=True),
