@@ -85,10 +85,11 @@ files:
     disambiguations:
       filename: 'disambiguations_en.ttl.bz2'
       url: 'http://downloads.dbpedia.org/2016-10/core-i18n/en/disambiguations_en.ttl.bz2'
+    nif_context:
+      filename: 'nif_context_en.ttl.bz2'
+      url: 'http://downloads.dbpedia.org/2016-10/core-i18n/en/nif_context_en.ttl.bz2'
     maintenance_categories:
       filename: 'maintenance_categories.ttl.bz2'
-    type_surface_forms:
-      filename: 'type_surface_forms_total.p.bz2'
   wikidata:
     resource_properties:
       filename: 'wikidata_resource_properties.nt.bz2'
@@ -172,6 +173,10 @@ cache:
   dbpedia_resource_disambiguations:
     filename: 'dbpedia-resource-disambiguations'
     version: 1
+  dbpedia_type_lexicalisations:
+    filename: 'dbpedia-type-lexicalisations'
+    version: 1
+    compress: True
   dbpedia_functional_predicates:
     filename: 'dbpedia-functional-predicates'
     version: 2  # version 1: strict; version 2: 5% tolerance

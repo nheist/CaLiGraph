@@ -6,7 +6,8 @@ __pycache__/
 
 # Project
 data/*
-!data/type_surface_forms_total.p.bz2
+data/cache/*
+!data/cache/type_lexicalisations.p.bz2
 !data/maintenance_categories.ttl.bz2
 
 results/*

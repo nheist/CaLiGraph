@@ -15,6 +15,7 @@ networkx = "*"
 sklearn = "*"
 rdflib = "*"
 nltk = "*"
+pynif = "*"
 
 [dev-packages]
 

@@ -71,7 +71,7 @@ def get_inverse_surface_forms(text: str) -> dict:
     global __RESOURCE_INVERSE_SURFACE_FORMS__
     if '__RESOURCE_INVERSE_SURFACE_FORMS__' not in globals():
         __RESOURCE_INVERSE_SURFACE_FORMS__ = util.load_or_create_cache('dbpedia_resource_inverse_surface_forms', _compute_inverse_surface_forms)
-    return __RESOURCE_INVERSE_SURFACE_FORMS__[text] if text in __RESOURCE_INVERSE_SURFACE_FORMS__ else {}
+    return __RESOURCE_INVERSE_SURFACE_FORMS__[text.lower()] if text.lower() in __RESOURCE_INVERSE_SURFACE_FORMS__ else {}
 
 
 def _compute_inverse_surface_forms():
