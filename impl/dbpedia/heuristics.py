@@ -1,3 +1,6 @@
+"""Implementing heuristics from Töpper et al. 2012 - DBpedia Ontology Enrichment for Inconsistency Detection"""
+
+
 import util
 from typing import Optional
 import impl.util.rdf as rdf_util
@@ -5,7 +8,7 @@ import impl.dbpedia.store as dbp_store
 from collections import defaultdict
 import math
 
-# implementing heuristics from Töpper et al. 2012 - DBpedia Ontology Enrichment for Inconsistency Detection
+
 DOMAIN_THRESHOLD = .96
 RANGE_THRESHOLD = .77
 DISJOINT_THRESHOLD = .17

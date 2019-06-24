@@ -149,11 +149,11 @@ cache:
   dbpedia_resource_abstracts:
     filename: 'dbpedia-resource-abstracts'
     version: 1
-  dbpedia_resource_surface_forms:
-    filename: 'dbpedia-resource-surface-forms'
+  dbpedia_resource_lexicalisations:
+    filename: 'dbpedia-resource-lexicalisations'
     version: 1
-  dbpedia_resource_inverse_surface_forms:
-    filename: 'dbpedia-resource-inverse-surface-forms'
+  dbpedia_resource_inverse_lexicalisations:
+    filename: 'dbpedia-resource-inverse-lexicalisations'
     version: 1
   dbpedia_resource_categories:
     filename: 'dbpedia-resource-categories'

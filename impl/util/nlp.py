@@ -21,21 +21,25 @@ def is_synonym(word: str, another_word: str) -> bool:
 
 
 def filter_important_words(text: str) -> set:
+    """Return the lemmatized versions of all non-stop-words in `text`."""
     return {word.lemma_ for word in parse(text) if not word.is_stop}
 
 
 def get_head_lemmas(doc: Doc) -> set:
+    """Return the lemmatized version of the lexical head of `doc`."""
     doc = tag_lexical_head(doc)
     return {w.lemma_ for w in doc if w.tag_ == 'NNS' and w.ent_type_ == 'LH'}
 
 
 def tag_lexical_head(doc: Doc, valid_words=None) -> Doc:
+    """Return `doc` where the lexical head is tagged as the entity 'LH'."""
     chunk_words = {w for chunk in doc.noun_chunks for w in chunk}
     lexhead_start = None
     for chunk in doc.noun_chunks:
         if valid_words and all(w not in chunk.text for w in valid_words):
             continue
 
+        # find the lexical head by looking for plural nouns (and ignore things like parentheses, conjunctions, ..)
         elem = chunk.root
         if elem.text.istitle() or elem.tag_ not in ['NN', 'NNS']:
             continue

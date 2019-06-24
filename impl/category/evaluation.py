@@ -128,5 +128,4 @@ def _get_coverage(graph: CategoryGraph) -> float:
 def _get_graph_resource_type_mapping(graph: CategoryGraph) -> dict:
     resources = dbp_store.get_resources()
     category_type_mapping = defaultdict(set, {cat: graph.dbp_types(cat) or set() for cat in graph.nodes})
-    resource_category_mapping = cat_store.get_resource_to_cats_mapping()
-    return {res: {t for cat in resource_category_mapping[res] for t in category_type_mapping[cat]} for res in resources}
+    return {res: {t for cat in cat_store.get_resource_categories(res) for t in category_type_mapping[cat]} for res in resources}

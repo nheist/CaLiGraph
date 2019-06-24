@@ -8,11 +8,13 @@ SINGULARIZED_CATEGORIES_CACHE_ID = 'categories_singularized'
 
 
 def parse_category(category: str) -> Doc:
+    """Return the category name as parsed Doc."""
     label = cat_store.get_label(category)
     return nlp_util.parse(label)
 
 
 def singularize(category: str) -> str:
+    """Return a singularized version of the category where only the lexical head of the category is singularized."""
     global __SINGULARIZED_CATEGORIES__
     if '__SINGULARIZED_CATEGORIES__' not in globals():
         __SINGULARIZED_CATEGORIES__ = util.load_or_create_cache(SINGULARIZED_CATEGORIES_CACHE_ID, lambda: dict())

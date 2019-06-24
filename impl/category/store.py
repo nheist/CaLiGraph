@@ -5,7 +5,7 @@ import util
 from collections import defaultdict
 
 
-def get_all_cats() -> set:
+def get_categories() -> set:
     global __CATEGORIES__
     if '__CATEGORIES__' not in globals():
         initializer = lambda: set(rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.categories')], rdf_util.PREDICATE_TYPE))
@@ -15,19 +15,14 @@ def get_all_cats() -> set:
 
 
 def get_usable_cats() -> set:
-    return {cat for cat in get_all_cats() if is_usable(cat)}
+    """Return only usable categories (cf. 'is_usable')."""
+    return {cat for cat in get_categories() if is_usable(cat)}
 
 
 def is_usable(category: str) -> bool:
-    # filtering maintenance categories
-    if category in get_maintenance_cats():
-        return False
-    # filtering other administrative categories
+    """Return categories that are no maintenance or organisational ones (using indicators in the category name)."""
     indicators = ['wikipedia', 'wikiproject', 'lists', 'redirects', 'mediawiki', 'template', 'user', 'portal', 'categories', 'articles', 'pages', 'navigational', 'stubs']
-    lower_category = category.lower()
-    if any(indicator in lower_category for indicator in indicators):
-        return False
-    return True
+    return category not in get_maintenance_categories() and all(indicator not in category.lower() for indicator in indicators)
 
 
 def get_label(category: str) -> str:
@@ -55,13 +50,13 @@ def get_resources(category: str) -> set:
     return __CATEGORY_RESOURCES__[category]
 
 
-def get_resource_to_cats_mapping() -> dict:
+def get_resource_categories(dbp_resource: str) -> set:
     if '__RESOURCE_CATEGORIES__' not in globals():
         initializer = lambda: rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.article_categories')], rdf_util.PREDICATE_SUBJECT)
         global __RESOURCE_CATEGORIES__
         __RESOURCE_CATEGORIES__ = util.load_or_create_cache('dbpedia_resource_categories', initializer)
 
-    return __RESOURCE_CATEGORIES__
+    return __RESOURCE_CATEGORIES__[dbp_resource]
 
 
 def get_children(category: str) -> set:
@@ -102,7 +97,7 @@ def get_topics(category: str) -> set:
     return __TOPICS__[category]
 
 
-def get_maintenance_cats() -> set:
+def get_maintenance_categories() -> set:
     global __MAINTENANCE_CATS__
     if '__MAINTENANCE_CATS__' not in globals():
         __MAINTENANCE_CATS__ = set(rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.maintenance_categories')], rdf_util.PREDICATE_TYPE))
@@ -111,6 +106,7 @@ def get_maintenance_cats() -> set:
 
 
 def get_statistics(category: str) -> dict:
+    """Return information about the amounts/frequencies of types and properties of a category's resources."""
     global __CATEGORY_STATISTICS__
     if '__CATEGORY_STATISTICS__' not in globals():
         __CATEGORY_STATISTICS__ = util.load_or_create_cache('dbpedia_category_statistics', _compute_category_statistics)
@@ -119,10 +115,9 @@ def get_statistics(category: str) -> dict:
 
 def _compute_category_statistics() -> dict:
     category_statistics = {}
-    for cat in get_all_cats():
+    for cat in get_categories():
         type_counts = defaultdict(int)
         property_counts = defaultdict(int)
-        #property_counts_inv = defaultdict(int)
 
         resources = get_resources(cat)
         for res in resources:
@@ -131,14 +126,10 @@ def _compute_category_statistics() -> dict:
                 type_counts[t] += 1
             for prop in resource_statistics['properties']:
                 property_counts[prop] += 1
-            #for prop in resource_statistics['properties_inv']:
-            #    property_counts_inv[prop] += 1
         category_statistics[cat] = {
             'type_counts': type_counts,
             'type_frequencies': defaultdict(float, {t: t_count / len(resources) for t, t_count in type_counts.items()}),
             'property_counts': property_counts,
             'property_frequencies': defaultdict(float, {prop: p_count / len(resources) for prop, p_count in property_counts.items()}),
-            #'property_counts_inv': property_counts_inv,
-            #'property_frequencies_inv': defaultdict(float, {prop: p_count / len(resources) for prop, p_count in property_counts_inv.items()}),
         }
     return category_statistics

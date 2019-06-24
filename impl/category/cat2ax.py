@@ -160,7 +160,7 @@ def _get_resource_surface_scores(text):
     direct_match = dbp_store.resolve_redirect(dbp_util.name2resource(text))
     if direct_match in dbp_store.get_resources():
         resource_surface_scores[direct_match] = 1
-    for surface_match, frequency in sorted(dbp_store.get_inverse_surface_forms(text.lower()).items(), key=operator.itemgetter(1)):
+    for surface_match, frequency in sorted(dbp_store.get_inverse_lexicalisations(text.lower()).items(), key=operator.itemgetter(1)):
         resource_surface_scores[surface_match] = frequency
     return resource_surface_scores
 

@@ -1,5 +1,4 @@
 import util
-import operator
 import impl.util.rdf as rdf_util
 from . import util as dbp_util
 from collections import defaultdict
@@ -27,13 +26,13 @@ def get_label(dbp_object: str) -> str:
     return __RESOURCE_LABELS__[dbp_object] if dbp_object in __RESOURCE_LABELS__ else dbp_util.object2name(dbp_object)
 
 
-def get_label_entity(label: str) -> str:
+def get_object_for_label(label: str) -> str:
     global __RESOURCE_INVERSE_LABELS__
     global __ONTOLOGY_INVERSE_LABELS__
     if '__RESOURCE_INVERSE_LABELS__' not in globals():
         __RESOURCE_INVERSE_LABELS__ = {v: k for k, v in _get_label_mapping().items()}
         ontology_labels = rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_LABEL)
-        __ONTOLOGY_INVERSE_LABELS__ = {v:k for k, v in ontology_labels.items()}
+        __ONTOLOGY_INVERSE_LABELS__ = {v: k for k, v in ontology_labels.items()}
     if label in __ONTOLOGY_INVERSE_LABELS__:
         return __ONTOLOGY_INVERSE_LABELS__[label]
     if label in __RESOURCE_INVERSE_LABELS__:
@@ -59,33 +58,33 @@ def get_abstract(dbp_resource: str) -> str:
     return __RESOURCE_ABSTRACTS__[dbp_resource] if dbp_resource in __RESOURCE_ABSTRACTS__ else None
 
 
-def get_surface_forms(dbp_resource: str) -> dict:
-    global __RESOURCE_SURFACE_FORMS__
-    if '__RESOURCE_SURFACE_FORMS__' not in globals():
+def get_lexicalisations(dbp_resource: str) -> dict:
+    global __RESOURCE_LEXICALISATIONS__
+    if '__RESOURCE_LEXICALISATIONS__' not in globals():
         initializer = lambda: rdf_util.create_multi_val_freq_dict_from_rdf([util.get_data_file('files.dbpedia.anchor_texts')], rdf_util.PREDICATE_ANCHOR_TEXT)
-        __RESOURCE_SURFACE_FORMS__ = util.load_or_create_cache('dbpedia_resource_surface_forms', initializer)
-    return __RESOURCE_SURFACE_FORMS__[dbp_resource]
+        __RESOURCE_LEXICALISATIONS__ = util.load_or_create_cache('dbpedia_resource_lexicalisations', initializer)
+    return __RESOURCE_LEXICALISATIONS__[dbp_resource]
 
 
-def get_inverse_surface_forms(text: str) -> dict:
-    global __RESOURCE_INVERSE_SURFACE_FORMS__
-    if '__RESOURCE_INVERSE_SURFACE_FORMS__' not in globals():
-        __RESOURCE_INVERSE_SURFACE_FORMS__ = util.load_or_create_cache('dbpedia_resource_inverse_surface_forms', _compute_inverse_surface_forms)
-    return __RESOURCE_INVERSE_SURFACE_FORMS__[text.lower()] if text.lower() in __RESOURCE_INVERSE_SURFACE_FORMS__ else {}
+def get_inverse_lexicalisations(text: str) -> dict:
+    global __RESOURCE_INVERSE_LEXICALISATIONS__
+    if '__RESOURCE_INVERSE_LEXICALISATIONS__' not in globals():
+        __RESOURCE_INVERSE_LEXICALISATIONS__ = util.load_or_create_cache('dbpedia_resource_inverse_lexicalisations', _compute_inverse_lexicalisations)
+    return __RESOURCE_INVERSE_LEXICALISATIONS__[text.lower()] if text.lower() in __RESOURCE_INVERSE_LEXICALISATIONS__ else {}
 
 
-def _compute_inverse_surface_forms():
-    inverse_surface_form_dict = rdf_util.create_multi_val_freq_dict_from_rdf([util.get_data_file('files.dbpedia.anchor_texts')], rdf_util.PREDICATE_ANCHOR_TEXT, reverse_key=True)
-    for surface_form, resources in inverse_surface_form_dict.items():
+def _compute_inverse_lexicalisations():
+    inverse_lexicalisation_dict = rdf_util.create_multi_val_freq_dict_from_rdf([util.get_data_file('files.dbpedia.anchor_texts')], rdf_util.PREDICATE_ANCHOR_TEXT, reverse_key=True)
+    for lex, resources in inverse_lexicalisation_dict.items():
         for res in set(resources.keys()):
             redirect_res = resolve_redirect(res)
             if res != redirect_res:
-                if redirect_res in inverse_surface_form_dict[surface_form]:
-                    inverse_surface_form_dict[surface_form][redirect_res] += inverse_surface_form_dict[surface_form][res]
+                if redirect_res in inverse_lexicalisation_dict[lex]:
+                    inverse_lexicalisation_dict[lex][redirect_res] += inverse_lexicalisation_dict[lex][res]
                 else:
-                    inverse_surface_form_dict[surface_form][redirect_res] = inverse_surface_form_dict[surface_form][res]
-                del inverse_surface_form_dict[surface_form][res]
-    return inverse_surface_form_dict
+                    inverse_lexicalisation_dict[lex][redirect_res] = inverse_lexicalisation_dict[lex][res]
+                del inverse_lexicalisation_dict[lex][res]
+    return inverse_lexicalisation_dict
 
 
 def get_types(dbp_resource: str) -> set:
@@ -98,8 +97,6 @@ def _get_resource_type_mapping() -> dict:
         type_files = [
             util.get_data_file('files.dbpedia.instance_types'),
             util.get_data_file('files.dbpedia.transitive_instance_types'),
-            #util.get_data_file('files.dbpedia.instance_types_sdtyped'),
-            #util.get_data_file('files.dbpedia.instance_types_lhd'),
         ]
         initializer = lambda: rdf_util.create_multi_val_dict_from_rdf(type_files, rdf_util.PREDICATE_TYPE)
         __RESOURCE_TYPE_MAPPING__ = util.load_or_create_cache('dbpedia_resource_type_mapping', initializer)
@@ -108,15 +105,18 @@ def _get_resource_type_mapping() -> dict:
 
 
 def get_transitive_types(dbp_resource: str) -> set:
+    """Return a resource's types as well as the transitive closure of these types."""
     transitive_types = {tt for t in get_types(dbp_resource) for tt in get_transitive_supertype_closure(t)}
     return {t for t in transitive_types if dbp_util.is_dbp_type(t)}
 
 
 def get_properties(dbp_resource: str) -> dict:
+    """Return all properties where `dbp_resource` is the subject."""
     return get_resource_property_mapping()[dbp_resource]
 
 
 def get_inverse_properties(dbp_resource: str) -> dict:
+    """Return all properties where `dbp_resource` is the object."""
     return get_inverse_resource_property_mapping()[dbp_resource]
 
 
@@ -130,6 +130,7 @@ def get_interlanguage_links(dbp_resource: str) -> set:
 
 
 def resolve_redirect(dbp_resource: str, visited=None) -> str:
+    """Return the resource to which `dbp_resource` redirects (if any) or `dbp_resource` itself."""
     global __REDIRECTS__
     if '__REDIRECTS__' not in globals():
         initializer = lambda: rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.redirects')], rdf_util.PREDICATE_REDIRECTS)
@@ -152,6 +153,7 @@ def get_disambiguations(dbp_resource: str) -> set:
 
 
 def get_statistics(dbp_resource: str) -> dict:
+    """Return information about the types and properties of `dbp_resource`."""
     global __RESOURCE_STATISTICS__
     if '__RESOURCE_STATISTICS__' not in globals():
         __RESOURCE_STATISTICS__ = {}
@@ -159,7 +161,6 @@ def get_statistics(dbp_resource: str) -> dict:
         __RESOURCE_STATISTICS__[dbp_resource] = {
             'types': get_transitive_types(dbp_resource),
             'properties': {(pred, val) for pred, values in get_properties(dbp_resource).items() for val in values},
-            #'properties_inv': {(pred, val) for pred, values in get_inverse_properties(dbp_resource).items() for val in values},
         }
     return __RESOURCE_STATISTICS__[dbp_resource]
 
@@ -301,7 +302,9 @@ def get_comment(dbp_ontology_item: str) -> str:
 
     return __COMMENTS__[dbp_ontology_item] if dbp_ontology_item in __COMMENTS__ else ''
 
+
 # DBpedia types
+
 
 def get_all_types() -> set:
     return set(_get_type_graph().nodes)
@@ -333,7 +336,7 @@ def _create_resource_type_cooccurrence_matrix() -> Tuple[np.array, dict]:
 
 
 def get_independent_types(dbp_types: set) -> set:
-    """Returns only types that are independent, i.e. there are no two types T, T' with T transitiveSupertypeOf T'"""
+    """Return only types that are independent, i.e. there are no two types T, T' with T transitiveSupertypeOf T'"""
     return dbp_types.difference({st for t in dbp_types for st in get_transitive_supertypes(t)})
 
 
@@ -354,6 +357,7 @@ def get_transitive_supertypes(dbp_type: str) -> set:
 
 
 def get_transitive_supertype_closure(dbp_type: str) -> set:
+    """Return `dbp_type` itself and its transitive supertypes."""
     return {dbp_type} | get_transitive_supertypes(dbp_type)
 
 
@@ -374,6 +378,7 @@ def get_transitive_subtypes(dbp_type: str) -> set:
 
 
 def get_transitive_subtype_closure(dbp_type: str) -> set:
+    """Return `dbp_type` itself and its transitive subtypes."""
     return {dbp_type} | get_transitive_subtypes(dbp_type)
 
 
@@ -392,6 +397,7 @@ def are_equivalent_types(dbp_types: set) -> bool:
 REMOVED_DISJOINTNESS_AXIOMS = [{'http://dbpedia.org/ontology/Agent', 'http://dbpedia.org/ontology/Place'}]
 ADDED_DISJOINTNESS_AXIOMS = [{'http://dbpedia.org/ontology/Person', 'http://dbpedia.org/ontology/Place'}, {'http://dbpedia.org/ontology/Family', 'http://dbpedia.org/ontology/Place'}]
 def get_disjoint_types(dbp_type: str) -> set:
+    """Return all types that are disjoint with `dbp_type` (excluding the wrong disjointness Agent<->Place)."""
     global __DISJOINT_TYPE_MAPPING__
     if '__DISJOINT_TYPE_MAPPING__' not in globals():
         __DISJOINT_TYPE_MAPPING__ = rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_DISJOINT_WITH, reflexive=True)
@@ -408,6 +414,7 @@ def get_disjoint_types(dbp_type: str) -> set:
 
 
 def get_type_depth(dbp_type: str) -> int:
+    """Return the shortest way from `dbp_type` to the root of the type graph."""
     global __TYPE_DEPTH__
     if '__TYPE_DEPTH__' not in globals():
         type_graph = _get_type_graph()
@@ -417,6 +424,7 @@ def get_type_depth(dbp_type: str) -> int:
 
 
 def get_type_frequency(dbp_type: str) -> float:
+    """Return the amount of resources having `dbp_type` as type."""
     global __TYPE_FREQUENCY__
     if '__TYPE_FREQUENCY__' not in globals():
         __TYPE_FREQUENCY__ = util.load_or_create_cache('dbpedia_resource_type_frequency', _compute_type_frequency)
@@ -430,6 +438,7 @@ def _compute_type_frequency() -> dict:
 
 
 def _get_type_graph() -> nx.DiGraph:
+    """Return the initialised graph of DBpedia types."""
     global __TYPE_GRAPH__
     if '__TYPE_GRAPH__' not in globals():
         subtype_mapping = rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_SUBCLASS_OF, reverse_key=True)

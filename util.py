@@ -11,6 +11,7 @@ import urllib.request
 
 # CONFIGURATION
 def get_config(path: str):
+    """Return the defined configuration value from 'config.yaml' of `path`."""
     try:
         value = __CONFIG__
         for part in path.split('.'):
@@ -22,6 +23,7 @@ def get_config(path: str):
 
 
 def set_config(path: str, val):
+    """Override the configuration value at `path`."""
     try:
         current = __CONFIG__
         path_segments = path.split('.')
@@ -37,15 +39,12 @@ with open('config.yaml', 'r') as config_file:
 
 
 # FILES
-def get_root_path() -> str:
-    return os.path.dirname(os.path.realpath(__file__))
-
-
 def get_data_file(config_path: str) -> str:
+    """Return the file path where the data file is located (given the `config_path` where it is specified)."""
     file_config = get_config(config_path)
 
     # download file if not existing
-    filepath = os.path.join(get_root_path(), 'data', file_config['filename'])
+    filepath = os.path.join(_get_root_path(), 'data', file_config['filename'])
     if not os.path.isfile(filepath):
         url = file_config['url']
         get_logger().info(f'Download file from {url}..')
@@ -56,11 +55,13 @@ def get_data_file(config_path: str) -> str:
 
 
 def get_results_file(config_path: str) -> str:
-    return os.path.join(get_root_path(), 'results', get_config(config_path))
+    """Return the file path where the results file is located (given the `config_path` where it is specified)."""
+    return os.path.join(_get_root_path(), 'results', get_config(config_path))
 
 
 # CACHING
 def load_or_create_cache(cache_identifier: str, init_func, version=None):
+    """Return the object cached at `cache_identifier` if existing - otherwise initialise it first using `init_func`."""
     cache_obj = load_cache(cache_identifier, version=version)
     if cache_obj is None:
         cache_obj = init_func()
@@ -69,6 +70,7 @@ def load_or_create_cache(cache_identifier: str, init_func, version=None):
 
 
 def load_cache(cache_identifier: str, version=None):
+    """Return the object cached at `cache_identifier`."""
     cache_path = _get_cache_path(cache_identifier, version=version)
     if not cache_path.exists():
         return None
@@ -78,6 +80,7 @@ def load_cache(cache_identifier: str, version=None):
 
 
 def update_cache(cache_identifier: str, cache_obj, version=None):
+    """Update the object cached at `cache_identifier` with `cache_obj`."""
     open_func = _get_cache_open_func(cache_identifier)
     with open_func(_get_cache_path(cache_identifier, version=version), mode='wb') as cache_file:
         pickle.dump(cache_obj, cache_file)
@@ -88,7 +91,7 @@ def _get_cache_path(cache_identifier: str, version=None) -> Path:
     filename = config['filename']
     version = version or config['version']
     fileformat = '.p' + ('.bz2' if _should_compress_cache(cache_identifier) else '')
-    return Path(os.path.join(get_root_path(), 'data', 'cache', f'{filename}_v{version}{fileformat}'))
+    return Path(os.path.join(_get_root_path(), 'data', 'cache', f'{filename}_v{version}{fileformat}'))
 
 
 def _get_cache_open_func(cache_identifier: str):
@@ -100,6 +103,10 @@ def _should_compress_cache(cache_identifier: str) -> bool:
     return 'compress' in config and config['compress']
 
 
+def _get_root_path() -> str:
+    return os.path.dirname(os.path.realpath(__file__))
+
+
 # LOGGING
 def get_logger():
     return logging.getLogger('impl')
@@ -109,7 +116,7 @@ log_format = '%(asctime)s %(levelname)s: %(message)s'
 log_level = get_config('logging.level')
 if get_config('logging.to_file') and 'ipykernel' not in sys.modules:
     log_filename = '{}_{}.log'.format(datetime.datetime.now().strftime('%Y%m%d-%H%M%S'), get_config('logging.filename'))
-    log_filepath = os.path.join(get_root_path(), 'logs', log_filename)
+    log_filepath = os.path.join(_get_root_path(), 'logs', log_filename)
     log_file_handler = logging.FileHandler(log_filepath, 'a', 'utf-8')
     log_file_handler.setFormatter(logging.Formatter(log_format))
     logger = get_logger()

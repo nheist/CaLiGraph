@@ -7,6 +7,7 @@ from spacy.tokens import Doc
 
 
 def is_conceptual_category(category: str) -> bool:
+    """Return true, if the category is conceptual (i.e. has a plural noun as its lexical head)."""
     global __CONCEPTUAL_CATEGORIES__
     if '__CONCEPTUAL_CATEGORIES__' not in globals():
         __CONCEPTUAL_CATEGORIES__ = util.load_or_create_cache('dbpedia_categories_conceptual', _compute_conceptual_categories)
@@ -15,11 +16,12 @@ def is_conceptual_category(category: str) -> bool:
 
 
 def _compute_conceptual_categories() -> set:
-    util.get_logger().info('Computing conceptual categories..')
-    return {cat for cat, doc in _tag_lexical_heads(cat_store.get_all_cats()).items() if _has_plural_lexical_head(doc)}
+    util.get_logger().info('CACHE: Computing conceptual categories')
+    return {cat for cat, doc in _tag_lexical_heads(cat_store.get_categories()).items() if _has_plural_lexical_head(doc)}
 
 
-def _tag_lexical_heads(categories) -> dict:
+def _tag_lexical_heads(categories: set) -> dict:
+    """Identify lexical head by basic tagging and additionally by using information from category sets."""
     # basic lexical head tagging
     category_docs = {cat: nlp_util.tag_lexical_head(cat_nlp.parse_category(cat)) for cat in categories}
     plural_lexhead_cats = {cat for cat, doc in category_docs.items() if _has_plural_lexical_head(doc)}

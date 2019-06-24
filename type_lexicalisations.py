@@ -31,7 +31,7 @@ def extract_type_lexicalisations():
             res, lex = word_to_chunk_mapping[res], word_to_chunk_mapping[lex]
 
             # STEP 2: for each word, count the types that it refers to
-            if uri not in dbp_store.get_inverse_surface_forms(res.text):
+            if uri not in dbp_store.get_inverse_lexicalisations(res.text):
                 # discard, if the resource text does not refer to the subject of the article
                 continue
 
@@ -48,7 +48,6 @@ def extract_type_lexicalisations():
 
 def _retrieve_plaintexts() -> Tuple[str, str]:
     """Return an iterator over DBpedia resources and their Wikipedia plaintexts."""
-
     with bz2.open(util.get_data_file('files.dbpedia.nif_context'), mode='rb') as nif_file:
         nif_collection = pynif.NIFCollection.loads(nif_file.read(), format='turtle')
         for nif_context in nif_collection.contexts:
@@ -100,7 +99,6 @@ patterns = {
 
 def _init_pattern_matcher(nlp) -> Matcher:
     """Return a spacy matcher that is initialised with the hearst patterns defined in `patterns`."""
-
     matcher = Matcher(nlp.vocab)
     for k, vals in patterns.items():
         matcher.add(k, None, *vals['pattern'])

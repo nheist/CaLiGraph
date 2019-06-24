@@ -1,3 +1,5 @@
+"""Functionality for handling RDF (parsing, conversion, formatting)"""
+
 from collections import namedtuple
 import bz2
 import re
