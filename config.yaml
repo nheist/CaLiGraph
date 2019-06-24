@@ -100,8 +100,6 @@ files:
   evaluation:
     catgraph_dbptypes:
       filename: 'catgraph-dbptype_labels.csv'
-    cataxioms:
-      filename: 'cataxioms_labels.csv'
 
 results:
   catgraph:
