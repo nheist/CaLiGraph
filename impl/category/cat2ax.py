@@ -165,15 +165,13 @@ def _get_resource_surface_scores(text):
     return resource_surface_scores
 
 
-word_surface_scores = pickle.load(bz2.open(util.get_data_file('files.dbpedia.type_surface_forms'), mode='rb'))
 def _get_type_surface_scores(words):
-    type_surface_scores = defaultdict(lambda: 0)
-    for word in [nlp_util.parse(w)[0].lemma_ for w in words]:
-        if word in word_surface_scores:
-            for t, score in word_surface_scores[word].items():
-                type_surface_scores[t] += score
-    total_scores = sum(type_surface_scores.values())
-    return defaultdict(lambda: 0, {t: score / total_scores for t, score in type_surface_scores.items()})
+    lexicalisation_scores = defaultdict(lambda: 0)
+    for lemma in [nlp_util.parse(w)[0].lemma_ for w in words]:
+        for t, score in dbp_store.get_type_lexicalisations(lemma).items():
+            lexicalisation_scores[t] += score
+    total_scores = sum(lexicalisation_scores.values())
+    return defaultdict(lambda: 0, {t: score / total_scores for t, score in lexicalisation_scores.items()})
 
 
 # --- PATTERN APPLICATION ---

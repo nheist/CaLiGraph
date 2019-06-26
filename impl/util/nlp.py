@@ -15,9 +15,11 @@ for word in parser.Defaults.stop_words:
 
 
 def is_synonym(word: str, another_word: str) -> bool:
-    if word == another_word:
-        return True
-    return another_word in {lm.name() for syn in wordnet.synsets(word) for lm in syn.lemmas()}
+    return word == another_word or word in get_synonyms(another_word)
+
+
+def get_synonyms(word: str) -> set:
+    return {lm.name() for syn in wordnet.synsets(word) for lm in syn.lemmas()}
 
 
 def filter_important_words(text: str) -> set:

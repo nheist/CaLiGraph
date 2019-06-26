@@ -310,31 +310,6 @@ def get_all_types() -> set:
     return set(_get_type_graph().nodes)
 
 
-def get_cooccurrence_frequency(dbp_type: str, another_dbp_type: str) -> float:
-    global __TYPE_COOCCURRENCE_FREQUENCY_MATRIX__, __TYPE_MATRIX_DICT__
-    if '__TYPE_COOCCURRENCE_FREQUENCY_MATRIX__' not in globals():
-        type_cooccurrence_matrix, __TYPE_MATRIX_DICT__ = util.load_or_create_cache('dbpedia_resource_type_cooccurrence_matrix', _create_resource_type_cooccurrence_matrix)
-        max_occurrences = np.max(type_cooccurrence_matrix, axis=1).reshape(-1, 1)
-        __TYPE_COOCCURRENCE_FREQUENCY_MATRIX__ = np.divide(type_cooccurrence_matrix, max_occurrences, out=np.zeros_like(type_cooccurrence_matrix, dtype=np.float32), where=(max_occurrences != 0))
-
-    if dbp_type not in __TYPE_MATRIX_DICT__ or another_dbp_type not in __TYPE_MATRIX_DICT__:
-        return 0
-
-    return __TYPE_COOCCURRENCE_FREQUENCY_MATRIX__[__TYPE_MATRIX_DICT__[dbp_type], __TYPE_MATRIX_DICT__[another_dbp_type]]
-
-
-def _create_resource_type_cooccurrence_matrix() -> Tuple[np.array, dict]:
-    types = get_all_types()
-    type_count = len(types)
-    type_dict = {t: i for t, i in zip(types, range(type_count))}
-    type_cooccurrence_matrix = np.zeros((type_count, type_count), dtype=np.int32)
-    for r in get_resources():
-        resource_type_indices = [type_dict[t] for t in get_transitive_types(r)]
-        for i in resource_type_indices:
-            type_cooccurrence_matrix[i, resource_type_indices] += 1
-    return type_cooccurrence_matrix, type_dict
-
-
 def get_independent_types(dbp_types: set) -> set:
     """Return only types that are independent, i.e. there are no two types T, T' with T transitiveSupertypeOf T'"""
     return dbp_types.difference({st for t in dbp_types for st in get_transitive_supertypes(t)})
@@ -435,6 +410,40 @@ def get_type_frequency(dbp_type: str) -> float:
 def _compute_type_frequency() -> dict:
     type_counts = rdf_util.create_count_dict(_get_resource_type_mapping().values())
     return {t: t_count / len(_get_resource_type_mapping()) for t, t_count in type_counts.items()}
+
+
+def get_type_lexicalisations(lemma: str) -> dict:
+    """Return the type lexicalisation score for a set of lemmas (i.e. the probabilities of types given `lemmas`)."""
+    global __TYPE_LEXICALISATIONS__
+    if '__TYPE_LEXICALISATIONS__' not in globals():
+        __TYPE_LEXICALISATIONS__ = util.load_cache('dbpedia_type_lexicalisations')
+
+    return __TYPE_LEXICALISATIONS__[lemma] if lemma in __TYPE_LEXICALISATIONS__ else {}
+
+
+def get_cooccurrence_frequency(dbp_type: str, another_dbp_type: str) -> float:
+    global __TYPE_COOCCURRENCE_FREQUENCY_MATRIX__, __TYPE_MATRIX_DICT__
+    if '__TYPE_COOCCURRENCE_FREQUENCY_MATRIX__' not in globals():
+        type_cooccurrence_matrix, __TYPE_MATRIX_DICT__ = util.load_or_create_cache('dbpedia_resource_type_cooccurrence_matrix', _create_resource_type_cooccurrence_matrix)
+        max_occurrences = np.max(type_cooccurrence_matrix, axis=1).reshape(-1, 1)
+        __TYPE_COOCCURRENCE_FREQUENCY_MATRIX__ = np.divide(type_cooccurrence_matrix, max_occurrences, out=np.zeros_like(type_cooccurrence_matrix, dtype=np.float32), where=(max_occurrences != 0))
+
+    if dbp_type not in __TYPE_MATRIX_DICT__ or another_dbp_type not in __TYPE_MATRIX_DICT__:
+        return 0
+
+    return __TYPE_COOCCURRENCE_FREQUENCY_MATRIX__[__TYPE_MATRIX_DICT__[dbp_type], __TYPE_MATRIX_DICT__[another_dbp_type]]
+
+
+def _create_resource_type_cooccurrence_matrix() -> Tuple[np.array, dict]:
+    types = get_all_types()
+    type_count = len(types)
+    type_dict = {t: i for t, i in zip(types, range(type_count))}
+    type_cooccurrence_matrix = np.zeros((type_count, type_count), dtype=np.int32)
+    for r in get_resources():
+        resource_type_indices = [type_dict[t] for t in get_transitive_types(r)]
+        for i in resource_type_indices:
+            type_cooccurrence_matrix[i, resource_type_indices] += 1
+    return type_cooccurrence_matrix, type_dict
 
 
 def _get_type_graph() -> nx.DiGraph:
