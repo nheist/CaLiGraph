@@ -4,10 +4,22 @@ import impl.category.cat2ax as cat_axioms
 import impl.util.nlp as nlp_util
 import pandas as pd
 import numpy as np
+import util
 
 
 def assign_entity_labels(entities: pd.DataFrame):
     entities['label'] = entities.apply(lambda row: _compute_label_for_entity(row['_listpage_uri'], row['_entity_uri']), axis=1)
+
+    if util.get_config('list.extraction.use_negative_evidence_assumption'):
+        # -- ASSUMPTION: an entry of a list page has at most one positive example --
+        # locate all entries that have a positive example
+        positive_examples = set()
+        for _, row in entities[entities['label'] == 1].iterrows():
+            positive_examples.add((row['_listpage_uri'], row['_section_name'], row['_entry_idx']))
+        # make all candidate examples negative that appear in an entry with a positive example
+        for i, row in entities[entities['label'] == -1].iterrows():
+            if (row['_listpage_uri'], row['_section_name'], row['_entry_idx']) in positive_examples:
+                entities.at[i, 'label'] = 0
 
 
 def _compute_label_for_entity(listpage_uri: str, entity_uri: str) -> int:
