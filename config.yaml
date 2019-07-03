@@ -2,14 +2,9 @@ caligraph:
   namespace: 'http://data.informatik.uni-mannheim.de/caligraph#'
 category:
   root_category: 'http://dbpedia.org/resource/Category:Main_topic_classifications'
-  dbp_types:
-    exclude_untyped_resources: False
-    prefer_resource_types: True
-    apply_type_depth_smoothing: True
-    apply_impure_type_filtering: True
-    type_purity_threshold: 0.95
-    resource_type_ratio: 0.5
-    child_type_ratio: 0.5
+list:
+  extraction:
+    use_negative_evidence_assumption: True
 cat2ax:
   use_materialized_category_graph: False
   pattern_confidence: 0.05
@@ -118,12 +113,6 @@ cache:
     version: 1
   catgraph_cyclefree:
     filename: 'catgraph-cyclefree'
-    version: 1
-  catgraph_dbp_typed:
-    filename: 'catgraph-dbp-typed'
-    version: 1
-  catgraph_taxonomic:
-    filename: 'catgraph-taxonomic'
     version: 1
   catgraph_wikitaxonomy:
     filename: 'catgraph-wikitaxonomy'

@@ -32,7 +32,7 @@ def get_equivalent_listpage(category: str) -> str:
 
 def _create_equivalent_listpage_mapping() -> dict:
     util.get_logger().info('CACHE: Creating equivalent-listpage mapping')
-    categories = cat_store.get_all_cats()
+    categories = cat_store.get_categories()
     cat_to_lp_mapping = {}
 
     # 1) find equivalent lists by matching category/list names exactly

@@ -10,8 +10,6 @@ import impl.category.category_set as cat_set
 import impl.category.nlp as cat_nlp
 import impl.util.nlp as nlp_util
 import impl.util.rdf as rdf_util
-import pickle
-import bz2
 
 
 USE_MATERIALIZED_GRAPH = util.get_config('cat2ax.use_materialized_category_graph')
@@ -28,13 +26,13 @@ class Axiom:
         return self.predicate == other.predicate and self.value == other.value
 
     def contradicts(self, other):
-        raise NotImplementedError("Please use the sublcasses.")
+        raise NotImplementedError("Please use the subclasses.")
 
     def accepts_resource(self, dbp_resource: str) -> bool:
-        raise NotImplementedError("Please use the sublcasses.")
+        raise NotImplementedError("Please use the subclasses.")
 
     def rejects_resource(self, dbp_resource: str) -> bool:
-        raise NotImplementedError("Please use the sublcasses.")
+        raise NotImplementedError("Please use the subclasses.")
 
 
 class TypeAxiom(Axiom):
@@ -85,25 +83,6 @@ def extract_category_axioms(category_graph, pattern_confidence):
     candidate_sets = cat_set.get_category_sets()
     patterns = _extract_patterns(category_graph, candidate_sets)
     return _extract_axioms(category_graph, pattern_confidence, patterns)
-
-
-#def run_extraction():
-#    util.get_logger().debug('Step 1: Candidate Selection')
-#    candidate_sets = cat_set.get_category_sets()
-#
-#    util.get_logger().debug('Step 2: Pattern Mining')
-#    patterns = _extract_patterns(candidate_sets)
-#
-#    util.get_logger().debug('Step 3: Pattern Application')
-#    relation_axioms, type_axioms = _extract_axioms(patterns)
-#
-#    util.get_logger().debug('Step 4: Axiom Application & Post-Filtering')
-#    relation_assertions, type_assertions = _extract_assertions(relation_axioms, type_axioms)
-#
-#    pd.DataFrame(data=relation_axioms, columns=['cat', 'pred', 'val', 'confidence']).to_csv(util.get_results_file('results.cat2ax.relation_axioms'), sep=';', index=False)
-#    pd.DataFrame(data=type_axioms, columns=['cat', 'pred', 'val', 'confidence']).to_csv(util.get_results_file('results.cat2ax.type_axioms'), sep=';', index=False)
-#    pd.DataFrame(data=relation_assertions, columns=['sub', 'pred', 'val']).to_csv(util.get_results_file('results.cat2ax.relation_assertions'), sep=';', index=False)
-#    pd.DataFrame(data=type_assertions, columns=['sub', 'pred', 'val']).to_csv(util.get_results_file('results.cat2ax.type_assertions'), sep=';', index=False)
 
 
 # --- PATTERN EXTRACTION ---

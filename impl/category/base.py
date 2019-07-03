@@ -2,11 +2,7 @@ from .graph import CategoryGraph
 import util
 
 
-def get_wikitaxonomy_graph() -> CategoryGraph:
-    global __WIKITAXONOMY_CATEGORY_GRAPH__
-    if '__WIKITAXONOMY_CATEGORY_GRAPH__' not in globals():
-        __WIKITAXONOMY_CATEGORY_GRAPH__ = util.load_or_create_cache('catgraph_wikitaxonomy', CategoryGraph.create_from_wikitaxonomy)
-    return __WIKITAXONOMY_CATEGORY_GRAPH__
+# TODO: make sure that there are no cycles in wikitaxonomy graph
 
 
 def get_conceptual_category_graph() -> CategoryGraph:
@@ -25,17 +21,8 @@ def get_cycle_free_category_graph() -> CategoryGraph:
     return __CYCLEFREE_CATEGORY_GRAPH__
 
 
-def get_dbp_typed_category_graph() -> CategoryGraph:
-    global __DBPTYPED_CATEGORY_GRAPH__
-    if '__DBPTYPED_CATEGORY_GRAPH__' not in globals():
-        initializer = lambda: get_cycle_free_category_graph().assign_dbp_types()
-        __DBPTYPED_CATEGORY_GRAPH__ = util.load_or_create_cache('catgraph_dbp_typed', initializer)
-    return __DBPTYPED_CATEGORY_GRAPH__
-
-
-def get_taxonomic_category_graph() -> CategoryGraph:
-    global __TAXONOMIC_CATEGORY_GRAPH__
-    if '__TAXONOMIC_CATEGORY_GRAPH__' not in globals():
-        initializer = lambda: get_dbp_typed_category_graph().make_taxonomy()
-        __TAXONOMIC_CATEGORY_GRAPH__ = util.load_or_create_cache('catgraph_taxonomic', initializer)
-    return __TAXONOMIC_CATEGORY_GRAPH__
+def get_wikitaxonomy_graph() -> CategoryGraph:
+    global __WIKITAXONOMY_CATEGORY_GRAPH__
+    if '__WIKITAXONOMY_CATEGORY_GRAPH__' not in globals():
+        __WIKITAXONOMY_CATEGORY_GRAPH__ = util.load_or_create_cache('catgraph_wikitaxonomy', CategoryGraph.create_from_wikitaxonomy)
+    return __WIKITAXONOMY_CATEGORY_GRAPH__
