@@ -16,16 +16,16 @@ if __name__ == '__main__':
 
         #list_parser.get_parsed_listpages()
 
-        entity_data = list_base.get_listpage_entity_data()
+        #entity_data = list_base.get_listpage_entity_data()
         #nlp_util.persist_cache()
-        entity_data.to_csv('data_caligraph/entities_train_v6.csv', index=False)
+        #entity_data.to_csv('data_caligraph/entities_train_v6.csv', index=False)
 
         #edges_found = len(cat_wikitax.get_valid_edges())
 
-        #list_hierarchy.get_equivalent_listpage('')
+        list_hierarchy.get_child_listpages('')
 
 
-        mailer.send_success(f'FINISHED feature extraction v6')
+        mailer.send_success(f'FINISHED list hierarchy extraction')
         util.get_logger().info('Finished CaLiGraph extraction.')
     except Exception as e:
         error_msg = traceback.format_exc()
