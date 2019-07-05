@@ -36,8 +36,8 @@ def _create_equivalent_listpage_mapping() -> dict:
     cat_to_lp_mapping = {}
 
     # 1) find equivalent lists by matching category/list names exactly
-    name_to_category_mapping = {cat_util.remove_category_prefix(cat).lower(): cat for cat in categories}
-    name_to_list_mapping = {list_util.remove_listpage_prefix(lp).lower(): lp for lp in list_store.get_listpages_with_redirects()}
+    name_to_category_mapping = {nlp_util.remove_by_phrase_from_text(cat_store.get_label(cat)).lower(): cat for cat in categories}
+    name_to_list_mapping = {nlp_util.remove_by_phrase_from_text(dbp_store.get_label(lp)).lower(): lp for lp in list_store.get_listpages_with_redirects()}
     equal_pagenames = set(name_to_category_mapping).intersection(set(name_to_list_mapping))
     cat_to_lp_mapping.update({name_to_category_mapping[name]: name_to_list_mapping[name] for name in equal_pagenames})
 
@@ -101,19 +101,18 @@ def _create_child_listpages_mapping() -> dict:
 
         headlemmas = nlp_util.get_head_lemmas(nlp_util.parse(list_util.list2name(lp)))
 
-        lp_cats = cat_store.get_resource_to_cats_mapping()[lp]
+        lp_cats = {cat for cat in cat_store.get_resource_categories(lp) if not list_util.is_listcategory(cat)}
+        lp_listcats = {cat for cat in cat_store.get_resource_categories(lp) if list_util.is_listcategory(cat)}
         # check if headlemma of lp matches with cat. if yes -> add
-        parent_category_docs = {cat: nlp_util.parse(cat_util.category2name(cat)) for cat in lp_cats if not list_util.is_listcategory(cat)}
+        parent_category_docs = {cat: nlp_util.parse(cat_util.category2name(cat)) for cat in lp_cats}
         matching_cats = _find_cats_with_matching_headlemmas(parent_category_docs, headlemmas)
         if matching_cats:
             for cat in matching_cats:
                 cat_to_lp_mapping[cat].add(lp)
             continue
 
-        # TODO: implement instance-based category retrieval (only if listpage has the category)
-
         # check if headlemma of lp matches with lists-of cat. if yes -> check for lists-of cat hierarchy path. if good -> add
-        parent_listcategory_docs = {cat: nlp_util.parse(list_util.listcategory2name(cat)) for cat in lp_cats if list_util.is_listcategory(cat)}
+        parent_listcategory_docs = {cat: nlp_util.parse(list_util.listcategory2name(cat)) for cat in lp_listcats}
         if len(parent_listcategory_docs) > 1:
             # if we have more than one listcategory, we only use those with a matching headlemma
             parent_listcategory_docs = {cat: parent_listcategory_docs[cat] for cat in _find_cats_with_matching_headlemmas(parent_listcategory_docs, headlemmas)}

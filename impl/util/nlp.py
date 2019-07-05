@@ -24,7 +24,25 @@ def get_synonyms(word: str) -> set:
 
 def filter_important_words(text: str) -> set:
     """Return the lemmatized versions of all non-stop-words in `text`."""
-    return {word.lemma_ for word in parse(text) if not word.is_stop}
+    return {word.lemma_ for word in remove_by_phrase(parse(text)) if not word.is_stop}
+
+
+def remove_by_phrase_from_text(text: str) -> str:
+    return remove_by_phrase(parse(text, disable_normalization=True, skip_cache=True)).text
+
+
+def remove_by_phrase(doc: Doc) -> Doc:
+    """Remove the 'by'-phrase at the end of a category or listpage, e.g. 'People by country' -> 'People'"""
+    by_indices = [w.i for w in doc if w.text == 'by']
+    if len(by_indices) == 0:
+        return doc
+    last_by_index = by_indices[-1]
+    if last_by_index == 0 or last_by_index == len(doc) - 1:
+        return doc
+    word_after_by = doc[last_by_index+1]
+    if word_after_by.text.istitle() or word_after_by.text == 'the' or word_after_by.tag_ == 'NNS':
+        return doc
+    return doc[:last_by_index].as_doc()
 
 
 def get_head_lemmas(doc: Doc) -> set:

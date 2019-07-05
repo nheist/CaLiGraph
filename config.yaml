@@ -210,10 +210,10 @@ cache:
     version: 1
   dbpedia_listpage_equivalents:
     filename: 'dbpedia-listpage-equivalents'
-    version: 1
+    version: 2  # v1: basic; v2: by-phrase removed
   dbpedia_listpage_children:
     filename: 'dbpedia-listpage-children'
-    version: 1
+    version: 2  # v1: basic; v2: by-phrase removed
   dbpedia_listpage_markup:
     filename: 'dbpedia-listpage-markup'
     version: 1

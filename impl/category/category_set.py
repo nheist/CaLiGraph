@@ -1,8 +1,8 @@
 import util
+import impl.util.nlp as nlp_util
 from collections import namedtuple, defaultdict
 import impl.category.store as cat_store
 import impl.category.nlp as cat_nlp
-from spacy.tokens import Doc
 import operator
 from typing import Tuple, Optional
 
@@ -39,24 +39,11 @@ def _compute_category_sets() -> dict:
     category_sets = {}
     for cat in cat_store.get_usable_cats():
         children = {c for c in cat_store.get_children(cat) if cat_store.is_usable(c)}
-        children_docs = {c: _remove_by_phrase(cat_nlp.parse_category(c)) for c in children}
+        children_docs = {c: nlp_util.remove_by_phrase(cat_nlp.parse_category(c)) for c in children}
         child_sets = _find_child_sets(cat, children_docs)
         if child_sets:
             category_sets[cat] = child_sets
     return category_sets
-
-
-def _remove_by_phrase(doc: Doc) -> Doc:
-    by_indices = [w.i for w in doc if w.text == 'by']
-    if len(by_indices) == 0:
-        return doc
-    last_by_index = by_indices[-1]
-    if last_by_index == 0 or last_by_index == len(doc) - 1:
-        return doc
-    word_after_by = doc[last_by_index+1]
-    if word_after_by.text.istitle() or word_after_by.text == 'the' or word_after_by.tag_ == 'NNS':
-        return doc
-    return doc[:last_by_index].as_doc()
 
 
 def _find_child_sets(parent: str, category_docs: dict, current_pattern=((), ())) -> list:

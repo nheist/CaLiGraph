@@ -127,7 +127,7 @@ def _extract_patterns(category_graph, candidate_sets):
 
 
 def _get_match_for_category(category: str, first_words: tuple, last_words: tuple) -> str:
-    doc = cat_set._remove_by_phrase(cat_nlp.parse_category(category))
+    doc = nlp_util.remove_by_phrase(cat_nlp.parse_category(category))
     return doc[len(first_words):len(doc)-len(last_words)].text
 
 
@@ -172,7 +172,7 @@ def _extract_axioms(category_graph, pattern_confidence, patterns):
         _fill_dict(enclosing_pattern_dict, list(front_pattern), lambda d: _fill_dict(d, list(reversed(back_pattern)), axiom_patterns))
 
     for cat in category_graph.categories:
-        cat_doc = cat_set._remove_by_phrase(cat_nlp.parse_category(cat))
+        cat_doc = nlp_util.remove_by_phrase(cat_nlp.parse_category(cat))
         cat_prop_axioms = []
         cat_type_axioms = []
 
