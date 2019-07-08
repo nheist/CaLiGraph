@@ -5,7 +5,6 @@ import numpy as np
 import impl.dbpedia.store as dbp_store
 import impl.dbpedia.util as dbp_util
 import impl.dbpedia.heuristics as dbp_heur
-import impl.category.base as cat_base
 import impl.category.category_set as cat_set
 import impl.category.nlp as cat_nlp
 import impl.util.nlp as nlp_util
@@ -72,8 +71,9 @@ class RelationAxiom(Axiom):
 def get_axioms(category: str) -> set:
     global __CATEGORY_AXIOMS__
     if '__CATEGORY_AXIOMS__' not in globals():
-        initializer = lambda: extract_category_axioms(cat_base.get_conceptual_category_graph(), PATTERN_CONF)
-        __CATEGORY_AXIOMS__ = util.load_or_create_cache('cat2ax_axioms', initializer)
+        __CATEGORY_AXIOMS__ = util.load_cache('cat2ax_axioms')
+        if not __CATEGORY_AXIOMS__:
+            raise ValueError('cat2ax_axioms not initialised. Run axiom extraction once to create the necessary cache!')
 
     return __CATEGORY_AXIOMS__[category]
 

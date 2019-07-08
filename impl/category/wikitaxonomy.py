@@ -2,10 +2,10 @@ from typing import Set
 from collections import defaultdict
 import pickle
 import util
-import impl.category.base as cat_base
 import impl.category.cat2ax as cat_axioms
 import impl.category.nlp as cat_nlp
 import impl.util.nlp as nlp_util
+from impl.category.graph import CategoryGraph
 
 
 THRESHOLD_AXIOM = 10
@@ -24,18 +24,20 @@ def get_valid_edges(possible_edges: set) -> Set[tuple]:
 def is_hypernym(hyper_word: str, hypo_word: str) -> bool:
     global __WIKITAXONOMY_HYPERNYMS__
     if '__WIKITAXONOMY_HYPERNYMS__' not in globals():
-        __WIKITAXONOMY_HYPERNYMS__ = util.load_or_create_cache('wikitaxonomy_hypernyms', _compute_hypernyms)
+        __WIKITAXONOMY_HYPERNYMS__ = util.load_cache('wikitaxonomy_hypernyms')
+        if not __WIKITAXONOMY_HYPERNYMS__:
+            raise ValueError('wikitaxonomy_hypernyms not initialised. Run hypernym extraction once to create the necessary cache!')
 
     if nlp_util.is_synonym(hyper_word, hypo_word):
         return True
     return hyper_word in __WIKITAXONOMY_HYPERNYMS__[hypo_word]
 
 
-def _compute_hypernyms() -> dict:
+def compute_hypernyms(category_graph: CategoryGraph) -> dict:
     hypernyms = defaultdict(set)
 
     axiom_hypernyms = defaultdict(lambda: defaultdict(lambda: 0))
-    for parent, child in _get_axiom_edges():
+    for parent, child in _get_axiom_edges(category_graph):
         for cl in _get_headlemmas(child):
             for pl in _get_headlemmas(parent):
                 axiom_hypernyms[cl][pl] += 1
@@ -67,11 +69,11 @@ def _compute_hypernyms() -> dict:
     return hypernyms
 
 
-def _get_axiom_edges() -> Set[tuple]:
+def _get_axiom_edges(category_graph: CategoryGraph) -> Set[tuple]:
     valid_axiom_edges = set()
-    for parent in _get_possible_categories():
+    for parent in category_graph.categories:
         parent_axioms = cat_axioms.get_axioms(parent)
-        for child in _get_possible_children(parent):
+        for child in category_graph.successors(parent):
             child_axioms = cat_axioms.get_axioms(child)
             if not any(pa.contradicts(ca) for pa in parent_axioms for ca in child_axioms):
                 if any(ca.implies(pa) for pa in parent_axioms for ca in child_axioms):
@@ -89,10 +91,3 @@ def _get_headlemmas(category: str) -> set:
 
     return __WIKITAXONOMY_CATEGORY_LEMMAS__[category]
 
-
-def _get_possible_categories() -> set:
-    return cat_base.get_conceptual_category_graph().categories
-
-
-def _get_possible_children(category: str) -> set:
-    return cat_base.get_conceptual_category_graph().successors(category)
