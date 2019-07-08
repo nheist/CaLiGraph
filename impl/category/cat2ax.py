@@ -72,8 +72,7 @@ class RelationAxiom(Axiom):
 def get_axioms(category: str) -> set:
     global __CATEGORY_AXIOMS__
     if '__CATEGORY_AXIOMS__' not in globals():
-        category_graph = cat_base.get_cycle_free_category_graph()
-        initializer = lambda: extract_category_axioms(category_graph, PATTERN_CONF)
+        initializer = lambda: extract_category_axioms(cat_base.get_conceptual_category_graph(), PATTERN_CONF)
         __CATEGORY_AXIOMS__ = util.load_or_create_cache('cat2ax_axioms', initializer)
 
     return __CATEGORY_AXIOMS__[category]

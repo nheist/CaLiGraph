@@ -13,19 +13,11 @@ THRESHOLD_WIKI = 100
 THRESHOLD_WEBISALOD = .4
 
 
-def get_valid_edges() -> Set[tuple]:
-    global __WIKITAXIONOMY_EDGES__
-    if '__WIKITAXIONOMY_EDGES__' not in globals():
-        __WIKITAXIONOMY_EDGES__ = util.load_or_create_cache('wikitaxonomy_edges', _compute_valid_edges)
-    return __WIKITAXIONOMY_EDGES__
-
-
-def _compute_valid_edges() -> Set[tuple]:
+def get_valid_edges(possible_edges: set) -> Set[tuple]:
     valid_edges = set()
-    for parent in _get_possible_categories():
-        for child in _get_possible_children(parent):
-            if any(is_hypernym(pl, cl) for pl in _get_headlemmas(parent) for cl in _get_headlemmas(child)):
-                valid_edges.add((parent, child))
+    for parent, child in possible_edges:
+        if any(is_hypernym(pl, cl) for pl in _get_headlemmas(parent) for cl in _get_headlemmas(child)):
+            valid_edges.add((parent, child))
     return valid_edges
 
 

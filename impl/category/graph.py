@@ -1,7 +1,8 @@
 import networkx as nx
-from . import store as cat_store
-from impl.util.base_graph import BaseGraph
+import impl.category.store as cat_store
+import impl.category.wikitaxonomy as cat_wikitax
 from impl.category.conceptual import is_conceptual_category
+from impl.util.base_graph import BaseGraph
 import util
 import numpy as np
 from collections import defaultdict
@@ -97,12 +98,6 @@ class CategoryGraph(BaseGraph):
         edges = [(cat, subcat) for cat in cat_store.get_categories() for subcat in cat_store.get_children(cat)]
         return CategoryGraph(nx.DiGraph(incoming_graph_data=edges))
 
-    @classmethod
-    def create_from_wikitaxonomy(cls):
-        # TODO: include wikitaxonomy.py directly
-        edges = list(util.load_cache('wikitaxonomy_edges'))
-        return CategoryGraph(nx.DiGraph(incoming_graph_data=edges)).append_unconnected().remove_unconnected().resolve_cycles()
-
     # connectivity
 
     def remove_unconnected(self):
@@ -121,6 +116,19 @@ class CategoryGraph(BaseGraph):
         categories = {c for c in self.nodes if cat_store.is_usable(c) and is_conceptual_category(c)}
         # clearing the graph of any invalid nodes
         self._remove_all_nodes_except(categories | {self.root_node})
+        # appending all loose categories to the root node and removing the remaining self-referencing circular graphs
+        self.append_unconnected().remove_unconnected()
+        return self
+
+    # apply wikitaxonomy
+
+    def apply_wikitaxonomy(self):
+        valid_edges = cat_wikitax.get_valid_edges(self.edges)
+        valid_nodes = {e[0] for e in valid_edges} | {e[1] for e in valid_edges} | {self.root_node}
+        # remove all non-wikitaxonomy nodes
+        self._remove_all_nodes_except(valid_nodes)
+        # remove all non-wikitaxonomy edges
+        self._remove_all_edges_except(valid_edges)
         # appending all loose categories to the root node and removing the remaining self-referencing circular graphs
         self.append_unconnected().remove_unconnected()
         return self

@@ -111,11 +111,11 @@ cache:
   catgraph_conceptual:
     filename: 'catgraph-conceptual'
     version: 1
-  catgraph_cyclefree:
-    filename: 'catgraph-cyclefree'
-    version: 1
   catgraph_wikitaxonomy:
     filename: 'catgraph-wikitaxonomy'
+    version: 1
+  catgraph_cyclefree:
+    filename: 'catgraph-cyclefree'
     version: 1
   categories_singularized:
     filename: 'categories-singularized'
@@ -228,9 +228,6 @@ cache:
     filename: 'wikidata-resource-properties'
     version: 1
     compress: True
-  wikitaxonomy_edges:
-    filename: 'wikitaxonomy-edges'
-    version: 1
   wikitaxonomy_hypernyms:
     filename: 'wikitaxonomy-hypernyms'
     version: 1  # version 1 -> thresholds 10 / 100 / .4
