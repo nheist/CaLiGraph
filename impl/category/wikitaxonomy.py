@@ -5,7 +5,6 @@ import util
 import impl.category.cat2ax as cat_axioms
 import impl.category.nlp as cat_nlp
 import impl.util.nlp as nlp_util
-from impl.category.graph import CategoryGraph
 
 
 THRESHOLD_AXIOM = 10
@@ -33,7 +32,7 @@ def is_hypernym(hyper_word: str, hypo_word: str) -> bool:
     return hyper_word in __WIKITAXONOMY_HYPERNYMS__[hypo_word]
 
 
-def compute_hypernyms(category_graph: CategoryGraph) -> dict:
+def compute_hypernyms(category_graph) -> dict:
     hypernyms = defaultdict(set)
 
     axiom_hypernyms = defaultdict(lambda: defaultdict(lambda: 0))
@@ -69,7 +68,7 @@ def compute_hypernyms(category_graph: CategoryGraph) -> dict:
     return hypernyms
 
 
-def _get_axiom_edges(category_graph: CategoryGraph) -> Set[tuple]:
+def _get_axiom_edges(category_graph) -> Set[tuple]:
     valid_axiom_edges = set()
     for parent in category_graph.categories:
         parent_axioms = cat_axioms.get_axioms(parent)
