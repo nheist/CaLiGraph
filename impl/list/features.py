@@ -1,6 +1,7 @@
 import impl.list.hierarchy as list_hierarchy
 import impl.category.store as cat_store
 import impl.category.cat2ax as cat_axioms
+import impl.category.base as cat_base
 import impl.util.nlp as nlp_util
 import pandas as pd
 import numpy as np
@@ -28,8 +29,10 @@ def _compute_label_for_entity(listpage_uri: str, entity_uri: str) -> int:
 
     listpage_categories = {list_hierarchy.get_equivalent_category(listpage_uri)} or list_hierarchy.get_parent_categories(listpage_uri)
     for cat in listpage_categories:
-        listpage_axioms.update(cat_axioms.get_axioms(cat))
-        category_resources.update(cat_store.get_resources(cat))
+        for p_cat in ({cat} | cat_base.get_wikitaxonomy_graph().ancestors(cat)):
+            listpage_axioms.update(cat_axioms.get_axioms(p_cat))
+        for s_cat in ({cat} | cat_base.get_wikitaxonomy_graph().descendants(cat)):
+            category_resources.update(cat_store.get_resources(s_cat))
 
     if entity_uri in category_resources:
         return 1
