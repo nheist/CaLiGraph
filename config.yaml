@@ -4,7 +4,7 @@ category:
   root_category: 'http://dbpedia.org/resource/Category:Main_topic_classifications'
 list:
   extraction:
-    use_negative_evidence_assumption: False
+    use_negative_evidence_assumption: True
 cat2ax:
   use_materialized_category_graph: False
   pattern_confidence: 0.05

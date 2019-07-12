@@ -29,3 +29,7 @@ def is_dbp_type(dbp_type: str) -> bool:
 
 def is_dbp_resource(dbp_resource: str) -> bool:
     return dbp_resource.startswith(NAMESPACE_DBP_RESOURCE)
+
+
+def is_file_resource(dbp_object: str) -> bool:
+    return not dbp_object.startswith(NAMESPACE_DBP_RESOURCE + 'File:')

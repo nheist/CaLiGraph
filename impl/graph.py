@@ -58,6 +58,8 @@ class CaLiGraph(BaseGraph):
     @staticmethod
     def create_from_category_graph():
         # todo: use new taxonomic graph!
+        # todo: remove by-phrases from categories and flatten graph
+        # todo: remove divisions of list-categories. e.g. 'List of films: A', 'List of films: B', ..
         catgraph = cat_base.get_dbp_typed_category_graph()
         typed_cats = {cat for cat in catgraph.nodes if catgraph.dbp_types(cat)}
         # create basic graph

@@ -74,7 +74,6 @@ def _extract_sections(wiki_text: WikiText) -> list:
     } for section in wiki_text.sections]
 
 
-# todo: test
 def _extract_entries_for_list(l: wtp.WikiList):
     entries = []
     for item_text in l.items:

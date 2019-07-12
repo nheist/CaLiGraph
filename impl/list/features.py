@@ -1,4 +1,5 @@
 import impl.list.hierarchy as list_hierarchy
+import impl.dbpedia.store as dbp_store
 import impl.category.store as cat_store
 import impl.category.cat2ax as cat_axioms
 import impl.category.base as cat_base
@@ -24,6 +25,9 @@ def assign_entity_labels(entities: pd.DataFrame):
 
 
 def _compute_label_for_entity(listpage_uri: str, entity_uri: str) -> int:
+    if entity_uri not in dbp_store.get_resources():
+        return 0
+
     listpage_axioms = set()
     category_resources = set()
 

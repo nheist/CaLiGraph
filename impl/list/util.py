@@ -2,6 +2,7 @@ import impl.dbpedia.util as dbp_util
 import impl.util.rdf as rdf_util
 
 NAMESPACE_DBP_LIST = dbp_util.NAMESPACE_DBP_RESOURCE + 'List_of_'
+NAMESPACE_DBP_LISTS = dbp_util.NAMESPACE_DBP_RESOURCE + 'Lists_of_'
 NAMESPACE_DBP_LISTCAT = dbp_util.NAMESPACE_DBP_RESOURCE + 'Category:Lists_of_'
 
 
@@ -13,6 +14,10 @@ def remove_listpage_prefix(listpage: str) -> str:
 
 def is_listpage(obj: str) -> bool:
     return obj.startswith(NAMESPACE_DBP_LIST)
+
+
+def is_listspage(obj: str) -> bool:
+    return obj.startswith(NAMESPACE_DBP_LISTS)
 
 
 def list2name(listpage: str) -> str:

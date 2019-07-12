@@ -1,6 +1,7 @@
 import util
 import impl.util.rdf as rdf_util
 from . import util as dbp_util
+import impl.list.util as list_util
 from collections import defaultdict
 import networkx as nx
 from typing import Optional, Tuple
@@ -15,6 +16,7 @@ def get_resources() -> set:
     global __RESOURCES__
     if '__RESOURCES__' not in globals():
         __RESOURCES__ = set(_get_label_mapping()) | set(get_resource_property_mapping())
+        __RESOURCES__ = {res for res in __RESOURCES__ if not list_util.is_listpage(res) and not list_util.is_listspage(res) and not dbp_util.is_file_resource(res)}
     return __RESOURCES__
 
 
