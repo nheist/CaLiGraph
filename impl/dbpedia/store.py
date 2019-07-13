@@ -15,9 +15,13 @@ import numpy as np
 def get_resources() -> set:
     global __RESOURCES__
     if '__RESOURCES__' not in globals():
-        __RESOURCES__ = set(_get_label_mapping()) | set(get_resource_property_mapping())
-        __RESOURCES__ = {res for res in __RESOURCES__ if not list_util.is_listpage(res) and not list_util.is_listspage(res) and not dbp_util.is_file_resource(res)}
+        __RESOURCES__ = util.load_or_create_cache('dbpedia_resources', _compute_resources)
     return __RESOURCES__
+
+
+def _compute_resources() -> set:
+    resources = set(_get_label_mapping()) | set(get_resource_property_mapping())
+    return {res for res in resources if not list_util.is_listpage(res) and not list_util.is_listspage(res) and not dbp_util.is_file_resource(res)}
 
 
 def get_label(dbp_object: str) -> str:

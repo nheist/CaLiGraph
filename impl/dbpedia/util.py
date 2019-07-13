@@ -32,4 +32,4 @@ def is_dbp_resource(dbp_resource: str) -> bool:
 
 
 def is_file_resource(dbp_object: str) -> bool:
-    return not dbp_object.startswith(NAMESPACE_DBP_RESOURCE + 'File:')
+    return dbp_object.startswith(NAMESPACE_DBP_RESOURCE + 'File:')
