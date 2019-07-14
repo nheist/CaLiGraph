@@ -12,5 +12,9 @@ def category2name(category: str) -> str:
     return rdf_util.uri2name(category, NAMESPACE_DBP_CATEGORY)
 
 
+def is_category(obj: str) -> bool:
+    return obj.startswith(NAMESPACE_DBP_CATEGORY)
+
+
 def remove_category_prefix(category: str) -> str:
     return category[len(NAMESPACE_DBP_CATEGORY):]

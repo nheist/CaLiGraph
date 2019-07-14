@@ -1,6 +1,7 @@
 import util
 import impl.util.rdf as rdf_util
 from . import util as dbp_util
+import impl.category.util as cat_util
 import impl.list.util as list_util
 from collections import defaultdict
 import networkx as nx
@@ -22,6 +23,10 @@ def get_resources() -> set:
 def _compute_resources() -> set:
     resources = set(_get_label_mapping()) | set(get_resource_property_mapping())
     return {res for res in resources if not list_util.is_listpage(res) and not list_util.is_listspage(res) and not dbp_util.is_file_resource(res)}
+
+
+def is_possible_resource(obj: str) -> bool:
+    return dbp_util.is_dbp_resource(obj) and not dbp_util.is_file_resource(obj) and not cat_util.is_category(obj) and not list_util.is_listpage(obj) and not list_util.is_listspage(obj)
 
 
 def get_label(dbp_object: str) -> str:
