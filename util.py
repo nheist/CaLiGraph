@@ -35,7 +35,7 @@ def set_config(path: str, val):
 
 
 with open('config.yaml', 'r') as config_file:
-    __CONFIG__ = yaml.load(config_file)
+    __CONFIG__ = yaml.full_load(config_file)
 
 
 # FILES
