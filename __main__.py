@@ -3,9 +3,8 @@ import util
 import mailer
 import impl.category.base as cat_base
 import impl.category.cat2ax as cat_axioms
-import impl.category.wikitaxonomy as cat_wikitax
+import impl.util.hypernymy as hypernymy_util
 import impl.list.store as list_store
-import impl.list.hierarchy as list_hierarchy
 import impl.list.base as list_base
 import impl.list.parser as list_parser
 #import impl.dbpedia.heuristics as dbp_heur
@@ -22,7 +21,7 @@ def setup():
     util.update_cache('cat2ax_axioms', cat2ax_axioms)
 
     # initialise wikitaxonomy hypernyms
-    wikitaxonomy_hypernyms = cat_wikitax.compute_hypernyms(category_graph)
+    wikitaxonomy_hypernyms = hypernymy_util.compute_hypernyms(category_graph)
     util.update_cache('wikitaxonomy_hypernyms', wikitaxonomy_hypernyms)
 
 
@@ -35,10 +34,6 @@ if __name__ == '__main__':
         #entity_data = list_base.get_listpage_entity_data()
         #nlp_util.persist_cache()
         #entity_data.to_csv('data_caligraph/entities_train_v6.csv', index=False)
-
-        #edges_found = len(cat_wikitax.get_valid_edges())
-
-        list_hierarchy.get_child_listpages('')
 
 
         mailer.send_success(f'FINISHED list hierarchy extraction')

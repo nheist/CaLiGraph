@@ -116,6 +116,9 @@ cache:
   catgraph_cyclefree:
     filename: 'catgraph-cyclefree'
     version: 1
+  catgraph_merged:
+    filename: 'catgraph-merged'
+    version: 1
   categories_singularized:
     filename: 'categories-singularized'
     version: 1

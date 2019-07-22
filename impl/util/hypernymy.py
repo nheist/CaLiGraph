@@ -1,23 +1,19 @@
+from nltk.corpus import wordnet
 from typing import Set
 from collections import defaultdict
-import pickle
 import util
+import pickle
 import impl.category.cat2ax as cat_axioms
 import impl.category.nlp as cat_nlp
 import impl.util.nlp as nlp_util
 
 
+"""Compute hypernyms with similiar methods as Ponzetto et al.: Wikitaxonomy"""
+
+
 THRESHOLD_AXIOM = 10
 THRESHOLD_WIKI = 100
 THRESHOLD_WEBISALOD = .4
-
-
-def get_valid_edges(possible_edges: set) -> Set[tuple]:
-    valid_edges = set()
-    for parent, child in possible_edges:
-        if any(is_hypernym(pl, cl) for pl in _get_headlemmas(parent) for cl in _get_headlemmas(child)):
-            valid_edges.add((parent, child))
-    return valid_edges
 
 
 def is_hypernym(hyper_word: str, hypo_word: str) -> bool:
@@ -27,9 +23,17 @@ def is_hypernym(hyper_word: str, hypo_word: str) -> bool:
         if not __WIKITAXONOMY_HYPERNYMS__:
             raise ValueError('wikitaxonomy_hypernyms not initialised. Run hypernym extraction once to create the necessary cache!')
 
-    if nlp_util.is_synonym(hyper_word, hypo_word):
+    if is_synonym(hyper_word, hypo_word):
         return True
     return hyper_word in __WIKITAXONOMY_HYPERNYMS__[hypo_word]
+
+
+def is_synonym(word: str, another_word: str) -> bool:
+    return word == another_word or word in get_synonyms(another_word)
+
+
+def get_synonyms(word: str) -> set:
+    return {lm.name() for syn in wordnet.synsets(word) for lm in syn.lemmas()}
 
 
 def compute_hypernyms(category_graph) -> dict:
@@ -89,4 +93,3 @@ def _get_headlemmas(category: str) -> set:
         __WIKITAXONOMY_CATEGORY_LEMMAS__[category] = nlp_util.get_head_lemmas(cat_nlp.parse_category(category))
 
     return __WIKITAXONOMY_CATEGORY_LEMMAS__[category]
-

@@ -13,7 +13,7 @@ def get_conceptual_category_graph() -> CategoryGraph:
 def get_wikitaxonomy_graph() -> CategoryGraph:
     global __WIKITAXONOMY_CATEGORY_GRAPH__
     if '__WIKITAXONOMY_CATEGORY_GRAPH__' not in globals():
-        initializer = lambda: get_conceptual_category_graph().apply_wikitaxonomy()
+        initializer = lambda: get_conceptual_category_graph().remove_unrelated_edges().append_unconnected().remove_unconnected()
         __WIKITAXONOMY_CATEGORY_GRAPH__ = util.load_or_create_cache('catgraph_wikitaxonomy', initializer)
     return __WIKITAXONOMY_CATEGORY_GRAPH__
 

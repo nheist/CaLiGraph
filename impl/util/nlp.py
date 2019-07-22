@@ -2,7 +2,6 @@ import spacy
 from spacy.tokens import Doc, Span
 import hashlib
 import util
-from nltk.corpus import wordnet
 
 SPACY_CACHE_ID = 'spacy_docs'
 
@@ -12,14 +11,6 @@ parser = spacy.load('en_core_web_lg')
 for word in parser.Defaults.stop_words:
     lex = parser.vocab[word]
     lex.is_stop = True
-
-
-def is_synonym(word: str, another_word: str) -> bool:
-    return word == another_word or word in get_synonyms(another_word)
-
-
-def get_synonyms(word: str) -> set:
-    return {lm.name() for syn in wordnet.synsets(word) for lm in syn.lemmas()}
 
 
 def filter_important_words(text: str) -> set:

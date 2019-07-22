@@ -2,12 +2,12 @@ from . import util as list_util
 import impl.category.base as cat_base
 import impl.category.store as cat_store
 import impl.category.util as cat_util
-import impl.category.wikitaxonomy as cat_wikitax
 from impl.category.conceptual import is_conceptual_category
 import impl.dbpedia.store as dbp_store
 import impl.list.store as list_store
 import util
 import impl.util.nlp as nlp_util
+import impl.util.hypernymy as hypernymy_util
 from collections import defaultdict
 from spacy.tokens import Doc
 
@@ -67,8 +67,8 @@ def _create_equivalent_listpage_mapping() -> dict:
         for lp in candidates:
             lp_important_words = nlp_util.filter_important_words(list_util.list2name(lp))
             if len(cat_important_words) == len(lp_important_words):
-                if all(any(nlp_util.is_synonym(ll, cl) for ll in lp_important_words) for cl in cat_important_words):
-                    if all(any(nlp_util.is_synonym(ll, cl) for cl in cat_important_words) for ll in lp_important_words):
+                if all(any(hypernymy_util.is_synonym(ll, cl) for ll in lp_important_words) for cl in cat_important_words):
+                    if all(any(hypernymy_util.is_synonym(ll, cl) for cl in cat_important_words) for ll in lp_important_words):
                         mapped_lps.add(lp)
         if mapped_lps:
             cat_to_lp_member_mapping[cat] = mapped_lps
@@ -152,7 +152,7 @@ def _find_cats_with_matching_headlemmas(category_docs: dict, headlemmas: set):
     matches = set()
     for cat, cat_doc in category_docs.items():
         cat_headlemmas = nlp_util.get_head_lemmas(cat_doc)
-        if any(cat_wikitax.is_hypernym(chl, hl) for chl in cat_headlemmas for hl in headlemmas):
+        if any(hypernymy_util.is_hypernym(chl, hl) for chl in cat_headlemmas for hl in headlemmas):
             matches.add(cat)
     return matches
 
