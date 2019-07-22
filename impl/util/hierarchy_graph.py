@@ -94,28 +94,32 @@ class HierarchyGraph(BaseGraph):
 
     def merge_nodes(self):
         """Create compounds of nodes by merging similar nodes into one."""
-        something_changed = True
-        while something_changed:
-            something_changed = False
+        found_merge_target = True
+        while found_merge_target:
+            found_merge_target = False
             traversed_nodes = set()
             for node, _ in nx.traversal.bfs_edges(self.graph, self.root_node):
                 if node in traversed_nodes:
                     continue
-                traversed_nodes.add(node)
 
+                merge_target = node
                 children_to_merge = {c for c in self.children(node) if self._should_merge_nodes(node, c)}
                 if children_to_merge:
-                    util.get_logger().debug(f'Merging nodes "{children_to_merge}" into {node}.')
-                    node_new_children = {child for node in children_to_merge for child in self.children(node)}
-                    edges_to_add = {(node, child) for child in node_new_children}
-                    edges_to_remove = {(node, old_child) for old_child in children_to_merge}
-                    self._remove_edges(edges_to_remove)
-                    self._add_edges(edges_to_add)
+                    found_merge_target = True
+                    break
+                else:
+                    traversed_nodes.add(node)
+            if found_merge_target:
+                util.get_logger().debug(f'Merging nodes "{children_to_merge}" into {merge_target}.')
+                node_new_children = {child for merge_node in children_to_merge for child in self.children(merge_node)}
+                edges_to_add = {(merge_target, child) for child in node_new_children}
+                edges_to_remove = {(merge_target, old_child) for old_child in children_to_merge}
+                self._remove_edges(edges_to_remove)
+                self._add_edges(edges_to_add)
 
-                    node_parts = self.get_parts(node) | children_to_merge
-                    self._set_parts(node, node_parts)
+                node_parts = self.get_parts(merge_target) | children_to_merge
+                self._set_parts(merge_target, node_parts)
 
-                    something_changed = True
         return self
 
     @staticmethod
