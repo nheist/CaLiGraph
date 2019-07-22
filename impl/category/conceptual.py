@@ -29,7 +29,7 @@ def _tag_lexical_heads(categories: set) -> dict:
     # enhanced lexical head tagging with category sets (yields 2822 additional conceptual categories)
     for category_set in cat_set.get_category_sets():
 
-        set_cats = category_set.categories
+        set_cats = category_set.nodes
         pattern_words = set(category_set.pattern[0] + category_set.pattern[1])
 
         plural_lexhead_set_cats = {c for c in set_cats if c in plural_lexhead_cats}

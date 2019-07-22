@@ -13,5 +13,5 @@ def get_materialized_resources(category: str) -> set:
 
 def _compute_materialized_resources(category: str) -> set:
     cat_graph = cat_base.get_wikitaxonomy_graph()
-    child_resources = {r for c in cat_graph.successors(category) for r in get_materialized_resources(c)}
+    child_resources = {r for c in cat_graph.children(category) for r in get_materialized_resources(c)}
     return cat_store.get_resources(category) | child_resources

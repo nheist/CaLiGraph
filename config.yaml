@@ -6,7 +6,6 @@ list:
   extraction:
     use_negative_evidence_assumption: True
 cat2ax:
-  use_materialized_category_graph: False
   pattern_confidence: 0.05
 
 
@@ -183,9 +182,6 @@ cache:
     version: 1
   dbpedia_category_statistics:
     filename: 'dbpedia-category-statistics'
-    version: 1
-  dbpedia_materialized_category_statistics:
-    filename: 'dbpedia-materialized-category-statistics'
     version: 1
   dbpedia_category_sets:
     filename: 'dbpedia-category-sets'

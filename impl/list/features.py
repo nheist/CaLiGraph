@@ -1,4 +1,4 @@
-import impl.list.hierarchy as list_hierarchy
+import impl.list.mapping as list_mapping
 import impl.dbpedia.store as dbp_store
 import impl.category.store as cat_store
 import impl.category.cat2ax as cat_axioms
@@ -9,6 +9,7 @@ import numpy as np
 import util
 
 
+# TODO: recompute due to changes in category hierarchy (equiv. cat. computation)
 def assign_entity_labels(entities: pd.DataFrame):
     entities['label'] = entities.apply(lambda row: _compute_label_for_entity(row['_listpage_uri'], row['_entity_uri']), axis=1)
 
@@ -31,7 +32,7 @@ def _compute_label_for_entity(listpage_uri: str, entity_uri: str) -> int:
     listpage_axioms = set()
     category_resources = set()
 
-    listpage_categories = {list_hierarchy.get_equivalent_category(listpage_uri)} or list_hierarchy.get_parent_categories(listpage_uri)
+    listpage_categories = list_mapping.get_equivalent_categories(listpage_uri) or list_mapping.get_parent_categories(listpage_uri)
     for cat in listpage_categories:
         for p_cat in ({cat} | cat_base.get_wikitaxonomy_graph().ancestors(cat)):
             listpage_axioms.update(cat_axioms.get_axioms(p_cat))

@@ -1,4 +1,5 @@
 import networkx as nx
+import numpy as np
 
 
 class BaseGraph:
@@ -19,25 +20,37 @@ class BaseGraph:
     def _remove_all_nodes_except(self, valid_nodes: set):
         invalid_nodes = self.nodes.difference(valid_nodes)
         self.graph.remove_nodes_from(invalid_nodes)
+        self._reset_node_indices()
+
+    def _reset_node_indices(self):
+        pass  # Triggered when anything changes in the node structure. Should be overriden by subclasses to clean up any outdated node indices.
 
     @property
     def edges(self) -> set:
         return set(self.graph.edges)
 
-    def add_edges(self, edges):
+    def _add_edges(self, edges):
         self.graph.add_edges_from(edges)
+        self._reset_edge_indices()
+
+    def _remove_edges(self, edges):
+        self.graph.remove_edges_from(edges)
+        self._reset_edge_indices()
 
     def _remove_all_edges_except(self, valid_edges: set):
         invalid_edges = self.edges.difference(valid_edges)
-        self.graph.remove_edges_from(invalid_edges)
+        self._remove_edges(invalid_edges)
 
-    def predecessors(self, node: str) -> set:
+    def _reset_edge_indices(self):
+        pass  # Triggered when anything changes in the edge structure. Should be overriden by subclasses to clean up any outdated edge indices.
+
+    def parents(self, node: str) -> set:
         return set(self.graph.predecessors(node)) if self.graph.has_node(node) else set()
 
     def ancestors(self, node: str) -> set:
         return set(nx.ancestors(self.graph, node)) if self.graph.has_node(node) else set()
 
-    def successors(self, node: str) -> set:
+    def children(self, node: str) -> set:
         return set(self.graph.successors(node)) if self.graph.has_node(node) else set()
 
     def descendants(self, node: str) -> set:
@@ -55,3 +68,19 @@ class BaseGraph:
     def _reset_attr(self, node, attr):
         if attr in self.graph.nodes[node]:
             del self.graph.nodes[node][attr]
+
+    @property
+    def statistics(self) -> str:
+        type_count = len(self.nodes)
+        edge_count = len(self.edges)
+        avg_indegree = np.mean([d for _, d in self.graph.in_degree])
+        avg_outdegree = np.mean([d for _, d in self.graph.out_degree])
+
+        return '\n'.join([
+            '{:^40}'.format('STATISTICS'),
+            '=' * 40,
+            '{:<30} | {:>7}'.format('clg-types', type_count),
+            '{:<30} | {:>7}'.format('edges', edge_count),
+            '{:<30} | {:>7.2f}'.format('in-degree', avg_indegree),
+            '{:<30} | {:>7.2f}'.format('out-degree', avg_outdegree),
+            ])

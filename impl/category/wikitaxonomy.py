@@ -70,9 +70,9 @@ def compute_hypernyms(category_graph) -> dict:
 
 def _get_axiom_edges(category_graph) -> Set[tuple]:
     valid_axiom_edges = set()
-    for parent in category_graph.categories:
+    for parent in category_graph.nodes:
         parent_axioms = cat_axioms.get_axioms(parent)
-        for child in category_graph.successors(parent):
+        for child in category_graph.children(parent):
             child_axioms = cat_axioms.get_axioms(child)
             if not any(pa.contradicts(ca) for pa in parent_axioms for ca in child_axioms):
                 if any(ca.implies(pa) for pa in parent_axioms for ca in child_axioms):
