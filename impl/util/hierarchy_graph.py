@@ -109,20 +109,21 @@ class HierarchyGraph(BaseGraph):
                 if node in traversed_nodes:
                     continue
 
-                merge_target = node
                 children_to_merge = {c for c in self.children(node) if self._should_merge_nodes(node, c)}
                 if children_to_merge:
                     found_merge_target = True
+                    merge_target = node
                     break
                 else:
                     traversed_nodes.add(node)
             if found_merge_target:
-                util.get_logger().debug(f'Merging nodes "{children_to_merge}" into {merge_target}.')
-                node_new_children = {child for merge_node in children_to_merge for child in self.children(merge_node)}
-                edges_to_add = {(merge_target, child) for child in node_new_children}
-                edges_to_remove = {(merge_target, old_child) for old_child in children_to_merge}
-                self._remove_edges(edges_to_remove)
-                self._add_edges(edges_to_add)
+                #util.get_logger().debug(f'Merging nodes "{children_to_merge}" into {merge_target}.')
+                for child in children_to_merge:
+                    parents = {parent for parent in self.parents(child)}
+                    grandchildren = {grandchild for grandchild in self.children(child)}
+                    edges_to_add = {(parent, grandchild) for parent in parents for grandchild in grandchildren}
+                    self._remove_nodes({child})
+                    self._add_edges(edges_to_add)
 
                 node_parts = self.get_parts(merge_target) | children_to_merge
                 self._set_parts(merge_target, node_parts)
