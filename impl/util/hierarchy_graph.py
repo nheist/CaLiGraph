@@ -95,9 +95,9 @@ class HierarchyGraph(BaseGraph):
     def merge_nodes(self):
         """Create compounds of nodes by merging similar nodes into one."""
         found_merge_target = True
+        traversed_nodes = set()
         while found_merge_target:
             found_merge_target = False
-            traversed_nodes = set()
             for node, _ in nx.traversal.bfs_edges(self.graph, self.root_node):
                 if node in traversed_nodes:
                     continue
