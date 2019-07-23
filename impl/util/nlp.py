@@ -33,7 +33,7 @@ def remove_by_phrase(doc: Doc) -> Doc:
     word_after_by = doc[last_by_index+1]
     if word_after_by.text.istitle() or word_after_by.text == 'the' or word_after_by.tag_ == 'NNS':
         return doc
-    return doc[:last_by_index].as_doc()
+    return parse(doc[:last_by_index].text.strip(), disable_normalization=True, skip_cache=True)
 
 
 def get_head_lemmas(doc: Doc) -> set:
