@@ -122,6 +122,5 @@ class HierarchyGraph(BaseGraph):
 
         return self
 
-    @staticmethod
-    def _should_merge_nodes(parent: str, child: str) -> bool:
-        return child.startswith(parent) and nlp_util.remove_by_phrase_from_text(child) == parent
+    def _should_merge_nodes(self, parent: str, child: str) -> bool:
+        return child.startswith(parent) and nlp_util.remove_by_phrase_from_text(self.get_name(child)) == self.get_name(parent)
