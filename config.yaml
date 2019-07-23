@@ -119,6 +119,18 @@ cache:
   catgraph_merged:
     filename: 'catgraph-merged'
     version: 1
+  listgraph_base:
+    filename: 'listgraph-base'
+    version: 1
+  listgraph_wikitaxonomy:
+    filename: 'listgraph-wikitaxonomy'
+    version: 1
+  listgraph_cyclefree:
+    filename: 'listgraph-cyclefree'
+    version: 1
+  listgraph_merged:
+    filename: 'listgraph-merged'
+    version: 1
   categories_singularized:
     filename: 'categories-singularized'
     version: 1
@@ -210,12 +222,12 @@ cache:
   dbpedia_listpages:
     filename: 'dbpedia-listpages'
     version: 1
-  dbpedia_listpage_equivalents:
-    filename: 'dbpedia-listpage-equivalents'
-    version: 2  # v1: basic; v2: by-phrase removed
-  dbpedia_listpage_children:
-    filename: 'dbpedia-listpage-children'
-    version: 2  # v1: basic; v2: by-phrase removed
+  dbpedia_list_equivalents:
+    filename: 'dbpedia-list-equivalents'
+    version: 1
+  dbpedia_list_parents:
+    filename: 'dbpedia-list-parents'
+    version: 1
   dbpedia_listpage_markup:
     filename: 'dbpedia-listpage-markup'
     version: 1

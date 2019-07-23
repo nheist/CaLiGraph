@@ -13,14 +13,17 @@ class CategoryGraph(HierarchyGraph):
         super().__init__(graph, root_node or util.get_config('category.root_category'))
 
     # node categories
-    def get_node_for_category(self, category: str) -> Optional[str]:
-        return self.get_node_for_part(category)
+    def get_all_categories(self) -> set:
+        return {cat for node in self.nodes for cat in self.get_categories(node)}
 
     def get_categories(self, node: str) -> set:
         return self.get_parts(node)
 
     def _set_categories(self, node: str, categories: set):
         self._set_parts(node, categories)
+
+    def get_node_for_category(self, category: str) -> Optional[str]:
+        return self.get_node_for_part(category)
 
     # node resources
 

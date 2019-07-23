@@ -1,177 +1,136 @@
-from . import util as list_util
 import impl.category.base as cat_base
 import impl.category.store as cat_store
-import impl.category.util as cat_util
-from impl.category.conceptual import is_conceptual_category
-import impl.dbpedia.store as dbp_store
+import impl.list.util as list_util
 import impl.list.store as list_store
+import impl.list.base as list_base
 import util
 import impl.util.nlp as nlp_util
 import impl.util.hypernymy as hypernymy_util
 from collections import defaultdict
-from spacy.tokens import Doc
+import inflection
 
 
-"""Mapping of listpages to the category-lists-hierarchy
+"""Mapping of listpages to the category-hierarchy
 
 A mapping can have one of two types:
-- Equivalence Mapping: The entities of the listpage are put directly into the mapped hierarchy item
-- Child Mapping: The listpage is appended to the hierarchy as a child of an existing hierarchy item
+- Equivalence Mapping: The entities of the listpage are put directly into the mapped hierarchy item, if:
+  - the name of the list is equivalent to the name of a category
+  - every word in the list's name is synonymous to a word in the category's name (and vice versa) [reduce complexity?]
+- Child Mapping: The listpage is appended to the hierarchy as a child of an existing hierarchy item, if:
+  - the headlemmas of a parent category are synonyms/hypernyms of the headlemmas of the list
+  - the only parent of the list is root and there exists a category that has the headlemma of the list as a name
+  - the only parent of the list is root -> append it to root
 """
 
 
-def get_equivalent_categories(listpage: str) -> set:
+def get_equivalent_categories(lst: str) -> set:
     global __EQUIVALENT_CATEGORY_MAPPING__
     if '__EQUIVALENT_CATEGORY_MAPPING__' not in globals():
-        __EQUIVALENT_CATEGORY_MAPPING__ = defaultdict(set)
-        get_equivalent_listpages('')  # make sure that equivalent-listpage mapping is initialised
-        for cat, lps in __EQUIVALENT_LISTPAGE_MAPPING__.items():
-            for lp in lps:
-                __EQUIVALENT_CATEGORY_MAPPING__[lp].add(cat)
-
-    return __EQUIVALENT_CATEGORY_MAPPING__[listpage]
+        __EQUIVALENT_CATEGORY_MAPPING__ = defaultdict(set, util.load_or_create_cache('dbpedia_list_equivalents', _create_list_equivalents_mapping))
+    return __EQUIVALENT_CATEGORY_MAPPING__[lst]
 
 
-def get_equivalent_listpages(category: str) -> set:
-    global __EQUIVALENT_LISTPAGE_MAPPING__
-    if '__EQUIVALENT_LISTPAGE_MAPPING__' not in globals():
-        __EQUIVALENT_LISTPAGE_MAPPING__ = defaultdict(set, util.load_or_create_cache('dbpedia_listpage_equivalents', _create_equivalent_listpage_mapping))
+def _create_list_equivalents_mapping():
+    util.get_logger().info('CACHE: Creating list-equivalents mapping')
 
-    return __EQUIVALENT_LISTPAGE_MAPPING__[category]
+    cat_graph = cat_base.get_merged_graph()
+    all_categories_in_graph = cat_graph.get_all_categories()
+    list_graph = list_base.get_merged_listgraph()
+    all_lists = list_graph.nodes | list_store.get_listpages()
 
-
-def _create_equivalent_listpage_mapping() -> dict:
-    util.get_logger().info('CACHE: Creating equivalent-listpage mapping')
-    cat_graph = cat_base.get_cyclefree_wikitaxonomy_graph()
-
-    # 1) find equivalent lists by matching category/list names exactly
-    name_to_category_mapping = {nlp_util.remove_by_phrase_from_text(cat_util.category2name(cat)).lower(): cat for cat in cat_graph.nodes}
+    # 1) find equivalent categories by exact name match
+    name_to_cat_mapping = {cat_graph.get_name(node).lower(): node for node in cat_graph.nodes}
     name_to_list_mapping = defaultdict(set)
-    for lp in list_store.get_listpages_with_redirects():
-        name_to_list_mapping[nlp_util.remove_by_phrase_from_text(list_util.list2name(lp)).lower()].add(lp)
-    equal_pagenames = set(name_to_category_mapping).intersection(set(name_to_list_mapping))
-    cat_to_lp_name_mapping = defaultdict(set, {name_to_category_mapping[name]: name_to_list_mapping[name] for name in equal_pagenames})
-    util.get_logger().debug(f'Name Mapping: Mapped {len(cat_to_lp_name_mapping)} categories to {sum(len(lps) for lps in cat_to_lp_name_mapping.values())} lists.')
+    for lst in all_lists:
+        name_to_list_mapping[list_util.list2name(lst).lower()].add(lst)
+    matching_names = set(name_to_list_mapping).intersection(set(name_to_cat_mapping))
+    list_to_cat_exact_mapping = defaultdict(set, {lst: {name_to_cat_mapping[name]} for name in matching_names for lst in name_to_list_mapping[name]})
+    util.get_logger().debug(f'Exact Mapping: Mapped {len(list_to_cat_exact_mapping)} lists to categories.')
 
-    # 2) find equivalent lists by using topical concepts and members of categories
-    cat_to_lp_member_mapping = defaultdict(set)
+    # 2) find equivalent categories by synonym match
+    list_to_cat_synonym_mapping = defaultdict(set)
 
-    for cat in cat_graph.nodes:
-        # topical concepts
-        candidates = {topic for topic in cat_store.get_topics(cat) if list_util.is_listpage(topic)}
-        # category members
-        candidates.update({page for page in cat_store.get_resources(cat) if list_util.is_listpage(page)})
-        # find approximate matches of category and listpage
-        cat_important_words = nlp_util.filter_important_words(cat_util.category2name(cat))
-        mapped_lps = set()
-        for lp in candidates:
-            lp_important_words = nlp_util.filter_important_words(list_util.list2name(lp))
-            if len(cat_important_words) == len(lp_important_words):
-                if all(any(hypernymy_util.is_synonym(ll, cl) for ll in lp_important_words) for cl in cat_important_words):
-                    if all(any(hypernymy_util.is_synonym(ll, cl) for cl in cat_important_words) for ll in lp_important_words):
-                        mapped_lps.add(lp)
-        if mapped_lps:
-            cat_to_lp_member_mapping[cat] = mapped_lps
-    util.get_logger().debug(f'Member Mapping: Mapped {len(cat_to_lp_member_mapping)} categories to {sum(len(lps) for lps in cat_to_lp_member_mapping.values())} lists.')
+    cats_important_words = {cat: nlp_util.filter_important_words(cat_graph.get_name(cat)) for cat in cat_graph.nodes}
 
-    # 3) Merge mappings and resolve redirects
-    mapped_cats = set(cat_to_lp_name_mapping) | set(cat_to_lp_member_mapping)
-    # join mappings
-    cat_to_lp_equivalence_mapping = {cat: cat_to_lp_name_mapping[cat] | cat_to_lp_member_mapping[cat] for cat in mapped_cats}
-    # resolve redirects
-    cat_to_lp_equivalence_mapping = {cat: {dbp_store.resolve_redirect(lp) for lp in lps if list_util.is_listpage(dbp_store.resolve_redirect(lp))} for cat, lps in cat_to_lp_equivalence_mapping.items()}
-    # remove empty mappings
-    cat_to_lp_equivalence_mapping = {cat: lps for cat, lps in cat_to_lp_equivalence_mapping.items() if lps}
-    util.get_logger().debug(f'Merged Equivalence Mapping: Mapped {len(cat_to_lp_equivalence_mapping)} categories to {sum(len(lps) for lps in cat_to_lp_equivalence_mapping.values())} lists.')
+    remaining_lists = all_lists.difference(set(list_to_cat_exact_mapping))
+    for lst in remaining_lists:
+        lst_important_words = nlp_util.filter_important_words(nlp_util.remove_by_phrase_from_text(list_util.list2name(lst)))
 
-    return cat_to_lp_equivalence_mapping
+        if list_util.is_listcategory(lst):
+            candidates = cat_store.get_parents(lst)
+        else:
+            candidates = cat_store.get_topic_categories(lst) | cat_store.get_resource_categories(lst)
+        candidates = {cat_graph.get_node_for_category(cat) for cat in candidates if cat in all_categories_in_graph}
+
+        for candidate_cat in candidates:
+            cat_important_words = cats_important_words[candidate_cat]
+            if len(lst_important_words) == len(cat_important_words):
+                if all(any(hypernymy_util.is_synonym(ll, cl) for ll in lst_important_words) for cl in cat_important_words):
+                    if all(any(hypernymy_util.is_synonym(ll, cl) for cl in cat_important_words) for ll in lst_important_words):
+                        list_to_cat_synonym_mapping[lst].add(candidate_cat)
+    util.get_logger().debug(f'Synonym Mapping: Mapped {len(list_to_cat_synonym_mapping)} lists to {sum(len(cat) for cat in list_to_cat_synonym_mapping.values())} categories.')
+
+    # merge mappings
+    mapped_lsts = set(list_to_cat_exact_mapping) | set(list_to_cat_synonym_mapping)
+    list_to_cat_equivalence_mapping = {lst: list_to_cat_exact_mapping[lst] | list_to_cat_synonym_mapping[lst] for lst in mapped_lsts}
+    util.get_logger().debug(f'Equivalence Mapping: Mapped {len(list_to_cat_equivalence_mapping)} lists to {sum(len(cat) for cat in list_to_cat_equivalence_mapping.values())} categories.')
+    return list_to_cat_equivalence_mapping
 
 
-# TODO: REWORK (methods, logging, ..)
-def get_parent_categories(listpage: str) -> set:
+def get_parent_categories(lst: str) -> set:
     global __PARENT_CATEGORIES_MAPPING__
     if '__PARENT_CATEGORIES_MAPPING__' not in globals():
-        __PARENT_CATEGORIES_MAPPING__ = defaultdict(set)
-        get_child_listpages('')  # make sure that parent-listpage mapping is initialised
-        for cat, lps in __CHILD_LISTPAGES_MAPPING__.items():
-            for lp in lps:
-                __PARENT_CATEGORIES_MAPPING__[lp].add(cat)
-
-    return __PARENT_CATEGORIES_MAPPING__[listpage]
+        __PARENT_CATEGORIES_MAPPING__ = defaultdict(set, util.load_or_create_cache('dbpedia_list_parents', _create_list_parents_mapping))
+    return __PARENT_CATEGORIES_MAPPING__[lst]
 
 
-def get_child_listpages(category: str) -> set:
-    global __CHILD_LISTPAGES_MAPPING__
-    if '__CHILD_LISTPAGES_MAPPING__' not in globals():
-        __CHILD_LISTPAGES_MAPPING__ = defaultdict(set, util.load_or_create_cache('dbpedia_listpage_children', _create_child_listpages_mapping))
+def _create_list_parents_mapping():
+    util.get_logger().info('CACHE: Creating list-parents mapping')
 
-    return __CHILD_LISTPAGES_MAPPING__[category]
+    cat_graph = cat_base.get_merged_graph()
+    all_categories_in_graph = cat_graph.get_all_categories()
+    list_graph = list_base.get_merged_listgraph()
+    all_lists = list_graph.nodes | list_store.get_listpages()
 
+    # 1) find parent categories by hypernym match
+    list_to_cat_hypernym_mapping = defaultdict(set)
 
-# TODO: create lists-of hierarchy externally and then use it here
-# TODO: make sure that we have an M:N mapping
-# TODO: split individual mappings and provide logging infos
-def _create_child_listpages_mapping() -> dict:
-    util.get_logger().info('CACHE: Creating child-listpage mapping')
+    cats_headlemmas = {cat: nlp_util.get_head_lemmas(nlp_util.parse(cat_graph.get_name(cat))) for cat in cat_graph.nodes}
 
-    cat_to_lp_mapping = defaultdict(set)
-    for lp in list_store.get_listpages():
-        if get_equivalent_categories(lp):
-            continue
+    unmapped_lists = {lst for lst in all_lists if not get_equivalent_categories(lst)}
+    lsts_headlemmas = {lst: nlp_util.get_head_lemmas(nlp_util.parse(list_util.list2name(lst))) for lst in unmapped_lists}
+    for lst, lst_headlemmas in lsts_headlemmas.items():
+        if list_util.is_listcategory(lst):
+            candidates = cat_store.get_parents(lst)
+        else:
+            candidates = cat_store.get_topic_categories(lst) | cat_store.get_resource_categories(lst)
+        candidates = {cat_graph.get_node_for_category(cat) for cat in candidates if cat in all_categories_in_graph}
 
-        headlemmas = nlp_util.get_head_lemmas(nlp_util.parse(list_util.list2name(lp)))
+        for candidate_cat in candidates:
+            cat_headlemmas = cats_headlemmas[candidate_cat]
+            if any(hypernymy_util.is_hypernym(chl, lhl) for chl in cat_headlemmas for lhl in lst_headlemmas):
+                list_to_cat_hypernym_mapping[lst].add(candidate_cat)
+    util.get_logger().debug(f'Hypernym Mapping: Mapped {len(list_to_cat_hypernym_mapping)} lists to {sum(len(cat) for cat in list_to_cat_hypernym_mapping.values())} categories.')
 
-        lp_listcats = {cat for cat in cat_store.get_resource_categories(lp) if list_util.is_listcategory(cat)}
-        lp_cats = cat_store.get_resource_categories(lp).difference(lp_listcats)
-        # check if headlemma of lp matches with cat. if yes -> add
-        parent_category_docs = {cat: nlp_util.parse(cat_util.category2name(cat)) for cat in lp_cats}
-        matching_cats = _find_cats_with_matching_headlemmas(parent_category_docs, headlemmas)
-        if matching_cats:
-            for cat in matching_cats:
-                cat_to_lp_mapping[cat].add(lp)
-            continue
+    # 2) map listcategory to headlemma category if a mapping to the root category is the only alternative
+    list_to_cat_headlemma_mapping = defaultdict(set)
 
-        # check if headlemma of lp matches with lists-of cat. if yes -> check for lists-of cat hierarchy path. if good -> add
-        parent_listcategory_docs = {cat: nlp_util.parse(list_util.listcategory2name(cat)) for cat in lp_listcats}
-        if len(parent_listcategory_docs) > 1:
-            # if we have more than one listcategory, we only use those with a matching headlemma
-            parent_listcategory_docs = {cat: parent_listcategory_docs[cat] for cat in _find_cats_with_matching_headlemmas(parent_listcategory_docs, headlemmas)}
+    unmapped_lists = unmapped_lists.difference(set(list_to_cat_hypernym_mapping))
+    unmapped_root_lists = {lst for lst in unmapped_lists if lst in list_graph.nodes and list_graph.depth(lst) == 1}
+    for lst in unmapped_root_lists:
+        lst_headlemmas = lsts_headlemmas[lst]
+        mapped_categories = {cat_graph.get_node_by_name(inflection.pluralize(lhl)) for lhl in lst_headlemmas if cat_graph.get_node_by_name(inflection.pluralize(lhl))}
+        if mapped_categories:
+            list_to_cat_headlemma_mapping[lst] = mapped_categories
+    util.get_logger().debug(f'Headlemma Mapping: Mapped {len(list_to_cat_headlemma_mapping)} lists to {sum(len(cat) for cat in list_to_cat_headlemma_mapping.values())} categories.')
 
-        for listcat, doc in parent_listcategory_docs.items():
-            parent_categories = _find_listcategory_hierarchy(listcat, doc)[-1]
-            for cat in parent_categories:
-                cat_to_lp_mapping[cat].add(lp)
+    # 3) map listcategory to root if there is no other parent
+    unmapped_root_lists = unmapped_root_lists.difference(set(list_to_cat_headlemma_mapping))
+    list_to_root_mapping = defaultdict(set, {lst: {cat_graph.root_node} for lst in unmapped_root_lists})
+    util.get_logger().debug(f'Root Mapping: Mapped {len(list_to_root_mapping)} lists to category root.')
 
-    # TODO: Implement remaining actions (listpage lemma search)
-
-    # TODO: resolve redirects and remove empty mappings // merge mappings
-    return cat_to_lp_mapping
-
-
-def _find_cats_with_matching_headlemmas(category_docs: dict, headlemmas: set):
-    matches = set()
-    for cat, cat_doc in category_docs.items():
-        cat_headlemmas = nlp_util.get_head_lemmas(cat_doc)
-        if any(hypernymy_util.is_hypernym(chl, hl) for chl in cat_headlemmas for hl in headlemmas):
-            matches.add(cat)
-    return matches
-
-
-def _find_listcategory_hierarchy(listcategory: str, listcat_doc: Doc) -> list:
-    headlemmas = nlp_util.get_head_lemmas(listcat_doc)
-
-    parent_cats = cat_store.get_parents(listcategory)
-    # check parent categories for same head lemmas
-    parent_category_docs = {cat: nlp_util.parse(cat_util.category2name(cat)) for cat in parent_cats if not list_util.is_listcategory(cat)}
-    matching_cats = {cat for cat in _find_cats_with_matching_headlemmas(parent_category_docs, headlemmas) if is_conceptual_category(cat)}
-    if matching_cats:
-        return [listcategory, set(matching_cats)]
-
-    # check parent listcategories for same head lemmas and propagate search
-    parent_listcategory_docs = {cat: nlp_util.parse(list_util.listcategory2name(cat)) for cat in parent_cats if list_util.is_listcategory(cat)}
-    parent_listcategory_docs = {cat: parent_listcategory_docs[cat] for cat in _find_cats_with_matching_headlemmas(parent_listcategory_docs, headlemmas)}
-    if parent_listcategory_docs:
-        return [listcategory] + _find_listcategory_hierarchy(*parent_listcategory_docs.popitem())
-
-    # return empty parent category as no link to the existing category hierarchy can be found
-    return [listcategory, set()]
+    # merge mappings
+    mapped_lsts = set(list_to_cat_hypernym_mapping) | set(list_to_cat_headlemma_mapping) | set(list_to_root_mapping)
+    list_to_cat_parents_mapping = {lst: list_to_cat_hypernym_mapping[lst] | list_to_cat_headlemma_mapping[lst] | list_to_root_mapping[lst] for lst in mapped_lsts}
+    util.get_logger().debug(f'Equivalence Mapping: Mapped {len(list_to_cat_parents_mapping)} lists to {sum(len(cat) for cat in list_to_cat_parents_mapping.values())} categories.')
+    return list_to_cat_parents_mapping

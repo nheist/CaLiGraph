@@ -10,6 +10,7 @@ class HierarchyGraph(BaseGraph):
     # initialisations
     def __init__(self, graph: nx.DiGraph, root_node: str = None):
         super().__init__(graph, root_node)
+        self._node_by_name = None
         self._node_by_part = None
 
     def _check_node_exists(self, node: str):
@@ -27,6 +28,12 @@ class HierarchyGraph(BaseGraph):
     def _set_name(self, node: str, name: str):
         self._check_node_exists(node)
         self._set_attr(node, self.ATTRIBUTE_NAME, name)
+        self._node_by_name = None  # reset name-to-node index due to changes
+
+    def get_node_by_name(self, name: str) -> Optional[str]:
+        if self._node_by_name is None:  # initialise name-to-node index if not existing
+            self._node_by_name = {self.get_name(node): node for node in self.nodes}
+        return self._node_by_name[name] if name in self._node_by_name else None
 
     # graph connectivity
 
@@ -50,7 +57,7 @@ class HierarchyGraph(BaseGraph):
     def _remove_cycle_edges_by_node_depth(self, comparator):
         edges_to_remove = set()
         for cycle in nx.simple_cycles(self.graph):
-            node_depths = {node: self._depth(node) for node in cycle}
+            node_depths = {node: self.depth(node) for node in cycle}
             for i in range(len(cycle)):
                 current_edge = (cycle[i], cycle[(i+1) % len(cycle)])
                 if comparator(node_depths[current_edge[0]], node_depths[current_edge[1]]):

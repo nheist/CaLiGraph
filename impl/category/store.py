@@ -97,6 +97,16 @@ def get_topics(category: str) -> set:
     return __TOPICS__[category]
 
 
+def get_topic_categories(dbp_resource: str) -> set:
+    global __TOPIC_CATEGORIES__
+    if '__TOPIC_CATEGORIES__' not in globals():
+        __TOPIC_CATEGORIES__ = defaultdict(set)
+        for cat in get_categories():
+            for topic in get_topics(cat):
+                __TOPIC_CATEGORIES__[topic].add(cat)
+    return __TOPIC_CATEGORIES__[dbp_resource]
+
+
 def get_maintenance_categories() -> set:
     global __MAINTENANCE_CATS__
     if '__MAINTENANCE_CATS__' not in globals():

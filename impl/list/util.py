@@ -1,6 +1,5 @@
 import impl.dbpedia.util as dbp_util
 import impl.util.rdf as rdf_util
-from collections import namedtuple
 
 NAMESPACE_DBP_LIST = dbp_util.NAMESPACE_DBP_RESOURCE + 'List_of_'
 NAMESPACE_DBP_LISTS = dbp_util.NAMESPACE_DBP_RESOURCE + 'Lists_of_'
@@ -15,7 +14,7 @@ def is_listspage(obj: str) -> bool:
     return obj.startswith(NAMESPACE_DBP_LISTS)
 
 
-def list2name(listpage: str) -> str:
+def listpage2name(listpage: str) -> str:
     if is_listpage(listpage):
         return rdf_util.uri2name(listpage, NAMESPACE_DBP_LIST)
     return rdf_util.uri2name(listpage, NAMESPACE_DBP_LISTS)
@@ -27,3 +26,9 @@ def is_listcategory(obj: str) -> bool:
 
 def listcategory2name(listcategory: str) -> str:
     return rdf_util.uri2name(listcategory, NAMESPACE_DBP_LISTCAT)
+
+
+def list2name(lst: str) -> str:
+    if is_listcategory(lst):
+        return listcategory2name(lst)
+    return listpage2name(lst)
