@@ -244,7 +244,7 @@ cache:
     compress: True
   wikitaxonomy_hypernyms:
     filename: 'wikitaxonomy-hypernyms'
-    version: 1  # version 1 -> thresholds 10 / 100 / .4
+    version: 2  # version 1 -> thresholds 10 / 100 / .4  // v2: new cat2ax version (v2)
   cat2ax_axioms:
     filename: 'cat2ax-axioms'
     version: 2  # new conceptual categorygraph version (v2)
