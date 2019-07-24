@@ -56,6 +56,4 @@ class CategoryGraph(HierarchyGraph):
         categories = {c for c in self.nodes if cat_store.is_usable(c) and is_conceptual_category(c)}
         # clearing the graph of any invalid nodes
         self._remove_all_nodes_except(categories | {self.root_node})
-        # appending all loose categories to the root node and removing the remaining self-referencing circular graphs
-        self.append_unconnected().remove_unconnected()
         return self

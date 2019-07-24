@@ -60,7 +60,10 @@ class BaseGraph:
         return set(nx.descendants(self.graph, node)) if self.graph.has_node(node) else set()
 
     def depth(self, node: str) -> int:
-        return nx.shortest_path_length(self.graph, source=self.root_node, target=node)
+        try:
+            return nx.shortest_path_length(self.graph, source=self.root_node, target=node)
+        except nx.NetworkXNoPath:
+            return -1
 
     def _get_attr(self, node, attr):
         return self.graph.nodes(data=attr)[node]

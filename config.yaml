@@ -109,16 +109,16 @@ cache:
   # version 2: added resource types from sdtyped + lhd
   catgraph_conceptual:
     filename: 'catgraph-conceptual'
-    version: 1
+    version: 2  # v2: do not remove unconnected nodes initially
   catgraph_wikitaxonomy:
     filename: 'catgraph-wikitaxonomy'
-    version: 1
+    version: 2  # v2: do not remove unconnected nodes initially
   catgraph_cyclefree:
     filename: 'catgraph-cyclefree'
-    version: 1
+    version: 2  # v2: do not remove unconnected nodes initially
   catgraph_merged:
     filename: 'catgraph-merged'
-    version: 1
+    version: 2  # v2: do not remove unconnected nodes initially
   listgraph_base:
     filename: 'listgraph-base'
     version: 1
