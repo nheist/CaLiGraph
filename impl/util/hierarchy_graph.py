@@ -4,6 +4,7 @@ import util
 import impl.util.nlp as nlp_util
 import impl.util.hypernymy as hypernymy_util
 from impl.util.base_graph import BaseGraph
+import random
 
 
 class HierarchyGraph(BaseGraph):
@@ -98,6 +99,24 @@ class HierarchyGraph(BaseGraph):
             raise Exception(f'Node {node} not in category graph.')
         self._set_attr(node, self.ATTRIBUTE_PARTS, parts)
         self._node_by_part = None  # reset part-to-node index due to changes
+
+    def merge_nodes_alt(self):
+        nodes_containing_by = {node for node in self.nodes if '_by_' in node}
+        nodes_to_merge = {}
+        for node in nodes_containing_by:
+            node_name = self.get_name(node)
+            node_name_without_by = nlp_util.remove_by_phrase_from_text(node_name)
+            if node_name != node_name_without_by:
+                nodes_to_merge[node] = node_name_without_by
+        util.get_logger().debug(f'Found {len(nodes_to_merge)} nodes to merge.')
+
+        direct_merges = {node: self.get_node_by_name(node_name_without_by) for node, node_name_without_by in nodes_to_merge.items() if self.get_node_by_name(node_name_without_by)}
+        util.get_logger().debug(f'Found {len(direct_merges)} nodes to merge directly.')
+
+        remaining_nodes_to_merge = set(nodes_to_merge).difference(set(direct_merges))
+        util.get_logger().debug(f'Examples of remaining nodes:')
+        for node in random.sample(remaining_nodes_to_merge, 100):
+            util.get_logger().debug(f'{node}')
 
     def merge_nodes(self):
         """Create compounds of nodes by merging similar nodes into one."""
