@@ -10,7 +10,7 @@ from impl.list.graph import ListGraph
 def get_base_listgraph() -> ListGraph:
     global __BASE_LISTGRAPH__
     if '__BASE_LISTGRAPH__' not in globals():
-        initializer = lambda: ListGraph.create_from_dbpedia().append_unconnected().remove_unconnected()
+        initializer = lambda: ListGraph.create_from_dbpedia().append_unconnected()
         __BASE_LISTGRAPH__ = util.load_or_create_cache('listgraph_base', initializer)
     return __BASE_LISTGRAPH__
 
@@ -18,7 +18,7 @@ def get_base_listgraph() -> ListGraph:
 def get_wikitaxonomy_listgraph() -> ListGraph:
     global __WIKITAXONOMY_LISTGRAPH__
     if '__WIKITAXONOMY_LISTGRAPH__' not in globals():
-        initializer = lambda: get_base_listgraph().remove_unrelated_edges().append_unconnected().remove_unconnected()
+        initializer = lambda: get_base_listgraph().remove_unrelated_edges()
         __WIKITAXONOMY_LISTGRAPH__ = util.load_or_create_cache('listgraph_wikitaxonomy', initializer)
     return __WIKITAXONOMY_LISTGRAPH__
 
@@ -26,7 +26,7 @@ def get_wikitaxonomy_listgraph() -> ListGraph:
 def get_cyclefree_wikitaxonomy_listgraph() -> ListGraph:
     global __CYCLEFREE_WIKITAXONOMY_LISTGRAPH__
     if '__CYCLEFREE_WIKITAXONOMY_LISTGRAPH__' not in globals():
-        initializer = lambda: get_wikitaxonomy_listgraph().resolve_cycles()
+        initializer = lambda: get_wikitaxonomy_listgraph().resolve_cycles().append_unconnected()
         __CYCLEFREE_WIKITAXONOMY_LISTGRAPH__ = util.load_or_create_cache('listgraph_cyclefree', initializer)
     return __CYCLEFREE_WIKITAXONOMY_LISTGRAPH__
 
