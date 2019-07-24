@@ -13,7 +13,7 @@ for word in parser.Defaults.stop_words:
     lex.is_stop = True
 
 
-def filter_important_words(text: str) -> set:
+def without_stopwords(text: str) -> set:
     """Return the lemmatized versions of all non-stop-words in `text`."""
     return {word.lemma_ for word in remove_by_phrase(parse(text)) if not word.is_stop}
 

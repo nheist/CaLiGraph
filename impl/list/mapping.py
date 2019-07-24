@@ -50,11 +50,11 @@ def _create_list_equivalents_mapping():
     # 2) find equivalent categories by synonym match
     list_to_cat_synonym_mapping = defaultdict(set)
 
-    cats_important_words = {cat: nlp_util.filter_important_words(cat_graph.get_name(cat)) for cat in cat_graph.nodes}
+    cats_important_words = {cat: nlp_util.without_stopwords(cat_graph.get_name(cat)) for cat in cat_graph.nodes}
 
     remaining_lists = all_lists.difference(set(list_to_cat_exact_mapping))
     for lst in remaining_lists:
-        lst_important_words = nlp_util.filter_important_words(nlp_util.remove_by_phrase_from_text(list_util.list2name(lst)))
+        lst_important_words = nlp_util.without_stopwords(nlp_util.remove_by_phrase_from_text(list_util.list2name(lst)))
 
         if list_util.is_listcategory(lst):
             candidates = cat_store.get_parents(lst)
@@ -64,10 +64,9 @@ def _create_list_equivalents_mapping():
 
         for candidate_cat in candidates:
             cat_important_words = cats_important_words[candidate_cat]
-            if len(lst_important_words) == len(cat_important_words):
-                if all(any(hypernymy_util.is_synonym(ll, cl) for ll in lst_important_words) for cl in cat_important_words):
-                    if all(any(hypernymy_util.is_synonym(ll, cl) for cl in cat_important_words) for ll in lst_important_words):
-                        list_to_cat_synonym_mapping[lst].add(candidate_cat)
+            if hypernymy_util.phrases_are_synonymous(lst_important_words, cat_important_words):
+                list_to_cat_synonym_mapping[lst].add(candidate_cat)
+
     util.get_logger().debug(f'Synonym Mapping: Mapped {len(list_to_cat_synonym_mapping)} lists to {sum(len(cat) for cat in list_to_cat_synonym_mapping.values())} categories.')
 
     # merge mappings
