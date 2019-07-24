@@ -86,6 +86,7 @@ def extract_category_axioms(category_graph, pattern_confidence):
 # --- PATTERN EXTRACTION ---
 
 def _extract_patterns(category_graph, candidate_sets):
+    util.get_logger().debug('Cat2Ax: Extracting patterns..')
     patterns = defaultdict(lambda: {'preds': defaultdict(list), 'types': defaultdict(list)})
 
     for parent, categories, (first_words, last_words) in candidate_sets:
@@ -121,6 +122,8 @@ def _extract_patterns(category_graph, candidate_sets):
                 for _ in categories_with_matches:
                     for t in types:
                         patterns[(tuple(first_words), tuple(last_words))]['types'][t].append(max_median)
+
+    util.get_logger().debug(f'Cat2Ax: Extracted {len(patterns)} patterns.')
     return patterns
 
 
@@ -155,6 +158,7 @@ def _get_type_surface_scores(words):
 
 
 def _extract_axioms(category_graph, pattern_confidence, patterns):
+    util.get_logger().debug('Cat2Ax: Extracting axioms..')
     category_axioms = defaultdict(set)
 
     front_pattern_dict = {}
@@ -207,6 +211,7 @@ def _extract_axioms(category_graph, pattern_confidence, patterns):
         if best_type_axiom:
             category_axioms[cat].add(TypeAxiom(best_type_axiom[2], best_type_axiom[3]))
 
+    util.get_logger().debug(f'Cat2Ax: Extracted {sum(len(axioms) for axioms in category_axioms.values())} axioms for {len(category_axioms)} categories.')
     return category_axioms
 
 
@@ -300,6 +305,8 @@ def _find_axioms(category_graph, pattern_confidence, pattern_dict, cat, cat_doc)
 
 
 def _extract_assertions(category_graph, relation_axioms, type_axioms):
+    util.get_logger().debug('Cat2Ax: Applying axioms..')
+
     relation_assertions = {(res, pred, val) for cat, pred, val, _ in relation_axioms for res in category_graph.get_resources(cat)}
     new_relation_assertions = {(res, pred, val) for res, pred, val in relation_assertions if pred not in dbp_store.get_properties(res) or val not in dbp_store.get_properties(res)[pred]}
 
@@ -311,4 +318,5 @@ def _extract_assertions(category_graph, relation_axioms, type_axioms):
     filtered_new_relation_assertions = {(res, pred, val) for res, pred, val in new_relation_assertions if pred not in dbp_store.get_properties(res) or not dbp_store.is_functional(pred)}
     filtered_new_type_assertions = {(res, pred, t) for res, pred, t in new_type_assertions_transitive if not dbp_store.get_disjoint_types(t).intersection(dbp_store.get_transitive_types(res))}
 
+    util.get_logger().debug(f'Cat2Ax: Generated {len(filtered_new_relation_assertions)} new relation assertions and {len(filtered_new_type_assertions)} new type assertions.')
     return filtered_new_relation_assertions, filtered_new_type_assertions
