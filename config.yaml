@@ -200,7 +200,7 @@ cache:
     version: 1
   dbpedia_category_sets:
     filename: 'dbpedia-category-sets'
-    version: 1
+    version: 2  # new conceptual categorygraph version (v2)
   dbpedia_categories_conceptual:
     filename: 'dbpedia-category-conceptual'
     version: 1
