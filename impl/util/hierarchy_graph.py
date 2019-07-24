@@ -5,6 +5,7 @@ import impl.util.nlp as nlp_util
 import impl.util.hypernymy as hypernymy_util
 from impl.util.base_graph import BaseGraph
 import random
+from collections import defaultdict
 
 
 class HierarchyGraph(BaseGraph):
@@ -102,21 +103,54 @@ class HierarchyGraph(BaseGraph):
 
     def merge_nodes_alt(self):
         nodes_containing_by = {node for node in self.nodes if '_by_' in node}
-        nodes_to_merge = {}
+        nodes_canonical_names = {}
         for node in nodes_containing_by:
             node_name = self.get_name(node)
-            node_name_without_by = nlp_util.remove_by_phrase_from_text(node_name)
-            if node_name != node_name_without_by:
-                nodes_to_merge[node] = node_name_without_by
-        util.get_logger().debug(f'Found {len(nodes_to_merge)} nodes to merge.')
+            canonical_name = nlp_util.remove_by_phrase_from_text(node_name)
+            if node_name != canonical_name:
+                nodes_canonical_names[node] = canonical_name
+        remaining_nodes_to_merge = set(nodes_canonical_names)
+        util.get_logger().debug(f'Found {len(remaining_nodes_to_merge)} nodes to merge.')
 
-        direct_merges = {node: self.get_node_by_name(node_name_without_by) for node, node_name_without_by in nodes_to_merge.items() if self.get_node_by_name(node_name_without_by)}
+        # 1) direct merge and synonym merge
+        direct_merges = defaultdict(set)
+
+        nodes_important_words = {node: nlp_util.without_stopwords(canonical_name) for node, canonical_name in nodes_canonical_names.items()}
+        for node in remaining_nodes_to_merge:
+            node_important_words = nodes_important_words[node]
+            for parent in self.parents(node):
+                if parent not in nodes_important_words:
+                    nodes_important_words[parent] = nlp_util.without_stopwords(self.get_name(parent))
+                parent_important_words = nodes_important_words[parent]
+
+                if hypernymy_util.phrases_are_synonymous(node_important_words, parent_important_words):
+                    direct_merges[node].add(parent)
         util.get_logger().debug(f'Found {len(direct_merges)} nodes to merge directly.')
+        util.get_logger().debug(f'Examples of direct merges:')
+        for node in random.sample(direct_merges, min(len(direct_merges), 50)):
+            util.get_logger().debug(f'{node} -> {direct_merges[node]}')
 
-        remaining_nodes_to_merge = set(nodes_to_merge).difference(set(direct_merges))
-        util.get_logger().debug(f'Examples of remaining nodes:')
-        for node in random.sample(remaining_nodes_to_merge, 100):
+        # 2) category set merge
+        catset_merges = defaultdict(set)
+        remaining_nodes_to_merge = remaining_nodes_to_merge.difference(set(direct_merges))
+        for node in remaining_nodes_to_merge:
+            node_canonical_name = nodes_canonical_names[node]
+            for parent in self.parents(node):
+                similar_children_count = len({child for child in self.children(parent) if child in nodes_canonical_names and nodes_canonical_names[child] == node_canonical_name})
+                if similar_children_count > 1:
+                    catset_merges[node].add(parent)
+        util.get_logger().debug(f'Found {len(catset_merges)} nodes to merge via category sets.')
+        util.get_logger().debug(f'Examples of catset merges:')
+        for node in random.sample(catset_merges, min(len(catset_merges), 50)):
+            util.get_logger().debug(f'{node} -> {catset_merges[node]}')
+
+        remaining_nodes_to_merge = remaining_nodes_to_merge.difference(set(catset_merges))
+        util.get_logger().debug(f'Examples of the {len(remaining_nodes_to_merge)} remaining nodes left:')
+        for node in random.sample(remaining_nodes_to_merge, min(len(remaining_nodes_to_merge), 100)):
             util.get_logger().debug(f'{node}')
+
+        # in caligraph: simply remove by phrase (maybe do that only in caligraph namespace then) -> !! and only do it if there is no uppercase word in by-phrase !!
+        # (and make sure to check whether the pruned category name also exists as dbpedia category)
 
     def merge_nodes(self):
         """Create compounds of nodes by merging similar nodes into one."""
