@@ -131,6 +131,7 @@ class HierarchyGraph(BaseGraph):
             util.get_logger().debug(f'{node} -> {direct_merges[node]}')
 
         # 2) category set merge
+        # TODO: if merge target is ROOT, then do not merge
         catset_merges = defaultdict(set)
         remaining_nodes_to_merge = remaining_nodes_to_merge.difference(set(direct_merges))
         for node in remaining_nodes_to_merge:

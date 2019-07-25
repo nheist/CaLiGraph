@@ -30,8 +30,9 @@ def remove_by_phrase(doc: Doc) -> Doc:
     last_by_index = by_indices[-1]
     if last_by_index == 0 or last_by_index == len(doc) - 1:
         return doc
+    word_before_by = doc[last_by_index-1]
     word_after_by = doc[last_by_index+1]
-    if word_after_by.text[0].isupper() or word_after_by.text == 'the' or word_after_by.tag_ == 'NNS':
+    if word_after_by.text[0].isupper() or word_after_by.text in ['a', 'an', 'the'] or word_before_by.tag_ == 'VBN' or word_after_by.tag_ == 'NNS':
         return doc
     return parse(doc[:last_by_index].text.strip(), disable_normalization=True, skip_cache=True)
 
