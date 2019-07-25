@@ -134,9 +134,6 @@ cache:
   listgraph_merged:
     filename: 'listgraph-merged'
     version: 1
-  listpage_entity_features:
-    filename: 'listpage-entity-features'
-    version: 1
   spacy_docs:
     filename: 'spacy-docs'
     version: 2  # version 2 incl. listpages
@@ -237,6 +234,9 @@ cache:
   dbpedia_listpage_parsed:
     filename: 'dbpedia-listpage-parsed'
     version: 2  # v1: basic; v2: with entity indices
+  dbpedia_listpage_features:
+    filename: 'dbpedia-listpage-features'
+    version: 1
   wikidata_dbpedia_resource_mapping:
     filename: 'wikidata-dbpedia-resource-mapping'
     version: 1

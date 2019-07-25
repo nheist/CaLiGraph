@@ -44,7 +44,7 @@ def get_merged_listgraph() -> ListGraph:
 def get_listpage_entity_features() -> pd.DataFrame:
     global __LISTPAGE_ENTITY_FEATURES__
     if '__LISTPAGE_ENTITY_FEATURES__' not in globals():
-        __LISTPAGE_ENTITY_FEATURES__ = util.load_or_create_cache('listpage_entity_features', _compute_listpage_entity_features)
+        __LISTPAGE_ENTITY_FEATURES__ = util.load_or_create_cache('dbpedia_listpage_features', _compute_listpage_entity_features)
     return __LISTPAGE_ENTITY_FEATURES__
 
 
