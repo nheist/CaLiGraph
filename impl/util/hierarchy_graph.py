@@ -4,7 +4,6 @@ import util
 import impl.util.nlp as nlp_util
 import impl.util.hypernymy as hypernymy_util
 from impl.util.base_graph import BaseGraph
-import random
 from collections import defaultdict
 
 
@@ -101,7 +100,8 @@ class HierarchyGraph(BaseGraph):
         self._set_attr(node, self.ATTRIBUTE_PARTS, parts)
         self._node_by_part = None  # reset part-to-node index due to changes
 
-    def merge_nodes_alt(self):
+    def merge_nodes(self):
+        # TODO: CHECK CYCLES AFTERWARDS!
         nodes_containing_by = {node for node in self.nodes if '_by_' in node}
         nodes_canonical_names = {}
         for node in nodes_containing_by:
@@ -112,7 +112,7 @@ class HierarchyGraph(BaseGraph):
         remaining_nodes_to_merge = set(nodes_canonical_names)
         util.get_logger().debug(f'Found {len(remaining_nodes_to_merge)} nodes to merge.')
 
-        # 1) direct merge and synonym merge
+        # 1) compute direct merge and synonym merge
         direct_merges = defaultdict(set)
 
         nodes_important_words = {node: nlp_util.without_stopwords(canonical_name) for node, canonical_name in nodes_canonical_names.items()}
@@ -126,65 +126,47 @@ class HierarchyGraph(BaseGraph):
                 if hypernymy_util.phrases_are_synonymous(node_important_words, parent_important_words):
                     direct_merges[node].add(parent)
         util.get_logger().debug(f'Found {len(direct_merges)} nodes to merge directly.')
-        util.get_logger().debug(f'Examples of direct merges:')
-        for node in random.sample(set(direct_merges), min(len(direct_merges), 50)):
-            util.get_logger().debug(f'{node} -> {direct_merges[node]}')
 
-        # 2) category set merge
-        # TODO: if merge target is ROOT, then do not merge
+        # 2) compute category set merge
         catset_merges = defaultdict(set)
         remaining_nodes_to_merge = remaining_nodes_to_merge.difference(set(direct_merges))
         for node in remaining_nodes_to_merge:
             node_canonical_name = nodes_canonical_names[node]
             for parent in self.parents(node):
+                if parent == self.root_node:
+                    continue
                 similar_children_count = len({child for child in self.children(parent) if child in nodes_canonical_names and nodes_canonical_names[child] == node_canonical_name})
                 if similar_children_count > 1:
                     catset_merges[node].add(parent)
         util.get_logger().debug(f'Found {len(catset_merges)} nodes to merge via category sets.')
-        util.get_logger().debug(f'Examples of catset merges:')
-        for node in random.sample(set(catset_merges), min(len(catset_merges), 50)):
-            util.get_logger().debug(f'{node} -> {catset_merges[node]}')
 
         remaining_nodes_to_merge = remaining_nodes_to_merge.difference(set(catset_merges))
-        util.get_logger().debug(f'Examples of the {len(remaining_nodes_to_merge)} remaining nodes left:')
-        for node in random.sample(remaining_nodes_to_merge, min(len(remaining_nodes_to_merge), 100)):
-            util.get_logger().debug(f'{node}')
+        util.get_logger().debug(f'The {len(remaining_nodes_to_merge)} remaining nodes will not be merged.')
 
-        # merge howto: find nodes that are not a target of another merge and merge them. then repeat until merge-list empty
+        # 3) conduct merge
+        nodes_to_merge = set(direct_merges) | set(catset_merges)
+        all_merges = {node: direct_merges[node] | catset_merges[node] for node in nodes_to_merge}
+        iteration = 0
+        while all_merges:
+            independent_nodes = set(all_merges).difference({merge_target for mts in all_merges.values() for merge_target in mts})
+            util.get_logger().debug(f'Merge iteration {iteration}: Merging {len(independent_nodes)} of remaining {len(all_merges)} nodes.')
+            for node_to_merge in independent_nodes:
+                merge_targets = all_merges[node_to_merge]
+                del all_merges[node_to_merge]
 
-        # in caligraph: simply remove by phrase (maybe do that only in caligraph namespace then) -> !! and only do it if there is no uppercase word in by-phrase !!
-        # (and make sure to check whether the pruned category name also exists as dbpedia category)
+                parents = self.parents(node_to_merge)
+                children = self.children(node_to_merge)
+                edges_to_add = set()
+                for mt in merge_targets:
+                    edges_to_add.update({(mt, c) for c in children})
+                    edges_to_add.update({(p, mt) for p in parents})
+                    self._set_parts(mt, self.get_parts(mt) | {node_to_merge})
 
-    def merge_nodes(self):
-        """Create compounds of nodes by merging similar nodes into one."""
-        found_merge_target = True
-        traversed_nodes = set()
-        while found_merge_target:
-            found_merge_target = False
-            for node, _ in nx.traversal.bfs_edges(self.graph, self.root_node):
-                if node in traversed_nodes:
-                    continue
+                self._remove_nodes({node_to_merge})
+                self._add_edges(edges_to_add)
+            iteration += 1
 
-                children_to_merge = {c for c in self.children(node) if self._should_merge_nodes(node, c)}
-                if children_to_merge:
-                    found_merge_target = True
-                    merge_target = node
-                    break
-                else:
-                    traversed_nodes.add(node)
-            if found_merge_target:
-                #util.get_logger().debug(f'Merging nodes "{children_to_merge}" into {merge_target}.')
-                for child in children_to_merge:
-                    parents = {parent for parent in self.parents(child)}
-                    grandchildren = {grandchild for grandchild in self.children(child)}
-                    edges_to_add = {(parent, grandchild) for parent in parents for grandchild in grandchildren}
-                    self._remove_nodes({child})
-                    self._add_edges(edges_to_add)
-
-                node_parts = self.get_parts(merge_target) | children_to_merge
-                self._set_parts(merge_target, node_parts)
+        # TODO in caligraph: simply remove by phrase -> !! and only do it if there is no uppercase word in by-phrase !!
+        # (and make sure to check whether the pruned category name also exists [a] already in the graph -> THEN VALIDATE!! or [b] as dbpedia category -> THEN ADD THIS CATEGORY AS DEPENDENCY TOO)
 
         return self
-
-    def _should_merge_nodes(self, parent: str, child: str) -> bool:
-        return child.startswith(parent) and nlp_util.remove_by_phrase_from_text(self.get_name(child)) == self.get_name(parent)
