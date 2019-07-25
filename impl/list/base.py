@@ -34,7 +34,7 @@ def get_cyclefree_wikitaxonomy_listgraph() -> ListGraph:
 def get_merged_listgraph() -> ListGraph:
     global __MERGED_LISTGRAPH__
     if '__MERGED_LISTGRAPH__' not in globals():
-        initializer = lambda: get_cyclefree_wikitaxonomy_listgraph().merge_nodes()
+        initializer = lambda: get_cyclefree_wikitaxonomy_listgraph().merge_nodes().resolve_cycles()
         __MERGED_LISTGRAPH__ = util.load_or_create_cache('listgraph_merged', initializer)
     return __MERGED_LISTGRAPH__
 

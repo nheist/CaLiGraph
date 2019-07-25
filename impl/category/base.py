@@ -29,6 +29,6 @@ def get_cyclefree_wikitaxonomy_graph() -> CategoryGraph:
 def get_merged_graph() -> CategoryGraph:
     global __MERGED_GRAPH__
     if '__MERGED_GRAPH__' not in globals():
-        initializer = lambda: get_cyclefree_wikitaxonomy_graph().merge_nodes()
+        initializer = lambda: get_cyclefree_wikitaxonomy_graph().merge_nodes().resolve_cycles()
         __MERGED_GRAPH__ = util.load_or_create_cache('catgraph_merged', initializer)
     return __MERGED_GRAPH__

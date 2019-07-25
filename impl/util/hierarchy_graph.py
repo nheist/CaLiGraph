@@ -166,7 +166,4 @@ class HierarchyGraph(BaseGraph):
                 self._remove_nodes({node_to_merge})
             iteration += 1
 
-        # TODO in caligraph: simply remove by phrase -> !! and only do it if there is no uppercase word in by-phrase !!
-        # (and make sure to check whether the pruned category name also exists [a] already in the graph -> THEN VALIDATE!! or [b] as dbpedia category -> THEN ADD THIS CATEGORY AS DEPENDENCY TOO)
-
         return self

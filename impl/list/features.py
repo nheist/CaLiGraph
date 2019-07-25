@@ -106,6 +106,9 @@ def make_entity_features(lp_data: dict) -> pd.DataFrame:
                     'lp_entry_char_std': chars_per_entry_std,
                     'lp_entry_comma_avg': commas_per_entry_avg,
                     'lp_entry_comma_std': commas_per_entry_std,
+                    # todo: lp_entry_entity_idx_avg, lp_entry_entity_idx_std
+                    # todo: lp_entry_entity_pos_avg, lp_entry_entity_pos_std
+                    # todo: lp_entry_entity_count_avg, lp_entry_entity_count_std
                     # FEATURES
                     'section_pos': _get_relative_position(section_idx, len(sections)),
                     'section_invpos': _get_relative_position(section_idx, len(sections), inverse=True),

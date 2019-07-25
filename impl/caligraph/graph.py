@@ -10,6 +10,8 @@ import impl.dbpedia.store as dbp_store
 from collections import defaultdict
 
 
+# TODO: remove by phrase -> !! and only do it if there is no uppercase word in by-phrase !!
+# (and make sure to check whether the pruned category name also exists [a] already in the graph -> THEN VALIDATE!! or [b] as dbpedia category -> THEN ADD THIS CATEGORY AS DEPENDENCY TOO)
 class CaLiGraph(BaseGraph):
 
     def __init__(self, graph: nx.DiGraph, root_node: str = None):
