@@ -158,12 +158,12 @@ class HierarchyGraph(BaseGraph):
                 children = self.children(node_to_merge)
                 edges_to_add = set()
                 for mt in merge_targets:
-                    edges_to_add.update({(mt, c) for c in children})
-                    edges_to_add.update({(p, mt) for p in parents})
-                    self._set_parts(mt, self.get_parts(mt) | {node_to_merge})
+                    edges_to_add.update({(mt, c) for c in children if mt != c})
+                    edges_to_add.update({(p, mt) for p in parents if mt != p})
+                    self._set_parts(mt, self.get_parts(mt) | self.get_parts(node_to_merge))
 
-                self._remove_nodes({node_to_merge})
                 self._add_edges(edges_to_add)
+                self._remove_nodes({node_to_merge})
             iteration += 1
 
         # TODO in caligraph: simply remove by phrase -> !! and only do it if there is no uppercase word in by-phrase !!
