@@ -3,6 +3,7 @@ from typing import Optional
 from impl.util.hierarchy_graph import HierarchyGraph
 import impl.dbpedia.store as dbp_store
 import impl.category.store as cat_store
+import impl.category.util as cat_util
 import impl.list.util as list_util
 import util
 
@@ -40,6 +41,7 @@ class ListGraph(HierarchyGraph):
             nodes.update(listpages)
             edges.update({(listcat, listpage) for listpage in listpages})
 
+        # initialise graph
         graph = nx.DiGraph(incoming_graph_data=list(edges))
         graph.add_nodes_from(list({n for n in nodes.difference(set(graph.nodes))}))
         list_graph = ListGraph(graph)
@@ -47,5 +49,10 @@ class ListGraph(HierarchyGraph):
         for node in graph.nodes:
             list_graph._set_name(node, list_util.list2name(node))
             list_graph._set_parts(node, {node})
+
+        # add root node
+        graph.add_node(list_graph.root_node)
+        list_graph._set_name(list_graph.root_node, cat_util.category2name(list_graph.root_node))
+        list_graph._set_parts(list_graph.root_node, {list_graph.root_node})
 
         return list_graph
