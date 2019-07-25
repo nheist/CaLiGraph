@@ -40,8 +40,8 @@ class ListGraph(HierarchyGraph):
             nodes.update(listpages)
             edges.update({(listcat, listpage) for listpage in listpages})
 
-        graph = nx.DiGraph(incoming_graph_data=edges)
-        graph.add_nodes_from({n for n in nodes.difference(set(graph.nodes))})
+        graph = nx.DiGraph(incoming_graph_data=list(edges))
+        graph.add_nodes_from(list({n for n in nodes.difference(set(graph.nodes))}))
         list_graph = ListGraph(graph)
 
         for node in graph.nodes:
