@@ -119,6 +119,9 @@ cache:
   catgraph_merged:
     filename: 'catgraph-merged'
     version: 2  # v2: do not remove unconnected nodes initially
+  categories_singularized:
+    filename: 'categories-singularized'
+    version: 1
   listgraph_base:
     filename: 'listgraph-base'
     version: 1
@@ -131,8 +134,8 @@ cache:
   listgraph_merged:
     filename: 'listgraph-merged'
     version: 1
-  categories_singularized:
-    filename: 'categories-singularized'
+  listpage_entity_features:
+    filename: 'listpage-entity-features'
     version: 1
   spacy_docs:
     filename: 'spacy-docs'

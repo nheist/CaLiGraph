@@ -41,7 +41,14 @@ def get_merged_listgraph() -> ListGraph:
 
 # LIST ENTITIES
 
-def get_listpage_entity_data() -> pd.DataFrame:
+def get_listpage_entity_features() -> pd.DataFrame:
+    global __LISTPAGE_ENTITY_FEATURES__
+    if '__LISTPAGE_ENTITY_FEATURES__' not in globals():
+        __LISTPAGE_ENTITY_FEATURES__ = util.load_or_create_cache('listpage_entity_features', _compute_listpage_entity_features)
+    return __LISTPAGE_ENTITY_FEATURES__
+
+
+def _compute_listpage_entity_features() -> pd.DataFrame:
     entities = None
     for lp, lp_data in list_parser.get_parsed_listpages().items():
         if lp_data['type'] != list_parser.LIST_TYPE_ENUM:
@@ -51,4 +58,6 @@ def get_listpage_entity_data() -> pd.DataFrame:
         entities = entities.append(lp_entities, ignore_index=True) if entities is not None else lp_entities
 
     list_features.assign_entity_labels(entities)
+    entities = list_features.with_section_name_features(entities)
+
     return entities

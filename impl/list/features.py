@@ -7,66 +7,25 @@ import impl.util.nlp as nlp_util
 import pandas as pd
 import numpy as np
 import util
+from sklearn.preprocessing import OneHotEncoder
 
 
-# TODO: recompute due to changes in category hierarchy (equiv. cat. computation)
-def assign_entity_labels(entities: pd.DataFrame):
-    entities['label'] = entities.apply(lambda row: _compute_label_for_entity(row['_listpage_uri'], row['_entity_uri']), axis=1)
-
-    if util.get_config('list.extraction.use_negative_evidence_assumption'):
-        # -- ASSUMPTION: an entry of a list page has at most one positive example --
-        # locate all entries that have a positive example
-        positive_examples = set()
-        for _, row in entities[entities['label'] == 1].iterrows():
-            positive_examples.add((row['_listpage_uri'], row['_section_name'], row['_entry_idx']))
-        # make all candidate examples negative that appear in an entry with a positive example
-        for i, row in entities[entities['label'] == -1].iterrows():
-            if (row['_listpage_uri'], row['_section_name'], row['_entry_idx']) in positive_examples:
-                entities.at[i, 'label'] = 0
-
-
-def _compute_label_for_entity(listpage_uri: str, entity_uri: str) -> int:
-    if entity_uri not in dbp_store.get_resources():
-        return 0
-
-    listpage_axioms = set()
-    category_resources = set()
-
-    listpage_categories = list_mapping.get_equivalent_categories(listpage_uri) or list_mapping.get_parent_categories(listpage_uri)
-    for cat in listpage_categories:
-        for p_cat in ({cat} | cat_base.get_wikitaxonomy_graph().ancestors(cat)):
-            listpage_axioms.update(cat_axioms.get_axioms(p_cat))
-        for s_cat in ({cat} | cat_base.get_wikitaxonomy_graph().descendants(cat)):
-            category_resources.update(cat_store.get_resources(s_cat))
-
-    if entity_uri in category_resources:
-        return 1
-    elif any(ax.rejects_resource(entity_uri) for ax in listpage_axioms):
-        return 0
-    return -1
-
+# COMPUTATION OF BASIC ENTITY FEATURES
 
 def make_entity_features(lp_data: dict) -> pd.DataFrame:
     lp_uri = lp_data['uri']
     sections = lp_data['sections']
-    entries_per_section = [len(section['entries']) for section in sections]
-    entries_per_section_avg = np.average(entries_per_section)
-    entries_per_section_std = np.std(entries_per_section)
-    depth_per_entry = [entry['depth'] for section in sections for entry in section['entries']]
-    depth_per_entry_avg = np.average(depth_per_entry)
-    depth_per_entry_std = np.std(depth_per_entry)
-    entities_per_entry = [len(entry['entities']) for section in sections for entry in section['entries']]
-    entities_per_entry_avg = np.average(entities_per_entry)
-    entities_per_entry_std = np.std(entities_per_entry)
-    words_per_entry = [len(entry['text'].split(' ')) for section in sections for entry in section['entries']]
-    words_per_entry_avg = np.average(words_per_entry)
-    words_per_entry_std = np.std(words_per_entry)
-    chars_per_entry = [len(entry['text']) for section in sections for entry in section['entries']]
-    chars_per_entry_avg = np.average(chars_per_entry)
-    chars_per_entry_std = np.std(chars_per_entry)
-    commas_per_entry = [entry['text'].count(',') for section in sections for entry in section['entries']]
-    commas_per_entry_avg = np.average(commas_per_entry)
-    commas_per_entry_std = np.std(commas_per_entry)
+
+    # lp feature statistics
+    lp_section_count = len(sections)
+    lp_section_entries = [len(section['entries']) for section in sections]
+    lp_entry_depths = []
+    lp_entry_entities = []
+    lp_entry_words = []
+    lp_entry_chars = []
+    lp_entry_commas = []
+    lp_first_entity_idx = []
+    lp_first_entity_pos = []
 
     data = []
     for section_idx, section_data in enumerate(sections):
@@ -77,6 +36,11 @@ def make_entity_features(lp_data: dict) -> pd.DataFrame:
             entry_doc = nlp_util.parse(entry_data['text'], disable_normalization=True)
 
             entities = entry_data['entities']
+            lp_entry_depths.append(entry_data['depth'])
+            lp_entry_entities.append(len(entities))
+            lp_entry_words.append(len(entry_data['text'].split(' ')))
+            lp_entry_chars.append(len(entry_data['text']))
+            lp_entry_commas.append(entry_data['text'].count(','))
             for entity_idx, entity_data in enumerate(entities):
                 entity_uri = entity_data['uri']
                 entity_uri = entity_uri[:entity_uri.index('#')] if '#' in entity_uri else entity_uri
@@ -85,6 +49,10 @@ def make_entity_features(lp_data: dict) -> pd.DataFrame:
                 if not entity_span:
                     continue
 
+                if entity_idx == 0:
+                    lp_first_entity_idx.append(entity_span.start)
+                    lp_first_entity_pos.append(_get_relative_position(entity_span.start, len(entry_doc)))
+
                 features = {
                     # ID
                     '_id': f'{lp_uri}__{section_name}__{entry_idx}__{entity_uri}',
@@ -92,24 +60,7 @@ def make_entity_features(lp_data: dict) -> pd.DataFrame:
                     '_section_name': section_name or '',
                     '_entry_idx': entry_idx,
                     '_entity_uri': entity_uri,
-                    # LP
-                    'lp_section_count': len(sections),
-                    'lp_section_entry_avg': entries_per_section_avg,
-                    'lp_section_entry_std': entries_per_section_std,
-                    'lp_entry_depth_avg': depth_per_entry_avg,
-                    'lp_entry_depth_std': depth_per_entry_std,
-                    'lp_entry_entity_avg': entities_per_entry_avg,
-                    'lp_entry_entity_std': entities_per_entry_std,
-                    'lp_entry_word_avg': words_per_entry_avg,
-                    'lp_entry_word_std': words_per_entry_std,
-                    'lp_entry_char_avg': chars_per_entry_avg,
-                    'lp_entry_char_std': chars_per_entry_std,
-                    'lp_entry_comma_avg': commas_per_entry_avg,
-                    'lp_entry_comma_std': commas_per_entry_std,
-                    # todo: lp_entry_entity_idx_avg, lp_entry_entity_idx_std
-                    # todo: lp_entry_entity_pos_avg, lp_entry_entity_pos_std
-                    # todo: lp_entry_entity_count_avg, lp_entry_entity_count_std
-                    # FEATURES
+                    # ENTITY FEATURES
                     'section_pos': _get_relative_position(section_idx, len(sections)),
                     'section_invpos': _get_relative_position(section_idx, len(sections), inverse=True),
                     'entry_pos': _get_relative_position(entry_idx, len(entries)),
@@ -137,6 +88,18 @@ def make_entity_features(lp_data: dict) -> pd.DataFrame:
 
                 data.append(features)
 
+    # LISTPAGE FEATURES
+    for feature_set in data:
+        feature_set['lp_section_count'] = lp_section_count
+        _assign_avg_and_std_to_feature_set(feature_set, lp_section_entries, 'lp_section_entry')
+        _assign_avg_and_std_to_feature_set(feature_set, lp_entry_depths, 'lp_entry_depth')
+        _assign_avg_and_std_to_feature_set(feature_set, lp_entry_entities, 'lp_entry_entity')
+        _assign_avg_and_std_to_feature_set(feature_set, lp_entry_words, 'lp_entry_word')
+        _assign_avg_and_std_to_feature_set(feature_set, lp_entry_chars, 'lp_entry_char')
+        _assign_avg_and_std_to_feature_set(feature_set, lp_entry_commas, 'lp_entry_comma')
+        _assign_avg_and_std_to_feature_set(feature_set, lp_first_entity_idx, 'lp_first_entity_idx')
+        _assign_avg_and_std_to_feature_set(feature_set, lp_first_entity_pos, 'lp_first_entity_pos')
+
     return pd.DataFrame(data)
 
 
@@ -154,3 +117,59 @@ def _get_relative_position(idx, total, inverse=False):
     if total == 0:
         return 0
     return (total - idx) / total if inverse else idx / total
+
+
+def _assign_avg_and_std_to_feature_set(feature_set: dict, data: list, name: str):
+    feature_set[f'{name}_avg'] = np.mean(data)
+    feature_set[f'{name}_std'] = np.std(data)
+
+
+# COMPUTATION OF ENTITY LABELS
+
+def assign_entity_labels(df: pd.DataFrame):
+    df['label'] = df.apply(lambda row: _compute_label_for_entity(row['_listpage_uri'], row['_entity_uri']), axis=1)
+
+    if util.get_config('list.extraction.use_negative_evidence_assumption'):
+        # -- ASSUMPTION: an entry of a list page has at most one positive example --
+        # locate all entries that have a positive example
+        positive_examples = set()
+        for _, row in df[df['label'] == 1].iterrows():
+            positive_examples.add((row['_listpage_uri'], row['_section_name'], row['_entry_idx']))
+        # make all candidate examples negative that appear in an entry with a positive example
+        for i, row in df[df['label'] == -1].iterrows():
+            if (row['_listpage_uri'], row['_section_name'], row['_entry_idx']) in positive_examples:
+                df.at[i, 'label'] = 0
+
+
+def _compute_label_for_entity(listpage_uri: str, entity_uri: str) -> int:
+    if entity_uri not in dbp_store.get_resources():
+        return 0
+
+    listpage_axioms = set()
+    category_resources = set()
+
+    listpage_categories = list_mapping.get_equivalent_categories(listpage_uri) or list_mapping.get_parent_categories(listpage_uri)
+    for cat in listpage_categories:
+        for p_cat in ({cat} | cat_base.get_wikitaxonomy_graph().ancestors(cat)):
+            listpage_axioms.update(cat_axioms.get_axioms(p_cat))
+        for s_cat in ({cat} | cat_base.get_wikitaxonomy_graph().descendants(cat)):
+            category_resources.update(cat_store.get_resources(s_cat))
+
+    if entity_uri in category_resources:
+        return 1
+    elif any(ax.rejects_resource(entity_uri) for ax in listpage_axioms):
+        return 0
+    return -1
+
+
+# COMPUTATION OF SECTION-NAME FEATURES
+
+def with_section_name_features(df: pd.DataFrame) -> pd.DataFrame:
+    # retrieve the 50 sections that appear most often in list pages
+    valid_sections = df[['_section_name', '_listpage_uri']].groupby(by='_section_name')[['_listpage_uri']].nunique().sort_values(by='_listpage_uri', ascending=False).head(50).index.values
+    # one-hot-encode these sections
+    encoder = OneHotEncoder(categories={0: valid_sections}, handle_unknown='ignore', sparse=False)
+    section_values = encoder.fit_transform(df[['_section_name']].fillna(value=''))
+    section_names = encoder.get_feature_names()
+    df_section = pd.DataFrame(data=section_values, columns=section_names)
+    return pd.merge(left=df, right=df_section, left_index=True, right_index=True)
