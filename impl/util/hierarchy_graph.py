@@ -149,6 +149,8 @@ class HierarchyGraph(BaseGraph):
         for node in random.sample(remaining_nodes_to_merge, min(len(remaining_nodes_to_merge), 100)):
             util.get_logger().debug(f'{node}')
 
+        # merge howto: find nodes that are not a target of another merge and merge them. then repeat until merge-list empty
+
         # in caligraph: simply remove by phrase (maybe do that only in caligraph namespace then) -> !! and only do it if there is no uppercase word in by-phrase !!
         # (and make sure to check whether the pruned category name also exists as dbpedia category)
 

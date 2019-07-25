@@ -7,6 +7,7 @@ import impl.dbpedia.util as dbp_util
 import impl.dbpedia.heuristics as dbp_heur
 import impl.category.category_set as cat_set
 import impl.category.nlp as cat_nlp
+import impl.category.store as cat_store
 import impl.util.nlp as nlp_util
 import impl.util.rdf as rdf_util
 
@@ -98,7 +99,7 @@ def _extract_patterns(category_graph, candidate_sets):
         categories_with_matches = {cat: match for cat, match in categories_with_matches.items() if category_graph.has_node(cat) and match}
         for cat, match in categories_with_matches.items():
             # compute predicate frequencies
-            statistics = category_graph.get_statistics(cat)
+            statistics = cat_store.get_statistics(cat)
             possible_vals = _get_resource_surface_scores(match)
             for (pred, val), freq in statistics['property_frequencies'].items():
                 if val in possible_vals:
@@ -178,19 +179,19 @@ def _extract_axioms(category_graph, pattern_confidence, patterns):
         cat_prop_axioms = []
         cat_type_axioms = []
 
-        front_prop_axiom, front_type_axiom = _find_axioms(category_graph, pattern_confidence, front_pattern_dict, cat, cat_doc)
+        front_prop_axiom, front_type_axiom = _find_axioms(pattern_confidence, front_pattern_dict, cat, cat_doc)
         if front_prop_axiom:
             cat_prop_axioms.append(front_prop_axiom)
         if front_type_axiom:
             cat_type_axioms.append(front_type_axiom)
 
-        back_prop_axiom, back_type_axiom = _find_axioms(category_graph, pattern_confidence, back_pattern_dict, cat, cat_doc)
+        back_prop_axiom, back_type_axiom = _find_axioms(pattern_confidence, back_pattern_dict, cat, cat_doc)
         if back_prop_axiom:
             cat_prop_axioms.append(back_prop_axiom)
         if back_type_axiom:
             cat_type_axioms.append(back_type_axiom)
 
-        enclosing_prop_axiom, enclosing_type_axiom = _find_axioms(category_graph, pattern_confidence, enclosing_pattern_dict, cat, cat_doc)
+        enclosing_prop_axiom, enclosing_type_axiom = _find_axioms(pattern_confidence, enclosing_pattern_dict, cat, cat_doc)
         if enclosing_prop_axiom:
             cat_prop_axioms.append(enclosing_prop_axiom)
         if enclosing_type_axiom:
@@ -262,11 +263,11 @@ def _detect_pattern(pattern_dict, words):
     return None, None
 
 
-def _get_axioms_for_cat(category_graph, pattern_confidence, axiom_patterns, cat, text_diff, words_same):
+def _get_axioms_for_cat(pattern_confidence, axiom_patterns, cat, text_diff, words_same):
     prop_axiom = None
     type_axiom = None
 
-    statistics = category_graph.get_statistics(cat)
+    statistics = cat_store.get_statistics(cat)
     pred_patterns = axiom_patterns['preds']
     possible_values = _get_resource_surface_scores(text_diff)
     props_scores = {(p, v): freq * pred_patterns[p] * possible_values[v] for (p, v), freq in statistics['property_frequencies'].items() if p in pred_patterns and v in possible_values}
@@ -285,7 +286,7 @@ def _get_axioms_for_cat(category_graph, pattern_confidence, axiom_patterns, cat,
     return prop_axiom, type_axiom
 
 
-def _find_axioms(category_graph, pattern_confidence, pattern_dict, cat, cat_doc):
+def _find_axioms(pattern_confidence, pattern_dict, cat, cat_doc):
     cat_words = [w.text for w in cat_doc]
     axiom_patterns, pattern_lengths = _detect_pattern(pattern_dict, cat_words)
     if axiom_patterns:
@@ -297,20 +298,20 @@ def _find_axioms(category_graph, pattern_confidence, pattern_dict, cat, cat_doc)
             words_same += cat_words[:front_pattern_idx]
         if back_pattern_idx:
             words_same += cat_words[back_pattern_idx:]
-        return _get_axioms_for_cat(category_graph, pattern_confidence, axiom_patterns, cat, text_diff, words_same)
+        return _get_axioms_for_cat(pattern_confidence, axiom_patterns, cat, text_diff, words_same)
     return None, None
 
 
 # --- AXIOM APPLICATION & POST-FILTERING ---
 
 
-def _extract_assertions(category_graph, relation_axioms, type_axioms):
+def _extract_assertions(relation_axioms, type_axioms):
     util.get_logger().debug('Cat2Ax: Applying axioms..')
 
-    relation_assertions = {(res, pred, val) for cat, pred, val, _ in relation_axioms for res in category_graph.get_resources(cat)}
+    relation_assertions = {(res, pred, val) for cat, pred, val, _ in relation_axioms for res in cat_store.get_resources(cat)}
     new_relation_assertions = {(res, pred, val) for res, pred, val in relation_assertions if pred not in dbp_store.get_properties(res) or val not in dbp_store.get_properties(res)[pred]}
 
-    type_assertions = {(res, rdf_util.PREDICATE_TYPE, t) for cat, pred, t, _ in type_axioms for res in category_graph.get_resources(cat)}
+    type_assertions = {(res, rdf_util.PREDICATE_TYPE, t) for cat, pred, t, _ in type_axioms for res in cat_store.get_resources(cat)}
     new_type_assertions = {(res, pred, t) for res, pred, t in type_assertions if t not in {tt for t in dbp_store.get_types(res) for tt in dbp_store.get_transitive_supertype_closure(t)} and t != rdf_util.CLASS_OWL_THING}
     new_type_assertions_transitive = {(res, pred, tt) for res, pred, t in new_type_assertions for tt in dbp_store.get_transitive_supertype_closure(t) if tt not in {ott for t in dbp_store.get_types(res) for ott in dbp_store.get_transitive_supertype_closure(t)} and tt != rdf_util.CLASS_OWL_THING}
 
