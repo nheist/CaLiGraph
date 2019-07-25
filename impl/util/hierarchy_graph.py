@@ -127,7 +127,7 @@ class HierarchyGraph(BaseGraph):
                     direct_merges[node].add(parent)
         util.get_logger().debug(f'Found {len(direct_merges)} nodes to merge directly.')
         util.get_logger().debug(f'Examples of direct merges:')
-        for node in random.sample(direct_merges, min(len(direct_merges), 50)):
+        for node in random.sample(set(direct_merges), min(len(direct_merges), 50)):
             util.get_logger().debug(f'{node} -> {direct_merges[node]}')
 
         # 2) category set merge
@@ -141,7 +141,7 @@ class HierarchyGraph(BaseGraph):
                     catset_merges[node].add(parent)
         util.get_logger().debug(f'Found {len(catset_merges)} nodes to merge via category sets.')
         util.get_logger().debug(f'Examples of catset merges:')
-        for node in random.sample(catset_merges, min(len(catset_merges), 50)):
+        for node in random.sample(set(catset_merges), min(len(catset_merges), 50)):
             util.get_logger().debug(f'{node} -> {catset_merges[node]}')
 
         remaining_nodes_to_merge = remaining_nodes_to_merge.difference(set(catset_merges))
