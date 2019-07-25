@@ -34,7 +34,7 @@ class ListGraph(HierarchyGraph):
             edges.update({(listcat, child) for child in listcat_children})
 
         # add nodes and edges for listpages
-        for listcat in nodes:
+        for listcat in list(nodes):
             listpages = {dbp_store.resolve_redirect(page) for page in cat_store.get_resources(listcat) if list_util.is_listpage(page)}
             listpages = {lp for lp in listpages if list_util.is_listpage(lp)}  # filter out redirects on non-listpages
             nodes.update(listpages)
