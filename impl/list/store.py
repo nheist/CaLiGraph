@@ -18,7 +18,7 @@ def get_listpages() -> set:
 def get_listpages_with_redirects() -> set:
     global __LISTPAGES_WITH_REDIRECTS__
     if '__LISTPAGES_WITH_REDIRECTS__' not in globals():
-        initializer = lambda: {res for res in dbp_store.get_resources() if list_util.is_listpage(res)}
+        initializer = lambda: {(res[:res.find('__')] if '__' in res else res) for res in dbp_store.get_resources() if list_util.is_listpage(res)}
         __LISTPAGES_WITH_REDIRECTS__ = util.load_or_create_cache('dbpedia_listpages', initializer)
 
     return __LISTPAGES_WITH_REDIRECTS__
