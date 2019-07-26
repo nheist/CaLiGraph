@@ -131,5 +131,5 @@ def _create_list_parents_mapping():
     # merge mappings
     mapped_lsts = set(list_to_cat_hypernym_mapping) | set(list_to_cat_headlemma_mapping) | set(list_to_root_mapping)
     list_to_cat_parents_mapping = {lst: list_to_cat_hypernym_mapping[lst] | list_to_cat_headlemma_mapping[lst] | list_to_root_mapping[lst] for lst in mapped_lsts}
-    util.get_logger().debug(f'Equivalence Mapping: Mapped {len(list_to_cat_parents_mapping)} lists to {sum(len(cat) for cat in list_to_cat_parents_mapping.values())} categories.')
+    util.get_logger().debug(f'Parents Mapping: Mapped {len(list_to_cat_parents_mapping)} lists to {sum(len(cat) for cat in list_to_cat_parents_mapping.values())} categories.')
     return list_to_cat_parents_mapping

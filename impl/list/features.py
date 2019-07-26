@@ -1,4 +1,5 @@
 import impl.list.mapping as list_mapping
+from impl.list.graph import ListGraph
 import impl.dbpedia.store as dbp_store
 import impl.category.store as cat_store
 import impl.category.cat2ax as cat_axioms
@@ -126,8 +127,8 @@ def _assign_avg_and_std_to_feature_set(feature_set: dict, data: list, name: str)
 
 # COMPUTATION OF ENTITY LABELS
 
-def assign_entity_labels(df: pd.DataFrame):
-    df['label'] = df.apply(lambda row: _compute_label_for_entity(row['_listpage_uri'], row['_entity_uri']), axis=1)
+def assign_entity_labels(list_graph: ListGraph, df: pd.DataFrame):
+    df['label'] = df.apply(lambda row: _compute_label_for_entity(list_graph, row['_listpage_uri'], row['_entity_uri']), axis=1)
 
     if util.get_config('list.extraction.use_negative_evidence_assumption'):
         # -- ASSUMPTION: an entry of a list page has at most one positive example --
@@ -141,18 +142,19 @@ def assign_entity_labels(df: pd.DataFrame):
                 df.at[i, 'label'] = 0
 
 
-def _compute_label_for_entity(listpage_uri: str, entity_uri: str) -> int:
+def _compute_label_for_entity(list_graph: ListGraph, listpage_uri: str, entity_uri: str) -> int:
     if entity_uri not in dbp_store.get_resources():
         return 0
 
     listpage_axioms = set()
     category_resources = set()
 
-    listpage_categories = list_mapping.get_equivalent_categories(listpage_uri) or list_mapping.get_parent_categories(listpage_uri)
+    listpage_closure = {listpage_uri} | list_graph.ancestors(listpage_uri)
+    listpage_categories = {cat for lst in listpage_closure for cat in _get_categories_for_list(lst)}
     for cat in listpage_categories:
-        for p_cat in ({cat} | cat_base.get_wikitaxonomy_graph().ancestors(cat)):
+        for p_cat in ({cat} | cat_base.get_cyclefree_wikitaxonomy_graph().ancestors(cat)):
             listpage_axioms.update(cat_axioms.get_axioms(p_cat))
-        for s_cat in ({cat} | cat_base.get_wikitaxonomy_graph().descendants(cat)):
+        for s_cat in ({cat} | cat_base.get_cyclefree_wikitaxonomy_graph().descendants(cat)):
             category_resources.update(cat_store.get_resources(s_cat))
 
     if entity_uri in category_resources:
@@ -160,6 +162,10 @@ def _compute_label_for_entity(listpage_uri: str, entity_uri: str) -> int:
     elif any(ax.rejects_resource(entity_uri) for ax in listpage_axioms):
         return 0
     return -1
+
+
+def _get_categories_for_list(listpage_uri: str) -> set:
+    return list_mapping.get_equivalent_categories(listpage_uri) | list_mapping.get_parent_categories(listpage_uri)
 
 
 # COMPUTATION OF SECTION-NAME FEATURES
