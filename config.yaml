@@ -136,7 +136,7 @@ cache:
     version: 1
   spacy_docs:
     filename: 'spacy-docs'
-    version: 2  # version 2 incl. listpages
+    version: 3  # version 2 incl. listpages; version 3 for spacy 2.1
   dbpedia_resources:
     filename: 'dbpedia-resources'
     version: 1
