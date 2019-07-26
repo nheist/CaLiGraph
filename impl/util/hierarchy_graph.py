@@ -75,10 +75,6 @@ class HierarchyGraph(BaseGraph):
             child_lemmas = node_to_headlemmas_mapping[child]
             if any(hypernymy_util.is_hypernym(pl, cl) for pl in parent_lemmas for cl in child_lemmas):
                 valid_edges.add((parent, child))
-        valid_nodes = {e[0] for e in valid_edges} | {e[1] for e in valid_edges} | {self.root_node}
-        # remove all unrelated nodes
-        self._remove_all_nodes_except(valid_nodes)
-        # remove all unrelated edges
         self._remove_all_edges_except(valid_edges)
         return self
 
