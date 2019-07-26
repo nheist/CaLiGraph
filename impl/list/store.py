@@ -1,6 +1,7 @@
 from . import util as list_util
 import impl.dbpedia.store as dbp_store
 import impl.dbpedia.util as dbp_util
+import impl.category.store as cat_store
 import util
 from lxml import etree
 from collections import defaultdict
@@ -22,6 +23,14 @@ def get_listpages_with_redirects() -> set:
         __LISTPAGES_WITH_REDIRECTS__ = util.load_or_create_cache('dbpedia_listpages', initializer)
 
     return __LISTPAGES_WITH_REDIRECTS__
+
+
+def get_listcategories() -> set:
+    global __LISTCATEGORIES__
+    if '__LISTCATEGORIES__' not in globals():
+        __LISTCATEGORIES__ = {lc for lc in cat_store.get_categories() if list_util.is_listcategory(lc)}
+
+    return __LISTCATEGORIES__
 
 
 def get_listpage_markup(listpage: str) -> str:

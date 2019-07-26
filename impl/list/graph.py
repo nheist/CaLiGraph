@@ -4,6 +4,7 @@ from impl.util.hierarchy_graph import HierarchyGraph
 import impl.dbpedia.store as dbp_store
 import impl.category.store as cat_store
 import impl.category.util as cat_util
+import impl.list.store as list_store
 import impl.list.util as list_util
 import util
 
@@ -31,7 +32,7 @@ class ListGraph(HierarchyGraph):
     @classmethod
     def create_from_dbpedia(cls):
         # add nodes and edges for listcategories
-        nodes = {cat for cat in cat_store.get_categories() if list_util.is_listcategory(cat)}
+        nodes = list_store.get_listcategories()
         edges = set()
         for listcat in nodes:
             listcat_children = {child for child in cat_store.get_children(listcat) if child in nodes}
