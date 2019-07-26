@@ -97,7 +97,6 @@ class HierarchyGraph(BaseGraph):
         self._node_by_part = None  # reset part-to-node index due to changes
 
     def merge_nodes(self):
-        # TODO: CHECK CYCLES AFTERWARDS!
         nodes_containing_by = {node for node in self.nodes if '_by_' in node}
         nodes_canonical_names = {}
         for node in nodes_containing_by:

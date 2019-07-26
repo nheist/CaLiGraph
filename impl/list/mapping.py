@@ -118,7 +118,7 @@ def _create_list_parents_mapping():
     unmapped_root_lists = {lst for lst in unmapped_lists if lst in list_graph.nodes and list_graph.depth(lst) == 1}
     for lst in unmapped_root_lists:
         lst_headlemmas = lsts_headlemmas[lst]
-        mapped_categories = {cat_graph.get_node_by_name(inflection.pluralize(lhl)) for lhl in lst_headlemmas if cat_graph.get_node_by_name(inflection.pluralize(lhl))}
+        mapped_categories = {cat_graph.get_node_by_name(inflection.pluralize(lhl).title()) for lhl in lst_headlemmas if cat_graph.get_node_by_name(inflection.pluralize(lhl))}
         if mapped_categories:
             list_to_cat_headlemma_mapping[lst] = mapped_categories
     util.get_logger().debug(f'Headlemma Mapping: Mapped {len(list_to_cat_headlemma_mapping)} lists to {sum(len(cat) for cat in list_to_cat_headlemma_mapping.values())} categories.')
