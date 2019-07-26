@@ -39,8 +39,8 @@ class HierarchyGraph(BaseGraph):
     # graph connectivity
 
     def remove_unconnected(self):
-        valid_categories = {self.root_node} | nx.descendants(self.graph, self.root_node)
-        self._remove_all_nodes_except(valid_categories)
+        valid_nodes = {self.root_node} | self.descendants(self.root_node)
+        self._remove_all_nodes_except(valid_nodes)
         return self
 
     def append_unconnected(self):

@@ -107,7 +107,7 @@ def _create_list_parents_mapping():
 
         for candidate_cat in candidates:
             cat_headlemmas = cats_headlemmas[candidate_cat]
-            if any(hypernymy_util.is_hypernym(chl, lhl) for chl in cat_headlemmas for lhl in lst_headlemmas):
+            if all(any(hypernymy_util.is_hypernym(chl, lhl) for chl in cat_headlemmas) for lhl in lst_headlemmas):
                 list_to_cat_hypernym_mapping[lst].add(candidate_cat)
     util.get_logger().debug(f'Hypernym Mapping: Mapped {len(list_to_cat_hypernym_mapping)} lists to {sum(len(cat) for cat in list_to_cat_hypernym_mapping.values())} categories.')
 
