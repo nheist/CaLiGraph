@@ -22,8 +22,7 @@ class BaseGraph:
         self._reset_node_indices()
 
     def _remove_all_nodes_except(self, valid_nodes: set):
-        invalid_nodes = self.nodes.difference(valid_nodes)
-        self._remove_nodes(invalid_nodes)
+        self._remove_nodes(self.nodes.difference(valid_nodes))
 
     def _reset_node_indices(self):
         pass  # Triggered when anything changes in the node structure. Should be overriden by subclasses to clean up any outdated node indices.
