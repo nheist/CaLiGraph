@@ -102,7 +102,7 @@ class HierarchyGraph(BaseGraph):
         nodes_canonical_names = {}
         for node in nodes_containing_by:
             node_name = self.get_name(node)
-            canonical_name = nlp_util.remove_by_phrase_from_text(node_name)
+            canonical_name = nlp_util.get_canonical_name(node_name)
             if node_name != canonical_name:
                 nodes_canonical_names[node] = canonical_name
         remaining_nodes_to_merge = set(nodes_canonical_names)
@@ -116,7 +116,7 @@ class HierarchyGraph(BaseGraph):
             node_important_words = nodes_important_words[node]
             for parent in self.parents(node):
                 if parent not in nodes_important_words:
-                    nodes_important_words[parent] = nlp_util.without_stopwords(self.get_name(parent))
+                    nodes_important_words[parent] = nlp_util.without_stopwords(nlp_util.get_canonical_name(self.get_name(parent)))
                 parent_important_words = nodes_important_words[parent]
 
                 if hypernymy_util.phrases_are_synonymous(node_important_words, parent_important_words):

@@ -39,10 +39,10 @@ def _create_list_equivalents_mapping():
     all_lists = list_graph.nodes | list_store.get_listpages()
 
     # 1) find equivalent categories by exact name match
-    name_to_cat_mapping = {cat_graph.get_name(node).lower(): node for node in cat_graph.nodes}
+    name_to_cat_mapping = {cat_graph.get_name(node).replace('-', ' ').lower(): node for node in cat_graph.nodes}
     name_to_list_mapping = defaultdict(set)
     for lst in all_lists:
-        name_to_list_mapping[list_util.list2name(lst).lower()].add(lst)
+        name_to_list_mapping[list_util.list2name(lst).replace('-', ' ').lower()].add(lst)
     matching_names = set(name_to_list_mapping).intersection(set(name_to_cat_mapping))
     list_to_cat_exact_mapping = defaultdict(set, {lst: {name_to_cat_mapping[name]} for name in matching_names for lst in name_to_list_mapping[name]})
     util.get_logger().debug(f'Exact Mapping: Mapped {len(list_to_cat_exact_mapping)} lists to categories.')
@@ -50,11 +50,11 @@ def _create_list_equivalents_mapping():
     # 2) find equivalent categories by synonym match
     list_to_cat_synonym_mapping = defaultdict(set)
 
-    cats_important_words = {cat: nlp_util.without_stopwords(cat_graph.get_name(cat)) for cat in cat_graph.nodes}
+    cats_important_words = {cat: nlp_util.without_stopwords(nlp_util.get_canonical_name(cat_graph.get_name(cat))) for cat in cat_graph.nodes}
 
     remaining_lists = all_lists.difference(set(list_to_cat_exact_mapping))
     for lst in remaining_lists:
-        lst_important_words = nlp_util.without_stopwords(nlp_util.remove_by_phrase_from_text(list_util.list2name(lst)))
+        lst_important_words = nlp_util.without_stopwords(nlp_util.get_canonical_name(list_util.list2name(lst)))
 
         if list_util.is_listcategory(lst):
             candidates = cat_store.get_parents(lst)

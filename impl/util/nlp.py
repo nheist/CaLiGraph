@@ -2,6 +2,7 @@ import spacy
 from spacy.tokens import Doc, Span
 import hashlib
 import util
+import re
 
 SPACY_CACHE_ID = 'spacy_docs'
 
@@ -15,11 +16,16 @@ for word in parser.Defaults.stop_words:
 
 def without_stopwords(text: str) -> set:
     """Return the lemmatized versions of all non-stop-words in `text`."""
-    return {word.lemma_ for word in remove_by_phrase(parse(text)) if not word.is_stop}
+    text = _remove_parentheses_content(text.replace('-', ' '))
+    return {word.lemma_ for word in parse(text) if not word.is_stop}
 
 
-def remove_by_phrase_from_text(text: str) -> str:
-    return remove_by_phrase(parse(text, disable_normalization=True, skip_cache=True)).text
+def get_canonical_name(text: str) -> str:
+    text = remove_by_phrase(parse(text, skip_cache=True)).text  # remove by-phrase
+    text = re.sub(r'\s+\([^()]+-[^()]+\)$', '', text)  # remove trailing parentheses with number or letter ranges, e.g. 'Interstate roads (1-10)'
+    text = re.sub(r'\s*[-:]\s*([A-Z],\s*)*[A-Z]$', '', text)  # remove trailing alphabetical splits, e.g. 'Football clubs in Sweden - Z' or '.. - X, Y, Z'
+    text = re.sub(r'\s+([A-Z],\s*)+[A-Z]$', '', text)  # remove trailing alphabetical splits without indicator, e.g. 'Fellows of the Royal Society A, B, C'
+    return _regularize_whitespaces(text)
 
 
 def remove_by_phrase(doc: Doc) -> Doc:
@@ -88,6 +94,15 @@ def parse(text: str, disable_normalization=False, skip_cache=False) -> Doc:
     __NLP_CACHE__[text_hash] = parsed_text
     __NLP_CACHE_CHANGED__ = True
     return parsed_text
+
+
+def _remove_parentheses_content(text: str) -> str:
+    without_parentheses = re.sub(r'\([^()]*\)', '', text)
+    return _regularize_whitespaces(without_parentheses)
+
+
+def _regularize_whitespaces(text: str) -> str:
+    return re.sub(r'\s+', ' ', text).strip()
 
 
 def persist_cache():
