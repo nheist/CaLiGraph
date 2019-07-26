@@ -14,14 +14,17 @@ class ListGraph(HierarchyGraph):
         super().__init__(graph, root_node or util.get_config('category.root_category'))
 
     # node lists
-    def get_node_for_list(self, lst: str) -> Optional[str]:
-        return self.get_node_for_part(lst)
+    def get_all_lists(self) -> set:
+        return {lst for node in self.nodes for lst in self.get_lists(node)}
 
     def get_lists(self, node: str) -> set:
         return self.get_parts(node)
 
     def _set_lists(self, node: str, lst: set):
         self._set_parts(node, lst)
+
+    def get_node_for_list(self, lst: str) -> Optional[str]:
+        return self.get_node_for_part(lst)
 
     # GRAPH CREATION
 
