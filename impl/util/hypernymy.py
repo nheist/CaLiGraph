@@ -36,7 +36,12 @@ def phrases_are_synonymous(phrase_a: set, phrase_b: set) -> bool:
 
 
 def is_synonym(word: str, another_word: str) -> bool:
-    return word == another_word or word in get_synonyms(another_word)
+    if word == another_word:
+        return True
+    if (word[0].isupper() or another_word[0].isupper()) and (word.lower().startswith(another_word.lower()) or another_word.lower().startswith(word.lower())):
+        # better recognition of inflectional forms of countries (e.g. recognise 'Simbabwe' and 'Simbabwean' as synonyms
+        return True
+    return word in get_synonyms(another_word)
 
 
 def get_synonyms(word: str) -> set:
