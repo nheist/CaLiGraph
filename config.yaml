@@ -12,7 +12,7 @@ cat2ax:
 logging:
   level: 'DEBUG'
   to_file: True
-  filename: 'listparse-v2'
+  filename: 'listpage-feature-extraction'
 
 mailer:
   sender: 'errors.nheist@gmail.com'

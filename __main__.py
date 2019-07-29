@@ -7,6 +7,7 @@ import impl.util.hypernymy as hypernymy_util
 import impl.list.store as list_store
 import impl.list.base as list_base
 import impl.list.parser as list_parser
+import impl.list.mapping as list_mapping
 #import impl.dbpedia.heuristics as dbp_heur
 #import impl.category.cat2ax as cat_axioms
 import impl.util.nlp as nlp_util
@@ -29,8 +30,22 @@ if __name__ == '__main__':
     try:
         util.get_logger().info('Starting list feature extraction..')
 
-        list_base.get_listpage_entity_features()
+        cat_graph = cat_base.get_merged_graph()
+        util.get_logger().info('catgraph done.')
         nlp_util.persist_cache()
+        util.get_logger().info('cache persist done.')
+        list_graph = list_base.get_merged_listgraph()
+        util.get_logger().info('listgraph done.')
+        nlp_util.persist_cache()
+        util.get_logger().info('cache persist done.')
+        list_mapping.get_parent_categories('http://dbpedia.org/resource/Category:Lists_of_NASCAR_broadcasters')
+        util.get_logger().info('mapping done.')
+        nlp_util.persist_cache()
+        util.get_logger().info('cache persist done.')
+        list_base.get_listpage_entity_features()
+        util.get_logger().info('extraction done.')
+        nlp_util.persist_cache()
+        util.get_logger().info('cache persist done.')
 
         mailer.send_success(f'FINISHED list feature extraction')
         util.get_logger().info('Finished CaLiGraph extraction.')
