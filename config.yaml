@@ -109,31 +109,31 @@ cache:
   # version 2: added resource types from sdtyped + lhd
   catgraph_conceptual:
     filename: 'catgraph-conceptual'
-    version: 2  # v2: do not remove unconnected nodes initially
+    version: 3  # v2: do not remove unconnected nodes initially ; v3: better synonym matching
   catgraph_wikitaxonomy:
     filename: 'catgraph-wikitaxonomy'
-    version: 2  # v2: do not remove unconnected nodes initially
+    version: 3  # v2: do not remove unconnected nodes initially ; v3: better synonym matching
   catgraph_cyclefree:
     filename: 'catgraph-cyclefree'
-    version: 2  # v2: do not remove unconnected nodes initially
+    version: 3  # v2: do not remove unconnected nodes initially ; v3: better synonym matching
   catgraph_merged:
     filename: 'catgraph-merged'
-    version: 2  # v2: do not remove unconnected nodes initially
+    version: 3  # v2: do not remove unconnected nodes initially ; v3: better synonym matching
   categories_singularized:
     filename: 'categories-singularized'
     version: 1
   listgraph_base:
     filename: 'listgraph-base'
-    version: 1
+    version: 2  # v2: better synonym matching
   listgraph_wikitaxonomy:
     filename: 'listgraph-wikitaxonomy'
-    version: 1
+    version: 2  # v2: better synonym matching
   listgraph_cyclefree:
     filename: 'listgraph-cyclefree'
-    version: 1
+    version: 2  # v2: better synonym matching
   listgraph_merged:
     filename: 'listgraph-merged'
-    version: 1
+    version: 2  # v2: better synonym matching
   spacy_docs:
     filename: 'spacy-docs'
     version: 3  # version 2 incl. listpages; version 3 for spacy 2.1
