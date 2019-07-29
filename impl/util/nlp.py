@@ -23,8 +23,8 @@ def without_stopwords(text: str) -> set:
 def get_canonical_name(text: str) -> str:
     text = remove_by_phrase(parse(text, skip_cache=True)).text  # remove by-phrase
     text = re.sub(r'\s+\([^()]+-[^()]+\)$', '', text)  # remove trailing parentheses with number or letter ranges, e.g. 'Interstate roads (1-10)'
-    text = re.sub(r'\s*[-:]\s*([A-Z],\s*)*[A-Z]$', '', text)  # remove trailing alphabetical splits, e.g. 'Football clubs in Sweden - Z' or '.. - X, Y, Z'
-    text = re.sub(r'\s+([A-Z],\s*)+[A-Z]$', '', text)  # remove trailing alphabetical splits without indicator, e.g. 'Fellows of the Royal Society A, B, C'
+    text = re.sub(r'\s*[-:]\s*([\p{Lu}\p{Lt}],\s*)*[\p{Lu}\p{Lt}]$', '', text)  # remove trailing alphabetical splits, e.g. 'Football clubs in Sweden - Z' or '.. - X, Y, Z'
+    text = re.sub(r'\s+([\p{Lu}\p{Lt}],\s*)+[\p{Lu}\p{Lt}]$', '', text)  # remove trailing alphabetical splits without indicator, e.g. 'Fellows of the Royal Society A, B, C'
     return _regularize_whitespaces(text)
 
 
