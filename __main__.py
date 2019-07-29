@@ -27,16 +27,12 @@ def setup():
 
 if __name__ == '__main__':
     try:
-        util.get_logger().info('Starting CaLiGraph extraction..')
+        util.get_logger().info('Starting list feature extraction..')
 
-        #list_parser.get_parsed_listpages()
+        list_base.get_listpage_entity_features()
+        nlp_util.persist_cache()
 
-        #entity_data = list_base.get_listpage_entity_data()
-        #nlp_util.persist_cache()
-        #entity_data.to_csv('data_caligraph/entities_train_v6.csv', index=False)
-
-
-        mailer.send_success(f'FINISHED list hierarchy extraction')
+        mailer.send_success(f'FINISHED list feature extraction')
         util.get_logger().info('Finished CaLiGraph extraction.')
     except Exception as e:
         error_msg = traceback.format_exc()
