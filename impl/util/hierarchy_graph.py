@@ -18,6 +18,10 @@ class HierarchyGraph(BaseGraph):
         if not self.has_node(node):
             raise Exception(f'Node {node} not in graph.')
 
+    def _reset_node_indices(self):
+        self._node_by_name = None
+        self._node_by_part = None
+
     # node attribute definitions
     ATTRIBUTE_NAME = 'attribute_name'
     ATTRIBUTE_PARTS = 'attribute_parts'
@@ -57,8 +61,8 @@ class HierarchyGraph(BaseGraph):
 
     def _remove_cycle_edges_by_node_depth(self, comparator):
         edges_to_remove = set()
+        node_depths = defaultdict(int, nx.shortest_path(self.graph, source=self.root_node))
         for cycle in nx.simple_cycles(self.graph):
-            node_depths = {node: self.depth(node) for node in cycle}
             for i in range(len(cycle)):
                 current_edge = (cycle[i], cycle[(i+1) % len(cycle)])
                 if comparator(node_depths[current_edge[0]], node_depths[current_edge[1]]):

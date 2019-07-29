@@ -17,6 +17,10 @@ class BaseGraph:
     def has_node(self, node) -> bool:
         return node in self.graph
 
+    def _add_nodes(self, nodes):
+        self.graph.add_nodes_from(nodes)
+        self._reset_node_indices()
+
     def _remove_nodes(self, nodes: set):
         self.graph.remove_nodes_from(nodes)
         self._reset_node_indices()
