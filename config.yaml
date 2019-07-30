@@ -224,10 +224,10 @@ cache:
     version: 1
   dbpedia_list_equivalents:
     filename: 'dbpedia-list-equivalents'
-    version: 1
+    version: 2  # v2: better synonym matching
   dbpedia_list_parents:
     filename: 'dbpedia-list-parents'
-    version: 1
+    version: 2  # v2: better synonym matching
   dbpedia_listpage_markup:
     filename: 'dbpedia-listpage-markup'
     version: 1
