@@ -153,14 +153,12 @@ class HierarchyGraph(BaseGraph):
                 merge_targets = all_merges[node_to_merge]
                 del all_merges[node_to_merge]
 
-                parents = self.parents(node_to_merge)
-                children = self.children(node_to_merge)
-                edges_to_add = set()
                 for mt in merge_targets:
-                    edges_to_add.update({(mt, c) for c in children if c not in merge_targets})
-                    edges_to_add.update({(p, mt) for p in parents if p not in merge_targets})
                     self._set_parts(mt, self.get_parts(mt) | self.get_parts(node_to_merge))
 
+                parents = self.parents(node_to_merge)
+                children = self.children(node_to_merge)
+                edges_to_add = {(p, c) for p in parents for c in children}
                 self._add_edges(edges_to_add)
                 self._remove_nodes({node_to_merge})
             iteration += 1
