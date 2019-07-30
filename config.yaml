@@ -124,16 +124,16 @@ cache:
     version: 1
   listgraph_base:
     filename: 'listgraph-base'
-    version: 2  # v2: better synonym matching
+    version: 3  # v2: better synonym matching ; v3: with all listpages
   listgraph_wikitaxonomy:
     filename: 'listgraph-wikitaxonomy'
-    version: 2  # v2: better synonym matching
+    version: 3  # v2: better synonym matching ; v3: with all listpages
   listgraph_cyclefree:
     filename: 'listgraph-cyclefree'
-    version: 2  # v2: better synonym matching
+    version: 3  # v2: better synonym matching ; v3: with all listpages
   listgraph_merged:
     filename: 'listgraph-merged'
-    version: 2  # v2: better synonym matching
+    version: 3  # v2: better synonym matching ; v3: with all listpages
   spacy_docs:
     filename: 'spacy-docs'
     version: 3  # version 2 incl. listpages; version 3 for spacy 2.1

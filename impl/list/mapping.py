@@ -36,12 +36,11 @@ def _create_list_equivalents_mapping():
     cat_graph = cat_base.get_merged_graph()
     all_categories_in_graph = cat_graph.get_all_categories()
     list_graph = list_base.get_merged_listgraph()
-    all_lists = list_graph.nodes | list_store.get_listpages()
 
     # 1) find equivalent categories by exact name match
     name_to_cat_mapping = {cat_graph.get_name(node).replace('-', ' ').lower(): node for node in cat_graph.nodes}
     name_to_list_mapping = defaultdict(set)
-    for lst in all_lists:
+    for lst in list_graph.nodes:
         name_to_list_mapping[list_util.list2name(lst).replace('-', ' ').lower()].add(lst)
     matching_names = set(name_to_list_mapping).intersection(set(name_to_cat_mapping))
     list_to_cat_exact_mapping = defaultdict(set, {lst: {name_to_cat_mapping[name]} for name in matching_names for lst in name_to_list_mapping[name]})
@@ -52,7 +51,7 @@ def _create_list_equivalents_mapping():
 
     cats_important_words = {cat: nlp_util.without_stopwords(nlp_util.get_canonical_name(cat_graph.get_name(cat))) for cat in cat_graph.nodes}
 
-    remaining_lists = all_lists.difference(set(list_to_cat_exact_mapping))
+    remaining_lists = list_graph.nodes.difference(set(list_to_cat_exact_mapping))
     for lst in remaining_lists:
         lst_important_words = nlp_util.without_stopwords(nlp_util.get_canonical_name(list_util.list2name(lst)))
 
@@ -89,14 +88,13 @@ def _create_list_parents_mapping():
     cat_graph = cat_base.get_merged_graph()
     all_categories_in_graph = cat_graph.get_all_categories()
     list_graph = list_base.get_merged_listgraph()
-    all_lists = list_graph.nodes | list_store.get_listpages()
 
     # 1) find parent categories by hypernym match
     list_to_cat_hypernym_mapping = defaultdict(set)
 
     cats_headlemmas = {cat: nlp_util.get_head_lemmas(nlp_util.parse(cat_graph.get_name(cat))) for cat in cat_graph.nodes}
 
-    unmapped_lists = {lst for lst in all_lists if not get_equivalent_categories(lst)}
+    unmapped_lists = {lst for lst in list_graph.nodes if not get_equivalent_categories(lst)}
     lsts_headlemmas = {lst: nlp_util.get_head_lemmas(nlp_util.parse(list_util.list2name(lst))) for lst in unmapped_lists}
     for lst, lst_headlemmas in lsts_headlemmas.items():
         if list_util.is_listcategory(lst):

@@ -45,6 +45,9 @@ class ListGraph(HierarchyGraph):
             nodes.update(listpages)
             edges.update({(listcat, listpage) for listpage in listpages})
 
+        # make sure that all listpages are in the graph
+        nodes.update(list_store.get_listpages())
+
         # initialise graph
         graph = nx.DiGraph(incoming_graph_data=list(edges))
         graph.add_nodes_from(list({n for n in nodes.difference(set(graph.nodes))}))
