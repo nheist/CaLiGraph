@@ -13,7 +13,7 @@ from sklearn.preprocessing import OneHotEncoder
 
 # COMPUTATION OF BASIC ENTITY FEATURES
 
-def make_entity_features(lp_data: dict) -> pd.DataFrame:
+def make_entity_features(lp_data: dict) -> list:
     lp_uri = lp_data['uri']
     sections = lp_data['sections']
 
@@ -101,7 +101,7 @@ def make_entity_features(lp_data: dict) -> pd.DataFrame:
         _assign_avg_and_std_to_feature_set(feature_set, lp_first_entity_idx, 'lp_first_entity_idx')
         _assign_avg_and_std_to_feature_set(feature_set, lp_first_entity_pos, 'lp_first_entity_pos')
 
-    return pd.DataFrame(data)
+    return data
 
 
 def _get_span_for_entity(doc, text, idx):
@@ -128,7 +128,8 @@ def _assign_avg_and_std_to_feature_set(feature_set: dict, data: list, name: str)
 # COMPUTATION OF ENTITY LABELS
 
 def assign_entity_labels(list_graph: ListGraph, df: pd.DataFrame):
-    df['label'] = df.apply(lambda row: _compute_label_for_entity(list_graph, row['_listpage_uri'], row['_entity_uri']), axis=1)
+    progress = {'idx': 0, 'total': len(df.index)}
+    df['label'] = df.apply(lambda row: _compute_label_for_entity(list_graph, row['_listpage_uri'], row['_entity_uri'], progress), axis=1)
 
     if util.get_config('list.extraction.use_negative_evidence_assumption'):
         # -- ASSUMPTION: an entry of a list page has at most one positive example --
@@ -142,7 +143,11 @@ def assign_entity_labels(list_graph: ListGraph, df: pd.DataFrame):
                 df.at[i, 'label'] = 0
 
 
-def _compute_label_for_entity(list_graph: ListGraph, listpage_uri: str, entity_uri: str) -> int:
+def _compute_label_for_entity(list_graph: ListGraph, listpage_uri: str, entity_uri: str, progress: dict) -> int:
+    progress['idx'] += 1
+    if progress['idx'] % 1000 == 0:
+        util.get_logger().debug(f'List-Entities: Assigned labels to {progress["idx"]} of {progress["total"]} entities.')
+
     if entity_uri not in dbp_store.get_resources():
         return 0
 

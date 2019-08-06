@@ -51,23 +51,21 @@ def get_listpage_entity_features() -> pd.DataFrame:
 def _compute_listpage_entity_features() -> pd.DataFrame:
     util.get_logger().info('List-Entities: Computing entity features..')
 
-    entities = None
+    entity_features = []
     parsed_listpages = list_parser.get_parsed_listpages()
-    progress = 0
-    for lp, lp_data in parsed_listpages.items():
-        progress += 1
-        if progress % 1000 == 0:
-            util.get_logger().debug(f'List-Entities: Extracted features for {progress} of {len(parsed_listpages)}')
+    for idx, (lp, lp_data) in enumerate(parsed_listpages.items()):
+        if idx % 1000 == 0:
+            util.get_logger().debug(f'List-Entities: Extracted features for {idx} of {len(parsed_listpages)}')
         if lp_data['type'] != list_parser.LIST_TYPE_ENUM:
             continue
 
-        lp_entities = list_features.make_entity_features(lp_data)
-        entities = entities.append(lp_entities, ignore_index=True) if entities is not None else lp_entities
+        entity_features.extend(list_features.make_entity_features(lp_data))
+    entity_features = pd.DataFrame(data=entity_features)
 
-    entities = list_features.with_section_name_features(entities)
+    entity_features = list_features.with_section_name_features(entity_features)
 
     util.get_logger().info('List-Entities: Assigning entity labels..')
-    list_features.assign_entity_labels(get_merged_listgraph(), entities)
+    list_features.assign_entity_labels(get_merged_listgraph(), entity_features)
 
     util.get_logger().info('List-Entities: Finished extracting entity features.')
-    return entities
+    return entity_features
