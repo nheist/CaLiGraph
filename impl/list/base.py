@@ -51,20 +51,20 @@ def get_listpage_entity_features() -> pd.DataFrame:
 def _compute_listpage_entity_features() -> pd.DataFrame:
     util.get_logger().info('List-Entities: Computing entity features..')
 
-    entity_features = []
-    parsed_listpages = list_parser.get_parsed_listpages()
-    for idx, (lp, lp_data) in enumerate(parsed_listpages.items()):
-        if idx % 1000 == 0:
-            util.get_logger().debug(f'List-Entities: Extracted features for {idx} of {len(parsed_listpages)}')
-        if lp_data['type'] != list_parser.LIST_TYPE_ENUM:
-            continue
+#    entity_features = []
+#    parsed_listpages = list_parser.get_parsed_listpages()
+#    for idx, (lp, lp_data) in enumerate(parsed_listpages.items()):
+#        if idx % 1000 == 0:
+#            util.get_logger().debug(f'List-Entities: Extracted features for {idx} of {len(parsed_listpages)}')
+#        if lp_data['type'] != list_parser.LIST_TYPE_ENUM:
+#            continue
+#
+#        entity_features.extend(list_features.make_entity_features(lp_data))
+#    entity_features = pd.DataFrame(data=entity_features)
+#
+#    entity_features = list_features.with_section_name_features(entity_features)
 
-        entity_features.extend(list_features.make_entity_features(lp_data))
-    entity_features = pd.DataFrame(data=entity_features)
-
-    entity_features = list_features.with_section_name_features(entity_features)
-
-    entity_features.to_csv('data_caligraph/entity-features_intermediate-result.csv', index=False)  # TODO: REMOVE
+    entity_features = pd.read_csv('data_caligraph/entity-features_intermediate-result.csv')  # TODO: REMOVE
 
     util.get_logger().info('List-Entities: Assigning entity labels..')
     list_features.assign_entity_labels(get_merged_listgraph(), entity_features)
