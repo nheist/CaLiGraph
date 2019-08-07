@@ -9,6 +9,7 @@ import pandas as pd
 import numpy as np
 import util
 from sklearn.preprocessing import OneHotEncoder
+from collections import defaultdict
 
 
 # COMPUTATION OF BASIC ENTITY FEATURES
@@ -128,8 +129,18 @@ def _assign_avg_and_std_to_feature_set(feature_set: dict, data: list, name: str)
 # COMPUTATION OF ENTITY LABELS
 
 def assign_entity_labels(list_graph: ListGraph, df: pd.DataFrame):
+    listpage_resource_categories = {}
+    listpage_axioms = defaultdict(set)
+    for listpage_uri in df['_listpage_uri'].unique():
+        listpage_closure = {listpage_uri} | list_graph.ancestors(listpage_uri)
+        listpage_categories = {cat for lst in listpage_closure for cat in _get_categories_for_list(lst)}
+        for cat in listpage_categories:
+            listpage_resource_categories[listpage_uri] = {cat} | cat_base.get_cyclefree_wikitaxonomy_graph().descendants(cat)
+            for p_cat in ({cat} | cat_base.get_cyclefree_wikitaxonomy_graph().ancestors(cat)):
+                listpage_axioms[listpage_uri].update(cat_axioms.get_axioms(p_cat))
+
     progress = {'idx': 0, 'total': len(df.index)}
-    df['label'] = df.apply(lambda row: _compute_label_for_entity(list_graph, row['_listpage_uri'], row['_entity_uri'], progress), axis=1)
+    df['label'] = df.apply(lambda row: _compute_label_for_entity(row['_listpage_uri'], row['_entity_uri'], listpage_resource_categories, listpage_axioms, progress), axis=1)
 
     if util.get_config('list.extraction.use_negative_evidence_assumption'):
         # -- ASSUMPTION: an entry of a list page has at most one positive example --
@@ -143,7 +154,7 @@ def assign_entity_labels(list_graph: ListGraph, df: pd.DataFrame):
                 df.at[i, 'label'] = 0
 
 
-def _compute_label_for_entity(list_graph: ListGraph, listpage_uri: str, entity_uri: str, progress: dict) -> int:
+def _compute_label_for_entity(listpage_uri: str, entity_uri: str, lp_resource_categories: dict, lp_axioms: dict, progress: dict) -> int:
     progress['idx'] += 1
     if progress['idx'] % 1000 == 0:
         util.get_logger().debug(f'List-Entities: Assigned labels to {progress["idx"]} of {progress["total"]} entities.')
@@ -151,18 +162,9 @@ def _compute_label_for_entity(list_graph: ListGraph, listpage_uri: str, entity_u
     if entity_uri not in dbp_store.get_resources():
         return 0
 
-    listpage_axioms = set()
-    category_resources = set()
-
-    listpage_closure = {listpage_uri} | list_graph.ancestors(listpage_uri)
-    listpage_categories = {cat for lst in listpage_closure for cat in _get_categories_for_list(lst)}
-    for cat in listpage_categories:
-        for p_cat in ({cat} | cat_base.get_cyclefree_wikitaxonomy_graph().ancestors(cat)):
-            listpage_axioms.update(cat_axioms.get_axioms(p_cat))
-        for s_cat in ({cat} | cat_base.get_cyclefree_wikitaxonomy_graph().descendants(cat)):
-            category_resources.update(cat_store.get_resources(s_cat))
-
-    if entity_uri in category_resources:
+    resource_categories = lp_resource_categories[listpage_uri]
+    listpage_axioms = lp_axioms[listpage_uri]
+    if any(entity_uri in cat_store.get_resources(cat) for cat in resource_categories):
         return 1
     elif any(ax.rejects_resource(entity_uri) for ax in listpage_axioms):
         return 0
