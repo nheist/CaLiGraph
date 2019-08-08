@@ -133,9 +133,8 @@ def assign_entity_labels(list_graph: ListGraph, df: pd.DataFrame):
     listpage_axioms = defaultdict(set)
     for listpage_uri in df['_listpage_uri'].unique():
         listpage_closure = {listpage_uri} | list_graph.ancestors(listpage_uri)
-        listpage_categories = {cat for lst in listpage_closure for cat in _get_categories_for_list(lst)}
-        for cat in listpage_categories:
-            listpage_resource_categories[listpage_uri] = {cat} | cat_base.get_cyclefree_wikitaxonomy_graph().descendants(cat)
+        listpage_resource_categories[listpage_uri] = {cat for lst in listpage_closure for cat in _get_categories_for_list(lst)}
+        for cat in listpage_resource_categories[listpage_uri]:
             for p_cat in ({cat} | cat_base.get_cyclefree_wikitaxonomy_graph().ancestors(cat)):
                 listpage_axioms[listpage_uri].update(cat_axioms.get_axioms(p_cat))
 
