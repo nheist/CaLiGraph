@@ -67,7 +67,7 @@ def _compute_listpage_entity_features() -> pd.DataFrame:
     entity_features = pd.read_csv('data_caligraph/entity-features_intermediate-result.csv')  # TODO: REMOVE
 
     util.get_logger().info('List-Entities: Assigning entity labels..')
-    list_features.assign_entity_labels(get_merged_listgraph(), entity_features)
+    list_features.assign_entity_labels(entity_features)
 
     util.get_logger().info('List-Entities: Finished extracting entity features.')
     return entity_features

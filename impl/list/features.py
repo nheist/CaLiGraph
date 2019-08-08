@@ -128,13 +128,12 @@ def _assign_avg_and_std_to_feature_set(feature_set: dict, data: list, name: str)
 
 # COMPUTATION OF ENTITY LABELS
 
-def assign_entity_labels(list_graph: ListGraph, df: pd.DataFrame):
+def assign_entity_labels(df: pd.DataFrame):
     listpage_resource_categories = {}
     listpage_axioms = defaultdict(set)
     for listpage_uri in df['_listpage_uri'].unique():
-        listpage_closure = {listpage_uri} | list_graph.ancestors(listpage_uri)
-        listpage_resource_categories[listpage_uri] = {cat for lst in listpage_closure for cat in _get_categories_for_list(lst)}
-        for cat in listpage_resource_categories[listpage_uri]:
+        for cat in _get_categories_for_list(listpage_uri):
+            listpage_resource_categories[listpage_uri] = {cat} | cat_base.get_cyclefree_wikitaxonomy_graph().descendants(cat)
             for p_cat in ({cat} | cat_base.get_cyclefree_wikitaxonomy_graph().ancestors(cat)):
                 listpage_axioms[listpage_uri].update(cat_axioms.get_axioms(p_cat))
 
