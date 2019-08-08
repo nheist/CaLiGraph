@@ -132,10 +132,14 @@ def assign_entity_labels(df: pd.DataFrame):
     listpage_resource_categories = {}
     listpage_axioms = defaultdict(set)
     for listpage_uri in df['_listpage_uri'].unique():
+        res_cats = _get_categories_for_list(listpage_uri)
+        axioms = set()
         for cat in _get_categories_for_list(listpage_uri):
-            listpage_resource_categories[listpage_uri] = {cat} | cat_base.get_cyclefree_wikitaxonomy_graph().descendants(cat)
+            res_cats.update(cat_base.get_cyclefree_wikitaxonomy_graph().descendants(cat))
             for p_cat in ({cat} | cat_base.get_cyclefree_wikitaxonomy_graph().ancestors(cat)):
-                listpage_axioms[listpage_uri].update(cat_axioms.get_axioms(p_cat))
+                axioms.update(cat_axioms.get_axioms(p_cat))
+        listpage_resource_categories[listpage_uri] = res_cats
+        listpage_axioms[listpage_uri] = axioms
 
     progress = {'idx': 0, 'total': len(df.index)}
     df['label'] = df.apply(lambda row: _compute_label_for_entity(row['_listpage_uri'], row['_entity_uri'], listpage_resource_categories, listpage_axioms, progress), axis=1)
