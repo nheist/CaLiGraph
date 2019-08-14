@@ -236,7 +236,7 @@ cache:
     version: 2  # v1: basic; v2: with entity indices
   dbpedia_listpage_features:
     filename: 'dbpedia-listpage-features'
-    version: 1
+    version: 2  # v2: transitive entity labeling
   wikidata_dbpedia_resource_mapping:
     filename: 'wikidata-dbpedia-resource-mapping'
     version: 1

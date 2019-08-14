@@ -135,7 +135,7 @@ def assign_entity_labels(df: pd.DataFrame):
         res_cats = set()
         axioms = set()
         for cat in _get_categories_for_list(listpage_uri):
-            res_cats.update({cat})  # | cat_base.get_cyclefree_wikitaxonomy_graph().descendants(cat))
+            res_cats.update({cat} | cat_base.get_cyclefree_wikitaxonomy_graph().descendants(cat))
             for p_cat in ({cat} | cat_base.get_cyclefree_wikitaxonomy_graph().ancestors(cat)):
                 axioms.update(cat_axioms.get_axioms(p_cat))
         listpage_resource_categories[listpage_uri] = res_cats
