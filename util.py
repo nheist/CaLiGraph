@@ -83,7 +83,7 @@ def update_cache(cache_identifier: str, cache_obj, version=None):
     """Update the object cached at `cache_identifier` with `cache_obj`."""
     open_func = _get_cache_open_func(cache_identifier)
     with open_func(_get_cache_path(cache_identifier, version=version), mode='wb') as cache_file:
-        pickle.dump(cache_obj, cache_file)
+        pickle.dump(cache_obj, cache_file, protocol=4)
 
 
 def _get_cache_path(cache_identifier: str, version=None) -> Path:
