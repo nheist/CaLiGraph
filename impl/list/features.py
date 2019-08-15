@@ -1,5 +1,4 @@
 import impl.list.mapping as list_mapping
-from impl.list.graph import ListGraph
 import impl.dbpedia.store as dbp_store
 import impl.category.store as cat_store
 import impl.category.cat2ax as cat_axioms
@@ -132,7 +131,7 @@ def assign_entity_labels(df: pd.DataFrame):
     listpage_valid_resources = {}
     listpage_axioms = defaultdict(set)
     for listpage_uri in df['_listpage_uri'].unique():
-        listpage_resources = set(df[df['_listpage_uri' == listpage_uri]]['_entity_uri'].unique())
+        listpage_resources = set(df[df['_listpage_uri'] == listpage_uri]['_entity_uri'].unique())
         listpage_categories = _get_categories_for_list(listpage_uri) | {cat for lp_cat in _get_categories_for_list(listpage_uri) for cat in cat_base.get_cyclefree_wikitaxonomy_graph().descendants(lp_cat)}
         listpage_category_resources = {res for cat in listpage_categories for res in cat_store.get_resources(cat)}
         listpage_valid_resources[listpage_uri] = listpage_resources.intersection(listpage_category_resources)
@@ -166,10 +165,9 @@ def _compute_label_for_entity(listpage_uri: str, entity_uri: str, lp_valid_resou
     if entity_uri not in dbp_store.get_resources():
         return 0
 
-    listpage_axioms = lp_axioms[listpage_uri]
     if entity_uri in lp_valid_resources[listpage_uri]:
         return 1
-    elif any(ax.rejects_resource(entity_uri) for ax in listpage_axioms):
+    elif any(ax.rejects_resource(entity_uri) for ax in lp_axioms[listpage_uri]):
         return 0
     return -1
 
