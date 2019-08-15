@@ -129,20 +129,22 @@ def _assign_avg_and_std_to_feature_set(feature_set: dict, data: list, name: str)
 # COMPUTATION OF ENTITY LABELS
 
 def assign_entity_labels(df: pd.DataFrame):
-    listpage_resource_categories = {}
+    listpage_valid_resources = {}
     listpage_axioms = defaultdict(set)
     for listpage_uri in df['_listpage_uri'].unique():
-        res_cats = set()
+        listpage_resources = set(df[df['_listpage_uri' == listpage_uri]]['_entity_uri'].unique())
+        listpage_categories = _get_categories_for_list(listpage_uri) | {cat for lp_cat in _get_categories_for_list(listpage_uri) for cat in cat_base.get_cyclefree_wikitaxonomy_graph().descendants(lp_cat)}
+        listpage_category_resources = {res for cat in listpage_categories for res in cat_store.get_resources(cat)}
+        listpage_valid_resources[listpage_uri] = listpage_resources.intersection(listpage_category_resources)
+
         axioms = set()
         for cat in _get_categories_for_list(listpage_uri):
-            res_cats.update({cat} | cat_base.get_cyclefree_wikitaxonomy_graph().descendants(cat))
             for p_cat in ({cat} | cat_base.get_cyclefree_wikitaxonomy_graph().ancestors(cat)):
                 axioms.update(cat_axioms.get_axioms(p_cat))
-        listpage_resource_categories[listpage_uri] = res_cats
         listpage_axioms[listpage_uri] = axioms
 
     progress = {'idx': 0, 'total': len(df.index)}
-    df['label'] = df.apply(lambda row: _compute_label_for_entity(row['_listpage_uri'], row['_entity_uri'], listpage_resource_categories, listpage_axioms, progress), axis=1)
+    df['label'] = df.apply(lambda row: _compute_label_for_entity(row['_listpage_uri'], row['_entity_uri'], listpage_valid_resources, listpage_axioms, progress), axis=1)
 
     if util.get_config('list.extraction.use_negative_evidence_assumption'):
         # -- ASSUMPTION: an entry of a list page has at most one positive example --
@@ -156,7 +158,7 @@ def assign_entity_labels(df: pd.DataFrame):
                 df.at[i, 'label'] = 0
 
 
-def _compute_label_for_entity(listpage_uri: str, entity_uri: str, lp_resource_categories: dict, lp_axioms: dict, progress: dict) -> int:
+def _compute_label_for_entity(listpage_uri: str, entity_uri: str, lp_valid_resources: dict, lp_axioms: dict, progress: dict) -> int:
     progress['idx'] += 1
     if progress['idx'] % 1000 == 0:
         util.get_logger().debug(f'List-Entities: Assigned labels to {progress["idx"]} of {progress["total"]} entities.')
@@ -164,9 +166,8 @@ def _compute_label_for_entity(listpage_uri: str, entity_uri: str, lp_resource_ca
     if entity_uri not in dbp_store.get_resources():
         return 0
 
-    resource_categories = lp_resource_categories[listpage_uri]
     listpage_axioms = lp_axioms[listpage_uri]
-    if any(entity_uri in cat_store.get_resources(cat) for cat in resource_categories):
+    if entity_uri in lp_valid_resources[listpage_uri]:
         return 1
     elif any(ax.rejects_resource(entity_uri) for ax in listpage_axioms):
         return 0
