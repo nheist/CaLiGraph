@@ -1,5 +1,7 @@
 caligraph:
-  namespace: 'http://data.informatik.uni-mannheim.de/caligraph#'
+  namespace:
+    ontology: 'https://caligraph.org/ontology/'
+    resource: 'https://caligraph.org/resource/'
 category:
   root_category: 'http://dbpedia.org/resource/Category:Main_topic_classifications'
 list:
@@ -236,7 +238,7 @@ cache:
     version: 2  # v1: basic; v2: with entity indices
   dbpedia_listpage_features:
     filename: 'dbpedia-listpage-features'
-    version: 2  # v2: transitive entity labeling
+    version: 3  # v2: transitive entity labeling; v3: + positive axiom labels
   wikidata_dbpedia_resource_mapping:
     filename: 'wikidata-dbpedia-resource-mapping'
     version: 1

@@ -167,6 +167,8 @@ def _compute_label_for_entity(listpage_uri: str, entity_uri: str, lp_valid_resou
         return 1
     elif any(ax.rejects_resource(entity_uri) for ax in lp_axioms[listpage_uri]):
         return 0
+    elif any(ax.accepts_resource(entity_uri) for ax in lp_axioms[listpage_uri]):
+        return 1
     return -1
 
 
