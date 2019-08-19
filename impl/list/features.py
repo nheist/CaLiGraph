@@ -136,14 +136,10 @@ def assign_entity_labels(df: pd.DataFrame):
         if idx % 1000 == 0:
             util.get_logger().debug(f'List-Entities: Processed {idx} of {len(listpage_uris)}.')
         listpage_resources = set(df[df['_listpage_uri'] == listpage_uri]['_entity_uri'].unique())
-        listpage_categories = _get_categories_for_list(listpage_uri) | {cat for lp_cat in _get_categories_for_list(listpage_uri) for cat in cat_base.get_cyclefree_wikitaxonomy_graph().descendants(lp_cat)}
-        listpage_category_resources = {res for cat in listpage_categories for res in cat_store.get_resources(cat)}
+        listpage_category_resources = {res for cat in _get_category_descendants_for_list(listpage_uri) for res in cat_store.get_resources(cat)}
         listpage_valid_resources[listpage_uri] = listpage_resources.intersection(listpage_category_resources)
 
-        axioms = set()
-        for cat in _get_categories_for_list(listpage_uri):
-            for p_cat in ({cat} | cat_base.get_cyclefree_wikitaxonomy_graph().ancestors(cat)):
-                axioms.update(cat_axioms.get_axioms(p_cat))
+        axioms = {ax for cat in _get_category_ancestors_for_list(listpage_uri) for ax in cat_axioms.get_axioms(cat)}
         listpage_axioms[listpage_uri] = axioms
 
     df['label'] = df.apply(lambda row: _compute_label_for_entity(row['_listpage_uri'], row['_entity_uri'], listpage_valid_resources, listpage_axioms), axis=1)
@@ -161,15 +157,33 @@ def assign_entity_labels(df: pd.DataFrame):
 
 
 def _compute_label_for_entity(listpage_uri: str, entity_uri: str, lp_valid_resources: dict, lp_axioms: dict) -> int:
-    if entity_uri not in dbp_store.get_resources():
-        return 0
     if entity_uri in lp_valid_resources[listpage_uri]:
         return 1
-    elif any(ax.rejects_resource(entity_uri) for ax in lp_axioms[listpage_uri]):
+    if not dbp_store.is_possible_resource(entity_uri):
         return 0
-    elif any(ax.accepts_resource(entity_uri) for ax in lp_axioms[listpage_uri]):
+    if any(ax.rejects_resource(entity_uri) for ax in lp_axioms[listpage_uri]):
+        return 0
+    if any(ax.accepts_resource(entity_uri) for ax in lp_axioms[listpage_uri]):
         return 1
     return -1
+
+
+def _get_category_ancestors_for_list(listpage_uri: str) -> set:
+    categories = set()
+    mapped_categories = _get_categories_for_list(listpage_uri)
+    ancestor_categories = {ancestor for cat in mapped_categories for ancestor in cat_base.get_merged_graph().ancestors(cat)}
+    for cat in mapped_categories | ancestor_categories:
+        categories.update(cat_base.get_merged_graph().get_categories(cat))
+    return categories
+
+
+def _get_category_descendants_for_list(listpage_uri: str) -> set:
+    categories = set()
+    mapped_categories = _get_categories_for_list(listpage_uri)
+    descendant_categories = {descendant for cat in mapped_categories for descendant in cat_base.get_merged_graph().descendants(cat)}
+    for cat in mapped_categories | descendant_categories:
+        categories.update(cat_base.get_merged_graph().get_categories(cat))
+    return categories
 
 
 def _get_categories_for_list(listpage_uri: str) -> set:
