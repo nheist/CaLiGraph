@@ -7,6 +7,7 @@ import pickle
 import bz2
 from pathlib import Path
 import urllib.request
+import pandas as pd
 
 
 # CONFIGURATION
@@ -74,23 +75,30 @@ def load_cache(cache_identifier: str, version=None):
     cache_path = _get_cache_path(cache_identifier, version=version)
     if not cache_path.exists():
         return None
-    open_func = _get_cache_open_func(cache_identifier)
-    with open_func(cache_path, mode='rb') as cache_file:
-        return pickle.load(cache_file)
+    if _should_store_as_hdf(cache_identifier):
+        return pd.read_hdf(_get_cache_path(cache_identifier, version=version), key='df')
+    else:
+        open_func = _get_cache_open_func(cache_identifier)
+        with open_func(cache_path, mode='rb') as cache_file:
+            return pickle.load(cache_file)
 
 
 def update_cache(cache_identifier: str, cache_obj, version=None):
     """Update the object cached at `cache_identifier` with `cache_obj`."""
-    open_func = _get_cache_open_func(cache_identifier)
-    with open_func(_get_cache_path(cache_identifier, version=version), mode='wb') as cache_file:
-        pickle.dump(cache_obj, cache_file, protocol=4)
+    if _should_store_as_hdf(cache_identifier):
+        cache_obj.to_hdf(_get_cache_path(cache_identifier, version=version), key='df', mode='w')
+    else:
+        open_func = _get_cache_open_func(cache_identifier)
+        with open_func(_get_cache_path(cache_identifier, version=version), mode='wb') as cache_file:
+            pickle.dump(cache_obj, cache_file, protocol=4)
 
 
 def _get_cache_path(cache_identifier: str, version=None) -> Path:
     config = get_config('cache.{}'.format(cache_identifier))
     filename = config['filename']
     version = version or config['version']
-    fileformat = '.p' + ('.bz2' if _should_compress_cache(cache_identifier) else '')
+    base_fileformat = '.h5' if _should_store_as_hdf(cache_identifier) else '.p'
+    fileformat = base_fileformat + ('.bz2' if _should_compress_cache(cache_identifier) else '')
     return Path(os.path.join(_get_root_path(), 'data', 'cache', f'{filename}_v{version}{fileformat}'))
 
 
@@ -101,6 +109,11 @@ def _get_cache_open_func(cache_identifier: str):
 def _should_compress_cache(cache_identifier: str) -> bool:
     config = get_config('cache.{}'.format(cache_identifier))
     return 'compress' in config and config['compress']
+
+
+def _should_store_as_hdf(cache_identifier: str) -> bool:
+    config = get_config('cache.{}'.format(cache_identifier))
+    return 'store_as_hdf' in config and config['store_as_hdf']
 
 
 def _get_root_path() -> str:

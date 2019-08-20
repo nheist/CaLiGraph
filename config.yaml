@@ -238,7 +238,8 @@ cache:
     version: 2  # v1: basic; v2: with entity indices
   dbpedia_listpage_features:
     filename: 'dbpedia-listpage-features'
-    version: 3  # v2: transitive entity labeling; v3: + positive axiom labels
+    version: 1  # v2: transitive entity labeling;
+    store_as_hdf: True
   wikidata_dbpedia_resource_mapping:
     filename: 'wikidata-dbpedia-resource-mapping'
     version: 1
