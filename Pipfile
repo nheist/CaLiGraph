@@ -16,6 +16,7 @@ sklearn = "*"
 rdflib = "*"
 nltk = "*"
 pynif = "*"
+tables = "*"
 
 [dev-packages]
 
