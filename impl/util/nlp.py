@@ -41,7 +41,7 @@ def remove_by_phrase(doc: Doc, strict=True) -> Doc:
     word_after_by = doc[last_by_index+1]
     if word_after_by.text[0].isupper() or word_after_by.text in ['a', 'an', 'the'] or word_before_by.tag_ == 'VBN' or word_after_by.tag_ in ['VBG', 'NNS']:
         return doc
-    if not strict and any(w[0].isupper() for w in doc[last_by_index+1:]):
+    if not strict and any(w.text[0].isupper() for w in doc[last_by_index+1:]):
         return doc  # do not remove by-phrase if we are unsure
     return parse(doc[:last_by_index].text.strip(), disable_normalization=True, skip_cache=True)
 
