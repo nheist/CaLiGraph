@@ -1,5 +1,4 @@
 import networkx as nx
-from typing import Optional
 from impl.util.hierarchy_graph import HierarchyGraph
 import impl.dbpedia.store as dbp_store
 import impl.category.store as cat_store
@@ -24,8 +23,8 @@ class ListGraph(HierarchyGraph):
     def _set_lists(self, node: str, lst: set):
         self._set_parts(node, lst)
 
-    def get_node_for_list(self, lst: str) -> Optional[str]:
-        return self.get_node_for_part(lst)
+    def get_nodes_for_list(self, lst: str) -> set:
+        return self.get_nodes_for_part(lst)
 
     # GRAPH CREATION
 

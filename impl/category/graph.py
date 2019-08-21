@@ -1,5 +1,4 @@
 import networkx as nx
-from typing import Optional
 import impl.category.util as cat_util
 import impl.category.store as cat_store
 from impl.category.conceptual import is_conceptual_category
@@ -22,8 +21,8 @@ class CategoryGraph(HierarchyGraph):
     def _set_categories(self, node: str, categories: set):
         self._set_parts(node, categories)
 
-    def get_node_for_category(self, category: str) -> Optional[str]:
-        return self.get_node_for_part(category)
+    def get_nodes_for_category(self, category: str) -> set:
+        return self.get_nodes_for_part(category)
 
     # node resources
 

@@ -82,14 +82,12 @@ class BaseGraph:
     def statistics(self) -> str:
         type_count = len(self.nodes)
         edge_count = len(self.edges)
-        avg_indegree = np.mean([d for _, d in self.graph.in_degree])
-        avg_outdegree = np.mean([d for _, d in self.graph.out_degree])
+        avg_degree = np.mean([d for _, d in self.graph.in_degree])
 
         return '\n'.join([
             '{:^40}'.format('STATISTICS'),
             '=' * 40,
-            '{:<30} | {:>7}'.format('clg-types', type_count),
+            '{:<30} | {:>7}'.format('nodes', type_count),
             '{:<30} | {:>7}'.format('edges', edge_count),
-            '{:<30} | {:>7.2f}'.format('in-degree', avg_indegree),
-            '{:<30} | {:>7.2f}'.format('out-degree', avg_outdegree),
+            '{:<30} | {:>7.2f}'.format('degree', avg_degree),
             ])

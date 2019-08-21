@@ -12,7 +12,7 @@ class HierarchyGraph(BaseGraph):
     def __init__(self, graph: nx.DiGraph, root_node: str = None):
         super().__init__(graph, root_node)
         self._node_by_name = None
-        self._node_by_part = None
+        self._nodes_by_part = None
 
     def _check_node_exists(self, node: str):
         if not self.has_node(node):
@@ -20,7 +20,7 @@ class HierarchyGraph(BaseGraph):
 
     def _reset_node_indices(self):
         self._node_by_name = None
-        self._node_by_part = None
+        self._nodes_by_part = None
 
     # node attribute definitions
     ATTRIBUTE_NAME = 'attribute_name'
@@ -84,10 +84,13 @@ class HierarchyGraph(BaseGraph):
 
     # compound nodes
 
-    def get_node_for_part(self, part: str) -> Optional[str]:
-        if self._node_by_part is None:  # initialise part-to-node index if not existing
-            self._node_by_part = {part: node for node in self.nodes for part in self.get_parts(node)}
-        return self._node_by_part[part] if part in self._node_by_part else None
+    def get_nodes_for_part(self, part: str) -> set:
+        if self._nodes_by_part is None:  # initialise part-to-node index if not existing
+            self._nodes_by_part = defaultdict(set)
+            for node in self.nodes:
+                for part in self.get_parts(node):
+                    self._nodes_by_part[part].add(node)
+        return self._nodes_by_part[part]
 
     def get_parts(self, node: str) -> set:
         if not self.has_node(node):
@@ -98,7 +101,7 @@ class HierarchyGraph(BaseGraph):
         if not self.has_node(node):
             raise Exception(f'Node {node} not in category graph.')
         self._set_attr(node, self.ATTRIBUTE_PARTS, parts)
-        self._node_by_part = None  # reset part-to-node index due to changes
+        self._nodes_by_part = None  # reset part-to-node index due to changes
 
     def merge_nodes(self):
         nodes_containing_by = {node for node in self.nodes if '_by_' in node}

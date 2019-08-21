@@ -1,7 +1,6 @@
 import impl.category.base as cat_base
 import impl.category.store as cat_store
 import impl.list.util as list_util
-import impl.list.store as list_store
 import impl.list.base as list_base
 import util
 import impl.util.nlp as nlp_util
@@ -59,7 +58,7 @@ def _create_list_equivalents_mapping():
             candidates = cat_store.get_parents(lst)
         else:
             candidates = cat_store.get_topic_categories(lst) | cat_store.get_resource_categories(lst)
-        candidates = {cat_graph.get_node_for_category(cat) for cat in candidates if cat in all_categories_in_graph}
+        candidates = {cand for cat in candidates for cand in cat_graph.get_nodes_for_category(cat) if cat in all_categories_in_graph}
 
         for candidate_cat in candidates:
             cat_important_words = cats_important_words[candidate_cat]
@@ -101,7 +100,7 @@ def _create_list_parents_mapping():
             candidates = cat_store.get_parents(lst)
         else:
             candidates = cat_store.get_topic_categories(lst) | cat_store.get_resource_categories(lst)
-        candidates = {cat_graph.get_node_for_category(cat) for cat in candidates if cat in all_categories_in_graph}
+        candidates = {cand for cat in candidates for cand in cat_graph.get_nodes_for_category(cat) if cat in all_categories_in_graph}
 
         for candidate_cat in candidates:
             cat_headlemmas = cats_headlemmas[candidate_cat]
@@ -121,13 +120,8 @@ def _create_list_parents_mapping():
             list_to_cat_headlemma_mapping[lst] = mapped_categories
     util.get_logger().debug(f'Headlemma Mapping: Mapped {len(list_to_cat_headlemma_mapping)} lists to {sum(len(cat) for cat in list_to_cat_headlemma_mapping.values())} categories.')
 
-    # 3) map listcategory to root if there is no other parent
-    unmapped_root_lists = unmapped_root_lists.difference(set(list_to_cat_headlemma_mapping))
-    list_to_root_mapping = defaultdict(set, {lst: {cat_graph.root_node} for lst in unmapped_root_lists})
-    util.get_logger().debug(f'Root Mapping: Mapped {len(list_to_root_mapping)} lists to category root.')
-
     # merge mappings
-    mapped_lsts = set(list_to_cat_hypernym_mapping) | set(list_to_cat_headlemma_mapping) | set(list_to_root_mapping)
-    list_to_cat_parents_mapping = {lst: list_to_cat_hypernym_mapping[lst] | list_to_cat_headlemma_mapping[lst] | list_to_root_mapping[lst] for lst in mapped_lsts}
+    mapped_lsts = set(list_to_cat_hypernym_mapping) | set(list_to_cat_headlemma_mapping)
+    list_to_cat_parents_mapping = {lst: list_to_cat_hypernym_mapping[lst] | list_to_cat_headlemma_mapping[lst] for lst in mapped_lsts}
     util.get_logger().debug(f'Parents Mapping: Mapped {len(list_to_cat_parents_mapping)} lists to {sum(len(cat) for cat in list_to_cat_parents_mapping.values())} categories.')
     return list_to_cat_parents_mapping
