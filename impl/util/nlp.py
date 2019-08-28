@@ -46,7 +46,9 @@ def remove_by_phrase(doc: Doc, strict=True, return_doc=True):
         return doc  # do not remove by-phrase if we are unsure
 
     result = doc[:last_by_index].text.strip()
+    util.get_logger().debug(f'{result} - {type(result)}')
     if return_doc:
+        util.get_logger().debug(f'WTF!?!??!')
         return parse(result, disable_normalization=True, skip_cache=True)
     return result
 
