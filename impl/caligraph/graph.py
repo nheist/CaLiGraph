@@ -24,8 +24,14 @@ class CaLiGraph(HierarchyGraph):
 
         # initialise from category graph
         util.get_logger().debug('CaLiGraph: Starting CategoryMerge..')
+        node_name_cache = {}
+
         cat_graph = cat_base.get_merged_graph()
-        for parent_cat, child_cat in nx.bfs_edges(cat_graph.graph, cat_graph.root_node):
+        edge_count = len(cat_graph.edges)
+        for edge_idx, (parent_cat, child_cat) in enumerate(nx.bfs_edges(cat_graph.graph, cat_graph.root_node)):
+            if edge_idx % 1000 == 0:
+                util.get_logger().debug(f'CaLiGraph: CategoryMerge - Processed {edge_idx} of {edge_count} category edges.')
+
             parent_nodes = graph.get_nodes_for_part(parent_cat)
             if not parent_nodes:
                 raise ValueError(f'"{parent_cat}" is not in graph despite of BFS!')
@@ -33,7 +39,7 @@ class CaLiGraph(HierarchyGraph):
             child_nodes = graph.get_nodes_for_part(child_cat)
             if not child_nodes:
                 # initialise child_node in caligraph
-                node_name = cls.get_caligraph_name(cat_graph.get_name(child_cat))
+                node_name = cls._get_cached_node_name(node_name_cache, cat_graph.get_name(child_cat))
                 node_id = cls.get_caligraph_resource(node_name)
                 node_parts = cat_graph.get_parts(child_cat)
                 if node_id in graph.nodes:
@@ -57,11 +63,15 @@ class CaLiGraph(HierarchyGraph):
         # merge with list graph
         util.get_logger().debug('CaLiGraph: Starting ListMerge..')
         list_graph = list_base.get_merged_listgraph()
-        for parent_lst, child_lst in nx.bfs_edges(list_graph.graph, list_graph.root_node):
+        edge_count = len(list_graph.edges)
+        for edge_idx, (parent_lst, child_lst) in enumerate(nx.bfs_edges(list_graph.graph, list_graph.root_node)):
+            if edge_idx % 1000 == 0:
+                util.get_logger().debug(f'CaLiGraph: ListMerge - Processed {edge_idx} of {edge_count} list edges.')
+
             parent_nodes = graph.get_nodes_for_part(parent_lst)
             if not parent_nodes:
                 # initialise parent_node in caligraph
-                node_name = cls.get_caligraph_name(list_graph.get_name(parent_lst))
+                node_name = cls._get_cached_node_name(node_name_cache, list_graph.get_name(parent_lst))
                 node_id = cls.get_caligraph_resource(node_name)
                 node_parts = list_graph.get_parts(parent_lst)
 
@@ -91,7 +101,7 @@ class CaLiGraph(HierarchyGraph):
             child_nodes = graph.get_nodes_for_part(child_lst)
             if not child_nodes:
                 # initialise child_node in caligraph
-                node_name = cls.get_caligraph_name(list_graph.get_name(child_lst))
+                node_name = cls._get_cached_node_name(node_name_cache, list_graph.get_name(child_lst))
                 node_id = cls.get_caligraph_resource(node_name)
                 node_parts = list_graph.get_parts(child_lst)
 
@@ -142,6 +152,12 @@ class CaLiGraph(HierarchyGraph):
         #   - check for cycles ?
         #   - remove transitive edges ?
         return graph
+
+    @classmethod
+    def _get_cached_node_name(cls, node_name_cache: dict, name: str) -> str:
+        if name not in node_name_cache:
+            node_name_cache[name] = cls.get_caligraph_name(name)
+        return node_name_cache[name]
 
     @staticmethod
     def get_ontology_namespace():

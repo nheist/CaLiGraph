@@ -21,7 +21,7 @@ def without_stopwords(text: str) -> set:
 
 
 def get_canonical_name(text: str, strict_by_removal=True) -> str:
-    text = remove_by_phrase(parse(text, disable_normalization=True, skip_cache=True), strict_by_removal).text  # remove by-phrase
+    text = remove_by_phrase(parse(text, disable_normalization=True, skip_cache=True), strict=strict_by_removal, return_doc=False)  # remove by-phrase
     text = re.sub(r'\s+\([^()]+-[^()]+\)$', '', text)  # remove trailing parentheses with number or letter ranges, e.g. 'Interstate roads (1-10)'
     text = re.sub(r'\s+\([A-Z]\)$', '', text)  # remove trailing parentheses with single letter, e.g. 'Interstate roads (Y)'
     text = re.sub(r'\s*[-:]\s*([A-Z],\s*)*[A-Z]$', '', text)  # remove trailing alphabetical splits, e.g. 'Football clubs in Sweden - Z' or '.. - X, Y, Z'
@@ -29,7 +29,7 @@ def get_canonical_name(text: str, strict_by_removal=True) -> str:
     return _regularize_whitespaces(text)
 
 
-def remove_by_phrase(doc: Doc, strict=True) -> Doc:
+def remove_by_phrase(doc: Doc, strict=True, return_doc=True):
     """Remove the 'by'-phrase at the end of a category or listpage, e.g. 'People by country' -> 'People'"""
     by_indices = [w.i for w in doc if w.text == 'by']
     if len(by_indices) == 0:
@@ -43,7 +43,11 @@ def remove_by_phrase(doc: Doc, strict=True) -> Doc:
         return doc
     if not strict and any(w.text[0].isupper() for w in doc[last_by_index+1:]):
         return doc  # do not remove by-phrase if we are unsure
-    return parse(doc[:last_by_index].text.strip(), disable_normalization=True, skip_cache=True)
+
+    result = doc[:last_by_index].text.strip()
+    if return_doc:
+        return parse(result, disable_normalization=True, skip_cache=True)
+    return result
 
 
 def get_head_lemmas(doc: Doc) -> set:
