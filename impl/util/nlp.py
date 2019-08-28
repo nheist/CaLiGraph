@@ -22,7 +22,6 @@ def without_stopwords(text: str) -> set:
 
 def get_canonical_name(text: str, strict_by_removal=True) -> str:
     text = remove_by_phrase(parse(text, disable_normalization=True, skip_cache=True), strict=strict_by_removal, return_doc=False)  # remove by-phrase
-    util.get_logger().debug(f'{text} - {type(text)}')
     text = re.sub(r'\s+\([^()]+-[^()]+\)$', '', text)  # remove trailing parentheses with number or letter ranges, e.g. 'Interstate roads (1-10)'
     text = re.sub(r'\s+\([A-Z]\)$', '', text)  # remove trailing parentheses with single letter, e.g. 'Interstate roads (Y)'
     text = re.sub(r'\s*[-:]\s*([A-Z],\s*)*[A-Z]$', '', text)  # remove trailing alphabetical splits, e.g. 'Football clubs in Sweden - Z' or '.. - X, Y, Z'
@@ -34,21 +33,19 @@ def remove_by_phrase(doc: Doc, strict=True, return_doc=True):
     """Remove the 'by'-phrase at the end of a category or listpage, e.g. 'People by country' -> 'People'"""
     by_indices = [w.i for w in doc if w.text == 'by']
     if len(by_indices) == 0:
-        return doc
+        return doc if return_doc else doc.text
     last_by_index = by_indices[-1]
     if last_by_index == 0 or last_by_index == len(doc) - 1:
-        return doc
+        return doc if return_doc else doc.text
     word_before_by = doc[last_by_index-1]
     word_after_by = doc[last_by_index+1]
     if word_after_by.text[0].isupper() or word_after_by.text in ['a', 'an', 'the'] or word_before_by.tag_ == 'VBN' or word_after_by.tag_ in ['VBG', 'NNS']:
-        return doc
+        return doc if return_doc else doc.text
     if not strict and any(w.text[0].isupper() for w in doc[last_by_index+1:]):
-        return doc  # do not remove by-phrase if we are unsure
+        return doc if return_doc else doc.text  # do not remove by-phrase if we are unsure
 
     result = doc[:last_by_index].text.strip()
-    util.get_logger().debug(f'{result} - {type(result)}')
     if return_doc:
-        util.get_logger().debug(f'WTF!?!??!')
         return parse(result, disable_normalization=True, skip_cache=True)
     return result
 
