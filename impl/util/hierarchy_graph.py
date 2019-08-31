@@ -12,7 +12,7 @@ class HierarchyGraph(BaseGraph):
     def __init__(self, graph: nx.DiGraph, root_node: str = None):
         super().__init__(graph, root_node)
         self._node_by_name = None
-        self._nodes_by_part = None
+        self._nodes_by_part = defaultdict(set)
 
     def _check_node_exists(self, node: str):
         if not self.has_node(node):
@@ -20,7 +20,6 @@ class HierarchyGraph(BaseGraph):
 
     def _reset_node_indices(self):
         self._node_by_name = None
-        self._nodes_by_part = None
 
     # node attribute definitions
     ATTRIBUTE_NAME = 'attribute_name'
@@ -85,23 +84,18 @@ class HierarchyGraph(BaseGraph):
     # compound nodes
 
     def get_nodes_for_part(self, part: str) -> set:
-        if self._nodes_by_part is None:  # initialise part-to-node index if not existing
-            self._nodes_by_part = defaultdict(set)
-            for node in self.nodes:
-                for part in self.get_parts(node):
-                    self._nodes_by_part[part].add(node)
-        return self._nodes_by_part[part]
+        # intersect result with existing nodes to be sure not to return outdated nodes that are not in the graph anymore
+        return self._nodes_by_part[part].intersection(self.nodes)
 
     def get_parts(self, node: str) -> set:
-        if not self.has_node(node):
-            raise Exception(f'Node {node} not in graph.')
+        self._check_node_exists(node)
         return self._get_attr(node, self.ATTRIBUTE_PARTS)
 
     def _set_parts(self, node: str, parts: set):
-        if not self.has_node(node):
-            raise Exception(f'Node {node} not in category graph.')
+        self._check_node_exists(node)
         self._set_attr(node, self.ATTRIBUTE_PARTS, parts)
-        self._nodes_by_part = None  # reset part-to-node index due to changes
+        for part in parts:
+            self._nodes_by_part[part].add(node)
 
     def merge_nodes(self):
         nodes_containing_by = {node for node in self.nodes if '_by_' in node}
