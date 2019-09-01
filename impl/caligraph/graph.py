@@ -45,11 +45,11 @@ class CaLiGraph(HierarchyGraph):
                 if node_id in graph.nodes:
                     # resolve conflicts with existing node
                     existing_node_categories = graph.get_parts(node_id)
-                    if existing_node_categories.intersection(cat_graph.children(parent_cat)):
-                        graph._set_parts(node_id, graph.get_parts(node_id) | node_parts)
-                        child_nodes = {node_id}
-                    else:
-                        util.get_logger().debug(f'CaLiGraph: CategoryMerge - Failed to include node "{child_cat}".')
+                    #if existing_node_categories.intersection(cat_graph.children(parent_cat)):
+                    graph._set_parts(node_id, graph.get_parts(node_id) | node_parts)
+                    child_nodes = {node_id}
+                    #else:
+                    #    util.get_logger().debug(f'CaLiGraph: CategoryMerge - Failed to include node "{child_cat}".')
                 else:
                     # create new node in graph
                     graph._add_nodes({node_id})
