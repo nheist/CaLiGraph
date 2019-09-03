@@ -22,12 +22,17 @@ class CaLiGraph(HierarchyGraph):
         graph._add_nodes({graph.root_node})
         graph._set_parts(graph.root_node, {graph.root_node, util.get_config('category.root_category')})
 
-        # initialise from category graph
-        util.get_logger().debug('CaLiGraph: Starting CategoryMerge..')
-        node_name_cache = {}
-
         cat_graph = cat_base.get_merged_graph()
         edge_count = len(cat_graph.edges)
+
+        # initialise from category graph
+        util.get_logger().debug('CaLiGraph: Starting CategoryMerge..')
+        cat_node_names = {}
+        for idx, node in enumerate(cat_graph.nodes):
+            if idx % 1000 == 0:
+                util.get_logger().debug(f'CaLiGraph: CategoryMerge - Created names for {idx} of {len(cat_graph.nodes)} nodes.')
+            cat_node_names[node] = cls.get_caligraph_name(cat_graph.get_name(node))
+
         for edge_idx, (parent_cat, child_cat) in enumerate(nx.bfs_edges(cat_graph.graph, cat_graph.root_node)):
             if edge_idx % 1000 == 0:
                 util.get_logger().debug(f'CaLiGraph: CategoryMerge - Processed {edge_idx} of {edge_count} category edges.')
@@ -39,12 +44,12 @@ class CaLiGraph(HierarchyGraph):
             child_nodes = graph.get_nodes_for_part(child_cat)
             if not child_nodes:
                 # initialise child_node in caligraph
-                node_name = cls._get_cached_node_name(node_name_cache, cat_graph.get_name(child_cat))
+                node_name = cat_node_names[child_cat]
                 node_id = cls.get_caligraph_resource(node_name)
                 node_parts = cat_graph.get_parts(child_cat)
                 if node_id in graph.nodes:
                     # resolve conflicts with existing node
-                    existing_node_categories = graph.get_parts(node_id)
+                    #existing_node_categories = graph.get_parts(node_id)
                     #if existing_node_categories.intersection(cat_graph.children(parent_cat)):
                     graph._set_parts(node_id, graph.get_parts(node_id) | node_parts)
                     child_nodes = {node_id}
@@ -64,6 +69,13 @@ class CaLiGraph(HierarchyGraph):
         util.get_logger().debug('CaLiGraph: Starting ListMerge..')
         list_graph = list_base.get_merged_listgraph()
         edge_count = len(list_graph.edges)
+
+        list_node_names = {}
+        for idx, node in enumerate(list_graph.nodes):
+            if idx % 1000 == 0:
+                util.get_logger().debug(f'CaLiGraph: ListMerge - Created names for {idx} of {len(cat_graph.nodes)} nodes.')
+            list_node_names[node] = cls.get_caligraph_name(list_graph.get_name(node))
+
         for edge_idx, (parent_lst, child_lst) in enumerate(nx.bfs_edges(list_graph.graph, list_graph.root_node)):
             if edge_idx % 1000 == 0:
                 util.get_logger().debug(f'CaLiGraph: ListMerge - Processed {edge_idx} of {edge_count} list edges.')
@@ -71,7 +83,7 @@ class CaLiGraph(HierarchyGraph):
             parent_nodes = graph.get_nodes_for_part(parent_lst)
             if not parent_nodes:
                 # initialise parent_node in caligraph
-                node_name = cls._get_cached_node_name(node_name_cache, list_graph.get_name(parent_lst))
+                node_name = list_node_names[parent_lst]
                 node_id = cls.get_caligraph_resource(node_name)
                 node_parts = list_graph.get_parts(parent_lst)
 
@@ -101,12 +113,11 @@ class CaLiGraph(HierarchyGraph):
             child_nodes = graph.get_nodes_for_part(child_lst)
             if not child_nodes:
                 # initialise child_node in caligraph
-                node_name = cls._get_cached_node_name(node_name_cache, list_graph.get_name(child_lst))
+                node_name = list_node_names[child_lst]
                 node_id = cls.get_caligraph_resource(node_name)
                 node_parts = list_graph.get_parts(child_lst)
 
                 equivalent_categories = list_mapping.get_equivalent_categories(child_lst)
-                parent_categories = list_mapping.get_parent_categories(parent_lst)
                 if equivalent_categories:
                     child_nodes = {node for cat in equivalent_categories for node in graph.get_nodes_for_part(cat)}
                     for cn in child_nodes:
