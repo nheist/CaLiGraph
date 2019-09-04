@@ -45,7 +45,6 @@ class CaLiGraph(HierarchyGraph):
             if not child_nodes:
                 # initialise child_node in caligraph
                 node_name = cat_node_names[child_cat]
-                #node_name = cls.get_caligraph_name(cat_graph.get_name(child_cat))
                 node_id = cls.get_caligraph_resource(node_name)
                 node_parts = cat_graph.get_parts(child_cat)
                 if graph.has_node(node_id):
@@ -73,7 +72,7 @@ class CaLiGraph(HierarchyGraph):
 
         list_node_names = {}
         for idx, node in enumerate(list_graph.nodes):
-            if idx % 1000 == 0:
+            if idx % 10000 == 0:
                 util.get_logger().debug(f'CaLiGraph: ListMerge - Created names for {idx} of {len(cat_graph.nodes)} nodes.')
             list_node_names[node] = cls.get_caligraph_name(list_graph.get_name(node))
 
