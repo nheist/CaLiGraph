@@ -14,7 +14,7 @@ cat2ax:
 logging:
   level: 'DEBUG'
   to_file: True
-  filename: 'listpage-feature-extraction'
+  filename: 'caligraph-merge'
 
 mailer:
   sender: 'errors.nheist@gmail.com'
