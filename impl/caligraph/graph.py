@@ -17,11 +17,9 @@ class CaLiGraph(HierarchyGraph):
     def build_graph(cls):
         util.get_logger().info('CaLiGraph: Starting to merge CategoryGraph and ListGraph..')
         graph = CaLiGraph(nx.DiGraph())
-        #graph_nodes = set()
 
         # add root node
         graph._add_nodes({graph.root_node})
-        #graph_nodes.add(graph.root_node)
         graph._set_parts(graph.root_node, {graph.root_node, util.get_config('category.root_category')})
 
         cat_graph = cat_base.get_merged_graph()
@@ -29,11 +27,11 @@ class CaLiGraph(HierarchyGraph):
 
         # initialise from category graph
         util.get_logger().debug('CaLiGraph: Starting CategoryMerge..')
-        #cat_node_names = {}
-        #for idx, node in enumerate(cat_graph.nodes):
-        #    if idx % 10000 == 0:
-        #        util.get_logger().debug(f'CaLiGraph: CategoryMerge - Created names for {idx} of {len(cat_graph.nodes)} nodes.')
-        #    cat_node_names[node] = cls.get_caligraph_name(cat_graph.get_name(node))
+        cat_node_names = {}
+        for idx, node in enumerate(cat_graph.nodes):
+            if idx % 10000 == 0:
+                util.get_logger().debug(f'CaLiGraph: CategoryMerge - Created names for {idx} of {len(cat_graph.nodes)} nodes.')
+            cat_node_names[node] = cls.get_caligraph_name(cat_graph.get_name(node))
 
         for edge_idx, (parent_cat, child_cat) in enumerate(nx.bfs_edges(cat_graph.graph, cat_graph.root_node)):
             if edge_idx % 1000 == 0:
@@ -46,8 +44,8 @@ class CaLiGraph(HierarchyGraph):
             child_nodes = graph.get_nodes_for_part(child_cat)
             if not child_nodes:
                 # initialise child_node in caligraph
-                #node_name = cat_node_names[child_cat]
-                node_name = cls.get_caligraph_name(cat_graph.get_name(child_cat))
+                node_name = cat_node_names[child_cat]
+                #node_name = cls.get_caligraph_name(cat_graph.get_name(child_cat))
                 node_id = cls.get_caligraph_resource(node_name)
                 node_parts = cat_graph.get_parts(child_cat)
                 if graph.has_node(node_id):
@@ -61,7 +59,6 @@ class CaLiGraph(HierarchyGraph):
                 else:
                     # create new node in graph
                     graph._add_nodes({node_id})
-                    #graph_nodes.add(node_id)
                     graph._set_name(node_id, node_name)
                     graph._set_parts(node_id, node_parts)
                     child_nodes = {node_id}
