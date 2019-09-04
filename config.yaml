@@ -136,6 +136,9 @@ cache:
   listgraph_merged:
     filename: 'listgraph-merged'
     version: 3  # v2: better synonym matching ; v3: with all listpages
+  caligraph_base:
+    filename: 'caligraph-base'
+    version: 1
   spacy_docs:
     filename: 'spacy-docs'
     version: 3  # version 2 incl. listpages; version 3 for spacy 2.1
