@@ -96,8 +96,8 @@ class CaLiGraph(HierarchyGraph):
                     parent_categories = list_mapping.get_parent_categories(parent_lst)
                     if parent_categories:
                         grandparent_nodes = {node for cat in parent_categories for node in graph.get_nodes_for_part(cat)} or {graph.root_node}
-                        if node_id in graph.nodes:
-                            if node_id in ({grandparent_nodes} | {c for gpn in grandparent_nodes for c in graph.children(gpn)}):
+                        if graph.has_node(node_id):
+                            if node_id in (grandparent_nodes | {c for gpn in grandparent_nodes for c in graph.children(gpn)}):
                                 graph._set_parts(node_id, graph.get_parts(node_id) | node_parts)
                                 parent_nodes = {node_id}
                             else:
@@ -127,8 +127,8 @@ class CaLiGraph(HierarchyGraph):
                     parent_categories = list_mapping.get_parent_categories(parent_lst)
                     if parent_categories:
                         otherparent_nodes = {node for cat in parent_categories for node in graph.get_nodes_for_part(cat)}
-                        if node_id in graph.nodes:
-                            if node_id in ({otherparent_nodes} | {c for gpn in otherparent_nodes for c in graph.children(gpn)}):
+                        if graph.has_node(node_id):
+                            if node_id in (otherparent_nodes | {c for gpn in otherparent_nodes for c in graph.children(gpn)}):
                                 graph._set_parts(node_id, graph.get_parts(node_id) | node_parts)
                                 child_nodes = {node_id}
                             else:
@@ -141,8 +141,8 @@ class CaLiGraph(HierarchyGraph):
                             graph._add_edges((gpn, node_id) for gpn in otherparent_nodes)
                             child_nodes = {node_id}
                     else:
-                        if node_id in graph.nodes:
-                            if node_id in ({parent_nodes} | {c for gpn in parent_nodes for c in graph.children(gpn)}):
+                        if graph.has_node(node_id):
+                            if node_id in (parent_nodes | {c for gpn in parent_nodes for c in graph.children(gpn)}):
                                 graph._set_parts(node_id, graph.get_parts(node_id) | node_parts)
                                 child_nodes = {node_id}
                             else:
