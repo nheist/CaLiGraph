@@ -12,7 +12,7 @@ class BaseGraph:
 
     @property
     def nodes(self) -> set:
-        return set(self.graph.nodes)
+        return set(self.graph)
 
     def has_node(self, node) -> bool:
         return node in self.graph

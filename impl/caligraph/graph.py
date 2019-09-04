@@ -17,11 +17,11 @@ class CaLiGraph(HierarchyGraph):
     def build_graph(cls):
         util.get_logger().info('CaLiGraph: Starting to merge CategoryGraph and ListGraph..')
         graph = CaLiGraph(nx.DiGraph())
-        graph_nodes = set()
+        #graph_nodes = set()
 
         # add root node
         graph._add_nodes({graph.root_node})
-        graph_nodes.add(graph.root_node)
+        #graph_nodes.add(graph.root_node)
         graph._set_parts(graph.root_node, {graph.root_node, util.get_config('category.root_category')})
 
         cat_graph = cat_base.get_merged_graph()
@@ -50,7 +50,7 @@ class CaLiGraph(HierarchyGraph):
                 node_name = cls.get_caligraph_name(cat_graph.get_name(child_cat))
                 node_id = cls.get_caligraph_resource(node_name)
                 node_parts = cat_graph.get_parts(child_cat)
-                if node_id in graph_nodes:
+                if graph.has_node(node_id):
                     # resolve conflicts with existing node
                     #existing_node_categories = graph.get_parts(node_id)
                     #if existing_node_categories.intersection(cat_graph.children(parent_cat)):
@@ -61,7 +61,7 @@ class CaLiGraph(HierarchyGraph):
                 else:
                     # create new node in graph
                     graph._add_nodes({node_id})
-                    graph_nodes.add(node_id)
+                    #graph_nodes.add(node_id)
                     graph._set_name(node_id, node_name)
                     graph._set_parts(node_id, node_parts)
                     child_nodes = {node_id}

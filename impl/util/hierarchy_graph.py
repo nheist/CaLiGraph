@@ -84,8 +84,8 @@ class HierarchyGraph(BaseGraph):
     # compound nodes
 
     def get_nodes_for_part(self, part: str) -> set:
-        # intersect result with existing nodes to be sure not to return outdated nodes that are not in the graph anymore
-        return self._nodes_by_part[part].intersection(self.nodes)
+        # be sure not to return outdated nodes that are not in the graph anymore
+        return {n for n in self._nodes_by_part[part] if self.has_node(n)}
 
     def get_parts(self, node: str) -> set:
         self._check_node_exists(node)
