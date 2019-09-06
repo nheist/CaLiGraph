@@ -3,8 +3,10 @@ import util
 from impl.util.hierarchy_graph import HierarchyGraph
 import impl.util.rdf as rdf_util
 import impl.category.base as cat_base
+import impl.category.util as cat_util
 from impl.category.graph import CategoryGraph
 import impl.list.base as list_base
+import impl.list.util as list_util
 from impl.list.graph import ListGraph
 import impl.list.mapping as list_mapping
 import impl.util.nlp as nlp_util
@@ -29,6 +31,10 @@ class CaLiGraph(HierarchyGraph):
 
         class_count = len(self.nodes)
         edge_count = len(self.edges)
+        parts_count = len({p for n in self.nodes for p in self.get_parts(n)})
+        cat_parts_count = len({p for n in self.nodes for p in self.get_parts(n) if cat_util.is_category(p)})
+        list_parts_count = len({p for n in self.nodes for p in self.get_parts(n) if list_util.is_listpage(p)})
+        listcat_parts_count = len({p for n in self.nodes for p in self.get_parts(n) if list_util.is_listcategory(p)})
         relation_count = 0
         classtree_depth_avg = np.mean([node_depths[node] for node in leaf_nodes])
         branching_factor_avg = np.mean([d for _, d in self.graph.out_degree])
@@ -38,6 +44,10 @@ class CaLiGraph(HierarchyGraph):
             '=' * 40,
             '{:<30} | {:>7}'.format('nodes', class_count),
             '{:<30} | {:>7}'.format('edges', edge_count),
+            '{:<30} | {:>7}'.format('parts', parts_count),
+            '{:<30} | {:>7}'.format('category parts', cat_parts_count),
+            '{:<30} | {:>7}'.format('list parts', list_parts_count),
+            '{:<30} | {:>7}'.format('listcat parts', listcat_parts_count),
             '{:<30} | {:>7.2f}'.format('classtree depth', classtree_depth_avg),
             '{:<30} | {:>7.2f}'.format('branching factor', branching_factor_avg),
             ])
@@ -139,7 +149,7 @@ class CaLiGraph(HierarchyGraph):
             equivalent_nodes.add(node_id)
         if len(equivalent_nodes) > 1:
             util.get_logger().debug(f'CaLiGraph: ListMerge - For "{lst}" multiple equivalent nodes have been found: {equivalent_nodes}.')
-            equivalent_nodes = {node_id}
+            equivalent_nodes = {node_id} if node_id in equivalent_nodes else equivalent_nodes
         if equivalent_nodes:
             main_node_id = equivalent_nodes.pop()
             self._set_parts(main_node_id, self.get_parts(main_node_id) | node_parts)
