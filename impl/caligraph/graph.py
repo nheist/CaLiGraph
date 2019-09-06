@@ -3,15 +3,44 @@ import util
 from impl.util.hierarchy_graph import HierarchyGraph
 import impl.util.rdf as rdf_util
 import impl.category.base as cat_base
+from impl.category.graph import CategoryGraph
 import impl.list.base as list_base
+from impl.list.graph import ListGraph
 import impl.list.mapping as list_mapping
 import impl.util.nlp as nlp_util
+import numpy as np
 
 
 class CaLiGraph(HierarchyGraph):
 
     def __init__(self, graph: nx.DiGraph, root_node: str = None):
         super().__init__(graph, root_node or rdf_util.CLASS_OWL_THING)
+
+    @property
+    def statistics(self) -> str:
+        leaf_nodes = {node for node in self.nodes if not self.children(node)}
+        node_depths = nx.shortest_path_length(self.graph, source=self.root_node)
+
+        instance_count = 0
+        instance_axiom_count = 0
+        instance_degree_avg = 0
+        instance_indegree_med = 0
+        instance_outdegree_med = 0
+
+        class_count = len(self.nodes)
+        edge_count = len(self.edges)
+        relation_count = 0
+        classtree_depth_avg = np.mean([node_depths[node] for node in leaf_nodes])
+        branching_factor_avg = np.mean([d for _, d in self.graph.out_degree])
+
+        return '\n'.join([
+            '{:^40}'.format('STATISTICS'),
+            '=' * 40,
+            '{:<30} | {:>7}'.format('nodes', class_count),
+            '{:<30} | {:>7}'.format('edges', edge_count),
+            '{:<30} | {:>7.2f}'.format('classtree depth', classtree_depth_avg),
+            '{:<30} | {:>7.2f}'.format('branching factor', branching_factor_avg),
+            ])
 
     @classmethod
     def build_graph(cls):
@@ -43,27 +72,9 @@ class CaLiGraph(HierarchyGraph):
 
             child_nodes = graph.get_nodes_for_part(child_cat)
             if not child_nodes:
-                # initialise child_node in caligraph
-                node_name = cat_node_names[child_cat]
-                node_id = cls.get_caligraph_resource(node_name)
-                node_parts = cat_graph.get_parts(child_cat)
-                if graph.has_node(node_id):
-                    # resolve conflicts with existing node
-                    #existing_node_categories = graph.get_parts(node_id)
-                    #if existing_node_categories.intersection(cat_graph.children(parent_cat)):
-                    graph._set_parts(node_id, graph.get_parts(node_id) | node_parts)
-                    child_nodes = {node_id}
-                    #else:
-                    #    util.get_logger().debug(f'CaLiGraph: CategoryMerge - Failed to include node "{child_cat}".')
-                else:
-                    # create new node in graph
-                    graph._add_nodes({node_id})
-                    graph._set_name(node_id, node_name)
-                    graph._set_parts(node_id, node_parts)
-                    child_nodes = {node_id}
+                child_nodes.add(graph._add_category_to_graph(child_cat, cat_node_names[child_cat], cat_graph))
 
-            if child_nodes:
-                graph._add_edges({(pn, cn) for pn in parent_nodes for cn in child_nodes})
+            graph._add_edges({(pn, cn) for pn in parent_nodes for cn in child_nodes})
 
         # merge with list graph
         util.get_logger().debug('CaLiGraph: Starting ListMerge..')
@@ -73,7 +84,7 @@ class CaLiGraph(HierarchyGraph):
         list_node_names = {}
         for idx, node in enumerate(list_graph.nodes):
             if idx % 10000 == 0:
-                util.get_logger().debug(f'CaLiGraph: ListMerge - Created names for {idx} of {len(cat_graph.nodes)} nodes.')
+                util.get_logger().debug(f'CaLiGraph: ListMerge - Created names for {idx} of {len(list_graph.nodes)} nodes.')
             list_node_names[node] = cls.get_caligraph_name(list_graph.get_name(node))
 
         for edge_idx, (parent_lst, child_lst) in enumerate(nx.bfs_edges(list_graph.graph, list_graph.root_node)):
@@ -82,87 +93,66 @@ class CaLiGraph(HierarchyGraph):
 
             parent_nodes = graph.get_nodes_for_part(parent_lst)
             if not parent_nodes:
-                # initialise parent_node in caligraph
-                node_name = list_node_names[parent_lst]
-                node_id = cls.get_caligraph_resource(node_name)
-                node_parts = list_graph.get_parts(parent_lst)
-
-                equivalent_categories = list_mapping.get_equivalent_categories(parent_lst)
-                if equivalent_categories:
-                    parent_nodes = {node for cat in equivalent_categories for node in graph.get_nodes_for_part(cat)}
-                    for pn in parent_nodes:
-                        graph._set_parts(pn, graph.get_parts(pn) | node_parts)
-                else:
-                    parent_categories = list_mapping.get_parent_categories(parent_lst)
-                    if parent_categories:
-                        grandparent_nodes = {node for cat in parent_categories for node in graph.get_nodes_for_part(cat)} or {graph.root_node}
-                        if graph.has_node(node_id):
-                            if node_id in (grandparent_nodes | {c for gpn in grandparent_nodes for c in graph.children(gpn)}):
-                                graph._set_parts(node_id, graph.get_parts(node_id) | node_parts)
-                                parent_nodes = {node_id}
-                            else:
-                                util.get_logger().debug(f'CaLiGraph: ListMerge - Failed to include parent list "{parent_lst}".')
-                        else:
-                            # create new node in graph
-                            graph._add_nodes({node_id})
-                            graph._set_name(node_id, node_name)
-                            graph._set_parts(node_id, node_parts)
-                            graph._add_edges((gpn, node_id) for gpn in grandparent_nodes)
-                            parent_nodes = {node_id}
+                raise ValueError(f'"{parent_lst}" is not in graph despite of BFS!')
 
             child_nodes = graph.get_nodes_for_part(child_lst)
             if not child_nodes:
-                # initialise child_node in caligraph
-                node_name = list_node_names[child_lst]
-                node_id = cls.get_caligraph_resource(node_name)
-                node_parts = list_graph.get_parts(child_lst)
+                child_nodes.add(graph._add_list_to_graph(child_lst, list_node_names[child_lst], list_graph))
 
-                equivalent_categories = list_mapping.get_equivalent_categories(child_lst)
-                if equivalent_categories:
-                    child_nodes = {node for cat in equivalent_categories for node in graph.get_nodes_for_part(cat)}
-                    for cn in child_nodes:
-                        graph._set_parts(cn, graph.get_parts(cn) | node_parts)
-                else:
-                    # todo: maybe simplify this part by generalizing it similar to parent-list merge
-                    parent_categories = list_mapping.get_parent_categories(parent_lst)
-                    if parent_categories:
-                        otherparent_nodes = {node for cat in parent_categories for node in graph.get_nodes_for_part(cat)}
-                        if graph.has_node(node_id):
-                            if node_id in (otherparent_nodes | {c for gpn in otherparent_nodes for c in graph.children(gpn)}):
-                                graph._set_parts(node_id, graph.get_parts(node_id) | node_parts)
-                                child_nodes = {node_id}
-                            else:
-                                util.get_logger().debug(f'CaLiGraph: ListMerge - Failed to include child list "{child_lst}".')
-                        else:
-                            # create new node in graph with links to other parents
-                            graph._add_nodes({node_id})
-                            graph._set_name(node_id, node_name)
-                            graph._set_parts(node_id, node_parts)
-                            graph._add_edges((gpn, node_id) for gpn in otherparent_nodes)
-                            child_nodes = {node_id}
-                    else:
-                        if graph.has_node(node_id):
-                            if node_id in (parent_nodes | {c for gpn in parent_nodes for c in graph.children(gpn)}):
-                                graph._set_parts(node_id, graph.get_parts(node_id) | node_parts)
-                                child_nodes = {node_id}
-                            else:
-                                util.get_logger().debug(f'CaLiGraph: ListMerge - Failed to include child list "{child_lst}".')
-                        else:
-                            # create new node in graph
-                            graph._add_nodes({node_id})
-                            graph._set_name(node_id, node_name)
-                            graph._set_parts(node_id, node_parts)
-                            child_nodes = {node_id}
+            graph._add_edges({(pn, cn) for pn in parent_nodes for cn in child_nodes if pn != cn})
 
-            if parent_nodes and child_nodes:
-                graph._add_edges({(pn, cn) for pn in parent_nodes for cn in child_nodes if pn != cn})
+        edges_to_remove = set()
+        for node in graph.nodes:
+            parents = graph.parents(node)
+            if len(parents) > 1 and graph.root_node in parents:
+                edges_to_remove.add((graph.root_node, node))
 
+        graph._remove_edges(edges_to_remove)
+        util.get_logger().debug(f'CaLiGraph: PostProcessing - Removed {len(edges_to_remove)} transitive root edges.')
         # clean up
         # todo: cleanup
         #   - append unconnected ?
         #   - check for cycles ?
         #   - remove transitive edges ?
         return graph
+
+    def _add_category_to_graph(self, category: str, category_name: str, cat_graph: CategoryGraph) -> str:
+        node_id = self.get_caligraph_resource(category_name)
+        node_parts = cat_graph.get_parts(category)
+        if self.has_node(node_id):
+            # extend existing node in graph
+            node_parts.update(self.get_parts(node_id))
+        else:
+            # create new node in graph
+            self._add_nodes({node_id})
+            self._set_name(node_id, category_name)
+        self._set_parts(node_id, node_parts)
+        return node_id
+
+    def _add_list_to_graph(self, lst: str, lst_name: str, list_graph: ListGraph) -> str:
+        node_id = self.get_caligraph_resource(lst_name)
+        node_parts = list_graph.get_parts(lst)
+
+        # check for equivalent mapping and existing node_id (if they map to more than one node -> log error)
+        equivalent_nodes = {node for eq_cat in list_mapping.get_equivalent_categories(lst) for node in self.get_nodes_for_part(eq_cat)}
+        if self.has_node(node_id):
+            equivalent_nodes.add(node_id)
+        if len(equivalent_nodes) > 1:
+            util.get_logger().debug(f'CaLiGraph: ListMerge - For "{lst}" multiple equivalent nodes have been found: {equivalent_nodes}.')
+            equivalent_nodes = {node_id}
+        if equivalent_nodes:
+            main_node_id = equivalent_nodes.pop()
+            self._set_parts(main_node_id, self.get_parts(main_node_id) | node_parts)
+            return main_node_id
+
+        # check for parents to initialise under (parent mapping)
+        self._add_nodes({node_id})
+        self._set_name(node_id, lst_name)
+        self._set_parts(node_id, node_parts)
+        parent_nodes = {node for parent_cat in list_mapping.get_parent_categories(lst) for node in self.get_nodes_for_part(parent_cat)}
+        self._add_edges({(pn, node_id) for pn in parent_nodes})
+
+        return node_id
 
     @staticmethod
     def get_ontology_namespace():
@@ -175,7 +165,8 @@ class CaLiGraph(HierarchyGraph):
     @staticmethod
     def get_caligraph_name(name: str) -> str:
         name = name[4:] if name.startswith('the ') else name
-        return nlp_util.get_canonical_name(name, strict_by_removal=False).capitalize()
+        canonical_name = nlp_util.get_canonical_name(name, strict_by_removal=False)
+        return canonical_name[0].upper() + canonical_name[1:]
 
     @classmethod
     def get_caligraph_resource(cls, caligraph_name: str) -> str:
