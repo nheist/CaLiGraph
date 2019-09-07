@@ -31,9 +31,7 @@ if __name__ == '__main__':
     try:
         util.get_logger().info('Starting caligraph merge..')
 
-        setup()
         cali_base.get_base_graph()
-        nlp_util.persist_cache()
 
         #cat_graph = cat_base.get_merged_graph()
         #util.get_logger().info('catgraph done.')
