@@ -80,13 +80,11 @@ def tag_lexical_head(doc: Doc, valid_words=None) -> Doc:
 
 def singularize_phrase(doc: Doc) -> str:
     doc = tag_lexical_head(doc)
-    result = []
-    for idx, word in enumerate(doc):
-        if word.ent_type_ == 'LH' and (len(doc) <= idx+1 or doc[idx+1].ent_type_ != 'LH'):
-            result.append(inflection.singularize(word.text))
-        else:
-            result.append(word.text)
-    return ' '.join(result)
+    result = doc.text
+    for idx, w in enumerate(doc):
+        if w.ent_type_ == 'LH' and (len(doc) <= idx+1 or doc[idx+1].text == 'and' or doc[idx+1].ent_type_ != 'LH'):
+            result = result.replace(w.text, inflection.singularize(w.text))
+    return result
 
 
 def parse(text: str, disable_normalization=False, skip_cache=False) -> Doc:
