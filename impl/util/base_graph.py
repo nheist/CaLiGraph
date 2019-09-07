@@ -1,5 +1,6 @@
 import networkx as nx
 import numpy as np
+from collections import defaultdict
 
 
 class BaseGraph:
@@ -67,6 +68,9 @@ class BaseGraph:
             return nx.shortest_path_length(self.graph, source=self.root_node, target=node)
         except nx.NetworkXNoPath:
             return -1
+
+    def depths(self) -> dict:
+        return defaultdict(lambda: -1, nx.shortest_path_length(self.graph, source=self.root_node))
 
     def _get_attr(self, node, attr):
         return self.graph.nodes(data=attr)[node]

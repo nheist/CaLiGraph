@@ -3,6 +3,7 @@ from spacy.tokens import Doc, Span
 import hashlib
 import util
 import re
+import inflection
 
 SPACY_CACHE_ID = 'spacy_docs'
 
@@ -20,8 +21,8 @@ def without_stopwords(text: str) -> set:
     return {word.lemma_ for word in parse(text) if not word.is_stop}
 
 
-def get_canonical_name(text: str, strict_by_removal=True) -> str:
-    text = remove_by_phrase(parse(text, disable_normalization=True), strict=strict_by_removal, return_doc=False)  # remove by-phrase
+def get_canonical_name(text: str) -> str:
+    text = remove_by_phrase(parse(text, disable_normalization=True), return_doc=False)  # remove by-phrase
     text = re.sub(r'\s+\([^()]+-[^()]+\)$', '', text)  # remove trailing parentheses with number or letter ranges, e.g. 'Interstate roads (1-10)'
     text = re.sub(r'\s+\([A-Z]\)$', '', text)  # remove trailing parentheses with single letter, e.g. 'Interstate roads (Y)'
     text = re.sub(r'\s*[-:]\s*([A-Z],\s*)*[A-Z]$', '', text)  # remove trailing alphabetical splits, e.g. 'Football clubs in Sweden - Z' or '.. - X, Y, Z'
@@ -29,7 +30,7 @@ def get_canonical_name(text: str, strict_by_removal=True) -> str:
     return _regularize_whitespaces(text)
 
 
-def remove_by_phrase(doc: Doc, strict=True, return_doc=True):
+def remove_by_phrase(doc: Doc, return_doc=True):
     """Remove the 'by'-phrase at the end of a category or listpage, e.g. 'People by country' -> 'People'"""
     by_indices = [w.i for w in doc if w.text == 'by']
     if len(by_indices) == 0:
@@ -39,10 +40,8 @@ def remove_by_phrase(doc: Doc, strict=True, return_doc=True):
         return doc if return_doc else doc.text
     word_before_by = doc[last_by_index-1]
     word_after_by = doc[last_by_index+1]
-    if word_after_by.text[0].isupper() or word_after_by.text in ['a', 'an', 'the'] or word_before_by.tag_ == 'VBN' or word_after_by.tag_ in ['VBG', 'NNS']:
+    if word_after_by.text[0].isupper() or word_after_by.tag_ == 'NNS' or word_after_by.text in ['a', 'an', 'the'] or word_before_by.tag_ == 'VBN':
         return doc if return_doc else doc.text
-    if not strict and any(w.text[0].isupper() for w in doc[last_by_index+1:]):
-        return doc if return_doc else doc.text  # do not remove by-phrase if we are unsure
 
     result = doc[:last_by_index].text.strip()
     if return_doc:
@@ -77,6 +76,17 @@ def tag_lexical_head(doc: Doc, valid_words=None) -> Doc:
         doc.ents = [Span(doc, lexhead_start, chunk.end, label=doc.vocab.strings['LH'])]
         break
     return doc
+
+
+def singularize_phrase(doc: Doc) -> str:
+    doc = tag_lexical_head(doc)
+    result = []
+    for idx, word in enumerate(doc):
+        if word.ent_type_ == 'LH' and (len(doc) <= idx+1 or doc[idx+1].ent_type_ != 'LH'):
+            result.append(inflection.singularize(word.text))
+        else:
+            result.append(word.text)
+    return ' '.join(result)
 
 
 def parse(text: str, disable_normalization=False, skip_cache=False) -> Doc:

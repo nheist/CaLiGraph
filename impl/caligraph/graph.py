@@ -21,7 +21,7 @@ class CaLiGraph(HierarchyGraph):
     @property
     def statistics(self) -> str:
         leaf_nodes = {node for node in self.nodes if not self.children(node)}
-        node_depths = nx.shortest_path_length(self.graph, source=self.root_node)
+        node_depths = self.depths()
 
         instance_count = 0
         instance_axiom_count = 0
@@ -43,6 +43,7 @@ class CaLiGraph(HierarchyGraph):
             '{:^40}'.format('STATISTICS'),
             '=' * 40,
             '{:<30} | {:>7}'.format('nodes', class_count),
+            '{:<30} | {:>7}'.format('nodes below root', len(self.children(self.root_node))),
             '{:<30} | {:>7}'.format('edges', edge_count),
             '{:<30} | {:>7}'.format('parts', parts_count),
             '{:<30} | {:>7}'.format('category parts', cat_parts_count),
@@ -121,13 +122,11 @@ class CaLiGraph(HierarchyGraph):
         util.get_logger().debug(f'CaLiGraph: PostProcessing - Removed {len(edges_to_remove)} transitive root edges.')
         # clean up
         # todo: cleanup
-        #   - append unconnected ?
         #   - check for cycles ?
-        #   - remove transitive edges ?
         return graph
 
     def _add_category_to_graph(self, category: str, category_name: str, cat_graph: CategoryGraph) -> str:
-        node_id = self.get_caligraph_resource(category_name)
+        node_id = self.get_caligraph_class(category_name)
         node_parts = cat_graph.get_parts(category)
         if self.has_node(node_id):
             # extend existing node in graph
@@ -140,7 +139,7 @@ class CaLiGraph(HierarchyGraph):
         return node_id
 
     def _add_list_to_graph(self, lst: str, lst_name: str, list_graph: ListGraph) -> str:
-        node_id = self.get_caligraph_resource(lst_name)
+        node_id = self.get_caligraph_class(lst_name)
         node_parts = list_graph.get_parts(lst)
 
         # check for equivalent mapping and existing node_id (if they map to more than one node -> log error)
@@ -175,9 +174,10 @@ class CaLiGraph(HierarchyGraph):
     @staticmethod
     def get_caligraph_name(name: str) -> str:
         name = name[4:] if name.startswith('the ') else name
-        canonical_name = nlp_util.get_canonical_name(name, strict_by_removal=False)
+        canonical_name = nlp_util.get_canonical_name(name)
+        canonical_name = nlp_util.singularize_phrase(nlp_util.parse(canonical_name, disable_normalization=True))
         return canonical_name[0].upper() + canonical_name[1:]
 
     @classmethod
-    def get_caligraph_resource(cls, caligraph_name: str) -> str:
-        return cls.get_resource_namespace() + caligraph_name.replace(' ', '_')
+    def get_caligraph_class(cls, caligraph_name: str) -> str:
+        return cls.get_ontology_namespace() + caligraph_name.replace(' ', '_')

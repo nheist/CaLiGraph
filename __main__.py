@@ -13,6 +13,7 @@ import impl.list.mapping as list_mapping
 import impl.util.nlp as nlp_util
 import impl.caligraph.base as cali_base
 
+
 def setup():
     category_graph = cat_base.get_conceptual_category_graph()
 
@@ -30,6 +31,7 @@ if __name__ == '__main__':
     try:
         util.get_logger().info('Starting caligraph merge..')
 
+        setup()
         cali_base.get_base_graph()
         nlp_util.persist_cache()
 
