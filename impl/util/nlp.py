@@ -21,8 +21,8 @@ def without_stopwords(text: str) -> set:
     return {word.lemma_ for word in parse(text) if not word.is_stop}
 
 
-def get_canonical_name(text: str) -> str:
-    text = remove_by_phrase(parse(text, disable_normalization=True), return_doc=False)  # remove by-phrase
+def get_canonical_name(text: str, disable_normalization=True) -> str:
+    text = remove_by_phrase(parse(text, disable_normalization=disable_normalization), return_doc=False)  # remove by-phrase
     text = re.sub(r'\s+\([^()]+-[^()]+\)$', '', text)  # remove trailing parentheses with number or letter ranges, e.g. 'Interstate roads (1-10)'
     text = re.sub(r'\s+\([A-Z]\)$', '', text)  # remove trailing parentheses with single letter, e.g. 'Interstate roads (Y)'
     text = re.sub(r'\s*[-:]\s*([A-Z],\s*)*[A-Z]$', '', text)  # remove trailing alphabetical splits, e.g. 'Football clubs in Sweden - Z' or '.. - X, Y, Z'

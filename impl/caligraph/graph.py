@@ -172,10 +172,10 @@ class CaLiGraph(HierarchyGraph):
         return util.get_config('caligraph.namespace.resource')
 
     @staticmethod
-    def get_caligraph_name(name: str) -> str:
+    def get_caligraph_name(name: str, disable_normalization=False) -> str:
         name = name[4:] if name.startswith('the ') else name
-        canonical_name = nlp_util.get_canonical_name(name)
-        canonical_name = nlp_util.singularize_phrase(nlp_util.parse(canonical_name, disable_normalization=True))
+        canonical_name = nlp_util.get_canonical_name(name, disable_normalization=disable_normalization)
+        canonical_name = nlp_util.singularize_phrase(nlp_util.parse(canonical_name, disable_normalization=disable_normalization))
         return canonical_name[0].upper() + canonical_name[1:]
 
     @classmethod
