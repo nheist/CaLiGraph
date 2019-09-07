@@ -84,7 +84,7 @@ def singularize_phrase(doc: Doc) -> str:
     for idx, w in enumerate(doc):
         if w.ent_type_ == 'LH' and (len(doc) <= idx+1 or doc[idx+1].text == 'and' or doc[idx+1].ent_type_ != 'LH'):
             result = result.replace(w.text, inflection.singularize(w.text))
-            if doc[idx+1].text == 'and':
+            if len(doc) > idx+1 and doc[idx+1].text == 'and':
                 result = result.replace('and', 'or')
     return result
 
