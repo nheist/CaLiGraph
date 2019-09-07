@@ -3,6 +3,7 @@ import util
 from impl.util.hierarchy_graph import HierarchyGraph
 import impl.util.rdf as rdf_util
 import impl.category.base as cat_base
+import impl.category.store as cat_store
 import impl.category.util as cat_util
 from impl.category.graph import CategoryGraph
 import impl.list.base as list_base
@@ -11,6 +12,7 @@ from impl.list.graph import ListGraph
 import impl.list.mapping as list_mapping
 import impl.util.nlp as nlp_util
 import numpy as np
+import impl.dbpedia.store as dbp_store
 
 
 class CaLiGraph(HierarchyGraph):
@@ -23,21 +25,30 @@ class CaLiGraph(HierarchyGraph):
         leaf_nodes = {node for node in self.nodes if not self.children(node)}
         node_depths = self.depths()
 
-        instance_count = 0
-        instance_axiom_count = 0
-        instance_degree_avg = 0
-        instance_indegree_med = 0
-        instance_outdegree_med = 0
-
         class_count = len(self.nodes)
         edge_count = len(self.edges)
         parts_count = len({p for n in self.nodes for p in self.get_parts(n)})
         cat_parts_count = len({p for n in self.nodes for p in self.get_parts(n) if cat_util.is_category(p)})
         list_parts_count = len({p for n in self.nodes for p in self.get_parts(n) if list_util.is_listpage(p)})
         listcat_parts_count = len({p for n in self.nodes for p in self.get_parts(n) if list_util.is_listcategory(p)})
-        relation_count = 0
         classtree_depth_avg = np.mean([node_depths[node] for node in leaf_nodes])
         branching_factor_avg = np.mean([d for _, d in self.graph.out_degree])
+        relation_count = 0
+
+        category_instances = set()
+        list_instances = set()
+
+        for node in self.nodes:
+            for part in self.get_parts(node):
+                if cat_util.is_category(part):
+                    category_instances.update(cat_store.get_resources(part))
+                elif list_util.is_listpage(part):
+                    list_instances.update(list_base.get_listpage_entities(part))
+
+        instance_axiom_count = 0
+        instance_degree_avg = 0
+        instance_indegree_med = 0
+        instance_outdegree_med = 0
 
         return '\n'.join([
             '{:^40}'.format('STATISTICS'),
@@ -51,7 +62,22 @@ class CaLiGraph(HierarchyGraph):
             '{:<30} | {:>7}'.format('listcat parts', listcat_parts_count),
             '{:<30} | {:>7.2f}'.format('classtree depth', classtree_depth_avg),
             '{:<30} | {:>7.2f}'.format('branching factor', branching_factor_avg),
+            '-' * 40,
+            '{:<30} | {:>7}'.format('instances', len(category_instances | list_instances)),
+            '{:<30} | {:>7}'.format('category instances', len(category_instances)),
+            '{:<30} | {:>7}'.format('list instances', len(list_instances)),
+            '{:<30} | {:>7}'.format('new instances', len(list_instances.difference(dbp_store.get_resources()))),
             ])
+
+    def get_resources(self, node: str) -> set:
+        # todo: change to caligraph namespace
+        resources = set()
+        for part in self.get_parts(node):
+            if cat_util.is_category(part):
+                resources.update(cat_store.get_resources(part))
+            elif list_util.is_listpage(part):
+                resources.update(list_base.get_listpage_entities(part))
+        return resources
 
     @classmethod
     def build_graph(cls):

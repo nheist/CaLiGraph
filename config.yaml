@@ -241,6 +241,9 @@ cache:
     filename: 'dbpedia-listpage-features'
     version: 1
     store_as_hdf: True
+  dbpedia_listpage_entities:
+    filename: 'dbpedia-listpage-entities'
+    version: 1
   wikidata_dbpedia_resource_mapping:
     filename: 'wikidata-dbpedia-resource-mapping'
     version: 1

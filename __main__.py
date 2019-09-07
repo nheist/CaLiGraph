@@ -31,7 +31,8 @@ if __name__ == '__main__':
     try:
         util.get_logger().info('Starting caligraph merge..')
 
-        cali_base.get_base_graph()
+        caligraph = cali_base.get_base_graph()
+        util.get_logger().info(caligraph.statistics)
 
         #cat_graph = cat_base.get_merged_graph()
         #util.get_logger().info('catgraph done.')

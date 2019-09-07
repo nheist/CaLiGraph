@@ -17,6 +17,7 @@ rdflib = "*"
 nltk = "*"
 pynif = "*"
 tables = "*"
+xgboost = "*"
 
 [dev-packages]
 
