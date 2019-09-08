@@ -212,10 +212,8 @@ def make_table_entity_features(lp_data: dict) -> list:
 
 def _get_span_for_entity(doc, text, idx):
     span = doc.char_span(idx, idx + len(text))
-
     if span is None or span.text != text:
-        raise ValueError(f'Trying to find "{text}" in "{doc}" starting at index {idx} but failed.')
-
+        return None
     return span
 
 
