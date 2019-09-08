@@ -33,10 +33,8 @@ def _parse_listpage(listpage_uri: str, listpage_markup: str) -> dict:
         'type': list_type
     }
 
-    if list_type == LIST_TYPE_ENUM:
-        result['sections'] = _extract_sections(cleaned_wiki_text)
-
-    # TODO: implement table-lists
+    if list_type != LIST_TYPE_NONE:
+        result['sections'] = _extract_sections(list_type, cleaned_wiki_text)
 
     return result
 
@@ -67,14 +65,24 @@ def _get_list_type(wiki_text: WikiText) -> str:
         return LIST_TYPE_NONE
 
 
-def _extract_sections(wiki_text: WikiText) -> list:
-    return [{
-        'name': section.title.strip() if section.title.strip() else 'Main',
-        'entries': [e for l in section.lists() for e in _extract_entries_for_list(l)]
-    } for section in wiki_text.sections]
+def _extract_sections(list_type: str, wiki_text: WikiText) -> list:
+    result = []
+
+    if list_type == LIST_TYPE_NONE:
+        result = [{
+            'name': section.title.strip() if section.title.strip() else 'Main',
+            'entries': [e for l in section.lists() for e in _extract_entries_for_list(l)]
+        } for section in wiki_text.sections]
+    elif list_type == LIST_TYPE_TABLE:
+        result = [{
+            'name': section.title.strip() if section.title.strip() else 'Main',
+            'tables': [_extract_table(t) for t in section.get_tables()]
+        } for section in wiki_text.sections]
+
+    return result
 
 
-def _extract_entries_for_list(l: wtp.WikiList):
+def _extract_entries_for_list(l: wtp.WikiList) -> list:
     entries = []
     for item_text in l.items:
         plaintext, entities = _convert_markup(item_text)
@@ -89,6 +97,20 @@ def _extract_entries_for_list(l: wtp.WikiList):
         entries.extend(_extract_entries_for_list(sl))
 
     return entries
+
+
+def _extract_table(table: wtp.Table) -> list:
+    rows = []
+    for row in table.data(span=False):
+        parsed_columns = []
+        for column in row:
+            plaintext, entities = _convert_markup(column)
+            parsed_columns.append({
+                'text': plaintext,
+                'entities': entities
+            })
+        rows.append(parsed_columns)
+    return rows
 
 
 def _convert_markup(wiki_text: str) -> Tuple[str, list]:
