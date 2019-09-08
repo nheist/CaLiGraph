@@ -100,8 +100,13 @@ def _extract_entries_for_list(l: wtp.WikiList) -> list:
 
 
 def _extract_table(table: wtp.Table) -> list:
-    rows = []
-    for row in table.data(span=False):
+    row_data = []
+    try:
+        rows = table.data(span=False)
+    except IndexError:
+        return []
+
+    for row in rows:
         parsed_columns = []
         for column in row:
             plaintext, entities = _convert_markup(column)
@@ -109,8 +114,8 @@ def _extract_table(table: wtp.Table) -> list:
                 'text': plaintext,
                 'entities': entities
             })
-        rows.append(parsed_columns)
-    return rows
+        row_data.append(parsed_columns)
+    return row_data
 
 
 def _convert_markup(wiki_text: str) -> Tuple[str, list]:
