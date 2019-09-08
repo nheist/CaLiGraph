@@ -31,7 +31,7 @@ if __name__ == '__main__':
     try:
         util.get_logger().info('Starting listpage parsing..')
 
-        list_parser.get_parsed_listpages()
+        list_base.get_table_listpage_entity_features()
 
         #caligraph = cali_base.get_base_graph()
         #util.get_logger().info(caligraph.statistics)

@@ -29,3 +29,7 @@ def extract_enum_entities(df: pd.DataFrame) -> dict:
     for idx, row in pd.concat([df_true, df_new[df_new['label'] == 1]]).iterrows():
         list_entities[row['_listpage_uri']].add(row['_entity_uri'])
     return list_entities
+
+
+def extract_table_entities(df: pd.DataFrame) -> dict:
+    pass  # todo

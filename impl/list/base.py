@@ -53,25 +53,42 @@ def get_listpage_entities(listpage: str) -> set:
 def _extract_listpage_entities():
     enum_features = get_enum_listpage_entity_features()
     enum_entities = list_extract.extract_enum_entities(enum_features)
-    return enum_entities
+
+    table_features = get_table_listpage_entity_features()
+    table_entities = list_extract.extract_table_entities(table_features)
+
+    return {lp: enum_entities[lp] | table_entities[lp] for lp in (set(enum_entities) | set(table_entities))}
 
 
 def get_enum_listpage_entity_features() -> pd.DataFrame:
-    global __LISTPAGE_ENTITY_FEATURES__
-    if '__LISTPAGE_ENTITY_FEATURES__' not in globals():
-        __LISTPAGE_ENTITY_FEATURES__ = util.load_or_create_cache('dbpedia_listpage_features', _compute_enum_listpage_entity_features)
-    return __LISTPAGE_ENTITY_FEATURES__
+    global __ENUM_LISTPAGE_ENTITY_FEATURES__
+    if '__ENUM_LISTPAGE_ENTITY_FEATURES__' not in globals():
+        __ENUM_LISTPAGE_ENTITY_FEATURES__ = util.load_or_create_cache('dbpedia_listpage_enum_features', lambda: _compute_listpage_entity_features(list_parser.LIST_TYPE_ENUM))
+    return __ENUM_LISTPAGE_ENTITY_FEATURES__
 
 
-def _compute_enum_listpage_entity_features() -> pd.DataFrame:
-    util.get_logger().info('List-Entities: Computing enum entity features..')
+def get_table_listpage_entity_features() -> pd.DataFrame:
+    global __TABLE_LISTPAGE_ENTITY_FEATURES__
+    if '__TABLE_LISTPAGE_ENTITY_FEATURES__' not in globals():
+        __TABLE_LISTPAGE_ENTITY_FEATURES__ = util.load_or_create_cache('dbpedia_listpage_table_features', lambda: _compute_listpage_entity_features(list_parser.LIST_TYPE_TABLE))
+    return __TABLE_LISTPAGE_ENTITY_FEATURES__
+
+
+def _compute_listpage_entity_features(list_type: str) -> pd.DataFrame:
+    util.get_logger().info(f'List-Entities: Computing entity features for {list_type}..')
 
     entity_features = []
     parsed_listpages = list_parser.get_parsed_listpages()
-    for lp, lp_data in parsed_listpages.items():
-        if lp_data['type'] != list_parser.LIST_TYPE_ENUM:
+    for idx, (lp, lp_data) in enumerate(parsed_listpages.items()):
+        if idx % 1000 == 0:
+            util.get_logger().debug(f'List-Entities: Processed {idx} of {len(parsed_listpages)} listpages.')
+
+        if lp_data['type'] != list_type:
             continue
-        entity_features.extend(list_features.make_entity_features(lp_data))
+        if list_type == list_parser.LIST_TYPE_ENUM:
+            entity_features.extend(list_features.make_enum_entity_features(lp_data))
+        elif list_type == list_parser.LIST_TYPE_TABLE:
+            entity_features.extend(list_features.make_table_entity_features(lp_data))
     entity_features = pd.DataFrame(data=entity_features)
 
     entity_features = list_features.with_section_name_features(entity_features)
@@ -79,5 +96,5 @@ def _compute_enum_listpage_entity_features() -> pd.DataFrame:
     util.get_logger().info('List-Entities: Assigning entity labels..')
     list_features.assign_entity_labels(entity_features)
 
-    util.get_logger().info('List-Entities: Finished extracting enum entity features.')
+    util.get_logger().info('List-Entities: Finished extracting entity features.')
     return entity_features

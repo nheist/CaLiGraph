@@ -11,9 +11,9 @@ from sklearn.preprocessing import OneHotEncoder
 from collections import defaultdict
 
 
-# COMPUTATION OF BASIC ENTITY FEATURES
+# COMPUTATION OF BASIC ENTITY FEATURES OF ENUM LISTPAGES
 
-def make_entity_features(lp_data: dict) -> list:
+def make_enum_entity_features(lp_data: dict) -> list:
     lp_uri = lp_data['uri']
     sections = lp_data['sections']
 
@@ -100,6 +100,112 @@ def make_entity_features(lp_data: dict) -> list:
         _assign_avg_and_std_to_feature_set(feature_set, lp_entry_commas, 'lp_entry_comma')
         _assign_avg_and_std_to_feature_set(feature_set, lp_first_entity_idx, 'lp_first_entity_idx')
         _assign_avg_and_std_to_feature_set(feature_set, lp_first_entity_pos, 'lp_first_entity_pos')
+
+    return data
+
+
+def make_table_entity_features(lp_data: dict) -> list:
+    lp_uri = lp_data['uri']
+    sections = lp_data['sections']
+
+    # lp feature statistics
+    lp_section_count = len(sections)
+    lp_table_count = sum([len(section['tables']) for section in sections])
+    lp_section_tables = [len(section['tables']) for section in sections]
+    lp_table_rows = [len(table) for section in sections for table in section['tables']]
+    lp_table_columns = [len(row) for section in sections for table in section['tables'] for row in table]
+    lp_table_column_words = []
+    lp_table_column_chars = []
+    lp_table_row_entities = []
+    lp_table_column_entities = []
+    lp_table_first_entity_column = []
+
+    data = []
+    for section_idx, section_data in enumerate(sections):
+        section_name = section_data['name']
+
+        tables = section_data['tables']
+        for table_idx, table in enumerate(tables):
+
+            for row_idx, row in enumerate(table):
+                lp_table_row_entities.append(sum([len(col['entities']) for col in row]))
+
+                for column_idx, column_data in enumerate(row):
+                    if column_data['entities']:
+                        lp_table_first_entity_column.append(column_idx)
+                        break
+
+                for column_idx, column_data in enumerate(row):
+                    column_text = column_data['text']
+                    lp_table_column_words.append(len(column_text.split(' ')))
+                    lp_table_column_chars.append(len(column_text))
+
+                    column_doc = nlp_util.parse(column_text, disable_normalization=True)
+
+                    column_entities = column_data['entities']
+                    lp_table_column_entities.append(len(column_entities))
+
+                    for entity_idx, entity_data in enumerate(column_entities):
+                        entity_uri = entity_data['uri']
+                        entity_uri = entity_uri[:entity_uri.index('#')] if '#' in entity_uri else entity_uri
+
+                        entity_span = _get_span_for_entity(column_doc, entity_data['text'], entity_data['idx'])
+                        if not entity_span:
+                            continue
+
+                        features = {
+                            # ID
+                            '_id': f'{lp_uri}__{section_name}__{table_idx}__{row_idx}__{column_idx}__{entity_uri}',
+                            '_listpage_uri': lp_uri,
+                            '_section_name': section_name or '',
+                            '_table_idx': table_idx,
+                            '_row_idx': row_idx,
+                            '_column_idx': column_idx,
+                            '_entity_uri': entity_uri,
+                            # ENTITY FEATURES
+                            'section_pos': _get_relative_position(section_idx, len(sections)),
+                            'section_invpos': _get_relative_position(section_idx, len(sections), inverse=True),
+                            'table_pos': _get_relative_position(table_idx, len(tables)),
+                            'table_invpos': _get_relative_position(table_idx, len(tables), inverse=True),
+                            'table_count': len(tables),
+                            'row_pos': _get_relative_position(row_idx, len(table)),
+                            'row_invpos': _get_relative_position(row_idx, len(table), inverse=True),
+                            'row_count': len(table),
+                            'column_pos': _get_relative_position(column_idx, len(row)),
+                            'column_invpos': _get_relative_position(column_idx, len(row), inverse=True),
+                            'column_count': len(row),
+                            'entity_link_pos': _get_relative_position(entity_idx, len(column_entities)),
+                            'entity_link_invpos': _get_relative_position(entity_idx, len(column_entities), inverse=True),
+                            'entity_first': entity_idx == 0,
+                            'entity_last': (entity_idx + 1) == len(column_entities),
+                            'entity_count': len(column_entities),
+                            'entity_idx': entity_span.start,
+                            'entity_invidx': len(column_doc) - entity_span.end,
+                            'entity_pos': _get_relative_position(entity_span.start, len(column_doc)),
+                            'entity_invpos': _get_relative_position(entity_span.end - 1, len(column_doc), inverse=True),
+                            'entity_pn': any(w.tag_ in ['NNP', 'NNPS'] for w in entity_span),
+                            'entity_noun': any(w.pos_ == 'NOUN' for w in entity_span),
+                            'entity_ne': any(w.ent_type_ for w in entity_span),
+                            'prev_pos': column_doc[entity_span.start - 1].pos_ if entity_span.start > 0 else 'START',
+                            'prev_ne': bool(column_doc[entity_span.start - 1].ent_type_) if entity_span.start > 0 else False,
+                            'succ_pos': column_doc[entity_span.end].pos_ if entity_span.end < len(column_doc) else 'END',
+                            'succ_ne': bool(column_doc[entity_span.end].ent_type_) if entity_span.end < len(column_doc) else False
+                        }
+
+                        data.append(features)
+
+    # LISTPAGE FEATURES
+    for feature_set in data:
+        feature_set['lp_section_count'] = lp_section_count
+        feature_set['lp_table_count'] = lp_table_count
+        _assign_avg_and_std_to_feature_set(feature_set, lp_section_tables, 'lp_section_tables')
+        _assign_avg_and_std_to_feature_set(feature_set, lp_table_rows, 'lp_table_rows')
+        _assign_avg_and_std_to_feature_set(feature_set, lp_table_row_entities, 'lp_table_row_entities')
+        _assign_avg_and_std_to_feature_set(feature_set, lp_table_columns, 'lp_table_columns')
+        _assign_avg_and_std_to_feature_set(feature_set, lp_table_column_words, 'lp_table_column_words')
+        _assign_avg_and_std_to_feature_set(feature_set, lp_table_column_chars, 'lp_table_column_chars')
+        _assign_avg_and_std_to_feature_set(feature_set, lp_table_column_entities, 'lp_table_column_entities')
+        _assign_avg_and_std_to_feature_set(feature_set, lp_table_first_entity_column, 'lp_table_first_entity_column')
 
     return data
 

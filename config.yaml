@@ -237,8 +237,12 @@ cache:
   dbpedia_listpage_parsed:
     filename: 'dbpedia-listpage-parsed'
     version: 3  # v1: basic; v2: with entity indices; v3: with tables
-  dbpedia_listpage_features:
-    filename: 'dbpedia-listpage-features'
+  dbpedia_listpage_enum_features:
+    filename: 'dbpedia-listpage-enum-features'
+    version: 1
+    store_as_hdf: True
+  dbpedia_listpage_table_features:
+    filename: 'dbpedia-listpage-table-features'
     version: 1
     store_as_hdf: True
   dbpedia_listpage_entities:
