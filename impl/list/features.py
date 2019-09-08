@@ -135,10 +135,9 @@ def assign_entity_labels(df: pd.DataFrame):
     for idx, listpage_uri in enumerate(listpage_uris):
         if idx % 1000 == 0:
             util.get_logger().debug(f'List-Entities: Processed {idx} of {len(listpage_uris)}.')
-        #listpage_resources = set(df[df['_listpage_uri'] == listpage_uri]['_entity_uri'].unique())
-        #listpage_category_resources = {res for cat in _get_category_descendants_for_list(listpage_uri) for res in cat_store.get_resources(cat)}
-        #listpage_valid_resources[listpage_uri] = listpage_resources.intersection(listpage_category_resources)
-        listpage_valid_resources[listpage_uri] = _get_categories_for_list(listpage_uri)
+        listpage_resources = set(df[df['_listpage_uri'] == listpage_uri]['_entity_uri'].unique())
+        listpage_category_resources = {res for cat in _get_category_descendants_for_list(listpage_uri) for res in cat_store.get_resources(cat)}
+        listpage_valid_resources[listpage_uri] = listpage_resources.intersection(listpage_category_resources)
 
         axioms = {ax for cat in _get_category_ancestors_for_list(listpage_uri) for ax in cat_axioms.get_axioms(cat)}
         listpage_axioms[listpage_uri] = axioms
