@@ -76,7 +76,7 @@ def _extract_sections(list_type: str, wiki_text: WikiText) -> list:
     elif list_type == LIST_TYPE_TABLE:
         result = [{
             'name': section.title.strip() if section.title.strip() else 'Main',
-            'tables': [_extract_table(t) for t in section.get_tables()]
+            'tables': [_extract_table(t) for t in section.tables]
         } for section in wiki_text.sections]
 
     return result
