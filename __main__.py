@@ -29,10 +29,12 @@ def setup():
 
 if __name__ == '__main__':
     try:
-        util.get_logger().info('Starting caligraph merge..')
+        util.get_logger().info('Starting listpage parsing..')
 
-        caligraph = cali_base.get_base_graph()
-        util.get_logger().info(caligraph.statistics)
+        list_parser.get_parsed_listpages()
+
+        #caligraph = cali_base.get_base_graph()
+        #util.get_logger().info(caligraph.statistics)
 
         #cat_graph = cat_base.get_merged_graph()
         #util.get_logger().info('catgraph done.')
@@ -51,8 +53,8 @@ if __name__ == '__main__':
         #nlp_util.persist_cache()
         #util.get_logger().info('cache persist done.')
 
-        mailer.send_success(f'FINISHED caligraph merge')
-        util.get_logger().info('Finished CaLiGraph extraction.')
+        mailer.send_success(f'FINISHED listpage parsing')
+        util.get_logger().info('Finished listpage parsing.')
     except Exception as e:
         error_msg = traceback.format_exc()
         mailer.send_error(error_msg)

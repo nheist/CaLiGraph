@@ -236,7 +236,7 @@ cache:
     version: 1
   dbpedia_listpage_parsed:
     filename: 'dbpedia-listpage-parsed'
-    version: 2  # v1: basic; v2: with entity indices
+    version: 3  # v1: basic; v2: with entity indices; v3: with tables
   dbpedia_listpage_features:
     filename: 'dbpedia-listpage-features'
     version: 1
