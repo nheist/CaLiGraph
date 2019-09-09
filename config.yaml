@@ -1,7 +1,7 @@
 caligraph:
   namespace:
-    ontology: 'https://caligraph.org/ontology/'
-    resource: 'https://caligraph.org/resource/'
+    ontology: 'http://caligraph.org/ontology/'
+    resource: 'http://caligraph.org/resource/'
 category:
   root_category: 'http://dbpedia.org/resource/Category:Main_topic_classifications'
 list:
