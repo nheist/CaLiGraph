@@ -152,7 +152,7 @@ class CaLiGraph(HierarchyGraph):
         for node in graph.nodes:
             cat_name = cat_util.name2category(graph.get_name(node))
             if cat_name in cat_store.get_categories() and cat_name not in graph.get_parts(node):
-                graph._set_parts(node, graph.get_parts(node) | cat_name)
+                graph._set_parts(node, graph.get_parts(node) | {cat_name})
 
         # clean up
         # todo: cleanup
