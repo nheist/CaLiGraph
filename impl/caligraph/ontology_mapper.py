@@ -9,7 +9,7 @@ def find_dbpedia_parent(graph: CaLiGraph, node: str) -> dict:
     name = graph.get_name(node)
     head_lemmas = nlp_util.get_head_lemmas(nlp_util.parse(name))
     type_lexicalisation_scores = cat_axioms._get_type_surface_scores(head_lemmas)
-    type_resource_scores = defaultdict(lambda: 1, _compute_type_resource_scores(graph, node))
+    type_resource_scores = defaultdict(int, _compute_type_resource_scores(graph, node))
     return {t: (type_lexicalisation_scores[t], type_resource_scores[t], type_lexicalisation_scores[t] * type_resource_scores[t]) for t in type_lexicalisation_scores}
 
 
