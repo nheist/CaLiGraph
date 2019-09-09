@@ -122,7 +122,7 @@ class CaLiGraph(HierarchyGraph):
         for idx, node in enumerate(list_graph.nodes):
             if idx % 10000 == 0:
                 util.get_logger().debug(f'CaLiGraph: ListMerge - Created names for {idx} of {len(list_graph.nodes)} nodes.')
-            list_node_names[node] = cls.get_caligraph_name(list_graph.get_name(node))
+            list_node_names[node] = cls.get_caligraph_name(list_graph.get_name(node), disable_normalization=True)
 
         for edge_idx, (parent_lst, child_lst) in enumerate(nx.bfs_edges(list_graph.graph, list_graph.root_node)):
             if edge_idx % 1000 == 0:
@@ -138,6 +138,7 @@ class CaLiGraph(HierarchyGraph):
 
             graph._add_edges({(pn, cn) for pn in parent_nodes for cn in child_nodes if pn != cn})
 
+        # remove transitive edges to root
         edges_to_remove = set()
         for node in graph.nodes:
             parents = graph.parents(node)
@@ -146,6 +147,13 @@ class CaLiGraph(HierarchyGraph):
 
         graph._remove_edges(edges_to_remove)
         util.get_logger().debug(f'CaLiGraph: PostProcessing - Removed {len(edges_to_remove)} transitive root edges.')
+
+        # add Wikipedia categories to nodes that have an exact name match
+        for node in graph.nodes:
+            cat_name = cat_util.name2category(graph.get_name(node))
+            if cat_name in cat_store.get_categories() and cat_name not in graph.get_parts(node):
+                graph._set_parts(node, graph.get_parts(node) | cat_name)
+
         # clean up
         # todo: cleanup
         #   - check for cycles ?
@@ -165,7 +173,7 @@ class CaLiGraph(HierarchyGraph):
         return node_id
 
     def _add_list_to_graph(self, lst: str, lst_name: str, list_graph: ListGraph) -> str:
-        node_id = self.get_caligraph_class(lst_name)
+        node_id = self.get_caligraph_class(lst_name, disable_normalization=True)
         node_parts = list_graph.get_parts(lst)
 
         # check for equivalent mapping and existing node_id (if they map to more than one node -> log error)
@@ -200,10 +208,10 @@ class CaLiGraph(HierarchyGraph):
     @staticmethod
     def get_caligraph_name(name: str, disable_normalization=False) -> str:
         name = name[4:] if name.startswith('the ') else name
-        canonical_name = nlp_util.get_canonical_name(name, disable_normalization=disable_normalization)
-        canonical_name = nlp_util.singularize_phrase(nlp_util.parse(canonical_name, disable_normalization=disable_normalization))
-        return canonical_name[0].upper() + canonical_name[1:]
+        return nlp_util.get_canonical_name(name, disable_normalization=disable_normalization)
 
     @classmethod
-    def get_caligraph_class(cls, caligraph_name: str) -> str:
+    def get_caligraph_class(cls, caligraph_name: str, disable_normalization=False) -> str:
+        caligraph_name = nlp_util.singularize_phrase(nlp_util.parse(caligraph_name, disable_normalization=disable_normalization))
+        caligraph_name = caligraph_name[0].upper() + caligraph_name[1:]
         return cls.get_ontology_namespace() + caligraph_name.replace(' ', '_')

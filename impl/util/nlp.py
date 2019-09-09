@@ -25,6 +25,7 @@ def get_canonical_name(text: str, disable_normalization=True) -> str:
     text = remove_by_phrase(parse(text, disable_normalization=disable_normalization), return_doc=False)  # remove by-phrase
     text = re.sub(r'\s+\([^()]+-[^()]+\)$', '', text)  # remove trailing parentheses with number or letter ranges, e.g. 'Interstate roads (1-10)'
     text = re.sub(r'\s+\([A-Z]\)$', '', text)  # remove trailing parentheses with single letter, e.g. 'Interstate roads (Y)'
+    text = re.sub(r'\s*[-:,]\s*[A-Z][a-z]*\s?-\s?[A-Z][a-z]*$', '', text)  # remove trailing alphabetical ranges, e.g. 'Drugs: Sp-Sub'
     text = re.sub(r'\s*[-:]\s*([A-Z],\s*)*[A-Z]$', '', text)  # remove trailing alphabetical splits, e.g. 'Football clubs in Sweden - Z' or '.. - X, Y, Z'
     text = re.sub(r'\s+([A-Z],\s*)+[A-Z]$', '', text)  # remove trailing alphabetical splits without indicator, e.g. 'Fellows of the Royal Society A, B, C'
     return _regularize_whitespaces(text)
@@ -119,7 +120,9 @@ def _remove_parentheses_content(text: str) -> str:
 
 
 def _regularize_whitespaces(text: str) -> str:
-    return re.sub(r'\s+', ' ', text).strip()
+    result = re.sub(r'\s+', ' ', text).strip()
+    result = result[:-1] if result.endswith(',') else result
+    return result
 
 
 def persist_cache():
