@@ -274,19 +274,21 @@ def _compute_label_for_entity(listpage_uri: str, entity_uri: str, lp_valid_resou
 
 def _get_category_ancestors_for_list(listpage_uri: str) -> set:
     categories = set()
+    cat_graph = cat_base.get_merged_graph()
     mapped_categories = _get_categories_for_list(listpage_uri)
-    ancestor_categories = {ancestor for cat in mapped_categories for ancestor in cat_base.get_merged_graph().ancestors(cat)}
+    ancestor_categories = {ancestor for cat in mapped_categories.intersection(cat_graph.nodes) for ancestor in cat_graph.ancestors(cat)}
     for cat in mapped_categories | ancestor_categories:
-        categories.update(cat_base.get_merged_graph().get_categories(cat))
+        categories.update(cat_graph.get_categories(cat) if cat in cat_graph.nodes else {cat})
     return categories
 
 
 def _get_category_descendants_for_list(listpage_uri: str) -> set:
     categories = set()
+    cat_graph = cat_base.get_merged_graph()
     mapped_categories = _get_categories_for_list(listpage_uri)
-    descendant_categories = {descendant for cat in mapped_categories for descendant in cat_base.get_merged_graph().descendants(cat)}
+    descendant_categories = {descendant for cat in mapped_categories.intersection(cat_graph.nodes) for descendant in cat_graph.descendants(cat)}
     for cat in mapped_categories | descendant_categories:
-        categories.update(cat_base.get_merged_graph().get_categories(cat))
+        categories.update(cat_graph.get_categories(cat) if cat in cat_graph.nodes else {cat})
     return categories
 
 
