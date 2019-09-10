@@ -5,12 +5,18 @@ import impl.category.cat2ax as cat_axioms
 from collections import defaultdict
 
 
-def find_dbpedia_parent(graph: CaLiGraph, node: str, resource_weight=0) -> dict:
+def find_dbpedia_parent(graph: CaLiGraph, node: str) -> dict:
     name = graph.get_name(node)
     head_lemmas = nlp_util.get_head_lemmas(nlp_util.parse(name))
-    type_lexicalisation_scores = cat_axioms._get_type_surface_scores(head_lemmas)
-    type_resource_scores = defaultdict(lambda: resource_weight, _compute_type_resource_scores(graph, node))
-    return {t: (type_lexicalisation_scores[t], type_resource_scores[t], type_lexicalisation_scores[t] * type_resource_scores[t]) for t in type_lexicalisation_scores}
+    type_lexicalisation_scores = defaultdict(int, cat_axioms._get_type_surface_scores(head_lemmas))
+    type_resource_scores = defaultdict(int, _compute_type_resource_scores(graph, node))
+
+    if not type_lexicalisation_scores:
+        return type_resource_scores
+    if not type_resource_scores:
+        return type_lexicalisation_scores
+
+    return {t: (type_lexicalisation_scores[t], type_resource_scores[t], type_lexicalisation_scores[t] * type_resource_scores[t]) for t in (set(type_lexicalisation_scores) | set(type_resource_scores))}
 
 
 def _compute_type_resource_scores(graph: CaLiGraph, node: str) -> dict:
