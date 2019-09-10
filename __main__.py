@@ -32,13 +32,13 @@ if __name__ == '__main__':
         util.get_logger().info('Starting listpage parsing..')
 
         list_base.get_table_listpage_entity_features()
+        nlp_util.persist_cache()
 
         #caligraph = cali_base.get_base_graph()
         #util.get_logger().info(caligraph.statistics)
 
         #cat_graph = cat_base.get_merged_graph()
         #util.get_logger().info('catgraph done.')
-        #nlp_util.persist_cache()
         #util.get_logger().info('cache persist done.')
         #list_graph = list_base.get_merged_listgraph()
         #util.get_logger().info('listgraph done.')
