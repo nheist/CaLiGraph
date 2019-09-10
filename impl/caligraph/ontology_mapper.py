@@ -12,9 +12,9 @@ def find_dbpedia_parent(graph: CaLiGraph, node: str) -> dict:
     type_resource_scores = defaultdict(int, _compute_type_resource_scores(graph, node))
 
     if not type_lexicalisation_scores:
-        return type_resource_scores
+        return {t: (0, score, score) for t, score in type_resource_scores.items()}
     if not type_resource_scores:
-        return type_lexicalisation_scores
+        return {t: (score, 0, score) for t, score in type_lexicalisation_scores.items()}
 
     return {t: (type_lexicalisation_scores[t], type_resource_scores[t], type_lexicalisation_scores[t] * type_resource_scores[t]) for t in (set(type_lexicalisation_scores) | set(type_resource_scores))}
 
