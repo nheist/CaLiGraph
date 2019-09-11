@@ -56,14 +56,17 @@ def get_head_lemmas(doc: Doc) -> set:
     return {w.lemma_ for w in doc if w.tag_ == 'NNS' and w.ent_type_ == 'LH'}
 
 
-def tag_lexical_head(doc: Doc, valid_words=None) -> Doc:
+def tag_lexical_head(doc: Doc) -> Doc:
     """Return `doc` where the lexical head is tagged as the entity 'LH'."""
+
+    # ensure that numbers are also regarded as nouns if being stand-alone
+    if doc[0].tag_ == 'CD' and (len(doc) < 2 or not doc[1].tag_.startswith('NN')):
+        doc.ents = [Span(doc, 0, 1, label=doc.vocab.strings['LH'])]
+        return doc
+
     chunk_words = {w for chunk in doc.noun_chunks for w in chunk}
     lexhead_start = None
     for chunk in doc.noun_chunks:
-        if valid_words and all(w not in chunk.text for w in valid_words):
-            continue
-
         # find the lexical head by looking for plural nouns (and ignore things like parentheses, conjunctions, ..)
         elem = chunk.root
         if elem.text.istitle() or elem.tag_ not in ['NN', 'NNS']:
