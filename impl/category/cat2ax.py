@@ -152,7 +152,7 @@ def _get_type_surface_scores(words):
         for t, score in dbp_store.get_type_lexicalisations(lemma).items():
             lexicalisation_scores[t] += score
     total_scores = sum(lexicalisation_scores.values())
-    return defaultdict(lambda: 0, {t: score / total_scores for t, score in lexicalisation_scores.items()})
+    return defaultdict(lambda: 0.0, {t: score / total_scores for t, score in lexicalisation_scores.items()})
 
 
 # --- PATTERN APPLICATION ---
