@@ -8,7 +8,8 @@ from collections import defaultdict
 def find_dbpedia_parent(graph: CaLiGraph, node: str) -> dict:
     name = graph.get_name(node)
     head_lemmas = nlp_util.get_head_lemmas(nlp_util.parse(name))
-    type_lexicalisation_scores = defaultdict(lambda: .1, cat_axioms._get_type_surface_scores(head_lemmas))
+    lexicalisation_default_score = .1 if len(graph.get_resources(node)) > 2 else 0.0
+    type_lexicalisation_scores = defaultdict(lambda: lexicalisation_default_score, cat_axioms._get_type_surface_scores(head_lemmas))
     type_resource_scores = defaultdict(lambda: 0.0, _compute_type_resource_scores(graph, node))
 
     return {t: (type_lexicalisation_scores[t], type_resource_scores[t], type_lexicalisation_scores[t] * type_resource_scores[t]) for t in (set(type_lexicalisation_scores) | set(type_resource_scores))}

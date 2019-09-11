@@ -148,11 +148,21 @@ def _get_resource_surface_scores(text):
 
 def _get_type_surface_scores(words):
     lexicalisation_scores = defaultdict(lambda: 0)
-    for lemma in [nlp_util.parse(w)[0].lemma_ for w in words]:
+    word_lemmas = [nlp_util.parse(w)[0].lemma_ for w in words]
+    for lemma in word_lemmas:
         for t, score in dbp_store.get_type_lexicalisations(lemma).items():
             lexicalisation_scores[t] += score
     total_scores = sum(lexicalisation_scores.values())
-    return defaultdict(lambda: 0.0, {t: score / total_scores for t, score in lexicalisation_scores.items()})
+    type_surface_scores = defaultdict(lambda: 0.0, {t: score / total_scores for t, score in lexicalisation_scores.items()})
+
+    # make sure that exact matches get at least appropriate probability
+    for lemma in word_lemmas:
+        word_type = dbp_store.get_type_by_name(lemma)
+        if word_type:
+            min_word_type_score = 1 / len(words)
+            type_surface_scores[word_type] = max(type_surface_scores[word_type], min_word_type_score)
+
+    return type_surface_scores
 
 
 # --- PATTERN APPLICATION ---

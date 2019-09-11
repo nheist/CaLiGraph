@@ -321,6 +321,14 @@ def get_all_types() -> set:
     return set(_get_type_graph().nodes)
 
 
+def get_type_by_name(name: str) -> Optional[str]:
+    global __TYPE_LABELS__
+    if '__TYPE_LABELS__' not in globals():
+        __TYPE_LABELS__ = defaultdict(lambda: None, {get_label(t).lower(): t for t in get_all_types()})
+
+    return __TYPE_LABELS__[name]
+
+
 def get_independent_types(dbp_types: set) -> set:
     """Return only types that are independent, i.e. there are no two types T, T' with T transitiveSupertypeOf T'"""
     return dbp_types.difference({st for t in dbp_types for st in get_transitive_supertypes(t)})
