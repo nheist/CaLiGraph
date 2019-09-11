@@ -77,6 +77,8 @@ def load_cache(cache_identifier: str, version=None):
         return None
     if _should_store_as_hdf(cache_identifier):
         return pd.read_hdf(_get_cache_path(cache_identifier, version=version), key='df')
+    if _should_store_as_csv(cache_identifier):
+        return pd.read_csv(_get_cache_path(cache_identifier, version=version), sep=';', index_col=0)
     else:
         open_func = _get_cache_open_func(cache_identifier)
         with open_func(cache_path, mode='rb') as cache_file:
@@ -87,6 +89,8 @@ def update_cache(cache_identifier: str, cache_obj, version=None):
     """Update the object cached at `cache_identifier` with `cache_obj`."""
     if _should_store_as_hdf(cache_identifier):
         cache_obj.to_hdf(_get_cache_path(cache_identifier, version=version), key='df', mode='w')
+    elif _should_store_as_csv(cache_identifier):
+        cache_obj.to_csv(_get_cache_path(cache_identifier, version=version), sep=';')
     else:
         open_func = _get_cache_open_func(cache_identifier)
         with open_func(_get_cache_path(cache_identifier, version=version), mode='wb') as cache_file:
@@ -97,7 +101,12 @@ def _get_cache_path(cache_identifier: str, version=None) -> Path:
     config = get_config('cache.{}'.format(cache_identifier))
     filename = config['filename']
     version = version or config['version']
-    base_fileformat = '.h5' if _should_store_as_hdf(cache_identifier) else '.p'
+    if _should_store_as_hdf(cache_identifier):
+        base_fileformat = '.h5'
+    elif _should_store_as_csv(cache_identifier):
+        base_fileformat = '.csv'
+    else:
+        base_fileformat = '.p'
     fileformat = base_fileformat + ('.bz2' if _should_compress_cache(cache_identifier) else '')
     return Path(os.path.join(_get_root_path(), 'data', 'cache', f'{filename}_v{version}{fileformat}'))
 
@@ -114,6 +123,11 @@ def _should_compress_cache(cache_identifier: str) -> bool:
 def _should_store_as_hdf(cache_identifier: str) -> bool:
     config = get_config('cache.{}'.format(cache_identifier))
     return 'store_as_hdf' in config and config['store_as_hdf']
+
+
+def _should_store_as_csv(cache_identifier: str) -> bool:
+    config = get_config('cache.{}'.format(cache_identifier))
+    return 'store_as_csv' in config and config['store_as_csv']
 
 
 def _get_root_path() -> str:

@@ -93,7 +93,8 @@ def _compute_listpage_entity_features(list_type: str) -> pd.DataFrame:
 
     entity_features = list_features.with_section_name_features(entity_features)
 
-    entity_features.to_hdf('enum_entitiy_backup.csv', key='df', mode='w')  # TODO: REMOVE!
+    entity_features.to_csv('table_entity_backup.csv', sep=';')  # TODO: REMOVE!
+    #entity_features.to_hdf('table_entity_backup.h5', key='df', mode='w')  # TODO: REMOVE!
     util.get_logger().info('List-Entities: Assigning entity labels..')
     list_features.assign_entity_labels(entity_features)
 
