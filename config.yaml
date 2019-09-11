@@ -14,7 +14,7 @@ cat2ax:
 logging:
   level: 'DEBUG'
   to_file: True
-  filename: 'caligraph-merge'
+  filename: 'caligraph-extraction-v6'
 
 mailer:
   sender: 'errors.nheist@gmail.com'
@@ -110,33 +110,37 @@ results:
 cache:
   # version 2: added resource types from sdtyped + lhd
   # version 5: complete new run for fresh caligraph
+  # version 6: new extraction with improved headlemma matching
   catgraph_conceptual:
     filename: 'catgraph-conceptual'
-    version: 5  # v2: do not remove unconnected nodes initially ; v3: better synonym matching
+    version: 6  # v2: do not remove unconnected nodes initially ; v3: better synonym matching
   catgraph_wikitaxonomy:
     filename: 'catgraph-wikitaxonomy'
-    version: 5  # v2: do not remove unconnected nodes initially ; v3: better synonym matching
+    version: 6  # v2: do not remove unconnected nodes initially ; v3: better synonym matching
   catgraph_cyclefree:
     filename: 'catgraph-cyclefree'
-    version: 5  # v2: do not remove unconnected nodes initially ; v3: better synonym matching
+    version: 6  # v2: do not remove unconnected nodes initially ; v3: better synonym matching
   catgraph_merged:
     filename: 'catgraph-merged'
-    version: 5  # v2: do not remove unconnected nodes initially ; v3: better synonym matching
+    version: 6  # v2: do not remove unconnected nodes initially ; v3: better synonym matching
   listgraph_base:
     filename: 'listgraph-base'
-    version: 5  # v2: better synonym matching ; v3: with all listpages
+    version: 6  # v2: better synonym matching ; v3: with all listpages
   listgraph_wikitaxonomy:
     filename: 'listgraph-wikitaxonomy'
-    version: 5  # v2: better synonym matching ; v3: with all listpages
+    version: 6  # v2: better synonym matching ; v3: with all listpages
   listgraph_cyclefree:
     filename: 'listgraph-cyclefree'
-    version: 5  # v2: better synonym matching ; v3: with all listpages
+    version: 6  # v2: better synonym matching ; v3: with all listpages
   listgraph_merged:
     filename: 'listgraph-merged'
-    version: 5  # v2: better synonym matching ; v3: with all listpages
+    version: 6  # v2: better synonym matching ; v3: with all listpages
   caligraph_base:
     filename: 'caligraph-base'
-    version: 5
+    version: 6
+  caligraph_merged_ontology:
+    filename: 'caligraph-merged-ontology'
+    version: 6
   spacy_docs:
     filename: 'spacy-docs'
     version: 3  # version 2 incl. listpages; version 3 for spacy 2.1
@@ -203,10 +207,10 @@ cache:
     version: 1
   dbpedia_category_sets:
     filename: 'dbpedia-category-sets'
-    version: 5  # new conceptual categorygraph version (v2)
+    version: 6  # new conceptual categorygraph version (v2)
   dbpedia_categories_conceptual:
     filename: 'dbpedia-category-conceptual'
-    version: 1
+    version: 6
   dbpedia_property_frequency_distribution:
     filename: 'dbpedia-property-frequency-distribution'
     version: 1
@@ -227,10 +231,10 @@ cache:
     version: 1
   dbpedia_list_equivalents:
     filename: 'dbpedia-list-equivalents'
-    version: 5  # v2: better synonym matching
+    version: 6  # v2: better synonym matching
   dbpedia_list_parents:
     filename: 'dbpedia-list-parents'
-    version: 5  # v2: better synonym matching
+    version: 6  # v2: better synonym matching
   dbpedia_listpage_markup:
     filename: 'dbpedia-listpage-markup'
     version: 1
@@ -258,7 +262,7 @@ cache:
     compress: True
   wikitaxonomy_hypernyms:
     filename: 'wikitaxonomy-hypernyms'
-    version: 5  # version 1 -> thresholds 10 / 100 / .4  // v2: new cat2ax version (v2)
+    version: 6  # version 1 -> thresholds 10 / 100 / .4  // v2: new cat2ax version (v2)
   cat2ax_axioms:
     filename: 'cat2ax-axioms'
-    version: 5  # new conceptual categorygraph version (v2)
+    version: 6  # new conceptual categorygraph version (v2)
