@@ -8,6 +8,7 @@ import networkx as nx
 from typing import Optional, Tuple
 import functools
 import numpy as np
+import inflection
 
 
 # DBpedia resources
@@ -326,7 +327,7 @@ def get_type_by_name(name: str) -> Optional[str]:
     if '__TYPE_LABELS__' not in globals():
         __TYPE_LABELS__ = defaultdict(lambda: None, {get_label(t).lower(): t for t in get_all_types()})
 
-    return __TYPE_LABELS__[name]
+    return __TYPE_LABELS__[name] if __TYPE_LABELS__[name] else __TYPE_LABELS__[inflection.singularize(name)]
 
 
 def get_independent_types(dbp_types: set) -> set:
@@ -435,9 +436,9 @@ def get_type_lexicalisations(lemma: str) -> dict:
     """Return the type lexicalisation score for a set of lemmas (i.e. the probabilities of types given `lemmas`)."""
     global __TYPE_LEXICALISATIONS__
     if '__TYPE_LEXICALISATIONS__' not in globals():
-        __TYPE_LEXICALISATIONS__ = util.load_cache('dbpedia_type_lexicalisations')
+        __TYPE_LEXICALISATIONS__ = defaultdict(dict, util.load_cache('dbpedia_type_lexicalisations'))
 
-    return __TYPE_LEXICALISATIONS__[lemma] if lemma in __TYPE_LEXICALISATIONS__ else {}
+    return __TYPE_LEXICALISATIONS__[lemma] if __TYPE_LEXICALISATIONS__[lemma] else __TYPE_LEXICALISATIONS__[inflection.singularize(lemma)]
 
 
 def get_cooccurrence_frequency(dbp_type: str, another_dbp_type: str) -> float:
