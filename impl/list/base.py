@@ -77,24 +77,25 @@ def get_table_listpage_entity_features() -> pd.DataFrame:
 def _compute_listpage_entity_features(list_type: str) -> pd.DataFrame:
     util.get_logger().info(f'List-Entities: Computing entity features for {list_type}..')
 
-    entity_features = []
-    parsed_listpages = list_parser.get_parsed_listpages()
-    for idx, (lp, lp_data) in enumerate(parsed_listpages.items()):
-        if idx % 1000 == 0:
-            util.get_logger().debug(f'List-Entities: Processed {idx} of {len(parsed_listpages)} listpages.')
-
-        if lp_data['type'] != list_type:
-            continue
-        if list_type == list_parser.LIST_TYPE_ENUM:
-            entity_features.extend(list_features.make_enum_entity_features(lp_data))
-        elif list_type == list_parser.LIST_TYPE_TABLE:
-            entity_features.extend(list_features.make_table_entity_features(lp_data))
-    entity_features = pd.DataFrame(data=entity_features)
-
-    entity_features = list_features.with_section_name_features(entity_features)
-
-    entity_features.to_csv('table_entity_backup.csv', sep=';')  # TODO: REMOVE!
+#    entity_features = []
+#    parsed_listpages = list_parser.get_parsed_listpages()
+#    for idx, (lp, lp_data) in enumerate(parsed_listpages.items()):
+#        if idx % 1000 == 0:
+#            util.get_logger().debug(f'List-Entities: Processed {idx} of {len(parsed_listpages)} listpages.')
+#
+#        if lp_data['type'] != list_type:
+#            continue
+#        if list_type == list_parser.LIST_TYPE_ENUM:
+#            entity_features.extend(list_features.make_enum_entity_features(lp_data))
+#        elif list_type == list_parser.LIST_TYPE_TABLE:
+#            entity_features.extend(list_features.make_table_entity_features(lp_data))
+#    entity_features = pd.DataFrame(data=entity_features)
+#
+#    entity_features = list_features.with_section_name_features(entity_features)
+#
+#    entity_features.to_csv('table_entity_backup.csv', sep=';')  # TODO: REMOVE!
     #entity_features.to_hdf('table_entity_backup.h5', key='df', mode='w')  # TODO: REMOVE!
+    entity_features = pd.read_csv('table_entity_backup.csv', sep=';', index_col=0)
     util.get_logger().info('List-Entities: Assigning entity labels..')
     list_features.assign_entity_labels(entity_features)
 

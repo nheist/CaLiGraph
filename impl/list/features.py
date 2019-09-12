@@ -253,11 +253,18 @@ def assign_entity_labels(df: pd.DataFrame):
         # locate all entries that have a positive example
         positive_examples = set()
         for _, row in df[df['label'] == 1].iterrows():
-            positive_examples.add((row['_listpage_uri'], row['_section_name'], row['_entry_idx']))
+            positive_examples.add(_get_entry_id(df, row))
         # make all candidate examples negative that appear in an entry with a positive example
         for i, row in df[df['label'] == -1].iterrows():
-            if (row['_listpage_uri'], row['_section_name'], row['_entry_idx']) in positive_examples:
+            if _get_entry_id(df, row) in positive_examples:
                 df.at[i, 'label'] = 0
+
+
+def _get_entry_id(df: pd.DataFrame, row: pd.Series) -> tuple:
+    if '_entry_idx' in df.columns:
+        return row['_listpage_uri'], row['_section_name'], row['_entry_idx']
+    else:
+        return row['_listpage_uri'], row['_section_name'], row['_table_idx'], row['_row_idx']
 
 
 def _compute_label_for_entity(listpage_uri: str, entity_uri: str, lp_valid_resources: dict, lp_axioms: dict) -> int:

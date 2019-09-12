@@ -14,7 +14,7 @@ cat2ax:
 logging:
   level: 'DEBUG'
   to_file: True
-  filename: 'caligraph-extraction-v6'
+  filename: 'table-entity-extraction'
 
 mailer:
   sender: 'errors.nheist@gmail.com'

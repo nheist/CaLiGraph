@@ -29,14 +29,14 @@ def setup():
 
 if __name__ == '__main__':
     try:
-        util.get_logger().info('Starting extraction of caligraph v6..')
+        util.get_logger().info('Starting extraction of table entities..')
 
-        #list_base.get_table_listpage_entity_features()
+        list_base.get_table_listpage_entity_features()
         #nlp_util.persist_cache()
 
-        setup()
-        caligraph = cali_base.get_base_graph()
-        util.get_logger().info(caligraph.statistics)
+        #setup()
+        #caligraph = cali_base.get_base_graph()
+        #util.get_logger().info(caligraph.statistics)
 
         #cat_graph = cat_base.get_merged_graph()
         #util.get_logger().info('catgraph done.')
@@ -54,8 +54,8 @@ if __name__ == '__main__':
         #nlp_util.persist_cache()
         #util.get_logger().info('cache persist done.')
 
-        mailer.send_success(f'FINISHED extraction of caligraph v6')
-        util.get_logger().info('Finished extraction of caligraph v6.')
+        mailer.send_success(f'FINISHED extraction of table entities')
+        util.get_logger().info('Finished extraction of table entities.')
     except Exception as e:
         error_msg = traceback.format_exc()
         mailer.send_error(error_msg)
