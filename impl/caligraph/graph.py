@@ -32,7 +32,7 @@ class CaLiGraph(HierarchyGraph):
         list_parts_count = len({p for n in self.nodes for p in self.get_parts(n) if list_util.is_listpage(p)})
         listcat_parts_count = len({p for n in self.nodes for p in self.get_parts(n) if list_util.is_listcategory(p)})
         classtree_depth_avg = np.mean([node_depths[node] for node in leaf_nodes])
-        branching_factor_avg = np.mean([d for _, d in self.graph.out_degree])
+        branching_factor_avg = np.mean([d for _, d in self.graph.out_degree if d > 0])
         relation_count = 0
 
         category_instances = set()
