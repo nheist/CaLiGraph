@@ -74,9 +74,9 @@ class CaLiGraph(HierarchyGraph):
         resources = set()
         for part in self.get_parts(node):
             if cat_util.is_category(part):
-                resources.update(cat_store.get_resources(part))
+                resources.update({r for r in cat_store.get_resources(part) if dbp_store.is_possible_resource(r)})
             elif list_util.is_listpage(part):
-                resources.update(list_base.get_listpage_entities(part))
+                resources.update({r for r in list_base.get_listpage_entities(part) if dbp_store.is_possible_resource(r)})
         return resources
 
     @classmethod
