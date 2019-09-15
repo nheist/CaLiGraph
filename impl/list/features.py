@@ -161,7 +161,7 @@ def make_table_entity_features(lp_data: dict) -> list:
                             '_table_idx': table_idx,
                             '_row_idx': row_idx,
                             '_column_idx': column_idx,
-                            '_column_name': table[0][column_idx]['text'],
+                            '_column_name': table[0][column_idx]['text'] if len(table[0]) > column_idx else '',
                             '_entity_uri': entity_uri,
                             # ENTITY FEATURES
                             'section_pos': _get_relative_position(section_idx, len(sections)),
