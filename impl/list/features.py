@@ -161,6 +161,7 @@ def make_table_entity_features(lp_data: dict) -> list:
                             '_table_idx': table_idx,
                             '_row_idx': row_idx,
                             '_column_idx': column_idx,
+                            '_column_name': table[0][column_idx]['text'],
                             '_entity_uri': entity_uri,
                             # ENTITY FEATURES
                             'section_pos': _get_relative_position(section_idx, len(sections)),
@@ -303,14 +304,14 @@ def _get_categories_for_list(listpage_uri: str) -> set:
     return list_mapping.get_equivalent_categories(listpage_uri) | list_mapping.get_parent_categories(listpage_uri)
 
 
-# COMPUTATION OF SECTION-NAME FEATURES
+# ONE-HOT ENCODE FEATURE BASED ON LISTPAGE FREQUENCY
 
-def with_section_name_features(df: pd.DataFrame) -> pd.DataFrame:
-    # retrieve the 50 sections that appear most often in list pages
-    valid_sections = df[['_section_name', '_listpage_uri']].groupby(by='_section_name')[['_listpage_uri']].nunique().sort_values(by='_listpage_uri', ascending=False).head(50).index.values
-    # one-hot-encode these sections
-    encoder = OneHotEncoder(categories={0: valid_sections}, handle_unknown='ignore', sparse=False)
-    section_values = encoder.fit_transform(df[['_section_name']].fillna(value=''))
-    section_names = encoder.get_feature_names()
-    df_section = pd.DataFrame(data=section_values, columns=section_names)
-    return pd.merge(left=df, right=df_section, left_index=True, right_index=True)
+def onehotencode_feature(df: pd.DataFrame, feature_name: str) -> pd.DataFrame:
+    # retrieve the 50 values that appear most often in list pages
+    frequent_values = df[[feature_name, '_listpage_uri']].groupby(by=feature_name)[['_listpage_uri']].nunique().sort_values(by='_listpage_uri', ascending=False).head(50).index.values
+    # one-hot-encode the most frequent values
+    encoder = OneHotEncoder(categories={0: frequent_values}, handle_unknown='ignore', sparse=False)
+    values = encoder.fit_transform(df[[feature_name]].fillna(value=''))
+    names = encoder.get_feature_names()
+    df_feature = pd.DataFrame(data=values, columns=names)
+    return pd.merge(left=df, right=df_feature, left_index=True, right_index=True)
