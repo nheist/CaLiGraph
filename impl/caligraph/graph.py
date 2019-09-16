@@ -13,6 +13,7 @@ import impl.list.mapping as list_mapping
 import impl.util.nlp as nlp_util
 import numpy as np
 import impl.dbpedia.store as dbp_store
+import impl.caligraph.ontology_mapper as cali_mapping
 
 
 class CaLiGraph(HierarchyGraph):
@@ -69,13 +70,12 @@ class CaLiGraph(HierarchyGraph):
             '{:<30} | {:>7}'.format('new instances', len(list_instances.difference(dbp_store.get_resources()))),
             ])
 
-    def get_resources(self, node: str) -> set:
-        # todo: change to caligraph namespace
+    def get_dbpedia_resources(self, node: str, use_listpage_resources=True) -> set:
         resources = set()
         for part in self.get_parts(node):
             if cat_util.is_category(part):
                 resources.update({r for r in cat_store.get_resources(part) if dbp_store.is_possible_resource(r)})
-            elif list_util.is_listpage(part):
+            elif use_listpage_resources and list_util.is_listpage(part):
                 resources.update({r for r in list_base.get_listpage_entities(part) if dbp_store.is_possible_resource(r)})
         return resources
 
@@ -156,9 +156,6 @@ class CaLiGraph(HierarchyGraph):
             if cat_name in cat_store.get_categories() and cat_name not in graph.get_parts(node):
                 graph._set_parts(node, graph.get_parts(node) | {cat_name})
 
-        # clean up
-        # todo: cleanup
-        #   - check for cycles ?
         return graph
 
     def _add_category_to_graph(self, category: str, category_name: str, cat_graph: CategoryGraph) -> str:
@@ -197,6 +194,46 @@ class CaLiGraph(HierarchyGraph):
         parent_nodes = {node for parent_cat in list_mapping.get_parent_categories(lst) for node in self.get_nodes_for_part(parent_cat)}
         self._add_edges({(pn, node_id) for pn in parent_nodes})
 
+        return node_id
+
+    def merge_ontology(self):
+        # compute mapping from caligraph-nodes to dbpedia-types
+        node_to_dbp_types_mapping = cali_mapping.find_mappings(self, False)
+
+        # add dbpedia types to caligraph
+        type_graph = dbp_store._get_type_graph()
+        for parent_type, child_type in nx.bfs_edges(type_graph, rdf_util.CLASS_OWL_THING):
+            parent_nodes = self.get_nodes_for_part(parent_type)
+            if not parent_nodes:
+                raise ValueError(f'"{parent_type}" is not in graph despite of BFS!')
+
+            child_nodes = self.get_nodes_for_part(child_type)
+            if not child_nodes:
+                child_nodes.add(self._add_dbp_type_to_graph(child_type))
+
+            self._add_edges({(pn, cn) for pn in parent_nodes for cn in child_nodes if pn != cn})
+
+        # connect caligraph-nodes with dbpedia-types
+        for node, dbp_types in node_to_dbp_types_mapping.items():
+            parent_nodes = {n for t in dbp_types for n in self.get_nodes_for_part(t)}.difference(node)
+            if parent_nodes:
+                self._remove_edges({(self.root_node, node)})
+                self._add_edges({(parent, node) for parent in parent_nodes})
+
+        return self
+
+    def _add_dbp_type_to_graph(self, dbp_type: str) -> str:
+        name = dbp_store.get_label(dbp_type)
+        node_id = self.get_ontology_namespace() + name.replace(' ', '_')
+        node_parts = {dbp_type}
+        if self.has_node(node_id):
+            # extend existing node in graph
+            node_parts.update(self.get_parts(node_id))
+        else:
+            # create new node in graph
+            self._add_nodes({node_id})
+            self._set_name(node_id, name)
+        self._set_parts(node_id, node_parts)
         return node_id
 
     @staticmethod
