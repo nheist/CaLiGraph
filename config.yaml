@@ -141,6 +141,9 @@ cache:
   caligraph_merged_ontology:
     filename: 'caligraph-merged-ontology'
     version: 6
+  caligraph_filtered:
+    filename: 'caligraph-filtered'
+    version: 6
   spacy_docs:
     filename: 'spacy-docs'
     version: 3  # version 2 incl. listpages; version 3 for spacy 2.1
@@ -251,7 +254,10 @@ cache:
     store_as_csv: True
   dbpedia_listpage_entities:
     filename: 'dbpedia-listpage-entities'
-    version: 1
+    version: 1  # todo: recompute (maybe even with table entities)
+  dbpedia_filtered_listpage_entities:
+    filename: 'dbpedia-filtered-listpage-entities'
+    version: 1  # todo: recompute (maybe even with table entities)
   wikidata_dbpedia_resource_mapping:
     filename: 'wikidata-dbpedia-resource-mapping'
     version: 1

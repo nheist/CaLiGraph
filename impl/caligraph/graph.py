@@ -13,13 +13,22 @@ import impl.list.mapping as list_mapping
 import impl.util.nlp as nlp_util
 import numpy as np
 import impl.dbpedia.store as dbp_store
+import impl.dbpedia.util as dbp_util
 import impl.caligraph.ontology_mapper as cali_mapping
+from collections import defaultdict
 
 
 class CaLiGraph(HierarchyGraph):
 
     def __init__(self, graph: nx.DiGraph, root_node: str = None):
         super().__init__(graph, root_node or rdf_util.CLASS_OWL_THING)
+        self._node_dbpedia_types = None
+
+    def _reset_node_indices(self):
+        self._node_dbpedia_types = None
+
+    def _reset_edge_indices(self):
+        self._node_dbpedia_types = None
 
     @property
     def statistics(self) -> str:
@@ -78,6 +87,20 @@ class CaLiGraph(HierarchyGraph):
             elif use_listpage_resources and list_util.is_listpage(part):
                 resources.update({r for r in list_base.get_listpage_entities(part) if dbp_store.is_possible_resource(r)})
         return resources
+
+    def get_dbpedia_types(self, node: str) -> set:
+        if not self._node_dbpedia_types:
+            self._node_dbpedia_types = defaultdict(set)
+            for node, _ in nx.bfs_edges(self.graph, self.root_node):
+                self._node_dbpedia_types[node] = self._compute_dbpedia_types(node)
+        return self._node_dbpedia_types[node]
+
+    def _compute_dbpedia_types(self, node: str) -> set:
+        if node in self._node_dbpedia_types:
+            return self._node_dbpedia_types[node]
+        node_types = {p for p in self.get_parts(node) if dbp_util.is_dbp_type(p)}
+        parent_types = {t for parent in self.parents(node) for t in self._compute_dbpedia_types(parent)}
+        return node_types | parent_types
 
     @classmethod
     def build_graph(cls):
@@ -196,9 +219,9 @@ class CaLiGraph(HierarchyGraph):
 
         return node_id
 
-    def merge_ontology(self):
+    def merge_ontology(self, use_listpage_resources: bool):
         # compute mapping from caligraph-nodes to dbpedia-types
-        node_to_dbp_types_mapping = cali_mapping.find_mappings(self, False)
+        node_to_dbp_types_mapping = cali_mapping.find_mappings(self, use_listpage_resources)
 
         # add dbpedia types to caligraph
         type_graph = dbp_store._get_type_graph()

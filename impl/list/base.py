@@ -4,6 +4,9 @@ from . import parser as list_parser
 from . import features as list_features
 from . import extract as list_extract
 from impl.list.graph import ListGraph
+from impl.caligraph.graph import CaLiGraph
+import impl.dbpedia.store as dbp_store
+import impl.dbpedia.heuristics as dbp_heur
 from collections import defaultdict
 
 
@@ -42,6 +45,26 @@ def get_merged_listgraph() -> ListGraph:
 
 
 # LIST ENTITIES
+
+def get_filtered_listpage_entities(graph: CaLiGraph, listpage: str) -> set:
+    global __FILTERED_LISTPAGE_ENTITIES__
+    if '__FILTERED_LISTPAGE_ENTITIES__' not in globals():
+        initializer = lambda: _filter_listpage_entities(graph)
+        __FILTERED_LISTPAGE_ENTITIES__ = defaultdict(set, util.load_or_create_cache('dbpedia_filtered_listpage_entities', initializer))
+    return __FILTERED_LISTPAGE_ENTITIES__[listpage]
+
+
+def _filter_listpage_entities(graph: CaLiGraph) -> dict:
+    get_listpage_entities('')  # make sure that listpage entities are initialised
+    filtered_entities = {}
+    for lp, entities in __LISTPAGE_ENTITIES__.items():
+        caligraph_nodes = graph.get_nodes_for_part(lp)
+        lp_types = {t for n in caligraph_nodes for types in graph.get_dbpedia_types(n) for t in types}
+        disjoint_types = {dt for t in lp_types for dt in dbp_heur.get_disjoint_types(t)}
+        valid_entities = {e for e in entities if not disjoint_types.intersection(dbp_store.get_transitive_types(e))}
+        filtered_entities[lp] = valid_entities  # TODO: check if it makes sense to discard all lp entities at a certain threshold
+    return filtered_entities
+
 
 def get_listpage_entities(listpage: str) -> set:
     global __LISTPAGE_ENTITIES__
