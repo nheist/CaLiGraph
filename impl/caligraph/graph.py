@@ -22,13 +22,13 @@ class CaLiGraph(HierarchyGraph):
 
     def __init__(self, graph: nx.DiGraph, root_node: str = None):
         super().__init__(graph, root_node or rdf_util.CLASS_OWL_THING)
-        self._node_dbpedia_types = None
+        self._node_dbpedia_types = defaultdict(set)
 
     def _reset_node_indices(self):
-        self._node_dbpedia_types = None
+        self._node_dbpedia_types = defaultdict(set)
 
     def _reset_edge_indices(self):
-        self._node_dbpedia_types = None
+        self._node_dbpedia_types = defaultdict(set)
 
     @property
     def statistics(self) -> str:
@@ -89,18 +89,11 @@ class CaLiGraph(HierarchyGraph):
         return resources
 
     def get_dbpedia_types(self, node: str) -> set:
-        if not self._node_dbpedia_types:
-            self._node_dbpedia_types = defaultdict(set)
-            for node, _ in nx.bfs_edges(self.graph, self.root_node):
-                self._node_dbpedia_types[node] = self._compute_dbpedia_types(node)
+        if node not in self._node_dbpedia_types:
+            node_types = {p for p in self.get_parts(node) if dbp_util.is_dbp_type(p)}
+            parent_types = {t for parent in self.parents(node) for t in self.get_dbpedia_types(parent)}
+            self._node_dbpedia_types[node] = node_types | parent_types
         return self._node_dbpedia_types[node]
-
-    def _compute_dbpedia_types(self, node: str) -> set:
-        if node in self._node_dbpedia_types:
-            return self._node_dbpedia_types[node]
-        node_types = {p for p in self.get_parts(node) if dbp_util.is_dbp_type(p)}
-        parent_types = {t for parent in self.parents(node) for t in self._compute_dbpedia_types(parent)}
-        return node_types | parent_types
 
     @classmethod
     def build_graph(cls):
