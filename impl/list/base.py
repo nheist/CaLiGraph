@@ -4,7 +4,6 @@ from . import parser as list_parser
 from . import features as list_features
 from . import extract as list_extract
 from impl.list.graph import ListGraph
-from impl.caligraph.graph import CaLiGraph
 import impl.dbpedia.store as dbp_store
 import impl.dbpedia.heuristics as dbp_heur
 from collections import defaultdict
@@ -46,7 +45,7 @@ def get_merged_listgraph() -> ListGraph:
 
 # LIST ENTITIES
 
-def get_filtered_listpage_entities(graph: CaLiGraph, listpage: str) -> set:
+def get_filtered_listpage_entities(graph, listpage: str) -> set:
     global __FILTERED_LISTPAGE_ENTITIES__
     if '__FILTERED_LISTPAGE_ENTITIES__' not in globals():
         initializer = lambda: _filter_listpage_entities(graph)
@@ -54,7 +53,7 @@ def get_filtered_listpage_entities(graph: CaLiGraph, listpage: str) -> set:
     return __FILTERED_LISTPAGE_ENTITIES__[listpage]
 
 
-def _filter_listpage_entities(graph: CaLiGraph) -> dict:
+def _filter_listpage_entities(graph) -> dict:
     get_listpage_entities('')  # make sure that listpage entities are initialised
     filtered_entities = {}
     for lp, entities in __LISTPAGE_ENTITIES__.items():
