@@ -1,6 +1,7 @@
 import networkx as nx
 import numpy as np
 from collections import defaultdict
+import copy
 
 
 class BaseGraph:
@@ -9,7 +10,7 @@ class BaseGraph:
         self.root_node = root_node
 
     def copy(self):
-        return self.__class__(self.graph.copy(), root_node=self.root_node)
+        return self.__class__(copy.deepcopy(self.graph), root_node=self.root_node)
 
     @property
     def nodes(self) -> set:
