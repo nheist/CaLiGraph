@@ -41,7 +41,7 @@ def _find_dbpedia_parents(graph, use_listpage_resources: bool, node: str) -> dic
     overall_scores = {t: type_lexicalisation_scores[t] * type_resource_scores[t] for t in type_resource_scores if dbp_util.is_dbp_type(t)}
     max_score = max(overall_scores.values(), default=0)
     if max_score < util.get_config('cat2ax.pattern_confidence'):
-        return {}
+        return defaultdict(float)
 
     mapped_types = {t: score for t, score in overall_scores.items() if score >= max_score}
     result = defaultdict(float)
