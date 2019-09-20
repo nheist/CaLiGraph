@@ -1,14 +1,17 @@
 import impl.list.mapping as list_mapping
+import impl.list.util as list_util
 import impl.dbpedia.store as dbp_store
 import impl.category.store as cat_store
 import impl.category.cat2ax as cat_axioms
 import impl.category.base as cat_base
 import impl.util.nlp as nlp_util
+import impl.util.hypernymy as hyper_util
 import pandas as pd
 import numpy as np
 import util
 from sklearn.preprocessing import OneHotEncoder
 from collections import defaultdict
+import operator
 
 
 # COMPUTATION OF BASIC ENTITY FEATURES OF ENUM LISTPAGES
@@ -136,6 +139,7 @@ def make_table_entity_features(lp_data: dict) -> list:
                         break
 
                 for column_idx, column_data in enumerate(row):
+                    column_name = table[0][column_idx]['text'] if len(table[0]) > column_idx else ''
                     column_text = column_data['text']
                     lp_table_column_words.append(len(column_text.split(' ')))
                     lp_table_column_chars.append(len(column_text))
@@ -161,7 +165,7 @@ def make_table_entity_features(lp_data: dict) -> list:
                             '_table_idx': table_idx,
                             '_row_idx': row_idx,
                             '_column_idx': column_idx,
-                            '_column_name': table[0][column_idx]['text'] if len(table[0]) > column_idx else '',
+                            '_column_name': column_name,
                             '_entity_uri': entity_uri,
                             # ENTITY FEATURES
                             'section_pos': _get_relative_position(section_idx, len(sections)),
@@ -175,6 +179,9 @@ def make_table_entity_features(lp_data: dict) -> list:
                             'column_pos': _get_relative_position(column_idx, len(row)),
                             'column_invpos': _get_relative_position(column_idx, len(row), inverse=True),
                             'column_count': len(row),
+                            'column_list_similar': _compute_column_list_similarity(operator.eq, lp_uri, column_name),
+                            'column_list_synonym': _compute_column_list_similarity(hyper_util.is_synonym, lp_uri, column_name),
+                            'column_list_hypernym': _compute_column_list_similarity(_is_hyper, lp_uri, column_name),
                             'entity_link_pos': _get_relative_position(entity_idx, len(column_entities)),
                             'entity_link_invpos': _get_relative_position(entity_idx, len(column_entities), inverse=True),
                             'entity_first': entity_idx == 0,
@@ -209,6 +216,17 @@ def make_table_entity_features(lp_data: dict) -> list:
         _assign_avg_and_std_to_feature_set(feature_set, lp_table_first_entity_column, 'lp_table_first_entity_column')
 
     return data
+
+
+def _compute_column_list_similarity(sim_func, listpage_uri, column_name):
+    listpage_name = list_util.listpage2name(listpage_uri)
+    listpage_lemmas = {w.lemma_ for w in nlp_util.parse(listpage_name, disable_normalization=True)}
+    column_name_lemmas = {w.lemma_ for w in nlp_util.parse(str(column_name))}
+    return 1 if any(sim_func(l, c) for l in listpage_lemmas for c in column_name_lemmas) else 0
+
+
+def _is_hyper(word_a: str, word_b: str) -> bool:
+    return hyper_util.is_hypernym(word_a, word_b) or hyper_util.is_hypernym(word_b, word_a)
 
 
 def _get_span_for_entity(doc, text, idx):
