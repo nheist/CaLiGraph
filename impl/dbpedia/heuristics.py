@@ -66,7 +66,7 @@ def get_disjoint_types(dbp_type) -> set:
     if '__DISJOINT_TYPES__' not in globals():
         __DISJOINT_TYPES__ = util.load_or_create_cache('dbpedia_heuristic_disjoint_types', _compute_disjoint_types)
 
-    return __DISJOINT_TYPES__[dbp_type] | dbp_store.get_disjoint_types(dbp_type)
+    return __DISJOINT_TYPES__[dbp_type]
 
 
 def _compute_disjoint_types() -> dict:
