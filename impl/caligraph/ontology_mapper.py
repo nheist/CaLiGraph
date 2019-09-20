@@ -8,7 +8,7 @@ import networkx as nx
 
 
 def find_mappings(graph, use_listpage_resources: bool) -> dict:
-    mappings = {node: _find_dbpedia_parents(graph, use_listpage_resources, node) for node in graph.nodes}
+    mappings = {node: _find_dbpedia_parents(graph, use_listpage_resources, node) for node in graph.nodes if node != graph.root_node}
 
     # apply complete transitivity to the graph in order to discover disjointnesses
     for parent, child in nx.bfs_edges(graph.graph, graph.root_node):
