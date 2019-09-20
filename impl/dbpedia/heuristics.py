@@ -66,7 +66,7 @@ def get_disjoint_types(dbp_type) -> set:
     if '__DISJOINT_TYPES__' not in globals():
         __DISJOINT_TYPES__ = util.load_or_create_cache('dbpedia_heuristic_disjoint_types', _compute_disjoint_types)
 
-    return __DISJOINT_TYPES__[dbp_type] | dbp_store.get_disjoint_types(dbp_type)
+    return __DISJOINT_TYPES__[dbp_type]
 
 
 def _compute_disjoint_types() -> dict:
@@ -80,6 +80,14 @@ def _compute_disjoint_types() -> dict:
             if _compute_type_similarity(dbp_type, other_dbp_type, type_property_weights) <= DISJOINT_THRESHOLD:
                 disjoint_types[dbp_type].update(dbp_store.get_transitive_subtype_closure(other_dbp_type))
                 disjoint_types[other_dbp_type].update(dbp_store.get_transitive_subtype_closure(dbp_type))
+
+    # remove any disjointness axioms that would violate the ontology hierarchy
+    # i.e. if two types share a common subtype then they can't be disjoint
+    for t in dbp_store.get_all_types().difference({rdf_util.CLASS_OWL_THING}):
+        transitive_types = dbp_store.get_transitive_supertype_closure(t)
+        for tt in transitive_types:
+            disjoint_types[tt] = disjoint_types[tt].difference(transitive_types)
+
     return disjoint_types
 
 

@@ -108,6 +108,8 @@ results:
     type_assertions: 'cat2ax_type-assertions.csv'
 
 cache:
+  # TODO: recompute everything related to subtypes as there was a problem with equivalent types (e.g. Weapon was subtype of Ship)
+  # TODO: recompute everything related to disjointesses as we improved them
   # version 2: added resource types from sdtyped + lhd
   # version 5: complete new run for fresh caligraph
   # version 6: new extraction with improved headlemma matching
@@ -228,7 +230,7 @@ cache:
     version: 1
   dbpedia_heuristic_disjoint_types:
     filename: 'dbpedia-heuristic-disjoint-types'
-    version: 1
+    version: 2
   dbpedia_listpages:
     filename: 'dbpedia-listpages'
     version: 1
