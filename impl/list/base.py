@@ -58,7 +58,7 @@ def _filter_listpage_entities(graph) -> dict:
     filtered_entities = {}
     for lp, entities in __LISTPAGE_ENTITIES__.items():
         caligraph_nodes = graph.get_nodes_for_part(lp)
-        lp_types = {t for n in caligraph_nodes for types in graph.get_dbpedia_types(n) for t in types}
+        lp_types = {tt for n in caligraph_nodes for t in graph.get_dbpedia_types(n) for tt in dbp_store.get_transitive_supertype_closure(t)}
         disjoint_types = {dt for t in lp_types for dt in dbp_heur.get_disjoint_types(t)}
         valid_entities = {e for e in entities if not disjoint_types.intersection(dbp_store.get_transitive_types(e))}
         filtered_entities[lp] = valid_entities  # TODO: check if it makes sense to discard all lp entities at a certain threshold
