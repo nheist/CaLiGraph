@@ -94,10 +94,10 @@ def singularize_phrase(doc: Doc) -> str:
 
 
 def parse(text: str, disable_normalization=False, skip_cache=False) -> Doc:
-    if not disable_normalization:
+    if not disable_normalization and text:
         split_text = text.split(' ')
         if len(split_text) == 1 or (len(split_text) > 1 and not (text[1].isupper() or split_text[1].istitle())):
-            text = text[0].lower() + text[1:]
+            text = text[0].lower() + text[1:] if len(text) > 1 else text[0].lower()
 
     if skip_cache:
         return parser(text)
