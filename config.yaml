@@ -108,44 +108,43 @@ results:
     type_assertions: 'cat2ax_type-assertions.csv'
 
 cache:
-  # TODO: recompute everything related to subtypes as there was a problem with equivalent types (e.g. Weapon was subtype of Ship)
-  # TODO: recompute everything related to disjointesses as we improved them
   # version 2: added resource types from sdtyped + lhd
   # version 5: complete new run for fresh caligraph
   # version 6: new extraction with improved headlemma matching
+  # version 7: recomputation due to improved disjointnesses, subtypes, headlemmas
   catgraph_conceptual:
     filename: 'catgraph-conceptual'
-    version: 6  # v2: do not remove unconnected nodes initially ; v3: better synonym matching
+    version: 7  # v2: do not remove unconnected nodes initially ; v3: better synonym matching
   catgraph_wikitaxonomy:
     filename: 'catgraph-wikitaxonomy'
-    version: 6  # v2: do not remove unconnected nodes initially ; v3: better synonym matching
+    version: 7  # v2: do not remove unconnected nodes initially ; v3: better synonym matching
   catgraph_cyclefree:
     filename: 'catgraph-cyclefree'
-    version: 6  # v2: do not remove unconnected nodes initially ; v3: better synonym matching
+    version: 7  # v2: do not remove unconnected nodes initially ; v3: better synonym matching
   catgraph_merged:
     filename: 'catgraph-merged'
-    version: 6  # v2: do not remove unconnected nodes initially ; v3: better synonym matching
+    version: 7  # v2: do not remove unconnected nodes initially ; v3: better synonym matching
   listgraph_base:
     filename: 'listgraph-base'
-    version: 6  # v2: better synonym matching ; v3: with all listpages
+    version: 7  # v2: better synonym matching ; v3: with all listpages
   listgraph_wikitaxonomy:
     filename: 'listgraph-wikitaxonomy'
-    version: 6  # v2: better synonym matching ; v3: with all listpages
+    version: 7  # v2: better synonym matching ; v3: with all listpages
   listgraph_cyclefree:
     filename: 'listgraph-cyclefree'
-    version: 6  # v2: better synonym matching ; v3: with all listpages
+    version: 7  # v2: better synonym matching ; v3: with all listpages
   listgraph_merged:
     filename: 'listgraph-merged'
-    version: 6  # v2: better synonym matching ; v3: with all listpages
+    version: 7  # v2: better synonym matching ; v3: with all listpages
   caligraph_base:
     filename: 'caligraph-base'
-    version: 6
+    version: 7
   caligraph_merged_ontology:
     filename: 'caligraph-merged-ontology'
-    version: 6
+    version: 7
   caligraph_filtered:
     filename: 'caligraph-filtered'
-    version: 6
+    version: 7
   spacy_docs:
     filename: 'spacy-docs'
     version: 3  # version 2 incl. listpages; version 3 for spacy 2.1
@@ -154,13 +153,13 @@ cache:
     version: 1
   dbpedia_resource_type_cooccurrence_matrix:
     filename: 'dbpedia-resource-type-cooccurrence-matrix'
-    version: 1
+    version: 7
   dbpedia_resource_type_frequency:
     filename: 'dbpedia-resource-type-frequency'
-    version: 1
+    version: 7
   dbpedia_resource_type_mapping:
     filename: 'dbpedia-resource-type-mapping'
-    version: 1
+    version: 7
   dbpedia_resource_labels:
     filename: 'dbpedia-resource-labels'
     version: 1
@@ -209,10 +208,10 @@ cache:
     version: 1
   dbpedia_category_statistics:
     filename: 'dbpedia-category-statistics'
-    version: 1
+    version: 7
   dbpedia_category_sets:
     filename: 'dbpedia-category-sets'
-    version: 6  # new conceptual categorygraph version (v2)
+    version: 7  # new conceptual categorygraph version (v2)
   dbpedia_categories_conceptual:
     filename: 'dbpedia-category-conceptual'
     version: 6
@@ -230,16 +229,16 @@ cache:
     version: 1
   dbpedia_heuristic_disjoint_types:
     filename: 'dbpedia-heuristic-disjoint-types'
-    version: 2
+    version: 7
   dbpedia_listpages:
     filename: 'dbpedia-listpages'
     version: 1
   dbpedia_list_equivalents:
     filename: 'dbpedia-list-equivalents'
-    version: 6  # v2: better synonym matching
+    version: 7  # v2: better synonym matching
   dbpedia_list_parents:
     filename: 'dbpedia-list-parents'
-    version: 6  # v2: better synonym matching
+    version: 7  # v2: better synonym matching
   dbpedia_listpage_markup:
     filename: 'dbpedia-listpage-markup'
     version: 1
@@ -248,18 +247,18 @@ cache:
     version: 3  # v1: basic; v2: with entity indices; v3: with tables
   dbpedia_listpage_enum_features:
     filename: 'dbpedia-listpage-enum-features'
-    version: 1
+    version: 1  # todo: recompute labels ( then v7 )
     store_as_hdf: True
   dbpedia_listpage_table_features:
     filename: 'dbpedia-listpage-table-features'
-    version: 2  # v2: with column_name feature
+    version: 2  # v2: with column_name feature    # todo: recompute labels ( then v7 )
     store_as_csv: True
   dbpedia_listpage_entities:
     filename: 'dbpedia-listpage-entities'
-    version: 1  # todo: recompute (maybe even with table entities)
+    version: 7
   dbpedia_filtered_listpage_entities:
     filename: 'dbpedia-filtered-listpage-entities'
-    version: 1  # todo: recompute (maybe even with table entities)
+    version: 7
   wikidata_dbpedia_resource_mapping:
     filename: 'wikidata-dbpedia-resource-mapping'
     version: 1
@@ -270,7 +269,7 @@ cache:
     compress: True
   wikitaxonomy_hypernyms:
     filename: 'wikitaxonomy-hypernyms'
-    version: 6  # version 1 -> thresholds 10 / 100 / .4  // v2: new cat2ax version (v2)
+    version: 7  # version 1 -> thresholds 10 / 100 / .4  // v2: new cat2ax version (v2)
   cat2ax_axioms:
     filename: 'cat2ax-axioms'
-    version: 6  # new conceptual categorygraph version (v2)
+    version: 7  # new conceptual categorygraph version (v2)

@@ -2,7 +2,6 @@ import util
 import impl.util.nlp as nlp_util
 import impl.category.store as cat_store
 import impl.category.nlp as cat_nlp
-from spacy.tokens import Doc
 
 
 def is_conceptual_category(category: str) -> bool:
@@ -16,10 +15,4 @@ def is_conceptual_category(category: str) -> bool:
 
 def _compute_conceptual_categories() -> set:
     util.get_logger().info('CACHE: Computing conceptual categories')
-    return {cat for cat in cat_store.get_categories() if _has_plural_lexical_head(nlp_util.tag_lexical_head(cat_nlp.parse_category(cat)))}
-
-
-def _has_plural_lexical_head(doc: Doc) -> bool:
-    return any(chunk.root.tag_ == 'NNS' and chunk.root.ent_type_ == 'LH' for chunk in doc.noun_chunks)
-
-
+    return {cat for cat in cat_store.get_categories() if nlp_util.get_head_lemmas(cat_nlp.parse_category(cat))}
