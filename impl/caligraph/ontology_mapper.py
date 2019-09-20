@@ -24,11 +24,12 @@ def find_mappings(graph, use_listpage_resources: bool) -> dict:
             for t, score in disjoint_types.items():
                 util.get_logger().debug(f'{t}: {score}')
 
+    # remove types with lowest score as long as disjointnesses exist (i.e. if disjoint types have same score, remove both)
 # TODO: resolve disjointnesses
 
     # remove transitivity from the mappings and create sets of types
-    for parent, child in reversed(list(nx.bfs_edges(graph.graph, graph.root_node))):
-        mappings[child] = set(mappings[child]).difference(set(mappings[parent]))
+#    for parent, child in reversed(list(nx.bfs_edges(graph.graph, graph.root_node))):
+#        mappings[child] = set(mappings[child]).difference(set(mappings[parent]))
 
     return mappings
 
