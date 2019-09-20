@@ -17,11 +17,12 @@ def find_mappings(graph, use_listpage_resources: bool) -> dict:
 
     for node in mappings:
         disjoint_types = {t: score for t, score in mappings[node].items() if set(mappings[node]).intersection(dbp_store.get_disjoint_types(t))}
-        util.get_logger().debug('*******')
-        util.get_logger().debug(f'Found disjoint types for node {node}')
-        util.get_logger().debug('')
-        for t, score in disjoint_types.items():
-            util.get_logger().debug(f'{t}: {score}')
+        if disjoint_types:
+            util.get_logger().debug('*******')
+            util.get_logger().debug(f'Found disjoint types for node {node}')
+            util.get_logger().debug('')
+            for t, score in disjoint_types.items():
+                util.get_logger().debug(f'{t}: {score}')
 
 # TODO: resolve disjointnesses
 
