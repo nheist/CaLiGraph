@@ -382,7 +382,7 @@ def get_equivalent_types(dbp_type: str) -> set:
     if '__EQUIVALENT_TYPE_MAPPING__' not in globals():
         __EQUIVALENT_TYPE_MAPPING__ = rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_EQUIVALENT_CLASS, reflexive=True)
         # remove external types from equivalent mappings as they are prone to errors
-        __EQUIVALENT_TYPE_MAPPING__ = {t: {et for et in __EQUIVALENT_TYPE_MAPPING__[t] if dbp_util.is_dbp_type(et) or et == rdf_util.CLASS_OWL_THING} for t in __EQUIVALENT_TYPE_MAPPING__ if dbp_util.is_dbp_type(t) or t == rdf_util.CLASS_OWL_THING}
+        __EQUIVALENT_TYPE_MAPPING__ = defaultdict(set, {t: {et for et in __EQUIVALENT_TYPE_MAPPING__[t] if dbp_util.is_dbp_type(et) or et == rdf_util.CLASS_OWL_THING} for t in __EQUIVALENT_TYPE_MAPPING__ if dbp_util.is_dbp_type(t) or t == rdf_util.CLASS_OWL_THING})
 
     return {dbp_type} | __EQUIVALENT_TYPE_MAPPING__[dbp_type]
 
