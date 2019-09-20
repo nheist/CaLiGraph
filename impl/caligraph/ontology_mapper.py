@@ -8,7 +8,7 @@ import networkx as nx
 
 
 def find_mappings(graph, use_listpage_resources: bool) -> dict:
-    mappings = {node: _find_dbpedia_parents(graph, use_listpage_resources, node) for node in graph.nodes if node != graph.root_node}
+    mappings = {node: _find_dbpedia_parents(graph, use_listpage_resources, node) for node in graph.nodes}
 
     # apply complete transitivity to the graph in order to discover disjointnesses
     for parent, child in nx.bfs_edges(graph.graph, graph.root_node):
@@ -33,7 +33,7 @@ def find_mappings(graph, use_listpage_resources: bool) -> dict:
 
 
 def _find_dbpedia_parents(graph, use_listpage_resources: bool, node: str) -> dict:
-    name = graph.get_name(node)
+    name = graph.get_name(node) or ''
     head_lemmas = nlp_util.get_head_lemmas(nlp_util.parse(name))
     type_lexicalisation_scores = defaultdict(lambda: 0.1, cat_axioms._get_type_surface_scores(head_lemmas))
     type_resource_scores = defaultdict(lambda: 0.0, _compute_type_resource_scores(graph, node, use_listpage_resources))
