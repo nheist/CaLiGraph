@@ -327,7 +327,7 @@ def _extract_assertions(relation_axioms, type_axioms):
 
     # post-filtering
     filtered_new_relation_assertions = {(res, pred, val) for res, pred, val in new_relation_assertions if pred not in dbp_store.get_properties(res) or not dbp_store.is_functional(pred)}
-    filtered_new_type_assertions = {(res, pred, t) for res, pred, t in new_type_assertions_transitive if not dbp_store.get_disjoint_types(t).intersection(dbp_store.get_transitive_types(res))}
+    filtered_new_type_assertions = {(res, pred, t) for res, pred, t in new_type_assertions_transitive if not dbp_heur.get_disjoint_types(t).intersection(dbp_store.get_transitive_types(res))}
 
     util.get_logger().debug(f'Cat2Ax: Generated {len(filtered_new_relation_assertions)} new relation assertions and {len(filtered_new_type_assertions)} new type assertions.')
     return filtered_new_relation_assertions, filtered_new_type_assertions

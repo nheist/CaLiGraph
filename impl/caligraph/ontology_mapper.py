@@ -1,6 +1,7 @@
 import impl.util.nlp as nlp_util
 import impl.dbpedia.store as dbp_store
 import impl.dbpedia.util as dbp_util
+import impl.dbpedia.heuristics as dbp_heur
 import impl.category.cat2ax as cat_axioms
 from collections import defaultdict
 import util
@@ -16,7 +17,7 @@ def find_mappings(graph, use_listpage_resources: bool) -> dict:
             mappings[child][t] = max(mappings[child][t], score)
 
     for node in mappings:
-        disjoint_types = {t: score for t, score in mappings[node].items() if set(mappings[node]).intersection(dbp_store.get_disjoint_types(t))}
+        disjoint_types = {t: score for t, score in mappings[node].items() if set(mappings[node]).intersection(dbp_heur.get_disjoint_types(t))}
         if disjoint_types:
             util.get_logger().debug('*******')
             util.get_logger().debug(f'Found disjoint types for node {node}')

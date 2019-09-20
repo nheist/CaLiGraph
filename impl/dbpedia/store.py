@@ -403,7 +403,7 @@ def get_disjoint_types(dbp_type: str) -> set:
             __DISJOINT_TYPE_MAPPING__[b].add(a)
 
         # completing the subtype of each type with the subtypes of its disjoint types
-        __DISJOINT_TYPE_MAPPING__ = defaultdict(set, {t: {st for dt in disjoint_types for st in get_transitive_subtypes(dt)} for t, disjoint_types in __DISJOINT_TYPE_MAPPING__.items()})
+        __DISJOINT_TYPE_MAPPING__ = defaultdict(set, {t: {st for dt in disjoint_types for st in get_transitive_subtype_closure(dt)} for t, disjoint_types in __DISJOINT_TYPE_MAPPING__.items()})
 
     return __DISJOINT_TYPE_MAPPING__[dbp_type]
 
