@@ -59,6 +59,9 @@ def get_head_lemmas(doc: Doc) -> set:
 def tag_lexical_head(doc: Doc) -> Doc:
     """Return `doc` where the lexical head is tagged as the entity 'LH'."""
 
+    if len(doc) == 0:
+        return doc
+
     # ensure that numbers are also regarded as nouns if being stand-alone
     if doc[0].tag_ == 'CD' and (len(doc) < 2 or not doc[1].tag_.startswith('NN')):
         doc.ents = [Span(doc, 0, 1, label=doc.vocab.strings['LH'])]
