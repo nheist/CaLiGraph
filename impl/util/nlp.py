@@ -53,7 +53,14 @@ def remove_by_phrase(doc: Doc, return_doc=True):
 def get_head_lemmas(doc: Doc) -> set:
     """Return the lemmatized version of the lexical head of `doc`."""
     doc = tag_lexical_head(doc)
-    return {w.lemma_ for w in doc if w.tag_ == 'NNS' and w.ent_type_ == 'LH'}
+    head_lemmas = set()
+    for idx, w in enumerate(doc):
+        if w.ent_type != 'LH' or w.tag_ != 'NNS':
+            continue
+        if idx + 1 < len(doc) and doc[idx+1].ent_type_ == 'LH' and doc[idx+1].text != 'and':
+            continue
+        head_lemmas.add(w.lemma_)
+    return head_lemmas
 
 
 def tag_lexical_head(doc: Doc) -> Doc:
