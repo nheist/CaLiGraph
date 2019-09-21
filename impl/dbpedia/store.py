@@ -329,6 +329,7 @@ def get_types_by_name(name: str) -> set:
         for t in get_all_types():
             __TYPE_LABELS__[get_label(t).lower().split()[-1]].add(t)
 
+    name = name.lower()
     return __TYPE_LABELS__[name] if __TYPE_LABELS__[name] else __TYPE_LABELS__[inflection.singularize(name)]
 
 
