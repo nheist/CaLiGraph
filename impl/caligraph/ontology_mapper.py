@@ -19,7 +19,7 @@ def find_mappings(graph, use_listpage_resources: bool) -> dict:
     # resolve disjointnesses
     for node, _ in nx.bfs_edges(graph.graph, graph.root_node):
         coherent_type_sets = _find_coherent_type_sets(mappings[node])
-        if len(coherent_type_sets) == 1:  # no disjoint sets
+        if len(coherent_type_sets) <= 1:  # no disjoint sets
             continue
 
         coherent_type_sets = [(cs, max(cs.values())) for cs in coherent_type_sets]
