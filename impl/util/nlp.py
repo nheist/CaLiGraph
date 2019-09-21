@@ -55,7 +55,7 @@ def get_head_lemmas(doc: Doc) -> set:
     doc = tag_lexical_head(doc)
     head_lemmas = set()
     for idx, w in enumerate(doc):
-        if w.ent_type != 'LH' or w.tag_ != 'NNS':
+        if w.ent_type_ != 'LH' or w.tag_ != 'NNS':
             continue
         if idx + 1 < len(doc) and doc[idx+1].ent_type_ == 'LH' and doc[idx+1].text != 'and':
             continue
