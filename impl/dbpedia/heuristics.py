@@ -78,8 +78,12 @@ def _compute_disjoint_types() -> dict:
         dbp_type = dbp_types.pop()
         for other_dbp_type in dbp_types:
             if _compute_type_similarity(dbp_type, other_dbp_type, type_property_weights) <= DISJOINT_THRESHOLD:
-                disjoint_types[dbp_type].update(dbp_store.get_transitive_subtype_closure(other_dbp_type))
-                disjoint_types[other_dbp_type].update(dbp_store.get_transitive_subtype_closure(dbp_type))
+                dbp_type_closure = dbp_store.get_transitive_subtype_closure(dbp_type)
+                other_dbp_type_closure = dbp_store.get_transitive_subtype_closure(other_dbp_type)
+                for t in dbp_type_closure:
+                    disjoint_types[t].update(other_dbp_type_closure)
+                for t in other_dbp_type_closure:
+                    disjoint_types[t].update(dbp_type_closure)
 
     # remove any disjointness axioms that would violate the ontology hierarchy
     # i.e. if two types share a common subtype then they can't be disjoint
