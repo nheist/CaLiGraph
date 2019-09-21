@@ -157,8 +157,8 @@ def _get_type_surface_scores(words):
 
     # make sure that exact matches get at least appropriate probability
     for lemma in word_lemmas:
-        word_type = dbp_store.get_type_by_name(lemma)
-        if word_type:
+        word_types = dbp_store.get_types_by_name(lemma)
+        for word_type in word_types:
             min_word_type_score = 1 / len(words)
             type_surface_scores[word_type] = max(type_surface_scores[word_type], min_word_type_score)
 

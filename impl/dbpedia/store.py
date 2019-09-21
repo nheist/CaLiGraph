@@ -322,10 +322,13 @@ def get_all_types() -> set:
     return set(_get_type_graph().nodes)
 
 
-def get_type_by_name(name: str) -> Optional[str]:
+def get_types_by_name(name: str) -> set:
     global __TYPE_LABELS__
     if '__TYPE_LABELS__' not in globals():
-        __TYPE_LABELS__ = defaultdict(lambda: None, {get_label(t).lower(): t for t in get_all_types()})
+        __TYPE_LABELS__ = defaultdict(set)
+        for t in get_all_types():
+            for w in get_label(t).lower().split():
+                __TYPE_LABELS__[w].add(t)
 
     return __TYPE_LABELS__[name] if __TYPE_LABELS__[name] else __TYPE_LABELS__[inflection.singularize(name)]
 
