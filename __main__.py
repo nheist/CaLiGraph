@@ -8,6 +8,7 @@ import impl.list.store as list_store
 import impl.list.base as list_base
 import impl.list.parser as list_parser
 import impl.list.mapping as list_mapping
+import impl.list.features as list_features
 #import impl.dbpedia.heuristics as dbp_heur
 #import impl.category.cat2ax as cat_axioms
 import impl.util.nlp as nlp_util
@@ -31,12 +32,27 @@ if __name__ == '__main__':
     try:
         util.get_logger().info('Starting caligraph v7 extraction..')
 
+        # relabel enum and table features
+        util.get_logger().debug('Recomputing enum labels..')
+        features = util.load_cache('dbpedia_listpage_enum_features', version=1)
+        list_features.assign_entity_labels(features)
+        util.update_cache('dbpedia_listpage_enum_features', features, version=7)
+
+        util.get_logger().debug('Recomputing table labels..')
+        features = util.load_cache('dbpedia_listpage_table_features', version=2)
+        list_features.assign_entity_labels(features)
+        util.update_cache('dbpedia_listpage_table_features', features, version=7)
+
+
+        # extract table features
         #list_base.get_table_listpage_entity_features()
         #nlp_util.persist_cache()
 
-        setup()
-        caligraph = cali_base.get_base_graph()
-        util.get_logger().info(caligraph.statistics)
+
+        # extract complete caligraph
+        #setup()
+        #caligraph = cali_base.get_base_graph()
+        #util.get_logger().info(caligraph.statistics)
 
         #cat_graph = cat_base.get_merged_graph()
         #util.get_logger().info('catgraph done.')
