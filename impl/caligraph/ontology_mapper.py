@@ -16,23 +16,47 @@ def find_mappings(graph, use_listpage_resources: bool) -> dict:
         for t, score in mappings[parent].items():
             mappings[child][t] = max(mappings[child][t], score)
 
-    for node in mappings:
-        disjoint_types = {t: score for t, score in mappings[node].items() if set(mappings[node]).intersection(dbp_heur.get_disjoint_types(t))}
-        if disjoint_types:
-            util.get_logger().debug('*******')
-            util.get_logger().debug(f'Found disjoint types for node {node}')
-            util.get_logger().debug('')
-            for t, score in disjoint_types.items():
-                util.get_logger().debug(f'{t}: {score}')
+    # resolve disjointnesses
+    for node, _ in nx.bfs_edges(graph.graph, graph.root_node):
+        coherent_type_sets = _find_coherent_type_sets(mappings[node])
+        if len(coherent_type_sets) == 1:  # no disjoint sets
+            continue
 
-    # remove types with lowest score as long as disjointnesses exist (i.e. if disjoint types have same score, remove both)
-# TODO: resolve disjointnesses
+        coherent_type_sets = [(cs, max(cs.values())) for cs in coherent_type_sets]
+        max_set_score = max([cs[1] for cs in coherent_type_sets])
+        max_set_score_count = len([cs for cs in coherent_type_sets if cs[1] == max_set_score])
+        if max_set_score_count > 1:  # no single superior set -> remove all type mappings
+            types_to_remove = {t for cs in coherent_type_sets for t in cs[0]}
+        else:  # there is one superior set -> remove types from all sets except for superior set
+            types_to_remove = {t for cs in coherent_type_sets for t in cs[0] if cs[1] < max_set_score}
+        _remove_types_from_mapping(graph, mappings, node, types_to_remove)
 
     # remove transitivity from the mappings and create sets of types
-#    for parent, child in reversed(list(nx.bfs_edges(graph.graph, graph.root_node))):
-#        mappings[child] = set(mappings[child]).difference(set(mappings[parent]))
+    for parent, child in reversed(list(nx.bfs_edges(graph.graph, graph.root_node))):
+        mappings[child] = set(mappings[child]).difference(set(mappings[parent]))
 
     return mappings
+
+
+def _find_coherent_type_sets(dbp_types: dict) -> list:
+    coherent_sets = []
+    disjoint_type_mapping = {t: set(dbp_types).intersection(dbp_heur.get_disjoint_types(t)) for t in dbp_types}
+    for t, score in dbp_types.items():
+        disjoint_types = disjoint_type_mapping[t]
+        found_set = False
+        for cs in coherent_sets:
+            if not disjoint_types.intersection(set(cs)):
+                cs[t] = score
+        if not found_set:
+            coherent_sets.extend({t: score})
+    return coherent_sets
+
+
+def _remove_types_from_mapping(graph, mappings: dict, node: str, types_to_remove: set):
+    node_closure = {node} | graph.descendants(node)
+    node_closure.update({a for n in node_closure for a in graph.ancestors(n)})
+    for n in node_closure:
+        mappings[n] = {t: score for t, score in mappings[n].items() if t not in types_to_remove}
 
 
 def _find_dbpedia_parents(graph, use_listpage_resources: bool, node: str) -> dict:
