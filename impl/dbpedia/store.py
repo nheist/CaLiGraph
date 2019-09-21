@@ -327,8 +327,7 @@ def get_types_by_name(name: str) -> set:
     if '__TYPE_LABELS__' not in globals():
         __TYPE_LABELS__ = defaultdict(set)
         for t in get_all_types():
-            for w in get_label(t).lower().split():
-                __TYPE_LABELS__[w].add(t)
+            __TYPE_LABELS__[get_label(t).lower().split()[-1]].add(t)
 
     return __TYPE_LABELS__[name] if __TYPE_LABELS__[name] else __TYPE_LABELS__[inflection.singularize(name)]
 
