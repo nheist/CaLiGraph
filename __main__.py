@@ -33,15 +33,15 @@ if __name__ == '__main__':
         util.get_logger().info('Starting caligraph v7 extraction..')
 
         # relabel enum and table features
-        util.get_logger().debug('Recomputing enum labels..')
-        features = util.load_cache('dbpedia_listpage_enum_features', version=1)
-        list_features.assign_entity_labels(features)
-        util.update_cache('dbpedia_listpage_enum_features', features, version=7)
-
-        util.get_logger().debug('Recomputing table labels..')
-        features = util.load_cache('dbpedia_listpage_table_features', version=2)
-        list_features.assign_entity_labels(features)
-        util.update_cache('dbpedia_listpage_table_features', features, version=7)
+#        util.get_logger().debug('Recomputing enum labels..')
+#        features = util.load_cache('dbpedia_listpage_enum_features', version=1)
+#        list_features.assign_entity_labels(features)
+#        util.update_cache('dbpedia_listpage_enum_features', features, version=7)
+#
+#        util.get_logger().debug('Recomputing table labels..')
+#        features = util.load_cache('dbpedia_listpage_table_features', version=2)
+#        list_features.assign_entity_labels(features)
+#        util.update_cache('dbpedia_listpage_table_features', features, version=7)
 
 
         # extract table features
@@ -50,8 +50,8 @@ if __name__ == '__main__':
 
 
         # extract complete caligraph
-        #setup()
-        #caligraph = cali_base.get_base_graph()
+        setup()
+        caligraph = cali_base.get_base_graph()
         #util.get_logger().info(caligraph.statistics)
 
         #cat_graph = cat_base.get_merged_graph()
