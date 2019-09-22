@@ -24,5 +24,3 @@ def get_filtered_graph() -> CaLiGraph:
         initializer = lambda: get_base_graph().copy().merge_ontology(True).resolve_cycles()
         __FILTERED_GRAPH__ = util.load_or_create_cache('caligraph_filtered', initializer)
     return __FILTERED_GRAPH__
-
-# TODO: check whether we are generating any disjoint type mappings

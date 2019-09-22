@@ -17,7 +17,6 @@ class HierarchyGraph(BaseGraph):
 
     def copy(self):
         new_self = super().copy()
-        new_self._node_by_name = copy.deepcopy(self._node_by_name)
         new_self._nodes_by_part = copy.deepcopy(self._nodes_by_part)
         return new_self
 
