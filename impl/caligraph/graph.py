@@ -16,6 +16,7 @@ import impl.dbpedia.store as dbp_store
 import impl.dbpedia.util as dbp_util
 import impl.caligraph.ontology_mapper as cali_mapping
 from collections import defaultdict
+import copy
 
 
 class CaLiGraph(HierarchyGraph):
@@ -23,6 +24,11 @@ class CaLiGraph(HierarchyGraph):
     def __init__(self, graph: nx.DiGraph, root_node: str = None):
         super().__init__(graph, root_node or rdf_util.CLASS_OWL_THING)
         self._node_dbpedia_types = defaultdict(set)
+
+    def copy(self):
+        new_self = super().copy()
+        new_self._node_dbpedia_types = copy.deepcopy(self._node_dbpedia_types)
+        return new_self
 
     def _reset_node_indices(self):
         self._node_dbpedia_types = defaultdict(set)

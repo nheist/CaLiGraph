@@ -5,6 +5,7 @@ import impl.util.nlp as nlp_util
 import impl.util.hypernymy as hypernymy_util
 from impl.util.base_graph import BaseGraph
 from collections import defaultdict
+import copy
 
 
 class HierarchyGraph(BaseGraph):
@@ -13,6 +14,12 @@ class HierarchyGraph(BaseGraph):
         super().__init__(graph, root_node)
         self._node_by_name = None
         self._nodes_by_part = defaultdict(set)
+
+    def copy(self):
+        new_self = super().copy()
+        new_self._node_by_name = copy.deepcopy(self._node_by_name)
+        new_self._nodes_by_part = copy.deepcopy(self._nodes_by_part)
+        return new_self
 
     def _check_node_exists(self, node: str):
         if not self.has_node(node):

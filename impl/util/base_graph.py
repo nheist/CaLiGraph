@@ -10,7 +10,8 @@ class BaseGraph:
         self.root_node = root_node
 
     def copy(self):
-        return self.__class__(copy.deepcopy(self.graph), root_node=self.root_node)
+        new_self = self.__class__(copy.deepcopy(self.graph), root_node=self.root_node)
+        return new_self
 
     @property
     def nodes(self) -> set:
