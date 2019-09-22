@@ -47,8 +47,9 @@ def _find_coherent_type_sets(dbp_types: dict) -> list:
         for cs in coherent_sets:
             if not disjoint_types.intersection(set(cs)):
                 cs[t] = score
+                found_set = True
         if not found_set:
-            coherent_sets.extend({t: score})
+            coherent_sets.append({t: score})
     return coherent_sets
 
 
