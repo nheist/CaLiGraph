@@ -33,7 +33,8 @@ def find_mappings(graph, use_listpage_resources: bool) -> dict:
 
     # remove transitivity from the mappings and create sets of types
     for parent, child in reversed(list(nx.bfs_edges(graph.graph, graph.root_node))):
-        mappings[child] = set(mappings[child]).difference(set(mappings[parent]))
+        child_types = set(mappings[child]).difference(set(mappings[parent]))
+        mappings[child] = dbp_store.get_independent_types(child_types)
 
     return mappings
 
@@ -50,6 +51,21 @@ def _find_coherent_type_sets(dbp_types: dict) -> list:
                 found_set = True
         if not found_set:
             coherent_sets.append({t: score})
+
+    if len(coherent_sets) > 1:
+        # check that a type is in all its valid sets (as types can be in multiple sets)
+        for t, score in dbp_types.items():
+            disjoint_types = disjoint_type_mapping[t]
+            for cs in coherent_sets:
+                if not disjoint_types.intersection(set(cs)):
+                    cs[t] = score
+
+        # remove types that exist in all sets, as they are not disjoint with anything
+        for t in dbp_types:
+            if all(t in cs for cs in coherent_sets):
+                for cs in coherent_sets:
+                    del cs[t]
+
     return coherent_sets
 
 
