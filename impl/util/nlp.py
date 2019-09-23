@@ -41,7 +41,7 @@ def remove_by_phrase(doc: Doc, return_doc=True):
         return doc if return_doc else doc.text
     word_before_by = doc[last_by_index-1]
     word_after_by = doc[last_by_index+1]
-    if word_after_by.text[0].isupper() or word_after_by.tag_ == 'NNS' or word_after_by.text in ['a', 'an', 'the'] or word_before_by.tag_ == 'VBN':
+    if word_after_by.text[0].isupper() or any(w.tag_ == 'NNS' for w in doc[last_by_index+1:]) or word_after_by.text in ['a', 'an', 'the'] or word_before_by.tag_ == 'VBN':
         return doc if return_doc else doc.text
 
     result = doc[:last_by_index].text.strip()
