@@ -231,7 +231,7 @@ class CaLiGraph(HierarchyGraph):
 
         # connect caligraph-nodes with dbpedia-types
         for node, dbp_types in node_to_dbp_types_mapping.items():
-            parent_nodes = {n for t in dbp_types for n in self.get_nodes_for_part(t)}.difference(node)
+            parent_nodes = {n for t in dbp_types for n in self.get_nodes_for_part(t)}.difference({node})
             if parent_nodes:
                 self._remove_edges({(self.root_node, node)})
                 self._add_edges({(parent, node) for parent in parent_nodes})
