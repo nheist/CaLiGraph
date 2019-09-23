@@ -2,6 +2,7 @@ import networkx as nx
 import numpy as np
 from collections import defaultdict
 import copy
+from typing import Iterator
 
 
 class BaseGraph:
@@ -83,6 +84,40 @@ class BaseGraph:
     def _reset_attr(self, node, attr):
         if attr in self.graph.nodes[node]:
             del self.graph.nodes[node][attr]
+
+    def traverse_topdown(self) -> Iterator:
+        """Traverse nodes in such a way that all parents of a node have been traversed before the node itself.
+        The graph has to be fully-connected and cycle-free.
+        """
+        visited_nodes = set()
+        node_queue = [self.root_node]
+        while node_queue:
+            node = node_queue.pop(0)
+            if node in visited_nodes:
+                continue
+            if not self.parents(node).issubset(visited_nodes):
+                node_queue.append(node)
+                continue
+            visited_nodes.add(node)
+            node_queue.extend(self.children(node))
+            yield node
+
+    def traverse_bottomup(self) -> Iterator:
+        """Traverse nodes in such a way that all children of a node have been traversed before the node itself.
+        The graph has to be fully-connected and cycle-free.
+        """
+        visited_nodes = set()
+        node_queue = [n for n in self.nodes if not self.children(n)]
+        while node_queue:
+            node = node_queue.pop(0)
+            if node in visited_nodes:
+                continue
+            if not self.children(node).issubset(visited_nodes):
+                node_queue.append(node)
+                continue
+            visited_nodes.add(node)
+            node_queue.extend(self.parents(node))
+            yield node
 
     @property
     def statistics(self) -> str:

@@ -5,19 +5,19 @@ import impl.dbpedia.heuristics as dbp_heur
 import impl.category.cat2ax as cat_axioms
 from collections import defaultdict
 import util
-import networkx as nx
 
 
 def find_mappings(graph, use_listpage_resources: bool) -> dict:
     mappings = {node: _find_dbpedia_parents(graph, use_listpage_resources, node) for node in graph.nodes}
 
     # apply complete transitivity to the graph in order to discover disjointnesses
-    for parent, child in nx.bfs_edges(graph.graph, graph.root_node):
-        for t, score in mappings[parent].items():
-            mappings[child][t] = max(mappings[child][t], score)
+    for node in graph.traverse_topdown():
+        for parent in graph.parents(node):
+            for t, score in mappings[parent].items():
+                mappings[node][t] = max(mappings[node][t], score)
 
     # resolve disjointnesses
-    for node, _ in nx.bfs_edges(graph.graph, graph.root_node):
+    for node in graph.traverse_topdown():
         coherent_type_sets = _find_coherent_type_sets(mappings[node])
         if len(coherent_type_sets) <= 1:  # no disjoint sets
             continue
@@ -32,11 +32,40 @@ def find_mappings(graph, use_listpage_resources: bool) -> dict:
         _remove_types_from_mapping(graph, mappings, node, types_to_remove)
 
     # remove transitivity from the mappings and create sets of types
-    for parent, child in reversed(list(nx.bfs_edges(graph.graph, graph.root_node))):
-        child_types = set(mappings[child]).difference(set(mappings[parent]))
-        mappings[child] = dbp_store.get_independent_types(child_types)
+    for node in graph.traverse_bottomup():
+        parent_types = {t for p in graph.parents(node) for t in mappings[p]}
+        node_types = set(mappings[node]).difference(parent_types)
+        mappings[node] = dbp_store.get_independent_types(node_types)
 
     return mappings
+
+
+def _find_dbpedia_parents(graph, use_listpage_resources: bool, node: str) -> dict:
+    name = graph.get_name(node) or ''
+    head_lemmas = nlp_util.get_head_lemmas(nlp_util.parse(name))
+    type_lexicalisation_scores = defaultdict(lambda: 0.1, cat_axioms._get_type_surface_scores(head_lemmas))
+    type_resource_scores = defaultdict(lambda: 0.0, _compute_type_resource_scores(graph, node, use_listpage_resources))
+
+    overall_scores = {t: type_lexicalisation_scores[t] * type_resource_scores[t] for t in type_resource_scores if dbp_util.is_dbp_type(t)}
+    max_score = max(overall_scores.values(), default=0)
+    if max_score < util.get_config('cat2ax.pattern_confidence'):
+        return defaultdict(float)
+
+    mapped_types = {t: score for t, score in overall_scores.items() if score >= max_score}
+    result = defaultdict(float)
+    for t, score in mapped_types.items():
+        for tt in dbp_store.get_transitive_supertype_closure(t):
+            result[tt] = max(result[tt], score)
+    return result
+
+
+def _compute_type_resource_scores(graph, node: str, use_listpage_resources: bool) -> dict:
+    node_resources = {res for sn in ({node} | graph.descendants(node)) for res in graph.get_dbpedia_resources(sn, use_listpage_resources)}
+    type_counts = defaultdict(int)
+    for res in node_resources:
+        for t in dbp_store.get_transitive_types(res):
+            type_counts[t] += 1
+    return {t: count / len(node_resources) for t, count in type_counts.items()}
 
 
 def _find_coherent_type_sets(dbp_types: dict) -> list:
@@ -74,31 +103,3 @@ def _remove_types_from_mapping(graph, mappings: dict, node: str, types_to_remove
     node_closure.update({a for n in node_closure for a in graph.ancestors(n)})
     for n in node_closure:
         mappings[n] = {t: score for t, score in mappings[n].items() if t not in types_to_remove}
-
-
-def _find_dbpedia_parents(graph, use_listpage_resources: bool, node: str) -> dict:
-    name = graph.get_name(node) or ''
-    head_lemmas = nlp_util.get_head_lemmas(nlp_util.parse(name))
-    type_lexicalisation_scores = defaultdict(lambda: 0.1, cat_axioms._get_type_surface_scores(head_lemmas))
-    type_resource_scores = defaultdict(lambda: 0.0, _compute_type_resource_scores(graph, node, use_listpage_resources))
-
-    overall_scores = {t: type_lexicalisation_scores[t] * type_resource_scores[t] for t in type_resource_scores if dbp_util.is_dbp_type(t)}
-    max_score = max(overall_scores.values(), default=0)
-    if max_score < util.get_config('cat2ax.pattern_confidence'):
-        return defaultdict(float)
-
-    mapped_types = {t: score for t, score in overall_scores.items() if score >= max_score}
-    result = defaultdict(float)
-    for t, score in mapped_types.items():
-        for tt in dbp_store.get_transitive_supertype_closure(t):
-            result[tt] = max(result[tt], score)
-    return result
-
-
-def _compute_type_resource_scores(graph, node: str, use_listpage_resources: bool) -> dict:
-    node_resources = {res for sn in ({node} | graph.descendants(node)) for res in graph.get_dbpedia_resources(sn, use_listpage_resources)}
-    type_counts = defaultdict(int)
-    for res in node_resources:
-        for t in dbp_store.get_transitive_types(res):
-            type_counts[t] += 1
-    return {t: count / len(node_resources) for t, count in type_counts.items()}
