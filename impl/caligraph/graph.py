@@ -79,6 +79,11 @@ class CaLiGraph(HierarchyGraph):
             '{:<30} | {:>7}'.format('new instances', len(list_instances.difference(dbp_store.get_resources()))),
             ])
 
+    def get_resources(self, node: str) -> set:
+        # TODO: filter resources based on disjointess with existing types
+        # TODO: use correct namespace
+        return set()
+
     def get_dbpedia_resources(self, node: str, use_listpage_resources=True) -> set:
         resources = set()
         for part in self.get_parts(node):
@@ -188,7 +193,9 @@ class CaLiGraph(HierarchyGraph):
         return node_id
 
     def _add_list_to_graph(self, lst: str, lst_name: str, list_graph: ListGraph) -> str:
-        node_id = self.get_caligraph_class(lst_name, disable_normalization=True)
+        node_id = self.get_caligraph_class(lst_name, disable_normalization=False)
+        if not self.has_node(node_id):
+            node_id = self.get_caligraph_class(lst_name, disable_normalization=True)
         node_parts = list_graph.get_parts(lst)
 
         # check for equivalent mapping and existing node_id (if they map to more than one node -> log error)
