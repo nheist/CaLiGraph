@@ -99,6 +99,8 @@ def _find_coherent_type_sets(dbp_types: dict) -> list:
 
 
 def _remove_types_from_mapping(graph, mappings: dict, node: str, types_to_remove: set):
+    types_to_remove = {tt for t in types_to_remove for tt in dbp_store.get_transitive_subtype_closure(t)}
+
     node_closure = {node} | graph.descendants(node)
     node_closure.update({a for n in node_closure for a in graph.ancestors(n)})
     for n in node_closure:
