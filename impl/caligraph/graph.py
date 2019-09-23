@@ -16,7 +16,6 @@ import impl.dbpedia.store as dbp_store
 import impl.dbpedia.util as dbp_util
 import impl.caligraph.ontology_mapper as cali_mapping
 from collections import defaultdict
-import copy
 
 
 class CaLiGraph(HierarchyGraph):
@@ -241,7 +240,7 @@ class CaLiGraph(HierarchyGraph):
 
     def _add_dbp_type_to_graph(self, dbp_type: str) -> str:
         name = dbp_store.get_label(dbp_type)
-        node_id = self.get_ontology_namespace() + name.replace(' ', '_')
+        node_id = self.get_ontology_namespace() + name[0].upper() + name[1:].replace(' ', '_')
         node_parts = {dbp_type}
         if self.has_node(node_id):
             # extend existing node in graph
