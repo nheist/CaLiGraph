@@ -81,6 +81,8 @@ def tag_lexical_head(doc: Doc) -> Doc:
         elem = chunk.root
         if elem.text.istitle() or elem.tag_ not in ['NN', 'NNS']:
             continue
+        if len(doc) > elem.i + 1 and doc[elem.i+1].text[0] in ["'", "´", "`"]:
+            continue
         if len(doc) > elem.i + 1 and doc[elem.i+1].text in ['(', ')', '–'] and doc[-1].text != ')':
             continue
         if (len(doc) > elem.i + 1 and doc[elem.i + 1].tag_ in ['NN', 'NNS']) or (len(doc) > elem.i + 2 and doc[elem.i+1].text == 'and' and doc[elem.i+2] in chunk_words):
