@@ -247,11 +247,11 @@ cache:
     version: 3  # v1: basic; v2: with entity indices; v3: with tables
   dbpedia_listpage_enum_features:
     filename: 'dbpedia-listpage-enum-features'
-    version: 1  # todo: recompute labels ( then v7 )
+    version: 8
     store_as_hdf: True
   dbpedia_listpage_table_features:
     filename: 'dbpedia-listpage-table-features'
-    version: 2  # v2: with column_name feature    # todo: recompute labels ( then v7 )
+    version: 8
     store_as_csv: True
   dbpedia_listpage_entities:
     filename: 'dbpedia-listpage-entities'

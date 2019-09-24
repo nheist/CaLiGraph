@@ -30,18 +30,19 @@ def setup():
 
 if __name__ == '__main__':
     try:
-        util.get_logger().info('Starting caligraph v7 extraction..')
+        util.get_logger().info('Starting feature relabelling..')
 
         # relabel enum and table features
-#        util.get_logger().debug('Recomputing enum labels..')
-#        features = util.load_cache('dbpedia_listpage_enum_features', version=1)
-#        list_features.assign_entity_labels(features)
-#        util.update_cache('dbpedia_listpage_enum_features', features, version=7)
-#
-#        util.get_logger().debug('Recomputing table labels..')
-#        features = util.load_cache('dbpedia_listpage_table_features', version=2)
-#        list_features.assign_entity_labels(features)
-#        util.update_cache('dbpedia_listpage_table_features', features, version=7)
+        graph = cali_base.get_merged_ontology_graph()
+        util.get_logger().debug('Recomputing enum labels..')
+        features = util.load_cache('dbpedia_listpage_enum_features', version=7)
+        list_features.assign_entity_labels(graph, features)
+        util.update_cache('dbpedia_listpage_enum_features', features, version=8)
+
+        util.get_logger().debug('Recomputing table labels..')
+        features = util.load_cache('dbpedia_listpage_table_features', version=7)
+        list_features.assign_entity_labels(graph, features)
+        util.update_cache('dbpedia_listpage_table_features', features, version=8)
 
 
         # extract table features
@@ -50,8 +51,8 @@ if __name__ == '__main__':
 
 
         # extract complete caligraph
-        setup()
-        caligraph = cali_base.get_merged_ontology_graph()
+#        setup()
+#        caligraph = cali_base.get_merged_ontology_graph()
 #        util.get_logger().info(caligraph.statistics)
 
         #cat_graph = cat_base.get_merged_graph()
@@ -70,8 +71,8 @@ if __name__ == '__main__':
         #nlp_util.persist_cache()
         #util.get_logger().info('cache persist done.')
 
-        mailer.send_success(f'FINISHED caligraph v7 extraction')
-        util.get_logger().info('Finished caligraph v7 extraction.')
+        mailer.send_success(f'FINISHED feature relabelling')
+        util.get_logger().info('Finished feature relabelling.')
     except Exception as e:
         error_msg = traceback.format_exc()
         mailer.send_error(error_msg)

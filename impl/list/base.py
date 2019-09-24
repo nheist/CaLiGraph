@@ -45,58 +45,58 @@ def get_merged_listgraph() -> ListGraph:
 
 # LIST ENTITIES
 
-def get_filtered_listpage_entities(graph, listpage: str) -> set:
-    global __FILTERED_LISTPAGE_ENTITIES__
-    if '__FILTERED_LISTPAGE_ENTITIES__' not in globals():
-        initializer = lambda: _filter_listpage_entities(graph)
-        __FILTERED_LISTPAGE_ENTITIES__ = defaultdict(set, util.load_or_create_cache('dbpedia_filtered_listpage_entities', initializer))
-    return __FILTERED_LISTPAGE_ENTITIES__[listpage]
+#def get_filtered_listpage_entities(graph, listpage: str) -> set:
+#    global __FILTERED_LISTPAGE_ENTITIES__
+#    if '__FILTERED_LISTPAGE_ENTITIES__' not in globals():
+#        initializer = lambda: _filter_listpage_entities(graph)
+#        __FILTERED_LISTPAGE_ENTITIES__ = defaultdict(set, util.load_or_create_cache('dbpedia_filtered_listpage_entities', initializer))
+#    return __FILTERED_LISTPAGE_ENTITIES__[listpage]
+#
+#
+#def _filter_listpage_entities(graph) -> dict:
+#    get_listpage_entities('')  # make sure that listpage entities are initialised
+#    filtered_entities = {}
+#    for lp, entities in __LISTPAGE_ENTITIES__.items():
+#        caligraph_nodes = graph.get_nodes_for_part(lp)
+#        lp_types = {tt for n in caligraph_nodes for t in graph.get_dbpedia_types(n) for tt in dbp_store.get_transitive_supertype_closure(t)}
+#        disjoint_types = {dt for t in lp_types for dt in dbp_heur.get_disjoint_types(t)}
+#        valid_entities = {e for e in entities if not disjoint_types.intersection(dbp_store.get_transitive_types(e))}
+#        filtered_entities[lp] = valid_entities  # TODO: check if it makes sense to discard all lp entities at a certain threshold
+#    return filtered_entities
 
 
-def _filter_listpage_entities(graph) -> dict:
-    get_listpage_entities('')  # make sure that listpage entities are initialised
-    filtered_entities = {}
-    for lp, entities in __LISTPAGE_ENTITIES__.items():
-        caligraph_nodes = graph.get_nodes_for_part(lp)
-        lp_types = {tt for n in caligraph_nodes for t in graph.get_dbpedia_types(n) for tt in dbp_store.get_transitive_supertype_closure(t)}
-        disjoint_types = {dt for t in lp_types for dt in dbp_heur.get_disjoint_types(t)}
-        valid_entities = {e for e in entities if not disjoint_types.intersection(dbp_store.get_transitive_types(e))}
-        filtered_entities[lp] = valid_entities  # TODO: check if it makes sense to discard all lp entities at a certain threshold
-    return filtered_entities
-
-
-def get_listpage_entities(listpage: str) -> set:
+def get_listpage_entities(graph, listpage: str) -> set:
     global __LISTPAGE_ENTITIES__
     if '__LISTPAGE_ENTITIES__' not in globals():
-        __LISTPAGE_ENTITIES__ = defaultdict(set, util.load_or_create_cache('dbpedia_listpage_entities', _extract_listpage_entities))
+        __LISTPAGE_ENTITIES__ = defaultdict(set, util.load_or_create_cache('dbpedia_listpage_entities', lambda: _extract_listpage_entities(graph)))
     return __LISTPAGE_ENTITIES__[listpage]
 
 
-def _extract_listpage_entities():
-    enum_features = get_enum_listpage_entity_features()
+def _extract_listpage_entities(graph):
+    enum_features = get_enum_listpage_entity_features(graph)
     enum_entities = list_extract.extract_enum_entities(enum_features)
 
-    table_features = get_table_listpage_entity_features()
+    table_features = get_table_listpage_entity_features(graph)
     table_entities = list_extract.extract_table_entities(table_features)
 
     return {lp: enum_entities[lp] | table_entities[lp] for lp in (set(enum_entities) | set(table_entities))}
 
 
-def get_enum_listpage_entity_features() -> pd.DataFrame:
+def get_enum_listpage_entity_features(graph) -> pd.DataFrame:
     global __ENUM_LISTPAGE_ENTITY_FEATURES__
     if '__ENUM_LISTPAGE_ENTITY_FEATURES__' not in globals():
-        __ENUM_LISTPAGE_ENTITY_FEATURES__ = util.load_or_create_cache('dbpedia_listpage_enum_features', lambda: _compute_listpage_entity_features(list_parser.LIST_TYPE_ENUM))
+        __ENUM_LISTPAGE_ENTITY_FEATURES__ = util.load_or_create_cache('dbpedia_listpage_enum_features', lambda: _compute_listpage_entity_features(graph, list_parser.LIST_TYPE_ENUM))
     return __ENUM_LISTPAGE_ENTITY_FEATURES__
 
 
-def get_table_listpage_entity_features() -> pd.DataFrame:
+def get_table_listpage_entity_features(graph) -> pd.DataFrame:
     global __TABLE_LISTPAGE_ENTITY_FEATURES__
     if '__TABLE_LISTPAGE_ENTITY_FEATURES__' not in globals():
-        __TABLE_LISTPAGE_ENTITY_FEATURES__ = util.load_or_create_cache('dbpedia_listpage_table_features', lambda: _compute_listpage_entity_features(list_parser.LIST_TYPE_TABLE))
+        __TABLE_LISTPAGE_ENTITY_FEATURES__ = util.load_or_create_cache('dbpedia_listpage_table_features', lambda: _compute_listpage_entity_features(graph, list_parser.LIST_TYPE_TABLE))
     return __TABLE_LISTPAGE_ENTITY_FEATURES__
 
 
-def _compute_listpage_entity_features(list_type: str) -> pd.DataFrame:
+def _compute_listpage_entity_features(graph, list_type: str) -> pd.DataFrame:
     util.get_logger().info(f'List-Entities: Computing entity features for {list_type}..')
 
     entity_features = []
@@ -115,6 +115,7 @@ def _compute_listpage_entity_features(list_type: str) -> pd.DataFrame:
 
     entity_features.to_csv('table_entity_backup_preencode.csv', sep=';')  # TODO: REMOVE!
 
+    # todo: check if an increase of generated one-hot-encodings boosts precision additionally
     entity_features = list_features.onehotencode_feature(entity_features, '_section_name')
     entity_features = list_features.onehotencode_feature(entity_features, '_column_name')
 
@@ -123,7 +124,7 @@ def _compute_listpage_entity_features(list_type: str) -> pd.DataFrame:
     #entity_features.to_hdf('table_entity_backup.h5', key='df', mode='w')  # TODO: REMOVE!
     #entity_features = pd.read_csv('table_entity_backup.csv', sep=';', index_col=0)
     util.get_logger().info('List-Entities: Assigning entity labels..')
-    list_features.assign_entity_labels(entity_features)
+    list_features.assign_entity_labels(graph, entity_features)
 
     util.get_logger().info('List-Entities: Finished extracting entity features.')
     return entity_features

@@ -1,8 +1,8 @@
 import impl.list.mapping as list_mapping
 import impl.list.util as list_util
 import impl.dbpedia.store as dbp_store
+import impl.dbpedia.heuristics as dbp_heur
 import impl.category.store as cat_store
-import impl.category.cat2ax as cat_axioms
 import impl.category.base as cat_base
 import impl.util.nlp as nlp_util
 import impl.util.hypernymy as hyper_util
@@ -92,8 +92,12 @@ def make_enum_entity_features(lp_data: dict) -> list:
 
                 data.append(features)
 
-    # LISTPAGE FEATURES
     for feature_set in data:
+        # ENTITY-STATS FEATURES
+        feature_set['entity_occurrence_count'] = len([fs for fs in data if fs['_entity_uri'] == feature_set['_entity_uri']]) - 1
+        feature_set['entity_occurrence'] = feature_set['entity_occurrence_count'] > 0
+
+        # LISTPAGE FEATURES
         feature_set['lp_section_count'] = lp_section_count
         _assign_avg_and_std_to_feature_set(feature_set, lp_section_entries, 'lp_section_entry')
         _assign_avg_and_std_to_feature_set(feature_set, lp_entry_depths, 'lp_entry_depth')
@@ -202,8 +206,14 @@ def make_table_entity_features(lp_data: dict) -> list:
 
                         data.append(features)
 
-    # LISTPAGE FEATURES
     for feature_set in data:
+        # ENTITY-STATS FEATURES
+        feature_set['entity_in_same_table_count'] = len([fs for fs in data if fs['_entity_uri'] == feature_set['_entity_uri'] and fs['table_pos'] == feature_set['table_pos']]) - 1
+        feature_set['entity_in_same_table'] = feature_set['entity_in_same_table_count'] > 0
+        feature_set['entity_in_other_table_count'] = len([fs for fs in data if fs['_entity_uri'] == feature_set['_entity_uri'] and fs['table_pos'] != feature_set['table_pos']])
+        feature_set['entity_in_other_table'] = feature_set['entity_in_other_table_count'] > 0
+
+        # LISTPAGE FEATURES
         feature_set['lp_section_count'] = lp_section_count
         feature_set['lp_table_count'] = lp_table_count
         _assign_avg_and_std_to_feature_set(feature_set, lp_section_tables, 'lp_section_tables')
@@ -250,9 +260,9 @@ def _assign_avg_and_std_to_feature_set(feature_set: dict, data: list, name: str)
 
 # COMPUTATION OF ENTITY LABELS
 
-def assign_entity_labels(df: pd.DataFrame):
+def assign_entity_labels(graph, df: pd.DataFrame):
     listpage_valid_resources = {}
-    listpage_axioms = defaultdict(set)
+    listpage_types = defaultdict(set)
 
     listpage_uris = set(df['_listpage_uri'].unique())
     for idx, listpage_uri in enumerate(listpage_uris):
@@ -262,10 +272,11 @@ def assign_entity_labels(df: pd.DataFrame):
         listpage_category_resources = {res for cat in _get_category_descendants_for_list(listpage_uri) for res in cat_store.get_resources(cat)}
         listpage_valid_resources[listpage_uri] = listpage_resources.intersection(listpage_category_resources)
 
-        axioms = {ax for cat in _get_category_ancestors_for_list(listpage_uri) for ax in cat_axioms.get_axioms(cat)}
-        listpage_axioms[listpage_uri] = axioms
+        caligraph_nodes = graph.get_nodes_for_part(listpage_uri)
+        for n in caligraph_nodes:
+            listpage_types[listpage_uri].update(dbp_store.get_independent_types(graph.get_dbpedia_types(n)))
 
-    df['label'] = df.apply(lambda row: _compute_label_for_entity(row['_listpage_uri'], row['_entity_uri'], listpage_valid_resources, listpage_axioms), axis=1)
+    df['label'] = df.apply(lambda row: _compute_label_for_entity(row['_listpage_uri'], row['_entity_uri'], listpage_valid_resources, listpage_types), axis=1)
 
     if util.get_config('list.extraction.use_negative_evidence_assumption'):
         # -- ASSUMPTION: an entry of a list page has at most one positive example --
@@ -286,14 +297,15 @@ def _get_entry_id(df: pd.DataFrame, row: pd.Series) -> tuple:
         return row['_listpage_uri'], row['_section_name'], row['_table_idx'], row['_row_idx']
 
 
-def _compute_label_for_entity(listpage_uri: str, entity_uri: str, lp_valid_resources: dict, lp_axioms: dict) -> int:
+def _compute_label_for_entity(listpage_uri: str, entity_uri: str, lp_valid_resources: dict, lp_types: dict) -> int:
+    entity_types = dbp_store.get_types(entity_uri)
     if entity_uri in lp_valid_resources[listpage_uri]:
         return 1
     if not dbp_store.is_possible_resource(entity_uri):
         return 0
-    if any(ax.rejects_resource(entity_uri) for ax in lp_axioms[listpage_uri]):
+    if any(entity_types.intersection(dbp_heur.get_disjoint_types(t)) for t in lp_types[listpage_uri]):
         return 0
-    if any(ax.accepts_resource(entity_uri) for ax in lp_axioms[listpage_uri]):
+    if entity_types.intersection(lp_types[listpage_uri]):
         return 1
     return -1
 

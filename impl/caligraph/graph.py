@@ -90,7 +90,7 @@ class CaLiGraph(HierarchyGraph):
             if cat_util.is_category(part):
                 resources.update({r for r in cat_store.get_resources(part) if dbp_store.is_possible_resource(r)})
             elif use_listpage_resources and list_util.is_listpage(part):
-                resources.update({r for r in list_base.get_listpage_entities(part) if dbp_store.is_possible_resource(r)})
+                resources.update({r for r in list_base.get_listpage_entities(self, part) if dbp_store.is_possible_resource(r)})
         return resources
 
     def get_dbpedia_types(self, node: str, force_recompute=False) -> set:
