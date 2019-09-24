@@ -54,12 +54,17 @@ def resolve_disjointnesses(graph, use_listpage_resources: bool):
                 types = [(ts, max(ts.values())) for ts in types]
                 direct_types, score = max(types, key=lambda x: x[1])
                 direct_types = set() if score == 0 else set(direct_types)
+            # make sure that types induced by parts are integrated in direct types
+            part_types = {t for t in graph.get_parts(node) if dbp_util.is_dbp_type(t)}
+            direct_types = (direct_types | part_types).difference({dt for t in part_types for dt in dbp_heur.get_disjoint_types(t)})
+            direct_types = {tt for t in direct_types for tt in dbp_store.get_transitive_supertype_closure(t)}
+
             invalid_types = transitive_types.difference(direct_types)
             new_parents = {p for p in parents if not invalid_types.intersection(graph.get_dbpedia_types(p))}
             graph._remove_edges({(p, node) for p in parents.difference(new_parents)})
             if not new_parents and direct_types:
                 independent_types = dbp_store.get_independent_types(direct_types)
-                new_parents = {n for t in independent_types for n in graph.get_nodes_for_part(t)}
+                new_parents = {n for t in independent_types for n in graph.get_nodes_for_part(t) if n != node}
                 graph._add_edges({(p, node) for p in new_parents})
 
 
@@ -77,6 +82,8 @@ def _find_dbpedia_parents(graph, use_listpage_resources: bool, node: str) -> dic
     for t, score in mapped_types.items():
         for tt in dbp_store.get_transitive_supertype_closure(t):
             result[tt] = max(result[tt], score)
+
+    result = {t: score for t, score in result.items() if not dbp_heur.get_disjoint_types(t).intersection(set(result))}
     return result
 
 
