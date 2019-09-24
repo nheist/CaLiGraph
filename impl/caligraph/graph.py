@@ -93,8 +93,8 @@ class CaLiGraph(HierarchyGraph):
                 resources.update({r for r in list_base.get_listpage_entities(part) if dbp_store.is_possible_resource(r)})
         return resources
 
-    def get_dbpedia_types(self, node: str) -> set:
-        if node not in self._node_dbpedia_types:
+    def get_dbpedia_types(self, node: str, force_recompute=False) -> set:
+        if node not in self._node_dbpedia_types or force_recompute:
             node_types = {p for p in self.get_parts(node) if dbp_util.is_dbp_type(p)}
             parent_types = {t for parent in self.parents(node) for t in self.get_dbpedia_types(parent)}
             self._node_dbpedia_types[node] = node_types | parent_types
@@ -242,6 +242,8 @@ class CaLiGraph(HierarchyGraph):
             if parent_nodes:
                 self._remove_edges({(self.root_node, node)})
                 self._add_edges({(parent, node) for parent in parent_nodes})
+
+        cali_mapping.resolve_disjointnesses(self)
 
         return self
 

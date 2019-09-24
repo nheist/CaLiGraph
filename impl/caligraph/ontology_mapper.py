@@ -16,7 +16,7 @@ def find_mappings(graph, use_listpage_resources: bool) -> dict:
             for t, score in mappings[parent].items():
                 mappings[node][t] = max(mappings[node][t], score)
 
-    # resolve disjointnesses
+    # resolve basic disjointnesses
     for node in graph.traverse_topdown():
         coherent_type_sets = _find_coherent_type_sets(mappings[node])
         if len(coherent_type_sets) <= 1:  # no disjoint sets
@@ -40,10 +40,32 @@ def find_mappings(graph, use_listpage_resources: bool) -> dict:
     return mappings
 
 
+def resolve_disjointnesses(graph, use_listpage_resources: bool):
+    for node in graph.traverse_topdown():
+        parents = graph.parents(node)
+        coherent_type_sets = _find_coherent_type_sets({t: 1 for t in graph.get_dbpedia_types(node, force_recompute=True)})
+        if len(coherent_type_sets) > 1:
+            transitive_types = {tt for ts in coherent_type_sets for t in ts for tt in dbp_store.get_transitive_supertype_closure(t)}
+            direct_types = {t for t in _find_dbpedia_parents(graph, use_listpage_resources, node)}
+            if not direct_types:
+                # compute direct types by finding the best matching type from lex score
+                lex_scores = _compute_type_lexicalisation_scores(graph, node)
+                types = [{t: lex_scores[t] for t in ts} for ts in coherent_type_sets]
+                types = [(ts, max(ts.values())) for ts in types]
+                direct_types, score = max(types, key=lambda x: x[1])
+                if score == 0:
+                    direct_types = set()
+            invalid_types = transitive_types.difference(direct_types)
+            new_parents = {p for p in parents if not invalid_types.intersection(graph.get_dbpedia_types(p))}
+            graph._remove_edges({(p, node) for p in parents.difference(new_parents)})
+            if not new_parents and direct_types:
+                independent_types = dbp_store.get_independent_types(direct_types)
+                new_parents = {n for t in independent_types for n in graph.get_nodes_for_part(t)}
+                graph._add_edges({(p, node) for p in new_parents})
+
+
 def _find_dbpedia_parents(graph, use_listpage_resources: bool, node: str) -> dict:
-    name = graph.get_name(node) or ''
-    head_lemmas = nlp_util.get_head_lemmas(nlp_util.parse(name))
-    type_lexicalisation_scores = defaultdict(lambda: 0.1, cat_axioms._get_type_surface_scores(head_lemmas))
+    type_lexicalisation_scores = defaultdict(lambda: 0.1, _compute_type_lexicalisation_scores(graph, node))
     type_resource_scores = defaultdict(lambda: 0.0, _compute_type_resource_scores(graph, node, use_listpage_resources))
 
     overall_scores = {t: type_lexicalisation_scores[t] * type_resource_scores[t] for t in type_resource_scores if dbp_util.is_dbp_type(t)}
@@ -57,6 +79,12 @@ def _find_dbpedia_parents(graph, use_listpage_resources: bool, node: str) -> dic
         for tt in dbp_store.get_transitive_supertype_closure(t):
             result[tt] = max(result[tt], score)
     return result
+
+
+def _compute_type_lexicalisation_scores(graph, node: str) -> dict:
+    name = graph.get_name(node) or ''
+    head_lemmas = nlp_util.get_head_lemmas(nlp_util.parse(name))
+    return cat_axioms._get_type_surface_scores(head_lemmas)
 
 
 def _compute_type_resource_scores(graph, node: str, use_listpage_resources: bool) -> dict:
