@@ -83,7 +83,7 @@ def _find_dbpedia_parents(graph, use_listpage_resources: bool, node: str) -> dic
         for tt in dbp_store.get_transitive_supertype_closure(t):
             result[tt] = max(result[tt], score)
 
-    result = {t: score for t, score in result.items() if not dbp_heur.get_disjoint_types(t).intersection(set(result))}
+    result = defaultdict(float, {t: score for t, score in result.items() if not dbp_heur.get_disjoint_types(t).intersection(set(result))})
     return result
 
 
