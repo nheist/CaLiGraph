@@ -53,8 +53,7 @@ def resolve_disjointnesses(graph, use_listpage_resources: bool):
                 types = [{t: lex_scores[t] for t in ts} for ts in coherent_type_sets]
                 types = [(ts, max(ts.values())) for ts in types]
                 direct_types, score = max(types, key=lambda x: x[1])
-                if score == 0:
-                    direct_types = set()
+                direct_types = set() if score == 0 else set(direct_types)
             invalid_types = transitive_types.difference(direct_types)
             new_parents = {p for p in parents if not invalid_types.intersection(graph.get_dbpedia_types(p))}
             graph._remove_edges({(p, node) for p in parents.difference(new_parents)})
