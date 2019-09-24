@@ -243,7 +243,8 @@ class CaLiGraph(HierarchyGraph):
                 self._remove_edges({(self.root_node, node)})
                 self._add_edges({(parent, node) for parent in parent_nodes})
 
-        cali_mapping.resolve_disjointnesses(self)
+        self.resolve_cycles().append_unconnected()
+        cali_mapping.resolve_disjointnesses(self, use_listpage_resources)
 
         return self
 
