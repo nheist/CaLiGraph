@@ -60,8 +60,9 @@ class CaLiGraph(HierarchyGraph):
             property_counts = defaultdict(int)
             for res in self.get_dbpedia_resources(node, True):
                 resource_count += 1
-                for pred, val in dbp_store.get_properties(res).items():
-                    property_counts[(pred, val)] += 1
+                for pred, values in dbp_store.get_properties(res).items():
+                    for val in values:
+                        property_counts[(pred, val)] += 1
             for child in self.children(node):
                 child_stats = self.get_resource_stats(child)
                 resource_count += child_stats['resource_count']
