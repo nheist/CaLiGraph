@@ -16,6 +16,7 @@ import impl.dbpedia.store as dbp_store
 import impl.dbpedia.util as dbp_util
 import impl.caligraph.ontology_mapper as cali_mapping
 from collections import defaultdict
+from typing import Optional
 
 
 class CaLiGraph(HierarchyGraph):
@@ -29,6 +30,20 @@ class CaLiGraph(HierarchyGraph):
 
     def _reset_edge_indices(self):
         self._node_dbpedia_types = defaultdict(set)
+
+    def is_caligraph_class(self, item: str) -> bool:
+        return item.startswith(self.get_ontology_namespace()) and self.has_node(item)
+
+    def is_caligraph_resource(self, item: str) -> bool:
+        return item.startswith(self.get_resource_namespace())
+
+    def get_label(self, node: str) -> Optional[str]:
+        if self.is_caligraph_class(node):
+            return node[len(self.get_ontology_namespace()):].replace('_', ' ')
+        if self.is_caligraph_resource(node):
+            # TODO: use labels from dbpedia/listpages
+            return node[len(self.get_resource_namespace()):].replace('_', ' ')
+        return None
 
     @property
     def statistics(self) -> str:

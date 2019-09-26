@@ -15,6 +15,7 @@ def get_category_sets() -> list:
     return [cs for category_sets in _get_parent_to_category_set_mapping().values() for cs in category_sets]
 
 
+# TODO: remove
 def get_category_sets_for_parent(parent_category: str) -> set:
     """Return all category sets that have been created with `parent_category` as a parent."""
     category_sets = _get_parent_to_category_set_mapping()
