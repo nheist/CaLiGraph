@@ -27,7 +27,14 @@ def _extract_candidate_sets(graph) -> list:
     for node in graph.traverse_topdown():
         children = graph.children(node)
         children_docs = {c: nlp_util.parse(graph.get_label(c)) for c in children}
+        # extract candidate sets ouf of direct children in caligraph
         candidate_sets.extend(cat_set._find_child_sets(node, children_docs))
+        # extract candidate sets out of partitions of the children(from node parts that point to children)
+        for part in graph.get_parts(node):
+            part_children = cat_store.get_children(part)
+            part_child_nodes = {n for pc in part_children for n in graph.get_nodes_for_part(pc) if n in children}
+            part_child_docs = {n: children_docs[n] for n in part_child_nodes}
+            candidate_sets.extend(cat_set._find_child_sets(node, part_child_docs))
 
     util.get_logger().debug(f'CaLi2Ax: Extracted {len(candidate_sets)} candidate sets.')
     return candidate_sets
