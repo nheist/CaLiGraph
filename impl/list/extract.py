@@ -1,11 +1,21 @@
 import pandas as pd
-from sklearn.pipeline import Pipeline
-from sklearn.feature_selection import SelectKBest
 from xgboost import XGBClassifier
 from collections import defaultdict
 
 
 def extract_enum_entities(df: pd.DataFrame) -> dict:
+    # TODO: optimise with grid-search
+    estimator = XGBClassifier(random_state=42, colsample_bytree=.8, max_depth=5, n_estimators=200, scale_pos_weight=.25)
+    return _extract_entities(df, estimator)
+
+
+def extract_table_entities(df: pd.DataFrame) -> dict:
+    # TODO: optimise with grid-search
+    estimator = XGBClassifier(random_state=42, colsample_bytree=.8, max_depth=5, n_estimators=200, scale_pos_weight=.25)
+    return _extract_entities(df, estimator)
+
+
+def _extract_entities(df: pd.DataFrame, estimator) -> dict:
     df_true = df[df['label'] == 1].copy()
     df_new = df[df['label'] == -1].copy()
 
@@ -15,21 +25,12 @@ def extract_enum_entities(df: pd.DataFrame) -> dict:
     train, candidates = df[df['label'] != -1], df[df['label'] == -1].drop(columns='label')
     X, y = train.drop(columns='label'), train['label']
 
-    # define model
-    pipeline = Pipeline([
-        ('feature_selection', SelectKBest(k=100)),
-        ('classification', XGBClassifier(random_state=42, colsample_bytree=.6, max_depth=15, n_estimators=300)),
-    ])
-
     # predict
-    pipeline.fit(X, y)
-    df_new['label'] = pipeline.predict(candidates)
+    estimator.fit(X, y)
+    df_new['label'] = estimator.predict(candidates)
 
+    # extract true entities
     list_entities = defaultdict(set)
     for idx, row in pd.concat([df_true, df_new[df_new['label'] == 1]]).iterrows():
         list_entities[row['_listpage_uri']].add(row['_entity_uri'])
     return list_entities
-
-
-def extract_table_entities(df: pd.DataFrame) -> dict:
-    pass  # todo
