@@ -24,12 +24,15 @@ class CaLiGraph(HierarchyGraph):
     def __init__(self, graph: nx.DiGraph, root_node: str = None):
         super().__init__(graph, root_node or rdf_util.CLASS_OWL_THING)
         self._node_dbpedia_types = defaultdict(set)
+        self._node_resource_stats = defaultdict(dict)
 
     def _reset_node_indices(self):
         self._node_dbpedia_types = defaultdict(set)
+        self._node_resource_stats = defaultdict(dict)
 
     def _reset_edge_indices(self):
         self._node_dbpedia_types = defaultdict(set)
+        self._node_resource_stats = defaultdict(dict)
 
     def is_caligraph_class(self, item: str) -> bool:
         return item.startswith(self.get_ontology_namespace()) and self.has_node(item)
@@ -44,6 +47,27 @@ class CaLiGraph(HierarchyGraph):
             # TODO: use labels from dbpedia/listpages
             return node[len(self.get_resource_namespace()):].replace('_', ' ')
         return None
+
+    def get_property_frequencies(self, node: str) -> dict:
+        resource_stats = self.get_resource_stats(node)
+        property_counts = resource_stats['property_counts']
+        resource_count = resource_stats['resource_count']
+        return {p: count / resource_count for p, count in property_counts.items()}
+
+    def get_resource_stats(self, node: str) -> dict:
+        if node not in self._node_resource_stats:
+            resource_count = 0
+            property_counts = defaultdict(int)
+            for res in self.get_dbpedia_resources(node, True):
+                resource_count += 1
+                for pred, val in dbp_store.get_properties(res).items():
+                    property_counts[(pred, val)] += 1
+            for child in self.children(node):
+                child_stats = self.get_resource_stats(child)
+                resource_count += child_stats['resource_count']
+                for prop, count in child_stats['property_counts'].items():
+                    property_counts[prop] += count
+        return self._node_resource_stats[node]
 
     @property
     def statistics(self) -> str:

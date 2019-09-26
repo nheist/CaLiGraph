@@ -90,12 +90,12 @@ def _extract_patterns(category_graph, candidate_sets):
     util.get_logger().debug('Cat2Ax: Extracting patterns..')
     patterns = defaultdict(lambda: {'preds': defaultdict(list), 'types': defaultdict(list)})
 
-    for parent, categories, (first_words, last_words) in candidate_sets:
+    for parent, children, (first_words, last_words) in candidate_sets:
         predicate_frequencies = defaultdict(list)
         type_frequencies = defaultdict(list)
         type_surface_scores = _get_type_surface_scores(first_words + last_words)
 
-        categories_with_matches = {cat: _get_match_for_category(cat, first_words, last_words) for cat in categories}
+        categories_with_matches = {cat: _get_match_for_category(cat, first_words, last_words) for cat in children}
         categories_with_matches = {cat: match for cat, match in categories_with_matches.items() if category_graph.has_node(cat) and match}
         for cat, match in categories_with_matches.items():
             # compute predicate frequencies

@@ -7,7 +7,7 @@ import operator
 from typing import Tuple, Optional
 
 
-CategorySet = namedtuple('CategorySet', ['parent', 'categories', 'pattern'])
+CandidateSet = namedtuple('CandidateSet', ['parent', 'children', 'pattern'])
 
 
 def get_category_sets() -> list:
@@ -67,7 +67,7 @@ def _find_child_sets(parent: str, category_docs: dict, current_pattern=((), ()))
     score = count / len(category_docs)
     if count < 2 or score < .5:
         if current_pattern[0] or current_pattern[1]:
-            return [CategorySet(parent=parent, categories=set(category_docs), pattern=current_pattern)]
+            return [CandidateSet(parent=parent, children=set(category_docs), pattern=current_pattern)]
         else:
             return []
 
