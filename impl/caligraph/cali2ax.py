@@ -22,18 +22,21 @@ def extract_axioms(graph):
 # --- CANDIDATE SET EXTRACTION ---
 
 def _extract_candidate_sets(graph) -> list:
+    util.get_logger().debug('CaLi2Ax: Extracting candidate sets..')
     candidate_sets = []
     for node in graph.traverse_topdown():
         children = graph.children(node)
         children_docs = {c: nlp_util.parse(graph.get_label(c)) for c in children}
         candidate_sets.extend(cat_set._find_child_sets(node, children_docs))
+
+    util.get_logger().debug(f'CaLi2Ax: Extracted {len(candidate_sets)} candidate sets.')
     return candidate_sets
 
 
 # --- PATTERN EXTRACTION ---
 
 # TODO: renaming
-def _extract_patterns(graph, candidate_sets):
+def _extract_patterns(graph, candidate_sets: list) -> dict:
     util.get_logger().debug('CaLi2Ax: Extracting patterns..')
     patterns = defaultdict(lambda: defaultdict(list))
 
