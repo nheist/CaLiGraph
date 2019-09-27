@@ -196,4 +196,4 @@ def _find_axioms(graph, pattern_confidence, pattern_dict, node, node_doc):
         back_pattern_idx = -1 * pattern_lengths[1] or None
         text_diff = node_doc[front_pattern_idx:back_pattern_idx].text
         return _get_axioms_for_node(graph, pattern_confidence, axiom_patterns, node, text_diff)
-    return None, None
+    return None
