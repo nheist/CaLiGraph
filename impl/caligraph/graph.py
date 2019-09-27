@@ -68,7 +68,7 @@ class CaLiGraph(HierarchyGraph):
                 resource_count += child_stats['resource_count']
                 for prop, count in child_stats['property_counts'].items():
                     property_counts[prop] += count
-            self._node_resource_stats = {'resource_count': resource_count, 'property_counts': property_counts}
+            self._node_resource_stats[node] = {'resource_count': resource_count, 'property_counts': property_counts}
         return self._node_resource_stats[node]
 
     @property
