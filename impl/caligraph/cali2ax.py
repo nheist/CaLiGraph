@@ -105,7 +105,7 @@ def _extract_axioms(graph, pattern_confidence, patterns):
     for (front_pattern, back_pattern), axiom_patterns in _get_confidence_pattern_set(patterns, True, True).items():
         _fill_dict(enclosing_pattern_dict, list(front_pattern), lambda d: _fill_dict(d, list(reversed(back_pattern)), axiom_patterns))
 
-    for node in graph.nodes:
+    for node in graph.nodes.difference({graph.root_node}):
         node_doc = nlp_util.parse(graph.get_label(node))
         node_axioms = []
 

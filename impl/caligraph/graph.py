@@ -123,6 +123,7 @@ class CaLiGraph(HierarchyGraph):
     def get_resources(self, node: str) -> set:
         # TODO: filter resources based on disjointess with existing types
         # TODO: use correct namespace
+        # TODO: trim whitespaces/_ at the end
         return set()
 
     def get_dbpedia_resources(self, node: str, use_listpage_resources=True) -> set:
