@@ -15,6 +15,7 @@ import numpy as np
 import impl.dbpedia.store as dbp_store
 import impl.dbpedia.util as dbp_util
 import impl.caligraph.ontology_mapper as cali_mapping
+import impl.caligraph.cali2ax as cali_axioms
 from collections import defaultdict
 from typing import Optional
 
@@ -25,6 +26,7 @@ class CaLiGraph(HierarchyGraph):
         super().__init__(graph, root_node or rdf_util.CLASS_OWL_THING)
         self._node_dbpedia_types = defaultdict(set)
         self._node_resource_stats = defaultdict(dict)
+        self._node_axioms = defaultdict(set)
 
     def _reset_node_indices(self):
         self._node_dbpedia_types = defaultdict(set)
@@ -303,6 +305,10 @@ class CaLiGraph(HierarchyGraph):
             self._set_name(node_id, name)
         self._set_parts(node_id, node_parts)
         return node_id
+
+    def compute_axioms(self):
+        for node, axiom in cali_axioms.extract_axioms(self):
+            self._node_axioms[node].add((axiom[1], axiom[2]))
 
     @staticmethod
     def get_ontology_namespace():

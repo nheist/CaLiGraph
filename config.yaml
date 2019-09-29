@@ -145,6 +145,9 @@ cache:
   caligraph_filtered:
     filename: 'caligraph-filtered'
     version: 7
+  caligraph_axiomatized:
+    filename: 'caligraph-axiomatized'
+    version: 7
   spacy_docs:
     filename: 'spacy-docs'
     version: 3  # version 2 incl. listpages; version 3 for spacy 2.1

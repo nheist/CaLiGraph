@@ -24,3 +24,11 @@ def get_filtered_graph() -> CaLiGraph:
         initializer = lambda: get_base_graph().copy().merge_ontology(True).resolve_cycles().append_unconnected()
         __FILTERED_GRAPH__ = util.load_or_create_cache('caligraph_filtered', initializer)
     return __FILTERED_GRAPH__
+
+
+def get_axiom_graph() -> CaLiGraph:
+    global __AXIOM_GRAPH__
+    if '__AXIOM_GRAPH__' not in globals():
+        initializer = lambda: get_filtered_graph().compute_axioms()
+        __AXIOM_GRAPH__ = util.load_or_create_cache('caligraph_axiomatized', initializer)
+    return __AXIOM_GRAPH__
