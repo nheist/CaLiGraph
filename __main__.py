@@ -32,18 +32,6 @@ if __name__ == '__main__':
     try:
         util.get_logger().info('Starting feature relabelling..')
 
-        # relabel enum and table features
-        graph = cali_base.get_merged_ontology_graph()
-        util.get_logger().debug('Recomputing enum labels..')
-        features = util.load_cache('dbpedia_listpage_enum_features', version=7)
-        list_features.assign_entity_labels(graph, features)
-        util.update_cache('dbpedia_listpage_enum_features', features, version=8)
-
-        util.get_logger().debug('Recomputing table labels..')
-        features = util.load_cache('dbpedia_listpage_table_features', version=7)
-        list_features.assign_entity_labels(graph, features)
-        util.update_cache('dbpedia_listpage_table_features', features, version=8)
-
 
         # extract table features
         #list_base.get_table_listpage_entity_features()
@@ -51,9 +39,9 @@ if __name__ == '__main__':
 
 
         # extract complete caligraph
-#        setup()
-#        caligraph = cali_base.get_merged_ontology_graph()
-#        util.get_logger().info(caligraph.statistics)
+        setup()
+        caligraph = cali_base.get_axiom_graph()
+        util.get_logger().info(caligraph.statistics)
 
         #cat_graph = cat_base.get_merged_graph()
         #util.get_logger().info('catgraph done.')

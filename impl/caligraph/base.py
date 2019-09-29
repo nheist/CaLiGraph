@@ -1,4 +1,5 @@
 from impl.caligraph.graph import CaLiGraph
+import impl.list.base as list_base
 import util
 
 
@@ -21,6 +22,9 @@ def get_merged_ontology_graph() -> CaLiGraph:
 def get_filtered_graph() -> CaLiGraph:
     global __FILTERED_GRAPH__
     if '__FILTERED_GRAPH__' not in globals():
+        # first make sure that resources have already been extracted using the merged ontology graph
+        list_base.get_listpage_entities(get_merged_ontology_graph(), '')
+
         initializer = lambda: get_base_graph().copy().merge_ontology(True).resolve_cycles().append_unconnected()
         __FILTERED_GRAPH__ = util.load_or_create_cache('caligraph_filtered', initializer)
     return __FILTERED_GRAPH__

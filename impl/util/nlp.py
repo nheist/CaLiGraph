@@ -27,6 +27,7 @@ def get_canonical_name(text: str, disable_normalization=True) -> str:
     text = re.sub(r'\s+\([A-Z]\)$', '', text)  # remove trailing parentheses with single letter, e.g. 'Interstate roads (Y)'
     text = re.sub(r'\s*[-:,–]\s*[A-Z][a-z]*\s?[-–]\s?[A-Z][a-z]*$', '', text)  # remove trailing alphabetical ranges, e.g. 'Drugs: Sp-Sub'
     text = re.sub(r'\s*[-:–]\s*([A-Z],\s*)*[A-Z]$', '', text)  # remove trailing alphabetical splits, e.g. 'Football clubs in Sweden - Z' or '.. - X, Y, Z'
+    text = re.sub(r'\s*/([A-Z],\s*)*[A-Z]$', '', text)  # remove trailing alphabetical splits with slash, e.g. 'Fellows of the Royal Society/A'
     text = re.sub(r'\s+([A-Z],\s*)+[A-Z]$', '', text)  # remove trailing alphabetical splits without indicator, e.g. 'Fellows of the Royal Society A, B, C'
     return _regularize_whitespaces(text)
 
@@ -44,6 +45,9 @@ def remove_by_phrase(doc: Doc, return_doc=True):
     if word_after_by.text[0].isupper() or any(w.tag_ == 'NNS' for w in doc[last_by_index+1:]) or word_after_by.text in ['a', 'an', 'the'] or word_before_by.tag_ == 'VBN':
         return doc if return_doc else doc.text
 
+    if doc[last_by_index - 1].text == '(':  # remove possible parenthesis before by phrase
+        last_by_index -= 1
+
     result = doc[:last_by_index].text.strip()
     if return_doc:
         return parse(result, disable_normalization=True, skip_cache=True)
@@ -57,7 +61,7 @@ def get_head_lemmas(doc: Doc) -> set:
     for idx, w in enumerate(doc):
         if w.ent_type_ != 'LH' or w.tag_ != 'NNS':
             continue
-        if idx + 1 < len(doc) and doc[idx+1].ent_type_ == 'LH' and doc[idx+1].text != 'and':
+        if idx + 1 < len(doc) and doc[idx+1].ent_type_ == 'LH' and not doc[idx+1].text in ['and', 'or', ',']:
             continue
         head_lemmas.add(w.lemma_)
     return head_lemmas
@@ -85,7 +89,7 @@ def tag_lexical_head(doc: Doc) -> Doc:
             continue
         if len(doc) > elem.i + 1 and doc[elem.i+1].text in ['(', ')', '–'] and doc[-1].text != ')':
             continue
-        if (len(doc) > elem.i + 1 and doc[elem.i + 1].tag_ in ['NN', 'NNS']) or (len(doc) > elem.i + 2 and doc[elem.i+1].text == 'and' and doc[elem.i+2] in chunk_words):
+        if (len(doc) > elem.i + 1 and doc[elem.i + 1].tag_ in ['NN', 'NNS']) or (len(doc) > elem.i + 2 and doc[elem.i+1].text in ['and', 'or', ','] and doc[elem.i+2] in chunk_words):
             lexhead_start = lexhead_start if lexhead_start is not None else chunk.start
             continue
         lexhead_start = lexhead_start if lexhead_start is not None else chunk.start
@@ -98,7 +102,7 @@ def singularize_phrase(doc: Doc) -> str:
     doc = tag_lexical_head(doc)
     result = doc.text
     for idx, w in enumerate(doc):
-        if w.ent_type_ == 'LH' and (len(doc) <= idx+1 or doc[idx+1].text == 'and' or doc[idx+1].ent_type_ != 'LH'):
+        if w.ent_type_ == 'LH' and (len(doc) <= idx+1 or doc[idx+1].text in ['and', 'or', ','] or doc[idx+1].ent_type_ != 'LH'):
             result = result.replace(w.text, inflection.singularize(w.text))
             if len(doc) > idx+1 and doc[idx+1].text == 'and':
                 result = result.replace('and', 'or')

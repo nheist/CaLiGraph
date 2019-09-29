@@ -14,6 +14,7 @@ import impl.util.nlp as nlp_util
 import numpy as np
 import impl.dbpedia.store as dbp_store
 import impl.dbpedia.util as dbp_util
+import impl.dbpedia.heuristics as dbp_heur
 import impl.caligraph.ontology_mapper as cali_mapping
 import impl.caligraph.cali2ax as cali_axioms
 from collections import defaultdict
@@ -26,14 +27,21 @@ class CaLiGraph(HierarchyGraph):
         super().__init__(graph, root_node or rdf_util.CLASS_OWL_THING)
         self._node_dbpedia_types = defaultdict(set)
         self._node_resource_stats = defaultdict(dict)
+        self._node_resources = defaultdict(set)
+        self._resource_nodes = defaultdict(set)
         self._node_axioms = defaultdict(set)
+        self._node_axioms_transitive = defaultdict(set)
 
     def _reset_node_indices(self):
         self._node_dbpedia_types = defaultdict(set)
+        self._node_resources = defaultdict(set)
+        self._resource_nodes = defaultdict(set)
         self._node_resource_stats = defaultdict(dict)
 
     def _reset_edge_indices(self):
         self._node_dbpedia_types = defaultdict(set)
+        self._node_resources = defaultdict(set)
+        self._resource_nodes = defaultdict(set)
         self._node_resource_stats = defaultdict(dict)
 
     def is_caligraph_class(self, item: str) -> bool:
@@ -46,87 +54,24 @@ class CaLiGraph(HierarchyGraph):
         if self.is_caligraph_class(node):
             return node[len(self.get_ontology_namespace()):].replace('_', ' ')
         if self.is_caligraph_resource(node):
-            # TODO: use labels from dbpedia/listpages
+            # TODO: crawl labels from listpages
             return node[len(self.get_resource_namespace()):].replace('_', ' ')
         return None
 
-    def get_property_frequencies(self, node: str) -> dict:
-        resource_stats = self.get_resource_stats(node)
-        property_counts = resource_stats['property_counts']
-        resource_count = resource_stats['resource_count']
-        return {p: count / resource_count for p, count in property_counts.items()}
-
-    def get_resource_stats(self, node: str) -> dict:
-        if node not in self._node_resource_stats:
-            resource_count = 0
-            property_counts = defaultdict(int)
-            for res in self.get_dbpedia_resources(node, True):
-                resource_count += 1
-                for pred, values in dbp_store.get_properties(res).items():
-                    for val in values:
-                        property_counts[(pred, val)] += 1
-            for child in self.children(node):
-                child_stats = self.get_resource_stats(child)
-                resource_count += child_stats['resource_count']
-                for prop, count in child_stats['property_counts'].items():
-                    property_counts[prop] += count
-            self._node_resource_stats[node] = {'resource_count': resource_count, 'property_counts': property_counts}
-        return self._node_resource_stats[node]
-
-    @property
-    def statistics(self) -> str:
-        leaf_nodes = {node for node in self.nodes if not self.children(node)}
-        node_depths = self.depths()
-
-        class_count = len(self.nodes)
-        edge_count = len(self.edges)
-        parts_count = len({p for n in self.nodes for p in self.get_parts(n)})
-        cat_parts_count = len({p for n in self.nodes for p in self.get_parts(n) if cat_util.is_category(p)})
-        list_parts_count = len({p for n in self.nodes for p in self.get_parts(n) if list_util.is_listpage(p)})
-        listcat_parts_count = len({p for n in self.nodes for p in self.get_parts(n) if list_util.is_listcategory(p)})
-        classtree_depth_avg = np.mean([node_depths[node] for node in leaf_nodes])
-        branching_factor_avg = np.mean([d for _, d in self.graph.out_degree if d > 0])
-        relation_count = 0
-
-        category_instances = set()
-        list_instances = set()
-
-        for node in self.nodes:
-            for part in self.get_parts(node):
-                if cat_util.is_category(part):
-                    category_instances.update(cat_store.get_resources(part))
-                elif list_util.is_listpage(part):
-                    list_instances.update(list_base.get_listpage_entities(part))
-
-        instance_axiom_count = 0
-        instance_degree_avg = 0
-        instance_indegree_med = 0
-        instance_outdegree_med = 0
-
-        return '\n'.join([
-            '{:^40}'.format('STATISTICS'),
-            '=' * 40,
-            '{:<30} | {:>7}'.format('nodes', class_count),
-            '{:<30} | {:>7}'.format('nodes below root', len(self.children(self.root_node))),
-            '{:<30} | {:>7}'.format('edges', edge_count),
-            '{:<30} | {:>7}'.format('parts', parts_count),
-            '{:<30} | {:>7}'.format('category parts', cat_parts_count),
-            '{:<30} | {:>7}'.format('list parts', list_parts_count),
-            '{:<30} | {:>7}'.format('listcat parts', listcat_parts_count),
-            '{:<30} | {:>7.2f}'.format('classtree depth', classtree_depth_avg),
-            '{:<30} | {:>7.2f}'.format('branching factor', branching_factor_avg),
-            '-' * 40,
-            '{:<30} | {:>7}'.format('instances', len(category_instances | list_instances)),
-            '{:<30} | {:>7}'.format('category instances', len(category_instances)),
-            '{:<30} | {:>7}'.format('list instances', len(list_instances)),
-            '{:<30} | {:>7}'.format('new instances', len(list_instances.difference(dbp_store.get_resources()))),
-            ])
-
     def get_resources(self, node: str) -> set:
-        # TODO: filter resources based on disjointess with existing types
-        # TODO: use correct namespace
-        # TODO: trim whitespaces/_ at the end
-        return set()
+        if node not in self._node_resources:
+            disjoint_types = {dt for t in self.get_dbpedia_types(node) for dt in dbp_heur.get_disjoint_types(t)}
+            dbp_resources = self.get_dbpedia_resources(node)
+            dbp_resources = {r for r in dbp_resources if not disjoint_types.intersection(dbp_store.get_types(r))}
+            self._node_resources[node] = {self.get_resource_namespace() + r[len(dbp_util.NAMESPACE_DBP_RESOURCE):].strip('_') for r in dbp_resources}
+        return self._node_resources[node]
+
+    def get_nodes_for_resource(self, resource: str) -> set:
+        if not self._resource_nodes:
+            for node in self.nodes:
+                for r in self.get_resources(node):
+                    self._resource_nodes[r].add(node)
+        return self._resource_nodes[resource]
 
     def get_dbpedia_resources(self, node: str, use_listpage_resources=True) -> set:
         resources = set()
@@ -143,6 +88,88 @@ class CaLiGraph(HierarchyGraph):
             parent_types = {t for parent in self.parents(node) for t in self.get_dbpedia_types(parent)}
             self._node_dbpedia_types[node] = node_types | parent_types
         return self._node_dbpedia_types[node]
+
+    def get_property_frequencies(self, node: str) -> dict:
+        resource_stats = self.get_resource_stats(node)
+        property_counts = resource_stats['property_counts']
+        resource_count = resource_stats['resource_count']
+        return {p: count / resource_count for p, count in property_counts.items()}
+
+    def get_resource_stats(self, node: str) -> dict:
+        if node not in self._node_resource_stats:
+            resource_count = 0
+            new_resource_count = 0
+            property_counts = defaultdict(int)
+            for res in self.get_dbpedia_resources(node, True):
+                if res in dbp_store.get_resources():
+                    resource_count += 1
+                    for pred, values in dbp_store.get_properties(res).items():
+                        for val in values:
+                            property_counts[(pred, val)] += 1
+                else:
+                    new_resource_count += 1
+            for child in self.children(node):
+                child_stats = self.get_resource_stats(child)
+                resource_count += child_stats['resource_count']
+                for prop, count in child_stats['property_counts'].items():
+                    property_counts[prop] += count
+            self._node_resource_stats[node] = {'resource_count': resource_count, 'new_resource_count': new_resource_count, 'property_counts': property_counts}
+        return self._node_resource_stats[node]
+
+    def get_axioms(self, node: str) -> set:
+        if node not in self._node_axioms_transitive:
+            self._node_axioms_transitive[node] = self._node_axioms[node] | {ax for p in self.parents(node) for ax in self.get_axioms(p)}
+        return self._node_axioms_transitive[node]
+
+    @property
+    def statistics(self) -> str:
+        leaf_nodes = {node for node in self.nodes if not self.children(node)}
+        node_depths = self.depths()
+
+        class_count = len(self.nodes)
+        edge_count = len(self.edges)
+        predicate_count = {pred for axioms in self._node_axioms.values() for pred, _ in axioms}
+        axiom_count = sum([len(axioms) for axioms in self._node_axioms.values()])
+        parts_count = len({p for n in self.nodes for p in self.get_parts(n)})
+        cat_parts_count = len({p for n in self.nodes for p in self.get_parts(n) if cat_util.is_category(p)})
+        list_parts_count = len({p for n in self.nodes for p in self.get_parts(n) if list_util.is_listpage(p)})
+        listcat_parts_count = len({p for n in self.nodes for p in self.get_parts(n) if list_util.is_listcategory(p)})
+        classtree_depth_avg = np.mean([node_depths[node] for node in leaf_nodes])
+        branching_factor_avg = np.mean([d for _, d in self.graph.out_degree if d > 0])
+
+        category_instances = set()
+        list_instances = set()
+
+        for node in self.nodes:
+            disjoint_types = {dt for t in self.get_dbpedia_types(node) for dt in dbp_heur.get_disjoint_types(t)}
+            for part in self.get_parts(node):
+                if cat_util.is_category(part):
+                    cat_resources = {r for r in cat_store.get_resources(part) if dbp_store.is_possible_resource(r) and not disjoint_types.intersection(dbp_store.get_types(r))}
+                    category_instances.update(cat_resources)
+                elif list_util.is_listpage(part):
+                    list_resources = {r for r in list_base.get_listpage_entities(self, part) if dbp_store.is_possible_resource(r) and not disjoint_types.intersection(dbp_store.get_types(r))}
+                    list_instances.update(list_resources)
+
+        return '\n'.join([
+            '{:^40}'.format('STATISTICS'),
+            '=' * 40,
+            '{:<30} | {:>7}'.format('nodes', class_count),
+            '{:<30} | {:>7}'.format('nodes below root', len(self.children(self.root_node))),
+            '{:<30} | {:>7}'.format('edges', edge_count),
+            '{:<30} | {:>7}'.format('predicates', predicate_count),
+            '{:<30} | {:>7}'.format('axioms', axiom_count),
+            '{:<30} | {:>7}'.format('parts', parts_count),
+            '{:<30} | {:>7}'.format('category parts', cat_parts_count),
+            '{:<30} | {:>7}'.format('list parts', list_parts_count),
+            '{:<30} | {:>7}'.format('listcat parts', listcat_parts_count),
+            '{:<30} | {:>7.2f}'.format('classtree depth', classtree_depth_avg),
+            '{:<30} | {:>7.2f}'.format('branching factor', branching_factor_avg),
+            '-' * 40,
+            '{:<30} | {:>7}'.format('instances', len(category_instances | list_instances)),
+            '{:<30} | {:>7}'.format('category instances', len(category_instances)),
+            '{:<30} | {:>7}'.format('list instances', len(list_instances)),
+            '{:<30} | {:>7}'.format('new instances', len(list_instances.difference(dbp_store.get_resources()))),
+            ])
 
     @classmethod
     def build_graph(cls):
