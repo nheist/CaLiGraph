@@ -31,6 +31,9 @@ files:
     pages:
       filename: 'pages_articles_en.xml.bz2'
       url: 'http://downloads.dbpedia.org/2016-10/core-i18n/en/pages_articles_en.xml.bz2'
+    taxonomy_owl:
+      filename: 'dbpedia_2016-10.owl'
+      url: 'http://downloads.dbpedia.org/2016-10/dbpedia_2016-10.owl'
     taxonomy:
       filename: 'dbpedia_2016-10.nt'
       url: 'http://downloads.dbpedia.org/2016-10/dbpedia_2016-10.nt'
@@ -107,6 +110,8 @@ results:
     type_axioms: 'cat2ax_type-axioms.csv'
     relation_assertions: 'cat2ax_relation-assertions.csv'
     type_assertions: 'cat2ax_type-assertions.csv'
+  caligraph:
+    complete: 'caligraph.nt.bz2'
 
 cache:
   # version 2: added resource types from sdtyped + lhd

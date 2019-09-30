@@ -18,6 +18,7 @@ nltk = "*"
 pynif = "*"
 tables = "*"
 xgboost = "*"
+owlready2 = "*"
 
 [dev-packages]
 

@@ -1,4 +1,5 @@
 from impl.caligraph.graph import CaLiGraph
+import impl.caligraph.serialize as cali_serialize
 import impl.list.base as list_base
 import util
 
@@ -36,3 +37,8 @@ def get_axiom_graph() -> CaLiGraph:
         initializer = lambda: get_filtered_graph().compute_axioms()
         __AXIOM_GRAPH__ = util.load_or_create_cache('caligraph_axiomatized', initializer)
     return __AXIOM_GRAPH__
+
+
+def serialize_final_graph():
+    graph = get_axiom_graph()
+    cali_serialize.serialize_graph(graph)

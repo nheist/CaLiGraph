@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "98b469ff6be247b0811965c96026c6cb2085cd9b0dee71050464125b037af7a0"
+            "sha256": "929f3f940fa284f530c4e2846e09e5ad57cac1fb5cce769d65f92490144ef732"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -36,10 +36,10 @@
         },
         "certifi": {
             "hashes": [
-                "sha256:046832c04d4e752f37383b628bc601a7ea7211496b4638f6514d0e5b9acc4939",
-                "sha256:945e3ba63a0b9f577b1395204e13c3a231f9bc0223888be653286534e5873695"
+                "sha256:e4f3620cfea4f83eedc95b24abd9cd56f3c4b146dd0177e83a21b4eb49e21e50",
+                "sha256:fd7c7c74727ddcf00e9acd26bba8da604ffec95bf1c2144e67aff7a8b50e6cef"
             ],
-            "version": "==2019.6.16"
+            "version": "==2019.9.11"
         },
         "chardet": {
             "hashes": [
@@ -232,6 +232,13 @@
             ],
             "index": "pypi",
             "version": "==1.17.2"
+        },
+        "owlready2": {
+            "hashes": [
+                "sha256:3ad4549206b0d1958dc22d4d3c04441119dfea966a7f82b46900a334545c2c07"
+            ],
+            "index": "pypi",
+            "version": "==0.20"
         },
         "pandas": {
             "hashes": [
@@ -507,17 +514,17 @@
         },
         "tqdm": {
             "hashes": [
-                "sha256:1be3e4e3198f2d0e47b928e9d9a8ec1b63525db29095cec1467f4c5a4ea8ebf9",
-                "sha256:7e39a30e3d34a7a6539378e39d7490326253b7ee354878a92255656dc4284457"
+                "sha256:abc25d0ce2397d070ef07d8c7e706aede7920da163c64997585d42d3537ece3d",
+                "sha256:dd3fcca8488bb1d416aa7469d2f277902f26260c45aa86b667b074cd44b3b115"
             ],
-            "version": "==4.35.0"
+            "version": "==4.36.1"
         },
         "urllib3": {
             "hashes": [
-                "sha256:b246607a25ac80bedac05c6f282e3cdaf3afb65420fd024ac94435cabe6e18d1",
-                "sha256:dbe59173209418ae49d485b87d1681aefa36252ee85884c31346debd19463232"
+                "sha256:2f3eadfea5d92bc7899e75b5968410b749a054b492d5a6379c1344a1481bc2cb",
+                "sha256:9c6c593cb28f52075016307fc26b0a0f8e82bc7d1ff19aaaa959b91710a56c47"
             ],
-            "version": "==1.25.3"
+            "version": "==1.25.5"
         },
         "wasabi": {
             "hashes": [

@@ -130,10 +130,10 @@ class CaLiGraph(HierarchyGraph):
             self._node_resource_stats[node] = {'resource_count': resource_count, 'new_resource_count': new_resource_count, 'property_counts': property_counts}
         return self._node_resource_stats[node]
 
-    def get_axioms(self, node: str) -> set:
+    def get_axioms(self, node: str, transitive=True) -> set:
         if node not in self._node_axioms_transitive:
             self._node_axioms_transitive[node] = self._node_axioms[node] | {ax for p in self.parents(node) for ax in self.get_axioms(p)}
-        return self._node_axioms_transitive[node]
+        return self._node_axioms_transitive[node] if transitive else self._node_axioms[node]
 
     def get_all_properties(self):
         return {p for axioms in self._node_axioms.values() for p, _ in axioms}
