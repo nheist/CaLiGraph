@@ -12,7 +12,7 @@ import impl.util.nlp as nlp_util
 PATTERN_CONF = util.get_config('cat2ax.pattern_confidence')
 
 
-def extract_axioms(graph):
+def extract_axioms(graph) -> dict:
     candidate_sets = _extract_candidate_sets(graph)
     patterns = _extract_patterns(graph, candidate_sets)
     return _extract_axioms(graph, PATTERN_CONF, patterns)
@@ -89,7 +89,7 @@ def _get_resource_surface_scores(text):
 
 # --- PATTERN APPLICATION ---
 
-def _extract_axioms(graph, pattern_confidence, patterns):
+def _extract_axioms(graph, pattern_confidence, patterns) -> dict:
     util.get_logger().debug('CaLi2Ax: Extracting axioms..')
     axioms = defaultdict(set)
 

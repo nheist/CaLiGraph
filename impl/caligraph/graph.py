@@ -334,8 +334,8 @@ class CaLiGraph(HierarchyGraph):
         return node_id
 
     def compute_axioms(self):
-        for node, axiom in cali_axioms.extract_axioms(self):
-            self._node_axioms[node].add((axiom[1], axiom[2]))
+        for node, axioms in cali_axioms.extract_axioms(self).items():
+            self._node_axioms[node] = {(axiom[1], axiom[2]) for axiom in axioms}
 
     @staticmethod
     def get_ontology_namespace():
