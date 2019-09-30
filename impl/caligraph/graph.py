@@ -54,16 +54,30 @@ class CaLiGraph(HierarchyGraph):
         if self.is_caligraph_class(node):
             return node[len(self.get_ontology_namespace()):].replace('_', ' ')
         if self.is_caligraph_resource(node):
-            # TODO: crawl labels from listpages
-            return node[len(self.get_resource_namespace()):].replace('_', ' ')
+            label = node[len(self.get_resource_namespace()):].replace('_', ' ')
+            label = nlp_util.remove_parentheses_content(label)
+            return label.strip()
         return None
 
     def get_resources(self, node: str) -> set:
-        if node not in self._node_resources:
-            disjoint_types = {dt for t in self.get_dbpedia_types(node) for dt in dbp_heur.get_disjoint_types(t)}
-            dbp_resources = self.get_dbpedia_resources(node)
-            dbp_resources = {r for r in dbp_resources if not disjoint_types.intersection(dbp_store.get_types(r))}
-            self._node_resources[node] = {self.get_resource_namespace() + r[len(dbp_util.NAMESPACE_DBP_RESOURCE):].strip('_') for r in dbp_resources}
+        if not self._node_resources:
+            # add resources from categories and lists
+            for n in self.nodes:
+                disjoint_types = {dt for t in self.get_dbpedia_types(node) for dt in dbp_heur.get_disjoint_types(t)}
+                dbp_resources = self.get_dbpedia_resources(n)
+                dbp_resources = {r for r in dbp_resources if not disjoint_types.intersection(dbp_store.get_types(r))}
+                self._node_resources[n] = {self.get_resource_namespace() + r[len(dbp_util.NAMESPACE_DBP_RESOURCE):].strip('_') for r in dbp_resources}
+            # add remaining resources with correct dbpedia types
+            total_resources = {r for resources in self._node_resources.values() for r in resources}
+            for n in self.nodes:
+                linked_dbpedia_types = {t for t in self.get_parts(n) if dbp_util.is_dbp_type(t)}
+                for t in linked_dbpedia_types:
+                    disjoint_types = dbp_heur.get_disjoint_types(t)
+                    for res in dbp_store.get_resources().difference(total_resources):
+                        resource_types = dbp_store.get_types(res)
+                        if t in resource_types and not resource_types.intersection(disjoint_types):
+                            self._node_resources[n].add(res)
+                            total_resources.add(res)
         return self._node_resources[node]
 
     def get_nodes_for_resource(self, resource: str) -> set:

@@ -17,7 +17,7 @@ for word in parser.Defaults.stop_words:
 
 def without_stopwords(text: str) -> set:
     """Return the lemmatized versions of all non-stop-words in `text`."""
-    text = _remove_parentheses_content(text.replace('-', ' '))
+    text = remove_parentheses_content(text.replace('-', ' '))
     return {word.lemma_ for word in parse(text) if not word.is_stop}
 
 
@@ -133,7 +133,7 @@ def parse(text: str, disable_normalization=False, skip_cache=False) -> Doc:
     return parsed_text
 
 
-def _remove_parentheses_content(text: str) -> str:
+def remove_parentheses_content(text: str) -> str:
     without_parentheses = re.sub(r'\([^()]*\)', '', text)
     return _regularize_whitespaces(without_parentheses)
 
