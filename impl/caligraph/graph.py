@@ -128,7 +128,7 @@ class CaLiGraph(HierarchyGraph):
 
         class_count = len(self.nodes)
         edge_count = len(self.edges)
-        predicate_count = {pred for axioms in self._node_axioms.values() for pred, _ in axioms}
+        predicate_count = len({pred for axioms in self._node_axioms.values() for pred, _ in axioms})
         axiom_count = sum([len(axioms) for axioms in self._node_axioms.values()])
         parts_count = len({p for n in self.nodes for p in self.get_parts(n)})
         cat_parts_count = len({p for n in self.nodes for p in self.get_parts(n) if cat_util.is_category(p)})
