@@ -17,6 +17,7 @@ import impl.dbpedia.util as dbp_util
 import impl.dbpedia.heuristics as dbp_heur
 import impl.caligraph.ontology_mapper as cali_mapping
 import impl.caligraph.cali2ax as cali_axioms
+import impl.caligraph.util as cali_util
 from collections import defaultdict
 from typing import Optional
 
@@ -29,6 +30,7 @@ class CaLiGraph(HierarchyGraph):
         self._node_resource_stats = defaultdict(dict)
         self._node_resources = defaultdict(set)
         self._resource_nodes = defaultdict(set)
+        self._resource_provenance = defaultdict(set)
         self._node_axioms = defaultdict(set)
         self._node_axioms_transitive = defaultdict(set)
 
@@ -36,25 +38,21 @@ class CaLiGraph(HierarchyGraph):
         self._node_dbpedia_types = defaultdict(set)
         self._node_resources = defaultdict(set)
         self._resource_nodes = defaultdict(set)
+        self._resource_provenance = defaultdict(set)
         self._node_resource_stats = defaultdict(dict)
 
     def _reset_edge_indices(self):
         self._node_dbpedia_types = defaultdict(set)
         self._node_resources = defaultdict(set)
         self._resource_nodes = defaultdict(set)
+        self._resource_provenance = defaultdict(set)
         self._node_resource_stats = defaultdict(dict)
 
-    def is_caligraph_class(self, item: str) -> bool:
-        return item.startswith(self.get_ontology_namespace()) and self.has_node(item)
-
-    def is_caligraph_resource(self, item: str) -> bool:
-        return item.startswith(self.get_resource_namespace())
-
-    def get_label(self, node: str) -> Optional[str]:
-        if self.is_caligraph_class(node):
-            return node[len(self.get_ontology_namespace()):].replace('_', ' ')
-        if self.is_caligraph_resource(node):
-            label = node[len(self.get_resource_namespace()):].replace('_', ' ')
+    def get_label(self, item: str) -> Optional[str]:
+        if cali_util.is_clg_type(item):
+            return cali_util.clg_type2name(item)
+        if cali_util.is_clg_resource(item):
+            label = cali_util.clg_resource2name(item)
             label = nlp_util.remove_parentheses_content(label)
             return label.strip()
         return None
@@ -64,8 +62,11 @@ class CaLiGraph(HierarchyGraph):
             disjoint_types = {dt for t in self.get_dbpedia_types(node) for dt in dbp_heur.get_disjoint_types(t)}
             dbp_resources = self.get_dbpedia_resources(node)
             dbp_resources = {r for r in dbp_resources if not disjoint_types.intersection(dbp_store.get_types(r))}
-            self._node_resources[node] = {self.get_resource_namespace() + r[len(dbp_util.NAMESPACE_DBP_RESOURCE):].strip('_') for r in dbp_resources}
+            self._node_resources[node] = {cali_util.dbp_resource2clg_resource(r) for r in dbp_resources}
         return self._node_resources[node]
+
+    def get_all_resources(self) -> set:
+        return {r for n in self.nodes for r in self.get_resources(n)}
 
     def get_nodes_for_resource(self, resource: str) -> set:
         if not self._resource_nodes:
@@ -82,6 +83,18 @@ class CaLiGraph(HierarchyGraph):
             elif use_listpage_resources and list_util.is_listpage(part):
                 resources.update({r for r in list_base.get_listpage_entities(self, part) if dbp_store.is_possible_resource(r)})
         return resources
+
+    def get_resource_provenance(self, resource: str) -> set:
+        if not self._resource_provenance:
+            for node in self.nodes:
+                for part in self.get_parts(node):
+                    if cat_util.is_category(part):
+                        for res in cat_store.get_resources(part):
+                            self._resource_provenance[res].add(part)
+                    elif list_util.is_listpage(part):
+                        for res in list_base.get_listpage_entities(self, part):
+                            self._resource_provenance[res].add(part)
+        return self._resource_provenance[resource]
 
     def get_dbpedia_types(self, node: str, force_recompute=False) -> set:
         if node not in self._node_dbpedia_types or force_recompute:
@@ -121,6 +134,9 @@ class CaLiGraph(HierarchyGraph):
         if node not in self._node_axioms_transitive:
             self._node_axioms_transitive[node] = self._node_axioms[node] | {ax for p in self.parents(node) for ax in self.get_axioms(p)}
         return self._node_axioms_transitive[node]
+
+    def get_all_properties(self):
+        return {p for axioms in self._node_axioms.values() for p, _ in axioms}
 
     @property
     def statistics(self) -> str:
@@ -190,7 +206,7 @@ class CaLiGraph(HierarchyGraph):
         for idx, node in enumerate(cat_graph.nodes):
             if idx % 10000 == 0:
                 util.get_logger().debug(f'CaLiGraph: CategoryMerge - Created names for {idx} of {len(cat_graph.nodes)} nodes.')
-            cat_node_names[node] = cls.get_caligraph_name(cat_graph.get_name(node))
+            cat_node_names[node] = cls._get_canonical_name(cat_graph.get_name(node))
 
         for edge_idx, (parent_cat, child_cat) in enumerate(nx.bfs_edges(cat_graph.graph, cat_graph.root_node)):
             if edge_idx % 1000 == 0:
@@ -215,7 +231,7 @@ class CaLiGraph(HierarchyGraph):
         for idx, node in enumerate(list_graph.nodes):
             if idx % 10000 == 0:
                 util.get_logger().debug(f'CaLiGraph: ListMerge - Created names for {idx} of {len(list_graph.nodes)} nodes.')
-            list_node_names[node] = cls.get_caligraph_name(list_graph.get_name(node), disable_normalization=True)
+            list_node_names[node] = cls._get_canonical_name(list_graph.get_name(node), disable_normalization=True)
 
         for edge_idx, (parent_lst, child_lst) in enumerate(nx.bfs_edges(list_graph.graph, list_graph.root_node)):
             if edge_idx % 1000 == 0:
@@ -252,7 +268,7 @@ class CaLiGraph(HierarchyGraph):
         return graph
 
     def _add_category_to_graph(self, category: str, category_name: str, cat_graph: CategoryGraph) -> str:
-        node_id = self.get_caligraph_class(category_name)
+        node_id = self._convert_to_clg_type(category_name)
         node_parts = cat_graph.get_parts(category)
         if self.has_node(node_id):
             # extend existing node in graph
@@ -265,9 +281,9 @@ class CaLiGraph(HierarchyGraph):
         return node_id
 
     def _add_list_to_graph(self, lst: str, lst_name: str, list_graph: ListGraph) -> str:
-        node_id = self.get_caligraph_class(lst_name, disable_normalization=False)
+        node_id = self._convert_to_clg_type(lst_name, disable_normalization=False)
         if not self.has_node(node_id):
-            node_id = self.get_caligraph_class(lst_name, disable_normalization=True)
+            node_id = self._convert_to_clg_type(lst_name, disable_normalization=True)
         node_parts = list_graph.get_parts(lst)
 
         # check for equivalent mapping and existing node_id (if they map to more than one node -> log error)
@@ -290,6 +306,16 @@ class CaLiGraph(HierarchyGraph):
         self._add_edges({(pn, node_id) for pn in parent_nodes})
 
         return node_id
+
+    @staticmethod
+    def _get_canonical_name(name: str, disable_normalization=False) -> str:
+        name = name[4:] if name.startswith('the ') else name
+        return nlp_util.get_canonical_name(name, disable_normalization=disable_normalization)
+
+    @classmethod
+    def _convert_to_clg_type(cls, caligraph_name: str, disable_normalization=False) -> str:
+        caligraph_name = nlp_util.singularize_phrase(nlp_util.parse(caligraph_name, disable_normalization=disable_normalization))
+        return cali_util.name2clg_type(caligraph_name)
 
     def merge_ontology(self, use_listpage_resources: bool):
         # compute mapping from caligraph-nodes to dbpedia-types
@@ -322,7 +348,7 @@ class CaLiGraph(HierarchyGraph):
 
     def _add_dbp_type_to_graph(self, dbp_type: str) -> str:
         name = dbp_store.get_label(dbp_type)
-        node_id = self.get_ontology_namespace() + name[0].upper() + name[1:].replace(' ', '_')
+        node_id = cali_util.name2clg_type(name)
         node_parts = {dbp_type}
         if self.has_node(node_id):
             # extend existing node in graph
@@ -336,24 +362,8 @@ class CaLiGraph(HierarchyGraph):
 
     def compute_axioms(self):
         for node, axioms in cali_axioms.extract_axioms(self).items():
-            self._node_axioms[node] = {(axiom[1], axiom[2]) for axiom in axioms}
+            for ax in axioms:
+                prop = cali_util.dbp_type2clg_type(ax[1])
+                val = cali_util.dbp_resource2clg_resource(ax[2]) if dbp_util.is_dbp_resource(ax[2]) else ax[2]
+                self._node_axioms[node].add((prop, val))
         return self
-
-    @staticmethod
-    def get_ontology_namespace():
-        return util.get_config('caligraph.namespace.ontology')
-
-    @staticmethod
-    def get_resource_namespace():
-        return util.get_config('caligraph.namespace.resource')
-
-    @staticmethod
-    def get_caligraph_name(name: str, disable_normalization=False) -> str:
-        name = name[4:] if name.startswith('the ') else name
-        return nlp_util.get_canonical_name(name, disable_normalization=disable_normalization)
-
-    @classmethod
-    def get_caligraph_class(cls, caligraph_name: str, disable_normalization=False) -> str:
-        caligraph_name = nlp_util.singularize_phrase(nlp_util.parse(caligraph_name, disable_normalization=disable_normalization))
-        caligraph_name = caligraph_name[0].upper() + caligraph_name[1:]
-        return cls.get_ontology_namespace() + caligraph_name.replace(' ', '_')

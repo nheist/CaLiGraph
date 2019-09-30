@@ -1,5 +1,6 @@
 caligraph:
   namespace:
+    base: 'http://caligraph.org/'
     ontology: 'http://caligraph.org/ontology/'
     resource: 'http://caligraph.org/resource/'
 category:
