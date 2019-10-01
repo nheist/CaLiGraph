@@ -3,10 +3,10 @@ import util
 import impl.dbpedia.store as dbp_store
 import impl.dbpedia.util as dbp_util
 import impl.caligraph.util as cali_util
-import types
 import bz2
 from typing import Optional
 import os
+import types
 
 
 def serialize_graph(graph):
@@ -17,6 +17,7 @@ def serialize_graph(graph):
     dbpedia_onto = get_ontology(util.get_config('files.dbpedia.taxonomy_owl.url')).load()
     dbpedia_resource_ns = dbpedia_onto.get_namespace(dbp_util.NAMESPACE_DBP_RESOURCE)
     with dbpedia_onto:  # add missing types to namespace
+        import types
         types.new_class('Location', (Thing,))
 
     get_ontology('https://www.w3.org/ns/prov-o.owl').load()  # load prov onto to be able to use wasDerivedFrom property
