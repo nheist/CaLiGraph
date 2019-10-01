@@ -323,8 +323,9 @@ class CaLiGraph(HierarchyGraph):
 
         # add dbpedia types to caligraph
         type_graph = dbp_store._get_type_graph()
+        valid_types = dbp_store.get_main_equivalence_types() | {rdf_util.CLASS_OWL_THING}
         for parent_type, child_type in nx.bfs_edges(type_graph, rdf_util.CLASS_OWL_THING):
-            if parent_type not in dbp_store.get_main_equivalence_types() or child_type not in dbp_store.get_main_equivalence_types():
+            if parent_type not in valid_types or child_type not in valid_types:
                 continue  # only use main types for mapping and avoid equivalent classes without additional meaning
             parent_nodes = self.get_nodes_for_part(parent_type)
             if not parent_nodes:
