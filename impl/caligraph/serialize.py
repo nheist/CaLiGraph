@@ -16,9 +16,7 @@ def serialize_graph(graph):
 
     dbpedia_onto = get_ontology(util.get_config('files.dbpedia.taxonomy_owl.url')).load()
     dbpedia_resource_ns = dbpedia_onto.get_namespace(dbp_util.NAMESPACE_DBP_RESOURCE)
-    with dbpedia_onto:  # add missing types to namespace
-        import types
-        types.new_class('Location', (Thing,))
+    dbpedia_onto.metadata.versionInfo = util.get_config('caligraph.version')
 
     get_ontology('https://www.w3.org/ns/prov-o.owl').load()  # load prov onto to be able to use wasDerivedFrom property
 

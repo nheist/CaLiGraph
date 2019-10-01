@@ -1,4 +1,5 @@
 caligraph:
+  version: '1.0'
   namespace:
     base: 'http://caligraph.org/'
     ontology: 'http://caligraph.org/ontology/'
