@@ -29,8 +29,8 @@ def serialize_graph(graph):
         _add_class(caligraph_onto, name, label, parents, equivalents)
 
     # define properties
-    for property in graph.get_all_properties():
-        name = property[len(cali_util.NAMESPACE_CLG_ONTOLOGY):]
+    for prop in graph.get_all_properties():
+        name = prop[len(cali_util.NAMESPACE_CLG_ONTOLOGY):]
         dbp_property = dbp_util.NAMESPACE_DBP_ONTOLOGY + name
         _add_property(caligraph_onto, name, dbp_property)
 
@@ -38,11 +38,11 @@ def serialize_graph(graph):
     axiom_resources = {ax[1] for n in graph.nodes for ax in graph.get_axioms(n, transitive=False)}
     for res in graph.get_all_resources() | axiom_resources:
         name = res[len(cali_util.NAMESPACE_CLG_RESOURCE):]
-        types = graph.get_nodes_for_resource(res) or {Thing.iri}
+        classes = graph.get_nodes_for_resource(res) or {Thing.iri}
         equivalent = _get_dbpedia_resource(cali_util.clg_resource2dbp_resource(res), dbpedia_resource_ns) if cali_util.clg_resource2dbp_resource(res) in dbp_store.get_resources() else None
         provenance = {_get_dbpedia_resource(prov, dbpedia_resource_ns) for prov in graph.get_resource_provenance(res)}
         label = graph.get_label(res)
-        _add_resource(caligraph_resource_ns, name, label, types, equivalent, provenance)
+        _add_resource(caligraph_resource_ns, name, label, classes, equivalent, provenance)
 
     # define restrictions
     for node in graph.nodes:
@@ -69,7 +69,6 @@ def serialize_graph(graph):
 def _add_class(onto, cls_name: str, label: str, parents: set, equivalents: set):
     with onto:
         cls = types.new_class(cls_name, tuple([IRIS[p] for p in parents]))
-    equivalents = equivalents.intersection(dbp_store.get_main_equivalence_types())  # TODO: temporary fix! remove after caligraph recomputation
     cls.equivalent_to.extend([IRIS[eq] for eq in equivalents])
     cls.label = label
 
@@ -80,10 +79,10 @@ def _add_property(onto, prop_name: str, equivalent_prop: str):
         prop.equivalent_to.append(IRIS[equivalent_prop])
 
 
-def _add_resource(resource_namespace, res_name: str, label: str, types: set, equivalent: Optional[str], provenance: set):
-    main_type = IRIS[types.pop()]
-    res = main_type(res_name, namespace=resource_namespace)
-    res.is_a.extend([IRIS[t] for t in types])
+def _add_resource(resource_namespace, res_name: str, label: str, classes: set, equivalent: Optional[str], provenance: set):
+    main_class = IRIS[classes.pop()]
+    res = main_class(res_name, namespace=resource_namespace)
+    res.is_a.extend([IRIS[c] for c in classes])
     res.label = label
     if equivalent:
         res.equivalent_to.append(equivalent)
@@ -91,18 +90,10 @@ def _add_resource(resource_namespace, res_name: str, label: str, types: set, equ
 
 
 def _add_restriction(cls_iri: str, prop_iri: str, val: str):
-    #cls = IRIS[cls_iri]
-    #prop = IRIS[prop_iri]
-    #val = IRIS[val] if cali_util.is_clg_resource(val) else val
-    #cls.is_a.append(prop.value(val))
-    util.get_logger().debug(f'Cls: {cls_iri} - Prop: {prop_iri} - Val: {val}')
     cls = IRIS[cls_iri]
     prop = IRIS[prop_iri]
     val = IRIS[val] if cali_util.is_clg_resource(val) else val
-    util.get_logger().debug(f'cls-type: {type(cls)} - prop-type: {type(prop)} - val-type: {type(val)}')
-    prop_val = prop.value(val)
-    util.get_logger().debug(f'propval-type: {type(prop_val)} - propval: {prop_val}')
-    cls.is_a.append(prop_val)
+    cls.is_a.append(prop.value(val))
 
 
 def _get_dbpedia_resource(resource_iri: str, resource_ns):
