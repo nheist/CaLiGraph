@@ -30,7 +30,7 @@ def setup():
 
 if __name__ == '__main__':
     try:
-        util.get_logger().info('Starting feature relabelling..')
+        util.get_logger().info('Starting caligraph v9 extraction..')
 
 
         # extract table features
@@ -59,8 +59,8 @@ if __name__ == '__main__':
         #nlp_util.persist_cache()
         #util.get_logger().info('cache persist done.')
 
-        mailer.send_success(f'FINISHED feature relabelling')
-        util.get_logger().info('Finished feature relabelling.')
+        mailer.send_success(f'FINISHED caligraph v9 extraction')
+        util.get_logger().info('Finished caligraph v9 extraction.')
     except Exception as e:
         error_msg = traceback.format_exc()
         mailer.send_error(error_msg)
