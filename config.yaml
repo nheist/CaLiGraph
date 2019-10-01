@@ -122,40 +122,40 @@ cache:
   # version 8: recomputation due to some minor improvements
   catgraph_conceptual:
     filename: 'catgraph-conceptual'
-    version: 8  # v2: do not remove unconnected nodes initially ; v3: better synonym matching
+    version: 9  # v2: do not remove unconnected nodes initially ; v3: better synonym matching
   catgraph_wikitaxonomy:
     filename: 'catgraph-wikitaxonomy'
-    version: 8  # v2: do not remove unconnected nodes initially ; v3: better synonym matching
+    version: 9  # v2: do not remove unconnected nodes initially ; v3: better synonym matching
   catgraph_cyclefree:
     filename: 'catgraph-cyclefree'
-    version: 8  # v2: do not remove unconnected nodes initially ; v3: better synonym matching
+    version: 9  # v2: do not remove unconnected nodes initially ; v3: better synonym matching
   catgraph_merged:
     filename: 'catgraph-merged'
-    version: 8  # v2: do not remove unconnected nodes initially ; v3: better synonym matching
+    version: 9  # v2: do not remove unconnected nodes initially ; v3: better synonym matching
   listgraph_base:
     filename: 'listgraph-base'
-    version: 8  # v2: better synonym matching ; v3: with all listpages
+    version: 9  # v2: better synonym matching ; v3: with all listpages
   listgraph_wikitaxonomy:
     filename: 'listgraph-wikitaxonomy'
-    version: 8  # v2: better synonym matching ; v3: with all listpages
+    version: 9  # v2: better synonym matching ; v3: with all listpages
   listgraph_cyclefree:
     filename: 'listgraph-cyclefree'
-    version: 8  # v2: better synonym matching ; v3: with all listpages
+    version: 9  # v2: better synonym matching ; v3: with all listpages
   listgraph_merged:
     filename: 'listgraph-merged'
-    version: 8  # v2: better synonym matching ; v3: with all listpages
+    version: 9  # v2: better synonym matching ; v3: with all listpages
   caligraph_base:
     filename: 'caligraph-base'
-    version: 8
+    version: 9
   caligraph_merged_ontology:
     filename: 'caligraph-merged-ontology'
-    version: 8
+    version: 9
   caligraph_filtered:
     filename: 'caligraph-filtered'
-    version: 8
+    version: 9
   caligraph_axiomatized:
     filename: 'caligraph-axiomatized'
-    version: 8
+    version: 9
   spacy_docs:
     filename: 'spacy-docs'
     version: 3  # version 2 incl. listpages; version 3 for spacy 2.1
@@ -246,10 +246,10 @@ cache:
     version: 1
   dbpedia_list_equivalents:
     filename: 'dbpedia-list-equivalents'
-    version: 8  # v2: better synonym matching
+    version: 9  # v2: better synonym matching
   dbpedia_list_parents:
     filename: 'dbpedia-list-parents'
-    version: 8  # v2: better synonym matching
+    version: 9  # v2: better synonym matching
   dbpedia_listpage_markup:
     filename: 'dbpedia-listpage-markup'
     version: 1
@@ -266,7 +266,7 @@ cache:
     store_as_csv: True
   dbpedia_listpage_entities:
     filename: 'dbpedia-listpage-entities'
-    version: 7
+    version: 9
   wikidata_dbpedia_resource_mapping:
     filename: 'wikidata-dbpedia-resource-mapping'
     version: 1
@@ -277,7 +277,7 @@ cache:
     compress: True
   wikitaxonomy_hypernyms:
     filename: 'wikitaxonomy-hypernyms'
-    version: 8  # version 1 -> thresholds 10 / 100 / .4  // v2: new cat2ax version (v2)
+    version: 9  # version 1 -> thresholds 10 / 100 / .4  // v2: new cat2ax version (v2)
   cat2ax_axioms:
     filename: 'cat2ax-axioms'
-    version: 8  # new conceptual categorygraph version (v2)
+    version: 9  # new conceptual categorygraph version (v2)
