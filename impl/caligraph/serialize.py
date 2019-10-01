@@ -99,9 +99,9 @@ def _add_restriction(cls_iri: str, prop_iri: str, val: str):
     cls = IRIS[cls_iri]
     prop = IRIS[prop_iri]
     val = IRIS[val] if cali_util.is_clg_resource(val) else val
+    util.get_logger().debug(f'cls-type: {type(cls)} - prop-type: {type(prop)} - val-type: {type(val)}')
     prop_val = prop.value(val)
-    util.get_logger().debug(f'propval-type: {type(prop_val)}')
-    util.get_logger().debug(f'propval: {prop_val}')
+    util.get_logger().debug(f'propval-type: {type(prop_val)} - propval: {prop_val}')
     cls.is_a.append(prop_val)
 
 
