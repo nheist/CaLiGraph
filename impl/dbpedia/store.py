@@ -394,6 +394,13 @@ def are_equivalent_types(dbp_types: set) -> bool:
     return dbp_types == get_equivalent_types(list(dbp_types)[0])
 
 
+def get_main_equivalence_types() -> set:
+    global __MAIN_EQUIVALENCE_TYPES__
+    if '__MAIN_EQUIVALENCE_TYPES__' not in globals():
+        __MAIN_EQUIVALENCE_TYPES__ = rdf_util.create_set_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_SUBCLASS_OF, None)
+    return __MAIN_EQUIVALENCE_TYPES__
+
+
 REMOVED_DISJOINTNESS_AXIOMS = [{'http://dbpedia.org/ontology/Agent', 'http://dbpedia.org/ontology/Place'}]
 ADDED_DISJOINTNESS_AXIOMS = [{'http://dbpedia.org/ontology/Person', 'http://dbpedia.org/ontology/Place'}, {'http://dbpedia.org/ontology/Family', 'http://dbpedia.org/ontology/Place'}]
 def get_disjoint_types(dbp_type: str) -> set:

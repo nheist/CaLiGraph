@@ -75,7 +75,7 @@ def create_set_from_rdf(filepaths: list, valid_pred: str, valid_obj: str) -> set
     data_set = set()
     for fp in filepaths:
         for sub, pred, obj in parse_triples_from_file(fp):
-            if pred == valid_pred and obj == valid_obj:
+            if pred == valid_pred and valid_obj in [None, obj]:
                 data_set.add(sub)
     return data_set
 
