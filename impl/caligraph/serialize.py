@@ -112,7 +112,6 @@ def _get_dbpedia_resource(resource_iri: str, resource_ns):
     return resource
 
 
-
 def _get_metadata(graph) -> list:
     void_entity = '<http://caligraph.org/.well-known/void>'
     description = 'The CaLiGraph is a large-scale general-purpose knowledge graph that extends DBpedia with a more fine-grained and restrictive ontology as well as additional resources extracted from Wikipedia Listpages.'
@@ -125,6 +124,8 @@ def _get_metadata(graph) -> list:
         f'{void_entity} <http://purl.org/dc/elements/1.1/title> "CaLiGraph" .',
         f'{void_entity} <http://www.w3.org/2000/01/rdf-schema#label> "CaLiGraph" .',
         f'{void_entity} <http://purl.org/dc/elements/1.1/description> "{description}" .',
+        f'{void_entity} <http://purl.org/dc/terms/license> <http://www.gnu.org/copyleft/fdl.html> .',
+        f'{void_entity} <http://purl.org/dc/terms/license> <http://creativecommons.org/licenses/by-sa/3.0/> .',
         f'{void_entity} <http://purl.org/dc/terms/creator> "Nicolas Heist" .',
         f'{void_entity} <http://purl.org/dc/terms/creator> "Nicolas Heist" .',
         f'{void_entity} <http://purl.org/dc/terms/creator> "Heiko Paulheim" .',
