@@ -68,6 +68,7 @@ def serialize_graph(graph):
 def _add_class(onto, cls_name: str, label: str, parents: set, equivalents: set):
     with onto:
         cls = types.new_class(cls_name, tuple([IRIS[p] for p in parents]))
+    util.get_logger().debug(f'Equivalents: {equivalents}')
     cls.equivalent_to.extend([IRIS[eq] for eq in equivalents])
     cls.label = label
 
