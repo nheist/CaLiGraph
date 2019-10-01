@@ -39,7 +39,7 @@ if __name__ == '__main__':
 
 
         # extract complete caligraph
-        setup()
+#        setup()
         caligraph = cali_base.get_axiom_graph()
         util.get_logger().info(caligraph.statistics)
 
