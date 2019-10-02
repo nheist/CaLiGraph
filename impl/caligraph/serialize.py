@@ -25,8 +25,8 @@ def serialize_graph(graph):
     for node in graph.traverse_topdown():
         name = _get_item_name(node, cali_util.NAMESPACE_CLG_ONTOLOGY)
         label = graph.get_label(node)
-        parents = graph.parents(node) or {Thing.iri}
-        equivalents = {t for t in graph.get_parts(node) if dbp_util.is_dbp_type(t)}
+        parents = {_encode_item_name(p) for p in graph.parents(node)} or {Thing.iri}
+        equivalents = {_encode_item_name(t) for t in graph.get_parts(node) if dbp_util.is_dbp_type(t)}
         for eq in equivalents:
             if not IRIS[eq]:  # make sure that the equivalent dbpedia classes are initialised
                 _add_class(dbpedia_onto, eq[len(dbp_util.NAMESPACE_DBP_ONTOLOGY):], None, {Thing.iri}, set())
@@ -43,8 +43,8 @@ def serialize_graph(graph):
     for res in graph.get_all_resources() | axiom_resources:
         name = _get_item_name(res, cali_util.NAMESPACE_CLG_RESOURCE)
         classes = graph.get_nodes_for_resource(res) or {Thing.iri}
-        equivalent = _get_dbpedia_resource(cali_util.clg_resource2dbp_resource(res), dbpedia_resource_ns) if cali_util.clg_resource2dbp_resource(res) in dbp_store.get_resources() else None
-        provenance = {_get_dbpedia_resource(prov, dbpedia_resource_ns) for prov in graph.get_resource_provenance(res)}
+        equivalent = _encode_item_name(_get_dbpedia_resource(cali_util.clg_resource2dbp_resource(res), dbpedia_resource_ns)) if cali_util.clg_resource2dbp_resource(res) in dbp_store.get_resources() else None
+        provenance = {_encode_item_name(_get_dbpedia_resource(prov, dbpedia_resource_ns)) for prov in graph.get_resource_provenance(res)}
         label = graph.get_label(res)
         _add_resource(caligraph_resource_ns, name, label, classes, equivalent, provenance)
 
@@ -97,7 +97,7 @@ def _add_resource(resource_namespace, res_name: str, label: str, classes: set, e
 def _add_restriction(cls_iri: str, prop_iri: str, val: str):
     cls = IRIS[cls_iri]
     prop = IRIS[prop_iri]
-    val = IRIS[val] if cali_util.is_clg_resource(val) else val
+    val = _encode_item_name(IRIS[val]) if cali_util.is_clg_resource(val) else val
     cls.is_a.append(prop.value(val))
 
 
@@ -147,7 +147,10 @@ def _get_metadata(graph) -> list:
 
 
 def _get_item_name(item: str, namespace: str) -> str:
-    name = item[len(namespace):]
+    return _encode_item_name(item[len(namespace):])
+
+
+def _encode_item_name(name: str) -> str:
     for c in ['\'', '"', '´', '`']:
         name = name.replace(c, urllib.parse.quote_plus(c))
     return name
