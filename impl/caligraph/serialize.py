@@ -43,7 +43,7 @@ def serialize_graph(graph):
     for res in graph.get_all_resources() | axiom_resources:
         name = _get_item_name(res, cali_util.NAMESPACE_CLG_RESOURCE)
         classes = graph.get_nodes_for_resource(res) or {Thing.iri}
-        equivalent = _encode_item_name(_get_dbpedia_resource(cali_util.clg_resource2dbp_resource(res), dbpedia_resource_ns)) if cali_util.clg_resource2dbp_resource(res) in dbp_store.get_resources() else None
+        equivalent = _get_dbpedia_resource(_encode_item_name(cali_util.clg_resource2dbp_resource(res)), dbpedia_resource_ns) if cali_util.clg_resource2dbp_resource(res) in dbp_store.get_resources() else None
         provenance = {_encode_item_name(_get_dbpedia_resource(prov, dbpedia_resource_ns)) for prov in graph.get_resource_provenance(res)}
         label = graph.get_label(res)
         _add_resource(caligraph_resource_ns, name, label, classes, equivalent, provenance)
