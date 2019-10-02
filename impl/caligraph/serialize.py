@@ -26,6 +26,9 @@ def serialize_graph(graph):
         label = graph.get_label(node)
         parents = graph.parents(node) or {Thing.iri}
         equivalents = {t for t in graph.get_parts(node) if dbp_util.is_dbp_type(t)}
+        for eq in equivalents:
+            if not IRIS[eq]:  # make sure that the equivalent dbpedia classes are initialised
+                _add_class(dbpedia_onto, eq[len(dbp_util.NAMESPACE_DBP_ONTOLOGY):], None, {Thing.iri}, set())
         _add_class(caligraph_onto, name, label, parents, equivalents)
 
     # define properties
@@ -66,17 +69,18 @@ def serialize_graph(graph):
     os.remove(tmp_filepath)
 
 
-def _add_class(onto, cls_name: str, label: str, parents: set, equivalents: set):
+def _add_class(onto, cls_name: str, label: Optional[str], parents: set, equivalents: set):
     with onto:
         cls = types.new_class(cls_name, tuple([IRIS[p] for p in parents]))
     cls.equivalent_to.extend([IRIS[eq] for eq in equivalents])
-    cls.label = label
+    if label:
+        cls.label = label
 
 
 def _add_property(onto, prop_name: str, equivalent_prop: str):
     with onto:
         prop = types.new_class(prop_name, (Property,))
-        prop.equivalent_to.append(IRIS[equivalent_prop])
+    prop.equivalent_to.append(IRIS[equivalent_prop])
 
 
 def _add_resource(resource_namespace, res_name: str, label: str, classes: set, equivalent: Optional[str], provenance: set):
