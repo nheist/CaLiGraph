@@ -42,7 +42,7 @@ def serialize_graph(graph):
     axiom_resources = {ax[1] for n in graph.nodes for ax in graph.get_axioms(n, transitive=False)}
     for res in graph.get_all_resources() | axiom_resources:
         name = _get_item_name(res, cali_util.NAMESPACE_CLG_RESOURCE)
-        classes = graph.get_nodes_for_resource(res) or {Thing.iri}
+        classes = {_encode_item_name(c) for c in graph.get_nodes_for_resource(res)} or {Thing.iri}
         equivalent = _get_dbpedia_resource(_encode_item_name(cali_util.clg_resource2dbp_resource(res)), dbpedia_resource_ns) if cali_util.clg_resource2dbp_resource(res) in dbp_store.get_resources() else None
         provenance = {_encode_item_name(_get_dbpedia_resource(prov, dbpedia_resource_ns)) for prov in graph.get_resource_provenance(res)}
         label = graph.get_label(res)
@@ -51,7 +51,7 @@ def serialize_graph(graph):
     # define restrictions
     for node in graph.nodes:
         for prop, val in graph.get_axioms(node, transitive=False):
-            _add_restriction(node, prop, val)
+            _add_restriction(_encode_item_name(node), prop, val)
 
     # intermediate persist
     result_filepath = util.get_results_file('results.caligraph.complete')
