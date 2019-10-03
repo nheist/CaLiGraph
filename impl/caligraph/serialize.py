@@ -97,7 +97,7 @@ def _add_resource(resource_namespace, res_name: str, label: str, classes: set, e
 def _add_restriction(cls_iri: str, prop_iri: str, val: str):
     cls = IRIS[cls_iri]
     prop = IRIS[prop_iri]
-    val = _encode_item_name(IRIS[val]) if cali_util.is_clg_resource(val) else val
+    val = IRIS[_encode_item_name(val)] if cali_util.is_clg_resource(val) else val
     cls.is_a.append(prop.value(val))
 
 
