@@ -117,10 +117,9 @@ def _get_creation_date() -> datetime.datetime:
 
 
 def _serialize_class(class_iri: str, label: str, parents: set, equivalents: set, sources: set) -> list:
-    result = [
-        serialize_util.as_object_triple(class_iri, rdf_util.PREDICATE_TYPE, rdf_util.CLASS_OWL_CLASS),
-        serialize_util.as_literal_triple(class_iri, rdf_util.PREDICATE_LABEL, label),
-    ]
+    result = [serialize_util.as_object_triple(class_iri, rdf_util.PREDICATE_TYPE, rdf_util.CLASS_OWL_CLASS)]
+    if label:
+        result.append(serialize_util.as_literal_triple(class_iri, rdf_util.PREDICATE_LABEL, label))
     result.extend([serialize_util.as_object_triple(class_iri, rdf_util.PREDICATE_SUBCLASS_OF, p) for p in parents])
     result.extend([serialize_util.as_object_triple(class_iri, rdf_util.PREDICATE_EQUIVALENT_CLASS, e) for e in equivalents])
     result.extend([serialize_util.as_object_triple(class_iri, 'http://www.w3.org/ns/prov#wasDerivedFrom', s) for s in sources])
