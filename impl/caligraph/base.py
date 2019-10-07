@@ -34,7 +34,7 @@ def get_filtered_graph() -> CaLiGraph:
 def get_axiom_graph() -> CaLiGraph:
     global __AXIOM_GRAPH__
     if '__AXIOM_GRAPH__' not in globals():
-        initializer = lambda: get_filtered_graph().compute_axioms()
+        initializer = lambda: get_filtered_graph().compute_axioms().remove_transitive_edges()
         __AXIOM_GRAPH__ = util.load_or_create_cache('caligraph_axiomatized', initializer)
     return __AXIOM_GRAPH__
 

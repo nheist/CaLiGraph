@@ -16,6 +16,7 @@ PREDICATE_TYPE = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type'
 PREDICATE_LABEL = 'http://www.w3.org/2000/01/rdf-schema#label'
 PREDICATE_SUBJECT = 'http://purl.org/dc/terms/subject'
 PREDICATE_SUBCLASS_OF = 'http://www.w3.org/2000/01/rdf-schema#subClassOf'
+PREDICATE_SUBPROPERTY_OF = 'http://www.w3.org/2000/01/rdf-schema#subPropertyOf'
 PREDICATE_DISJOINT_WITH = 'http://www.w3.org/2002/07/owl#disjointWith'
 PREDICATE_REDIRECTS = 'http://dbpedia.org/ontology/wikiPageRedirects'
 PREDICATE_DISAMBIGUATES = 'http://dbpedia.org/ontology/wikiPageDisambiguates'
@@ -30,6 +31,8 @@ PREDICATE_ABSTRACT = 'http://dbpedia.org/ontology/abstract'
 # classes
 CLASS_OWL_THING = 'http://www.w3.org/2002/07/owl#Thing'
 CLASS_OWL_CLASS = 'http://www.w3.org/2002/07/owl#Class'
+CLASS_OWL_NAMED_INDIVIDUAL = 'http://www.w3.org/2002/07/owl#NamedIndividual'
+CLASS_PROPERTY = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#Property'
 
 # auxiliary structures
 Triple = namedtuple('Triple', 'sub pred obj')

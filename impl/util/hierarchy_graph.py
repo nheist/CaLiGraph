@@ -167,3 +167,7 @@ class HierarchyGraph(BaseGraph):
             iteration += 1
 
         return self
+
+    def remove_transitive_edges(self):
+        self._remove_all_edges_except(set(nx.transitive_reduction(self.graph).edges))
+        return self
