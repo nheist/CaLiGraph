@@ -135,10 +135,9 @@ def _serialize_property(prop_iri: str, equivalent_property_iri: str):
 
 
 def _serialize_resource(resource_iri: str, label: str, types: set, equivalent: Optional[str], provenance_iris: set):
-    result = [
-        serialize_util.as_object_triple(resource_iri, rdf_util.PREDICATE_TYPE, rdf_util.CLASS_OWL_NAMED_INDIVIDUAL),
-        serialize_util.as_literal_triple(resource_iri, rdf_util.PREDICATE_LABEL, label)
-    ]
+    result = [serialize_util.as_object_triple(resource_iri, rdf_util.PREDICATE_TYPE, rdf_util.CLASS_OWL_NAMED_INDIVIDUAL)]
+    if label:
+        result.append(serialize_util.as_literal_triple(resource_iri, rdf_util.PREDICATE_LABEL, label))
     result.extend([serialize_util.as_object_triple(resource_iri, rdf_util.PREDICATE_TYPE, t) for t in types])
     result.extend([serialize_util.as_object_triple(resource_iri, 'http://www.w3.org/ns/prov#wasDerivedFrom', p) for p in provenance_iris])
     if equivalent:
