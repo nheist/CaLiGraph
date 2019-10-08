@@ -35,7 +35,7 @@ def serialize_graph(graph):
     # properties
     for prop in graph.get_all_properties():
         equivalent_property = cali_util.clg_type2dbp_type(prop)
-        _serialize_property(prop, equivalent_property)
+        lines.extend(_serialize_property(prop, equivalent_property))
 
     # resources
     axiom_resources = {ax[1] for n in graph.nodes for ax in graph.get_axioms(n, transitive=False)}
@@ -44,13 +44,13 @@ def serialize_graph(graph):
         types = graph.get_nodes_for_resource(res)
         equivalent = cali_util.clg_resource2dbp_resource(res) if cali_util.clg_resource2dbp_resource(res) in dbp_store.get_resources() else None
         provenance = graph.get_resource_provenance(res)
-        _serialize_resource(res, label, types, equivalent, provenance)
+        lines.extend(_serialize_resource(res, label, types, equivalent, provenance))
 
     # restrictions
     blank_node_counter = 1
     for node in graph.nodes:
         for prop, val in graph.get_axioms(node, transitive=False):
-            _serialize_restriction(node, prop, val, blank_node_counter)
+            lines.extend(_serialize_restriction(node, prop, val, blank_node_counter))
             blank_node_counter += 1
 
     # persist minimal version
@@ -126,7 +126,7 @@ def _serialize_class(class_iri: str, label: str, parents: set, equivalents: set,
     return result
 
 
-def _serialize_property(prop_iri: str, equivalent_property_iri: str):
+def _serialize_property(prop_iri: str, equivalent_property_iri: str) -> list:
     return [
         serialize_util.as_object_triple(prop_iri, rdf_util.PREDICATE_TYPE, rdf_util.CLASS_OWL_CLASS),
         serialize_util.as_object_triple(prop_iri, rdf_util.PREDICATE_SUBPROPERTY_OF, rdf_util.CLASS_PROPERTY),
@@ -134,7 +134,7 @@ def _serialize_property(prop_iri: str, equivalent_property_iri: str):
     ]
 
 
-def _serialize_resource(resource_iri: str, label: str, types: set, equivalent: Optional[str], provenance_iris: set):
+def _serialize_resource(resource_iri: str, label: str, types: set, equivalent: Optional[str], provenance_iris: set) -> list:
     result = [serialize_util.as_object_triple(resource_iri, rdf_util.PREDICATE_TYPE, rdf_util.CLASS_OWL_NAMED_INDIVIDUAL)]
     if label:
         result.append(serialize_util.as_literal_triple(resource_iri, rdf_util.PREDICATE_LABEL, label))
@@ -145,7 +145,7 @@ def _serialize_resource(resource_iri: str, label: str, types: set, equivalent: O
     return result
 
 
-def _serialize_restriction(class_iri: str, prop_iri: str, val: str, blank_node_index: int):
+def _serialize_restriction(class_iri: str, prop_iri: str, val: str, blank_node_index: int) -> list:
     blank_node_iri = f'_:{blank_node_index}'
     result = [
         serialize_util.as_object_triple(blank_node_iri, rdf_util.PREDICATE_TYPE, 'http://www.w3.org/2002/07/owl#Restriction'),
