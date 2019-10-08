@@ -58,26 +58,34 @@ def serialize_graph(graph):
     with bz2.open(result_filepath, mode='wt') as f:
         f.writelines(lines)
 
-    # transitive classes, transitive types, materialized axioms
-    for node in graph.traverse_topdown():
-        direct_parents = graph.parents(node)
-        transitive_parents = {tp for p in direct_parents for tp in graph.ancestors(p)}.difference(direct_parents)
-        lines.extend([serialize_util.as_object_triple(node, rdf_util.PREDICATE_SUBCLASS_OF, tp) for tp in transitive_parents])
-
+    # materialized axioms
     for res in graph.get_all_resources():
-        direct_types = graph.get_nodes_for_resource(res)
-        transitive_types = {tt for t in direct_types for tt in graph.ancestors(t)}.difference(direct_types)
-        lines.extend([serialize_util.as_object_triple(res, rdf_util.PREDICATE_TYPE, tt) for tt in transitive_types])
-
-        axioms = {a for t in direct_types for a in graph.get_axioms(t)}
+        axioms = {a for n in graph.get_nodes_for_resource(res) for a in graph.get_axioms(n)}
         for prop, val in axioms:
             if val.startswith(cali_util.NAMESPACE_CLG_RESOURCE):
                 lines.append(serialize_util.as_object_triple(res, prop, val))
             else:
                 lines.append(serialize_util.as_literal_triple(res, prop, val))
 
+    # persist materialized-axioms version
+    result_filepath = util.get_results_file('results.caligraph.materialized_axioms')
+    with bz2.open(result_filepath, mode='wt') as f:
+        f.writelines(lines)
+
+    # transitive classes
+    for node in graph.traverse_topdown():
+        direct_parents = graph.parents(node)
+        transitive_parents = {tp for p in direct_parents for tp in graph.ancestors(p)}.difference(direct_parents)
+        lines.extend([serialize_util.as_object_triple(node, rdf_util.PREDICATE_SUBCLASS_OF, tp) for tp in transitive_parents])
+
+    # transitive types
+    for res in graph.get_all_resources():
+        direct_types = graph.get_nodes_for_resource(res)
+        transitive_types = {tt for t in direct_types for tt in graph.ancestors(t)}.difference(direct_types)
+        lines.extend([serialize_util.as_object_triple(res, rdf_util.PREDICATE_TYPE, tt) for tt in transitive_types])
+
     # persist full version
-    result_filepath = util.get_results_file('results.caligraph.materialized')
+    result_filepath = util.get_results_file('results.caligraph.materialized_full')
     with bz2.open(result_filepath, mode='wt') as f:
         f.writelines(lines)
 

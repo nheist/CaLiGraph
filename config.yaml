@@ -114,7 +114,8 @@ results:
     type_assertions: 'cat2ax_type-assertions.csv'
   caligraph:
     minimal: 'caligraph_minimal.nt.bz2'
-    materialized: 'caligraph_materialized.nt.bz2'
+    materialized_axioms: 'caligraph_materialized-axioms.nt.bz2'
+    materialized_full: 'caligraph_materialized-full.nt.bz2'
 
 cache:
   # version 2: added resource types from sdtyped + lhd
