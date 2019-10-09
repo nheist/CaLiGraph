@@ -38,7 +38,7 @@ def serialize_graph(graph):
         lines.extend(_serialize_property(prop, equivalent_property))
 
     # resources
-    axiom_resources = {ax[1] for n in graph.nodes for ax in graph.get_axioms(n, transitive=False)}
+    axiom_resources = {ax[1] for n in graph.nodes for ax in graph.get_axioms(n, transitive=False) if graph.is_clg_resource(ax[1])}
     for res in graph.get_all_resources() | axiom_resources:
         label = graph.get_label(res)
         types = graph.get_nodes_for_resource(res)
