@@ -124,6 +124,7 @@ results:
     instances_dbpedia-mapping: 'caligraph-instances_dbpedia-mapping.nt.bz2'  # sameAs links to DBpedia
     instances_provenance: 'caligraph-instances_provenance.nt.bz2'  # provenance information for instances
 
+    dbpedia_instances: 'dbpedia_caligraph-instances.nt.bz2'  # new dbpedia instances found through CaLiGraph
     dbpedia_instance-types: 'dbpedia_caligraph-types.nt.bz2'  # new dbpedia types found through CaLiGraph
     dbpedia_instance-relations: 'dbpedia_caligraph-relations.nt.bz2'  #  new dbpedia relations found through CaLiGraph
 

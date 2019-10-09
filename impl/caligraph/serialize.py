@@ -21,6 +21,7 @@ def serialize_graph(graph):
     _write_lines_to_file(_get_lines_instances_dbpedia_mapping(graph), 'results.caligraph.instances_dbpedia-mapping')
     _write_lines_to_file(_get_lines_instances_provenance(graph), 'results.caligraph.instances_provenance')
 
+    _write_lines_to_file(_get_lines_dbpedia_instances(graph), 'results.caligraph.dbpedia_instances')
     _write_lines_to_file(_get_lines_dbpedia_instance_types(graph), 'results.caligraph.dbpedia_instance-types')
     _write_lines_to_file(_get_lines_dbpedia_instance_relations(graph), 'results.caligraph.dbpedia_instance-relations')
 
@@ -190,11 +191,16 @@ def _get_lines_instances_provenance(graph) -> list:
     return lines_instances_provenance
 
 
+def _get_lines_dbpedia_instances(graph) -> list:
+    new_instances = {cali_util.clg_resource2dbp_resource(res) for res in graph.get_all_resources()}.difference(dbp_store.get_resources())
+    return [serialize_util.as_object_triple(inst, rdf_util.PREDICATE_TYPE, rdf_util.CLASS_OWL_NAMED_INDIVIDUAL) for inst in new_instances]
+
+
 def _get_lines_dbpedia_instance_types(graph) -> list:
     new_dbpedia_types = defaultdict(set)
     for node in graph.nodes:
         node_types = graph.get_dbpedia_types(node, force_recompute=True)
-        transitive_node_types = {tt for t in node_types for tt in dbp_store.get_transitive_supertype_closure(t)}
+        transitive_node_types = {tt for t in node_types for tt in dbp_store.get_transitive_supertype_closure(t)}.difference({rdf_util.CLASS_OWL_THING})
         for res in graph.get_resources(node):
             dbp_res = cali_util.clg_resource2dbp_resource(res)
             if dbp_res in dbp_store.get_resources():
