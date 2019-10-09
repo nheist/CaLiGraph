@@ -73,6 +73,8 @@ def _get_lines_ontology(graph) -> list:
     ])
     # classes
     for node in graph.traverse_topdown():
+        if node == rdf_util.CLASS_OWL_THING:
+            continue
         lines_ontology.append(serialize_util.as_object_triple(node, rdf_util.PREDICATE_TYPE, rdf_util.CLASS_OWL_CLASS))
         label = graph.get_label(node)
         if label:
@@ -115,6 +117,8 @@ def _serialize_restriction(class_iri: str, prop_iri: str, val: str, blank_node_i
 def _get_lines_ontology_dbpedia_mapping(graph) -> list:
     lines_ontology_dbpedia_mapping = []
     for node in graph.traverse_topdown():
+        if node == rdf_util.CLASS_OWL_THING:
+            continue
         equivalents = {t for t in graph.get_parts(node) if dbp_util.is_dbp_type(t)}
         lines_ontology_dbpedia_mapping.extend([serialize_util.as_object_triple(node, rdf_util.PREDICATE_EQUIVALENT_CLASS, e) for e in equivalents])
     for prop in graph.get_all_properties():
@@ -126,6 +130,8 @@ def _get_lines_ontology_dbpedia_mapping(graph) -> list:
 def _get_lines_ontology_provenance(graph) -> list:
     lines_ontology_provenance = []
     for node in graph.traverse_topdown():
+        if node == rdf_util.CLASS_OWL_THING:
+            continue
         sources = graph.get_parts(node)
         lines_ontology_provenance.extend([serialize_util.as_object_triple(node, rdf_util.PREDICATE_WAS_DERIVED_FROM, s) for s in sources])
     return lines_ontology_provenance
