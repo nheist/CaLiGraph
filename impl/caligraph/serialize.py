@@ -210,9 +210,9 @@ def _get_lines_dbpedia_instance_types(graph) -> list:
         for res in graph.get_resources(node):
             dbp_res = cali_util.clg_resource2dbp_resource(res)
             if dbp_res in dbp_store.get_resources():
-                new_dbpedia_types[res].update(transitive_node_types.difference(dbp_store.get_transitive_types(res)))
+                new_dbpedia_types[dbp_res].update(transitive_node_types.difference(dbp_store.get_transitive_types(dbp_res)))
             else:
-                new_dbpedia_types[res].update(transitive_node_types)
+                new_dbpedia_types[dbp_res].update(transitive_node_types)
     return [serialize_util.as_object_triple(res, rdf_util.PREDICATE_TYPE, t) for res, types in new_dbpedia_types.items() for t in types]
 
 
