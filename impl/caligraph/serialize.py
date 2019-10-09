@@ -6,6 +6,7 @@ import bz2
 import impl.util.serialize as serialize_util
 import impl.util.rdf as rdf_util
 import datetime
+from collections import defaultdict
 
 
 def serialize_graph(graph):
@@ -19,6 +20,9 @@ def serialize_graph(graph):
     _write_lines_to_file(_get_lines_instances_relations(graph), 'results.caligraph.instances_relations')
     _write_lines_to_file(_get_lines_instances_dbpedia_mapping(graph), 'results.caligraph.instances_dbpedia-mapping')
     _write_lines_to_file(_get_lines_instances_provenance(graph), 'results.caligraph.instances_provenance')
+
+    _write_lines_to_file(_get_lines_dbpedia_instance_types(graph), 'results.caligraph.dbpedia_instance-types')
+    _write_lines_to_file(_get_lines_dbpedia_instance_relations(graph), 'results.caligraph.dbpedia_instance-relations')
 
 
 def _write_lines_to_file(lines: list, filepath_config: str):
@@ -184,3 +188,36 @@ def _get_lines_instances_provenance(graph) -> list:
     for res in graph.get_all_resources():
         lines_instances_provenance.extend([serialize_util.as_object_triple(res, rdf_util.PREDICATE_WAS_DERIVED_FROM, p) for p in graph.get_resource_provenance(res)])
     return lines_instances_provenance
+
+
+def _get_lines_dbpedia_instance_types(graph) -> list:
+    new_dbpedia_types = defaultdict(set)
+    for node in graph.nodes:
+        node_types = graph.get_dbpedia_types(node, force_recompute=True)
+        transitive_node_types = {tt for t in node_types for tt in dbp_store.get_transitive_supertype_closure(t)}
+        for res in graph.get_resources(node):
+            dbp_res = cali_util.clg_resource2dbp_resource(res)
+            if dbp_res in dbp_store.get_resources():
+                new_dbpedia_types[res].update(transitive_node_types.difference(dbp_store.get_transitive_types(res)))
+            else:
+                new_dbpedia_types[res].update(transitive_node_types)
+    return [serialize_util.as_object_triple(res, rdf_util.PREDICATE_TYPE, t) for res, types in new_dbpedia_types.items() for t in types]
+
+
+def _get_lines_dbpedia_instance_relations(graph) -> list:
+    new_instance_relations = set()
+    for node in graph.nodes:
+        for prop, val in graph.get_axioms(node):
+            dbp_prop = cali_util.clg_type2dbp_type(prop)
+            dbp_val = cali_util.clg_resource2dbp_resource(val) if cali_util.is_clg_resource(val) else val
+            for res in graph.get_resources(node):
+                dbp_res = cali_util.clg_resource2dbp_resource(res)
+                if dbp_res not in dbp_store.get_resources() or dbp_prop not in dbp_store.get_properties(dbp_res) or dbp_val not in dbp_store.get_properties(dbp_res)[dbp_prop]:
+                    new_instance_relations.add((dbp_res, dbp_prop, dbp_val))
+    lines_dbpedia_instance_relations = []
+    for s, p, o in new_instance_relations:
+        if dbp_util.is_dbp_resource(o):
+            lines_dbpedia_instance_relations.append(serialize_util.as_object_triple(s, p, o))
+        else:
+            lines_dbpedia_instance_relations.append(serialize_util.as_literal_triple(s, p, o))
+    return lines_dbpedia_instance_relations
