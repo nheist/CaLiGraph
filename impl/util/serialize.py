@@ -7,7 +7,7 @@ POSTFIXES = {
     int: 'http://www.w3.org/2001/XMLSchema#integer',
     datetime.datetime: 'http://www.w3.org/2001/XMLSchema#date'
 }
-RESOURCE_ENCODED_CHARS = ['\'', '"', '´', '`', '{', '}', '^']
+RESOURCE_ENCODED_CHARS = ['\\', '\'', '"', '´', '`', '{', '}', '^']
 LITERAL_ENCODED_CHARS = ['\\', '\'', '"']
 
 
