@@ -90,10 +90,10 @@ class CaLiGraph(HierarchyGraph):
                 for part in self.get_parts(node):
                     if cat_util.is_category(part):
                         for res in cat_store.get_resources(part):
-                            self._resource_provenance[res].add(part)
+                            self._resource_provenance[cali_util.dbp_resource2clg_resource(res)].add(part)
                     elif list_util.is_listpage(part):
                         for res in list_base.get_listpage_entities(self, part):
-                            self._resource_provenance[res].add(part)
+                            self._resource_provenance[cali_util.dbp_resource2clg_resource(res)].add(part)
         return self._resource_provenance[resource]
 
     def get_dbpedia_types(self, node: str, force_recompute=False) -> set:
