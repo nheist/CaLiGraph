@@ -202,7 +202,7 @@ def _get_lines_dbpedia_instances(graph) -> list:
     new_instances = {cali_util.clg_resource2dbp_resource(res) for res in graph.get_all_resources()}.difference(dbp_store.get_resources())
     for inst in new_instances:
         lines_dbpedia_instances.append(serialize_util.as_object_triple(inst, rdf_util.PREDICATE_TYPE, rdf_util.CLASS_OWL_NAMED_INDIVIDUAL))
-        label = graph.get_label(inst)
+        label = graph.get_label(cali_util.dbp_resource2clg_resource(inst))
         if label:
             lines_dbpedia_instances.append(serialize_util.as_literal_triple(inst, rdf_util.PREDICATE_LABEL, label))
     return lines_dbpedia_instances
