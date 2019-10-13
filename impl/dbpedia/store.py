@@ -108,7 +108,7 @@ def get_resources_for_type(dbp_type: str) -> set:
     global __TYPE_RESOURCE_MAPPING__
     if '__TYPE_RESOURCE_MAPPING__' not in globals():
         __TYPE_RESOURCE_MAPPING__ = defaultdict(set)
-        for r, ts in _get_resource_type_mapping():
+        for r, ts in _get_resource_type_mapping().items():
             for t in get_independent_types(ts):
                 __TYPE_RESOURCE_MAPPING__[t].add(r)
     return __TYPE_RESOURCE_MAPPING__[dbp_type]
