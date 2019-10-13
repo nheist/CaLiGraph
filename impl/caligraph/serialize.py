@@ -139,11 +139,18 @@ def _get_lines_ontology_provenance(graph) -> list:
 
 def _get_lines_instances_types(graph) -> list:
     lines_instances_types = []
+
+    caligraph_ancestors = defaultdict(set)
+    for n in graph.traverse_topdown():
+        parents = graph.parents(n)
+        caligraph_ancestors[n] = parents | {a for p in parents for a in caligraph_ancestors[p]}
+
     axiom_resources = {ax[1] for n in graph.nodes for ax in graph.get_axioms(n, transitive=False) if cali_util.is_clg_resource(ax[1])}
     for res in graph.get_all_resources() | axiom_resources:
         lines_instances_types.append(serialize_util.as_object_triple(res, rdf_util.PREDICATE_TYPE, rdf_util.CLASS_OWL_NAMED_INDIVIDUAL))
-        types = graph.get_nodes_for_resource(res).difference({rdf_util.CLASS_OWL_THING})
-        lines_instances_types.extend([serialize_util.as_object_triple(res, rdf_util.PREDICATE_TYPE, t) for t in types])
+        types = graph.get_nodes_for_resource(res)
+        direct_types = types.difference({a for t in types for a in caligraph_ancestors[t]})
+        lines_instances_types.extend([serialize_util.as_object_triple(res, rdf_util.PREDICATE_TYPE, t) for t in direct_types])
     return lines_instances_types
 
 
