@@ -29,6 +29,7 @@ class CaLiGraph(HierarchyGraph):
         self._node_dbpedia_types = defaultdict(set)
         self._node_resource_stats = defaultdict(dict)
         self._node_resources = defaultdict(set)
+        self._all_node_resources = set()
         self._resource_nodes = defaultdict(set)
         self._resource_provenance = defaultdict(set)
         self._node_axioms = defaultdict(set)
@@ -59,14 +60,17 @@ class CaLiGraph(HierarchyGraph):
 
     def get_resources(self, node: str) -> set:
         if node not in self._node_resources:
-            disjoint_types = {dt for t in self.get_dbpedia_types(node) for dt in dbp_heur.get_disjoint_types(t)}
-            dbp_resources = self.get_dbpedia_resources(node)
-            dbp_resources = {r for r in dbp_resources if not disjoint_types.intersection(dbp_store.get_types(r))}
+            direct_dbp_types = {t for t in self.get_parts(node) if dbp_util.is_dbp_type(t)}
+            disjoint_dbp_types = {dt for t in self.get_dbpedia_types(node) for dt in dbp_heur.get_disjoint_types(t)}
+            dbp_resources = self.get_direct_dbpedia_resources(node) | {r for t in direct_dbp_types for r in dbp_store.get_resources_for_type(t)}
+            dbp_resources = {r for r in dbp_resources if not disjoint_dbp_types.intersection(dbp_store.get_types(r))}
             self._node_resources[node] = {cali_util.dbp_resource2clg_resource(r) for r in dbp_resources}
         return self._node_resources[node]
 
     def get_all_resources(self) -> set:
-        return {r for n in self.nodes for r in self.get_resources(n)}
+        if not self._all_node_resources:
+            self._all_node_resources = {r for n in self.nodes for r in self.get_resources(n)}
+        return self._all_node_resources
 
     def get_nodes_for_resource(self, resource: str) -> set:
         if not self._resource_nodes:
@@ -75,7 +79,7 @@ class CaLiGraph(HierarchyGraph):
                     self._resource_nodes[r].add(node)
         return self._resource_nodes[resource]
 
-    def get_dbpedia_resources(self, node: str, use_listpage_resources=True) -> set:
+    def get_direct_dbpedia_resources(self, node: str, use_listpage_resources=True) -> set:
         resources = set()
         for part in self.get_parts(node):
             if cat_util.is_category(part):
@@ -114,7 +118,7 @@ class CaLiGraph(HierarchyGraph):
             resource_count = 0
             new_resource_count = 0
             property_counts = defaultdict(int)
-            for res in self.get_dbpedia_resources(node, True):
+            for res in self.get_direct_dbpedia_resources(node, True):
                 if res in dbp_store.get_resources():
                     resource_count += 1
                     for pred, values in dbp_store.get_properties(res).items():
