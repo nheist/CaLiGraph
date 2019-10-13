@@ -86,6 +86,7 @@ class CaLiGraph(HierarchyGraph):
                 resources.update({r for r in cat_store.get_resources(part) if dbp_store.is_possible_resource(r)})
             elif use_listpage_resources and list_util.is_listpage(part):
                 resources.update({r for r in list_base.get_listpage_entities(self, part) if dbp_store.is_possible_resource(r)})
+        resources = {dbp_store.resolve_redirect(r) for r in resources}
         return resources
 
     def get_resource_provenance(self, resource: str) -> set:
