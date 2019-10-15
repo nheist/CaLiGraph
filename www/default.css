@@ -8,6 +8,16 @@
     font-family: DistantStroke, "Playfair Display", Georgia, "Times New Roman", serif;
 }
 
+html, body {
+    height: 100%;
+    position: relative;
+}
+
+.main-content {
+    min-height: calc(100% - 10rem);
+    position: relative;
+}
+
 .nav > a {
     padding: 2px;
     text-decoration: none;
@@ -15,12 +25,6 @@
 
 .nav-active > span {
     border-bottom: solid 1px;
-}
-
-.footer-logo {
-    max-height: 5rem;
-    max-width: 100%;
-    float: right;
 }
 
 .blog-header {
@@ -110,14 +114,6 @@ body, h1, h2, h3, h4, h5, h6 {
     }
 }
 
-/* Pagination */
-.blog-pagination {
-    margin-bottom: 4rem;
-}
-.blog-pagination > .btn {
-    border-radius: 2rem;
-}
-
 /*
  * Blog posts
  */
@@ -134,15 +130,69 @@ body, h1, h2, h3, h4, h5, h6 {
 }
 
 /*
+ * Contact page
+ */
+
+.profile-card {
+    margin-top: 1.5rem;
+}
+
+.profile-card__intro-text {
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.25rem;
+}
+
+.profile-card__intro-text > a {
+    padding: 0 5px;
+}
+
+.profile-card .col-lg-4 {
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+.profile-card h2 {
+    font-weight: 400;
+}
+.profile-card .col-lg-4 p {
+    margin-right: .75rem;
+    margin-left: .75rem;
+}
+
+.profile-card a {
+    text-decoration: none;
+}
+
+/*
  * Footer
  */
 .blog-footer {
     position: relative;
+    width: 100%;
     padding: 2.5rem 0;
     color: #999;
-    background-color: #f9f9f9;
     border-top: .05rem solid #e5e5e5;
 }
 .blog-footer p:last-child {
     margin-bottom: 0;
+}
+
+.footer-logo {
+    max-height: 4rem;
+    max-width: 100%;
+    float: right;
+    border: 1px solid #FFFFFF;
+    border-radius: .25rem;
+}
+
+
+@media (max-width: 768px) {
+    .footer-logo-container {
+        display: block;
+        text-align: center;
+        padding: .95rem;
+    }
+    .footer-logo {
+        float: none;
+    }
 }

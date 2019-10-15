@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-    <title>CaLiGraph</title>
+    <title>CaLiGraph - Landingpage</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="theme-color" content="#ffffff">
     <meta charset="UTF-8">
@@ -13,14 +13,13 @@
     <link rel="stylesheet" href="default.css">
 </head>
 <body>
-    <div class="container">
+    <div class="main-content container">
 
         <!-- Nav bar -->
-
         <header class="blog-header py-3">
             <div class="row flex-nowrap justify-content-between align-items-center">
                 <div class="col-12 text-center">
-                    <a class="blog-header-logo caligraph-font text-dark" href="#">CaLiGraph</a>
+                    <a class="blog-header-logo caligraph-font text-dark" href="index.html">CaLiGraph</a>
                 </div>
             </div>
         </header>
@@ -36,27 +35,30 @@
             </nav>
         </div>
 
+        <!-- Main content -->
+
         <!-- Large box -->
         <div class="jumbotron p-4 p-md-5 text-white rounded bg-dark">
             <div class="row">
                 <div class="col-md-6 px-0">
-                    <h1 class="display-4 font-italic">First release of <span style="font-size:3.5rem" class="caligraph-font">CaLiGraph</span></h1>
+                    <h1 class="display-4 font-italic"><span style="font-size:3.5rem" class="caligraph-font">CaLiGraph v1.0</span></h1>
                     <p class="lead my-3">
-                        The first version of our knowledge graph is officially released.
-                        We extract a rich ontology by compiling information from the DBpedia ontology, and Wikipedia Categories & Listpages.
-                        By combining this ontological information with machine learning, we identify a large amount of additional resources in Wikipedia Listpages.
+                        CaLiGraph is a large semantic knowledge graph.
+                        It has a rich ontology which is compiled from the DBpedia ontology, and Wikipedia Categories & Listpages.
+                        The ontology is enriched with fine-grained value restrictions on its classes that are learned through the Cat2Ax approach.
+                        A large amount of CaLiGraph's resources are extracted from Wikipedia Listpages by combining the ontological information with machine learning.
                     </p>
                     <p class="lead mb-0"><a href="core-ideas.html" class="text-white font-weight-bold">Check out the core ideas of the extraction</a></p>
                 </div>
                 <div class="col-md-6 px-0">
-                    <img src="resources/images/index_teaser.png" width="100%" height="100%" style="object-fit:cover;" />
+                    <img src="resources/images/index_teaser.png" width="100%" height="100%" style="object-fit:contain;" />
                 </div>
             </div>
         </div>
 
 
-        <!-- Two smaller boxes -->
         <div class="row mb-2">
+            <!-- Small box -->
             <div class="col-md-6">
                 <div class="row no-gutters border rounded overflow-hidden flex-md-row mb-4 shadow-sm h-md-250 position-relative">
                     <div class="col p-4 d-flex flex-column position-static">
@@ -73,6 +75,7 @@
                     </div>
                 </div>
             </div>
+            <!-- Small box -->
             <div class="col-md-6">
                 <div class="row no-gutters border rounded overflow-hidden flex-md-row mb-4 shadow-sm h-md-250 position-relative">
                     <div class="col p-4 d-flex flex-column position-static">
@@ -91,34 +94,36 @@
             </div>
         </div>
 
+        <!-- News -->
         <div class="row">
             <div class="col-md-12 blog-main">
                 <h3 class="pb-4 mb-4 font-italic border-bottom">
                     News
                 </h3>
 
+                <!-- Blog post -->
                 <div class="blog-post">
-                    <h2 class="blog-post-title">CaLiGraph v1 Release</h2>
+                    <h2 class="blog-post-title">CaLiGraph v1.0 Release</h2>
                     <p class="blog-post-meta">October 1, 2019</p>
 
                     <p>The first version of CaLiGraph is released and the website is launched.</p>
                     <p>On October 29, 2019 the paper <a href="https://arxiv.org/pdf/1906.12089.pdf">Uncovering the Semantics of Wikipedia Categories</a>, which describes the foundations used for the extraction of CaLiGraph, is presented at the <a href="https://iswc2019.semanticweb.org/">International Semantic Web Conference</a>.</p>
-                </div><!-- /.blog-post -->
-            </div><!-- /.blog-main -->
+                </div>
+            </div>
         </div>
 
     </div>
 
 
     <!-- Footer -->
-    <footer class="blog-footer">
+    <footer class="blog-footer bg-dark">
         <div class="container">
             <div class="row">
                 <div class="col-md-9">
-                    <p>The CaLiGraph is created and provided by the <a href="https://www.uni-mannheim.de/dws/">Data and Web Science Group</a>, University of Mannheim.</p>
+                    <p>CaLiGraph is created and provided by the <a href="https://www.uni-mannheim.de/dws/">Data and Web Science Group</a>, University of Mannheim.</p>
                     <p>For questions and other matters, feel free to <a href="contact.html">contact us</a>.</p>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-3 footer-logo-container">
                     <img class="footer-logo" src="resources/images/DWS-Logo-2019.jpg" />
                 </div>
             </div>
