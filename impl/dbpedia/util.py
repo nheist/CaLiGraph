@@ -33,3 +33,9 @@ def is_dbp_resource(dbp_resource: str) -> bool:
 
 def is_file_resource(dbp_object: str) -> bool:
     return dbp_object.startswith(NAMESPACE_DBP_RESOURCE + 'File:')
+
+
+def dbp_resource2wikipedia_resource(dbp_resource: str) -> str:
+    if not is_dbp_resource(dbp_resource):
+        return dbp_resource
+    return f'http://en.wikipedia.org/wiki/{dbp_resource[len(NAMESPACE_DBP_RESOURCE):]}'

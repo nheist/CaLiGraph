@@ -132,7 +132,7 @@ def _get_lines_ontology_provenance(graph) -> list:
     for node in graph.traverse_topdown():
         if node == rdf_util.CLASS_OWL_THING:
             continue
-        sources = graph.get_parts(node)
+        sources = {dbp_util.dbp_resource2wikipedia_resource(p) for p in graph.get_parts(node)}
         lines_ontology_provenance.extend([serialize_util.as_object_triple(node, rdf_util.PREDICATE_WAS_DERIVED_FROM, s) for s in sources])
     return lines_ontology_provenance
 
@@ -200,7 +200,8 @@ def _get_lines_instances_dbpedia_mapping(graph) -> list:
 def _get_lines_instances_provenance(graph) -> list:
     lines_instances_provenance = []
     for res in graph.get_all_resources():
-        lines_instances_provenance.extend([serialize_util.as_object_triple(res, rdf_util.PREDICATE_WAS_DERIVED_FROM, p) for p in graph.get_resource_provenance(res)])
+        provenance_data = {dbp_util.dbp_resource2wikipedia_resource(p) for p in graph.get_resource_provenance(res)}
+        lines_instances_provenance.extend([serialize_util.as_object_triple(res, rdf_util.PREDICATE_WAS_DERIVED_FROM, p) for p in provenance_data])
     return lines_instances_provenance
 
 
