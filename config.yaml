@@ -17,7 +17,7 @@ cat2ax:
 logging:
   level: 'DEBUG'
   to_file: True
-  filename: 'table-entity-extraction'
+  filename: 'feature-relabeling'
 
 mailer:
   sender: 'errors.nheist@gmail.com'

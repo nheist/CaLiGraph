@@ -30,18 +30,47 @@ def setup():
 
 if __name__ == '__main__':
     try:
-        util.get_logger().info('Starting caligraph v9 extraction..')
+        util.get_logger().info('Starting relabeling v10..')
+
+        graph = cali_base.get_axiom_graph()
+        # recompute entity labels
+        enum_features = list_base.get_enum_listpage_entity_features(graph)
+        util.get_logger().debug('Before relabeling (enum)')
+        util.get_logger().debug(f'True: {len(enum_features[enum_features["label"] == 1])}')
+        util.get_logger().debug(f'False: {len(enum_features[enum_features["label"] == 0])}')
+        util.get_logger().debug(f'New: {len(enum_features[enum_features["label"] == -1])}')
+
+        list_features.assign_entity_labels(graph, enum_features)
+        util.get_logger().debug('After relabeling (enum)')
+        util.get_logger().debug(f'True: {len(enum_features[enum_features["label"] == 1])}')
+        util.get_logger().debug(f'False: {len(enum_features[enum_features["label"] == 0])}')
+        util.get_logger().debug(f'New: {len(enum_features[enum_features["label"] == -1])}')
+        util.update_cache('dbpedia_listpage_enum_features', enum_features, version=10)
+
+        table_features = list_base.get_table_listpage_entity_features(graph)
+        util.get_logger().debug('Before relabeling (table)')
+        util.get_logger().debug(f'True: {len(table_features[table_features["label"] == 1])}')
+        util.get_logger().debug(f'False: {len(table_features[table_features["label"] == 0])}')
+        util.get_logger().debug(f'New: {len(table_features[table_features["label"] == -1])}')
+
+        list_features.assign_entity_labels(graph, table_features)
+        util.get_logger().debug('After relabeling (table)')
+        util.get_logger().debug(f'True: {len(table_features[table_features["label"] == 1])}')
+        util.get_logger().debug(f'False: {len(table_features[table_features["label"] == 0])}')
+        util.get_logger().debug(f'New: {len(table_features[table_features["label"] == -1])}')
+        util.update_cache('dbpedia_listpage_table_features', table_features, version=10)
 
 
-        # extract table features
+
+    # extract table features
         #list_base.get_table_listpage_entity_features()
         #nlp_util.persist_cache()
 
 
         # extract complete caligraph
 #        setup()
-        caligraph = cali_base.get_axiom_graph()
-        util.get_logger().info(caligraph.statistics)
+#        caligraph = cali_base.get_axiom_graph()
+#        util.get_logger().info(caligraph.statistics)
 
         #cat_graph = cat_base.get_merged_graph()
         #util.get_logger().info('catgraph done.')
@@ -59,8 +88,8 @@ if __name__ == '__main__':
         #nlp_util.persist_cache()
         #util.get_logger().info('cache persist done.')
 
-        mailer.send_success(f'FINISHED caligraph v9 extraction')
-        util.get_logger().info('Finished caligraph v9 extraction.')
+        mailer.send_success(f'FINISHED relabeling v10')
+        util.get_logger().info('Finished relabeling v10.')
     except Exception as e:
         error_msg = traceback.format_exc()
         mailer.send_error(error_msg)
