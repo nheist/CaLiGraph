@@ -88,11 +88,12 @@ def _get_lines_ontology(graph) -> list:
             serialize_util.as_object_triple(prop, rdf_util.PREDICATE_SUBPROPERTY_OF, rdf_util.CLASS_PROPERTY),
         ])
     # restrictions
-    blank_node_counter = 1
+    defined_restrictions = set()
     for node in graph.nodes:
         for prop, val in graph.get_axioms(node, transitive=False):
-            lines_ontology.extend(_serialize_restriction(node, prop, val, blank_node_counter))
-            blank_node_counter += 1
+            restriction_is_defined = (prop, val) in defined_restrictions
+            lines_ontology.extend(_serialize_restriction(node, prop, val, restriction_is_defined))
+            defined_restrictions.add((prop, val))
     return lines_ontology
 
 
@@ -100,17 +101,25 @@ def _get_creation_date() -> datetime.datetime:
     return datetime.datetime.strptime(util.get_config('caligraph.creation_date'), '%Y-%m-%d')
 
 
-def _serialize_restriction(class_iri: str, prop_iri: str, val: str, blank_node_index: int) -> list:
-    blank_node_iri = f'_:{blank_node_index}'
-    result = [
-        serialize_util.as_object_triple(blank_node_iri, rdf_util.PREDICATE_TYPE, 'http://www.w3.org/2002/07/owl#Restriction'),
-        serialize_util.as_object_triple(blank_node_iri, 'http://www.w3.org/2002/07/owl#onProperty', prop_iri),
-        serialize_util.as_object_triple(class_iri, rdf_util.PREDICATE_SUBCLASS_OF, blank_node_iri)
-    ]
-    if val.startswith(cali_util.NAMESPACE_CLG_RESOURCE):
-        result.append(serialize_util.as_object_triple(blank_node_iri, 'http://www.w3.org/2002/07/owl#hasValue', val))
+def _serialize_restriction(class_iri: str, prop_iri: str, val: str, restriction_is_defined: bool) -> list:
+    prop_id = prop_iri[len(cali_util.NAMESPACE_CLG_ONTOLOGY):]
+    val_id = val[len(cali_util.NAMESPACE_CLG_RESOURCE):] if cali_util.is_clg_resource(val) else val
+    restriction_iri = f'{cali_util.NAMESPACE_CLG_ONTOLOGY}RestrictionHasValue_{prop_id}_{val_id}'
+
+    if restriction_is_defined:
+        result = []
     else:
-        result.append(serialize_util.as_literal_triple(blank_node_iri, 'http://www.w3.org/2002/07/owl#hasValue', val))
+        result = [
+            serialize_util.as_object_triple(restriction_iri, rdf_util.PREDICATE_TYPE, 'http://www.w3.org/2002/07/owl#Restriction'),
+            serialize_util.as_object_triple(restriction_iri, rdf_util.PREDICATE_LABEL, f'Restriction onProperty={prop_id} hasValue={val_id}'),
+            serialize_util.as_object_triple(restriction_iri, 'http://www.w3.org/2002/07/owl#onProperty', prop_iri),
+        ]
+        if cali_util.is_clg_resource(val):
+            result.append(serialize_util.as_object_triple(restriction_iri, 'http://www.w3.org/2002/07/owl#hasValue', val))
+        else:
+            result.append(serialize_util.as_literal_triple(restriction_iri, 'http://www.w3.org/2002/07/owl#hasValue', val))
+
+    result.append(serialize_util.as_object_triple(class_iri, rdf_util.PREDICATE_SUBCLASS_OF, restriction_iri))
     return result
 
 
