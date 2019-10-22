@@ -134,42 +134,43 @@ cache:
   # version 6: new extraction with improved headlemma matching
   # version 7: recomputation due to improved disjointnesses, subtypes, headlemmas
   # version 8: recomputation due to some minor improvements
+  # version 10: bunch of small fixes; better restrictions; well formatted labels
   catgraph_conceptual:
     filename: 'catgraph-conceptual'
-    version: 9  # v2: do not remove unconnected nodes initially ; v3: better synonym matching
+    version: 10  # v2: do not remove unconnected nodes initially ; v3: better synonym matching
   catgraph_wikitaxonomy:
     filename: 'catgraph-wikitaxonomy'
-    version: 9  # v2: do not remove unconnected nodes initially ; v3: better synonym matching
+    version: 10  # v2: do not remove unconnected nodes initially ; v3: better synonym matching
   catgraph_cyclefree:
     filename: 'catgraph-cyclefree'
-    version: 9  # v2: do not remove unconnected nodes initially ; v3: better synonym matching
+    version: 10  # v2: do not remove unconnected nodes initially ; v3: better synonym matching
   catgraph_merged:
     filename: 'catgraph-merged'
-    version: 9  # v2: do not remove unconnected nodes initially ; v3: better synonym matching
+    version: 10  # v2: do not remove unconnected nodes initially ; v3: better synonym matching
   listgraph_base:
     filename: 'listgraph-base'
-    version: 9  # v2: better synonym matching ; v3: with all listpages
+    version: 10  # v2: better synonym matching ; v3: with all listpages
   listgraph_wikitaxonomy:
     filename: 'listgraph-wikitaxonomy'
-    version: 9  # v2: better synonym matching ; v3: with all listpages
+    version: 10  # v2: better synonym matching ; v3: with all listpages
   listgraph_cyclefree:
     filename: 'listgraph-cyclefree'
-    version: 9  # v2: better synonym matching ; v3: with all listpages
+    version: 10  # v2: better synonym matching ; v3: with all listpages
   listgraph_merged:
     filename: 'listgraph-merged'
-    version: 9  # v2: better synonym matching ; v3: with all listpages
+    version: 10  # v2: better synonym matching ; v3: with all listpages
   caligraph_base:
     filename: 'caligraph-base'
-    version: 9
+    version: 10
   caligraph_merged_ontology:
     filename: 'caligraph-merged-ontology'
-    version: 9
+    version: 10
   caligraph_filtered:
     filename: 'caligraph-filtered'
-    version: 9
+    version: 10
   caligraph_axiomatized:
     filename: 'caligraph-axiomatized'
-    version: 9
+    version: 10
   spacy_docs:
     filename: 'spacy-docs'
     version: 3  # version 2 incl. listpages; version 3 for spacy 2.1
@@ -236,7 +237,7 @@ cache:
     version: 7
   dbpedia_category_sets:
     filename: 'dbpedia-category-sets'
-    version: 8  # new conceptual categorygraph version (v2)
+    version: 10  # new conceptual categorygraph version (v2)
   dbpedia_categories_conceptual:
     filename: 'dbpedia-category-conceptual'
     version: 6
@@ -260,10 +261,10 @@ cache:
     version: 1
   dbpedia_list_equivalents:
     filename: 'dbpedia-list-equivalents'
-    version: 9  # v2: better synonym matching
+    version: 10  # v2: better synonym matching
   dbpedia_list_parents:
     filename: 'dbpedia-list-parents'
-    version: 9  # v2: better synonym matching
+    version: 10  # v2: better synonym matching
   dbpedia_listpage_markup:
     filename: 'dbpedia-listpage-markup'
     version: 1
@@ -272,15 +273,15 @@ cache:
     version: 3  # v1: basic; v2: with entity indices; v3: with tables
   dbpedia_listpage_enum_features:
     filename: 'dbpedia-listpage-enum-features'
-    version: 8
+    version: 10
     store_as_hdf: True
   dbpedia_listpage_table_features:
     filename: 'dbpedia-listpage-table-features'
-    version: 8
+    version: 10
     store_as_csv: True
   dbpedia_listpage_entities:
     filename: 'dbpedia-listpage-entities'
-    version: 9
+    version: 10
   wikidata_dbpedia_resource_mapping:
     filename: 'wikidata-dbpedia-resource-mapping'
     version: 1
@@ -291,7 +292,7 @@ cache:
     compress: True
   wikitaxonomy_hypernyms:
     filename: 'wikitaxonomy-hypernyms'
-    version: 9  # version 1 -> thresholds 10 / 100 / .4  // v2: new cat2ax version (v2)
+    version: 10  # version 1 -> thresholds 10 / 100 / .4  // v2: new cat2ax version (v2)
   cat2ax_axioms:
     filename: 'cat2ax-axioms'
-    version: 9  # new conceptual categorygraph version (v2)
+    version: 10  # new conceptual categorygraph version (v2)
