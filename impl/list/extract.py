@@ -1,17 +1,30 @@
 import pandas as pd
+from sklearn.pipeline import Pipeline
+from sklearn.feature_selection import SelectKBest
 from xgboost import XGBClassifier
 from collections import defaultdict
 
 
 def extract_enum_entities(df: pd.DataFrame) -> dict:
-    # TODO: optimise with grid-search
-    estimator = XGBClassifier(random_state=42, colsample_bytree=.8, max_depth=5, n_estimators=200, scale_pos_weight=.25)
+    # Performance on v10
+    # TN / FP: [1273464  100741]
+    # FN / TP: [ 266052 1120356]
+    # Positive Class: F1=0.86 P=0.92 R=0.81
+    # Negative Class: F1=0.87 P=0.83 R=0.93
+    estimator = XGBClassifier(colsample_bytree=.8, max_depth=5, n_estimators=400, scale_pos_weight=.25)
     return _extract_entities(df, estimator)
 
 
 def extract_table_entities(df: pd.DataFrame) -> dict:
-    # TODO: optimise with grid-search
-    estimator = XGBClassifier(random_state=42, colsample_bytree=.8, max_depth=5, n_estimators=200, scale_pos_weight=.25)
+    # Performance on v10
+    #
+    #
+    #
+    #
+    estimator = Pipeline([
+        ('feature_selection', SelectKBest(k=100)),
+        ('classification', XGBClassifier(colsample_bytree=.8, max_depth=5, n_estimators=200, scale_pos_weight=.25)),
+    ])
     return _extract_entities(df, estimator)
 
 
