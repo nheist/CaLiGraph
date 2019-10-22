@@ -3,7 +3,6 @@ import urllib.parse
 
 TYPE_RESOURCE = 'type_resource'
 POSTFIXES = {
-    str: 'http://www.w3.org/2001/XMLSchema#string',
     int: 'http://www.w3.org/2001/XMLSchema#integer',
     datetime.datetime: 'http://www.w3.org/2001/XMLSchema#date'
 }
@@ -25,7 +24,12 @@ def as_object_triple(sub: str, pred: str, obj: str) -> str:
 
 
 def _as_triple(sub: str, pred: str, obj: str, obj_type) -> str:
-    obj_as_string = _resource_to_string(obj) if obj_type == TYPE_RESOURCE else f'"{obj}"^^{_resource_to_string(POSTFIXES[obj_type])}'
+    if obj_type == TYPE_RESOURCE:
+        obj_as_string = _resource_to_string(obj)
+    else:
+        obj_as_string = f'"{obj}"'
+        if obj_type in POSTFIXES:
+            obj_as_string += f'^^{_resource_to_string(POSTFIXES[obj_type])}'
     return f'{_resource_to_string(sub)} {_resource_to_string(pred)} {obj_as_string} .\n'
 
 

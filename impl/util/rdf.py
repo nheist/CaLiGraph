@@ -9,7 +9,7 @@ import functools
 
 # predicates
 PREDICATE_EQUIVALENT_CLASS = 'http://www.w3.org/2002/07/owl#equivalentClass'
-PREDICATE_WAS_DERIVED_FROM = 'https://www.w3.org/ns/prov#wasDerivedFrom'
+PREDICATE_WAS_DERIVED_FROM = 'http://www.w3.org/ns/prov#wasDerivedFrom'
 PREDICATE_BROADER = 'http://www.w3.org/2004/02/skos/core#broader'
 PREDICATE_SKOS_LABEL = 'http://www.w3.org/2004/02/skos/core#prefLabel'
 PREDICATE_TYPE = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type'
