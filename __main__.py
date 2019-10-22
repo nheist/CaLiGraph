@@ -32,7 +32,7 @@ if __name__ == '__main__':
     try:
         util.get_logger().info('Starting caligraph v10..')
 
-        graph = cali_base.get_axiom_graph()
+        #graph = cali_base.get_axiom_graph()
         # recompute entity labels
         #enum_features = list_base.get_enum_listpage_entity_features(graph)
         #util.get_logger().debug('Before relabeling (enum)')

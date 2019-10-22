@@ -17,10 +17,10 @@ def extract_enum_entities(df: pd.DataFrame) -> dict:
 
 def extract_table_entities(df: pd.DataFrame) -> dict:
     # Performance on v10
-    #
-    #
-    #
-    #
+    # TN / FP: [2909270   42194]
+    # FN / TP: [415948 430710]
+    # Positive Class: F1=0.65 P=0.91 R=0.51
+    # Negative Class: F1=0.93 P=0.87 R=0.99
     estimator = Pipeline([
         ('feature_selection', SelectKBest(k=100)),
         ('classification', XGBClassifier(colsample_bytree=.8, max_depth=5, n_estimators=200, scale_pos_weight=.25)),
