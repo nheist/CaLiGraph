@@ -407,6 +407,11 @@ def are_equivalent_types(dbp_types: set) -> bool:
     return dbp_types == get_equivalent_types(list(dbp_types)[0])
 
 
+def get_main_equivalence_type(dbp_type: str) -> str:
+    valid_types = get_main_equivalence_types() | {rdf_util.CLASS_OWL_THING}
+    return get_equivalent_types(dbp_type).intersection(valid_types).pop()
+
+
 def get_main_equivalence_types() -> set:
     global __MAIN_EQUIVALENCE_TYPES__
     if '__MAIN_EQUIVALENCE_TYPES__' not in globals():
