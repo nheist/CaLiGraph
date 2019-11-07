@@ -13,6 +13,7 @@ import impl.list.features as list_features
 #import impl.category.cat2ax as cat_axioms
 import impl.util.nlp as nlp_util
 import impl.caligraph.base as cali_base
+import impl.caligraph.serialize as cali_serialize
 
 
 def setup():
@@ -32,6 +33,8 @@ if __name__ == '__main__':
     try:
         util.get_logger().info('Starting caligraph v10..')
 
+        graph = cali_base.get_axiom_graph()
+        cali_serialize._write_lines_to_file(cali_serialize._get_lines_ontology(graph), 'results.caligraph.ontology')
         #graph = cali_base.get_axiom_graph()
         # recompute entity labels
         #enum_features = list_base.get_enum_listpage_entity_features(graph)
@@ -69,7 +72,7 @@ if __name__ == '__main__':
 
         # extract complete caligraph
         #setup()
-        cali_base.serialize_final_graph()
+        #cali_base.serialize_final_graph()
 
         #cat_graph = cat_base.get_merged_graph()
         #util.get_logger().info('catgraph done.')
