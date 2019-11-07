@@ -111,7 +111,7 @@ def _serialize_restriction(class_iri: str, prop_iri: str, val: str, restriction_
     else:
         result = [
             serialize_util.as_object_triple(restriction_iri, rdf_util.PREDICATE_TYPE, 'http://www.w3.org/2002/07/owl#Restriction'),
-            serialize_util.as_object_triple(restriction_iri, rdf_util.PREDICATE_LABEL, f'Restriction onProperty={prop_id} hasValue={val_id}'),
+            serialize_util.as_literal_triple(restriction_iri, rdf_util.PREDICATE_LABEL, f'Restriction onProperty={prop_id} hasValue={val_id}'),
             serialize_util.as_object_triple(restriction_iri, 'http://www.w3.org/2002/07/owl#onProperty', prop_iri),
         ]
         if cali_util.is_clg_resource(val):
