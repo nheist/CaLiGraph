@@ -158,9 +158,9 @@ class HierarchyGraph(BaseGraph):
             for parent in self.parents(node):
                 parent_lemmas = node_to_headlemmas_mapping[parent]
                 child_lemmas = node_to_headlemmas_mapping[node]
-                if any(hypernymy_util.is_synonym(pl, cl) for pl in parent_lemmas for cl in child_lemmas):
+                if all(any(hypernymy_util.is_synonym(pl, cl) for pl in parent_lemmas) for cl in child_lemmas):
                     synonym_merges[node].add(parent)
-                elif any(hypernymy_util.is_hypernym(pl, cl) for pl in parent_lemmas for cl in child_lemmas):
+                elif all(any(hypernymy_util.is_hypernym(pl, cl) for pl in parent_lemmas) for cl in child_lemmas):
                     hypernym_merges[node].add(parent)
 
         # conduct merge
