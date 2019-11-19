@@ -149,15 +149,15 @@ class HierarchyGraph(BaseGraph):
 #        nodes_to_merge = set(direct_merges) | set(catset_merges)
 #        all_merges = {node: direct_merges[node] | catset_merges[node] for node in nodes_to_merge}
 
-        node_to_headlemmas_mapping = {node: nlp_util.get_head_lemmas(nlp_util.parse(self.get_name(node))) for node in self.nodes}
+        node_to_lexheadwords_mapping = {node: nlp_util.get_lexical_head_words(nlp_util.parse(self.get_name(node))) for node in self.nodes}
 
         # find merge targets by looking for synonymous and hypernymous headlemmas of parents
         synonym_merges = defaultdict(set)
         hypernym_merges = defaultdict(set)
         for node in remaining_nodes_to_merge:
             for parent in self.parents(node):
-                parent_lemmas = node_to_headlemmas_mapping[parent]
-                child_lemmas = node_to_headlemmas_mapping[node]
+                parent_lemmas = node_to_lexheadwords_mapping[parent]
+                child_lemmas = node_to_lexheadwords_mapping[node]
                 if all(any(hypernymy_util.is_synonym(pl, cl) for pl in parent_lemmas) for cl in child_lemmas):
                     synonym_merges[node].add(parent)
                 elif all(any(hypernymy_util.is_hypernym(pl, cl) for pl in parent_lemmas) for cl in child_lemmas):

@@ -68,6 +68,11 @@ def get_head_lemmas(doc: Doc) -> set:
     return head_lemmas
 
 
+def get_lexical_head_words(doc: Doc) -> set:
+    doc = tag_lexical_head(doc)
+    return {w.lemma_ for w in doc if w.ent_type_ == 'LH' and not w.is_stop}
+
+
 def tag_lexical_head(doc: Doc) -> Doc:
     """Return `doc` where the lexical head is tagged as the entity 'LH'."""
 
