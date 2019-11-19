@@ -114,40 +114,59 @@ class HierarchyGraph(BaseGraph):
         remaining_nodes_to_merge = set(nodes_canonical_names)
         util.get_logger().debug(f'Found {len(remaining_nodes_to_merge)} nodes to merge.')
 
-        # 1) compute direct merge and synonym merge
-        direct_merges = defaultdict(set)
+#        # 1) compute direct merge and synonym merge
+#        direct_merges = defaultdict(set)
+#
+#        nodes_important_words = {node: nlp_util.without_stopwords(canonical_name) for node, canonical_name in nodes_canonical_names.items()}
+#        for node in remaining_nodes_to_merge:
+#            node_important_words = nodes_important_words[node]
+#            for parent in self.parents(node):
+#                if parent not in nodes_important_words:
+#                    nodes_important_words[parent] = nlp_util.without_stopwords(nlp_util.get_canonical_name(self.get_name(parent)))
+#                parent_important_words = nodes_important_words[parent]
+#
+#                if hypernymy_util.phrases_are_synonymous(node_important_words, parent_important_words):
+#                    direct_merges[node].add(parent)
+#        util.get_logger().debug(f'Found {len(direct_merges)} nodes to merge directly.')
+#
+#        # 2) compute category set merge
+#        catset_merges = defaultdict(set)
+#        remaining_nodes_to_merge = remaining_nodes_to_merge.difference(set(direct_merges))
+#        for node in remaining_nodes_to_merge:
+#            node_canonical_name = nodes_canonical_names[node]
+#            for parent in self.parents(node):
+#                if parent == self.root_node:
+#                    continue
+#                similar_children_count = len({child for child in self.children(parent) if child in nodes_canonical_names and nodes_canonical_names[child] == node_canonical_name})
+#                if similar_children_count > 1:
+#                    catset_merges[node].add(parent)
+#        util.get_logger().debug(f'Found {len(catset_merges)} nodes to merge via category sets.')
+#
+#        remaining_nodes_to_merge = remaining_nodes_to_merge.difference(set(catset_merges))
+#        util.get_logger().debug(f'The {len(remaining_nodes_to_merge)} remaining nodes will not be merged.')
+#
+#        # 3) conduct merge
+#        nodes_to_merge = set(direct_merges) | set(catset_merges)
+#        all_merges = {node: direct_merges[node] | catset_merges[node] for node in nodes_to_merge}
 
-        nodes_important_words = {node: nlp_util.without_stopwords(canonical_name) for node, canonical_name in nodes_canonical_names.items()}
+        node_to_headlemmas_mapping = {node: nlp_util.get_head_lemmas(nlp_util.parse(self.get_name(node))) for node in self.nodes}
+
+        # find merge targets by looking for synonymous and hypernymous headlemmas of parents
+        synonym_merges = defaultdict(set)
+        hypernym_merges = defaultdict(set)
         for node in remaining_nodes_to_merge:
-            node_important_words = nodes_important_words[node]
             for parent in self.parents(node):
-                if parent not in nodes_important_words:
-                    nodes_important_words[parent] = nlp_util.without_stopwords(nlp_util.get_canonical_name(self.get_name(parent)))
-                parent_important_words = nodes_important_words[parent]
+                parent_lemmas = node_to_headlemmas_mapping[parent]
+                child_lemmas = node_to_headlemmas_mapping[node]
+                if any(hypernymy_util.is_synonym(pl, cl) for pl in parent_lemmas for cl in child_lemmas):
+                    synonym_merges[node].add(parent)
+                elif any(hypernymy_util.is_hypernym(pl, cl) for pl in parent_lemmas for cl in child_lemmas):
+                    hypernym_merges[node].add(parent)
 
-                if hypernymy_util.phrases_are_synonymous(node_important_words, parent_important_words):
-                    direct_merges[node].add(parent)
-        util.get_logger().debug(f'Found {len(direct_merges)} nodes to merge directly.')
+        # conduct merge
+        nodes_to_merge = set(synonym_merges) | set(hypernym_merges)
+        all_merges = {node: synonym_merges[node] or hypernym_merges[node] for node in nodes_to_merge}
 
-        # 2) compute category set merge
-        catset_merges = defaultdict(set)
-        remaining_nodes_to_merge = remaining_nodes_to_merge.difference(set(direct_merges))
-        for node in remaining_nodes_to_merge:
-            node_canonical_name = nodes_canonical_names[node]
-            for parent in self.parents(node):
-                if parent == self.root_node:
-                    continue
-                similar_children_count = len({child for child in self.children(parent) if child in nodes_canonical_names and nodes_canonical_names[child] == node_canonical_name})
-                if similar_children_count > 1:
-                    catset_merges[node].add(parent)
-        util.get_logger().debug(f'Found {len(catset_merges)} nodes to merge via category sets.')
-
-        remaining_nodes_to_merge = remaining_nodes_to_merge.difference(set(catset_merges))
-        util.get_logger().debug(f'The {len(remaining_nodes_to_merge)} remaining nodes will not be merged.')
-
-        # 3) conduct merge
-        nodes_to_merge = set(direct_merges) | set(catset_merges)
-        all_merges = {node: direct_merges[node] | catset_merges[node] for node in nodes_to_merge}
         iteration = 0
         while all_merges:
             independent_nodes = set(all_merges).difference({merge_target for mts in all_merges.values() for merge_target in mts})
