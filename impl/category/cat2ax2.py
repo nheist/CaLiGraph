@@ -230,7 +230,7 @@ def _extract_axioms(category_graph, candidate_sets, patterns, pattern_confidence
             scores += [0] * (len(category_set) - len(scores))  # add 0 for categories that did not find the property axiom at all
             if np.median(scores) > 0:
                 for cat in category_set:
-                    val, score = max(category_set_property_axioms[prop][cat], key=operator.itemgetter(1), default=(None, 0))
+                    val, score = max(category_set_property_axioms[prop][cat].items(), key=operator.itemgetter(1), default=(None, 0))
                     if val is not None:
                         category_axioms[cat].add(RelationAxiom(prop, val, score))
 
