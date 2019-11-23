@@ -31,10 +31,8 @@ def setup():
 
 if __name__ == '__main__':
     try:
-        util.get_logger().info('Starting caligraph v10..')
+        util.get_logger().info('Starting caligraph v11..')
 
-        graph = cali_base.get_axiom_graph()
-        cali_serialize._write_lines_to_file(cali_serialize._get_lines_ontology(graph), 'results.caligraph.ontology')
         #graph = cali_base.get_axiom_graph()
         # recompute entity labels
         #enum_features = list_base.get_enum_listpage_entity_features(graph)
@@ -65,14 +63,14 @@ if __name__ == '__main__':
 
 
 
-    # extract table features
+        # extract table features
         #list_base.get_table_listpage_entity_features()
         #nlp_util.persist_cache()
 
 
         # extract complete caligraph
-        #setup()
-        #cali_base.serialize_final_graph()
+        setup()
+        cali_base.serialize_final_graph()
 
         #cat_graph = cat_base.get_merged_graph()
         #util.get_logger().info('catgraph done.')
@@ -90,8 +88,8 @@ if __name__ == '__main__':
         #nlp_util.persist_cache()
         #util.get_logger().info('cache persist done.')
 
-        mailer.send_success(f'FINISHED caligraph v10')
-        util.get_logger().info('Finished caligraph v10.')
+        mailer.send_success(f'FINISHED caligraph v11')
+        util.get_logger().info('Finished caligraph v11.')
     except Exception as e:
         error_msg = traceback.format_exc()
         mailer.send_error(error_msg)
