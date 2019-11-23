@@ -5,6 +5,7 @@ from . import features as list_features
 from . import extract as list_extract
 from impl.list.graph import ListGraph
 from collections import defaultdict
+import impl.dbpedia.util as dbp_util
 
 
 # LIST HIERARCHY
@@ -57,7 +58,18 @@ def _extract_listpage_entities(graph):
     table_features = get_table_listpage_entity_features(graph)
     table_entities = list_extract.extract_table_entities(table_features)
 
-    return {lp: enum_entities[lp] | table_entities[lp] for lp in (set(enum_entities) | set(table_entities))}
+    listpage_entities = {lp: enum_entities[lp] | table_entities[lp] for lp in (set(enum_entities) | set(table_entities))}
+    listpage_entities = {lp: {_remove_language_tag(e) for e in entities} for lp, entities in listpage_entities.items()}
+    return listpage_entities
+
+
+def _remove_language_tag(entity_uri: str) -> str:
+    entity_id = entity_uri[len(dbp_util.NAMESPACE_DBP_RESOURCE):]
+    if entity_id[0] != ':':
+        return entity_uri
+    if len(entity_id) < 3 or entity_id[2] != ':':
+        return dbp_util.NAMESPACE_DBP_RESOURCE + entity_id[1:]
+    return dbp_util.NAMESPACE_DBP_RESOURCE + entity_id[3:]
 
 
 def get_enum_listpage_entity_features(graph) -> pd.DataFrame:

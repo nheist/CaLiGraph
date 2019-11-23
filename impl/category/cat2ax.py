@@ -79,8 +79,7 @@ def get_axioms(category: str) -> set:
 
 
 def extract_category_axioms(category_graph, pattern_confidence):
-    #candidate_sets = cat_set.get_category_sets()  # TODO: Check if that's better
-    candidate_sets = [cs for cs in cat_set.get_category_sets() if category_graph.has_node(cs.parent)]
+    candidate_sets = cat_set.get_category_sets()
     patterns = _extract_patterns(category_graph, candidate_sets)
     return _extract_axioms(category_graph, pattern_confidence, patterns)
 
