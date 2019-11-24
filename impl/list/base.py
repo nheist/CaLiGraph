@@ -64,6 +64,8 @@ def _extract_listpage_entities(graph):
 
 
 def _remove_language_tag(entity_uri: str) -> str:
+    if not entity_uri.startswith(dbp_util.NAMESPACE_DBP_RESOURCE):
+        return entity_uri
     entity_id = entity_uri[len(dbp_util.NAMESPACE_DBP_RESOURCE):]
     if entity_id[0] != ':':
         return entity_uri

@@ -69,7 +69,7 @@ if __name__ == '__main__':
 
 
         # extract complete caligraph
-        setup()
+        #setup()
         cali_base.serialize_final_graph()
 
         #cat_graph = cat_base.get_merged_graph()
