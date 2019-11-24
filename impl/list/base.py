@@ -67,7 +67,7 @@ def _remove_language_tag(entity_uri: str) -> str:
     if not entity_uri.startswith(dbp_util.NAMESPACE_DBP_RESOURCE):
         return entity_uri
     entity_id = entity_uri[len(dbp_util.NAMESPACE_DBP_RESOURCE):]
-    if entity_id[0] != ':':
+    if len(entity_id) == 0 or entity_id[0] != ':':
         return entity_uri
     if len(entity_id) < 3 or entity_id[2] != ':':
         return dbp_util.NAMESPACE_DBP_RESOURCE + entity_id[1:]
