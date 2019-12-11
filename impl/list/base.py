@@ -59,20 +59,7 @@ def _extract_listpage_entities(graph):
     table_entities = list_extract.extract_table_entities(table_features)
 
     listpage_entities = {lp: enum_entities[lp] | table_entities[lp] for lp in (set(enum_entities) | set(table_entities))}
-    listpage_entities = {lp: {_remove_language_tag(e) for e in entities} for lp, entities in listpage_entities.items()}
     return listpage_entities
-
-
-def _remove_language_tag(entity_uri: str) -> str:
-    if not entity_uri.startswith(dbp_util.NAMESPACE_DBP_RESOURCE):
-        return entity_uri
-    entity_id = entity_uri[len(dbp_util.NAMESPACE_DBP_RESOURCE):]
-    if len(entity_id) == 0 or entity_id[0] != ':':
-        return entity_uri
-    if len(entity_id) < 3 or entity_id[2] != ':':
-        return dbp_util.NAMESPACE_DBP_RESOURCE + entity_id[1:]
-    return dbp_util.NAMESPACE_DBP_RESOURCE + entity_id[3:]
-
 
 def get_enum_listpage_entity_features(graph) -> pd.DataFrame:
     global __ENUM_LISTPAGE_ENTITY_FEATURES__

@@ -162,10 +162,19 @@ def _extract_entity(text: str) -> Tuple[str, Optional[dict]]:
         return plaintext, {}
 
     return plaintext, {
-        'uri': dbp_util.name2resource(link_target),
+        'uri': dbp_util.name2resource(_remove_language_tag(link_target.strip())),
         'text': link_text,
         'idx': len(pre)
     }
+
+
+def _remove_language_tag(link_target: str) -> str:
+    if len(link_target) == 0 or link_target[0] != ':':
+        return link_target
+    if len(link_target) < 4 or link_target[3] != ':':
+        return link_target[1:]
+    return link_target[4:]
+
 
 
 def _remove_wikimarkup(wiki_text: WikiText) -> str:

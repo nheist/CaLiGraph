@@ -299,7 +299,6 @@ def _get_entry_id(df: pd.DataFrame, row: pd.Series) -> tuple:
 
 def _compute_label_for_entity(listpage_uri: str, entity_uri: str, lp_valid_resources: dict, lp_types: dict) -> int:
     entity_types = dbp_store.get_types(entity_uri)
-    # TODO: check how many positive examples we lose if we do not include the ones from lp_types (as they might be errorprone)
     if entity_uri in lp_valid_resources[listpage_uri]:# or entity_types.intersection(lp_types[listpage_uri]):
         return 1
     if not dbp_store.is_possible_resource(entity_uri) or any(entity_types.intersection(dbp_heur.get_disjoint_types(t)) for t in lp_types[listpage_uri]):
