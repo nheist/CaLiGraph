@@ -21,9 +21,12 @@ def get_resources() -> set:
     return __RESOURCES__
 
 
+def get_raw_resources() -> set:
+    return set(_get_label_mapping()) | set(get_resource_property_mapping())
+
+
 def _compute_resources() -> set:
-    resources = set(_get_label_mapping()) | set(get_resource_property_mapping())
-    return {res for res in resources if not list_util.is_listpage(res) and not list_util.is_listspage(res) and not dbp_util.is_file_resource(res)}
+    return {res for res in get_raw_resources() if not list_util.is_listpage(res) and not list_util.is_listspage(res) and not dbp_util.is_file_resource(res)}
 
 
 def is_possible_resource(obj: str) -> bool:

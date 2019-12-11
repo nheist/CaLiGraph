@@ -259,7 +259,7 @@ cache:
     version: 7
   dbpedia_listpages:
     filename: 'dbpedia-listpages'
-    version: 1
+    version: 11
   dbpedia_list_equivalents:
     filename: 'dbpedia-list-equivalents'
     version: 11  # v2: better synonym matching
