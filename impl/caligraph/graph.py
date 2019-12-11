@@ -83,10 +83,11 @@ class CaLiGraph(HierarchyGraph):
         resources = set()
         for part in self.get_parts(node):
             if cat_util.is_category(part):
-                resources.update({r for r in cat_store.get_resources(part) if dbp_store.is_possible_resource(r)})
+                resources.update({r for r in cat_store.get_resources(part)})
             elif use_listpage_resources and list_util.is_listpage(part):
-                resources.update({r for r in list_base.get_listpage_entities(self, part) if dbp_store.is_possible_resource(r)})
+                resources.update({r for r in list_base.get_listpage_entities(self, part)})
         resources = {dbp_store.resolve_redirect(r) for r in resources}
+        resources = {r for r in resources if len(r) > len(dbp_util.NAMESPACE_DBP_RESOURCE) and dbp_store.is_possible_resource(r)}
         return resources
 
     def get_resource_provenance(self, resource: str) -> set:
@@ -111,8 +112,13 @@ class CaLiGraph(HierarchyGraph):
     def get_property_frequencies(self, node: str) -> dict:
         resource_stats = self.get_resource_stats(node)
         property_counts = resource_stats['property_counts']
-        resource_count = resource_stats['resource_count']
-        return {p: count / resource_count for p, count in property_counts.items()}
+
+        predicate_counts = defaultdict(int)
+        for (pred, _), cnt in property_counts.items():
+            predicate_counts[pred] += cnt
+
+        return {p: count / predicate_counts[p[0]] for p, count in property_counts.items()}
+        #return {p: count / resource_count for p, count in property_counts.items()}
 
     def get_resource_stats(self, node: str) -> dict:
         if node not in self._node_resource_stats:
