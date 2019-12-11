@@ -171,7 +171,7 @@ cache:
     version: 11
   caligraph_axiomatized:
     filename: 'caligraph-axiomatized'
-    version: 11
+    version: 12
   spacy_docs:
     filename: 'spacy-docs'
     version: 3  # version 2 incl. listpages; version 3 for spacy 2.1
