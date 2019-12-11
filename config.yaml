@@ -17,7 +17,7 @@ cat2ax:
 logging:
   level: 'DEBUG'
   to_file: True
-  filename: 'feature-relabeling'
+  filename: 'caligraph_v12'
 
 mailer:
   sender: 'errors.nheist@gmail.com'

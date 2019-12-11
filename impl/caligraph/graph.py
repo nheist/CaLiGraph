@@ -111,34 +111,55 @@ class CaLiGraph(HierarchyGraph):
 
     def get_property_frequencies(self, node: str) -> dict:
         resource_stats = self.get_resource_stats(node)
-        property_counts = resource_stats['property_counts']
+        resource_count = resource_stats['resource_count']
+        if resource_count < 5:
+            resource_count = resource_stats['transitive_resource_count']
+            property_counts = resource_stats['transitive_property_counts']
+        else:
+            property_counts = resource_stats['property_counts']
 
-        predicate_counts = defaultdict(int)
-        for (pred, _), cnt in property_counts.items():
-            predicate_counts[pred] += cnt
+        #predicate_counts = defaultdict(int)
+        #for (pred, _), cnt in property_counts.items():
+        #    predicate_counts[pred] += cnt
+        #return {p: count / predicate_counts[p[0]] for p, count in property_counts.items()}
 
-        return {p: count / predicate_counts[p[0]] for p, count in property_counts.items()}
-        #return {p: count / resource_count for p, count in property_counts.items()}
+        return {p: count / resource_count for p, count in property_counts.items()}
 
     def get_resource_stats(self, node: str) -> dict:
         if node not in self._node_resource_stats:
             resource_count = 0
             new_resource_count = 0
             property_counts = defaultdict(int)
+
+            transitive_resource_count = 0
+            transitive_new_resource_count = 0
+            transitive_property_counts = defaultdict(int)
+
             for res in self.get_direct_dbpedia_resources(node, True):
                 if res in dbp_store.get_resources():
                     resource_count += 1
+                    transitive_resource_count += 1
                     for pred, values in dbp_store.get_properties(res).items():
                         for val in values:
                             property_counts[(pred, val)] += 1
+                            transitive_property_counts[(pred, val)] += 1
                 else:
                     new_resource_count += 1
+                    transitive_new_resource_count += 1
             for child in self.children(node):
                 child_stats = self.get_resource_stats(child)
-                resource_count += child_stats['resource_count']
-                for prop, count in child_stats['property_counts'].items():
-                    property_counts[prop] += count
-            self._node_resource_stats[node] = {'resource_count': resource_count, 'new_resource_count': new_resource_count, 'property_counts': property_counts}
+                transitive_resource_count += child_stats['transitive_resource_count']
+                transitive_new_resource_count += child_stats['transitive_new_resource_count']
+                for prop, count in child_stats['transitive_property_counts'].items():
+                    transitive_property_counts[prop] += count
+            self._node_resource_stats[node] = {
+                'resource_count': resource_count,
+                'new_resource_count': new_resource_count,
+                'property_counts': property_counts,
+                'transitive_resource_count': transitive_resource_count,
+                'transitive_new_resource_count': transitive_new_resource_count,
+                'transitive_property_counts': transitive_property_counts
+            }
         return self._node_resource_stats[node]
 
     def get_axioms(self, node: str, transitive=True) -> set:

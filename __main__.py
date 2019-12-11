@@ -31,7 +31,7 @@ def setup():
 
 if __name__ == '__main__':
     try:
-        util.get_logger().info('Starting caligraph v11..')
+        util.get_logger().info('Starting caligraph v12..')
 
         #graph = cali_base.get_axiom_graph()
         # recompute entity labels
@@ -88,8 +88,8 @@ if __name__ == '__main__':
         #nlp_util.persist_cache()
         #util.get_logger().info('cache persist done.')
 
-        mailer.send_success(f'FINISHED caligraph v11')
-        util.get_logger().info('Finished caligraph v11.')
+        mailer.send_success(f'FINISHED caligraph v12')
+        util.get_logger().info('Finished caligraph v12.')
     except Exception as e:
         error_msg = traceback.format_exc()
         mailer.send_error(error_msg)
