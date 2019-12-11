@@ -203,8 +203,8 @@ def _get_confidence_pattern_set(pattern_set, has_front, has_back):
     result = {}
     for pattern, axiom_patterns in pattern_set.items():
         if bool(pattern[0]) == has_front and bool(pattern[1]) == has_back:
-            preds_sum = sum(len(freqs) for freqs in axiom_patterns.values())
-            result[pattern] = defaultdict(lambda: 0, {p: len(freqs) / preds_sum for p, freqs in axiom_patterns.items()})
+            preds_sum = sum(len(freqs) for freqs in axiom_patterns['preds'].values())
+            result[pattern] = defaultdict(lambda: 0, {p: len(freqs) / preds_sum for p, freqs in axiom_patterns['preds'].items()})
     return result
 
 
