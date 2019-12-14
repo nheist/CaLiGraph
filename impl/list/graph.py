@@ -9,6 +9,8 @@ import util
 
 
 class ListGraph(HierarchyGraph):
+    """A graph of list categories and list pages retrieved directly from DBpedia resources."""
+
     # initialisations
     def __init__(self, graph: nx.DiGraph, root_node: str = None):
         super().__init__(graph, root_node or util.get_config('category.root_category'))
@@ -30,6 +32,7 @@ class ListGraph(HierarchyGraph):
 
     @classmethod
     def create_from_dbpedia(cls):
+        """Initialise the graph by combining list categories with list pages."""
         # add nodes and edges for listcategories
         nodes = list_store.get_listcategories()
         edges = set()

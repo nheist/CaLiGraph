@@ -1,3 +1,5 @@
+"""Extraction of features and labels for different list page layouts."""
+
 import impl.list.mapping as list_mapping
 import impl.list.util as list_util
 import impl.dbpedia.store as dbp_store
@@ -17,6 +19,7 @@ import operator
 # COMPUTATION OF BASIC ENTITY FEATURES OF ENUM LISTPAGES
 
 def make_enum_entity_features(lp_data: dict) -> list:
+    """Return a set of features for every entity in a enumeration list page."""
     lp_uri = lp_data['uri']
     sections = lp_data['sections']
 
@@ -112,6 +115,7 @@ def make_enum_entity_features(lp_data: dict) -> list:
 
 
 def make_table_entity_features(lp_data: dict) -> list:
+    """Return a set of features for every entity in a table list page."""
     lp_uri = lp_data['uri']
     sections = lp_data['sections']
 
@@ -229,6 +233,7 @@ def make_table_entity_features(lp_data: dict) -> list:
 
 
 def _compute_column_list_similarity(sim_func, listpage_uri, column_name):
+    """Return similarity value of column header and list page name."""
     listpage_name = list_util.listpage2name(listpage_uri)
     listpage_lemmas = {w.lemma_ for w in nlp_util.parse(listpage_name, disable_normalization=True)}
     column_name_lemmas = {w.lemma_ for w in nlp_util.parse(str(column_name))}
@@ -236,6 +241,7 @@ def _compute_column_list_similarity(sim_func, listpage_uri, column_name):
 
 
 def _is_hyper(word_a: str, word_b: str) -> bool:
+    """Return True, if there is any kind of hypernymy-relationship between the two words."""
     return hyper_util.is_hypernym(word_a, word_b) or hyper_util.is_hypernym(word_b, word_a)
 
 
@@ -261,6 +267,7 @@ def _assign_avg_and_std_to_feature_set(feature_set: dict, data: list, name: str)
 # COMPUTATION OF ENTITY LABELS
 
 def assign_entity_labels(graph, df: pd.DataFrame):
+    """Derive labels (1 for True, 0 for False, -1 for Undefined) for all entities in the data frame."""
     listpage_valid_resources = {}
     listpage_types = defaultdict(set)
 
@@ -276,6 +283,7 @@ def assign_entity_labels(graph, df: pd.DataFrame):
         for n in caligraph_nodes:
             listpage_types[listpage_uri].update(dbp_store.get_independent_types(graph.get_dbpedia_types(n)))
 
+    # assign positive and negative labels that are induced directly from the taxonomy
     df['label'] = df.apply(lambda row: _compute_label_for_entity(row['_listpage_uri'], row['_entity_uri'], listpage_valid_resources, listpage_types), axis=1)
 
     if util.get_config('list.extraction.use_negative_evidence_assumption'):
@@ -298,25 +306,17 @@ def _get_entry_id(df: pd.DataFrame, row: pd.Series) -> tuple:
 
 
 def _compute_label_for_entity(listpage_uri: str, entity_uri: str, lp_valid_resources: dict, lp_types: dict) -> int:
+    """Return a label for the entity based on links in the taxonomy graph."""
     entity_types = dbp_store.get_types(entity_uri)
-    if entity_uri in lp_valid_resources[listpage_uri]:# or entity_types.intersection(lp_types[listpage_uri]):
+    if entity_uri in lp_valid_resources[listpage_uri]:
         return 1
     if not dbp_store.is_possible_resource(entity_uri) or any(entity_types.intersection(dbp_heur.get_disjoint_types(t)) for t in lp_types[listpage_uri]):
         return 0
     return -1
 
 
-def _get_category_ancestors_for_list(listpage_uri: str) -> set:
-    categories = set()
-    cat_graph = cat_base.get_merged_graph()
-    mapped_categories = {x for cat in _get_categories_for_list(listpage_uri) for x in cat_graph.get_nodes_for_category(cat)}
-    ancestor_categories = {ancestor for cat in mapped_categories for ancestor in cat_graph.ancestors(cat)}
-    for cat in mapped_categories | ancestor_categories:
-        categories.update(cat_graph.get_categories(cat))
-    return categories
-
-
 def _get_category_descendants_for_list(listpage_uri: str) -> set:
+    """Return the category that is most closely related to the given list page as well as all of its children."""
     categories = set()
     cat_graph = cat_base.get_merged_graph()
     mapped_categories = {x for cat in _get_categories_for_list(listpage_uri) for x in cat_graph.get_nodes_for_category(cat)}
@@ -327,6 +327,7 @@ def _get_category_descendants_for_list(listpage_uri: str) -> set:
 
 
 def _get_categories_for_list(listpage_uri: str) -> set:
+    """Return category that is mapped to the list page."""
     return list_mapping.get_equivalent_categories(listpage_uri) | list_mapping.get_parent_categories(listpage_uri)
 
 

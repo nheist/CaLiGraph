@@ -1,3 +1,5 @@
+"""Functionality for parsing Wikipedia list pages from WikiText."""
+
 import wikitextparser as wtp
 from wikitextparser import WikiText
 from typing import Tuple, Optional
@@ -12,6 +14,7 @@ LIST_TYPE_ENUM, LIST_TYPE_TABLE, LIST_TYPE_NONE = 'list_type_enum', 'list_type_t
 
 
 def get_parsed_listpages() -> dict:
+    """Return parsed list pages as structured dictionary."""
     global __PARSED_LISTPAGES__
     if '__PARSED_LISTPAGES__' not in globals():
         __PARSED_LISTPAGES__ = util.load_or_create_cache('dbpedia_listpage_parsed', _compute_parsed_listpages)
@@ -24,6 +27,11 @@ def _compute_parsed_listpages() -> dict:
 
 
 def _parse_listpage(listpage_uri: str, listpage_markup: str) -> dict:
+    """Return a single parsed list page in the following hierarchical structure:
+
+    Sections > Entries > Entities (for enumeration list pages)
+    Sections > Tables > Rows > Entities (for table list pages)
+    """
     wiki_text = wtp.parse(listpage_markup)
     cleaned_wiki_text = _convert_special_enums(wiki_text)
 
@@ -40,6 +48,7 @@ def _parse_listpage(listpage_uri: str, listpage_markup: str) -> dict:
 
 
 def _convert_special_enums(wiki_text: WikiText) -> WikiText:
+    """Remove special templates used as enumerations from the text."""
     result = wiki_text.string
     enum_templates = [t for t in wiki_text.templates if t.name == 'columns-list']
     for et in enum_templates:
@@ -49,19 +58,18 @@ def _convert_special_enums(wiki_text: WikiText) -> WikiText:
 
 
 def _get_list_type(wiki_text: WikiText) -> str:
+    """Return layout type of the list page by counting whether we have more table rows or enumeration entries."""
     try:
         enum_entry_count = len([entry for enum in wiki_text.lists(pattern=r'\*+') for entry in enum.items])
         table_row_count = len([row for table in wiki_text.tables for row in table.data(span=False)])
 
         if not enum_entry_count and not table_row_count:
-            #util.get_logger().debug('LIST-PARSE: found list without concrete type: {}'.format(wiki_text))
             return LIST_TYPE_NONE
         elif enum_entry_count > table_row_count:
             return LIST_TYPE_ENUM
         else:
             return LIST_TYPE_TABLE
-    except RegexError as reg_err:
-        #util.get_logger().debug('LIST-PARSE: could not parse list due to exception "{}": {}'.format(reg_err, wiki_text))
+    except RegexError:
         return LIST_TYPE_NONE
 
 
@@ -174,7 +182,6 @@ def _remove_language_tag(link_target: str) -> str:
     if len(link_target) < 4 or link_target[3] != ':':
         return link_target[1:]
     return link_target[4:]
-
 
 
 def _remove_wikimarkup(wiki_text: WikiText) -> str:

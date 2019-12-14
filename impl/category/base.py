@@ -1,3 +1,5 @@
+"""Functionality to retrieve cached versions of the category graph in several stages."""
+
 from .graph import CategoryGraph
 import util
 

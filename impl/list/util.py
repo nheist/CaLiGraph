@@ -1,3 +1,5 @@
+"""Utilities to work with list pages and list categories."""
+
 import impl.dbpedia.util as dbp_util
 import impl.util.rdf as rdf_util
 

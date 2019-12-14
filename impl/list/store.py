@@ -1,3 +1,5 @@
+"""Functionality to retrieve everything list-related from DBpedia resources."""
+
 from . import util as list_util
 import impl.dbpedia.store as dbp_store
 import impl.dbpedia.util as dbp_util
@@ -9,6 +11,7 @@ import bz2
 
 
 def get_listpages() -> set:
+    """Return all list pages (with already resolved redirects)."""
     global __LISTPAGES__
     if '__LISTPAGES__' not in globals():
         __LISTPAGES__ = {dbp_store.resolve_redirect(lp) for lp in get_listpages_with_redirects() if list_util.is_listpage(dbp_store.resolve_redirect(lp))}
@@ -17,6 +20,7 @@ def get_listpages() -> set:
 
 
 def get_listpages_with_redirects() -> set:
+    """Return all list pages."""
     global __LISTPAGES_WITH_REDIRECTS__
     if '__LISTPAGES_WITH_REDIRECTS__' not in globals():
         initializer = lambda: {(res[:res.find('__')] if '__' in res else res) for res in dbp_store.get_raw_resources() if list_util.is_listpage(res)}
@@ -26,6 +30,7 @@ def get_listpages_with_redirects() -> set:
 
 
 def get_listcategories() -> set:
+    """Return all list categories (i.e. categories starting with 'Lists of')."""
     global __LISTCATEGORIES__
     if '__LISTCATEGORIES__' not in globals():
         __LISTCATEGORIES__ = {lc for lc in cat_store.get_categories() if list_util.is_listcategory(lc)}
@@ -34,6 +39,7 @@ def get_listcategories() -> set:
 
 
 def get_listpage_markup(listpage: str) -> str:
+    """Return the WikiText markup for the given list page."""
     global __LISTPAGE_MARKUP__
     if '__LISTPAGE_MARKUP__' not in globals():
         __LISTPAGE_MARKUP__ = defaultdict(lambda: '', util.load_or_create_cache('dbpedia_listpage_markup', _fetch_listpage_markup))
@@ -50,6 +56,7 @@ def _fetch_listpage_markup():
 
 
 class WikiListpageParser:
+    """Parse WikiText as stream and return content based on page markers (only for pages starting with 'List of')."""
     def __init__(self):
         self.processed_pages = 0
         self.list_markup = {}

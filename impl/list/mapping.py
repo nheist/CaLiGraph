@@ -1,3 +1,14 @@
+"""Mapping of listpages to the category-hierarchy
+
+A mapping can have one of two types:
+- Equivalence Mapping: The entities of the listpage are put directly into the mapped hierarchy item, if:
+  - the name of the list is equivalent to the name of a category
+  - every word in the list's name is synonymous to a word in the category's name (and vice versa) [reduce complexity?]
+- Child Mapping: The listpage is appended to the hierarchy as a child of an existing hierarchy item, if:
+  - the headlemmas of a parent category are synonyms/hypernyms of the headlemmas of the list
+  - the only parent of the list is root -> append it to root
+"""
+
 import impl.category.base as cat_base
 import impl.category.store as cat_store
 import impl.list.util as list_util
@@ -7,19 +18,6 @@ import impl.util.nlp as nlp_util
 import impl.util.hypernymy as hypernymy_util
 from collections import defaultdict
 import inflection
-
-
-"""Mapping of listpages to the category-hierarchy
-
-A mapping can have one of two types:
-- Equivalence Mapping: The entities of the listpage are put directly into the mapped hierarchy item, if:
-  - the name of the list is equivalent to the name of a category
-  - every word in the list's name is synonymous to a word in the category's name (and vice versa) [reduce complexity?]
-- Child Mapping: The listpage is appended to the hierarchy as a child of an existing hierarchy item, if:
-  - the headlemmas of a parent category are synonyms/hypernyms of the headlemmas of the list
-  - the only parent of the list is root and there exists a category that has the headlemma of the list as a name
-  - the only parent of the list is root -> append it to root
-"""
 
 
 def get_equivalent_categories(lst: str) -> set:
