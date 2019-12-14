@@ -1,3 +1,5 @@
+"""Serialization of statements into RDF triples."""
+
 import datetime
 import urllib.parse
 
@@ -11,6 +13,7 @@ LITERAL_ENCODED_CHARS = ['\\', '\'', '"']
 
 
 def as_literal_triple(sub: str, pred: str, obj) -> str:
+    """Serialize a triples as literal triple."""
     obj_type = type(obj)
     if obj_type == datetime.datetime:
         obj = obj.strftime('%Y-%m-%d')
@@ -20,6 +23,7 @@ def as_literal_triple(sub: str, pred: str, obj) -> str:
 
 
 def as_object_triple(sub: str, pred: str, obj: str) -> str:
+    """Serialize a triples as object triple."""
     return _as_triple(sub, pred, obj, TYPE_RESOURCE)
 
 

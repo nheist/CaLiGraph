@@ -1,3 +1,5 @@
+"""NLP methods mainly for the identification of head nouns of Wikipedia categories."""
+
 import spacy
 from spacy.tokens import Doc, Span
 import hashlib
@@ -5,7 +7,9 @@ import util
 import re
 import inflection
 
+
 SPACY_CACHE_ID = 'spacy_docs'
+
 
 # initialization
 parser = spacy.load('en_core_web_lg')
@@ -22,6 +26,7 @@ def without_stopwords(text: str) -> set:
 
 
 def get_canonical_name(text: str, disable_normalization=True) -> str:
+    """"Remove parts from the name that Wikipedia adds for organisational reasons (e.g. by-phrases or alphabetical splits)."""
     text = remove_by_phrase(parse(text, disable_normalization=disable_normalization), return_doc=False)  # remove by-phrase
     text = re.sub(r'\s*/[A-Za-z]+:\s*[A-Za-z](\s*[-–]\s*[A-Za-z])?$', '', text)  # remove trailing alphabetical splits with slash and type, e.g. 'Fellows of the Royal Society/name: A-C'
     text = re.sub(r'\s+\([^()]+[-–][^()]+\)$', '', text)  # remove trailing parentheses with number or letter ranges, e.g. 'Interstate roads (1-10)'
@@ -69,11 +74,6 @@ def get_head_lemmas(doc: Doc) -> set:
     return head_lemmas
 
 
-def get_lexical_head_words(doc: Doc) -> set:
-    doc = tag_lexical_head(doc)
-    return {w.lemma_ for w in doc if w.ent_type_ == 'LH' and not w.is_stop}
-
-
 def tag_lexical_head(doc: Doc) -> Doc:
     """Return `doc` where the lexical head is tagged as the entity 'LH'."""
 
@@ -106,6 +106,7 @@ def tag_lexical_head(doc: Doc) -> Doc:
 
 
 def singularize_phrase(doc: Doc) -> str:
+    """Return the singular form of the phrase by looking for head nouns and converting them to the singular form."""
     doc = tag_lexical_head(doc)
     result = doc.text
     for idx, w in enumerate(doc):
@@ -117,6 +118,7 @@ def singularize_phrase(doc: Doc) -> str:
 
 
 def parse(text: str, disable_normalization=False, skip_cache=False) -> Doc:
+    """Return the given text as a spaCy document."""
     if not disable_normalization and text:
         split_text = text.split(' ')
         if len(split_text) == 1 or (len(split_text) > 1 and not (text[1].isupper() or split_text[1].istitle())):
@@ -141,11 +143,13 @@ def parse(text: str, disable_normalization=False, skip_cache=False) -> Doc:
 
 
 def remove_parentheses_content(text: str) -> str:
+    """Remove all parentheses from the given text."""
     without_parentheses = re.sub(r'\([^()]*\)', '', text)
     return _regularize_whitespaces(without_parentheses)
 
 
 def _regularize_whitespaces(text: str) -> str:
+    """Merge multiple whitespaces into one and remove trailing commas."""
     result = re.sub(r'\s+', ' ', text).strip()
     result = result[:-1] if result.endswith(',') else result
     return result

@@ -9,11 +9,20 @@ import copy
 
 
 class HierarchyGraph(BaseGraph):
+    """An extension of the graph with methods to add, remove, and merge nodes.
+
+    Existing nodes can be merged into a new node. The existing nodes then become its 'parts'.
+    """
+
     # initialisations
     def __init__(self, graph: nx.DiGraph, root_node: str = None):
         super().__init__(graph, root_node)
         self._node_by_name = None
         self._nodes_by_part = defaultdict(set)
+
+    # node attribute definitions
+    ATTRIBUTE_NAME = 'attribute_name'
+    ATTRIBUTE_PARTS = 'attribute_parts'
 
     def copy(self):
         new_self = super().copy()
@@ -26,10 +35,6 @@ class HierarchyGraph(BaseGraph):
 
     def _reset_node_indices(self):
         self._node_by_name = None
-
-    # node attribute definitions
-    ATTRIBUTE_NAME = 'attribute_name'
-    ATTRIBUTE_PARTS = 'attribute_parts'
 
     def get_name(self, node: str) -> str:
         self._check_node_exists(node)
@@ -48,16 +53,19 @@ class HierarchyGraph(BaseGraph):
     # graph connectivity
 
     def remove_unconnected(self):
+        """Remove all nodes that are not connected to the root node."""
         valid_nodes = {self.root_node} | self.descendants(self.root_node)
         self._remove_all_nodes_except(valid_nodes)
         return self
 
     def append_unconnected(self):
+        """Make all unconnected nodes children of the root node."""
         unconnected_root_nodes = {node for node in self.nodes if not self.parents(node) and node != self.root_node}
         self._add_edges([(self.root_node, node) for node in unconnected_root_nodes])
         return self
 
     def resolve_cycles(self):
+        """Resolve cycles by removing cycle edges that point from a node with a higher depth to a node with a lower depth."""
         # remove all edges N1-->N2 of a cycle with depth(N1) > depth(N2)
         self._remove_cycle_edges_by_node_depth(lambda x, y: x > y)
         # remove all edges N1-->N2 of a cycle with depth(N1) >= depth(N2)
@@ -77,6 +85,7 @@ class HierarchyGraph(BaseGraph):
     # semantic connectivity
 
     def remove_unrelated_edges(self):
+        """Remove edges that connect nodes which have head nouns that are neither synonyms nor hypernyms."""
         valid_edges = set()
         node_to_headlemmas_mapping = {node: nlp_util.get_head_lemmas(nlp_util.parse(self.get_name(node))) for node in self.nodes}
         for parent, child in self.edges:
@@ -104,6 +113,11 @@ class HierarchyGraph(BaseGraph):
             self._nodes_by_part[part].add(node)
 
     def merge_nodes(self):
+        """Merges any two nodes that have the same canonical name.
+
+        A canonical name of a node is its name without any postfixes that Wikipedia appends for organisational purposes.
+        E.g., we remove by-phrases like in "Authors by name", and we remove alphabetical splits like in "Authors: A-C".
+        """
         nodes_containing_by = {node for node in self.nodes if '_by_' in node}
         nodes_canonical_names = {}
         for node in nodes_containing_by:
@@ -149,24 +163,6 @@ class HierarchyGraph(BaseGraph):
         nodes_to_merge = set(direct_merges) | set(catset_merges)
         all_merges = {node: direct_merges[node] | catset_merges[node] for node in nodes_to_merge}
 
-#        node_to_lexheadwords_mapping = {node: nlp_util.get_lexical_head_words(nlp_util.parse(self.get_name(node))) for node in self.nodes}
-#
-#        # find merge targets by looking for synonymous and hypernymous headlemmas of parents
-#        synonym_merges = defaultdict(set)
-#        hypernym_merges = defaultdict(set)
-#        for node in remaining_nodes_to_merge:
-#            for parent in self.parents(node):
-#                parent_lemmas = node_to_lexheadwords_mapping[parent]
-#                child_lemmas = node_to_lexheadwords_mapping[node]
-#                if all(any(hypernymy_util.is_synonym(pl, cl) for pl in parent_lemmas) for cl in child_lemmas):
-#                    synonym_merges[node].add(parent)
-#                elif all(any(hypernymy_util.is_hypernym(pl, cl) for pl in parent_lemmas) for cl in child_lemmas):
-#                    hypernym_merges[node].add(parent)
-#
-#        # conduct merge
-#        nodes_to_merge = set(synonym_merges) | set(hypernym_merges)
-#        all_merges = {node: synonym_merges[node] or hypernym_merges[node] for node in nodes_to_merge}
-
         iteration = 0
         while all_merges:
             independent_nodes = set(all_merges).difference({merge_target for mts in all_merges.values() for merge_target in mts})
@@ -188,5 +184,6 @@ class HierarchyGraph(BaseGraph):
         return self
 
     def remove_transitive_edges(self):
+        """Removes all transitive edges from the graph."""
         self._remove_all_edges_except(set(nx.transitive_reduction(self.graph).edges))
         return self

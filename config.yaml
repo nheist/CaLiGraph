@@ -92,17 +92,12 @@ files:
       url: 'http://downloads.dbpedia.org/2016-10/core-i18n/en/nif_context_en.ttl.bz2'
     maintenance_categories:
       filename: 'maintenance_categories.ttl.bz2'
-  wikidata:
-    resource_properties:
-      filename: 'wikidata_resource_properties.nt.bz2'
-      url: ~
-  webisalod:
-    instances:
-      filename: 'webisalod-instances.nq.gz'
-      url: 'http://data.dws.informatik.uni-mannheim.de/webisa/webisalod-instances.nq.gz'
-  evaluation:
-    catgraph_dbptypes:
-      filename: 'catgraph-dbptype_labels.csv'
+    wikipedia_hypernyms:
+      filename: 'wiki_hypernyms_lemmas.p'
+      url: 'http://data.dws.informatik.uni-mannheim.de/CaLiGraph/data/wiki_hypernyms_lemmas.p'
+    webisalod_hypernyms:
+      filename: 'webisalod_hypernyms.p'
+      url: 'http://data.dws.informatik.uni-mannheim.de/CaLiGraph/data/webisalod_hypernyms.p'
 
 results:
   catgraph:

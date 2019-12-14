@@ -1,22 +1,24 @@
+"""Compute hypernyms with methods similar to Ponzetto & Strube: Deriving a large scale taxonomy from Wikipedia."""
+
 from nltk.corpus import wordnet
 from typing import Set
 from collections import defaultdict
 import util
+import bz2
 import pickle
 import impl.category.cat2ax as cat_axioms
 import impl.category.nlp as cat_nlp
 import impl.util.nlp as nlp_util
 
 
-"""Compute hypernyms with similiar methods as Ponzetto et al.: Wikitaxonomy"""
-
-
+# thresholds of individual sources
 THRESHOLD_AXIOM = 10
 THRESHOLD_WIKI = 100
 THRESHOLD_WEBISALOD = .4
 
 
 def is_hypernym(hyper_word: str, hypo_word: str) -> bool:
+    """Returns True, if `hyper_word` and `hypo_word` are synonyms or if the former is a hypernym of the latter."""
     global __WIKITAXONOMY_HYPERNYMS__
     if '__WIKITAXONOMY_HYPERNYMS__' not in globals():
         __WIKITAXONOMY_HYPERNYMS__ = util.load_cache('wikitaxonomy_hypernyms')
@@ -29,6 +31,7 @@ def is_hypernym(hyper_word: str, hypo_word: str) -> bool:
 
 
 def phrases_are_synonymous(phrase_a: set, phrase_b: set) -> bool:
+    """Returns True, if the phrases consist of synonymous pairs of words (i.e. there is a synonym for every word)."""
     if len(phrase_a) == len(phrase_b):
         if phrase_a == phrase_b:
             return True
@@ -36,6 +39,7 @@ def phrases_are_synonymous(phrase_a: set, phrase_b: set) -> bool:
 
 
 def is_synonym(word: str, another_word: str) -> bool:
+    """Returns True, if the words are synonyms."""
     if word == another_word:
         return True
     if (word[0].isupper() or another_word[0].isupper()) and (word.lower().startswith(another_word.lower()) or another_word.lower().startswith(word.lower())):
@@ -45,25 +49,29 @@ def is_synonym(word: str, another_word: str) -> bool:
 
 
 def get_synonyms(word: str) -> set:
+    """Returns all synonyms of a word from WordNet."""
     return {lm.name() for syn in wordnet.synsets(word) for lm in syn.lemmas()}
 
 
 def compute_hypernyms(category_graph) -> dict:
+    """Retrieves all hypernym relationships from the three sources (Wiki corpus, WebIsALOD, Category axioms)."""
     hypernyms = defaultdict(set)
 
+    # collect hypernyms from axiom matches between Wikipedia categories
     axiom_hypernyms = defaultdict(lambda: defaultdict(lambda: 0))
     for parent, child in _get_axiom_edges(category_graph):
         for cl in _get_headlemmas(child):
             for pl in _get_headlemmas(parent):
                 axiom_hypernyms[cl][pl] += 1
 
-    wiki_hypernyms = pickle.load(open('data_surface_forms/wiki_hypernyms_lemmas.p', mode='rb'))  # TODO: integrate
-
-    webisalod_data = pickle.load(open('data_caligraph/webisalod_hypernyms.p', mode='rb'))  # TODO: integrate
+    # load remaining hypernyms
+    wiki_hypernyms = pickle.load(bz2.open(util.get_data_file('files.dbpedia.wikipedia_hypernyms'), mode='rb'))
+    webisalod_data = pickle.load(bz2.open(util.get_data_file('files.dbpedia.webisalod_hypernyms'), mode='rb'))
     webisalod_hypernyms = defaultdict(dict)
     for parent, child, conf in webisalod_data:
         webisalod_hypernyms[child][parent] = conf
 
+    # merge hypernyms
     candidates = set(axiom_hypernyms) | set(wiki_hypernyms) | set(webisalod_hypernyms)
     for candidate in candidates:
         hyper_count = defaultdict(lambda: 0)
@@ -85,6 +93,7 @@ def compute_hypernyms(category_graph) -> dict:
 
 
 def _get_axiom_edges(category_graph) -> Set[tuple]:
+    """Return all edges that are confirmed by axioms (i.e. the child axiom implies the parent axiom."""
     valid_axiom_edges = set()
     for parent in category_graph.nodes:
         parent_axioms = cat_axioms.get_axioms(parent)
@@ -97,6 +106,7 @@ def _get_axiom_edges(category_graph) -> Set[tuple]:
 
 
 def _get_headlemmas(category: str) -> set:
+    """Cache head lemmas of categories for multiple use."""
     global __WIKITAXONOMY_CATEGORY_LEMMAS__
     if '__WIKITAXONOMY_CATEGORY_LEMMAS__' not in globals():
         __WIKITAXONOMY_CATEGORY_LEMMAS__ = {}

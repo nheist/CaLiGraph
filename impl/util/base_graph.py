@@ -1,11 +1,12 @@
 import networkx as nx
-import numpy as np
 from collections import defaultdict
 import copy
 from typing import Iterator
 
 
 class BaseGraph:
+    """A simple graph with nodes and edges."""
+
     def __init__(self, graph: nx.DiGraph, root_node: str = None):
         self.graph = graph
         self.root_node = root_node
@@ -33,7 +34,10 @@ class BaseGraph:
         self._remove_nodes(self.nodes.difference(valid_nodes))
 
     def _reset_node_indices(self):
-        pass  # Triggered when anything changes in the node structure. Should be overriden by subclasses to clean up any outdated node indices.
+        """This method is triggered when anything changes in the node structure.
+        Should be overridden by subclasses to clean up any outdated node indices.
+        """
+        pass
 
     @property
     def edges(self) -> set:
@@ -52,7 +56,10 @@ class BaseGraph:
         self._remove_edges(invalid_edges)
 
     def _reset_edge_indices(self):
-        pass  # Triggered when anything changes in the edge structure. Should be overriden by subclasses to clean up any outdated edge indices.
+        """This method is triggered when anything changes in the node structure.
+        Should be overridden by subclasses to clean up any outdated edge indices.
+        """
+        pass
 
     def parents(self, node: str) -> set:
         return set(self.graph.predecessors(node)) if self.graph.has_node(node) else set()
@@ -67,12 +74,14 @@ class BaseGraph:
         return set(nx.descendants(self.graph, node)) if self.graph.has_node(node) else set()
 
     def depth(self, node: str) -> int:
+        """Returns the length of the shortest path from a given node to the root node (or -1 if none exists)."""
         try:
             return nx.shortest_path_length(self.graph, source=self.root_node, target=node)
         except nx.NetworkXNoPath:
             return -1
 
     def depths(self) -> dict:
+        """Returns the lengths of the shortest path from all nodes of the graph to the root node."""
         return defaultdict(lambda: -1, nx.shortest_path_length(self.graph, source=self.root_node))
 
     def _get_attr(self, node, attr):
@@ -118,17 +127,3 @@ class BaseGraph:
             visited_nodes.add(node)
             node_queue.extend(self.parents(node))
             yield node
-
-    @property
-    def statistics(self) -> str:
-        type_count = len(self.nodes)
-        edge_count = len(self.edges)
-        avg_degree = np.mean([d for _, d in self.graph.in_degree])
-
-        return '\n'.join([
-            '{:^40}'.format('STATISTICS'),
-            '=' * 40,
-            '{:<30} | {:>7}'.format('nodes', type_count),
-            '{:<30} | {:>7}'.format('edges', edge_count),
-            '{:<30} | {:>7.2f}'.format('degree', avg_degree),
-            ])

@@ -1,4 +1,4 @@
-"""Functionality for handling RDF (parsing, conversion, formatting)"""
+"""Functionality for handling RDF (parsing, conversion, formatting)."""
 
 from collections import namedtuple
 import bz2
@@ -52,11 +52,8 @@ def get_literal_value(literal_string: str) -> str:
     return literal_string[string_start:string_end]
 
 
-def format_object_triple(sub, pred, obj):
-    return '<{}> <{}> <{}> .\n'.format(sub, pred, obj)
-
-
 def parse_triples_from_file(filepath: str) -> Iterator[Triple]:
+    """Parse triples from file using a regular expression that is only guaranteed to work for DBpedia files."""
     object_pattern = re.compile(b'\<(.*)\> \<(.*)\> \<(.*)\> \.\\n')
     literal_pattern = re.compile(b'\<(.*)\> \<(.*)\> "(.*)"(?:\^\^.*|@en.*)? \.\\n')
 
@@ -75,6 +72,7 @@ def parse_triples_from_file(filepath: str) -> Iterator[Triple]:
 
 
 def create_set_from_rdf(filepaths: list, valid_pred: str, valid_obj: str) -> set:
+    """Create a set of its subjects from a given triple file."""
     data_set = set()
     for fp in filepaths:
         for sub, pred, obj in parse_triples_from_file(fp):
@@ -84,6 +82,7 @@ def create_set_from_rdf(filepaths: list, valid_pred: str, valid_obj: str) -> set
 
 
 def create_multi_val_dict_from_rdf(filepaths: list, valid_pred: str, reverse_key=False, reflexive=False) -> dict:
+    """Create a key-value dict from a given triple file."""
     data_dict = defaultdict(set)
     for fp in filepaths:
         for sub, pred, obj in parse_triples_from_file(fp):
@@ -96,6 +95,7 @@ def create_multi_val_dict_from_rdf(filepaths: list, valid_pred: str, reverse_key
 
 
 def create_multi_val_freq_dict_from_rdf(filepaths: list, valid_pred: str, reverse_key=False) -> dict:
+    """Create a key-value dict with frequencies from a given triple file."""
     data_dict = defaultdict(functools.partial(defaultdict, float))
     for fp in filepaths:
         for sub, pred, obj in parse_triples_from_file(fp):
@@ -111,6 +111,7 @@ def create_multi_val_freq_dict_from_rdf(filepaths: list, valid_pred: str, revers
 
 
 def create_single_val_dict_from_rdf(filepaths: list, valid_pred: str, reverse_key=False, reflexive=False) -> dict:
+    """Create a key-value mapping from a given triple file."""
     data_dict = {}
     for fp in filepaths:
         for sub, pred, obj in parse_triples_from_file(fp):
@@ -123,6 +124,7 @@ def create_single_val_dict_from_rdf(filepaths: list, valid_pred: str, reverse_ke
 
 
 def create_dict_from_rdf(filepaths: list, valid_predicates: set = None, reverse_key=False) -> dict:
+    """Create a two-dimensional dict from a given triple file."""
     data_dict = defaultdict(functools.partial(defaultdict, set))
     for fp in filepaths:
         for sub, pred, obj in parse_triples_from_file(fp):
@@ -132,6 +134,7 @@ def create_dict_from_rdf(filepaths: list, valid_predicates: set = None, reverse_
 
 
 def create_count_dict(iterables) -> dict:
+    """Create a count dict from a given triple file."""
     count_dict = defaultdict(int)
     for i in iterables:
         for entry in i:
