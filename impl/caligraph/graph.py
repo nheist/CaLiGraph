@@ -23,7 +23,8 @@ from typing import Optional
 
 
 class CaLiGraph(HierarchyGraph):
-
+    """A graph of categories and lists that is enriched with resources extract from list pages."""
+    # initialisations
     def __init__(self, graph: nx.DiGraph, root_node: str = None):
         super().__init__(graph, root_node or rdf_util.CLASS_OWL_THING)
         self._node_dbpedia_types = defaultdict(set)
@@ -50,6 +51,7 @@ class CaLiGraph(HierarchyGraph):
         self._node_resource_stats = defaultdict(dict)
 
     def get_label(self, item: str) -> Optional[str]:
+        """Return the label of a CaLiGraph type or resource."""
         if cali_util.is_clg_type(item):
             return cali_util.clg_type2name(item)
         if cali_util.is_clg_resource(item):
@@ -59,6 +61,7 @@ class CaLiGraph(HierarchyGraph):
         return None
 
     def get_resources(self, node: str) -> set:
+        """Return all resources of a node."""
         if node not in self._node_resources:
             direct_dbp_types = {t for t in self.get_parts(node) if dbp_util.is_dbp_type(t)}
             disjoint_dbp_types = {dt for t in self.get_dbpedia_types(node) for dt in dbp_heur.get_disjoint_types(t)}
@@ -68,11 +71,13 @@ class CaLiGraph(HierarchyGraph):
         return self._node_resources[node]
 
     def get_all_resources(self) -> set:
+        """Return all resources contained in the graph."""
         if not self._all_node_resources:
             self._all_node_resources = {r for n in self.nodes for r in self.get_resources(n)}
         return self._all_node_resources
 
     def get_nodes_for_resource(self, resource: str) -> set:
+        """Return all nodes the resource is contained in."""
         if not self._resource_nodes:
             for node in self.nodes:
                 for r in self.get_resources(node):
@@ -80,6 +85,7 @@ class CaLiGraph(HierarchyGraph):
         return self._resource_nodes[resource]
 
     def get_direct_dbpedia_resources(self, node: str, use_listpage_resources=True) -> set:
+        """Return all DBpedia resources associated with the node (or its parts)."""
         resources = set()
         for part in self.get_parts(node):
             if cat_util.is_category(part):
@@ -91,6 +97,7 @@ class CaLiGraph(HierarchyGraph):
         return resources
 
     def get_resource_provenance(self, resource: str) -> set:
+        """Return provenance information of a resource (i.e. which categories and lists have been used to extract it)."""
         if not self._resource_provenance:
             for node in self.nodes:
                 for part in self.get_parts(node):
@@ -103,6 +110,7 @@ class CaLiGraph(HierarchyGraph):
         return self._resource_provenance[resource]
 
     def get_dbpedia_types(self, node: str, force_recompute=False) -> set:
+        """Return all mapped DBpedia types of a node."""
         if node not in self._node_dbpedia_types or force_recompute:
             node_types = {p for p in self.get_parts(node) if dbp_util.is_dbp_type(p)}
             parent_types = {t for parent in self.parents(node) for t in self.get_dbpedia_types(parent)}
@@ -110,6 +118,7 @@ class CaLiGraph(HierarchyGraph):
         return self._node_dbpedia_types[node]
 
     def get_property_frequencies(self, node: str) -> dict:
+        """Return property frequencies for a given node."""
         resource_stats = self.get_resource_stats(node)
         resource_count = resource_stats['resource_count']
         if resource_count < 5:
@@ -118,14 +127,10 @@ class CaLiGraph(HierarchyGraph):
         else:
             property_counts = resource_stats['property_counts']
 
-        #predicate_counts = defaultdict(int)
-        #for (pred, _), cnt in property_counts.items():
-        #    predicate_counts[pred] += cnt
-        #return {p: count / predicate_counts[p[0]] for p, count in property_counts.items()}
-
         return {p: count / resource_count for p, count in property_counts.items()}
 
     def get_resource_stats(self, node: str) -> dict:
+        """Return resource stats of a node (i.e. resource count and property count)."""
         if node not in self._node_resource_stats:
             resource_count = 0
             new_resource_count = 0
@@ -163,15 +168,18 @@ class CaLiGraph(HierarchyGraph):
         return self._node_resource_stats[node]
 
     def get_axioms(self, node: str, transitive=True) -> set:
+        """Return all axioms (from CaLi2Ax) for a given node."""
         if node not in self._node_axioms_transitive:
             self._node_axioms_transitive[node] = self._node_axioms[node] | {ax for p in self.parents(node) for ax in self.get_axioms(p)}
         return self._node_axioms_transitive[node] if transitive else self._node_axioms[node]
 
     def get_all_properties(self):
+        """Return all properties used in CaLiGraph."""
         return {p for axioms in self._node_axioms.values() for p, _ in axioms}
 
     @property
     def statistics(self) -> str:
+        """Return statistics of CaLiGraph in a printable format."""
         leaf_nodes = {node for node in self.nodes if not self.children(node)}
         node_depths = self.depths()
 
@@ -222,6 +230,7 @@ class CaLiGraph(HierarchyGraph):
 
     @classmethod
     def build_graph(cls):
+        """Initialise the graph by merging the category graph and the list graph."""
         util.get_logger().info('CaLiGraph: Starting to merge CategoryGraph and ListGraph..')
         graph = CaLiGraph(nx.DiGraph())
 
@@ -300,6 +309,7 @@ class CaLiGraph(HierarchyGraph):
         return graph
 
     def _add_category_to_graph(self, category: str, category_name: str, cat_graph: CategoryGraph) -> str:
+        """Add a category as new node to the graph."""
         node_id = self._convert_to_clg_type(category_name)
         node_parts = cat_graph.get_parts(category)
         if self.has_node(node_id):
@@ -313,6 +323,7 @@ class CaLiGraph(HierarchyGraph):
         return node_id
 
     def _add_list_to_graph(self, lst: str, lst_name: str, list_graph: ListGraph) -> str:
+        """Add a list as new node to the graph."""
         node_id = self._convert_to_clg_type(lst_name, disable_normalization=False)
         if not self.has_node(node_id):
             node_id = self._convert_to_clg_type(lst_name, disable_normalization=True)
@@ -341,15 +352,18 @@ class CaLiGraph(HierarchyGraph):
 
     @staticmethod
     def _get_canonical_name(name: str, disable_normalization=False) -> str:
+        """Convert a name into the canonical format (c.f. `get_canonical_name` in nlp_util)."""
         name = name[4:] if name.startswith('the ') else name
         return nlp_util.get_canonical_name(name, disable_normalization=disable_normalization)
 
     @classmethod
     def _convert_to_clg_type(cls, caligraph_name: str, disable_normalization=False) -> str:
+        """Convert a name into a CaLiGraph type URI."""
         caligraph_name = nlp_util.singularize_phrase(nlp_util.parse(caligraph_name, disable_normalization=disable_normalization))
         return cali_util.name2clg_type(caligraph_name)
 
     def merge_ontology(self, use_listpage_resources: bool):
+        """Combine the category-list-graph with the DBpedia ontology."""
         # compute mapping from caligraph-nodes to dbpedia-types
         node_to_dbp_types_mapping = cali_mapping.find_mappings(self, use_listpage_resources)
 
@@ -383,6 +397,7 @@ class CaLiGraph(HierarchyGraph):
         return self
 
     def _add_dbp_type_to_graph(self, dbp_type: str) -> str:
+        """Add a DBpedia type as node to the graph."""
         name = dbp_store.get_label(dbp_type)
         node_id = cali_util.name2clg_type(name)
         node_parts = dbp_store.get_equivalent_types(dbp_type)
@@ -397,6 +412,7 @@ class CaLiGraph(HierarchyGraph):
         return node_id
 
     def compute_axioms(self):
+        """Compute axioms for all nodes in the graph."""
         for node, axioms in cali_axioms.extract_axioms(self).items():
             for ax in axioms:
                 prop = cali_util.dbp_type2clg_type(ax[1])

@@ -1,3 +1,5 @@
+"""Functionality to serialize the individual parts of CaLiGraph."""
+
 import util
 import impl.dbpedia.store as dbp_store
 import impl.dbpedia.util as dbp_util
@@ -10,6 +12,7 @@ from collections import defaultdict
 
 
 def serialize_graph(graph):
+    """Serialize the complete graph as individual files."""
     _write_lines_to_file(_get_lines_metadata(graph), 'results.caligraph.metadata')
     _write_lines_to_file(_get_lines_ontology(graph), 'results.caligraph.ontology')
     _write_lines_to_file(_get_lines_ontology_dbpedia_mapping(graph), 'results.caligraph.ontology_dbpedia-mapping')
@@ -33,6 +36,7 @@ def _write_lines_to_file(lines: list, filepath_config: str):
 
 
 def _get_lines_metadata(graph) -> list:
+    """Serialize metadata."""
     void_resource = 'http://caligraph.org/.well-known/void'
     description = 'The CaLiGraph is a large-scale general-purpose knowledge graph that extends DBpedia with a more fine-grained and restrictive ontology as well as additional resources extracted from Wikipedia Listpages.'
     entity_count = len(graph.get_all_resources())
@@ -62,6 +66,7 @@ def _get_lines_metadata(graph) -> list:
 
 
 def _get_lines_ontology(graph) -> list:
+    """Serialize the ontology."""
     lines_ontology = []
     # metadata
     ontology_resource = 'http://caligraph.org/ontology'
@@ -102,6 +107,7 @@ def _get_creation_date() -> datetime.datetime:
 
 
 def _serialize_restriction(class_iri: str, prop_iri: str, val: str, restriction_is_defined: bool) -> list:
+    """Serialize the restrictions (i.e. relation axioms)."""
     prop_id = prop_iri[len(cali_util.NAMESPACE_CLG_ONTOLOGY):]
     val_id = val[len(cali_util.NAMESPACE_CLG_RESOURCE):] if cali_util.is_clg_resource(val) else val
     restriction_iri = f'{cali_util.NAMESPACE_CLG_ONTOLOGY}RestrictionHasValue_{prop_id}_{val_id}'
@@ -124,6 +130,7 @@ def _serialize_restriction(class_iri: str, prop_iri: str, val: str, restriction_
 
 
 def _get_lines_ontology_dbpedia_mapping(graph) -> list:
+    """Serialize the DBpedia mapping for types and predicates."""
     lines_ontology_dbpedia_mapping = []
     for node in graph.traverse_topdown():
         if node == rdf_util.CLASS_OWL_THING:
@@ -137,6 +144,7 @@ def _get_lines_ontology_dbpedia_mapping(graph) -> list:
 
 
 def _get_lines_ontology_provenance(graph) -> list:
+    """Serialize provenance information of the ontology."""
     lines_ontology_provenance = []
     for node in graph.traverse_topdown():
         if node == rdf_util.CLASS_OWL_THING:
@@ -147,6 +155,7 @@ def _get_lines_ontology_provenance(graph) -> list:
 
 
 def _get_lines_instances_types(graph) -> list:
+    """Serialize types of resources."""
     lines_instances_types = []
 
     caligraph_ancestors = defaultdict(set)
@@ -164,6 +173,7 @@ def _get_lines_instances_types(graph) -> list:
 
 
 def _get_lines_instances_transitive_types(graph) -> list:
+    """Serialize transitive types of resources."""
     lines_instances_transitive_types = []
     for res in graph.get_all_resources():
         direct_types = graph.get_nodes_for_resource(res)
@@ -173,6 +183,7 @@ def _get_lines_instances_transitive_types(graph) -> list:
 
 
 def _get_lines_instances_labels(graph) -> list:
+    """Serialize resource labels."""
     lines_instances_labels = []
     axiom_resources = {ax[1] for n in graph.nodes for ax in graph.get_axioms(n, transitive=False) if cali_util.is_clg_resource(ax[1])}
     for res in graph.get_all_resources() | axiom_resources:
@@ -183,6 +194,7 @@ def _get_lines_instances_labels(graph) -> list:
 
 
 def _get_lines_instances_relations(graph) -> list:
+    """Serialize resource facts."""
     lines_instances_relations = []
     instance_relations = set()
     for node in graph.nodes:
@@ -197,6 +209,7 @@ def _get_lines_instances_relations(graph) -> list:
 
 
 def _get_lines_instances_dbpedia_mapping(graph) -> list:
+    """Serialize DBpedia mapping for resources."""
     lines_instances_dbpedia_mapping = []
     axiom_resources = {ax[1] for n in graph.nodes for ax in graph.get_axioms(n, transitive=False) if cali_util.is_clg_resource(ax[1])}
     for res in graph.get_all_resources() | axiom_resources:
@@ -207,6 +220,7 @@ def _get_lines_instances_dbpedia_mapping(graph) -> list:
 
 
 def _get_lines_instances_provenance(graph) -> list:
+    """Serialize provenance information for resources."""
     lines_instances_provenance = []
     for res in graph.get_all_resources():
         provenance_data = {dbp_util.dbp_resource2wikipedia_resource(p) for p in graph.get_resource_provenance(res)}
@@ -215,6 +229,7 @@ def _get_lines_instances_provenance(graph) -> list:
 
 
 def _get_lines_dbpedia_instances(graph) -> list:
+    """Serialize new DBpedia resources in DBpedia namespace."""
     lines_dbpedia_instances = []
     new_instances = {cali_util.clg_resource2dbp_resource(res) for res in graph.get_all_resources()}.difference(dbp_store.get_resources())
     for inst in new_instances:
@@ -226,6 +241,7 @@ def _get_lines_dbpedia_instances(graph) -> list:
 
 
 def _get_lines_dbpedia_instance_types(graph) -> list:
+    """Serialize new types for DBpedia resources in DBpedia namespace."""
     new_dbpedia_types = defaultdict(set)
     for node in graph.nodes:
         node_types = graph.get_dbpedia_types(node, force_recompute=True)
@@ -240,6 +256,7 @@ def _get_lines_dbpedia_instance_types(graph) -> list:
 
 
 def _get_lines_dbpedia_instance_relations(graph) -> list:
+    """Serialize new facts for DBpedia resources in DBpedia namespace."""
     new_instance_relations = set()
     for node in graph.nodes:
         for prop, val in graph.get_axioms(node):

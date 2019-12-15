@@ -1,3 +1,5 @@
+"""Mapping of the category-list graph to DBpedia types (including resolution of disjointnesses that are created)."""
+
 import impl.util.nlp as nlp_util
 import impl.dbpedia.store as dbp_store
 import impl.dbpedia.util as dbp_util
@@ -8,6 +10,7 @@ import util
 
 
 def find_mappings(graph, use_listpage_resources: bool) -> dict:
+    """Return mappings from nodes in `graph` to DBpedia types retrieved from axioms of the Cat2Ax approach."""
     mappings = {node: _find_dbpedia_parents(graph, use_listpage_resources, node) for node in graph.nodes}
 
     # apply complete transitivity to the graph in order to discover disjointnesses
@@ -41,6 +44,7 @@ def find_mappings(graph, use_listpage_resources: bool) -> dict:
 
 
 def resolve_disjointnesses(graph, use_listpage_resources: bool):
+    """Resolve violations of disjointness axioms that are created through the mapping to DBpedia types."""
     for node in graph.traverse_topdown():
         parents = graph.parents(node)
         coherent_type_sets = _find_coherent_type_sets({t: 1 for t in graph.get_dbpedia_types(node, force_recompute=True)})
@@ -69,6 +73,10 @@ def resolve_disjointnesses(graph, use_listpage_resources: bool):
 
 
 def _find_dbpedia_parents(graph, use_listpage_resources: bool, node: str) -> dict:
+    """Retrieve DBpedia types that can be used as parents for `node` based on axioms discovered for it.
+
+    If `use_listpage_resources` is True, the resources that are extracted from list pages are also taken into account.
+    """
     type_lexicalisation_scores = defaultdict(lambda: 0.1, _compute_type_lexicalisation_scores(graph, node))
     type_resource_scores = defaultdict(lambda: 0.0, _compute_type_resource_scores(graph, node, use_listpage_resources))
 
@@ -104,6 +112,7 @@ def _compute_type_resource_scores(graph, node: str, use_listpage_resources: bool
 
 
 def _find_coherent_type_sets(dbp_types: dict) -> list:
+    """Find biggest subset of types in `dbp_types` that does not violate any disjointness axioms."""
     coherent_sets = []
     disjoint_type_mapping = {t: set(dbp_types).intersection(dbp_heur.get_disjoint_types(t)) for t in dbp_types}
     for t, score in dbp_types.items():
@@ -134,6 +143,7 @@ def _find_coherent_type_sets(dbp_types: dict) -> list:
 
 
 def _remove_types_from_mapping(graph, mappings: dict, node: str, types_to_remove: set):
+    """Remove `types_to_remove` from a mapping for a node in order to resolve disjointnesses."""
     types_to_remove = {tt for t in types_to_remove for tt in dbp_store.get_transitive_subtype_closure(t)}
 
     node_closure = {node} | graph.descendants(node)

@@ -7,6 +7,7 @@ import util
 
 
 def get_base_graph() -> CaLiGraph:
+    """Retrieve graph created from categories and lists."""
     global __BASE_GRAPH__
     if '__BASE_GRAPH__' not in globals():
         initializer = lambda: CaLiGraph.build_graph().resolve_cycles().append_unconnected()
@@ -15,6 +16,7 @@ def get_base_graph() -> CaLiGraph:
 
 
 def get_merged_ontology_graph() -> CaLiGraph:
+    """Retrieve base graph joined with DBpedia ontology."""
     global __MERGED_ONTOLOGY_GRAPH__
     if '__MERGED_ONTOLOGY_GRAPH__' not in globals():
         initializer = lambda: get_base_graph().copy().merge_ontology(False).resolve_cycles().append_unconnected()
@@ -23,6 +25,7 @@ def get_merged_ontology_graph() -> CaLiGraph:
 
 
 def get_filtered_graph() -> CaLiGraph:
+    """Retrieve initial CaLiGraph (with resources extracted from list pages)."""
     global __FILTERED_GRAPH__
     if '__FILTERED_GRAPH__' not in globals():
         # first make sure that resources have already been extracted using the merged ontology graph
@@ -34,6 +37,7 @@ def get_filtered_graph() -> CaLiGraph:
 
 
 def get_axiom_graph() -> CaLiGraph:
+    """Retrieve CaLiGraph enriched with axioms from the Cat2Ax approach."""
     global __AXIOM_GRAPH__
     if '__AXIOM_GRAPH__' not in globals():
         initializer = lambda: get_filtered_graph().compute_axioms().remove_transitive_edges()
@@ -42,5 +46,6 @@ def get_axiom_graph() -> CaLiGraph:
 
 
 def serialize_final_graph():
+    """Serialize the final CaLiGraph."""
     graph = get_axiom_graph()
     cali_serialize.serialize_graph(graph)

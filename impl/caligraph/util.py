@@ -1,3 +1,5 @@
+"""Utilities to work with CaLiGraph resources, types, and predicates."""
+
 import util
 import impl.dbpedia.util as dbp_util
 
