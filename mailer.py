@@ -1,3 +1,5 @@
+"""Mailer to inform about success or failure of the extraction."""
+
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText

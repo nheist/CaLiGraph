@@ -1,3 +1,9 @@
+"""Extraction of type lexicalisations from the Wikipedia corpus.
+
+The resulting cache file is already placed at `data/cache/dbpedia-type-lexicalisations_v1.p.bz2`
+but can be recomputed with this script.
+"""
+
 import util
 from typing import Tuple
 import re

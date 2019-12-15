@@ -1,3 +1,4 @@
+# -- CALIGRAPH CONFIGURATION --
 caligraph:
   version: '1.0'
   creation_date: '2019-10-01'
@@ -13,21 +14,25 @@ list:
 cat2ax:
   pattern_confidence: 0.05
 
-
+# -- LOGGING CONFIGURATION --
 logging:
   level: 'DEBUG'
   to_file: True
-  filename: 'caligraph_v12'
+  filename: 'caligraph_v1'
 
+# -- ERROR-MAILER CONFIGURATION --
+# -> add information about your mail accounts here and enable the `success` or `error` switches
+#    if you want to receive information about success or failure of the extraction by mail. <-
 mailer:
-  sender: 'errors.nheist@gmail.com'
-  password: 'Asdf1234!'
-  receiver: 'nico.heist@gmail.com'
+  sender: ~
+  password: ~
+  receiver: ~
   subject: 'CaLiGraph | '
   enable:
-    success: True
-    error: True
+    success: False
+    error: False
 
+# -- SOURCE FILE CONFIGURATION --
 files:
   dbpedia:
     pages:
@@ -90,14 +95,8 @@ files:
       filename: 'webisalod_hypernyms.p'
       url: 'http://data.dws.informatik.uni-mannheim.de/CaLiGraph/data/webisalod_hypernyms.p'
 
+# -- RESULT FILE CONFIGURATION --
 results:
-  catgraph:
-    dbp_type_sample: 'dbp-type-sample.csv'
-  cat2ax:
-    relation_axioms: 'cat2ax_relation-axioms.csv'
-    type_axioms: 'cat2ax_type-axioms.csv'
-    relation_assertions: 'cat2ax_relation-assertions.csv'
-    type_assertions: 'cat2ax_type-assertions.csv'
   caligraph:
     metadata: 'caligraph-metadata.nt.bz2'  # void description
     ontology: 'caligraph-ontology.nt.bz2'  # class hierarchy, labels
@@ -114,62 +113,56 @@ results:
     dbpedia_instance-types: 'dbpedia_caligraph-types.nt.bz2'  # new dbpedia types found through CaLiGraph
     dbpedia_instance-relations: 'dbpedia_caligraph-relations.nt.bz2'  #  new dbpedia relations found through CaLiGraph
 
+# -- CACHE FILE CONFIGURATION --
 cache:
-  # version 2: added resource types from sdtyped + lhd
-  # version 5: complete new run for fresh caligraph
-  # version 6: new extraction with improved headlemma matching
-  # version 7: recomputation due to improved disjointnesses, subtypes, headlemmas
-  # version 8: recomputation due to some minor improvements
-  # version 10: bunch of small fixes; better restrictions; well formatted labels
-  # version 11: military book bugfix; small fixes
   catgraph_conceptual:
     filename: 'catgraph-conceptual'
-    version: 11  # v2: do not remove unconnected nodes initially ; v3: better synonym matching
+    version: 1
   catgraph_wikitaxonomy:
     filename: 'catgraph-wikitaxonomy'
-    version: 11  # v2: do not remove unconnected nodes initially ; v3: better synonym matching
+    version: 1
   catgraph_cyclefree:
     filename: 'catgraph-cyclefree'
-    version: 11  # v2: do not remove unconnected nodes initially ; v3: better synonym matching
+    version: 1
   catgraph_merged:
     filename: 'catgraph-merged'
-    version: 11  # v2: do not remove unconnected nodes initially ; v3: better synonym matching
+    version: 1
   listgraph_base:
     filename: 'listgraph-base'
-    version: 11  # v2: better synonym matching ; v3: with all listpages
+    version: 1
   listgraph_wikitaxonomy:
     filename: 'listgraph-wikitaxonomy'
-    version: 11  # v2: better synonym matching ; v3: with all listpages
+    version: 1
   listgraph_cyclefree:
     filename: 'listgraph-cyclefree'
-    version: 11  # v2: better synonym matching ; v3: with all listpages
+    version: 1
   listgraph_merged:
     filename: 'listgraph-merged'
-    version: 11  # v2: better synonym matching ; v3: with all listpages
+    version: 1
   caligraph_base:
     filename: 'caligraph-base'
-    version: 11
+    version: 1
   caligraph_merged_ontology:
     filename: 'caligraph-merged-ontology'
-    version: 11
+    version: 1
   caligraph_filtered:
     filename: 'caligraph-filtered'
-    version: 11
+    version: 1
   caligraph_axiomatized:
     filename: 'caligraph-axiomatized'
-    version: 12
+    version: 1
   spacy_docs:
     filename: 'spacy-docs'
-    version: 3  # version 2 incl. listpages; version 3 for spacy 2.1
+    version: 1
   dbpedia_resources:
     filename: 'dbpedia-resources'
     version: 1
   dbpedia_resource_type_frequency:
     filename: 'dbpedia-resource-type-frequency'
-    version: 7
+    version: 1
   dbpedia_resource_type_mapping:
     filename: 'dbpedia-resource-type-mapping'
-    version: 7
+    version: 1
   dbpedia_resource_labels:
     filename: 'dbpedia-resource-labels'
     version: 1
@@ -200,7 +193,7 @@ cache:
     compress: True
   dbpedia_functional_predicates:
     filename: 'dbpedia-functional-predicates'
-    version: 2  # version 1: strict; version 2: 5% tolerance
+    version: 1
   dbpedia_categories:
     filename: 'dbpedia-categories'
     version: 1
@@ -212,13 +205,13 @@ cache:
     version: 1
   dbpedia_category_statistics:
     filename: 'dbpedia-category-statistics'
-    version: 7
+    version: 1
   dbpedia_category_sets:
     filename: 'dbpedia-category-sets'
-    version: 11  # new conceptual categorygraph version (v2)
+    version: 1
   dbpedia_categories_conceptual:
     filename: 'dbpedia-category-conceptual'
-    version: 11
+    version: 1
   dbpedia_heuristic_domains:
     filename: 'dbpedia-heuristic-domains'
     version: 1
@@ -227,33 +220,33 @@ cache:
     version: 1
   dbpedia_heuristic_disjoint_types:
     filename: 'dbpedia-heuristic-disjoint-types'
-    version: 7
+    version: 1
   dbpedia_listpages:
     filename: 'dbpedia-listpages'
-    version: 11
+    version: 1
   dbpedia_list_equivalents:
     filename: 'dbpedia-list-equivalents'
-    version: 11  # v2: better synonym matching
+    version: 1
   dbpedia_list_parents:
     filename: 'dbpedia-list-parents'
-    version: 11  # v2: better synonym matching
+    version: 1
   dbpedia_listpage_markup:
     filename: 'dbpedia-listpage-markup'
     version: 1
   dbpedia_listpage_parsed:
     filename: 'dbpedia-listpage-parsed'
-    version: 3  # v1: basic; v2: with entity indices; v3: with tables
+    version: 1
   dbpedia_listpage_enum_features:
     filename: 'dbpedia-listpage-enum-features'
-    version: 10
+    version: 1
     store_as_hdf: True
   dbpedia_listpage_table_features:
     filename: 'dbpedia-listpage-table-features'
-    version: 10
+    version: 1
     store_as_csv: True
   dbpedia_listpage_entities:
     filename: 'dbpedia-listpage-entities'
-    version: 11
+    version: 1
   wikidata_dbpedia_resource_mapping:
     filename: 'wikidata-dbpedia-resource-mapping'
     version: 1
@@ -264,7 +257,7 @@ cache:
     compress: True
   wikitaxonomy_hypernyms:
     filename: 'wikitaxonomy-hypernyms'
-    version: 11  # version 1 -> thresholds 10 / 100 / .4  // v2: new cat2ax version (v2)
+    version: 1
   cat2ax_axioms:
     filename: 'cat2ax-axioms'
-    version: 11  # new conceptual categorygraph version (v2)
+    version: 1
