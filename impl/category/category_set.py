@@ -1,3 +1,5 @@
+"""Extract sets of categories that have the same parent and share a common pre- and/or postfix."""
+
 import util
 import impl.util.nlp as nlp_util
 from collections import namedtuple, defaultdict
@@ -13,13 +15,6 @@ CandidateSet = namedtuple('CandidateSet', ['parent', 'children', 'pattern'])
 def get_category_sets() -> list:
     """Return a list of category sets found in DBpedia."""
     return [cs for category_sets in _get_parent_to_category_set_mapping().values() for cs in category_sets]
-
-
-# TODO: remove
-def get_category_sets_for_parent(parent_category: str) -> set:
-    """Return all category sets that have been created with `parent_category` as a parent."""
-    category_sets = _get_parent_to_category_set_mapping()
-    return category_sets[parent_category] if parent_category in category_sets else set()
 
 
 def _get_parent_to_category_set_mapping() -> dict:

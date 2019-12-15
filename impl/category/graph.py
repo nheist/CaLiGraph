@@ -7,6 +7,7 @@ import util
 
 
 class CategoryGraph(HierarchyGraph):
+    """A graph of categories retrieved from Wikipedia categories."""
     # initialisations
     def __init__(self, graph: nx.DiGraph, root_node: str = None):
         super().__init__(graph, root_node or util.get_config('category.root_category'))
@@ -52,6 +53,7 @@ class CategoryGraph(HierarchyGraph):
     # filter for conceptual categories
 
     def make_conceptual(self):
+        """Remove all nodes that are non-conceptual (i.e. that do not represent a class in a taxonomy)."""
         categories = {c for c in self.nodes if cat_store.is_usable(c) and is_conceptual_category(c)}
         # clearing the graph of any invalid nodes
         self._remove_all_nodes_except(categories | {self.root_node})

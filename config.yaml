@@ -51,9 +51,6 @@ files:
     topical_concepts:
       filename: 'topical_concepts_en.ttl.bz2'
       url: 'http://downloads.dbpedia.org/2016-10/core-i18n/en/topical_concepts_en.ttl.bz2'
-    category_redirects:
-      filename: 'category_redirects_en.ttl.bz2'
-      url: 'http://downloads.dbpedia.org/2016-10/core-i18n/en/redirects_en.ttl.bz2'
     article_categories:
       filename: 'article_categories_en.ttl.bz2'
       url: 'http://downloads.dbpedia.org/2016-10/core-i18n/en/article_categories_en.ttl.bz2'

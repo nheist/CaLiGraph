@@ -1,3 +1,5 @@
+"""Functionality to retrieve everything related to categories."""
+
 from . import util as cat_util
 import impl.util.rdf as rdf_util
 import impl.dbpedia.store as dbp_store
@@ -6,6 +8,7 @@ from collections import defaultdict
 
 
 def get_categories() -> set:
+    """Return all categories."""
     global __CATEGORIES__
     if '__CATEGORIES__' not in globals():
         initializer = lambda: set(rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.categories')], rdf_util.PREDICATE_TYPE))
@@ -27,6 +30,7 @@ def is_usable(category: str) -> bool:
 
 
 def get_label(category: str) -> str:
+    """Return the label for the given category."""
     global __CATEGORY_LABELS__
     if '__CATEGORY_LABELS__' not in globals():
         __CATEGORY_LABELS__ = rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.categories')], rdf_util.PREDICATE_SKOS_LABEL)
@@ -35,6 +39,7 @@ def get_label(category: str) -> str:
 
 
 def get_label_category(label: str) -> str:
+    """Return the category that fits the given label best."""
     global __INVERSE_CATEGORY_LABELS__
     if '__INVERSE_CATEGORY_LABELS__' not in globals():
         labels = rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.categories')], rdf_util.PREDICATE_SKOS_LABEL)
@@ -43,6 +48,7 @@ def get_label_category(label: str) -> str:
 
 
 def get_resources(category: str) -> set:
+    """Return all resources of the given category."""
     global __CATEGORY_RESOURCES__
     if '__CATEGORY_RESOURCES__' not in globals():
         initializer = lambda: rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.article_categories')], rdf_util.PREDICATE_SUBJECT, reverse_key=True)
@@ -52,6 +58,7 @@ def get_resources(category: str) -> set:
 
 
 def get_resource_categories(dbp_resource: str) -> set:
+    """Return all categories the given resource is contained in."""
     if '__RESOURCE_CATEGORIES__' not in globals():
         initializer = lambda: rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.article_categories')], rdf_util.PREDICATE_SUBJECT)
         global __RESOURCE_CATEGORIES__
@@ -61,6 +68,7 @@ def get_resource_categories(dbp_resource: str) -> set:
 
 
 def get_children(category: str) -> set:
+    """Return all subcategories for the given category."""
     global __CHILDREN__
     if '__CHILDREN__' not in globals():
         initializer = lambda: rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.categories')], rdf_util.PREDICATE_BROADER, reverse_key=True)
@@ -69,28 +77,8 @@ def get_children(category: str) -> set:
     return __CHILDREN__[category].difference({category})
 
 
-def get_parents(category: str) -> set:
-    global __PARENTS__, __CHILDREN__
-    if '__PARENTS__' not in globals():
-        get_children('')  # make sure that __CHILDREN__ is initialized
-        __PARENTS__ = defaultdict(set)
-        for child, parents in __CHILDREN__.items():
-            for parent in parents:
-                if parent != child:
-                    __PARENTS__[parent].add(child)
-
-    return __PARENTS__[category]
-
-
-def get_redirects(category: str) -> set:
-    global __REDIRECTS__
-    if '__REDIRECTS__' not in globals():
-        __REDIRECTS__ = rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.category_redirects')], rdf_util.PREDICATE_REDIRECTS)
-
-    return __REDIRECTS__[category]
-
-
 def get_topics(category: str) -> set:
+    """Return the topics for the given category."""
     global __TOPICS__
     if '__TOPICS__' not in globals():
         __TOPICS__ = rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.topical_concepts')], rdf_util.PREDICATE_SUBJECT)
@@ -99,6 +87,7 @@ def get_topics(category: str) -> set:
 
 
 def get_topic_categories(dbp_resource: str) -> set:
+    """Return all categories the given resource is a topic of."""
     global __TOPIC_CATEGORIES__
     if '__TOPIC_CATEGORIES__' not in globals():
         __TOPIC_CATEGORIES__ = defaultdict(set)
@@ -109,6 +98,7 @@ def get_topic_categories(dbp_resource: str) -> set:
 
 
 def get_maintenance_categories() -> set:
+    """Return all categories that are used solely for maintenance purposes in Wikipedia."""
     global __MAINTENANCE_CATS__
     if '__MAINTENANCE_CATS__' not in globals():
         __MAINTENANCE_CATS__ = set(rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.maintenance_categories')], rdf_util.PREDICATE_TYPE))

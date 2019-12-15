@@ -1,3 +1,11 @@
+"""Cat2Ax approach as described in "Heist & Paulheim, 2019: Uncovering the Semantics of Wikipedia Categories"
+
+The extraction is performed in three steps:
+1) Identify candidate category sets that share a textual pattern
+2) Find characteristic properties and types for candidate sets and combine them to patterns
+3) Apply patterns to all categories to extract axioms
+"""
+
 import util
 from collections import defaultdict
 import operator
@@ -69,6 +77,7 @@ class RelationAxiom(Axiom):
 
 
 def get_axioms(category: str) -> set:
+    """Return all axioms created by the Cat2Ax approach."""
     global __CATEGORY_AXIOMS__
     if '__CATEGORY_AXIOMS__' not in globals():
         __CATEGORY_AXIOMS__ = util.load_cache('cat2ax_axioms')
@@ -79,6 +88,7 @@ def get_axioms(category: str) -> set:
 
 
 def extract_category_axioms(category_graph, pattern_confidence):
+    """Run extraction for the given graph with a confidence of `pattern_confidence`."""
     candidate_sets = cat_set.get_category_sets()
     patterns = _extract_patterns(category_graph, candidate_sets)
     return _extract_axioms(category_graph, pattern_confidence, patterns)
@@ -87,6 +97,7 @@ def extract_category_axioms(category_graph, pattern_confidence):
 # --- PATTERN EXTRACTION ---
 
 def _extract_patterns(category_graph, candidate_sets):
+    """Return property/type patterns extracted from `category_graph` for each set in `candidate_sets`."""
     util.get_logger().debug('Cat2Ax: Extracting patterns..')
     patterns = defaultdict(lambda: {'preds': defaultdict(list), 'types': defaultdict(list)})
 
@@ -129,11 +140,13 @@ def _extract_patterns(category_graph, candidate_sets):
 
 
 def _get_match_for_category(category: str, first_words: tuple, last_words: tuple) -> str:
+    """Return variable part of the category name."""
     doc = nlp_util.remove_by_phrase(cat_nlp.parse_category(category))
     return doc[len(first_words):len(doc)-len(last_words)].text
 
 
 def _get_resource_surface_scores(text):
+    """Return resource lexicalisation scores for the given text."""
     resource_surface_scores = {}
     if not text:
         return resource_surface_scores
@@ -147,6 +160,7 @@ def _get_resource_surface_scores(text):
 
 
 def _get_type_surface_scores(words):
+    """Return type lexicalisation scores for a given set of `words`."""
     lexicalisation_scores = defaultdict(lambda: 0)
     word_lemmas = [nlp_util.parse(w)[0].lemma_ for w in words]
     for lemma in word_lemmas:
@@ -169,9 +183,11 @@ def _get_type_surface_scores(words):
 
 
 def _extract_axioms(category_graph, pattern_confidence, patterns):
+    """Return axioms extracted from `category_graph` by applying `patterns` to all categories."""
     util.get_logger().debug('Cat2Ax: Extracting axioms..')
     category_axioms = defaultdict(set)
 
+    # process front/back/front+back patterns individually to reduce computational complexity
     front_pattern_dict = {}
     for (front_pattern, back_pattern), axiom_patterns in _get_confidence_pattern_set(patterns, True, False).items():
         _fill_dict(front_pattern_dict, list(front_pattern), lambda d: _fill_dict(d, list(reversed(back_pattern)), axiom_patterns))
@@ -207,6 +223,7 @@ def _extract_axioms(category_graph, pattern_confidence, patterns):
         if enclosing_type_axiom:
             cat_type_axioms.append(enclosing_type_axiom)
 
+        # apply selection of axioms (multiple axioms can be selected if they do not contradict each other)
         prop_axioms_by_pred = {a[1]: {x for x in cat_prop_axioms if x[1] == a[1]} for a in cat_prop_axioms}
         for pred, similar_prop_axioms in prop_axioms_by_pred.items():
             if dbp_store.is_object_property(pred):
@@ -227,6 +244,7 @@ def _extract_axioms(category_graph, pattern_confidence, patterns):
 
 
 def _get_confidence_pattern_set(pattern_set, has_front, has_back):
+    """Return pattern confidences per pattern."""
     result = {}
     for pattern, axiom_patterns in pattern_set.items():
         if bool(pattern[0]) == has_front and bool(pattern[1]) == has_back:
@@ -243,6 +261,7 @@ def _get_confidence_pattern_set(pattern_set, has_front, has_back):
 MARKER_HIT = '_marker_hit_'
 MARKER_REVERSE = '_marker_reverse_'
 def _fill_dict(dictionary, elements, leaf):
+    """Recursively fill a dictionary with a given sequence of elements and finally apply/append `leaf`."""
     if not elements:
         if callable(leaf):
             if MARKER_REVERSE not in dictionary:
@@ -257,6 +276,7 @@ def _fill_dict(dictionary, elements, leaf):
 
 
 def _detect_pattern(pattern_dict, words):
+    """Search for a pattern of `words` in `pattern_dict` and return if found - else return None."""
     pattern_length = 0
     ctx = pattern_dict
     for word in words:
@@ -274,6 +294,7 @@ def _detect_pattern(pattern_dict, words):
 
 
 def _get_axioms_for_cat(pattern_confidence, axiom_patterns, cat, text_diff, words_same):
+    """Return axioms by applying the best matching pattern to a category."""
     prop_axiom = None
     type_axiom = None
 
@@ -297,6 +318,7 @@ def _get_axioms_for_cat(pattern_confidence, axiom_patterns, cat, text_diff, word
 
 
 def _find_axioms(pattern_confidence, pattern_dict, cat, cat_doc):
+    """Iterate over possible patterns to extract and return best axioms."""
     cat_words = [w.text for w in cat_doc]
     axiom_patterns, pattern_lengths = _detect_pattern(pattern_dict, cat_words)
     if axiom_patterns:
@@ -310,24 +332,3 @@ def _find_axioms(pattern_confidence, pattern_dict, cat, cat_doc):
             words_same += cat_words[back_pattern_idx:]
         return _get_axioms_for_cat(pattern_confidence, axiom_patterns, cat, text_diff, words_same)
     return None, None
-
-
-# --- AXIOM APPLICATION & POST-FILTERING ---
-
-
-def _extract_assertions(relation_axioms, type_axioms):
-    util.get_logger().debug('Cat2Ax: Applying axioms..')
-
-    relation_assertions = {(res, pred, val) for cat, pred, val, _ in relation_axioms for res in cat_store.get_resources(cat)}
-    new_relation_assertions = {(res, pred, val) for res, pred, val in relation_assertions if pred not in dbp_store.get_properties(res) or val not in dbp_store.get_properties(res)[pred]}
-
-    type_assertions = {(res, rdf_util.PREDICATE_TYPE, t) for cat, pred, t, _ in type_axioms for res in cat_store.get_resources(cat)}
-    new_type_assertions = {(res, pred, t) for res, pred, t in type_assertions if t not in {tt for t in dbp_store.get_types(res) for tt in dbp_store.get_transitive_supertype_closure(t)} and t != rdf_util.CLASS_OWL_THING}
-    new_type_assertions_transitive = {(res, pred, tt) for res, pred, t in new_type_assertions for tt in dbp_store.get_transitive_supertype_closure(t) if tt not in {ott for t in dbp_store.get_types(res) for ott in dbp_store.get_transitive_supertype_closure(t)} and tt != rdf_util.CLASS_OWL_THING}
-
-    # post-filtering
-    filtered_new_relation_assertions = {(res, pred, val) for res, pred, val in new_relation_assertions if pred not in dbp_store.get_properties(res) or not dbp_store.is_functional(pred)}
-    filtered_new_type_assertions = {(res, pred, t) for res, pred, t in new_type_assertions_transitive if not dbp_heur.get_disjoint_types(t).intersection(dbp_store.get_transitive_types(res))}
-
-    util.get_logger().debug(f'Cat2Ax: Generated {len(filtered_new_relation_assertions)} new relation assertions and {len(filtered_new_type_assertions)} new type assertions.')
-    return filtered_new_relation_assertions, filtered_new_type_assertions

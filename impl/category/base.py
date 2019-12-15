@@ -5,6 +5,7 @@ import util
 
 
 def get_conceptual_category_graph() -> CategoryGraph:
+    """Retrieve category graph with filtered categories."""
     global __CONCEPTUAL_CATEGORY_GRAPH__
     if '__CONCEPTUAL_CATEGORY_GRAPH__' not in globals():
         initializer = lambda: CategoryGraph.create_from_dbpedia().remove_unconnected().make_conceptual()
@@ -13,6 +14,7 @@ def get_conceptual_category_graph() -> CategoryGraph:
 
 
 def get_wikitaxonomy_graph() -> CategoryGraph:
+    """Retrieve category graph with filtered categories and edges."""
     global __WIKITAXONOMY_CATEGORY_GRAPH__
     if '__WIKITAXONOMY_CATEGORY_GRAPH__' not in globals():
         initializer = lambda: get_conceptual_category_graph().remove_unrelated_edges()
@@ -21,6 +23,7 @@ def get_wikitaxonomy_graph() -> CategoryGraph:
 
 
 def get_cyclefree_wikitaxonomy_graph() -> CategoryGraph:
+    """Retrieve the cycle-free category graph with filtered categories and edges."""
     global __CYCLEFREE_WIKITAXONOMY_GRAPH__
     if '__CYCLEFREE_WIKITAXONOMY_GRAPH__' not in globals():
         initializer = lambda: get_wikitaxonomy_graph().resolve_cycles().append_unconnected()
@@ -29,6 +32,7 @@ def get_cyclefree_wikitaxonomy_graph() -> CategoryGraph:
 
 
 def get_merged_graph() -> CategoryGraph:
+    """Retrieve the cycle-free category graph with filtered+merged categories and filtered edges."""
     global __MERGED_GRAPH__
     if '__MERGED_GRAPH__' not in globals():
         initializer = lambda: get_cyclefree_wikitaxonomy_graph().merge_nodes()

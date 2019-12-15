@@ -1,3 +1,5 @@
+"""NLP-functionality specifically for categories."""
+
 import impl.util.nlp as nlp_util
 import impl.category.store as cat_store
 from spacy.tokens import Doc

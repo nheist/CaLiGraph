@@ -1,3 +1,5 @@
+"""Utilities to work with categories."""
+
 import impl.util.rdf as rdf_util
 from impl.dbpedia.util import NAMESPACE_DBP_RESOURCE
 
