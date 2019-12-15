@@ -1,3 +1,5 @@
+"""Utilities to work with resources, properties, and types in DBpedia."""
+
 import impl.util.rdf as rdf_util
 
 NAMESPACE_DBP_ONTOLOGY = 'http://dbpedia.org/ontology/'

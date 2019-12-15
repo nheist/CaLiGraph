@@ -1,3 +1,5 @@
+"""Functionality to retrieve everything related to DBpedia resources, properties, and types."""
+
 import util
 import impl.util.rdf as rdf_util
 from . import util as dbp_util
@@ -5,36 +7,38 @@ import impl.category.util as cat_util
 import impl.list.util as list_util
 from collections import defaultdict
 import networkx as nx
-from typing import Optional, Tuple
-import functools
-import numpy as np
+from typing import Optional
 import inflection
 
 
-# DBpedia resources
+# DBpedia RESOURCES
 
 
 def get_resources() -> set:
+    """Return all resources that are neither files nor lists."""
     global __RESOURCES__
     if '__RESOURCES__' not in globals():
         __RESOURCES__ = util.load_or_create_cache('dbpedia_resources', _compute_resources)
     return __RESOURCES__
 
 
-def get_raw_resources() -> set:
-    return set(_get_label_mapping()) | set(get_resource_property_mapping())
-
-
 def _compute_resources() -> set:
     return {res for res in get_raw_resources() if not list_util.is_listpage(res) and not list_util.is_listspage(res) and not dbp_util.is_file_resource(res)}
 
 
+def get_raw_resources() -> set:
+    """Return all resources in DBpedia."""
+    return set(_get_label_mapping()) | set(get_resource_property_mapping())
+
+
 def is_possible_resource(obj: str) -> bool:
+    """Return True, if the given object is a potential DBpedia resources (i.e. valid URI, no file, no category, ..)."""
     obj = resolve_redirect(obj)
     return dbp_util.is_dbp_resource(obj) and not dbp_util.is_file_resource(obj) and not cat_util.is_category(obj) and not list_util.is_listpage(obj) and not list_util.is_listspage(obj)
 
 
 def get_label(dbp_object: str) -> str:
+    """Return the label of a DBpedia resource or type."""
     global __RESOURCE_LABELS__
     if '__RESOURCE_LABELS__' not in globals():
         __RESOURCE_LABELS__ = dict(_get_label_mapping())
@@ -43,6 +47,7 @@ def get_label(dbp_object: str) -> str:
 
 
 def get_object_for_label(label: str) -> str:
+    """Return the object that fits the given label."""
     global __RESOURCE_INVERSE_LABELS__
     global __ONTOLOGY_INVERSE_LABELS__
     if '__RESOURCE_INVERSE_LABELS__' not in globals():
@@ -66,6 +71,7 @@ def _get_label_mapping() -> dict:
 
 
 def get_abstract(dbp_resource: str) -> str:
+    """Return the Wikipedia abstract text of the given resource."""
     global __RESOURCE_ABSTRACTS__
     if '__RESOURCE_ABSTRACTS__' not in globals():
         initializer = lambda: rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.long_abstracts')], rdf_util.PREDICATE_ABSTRACT)
@@ -75,6 +81,7 @@ def get_abstract(dbp_resource: str) -> str:
 
 
 def get_lexicalisations(dbp_resource: str) -> dict:
+    """Return all lexicalisations (i.e. anchor texts) of the given resource."""
     global __RESOURCE_LEXICALISATIONS__
     if '__RESOURCE_LEXICALISATIONS__' not in globals():
         initializer = lambda: rdf_util.create_multi_val_freq_dict_from_rdf([util.get_data_file('files.dbpedia.anchor_texts')], rdf_util.PREDICATE_ANCHOR_TEXT)
@@ -83,6 +90,7 @@ def get_lexicalisations(dbp_resource: str) -> dict:
 
 
 def get_inverse_lexicalisations(text: str) -> dict:
+    """Return all resources that fit to the given lexicalisation."""
     global __RESOURCE_INVERSE_LEXICALISATIONS__
     if '__RESOURCE_INVERSE_LEXICALISATIONS__' not in globals():
         __RESOURCE_INVERSE_LEXICALISATIONS__ = util.load_or_create_cache('dbpedia_resource_inverse_lexicalisations', _compute_inverse_lexicalisations)
@@ -104,10 +112,12 @@ def _compute_inverse_lexicalisations():
 
 
 def get_types(dbp_resource: str) -> set:
+    """Return all types in DBpedia."""
     return {t for t in _get_resource_type_mapping()[dbp_resource] if dbp_util.is_dbp_type(t)}
 
 
 def get_resources_for_type(dbp_type: str) -> set:
+    """Return all resources for a given DBpedia type."""
     global __TYPE_RESOURCE_MAPPING__
     if '__TYPE_RESOURCE_MAPPING__' not in globals():
         __TYPE_RESOURCE_MAPPING__ = defaultdict(set)
@@ -148,15 +158,6 @@ def get_inverse_properties(dbp_resource: str) -> dict:
     return get_inverse_resource_property_mapping()[dbp_resource]
 
 
-def get_interlanguage_links(dbp_resource: str) -> set:
-    global __RESOURCE_INTERLANGUAGE_LINKS__
-    if '__RESOURCE_INTERLANGUAGE_LINKS__' not in globals():
-        initializer = lambda: rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.interlanguage_links')], rdf_util.PREDICATE_SAME_AS, reflexive=True)
-        __RESOURCE_INTERLANGUAGE_LINKS__ = util.load_or_create_cache('dbpedia_resource_interlanguage_links', initializer)
-
-    return __RESOURCE_INTERLANGUAGE_LINKS__[dbp_resource]
-
-
 def resolve_redirect(dbp_resource: str, visited=None) -> str:
     """Return the resource to which `dbp_resource` redirects (if any) or `dbp_resource` itself."""
     global __REDIRECTS__
@@ -169,15 +170,6 @@ def resolve_redirect(dbp_resource: str, visited=None) -> str:
         if dbp_resource not in visited:
             return resolve_redirect(__REDIRECTS__[dbp_resource], visited | {dbp_resource})
     return dbp_resource
-
-
-def get_disambiguations(dbp_resource: str) -> set:
-    global __DISAMBIGUATIONS__
-    if '__DISAMBIGUATIONS__' not in globals():
-        initializer = lambda: rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.disambiguations')], rdf_util.PREDICATE_DISAMBIGUATES)
-        __DISAMBIGUATIONS__ = defaultdict(set, util.load_or_create_cache('dbpedia_resource_disambiguations', initializer))
-
-    return __DISAMBIGUATIONS__[dbp_resource]
 
 
 def get_statistics(dbp_resource: str) -> dict:
@@ -196,45 +188,8 @@ def get_statistics(dbp_resource: str) -> dict:
 # DBpedia property
 
 
-def get_inverse_property_frequency_distribution(dbp_predicate: str) -> dict:
-    global __INVERSE_PROPERTY_FREQUENCY_DISTRIBUTION__
-    if '__INVERSE_PROPERTY_FREQUENCY_DISTRIBUTION__' not in globals():
-        __INVERSE_PROPERTY_FREQUENCY_DISTRIBUTION__ = util.load_or_create_cache('dbpedia_inverse_property_frequency_distribution', _compute_inverse_property_frequency_distribution)
-
-    return __INVERSE_PROPERTY_FREQUENCY_DISTRIBUTION__[dbp_predicate]
-
-
-def _compute_inverse_property_frequency_distribution() -> dict:
-    inverse_property_frequency_distribution = defaultdict(functools.partial(defaultdict, int))
-    for properties in get_inverse_resource_property_mapping().values():
-        for pred, values in properties.items():
-            for val in values:
-                inverse_property_frequency_distribution[pred][val] += 1
-    for pred, value_counts in inverse_property_frequency_distribution.items():
-        inverse_property_frequency_distribution[pred]['_sum'] = sum(value_counts.values())
-    return inverse_property_frequency_distribution
-
-
-def get_property_frequency_distribution(dbp_predicate: str) -> dict:
-    global __PROPERTY_FREQUENCY_DISTRIBUTION__
-    if '__PROPERTY_FREQUENCY_DISTRIBUTION__' not in globals():
-        __PROPERTY_FREQUENCY_DISTRIBUTION__ = util.load_or_create_cache('dbpedia_property_frequency_distribution', _compute_property_frequency_distribution)
-
-    return __PROPERTY_FREQUENCY_DISTRIBUTION__[dbp_predicate]
-
-
-def _compute_property_frequency_distribution() -> dict:
-    property_frequency_distribution = defaultdict(functools.partial(defaultdict, int))
-    for properties in get_resource_property_mapping().values():
-        for pred, values in properties.items():
-            for val in values:
-                property_frequency_distribution[pred][val] += 1
-    for pred, value_counts in property_frequency_distribution.items():
-        property_frequency_distribution[pred]['_sum'] = sum(value_counts.values())
-    return property_frequency_distribution
-
-
 def get_resource_property_mapping() -> dict:
+    """Return a mapping from DBpedia resources to a dict containing property-value assignments (containing facts of DBpedia)."""
     global __RESOURCE_PROPERTY_MAPPING__
     if '__RESOURCE_PROPERTY_MAPPING__' not in globals():
         property_files = [util.get_data_file('files.dbpedia.mappingbased_literals'), util.get_data_file('files.dbpedia.mappingbased_objects')]
@@ -245,6 +200,7 @@ def get_resource_property_mapping() -> dict:
 
 
 def get_inverse_resource_property_mapping() -> dict:
+    """Return a mapping from DBpedia resources to a dict containing property-value assignments (containing inverted facts of DBpedia)."""
     global __INVERSE_RESOURCE_PROPERTY_MAPPING__
     if '__INVERSE_RESOURCE_PROPERTY_MAPPING__' not in globals():
         initializer = lambda: rdf_util.create_dict_from_rdf([util.get_data_file('files.dbpedia.mappingbased_objects')], reverse_key=True)
@@ -254,6 +210,7 @@ def get_inverse_resource_property_mapping() -> dict:
 
 
 def get_domain(dbp_predicate: str) -> Optional[str]:
+    """Return the domain of a given predicate."""
     global __PREDICATE_DOMAIN__
     if '__PREDICATE_DOMAIN__' not in globals():
         __PREDICATE_DOMAIN__ = rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_DOMAIN)
@@ -262,6 +219,7 @@ def get_domain(dbp_predicate: str) -> Optional[str]:
 
 
 def get_range(dbp_predicate: str) -> Optional[str]:
+    """Return the range of a given predicate."""
     global __PREDICATE_RANGE__
     if '__PREDICATE_RANGE__' not in globals():
         __PREDICATE_RANGE__ = rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_RANGE)
@@ -270,6 +228,7 @@ def get_range(dbp_predicate: str) -> Optional[str]:
 
 
 def get_equivalent_predicates(dbp_predicate: str) -> set:
+    """Return all equivalent predicates of a given predicate."""
     global __EQUIVALENT_PREDICATE__
     if '__EQUIVALENT_PREDICATE__' not in globals():
         __EQUIVALENT_PREDICATE__ = rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_EQUIVALENT_PROPERTY)
@@ -278,6 +237,7 @@ def get_equivalent_predicates(dbp_predicate: str) -> set:
 
 
 def is_object_property(dbp_predicate: str) -> bool:
+    """Return True, if the predicate always has a resource as object."""
     global __OBJECT_PROPERTY__
     if '__OBJECT_PROPERTY__' not in globals():
         __OBJECT_PROPERTY__ = defaultdict(lambda: False)
@@ -294,6 +254,7 @@ def is_object_property(dbp_predicate: str) -> bool:
 
 
 def is_functional(dbp_predicate: str) -> bool:
+    """Return True, if the predicate is functional (i.e. a resource has at most one value for the given predicate)."""
     global __PREDICATE_FUNCTIONAL__
     if '__PREDICATE_FUNCTIONAL__' not in globals():
         __PREDICATE_FUNCTIONAL__ = util.load_or_create_cache('dbpedia_functional_predicates', _create_functional_predicate_dict)
@@ -316,6 +277,7 @@ def _create_functional_predicate_dict():
 
 
 def get_all_predicates() -> set:
+    """Return all predicates in DBpedia."""
     global __PREDICATES__
     if '__PREDICATES__' not in globals():
         __PREDICATES__ = {pred for props in get_resource_property_mapping().values() for pred in props}
@@ -323,22 +285,16 @@ def get_all_predicates() -> set:
     return __PREDICATES__
 
 
-def get_comment(dbp_ontology_item: str) -> str:
-    global __COMMENTS__
-    if '__COMMENTS__' not in globals():
-        __COMMENTS__ = rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_COMMENT)
-
-    return __COMMENTS__[dbp_ontology_item] if dbp_ontology_item in __COMMENTS__ else ''
-
-
 # DBpedia types
 
 
 def get_all_types() -> set:
+    """Return all types in DBpedia."""
     return set(_get_type_graph().nodes)
 
 
 def get_types_by_name(name: str) -> set:
+    """Return all types that fit the given name."""
     global __TYPE_LABELS__
     if '__TYPE_LABELS__' not in globals():
         __TYPE_LABELS__ = defaultdict(set)
@@ -355,11 +311,13 @@ def get_independent_types(dbp_types: set) -> set:
 
 
 def get_supertypes(dbp_type: str) -> set:
+    """Return all parent types of the given type."""
     type_graph = _get_type_graph()
     return set(type_graph.predecessors(dbp_type)) if dbp_type in type_graph else set()
 
 
 def get_transitive_supertypes(dbp_type: str) -> set:
+    """Return all transitive parent types of the given type."""
     global __TRANSITIVE_SUPERTYPE_MAPPING__
     if '__TRANSITIVE_SUPERTYPE_MAPPING__' not in globals():
         __TRANSITIVE_SUPERTYPE_MAPPING__ = dict()
@@ -376,11 +334,13 @@ def get_transitive_supertype_closure(dbp_type: str) -> set:
 
 
 def get_subtypes(dbp_type: str) -> set:
+    """Return all child types of the given type."""
     type_graph = _get_type_graph()
     return set(type_graph.successors(dbp_type)) if dbp_type in type_graph else set()
 
 
 def get_transitive_subtypes(dbp_type: str) -> set:
+    """Return all transitive child types of the given type."""
     global __TRANSITIVE_SUBTYPE_MAPPING__
     if '__TRANSITIVE_SUBTYPE_MAPPING__' not in globals():
         __TRANSITIVE_SUBTYPE_MAPPING__ = dict()
@@ -397,6 +357,7 @@ def get_transitive_subtype_closure(dbp_type: str) -> set:
 
 
 def get_equivalent_types(dbp_type: str) -> set:
+    """Return the set of equivalent types to the given type (including itself)."""
     global __EQUIVALENT_TYPE_MAPPING__
     if '__EQUIVALENT_TYPE_MAPPING__' not in globals():
         __EQUIVALENT_TYPE_MAPPING__ = rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_EQUIVALENT_CLASS, reflexive=True)
@@ -407,10 +368,12 @@ def get_equivalent_types(dbp_type: str) -> set:
 
 
 def are_equivalent_types(dbp_types: set) -> bool:
+    """Return True, if types are equivalent."""
     return dbp_types == get_equivalent_types(list(dbp_types)[0])
 
 
 def get_main_equivalence_type(dbp_type: str) -> str:
+    """Return the main equivalence type (i.e. the most strongly linked type in the taxonomy) for a given type."""
     valid_types = get_main_equivalence_types() | {rdf_util.CLASS_OWL_THING}
     return get_equivalent_types(dbp_type).intersection(valid_types).pop()
 
@@ -472,31 +435,6 @@ def get_type_lexicalisations(lemma: str) -> dict:
         __TYPE_LEXICALISATIONS__ = defaultdict(dict, util.load_cache('dbpedia_type_lexicalisations'))
 
     return __TYPE_LEXICALISATIONS__[lemma] if __TYPE_LEXICALISATIONS__[lemma] else __TYPE_LEXICALISATIONS__[inflection.singularize(lemma)]
-
-
-def get_cooccurrence_frequency(dbp_type: str, another_dbp_type: str) -> float:
-    global __TYPE_COOCCURRENCE_FREQUENCY_MATRIX__, __TYPE_MATRIX_DICT__
-    if '__TYPE_COOCCURRENCE_FREQUENCY_MATRIX__' not in globals():
-        type_cooccurrence_matrix, __TYPE_MATRIX_DICT__ = util.load_or_create_cache('dbpedia_resource_type_cooccurrence_matrix', _create_resource_type_cooccurrence_matrix)
-        max_occurrences = np.max(type_cooccurrence_matrix, axis=1).reshape(-1, 1)
-        __TYPE_COOCCURRENCE_FREQUENCY_MATRIX__ = np.divide(type_cooccurrence_matrix, max_occurrences, out=np.zeros_like(type_cooccurrence_matrix, dtype=np.float32), where=(max_occurrences != 0))
-
-    if dbp_type not in __TYPE_MATRIX_DICT__ or another_dbp_type not in __TYPE_MATRIX_DICT__:
-        return 0
-
-    return __TYPE_COOCCURRENCE_FREQUENCY_MATRIX__[__TYPE_MATRIX_DICT__[dbp_type], __TYPE_MATRIX_DICT__[another_dbp_type]]
-
-
-def _create_resource_type_cooccurrence_matrix() -> Tuple[np.array, dict]:
-    types = get_all_types()
-    type_count = len(types)
-    type_dict = {t: i for t, i in zip(types, range(type_count))}
-    type_cooccurrence_matrix = np.zeros((type_count, type_count), dtype=np.int32)
-    for r in get_resources():
-        resource_type_indices = [type_dict[t] for t in get_transitive_types(r)]
-        for i in resource_type_indices:
-            type_cooccurrence_matrix[i, resource_type_indices] += 1
-    return type_cooccurrence_matrix, type_dict
 
 
 def _get_type_graph() -> nx.DiGraph:

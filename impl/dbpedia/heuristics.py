@@ -1,6 +1,5 @@
 """Implementing heuristics from Töpper et al. 2012 - DBpedia Ontology Enrichment for Inconsistency Detection"""
 
-
 import util
 from typing import Optional
 import impl.util.rdf as rdf_util

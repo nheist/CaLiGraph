@@ -75,18 +75,12 @@ files:
     mappingbased_objects:
       filename: 'mappingbased_objects_en.ttl.bz2'
       url: 'http://downloads.dbpedia.org/2016-10/core-i18n/en/mappingbased_objects_en.ttl.bz2'
-    interlanguage_links:
-      filename: 'interlanguage_links_en.ttl.bz2'
-      url: 'http://downloads.dbpedia.org/2016-10/core-i18n/en/interlanguage_links_en.ttl.bz2'
     anchor_texts:
       filename: 'anchor_text_en.ttl.bz2'
       url: 'http://downloads.dbpedia.org/2016-10/core-i18n/en/anchor_text_en.ttl.bz2'
     redirects:
       filename: 'redirects_en.ttl.bz2'
       url: 'http://downloads.dbpedia.org/2016-10/core-i18n/en/redirects_en.ttl.bz2'
-    disambiguations:
-      filename: 'disambiguations_en.ttl.bz2'
-      url: 'http://downloads.dbpedia.org/2016-10/core-i18n/en/disambiguations_en.ttl.bz2'
     nif_context:
       filename: 'nif_context_en.ttl.bz2'
       url: 'http://downloads.dbpedia.org/2016-10/core-i18n/en/nif_context_en.ttl.bz2'
@@ -173,9 +167,6 @@ cache:
   dbpedia_resources:
     filename: 'dbpedia-resources'
     version: 1
-  dbpedia_resource_type_cooccurrence_matrix:
-    filename: 'dbpedia-resource-type-cooccurrence-matrix'
-    version: 7
   dbpedia_resource_type_frequency:
     filename: 'dbpedia-resource-type-frequency'
     version: 7
@@ -203,14 +194,8 @@ cache:
   dbpedia_inverse_resource_properties:
     filename: 'dbpedia-inverse-resource-properties'
     version: 1
-  dbpedia_resource_interlanguage_links:
-    filename: 'dbpedia-resource-interlanguage-links'
-    version: 1
   dbpedia_resource_redirects:
     filename: 'dbpedia-resource-redirects'
-    version: 1
-  dbpedia_resource_disambiguations:
-    filename: 'dbpedia-resource-disambiguations'
     version: 1
   dbpedia_type_lexicalisations:
     filename: 'dbpedia-type-lexicalisations'
@@ -237,12 +222,6 @@ cache:
   dbpedia_categories_conceptual:
     filename: 'dbpedia-category-conceptual'
     version: 11
-  dbpedia_property_frequency_distribution:
-    filename: 'dbpedia-property-frequency-distribution'
-    version: 1
-  dbpedia_inverse_property_frequency_distribution:
-    filename: 'dbpedia-inverse-property-frequency-distribution'
-    version: 1
   dbpedia_heuristic_domains:
     filename: 'dbpedia-heuristic-domains'
     version: 1
