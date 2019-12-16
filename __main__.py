@@ -5,6 +5,7 @@ import impl.category.base as cat_base
 import impl.category.cat2ax as cat_axioms
 import impl.util.hypernymy as hypernymy_util
 import impl.caligraph.base as cali_base
+import impl.util.nlp as nlp_util
 
 
 def _setup_hypernyms():
@@ -27,6 +28,7 @@ if __name__ == '__main__':
 
         _setup_hypernyms()  # initialise hypernyms
         cali_base.serialize_final_graph()  # run the complete extraction cycle and end with serializing CaLiGraph
+        nlp_util.persist_cache()  # persist the spaCy cache to rerun extraction more quickly
 
         success_msg = 'Starting extraction of CaLiGraph version 1.'
         mailer.send_success(success_msg)
