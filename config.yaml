@@ -89,11 +89,11 @@ files:
     maintenance_categories:
       filename: 'maintenance_categories.ttl.bz2'
     wikipedia_hypernyms:
-      filename: 'wiki_hypernyms_lemmas.p'
-      url: 'http://data.dws.informatik.uni-mannheim.de/CaLiGraph/data/wiki_hypernyms_lemmas.p'
+      filename: 'wiki_hypernyms_lemmas.p.bz2'
+      url: 'http://data.dws.informatik.uni-mannheim.de/CaLiGraph/data/wiki_hypernyms_lemmas.p.bz2'
     webisalod_hypernyms:
-      filename: 'webisalod_hypernyms.p'
-      url: 'http://data.dws.informatik.uni-mannheim.de/CaLiGraph/data/webisalod_hypernyms.p'
+      filename: 'webisalod_hypernyms.p.bz2'
+      url: 'http://data.dws.informatik.uni-mannheim.de/CaLiGraph/data/webisalod_hypernyms.p.bz2'
 
 # -- RESULT FILE CONFIGURATION --
 results:
