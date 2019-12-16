@@ -59,9 +59,9 @@ def get_resources(category: str) -> set:
 
 def get_resource_categories(dbp_resource: str) -> set:
     """Return all categories the given resource is contained in."""
+    global __RESOURCE_CATEGORIES__
     if '__RESOURCE_CATEGORIES__' not in globals():
         initializer = lambda: rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.article_categories')], rdf_util.PREDICATE_SUBJECT)
-        global __RESOURCE_CATEGORIES__
         __RESOURCE_CATEGORIES__ = util.load_or_create_cache('dbpedia_resource_categories', initializer)
 
     return __RESOURCE_CATEGORIES__[dbp_resource]
