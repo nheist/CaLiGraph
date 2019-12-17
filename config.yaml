@@ -83,6 +83,9 @@ files:
     redirects:
       filename: 'redirects_en.ttl.bz2'
       url: 'http://downloads.dbpedia.org/2016-10/core-i18n/en/redirects_en.ttl.bz2'
+    disambiguations:
+      filename: 'disambiguations_en.ttl.bz2'
+      url: 'http://downloads.dbpedia.org/2016-10/core-i18n/en/disambiguations_en.ttl.bz2'
     nif_context:
       filename: 'nif_context_en.ttl.bz2'
       url: 'http://downloads.dbpedia.org/2016-10/core-i18n/en/nif_context_en.ttl.bz2'
@@ -186,6 +189,9 @@ cache:
     version: 1
   dbpedia_resource_redirects:
     filename: 'dbpedia-resource-redirects'
+    version: 1
+  dbpedia_resource_disambiguations:
+    filename: 'dbpedia-resource-disambiguations'
     version: 1
   dbpedia_type_lexicalisations:
     filename: 'dbpedia-type-lexicalisations'

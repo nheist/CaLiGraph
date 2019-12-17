@@ -337,7 +337,7 @@ class CaLiGraph(HierarchyGraph):
             util.get_logger().debug(f'CaLiGraph: ListMerge - For "{lst}" multiple equivalent nodes have been found: {equivalent_nodes}.')
             equivalent_nodes = {node_id} if node_id in equivalent_nodes else equivalent_nodes
         if equivalent_nodes:
-            main_node_id = equivalent_nodes.pop()
+            main_node_id = equivalent_nodes.pop()  # TODO: use edit distance to find closest node if len is still > 1
             self._set_parts(main_node_id, self.get_parts(main_node_id) | node_parts)
             return main_node_id
 

@@ -172,6 +172,15 @@ def resolve_redirect(dbp_resource: str, visited=None) -> str:
     return dbp_resource
 
 
+def get_disambiguation_mapping() -> dict:
+    global __DISAMBIGUATIONS__
+    if '__DISAMBIGUATIONS__' not in globals():
+        initializer = lambda: rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.disambiguations')], rdf_util.PREDICATE_DISAMBIGUATES)
+        __DISAMBIGUATIONS__ = defaultdict(set, util.load_or_create_cache('dbpedia_resource_disambiguations', initializer))
+
+    return __DISAMBIGUATIONS__
+
+
 def get_statistics(dbp_resource: str) -> dict:
     """Return information about the types and properties of `dbp_resource`."""
     global __RESOURCE_STATISTICS__
