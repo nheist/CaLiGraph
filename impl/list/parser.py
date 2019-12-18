@@ -76,7 +76,7 @@ def _get_list_type(wiki_text: WikiText) -> str:
 def _extract_sections(list_type: str, wiki_text: WikiText) -> list:
     result = []
 
-    if list_type == LIST_TYPE_NONE:
+    if list_type == LIST_TYPE_ENUM:
         result = [{
             'name': section.title.strip() if section.title.strip() else 'Main',
             'entries': [e for l in section.lists() for e in _extract_entries_for_list(l)]
