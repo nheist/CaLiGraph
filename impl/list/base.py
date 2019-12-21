@@ -105,7 +105,8 @@ def _compute_listpage_entity_features(graph, list_type: str) -> pd.DataFrame:
 
     # one-hot-encode name features
     entity_features = list_features.onehotencode_feature(entity_features, '_section_name')
-    entity_features = list_features.onehotencode_feature(entity_features, '_column_name')
+    if '_column_name' in entity_features.columns:
+        entity_features = list_features.onehotencode_feature(entity_features, '_column_name')
 
     util.get_logger().info('List-Entities: Assigning entity labels..')
     list_features.assign_entity_labels(graph, entity_features)
