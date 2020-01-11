@@ -41,7 +41,7 @@ def extract_type_lexicalisations():
                 # discard, if the resource text does not refer to the subject of the article
                 continue
 
-            for t in dbp_store.get_independent_types(uri):
+            for t in dbp_store.get_independent_types(dbp_store.get_types(uri)):
                 for word in lex:
                     type_lexicalisations[word.lemma_][t] += 1
 
