@@ -116,15 +116,28 @@ def get_types(dbp_resource: str) -> set:
     return {t for t in _get_resource_type_mapping()[dbp_resource] if dbp_util.is_dbp_type(t)}
 
 
-def get_resources_for_type(dbp_type: str) -> set:
-    """Return all resources for a given DBpedia type."""
-    global __TYPE_RESOURCE_MAPPING__
-    if '__TYPE_RESOURCE_MAPPING__' not in globals():
-        __TYPE_RESOURCE_MAPPING__ = defaultdict(set)
+def get_direct_resources_for_type(dbp_type: str) -> set:
+    """Return all direct resources for a given DBpedia type (i.e. having dbp_type as the most specific type)."""
+    global __TYPE_DIRECT_RESOURCE_MAPPING__
+    if '__TYPE_DIRECT_RESOURCE_MAPPING__' not in globals():
+        __TYPE_DIRECT_RESOURCE_MAPPING__ = defaultdict(set)
         for r, ts in _get_resource_type_mapping().items():
             if r != resolve_redirect(r):
                 continue
             for t in get_independent_types(ts):
+                __TYPE_DIRECT_RESOURCE_MAPPING__[t].add(r)
+    return __TYPE_DIRECT_RESOURCE_MAPPING__[dbp_type]
+
+
+def get_all_resources_for_type(dbp_type: str) -> set:
+    """Return all resources for a given DBpedia type."""
+    global __TYPE_RESOURCE_MAPPING__
+    if '__TYPE_RESOURCE_MAPPING__' not in globals():
+        __TYPE_RESOURCE_MAPPING__ = defaultdict(set)
+        for r in _get_resource_type_mapping():
+            if r != resolve_redirect(r):
+                continue
+            for t in get_transitive_types(r):
                 __TYPE_RESOURCE_MAPPING__[t].add(r)
     return __TYPE_RESOURCE_MAPPING__[dbp_type]
 

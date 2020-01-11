@@ -65,7 +65,7 @@ class CaLiGraph(HierarchyGraph):
         if node not in self._node_resources:
             direct_dbp_types = {t for t in self.get_parts(node) if dbp_util.is_dbp_type(t)}
             disjoint_dbp_types = {dt for t in self.get_dbpedia_types(node) for dt in dbp_heur.get_disjoint_types(t)}
-            dbp_resources = self.get_direct_dbpedia_resources(node) | {r for t in direct_dbp_types for r in dbp_store.get_resources_for_type(t)}
+            dbp_resources = self.get_direct_dbpedia_resources(node) | {r for t in direct_dbp_types for r in dbp_store.get_direct_resources_for_type(t)}
             dbp_resources = {r for r in dbp_resources if not disjoint_dbp_types.intersection(dbp_store.get_types(r))}
             self._node_resources[node] = {cali_util.dbp_resource2clg_resource(r) for r in dbp_resources}
         return self._node_resources[node]
