@@ -14,6 +14,7 @@ import util
 from sklearn.preprocessing import OneHotEncoder
 from collections import defaultdict
 import operator
+from _collections import Counter
 
 
 # COMPUTATION OF BASIC ENTITY FEATURES OF ENUM LISTPAGES
@@ -41,6 +42,7 @@ def make_enum_entity_features(lp_data: dict) -> list:
         entries = section_data['entries']
         for entry_idx, entry_data in enumerate(entries):
             entry_doc = nlp_util.parse(entry_data['text'], disable_normalization=True)
+            # TODO: only use first sentence for entity classification
 
             entities = entry_data['entities']
             lp_entry_depths.append(entry_data['depth'])
@@ -85,7 +87,7 @@ def make_enum_entity_features(lp_data: dict) -> list:
                     'entity_last': (entity_idx + 1) == len(entities),
                     'entity_pn': any(w.tag_ in ['NNP', 'NNPS'] for w in entity_span),
                     'entity_noun': any(w.pos_ == 'NOUN' for w in entity_span),
-                    'entity_ne': any(w.ent_type_ for w in entity_span),
+                    'entity_ne': _extract_ne_tag(entity_span),
                     'prev_pos': entry_doc[entity_span.start - 1].pos_ if entity_span.start > 0 else 'START',
                     'prev_ne': bool(entry_doc[entity_span.start - 1].ent_type_) if entity_span.start > 0 else False,
                     'succ_pos': entry_doc[entity_span.end].pos_ if entity_span.end < len(entry_doc) else 'END',
@@ -201,7 +203,7 @@ def make_table_entity_features(lp_data: dict) -> list:
                             'entity_invpos': _get_relative_position(entity_span.end - 1, len(column_doc), inverse=True),
                             'entity_pn': any(w.tag_ in ['NNP', 'NNPS'] for w in entity_span),
                             'entity_noun': any(w.pos_ == 'NOUN' for w in entity_span),
-                            'entity_ne': any(w.ent_type_ for w in entity_span),
+                            'entity_ne': _extract_ne_tag(entity_span),
                             'prev_pos': column_doc[entity_span.start - 1].pos_ if entity_span.start > 0 else 'START',
                             'prev_ne': bool(column_doc[entity_span.start - 1].ent_type_) if entity_span.start > 0 else False,
                             'succ_pos': column_doc[entity_span.end].pos_ if entity_span.end < len(column_doc) else 'END',
@@ -230,6 +232,15 @@ def make_table_entity_features(lp_data: dict) -> list:
         _assign_avg_and_std_to_feature_set(feature_set, lp_table_first_entity_column, 'lp_table_first_entity_column')
 
     return data
+
+
+def _extract_ne_tag(entity_span) -> str:
+    """Return the (most common) named entity tag of an entity span."""
+    tags = [w.ent_type_ for w in entity_span]
+    if not tags:
+        return 'NONE'
+    tag_count = Counter(reversed(tags))  # reverse order to return tag of last entity (at same count)
+    return sorted(dict(tag_count.items(), key=lambda x: x[1], reverse=True))[0][0]
 
 
 def _compute_column_list_similarity(sim_func, listpage_uri, column_name):
