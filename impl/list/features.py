@@ -41,15 +41,18 @@ def make_enum_entity_features(lp_data: dict) -> list:
 
         entries = section_data['entries']
         for entry_idx, entry_data in enumerate(entries):
+            if not entry_data['text'].strip():
+                continue
             entry_doc = nlp_util.parse(entry_data['text'], disable_normalization=True)
-            # TODO: only use first sentence for entity classification
+            entry_doc = list(entry_doc.sents)[0]  # use only first sentence of entry
+            entry_text = entry_doc.text
 
             entities = entry_data['entities']
             lp_entry_depths.append(entry_data['depth'])
             lp_entry_entities.append(len(entities))
-            lp_entry_words.append(len(entry_data['text'].split(' ')))
-            lp_entry_chars.append(len(entry_data['text']))
-            lp_entry_commas.append(entry_data['text'].count(','))
+            lp_entry_words.append(len(entry_text.split(' ')))
+            lp_entry_chars.append(len(entry_text))
+            lp_entry_commas.append(entry_text.count(','))
             for entity_idx, entity_data in enumerate(entities):
                 entity_uri = entity_data['uri']
                 entity_uri = entity_uri[:entity_uri.index('#')] if '#' in entity_uri else entity_uri
