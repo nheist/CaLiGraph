@@ -28,7 +28,10 @@ def _compute_resources() -> set:
 
 def get_raw_resources() -> set:
     """Return all resources in DBpedia."""
-    return set(_get_label_mapping()) | set(get_resource_property_mapping())
+    global __RAW_RESOURCES__
+    if '__RAW_RESOURCES__' not in globals():
+        __RAW_RESOURCES__ = set(_get_label_mapping()) | set(get_resource_property_mapping())
+    return __RAW_RESOURCES__
 
 
 def is_possible_resource(obj: str) -> bool:
