@@ -272,7 +272,7 @@ def _extract_ne_tag(entity_span) -> str:
     if not tags:
         return 'NONE'
     tag_count = Counter(reversed(tags))  # reverse order to return tag of last entity (at same count)
-    return sorted(dict(tag_count.items(), key=lambda x: x[1], reverse=True))[0][0]
+    return sorted(dict(tag_count).items(), key=lambda x: x[1], reverse=True)[0][0]
 
 
 def _compute_column_list_similarity(sim_func, listpage_uri, column_name):
