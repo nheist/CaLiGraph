@@ -13,9 +13,8 @@ import pandas as pd
 import numpy as np
 import util
 from sklearn.preprocessing import OneHotEncoder
-from collections import defaultdict
+from collections import defaultdict, Counter
 import operator
-from _collections import Counter
 import spacy
 
 
