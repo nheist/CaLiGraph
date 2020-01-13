@@ -48,7 +48,7 @@ def make_enum_entity_features(lp_data: dict) -> list:
 
             # load enum-specific NE-tagging model and use only first sentence of every entry
             # TODO: proper wrapping of NE model
-            nlp = spacy.load('data_caligraph-NE/spacy-model_goldstandard_26p-full')
+            nlp = spacy.load('data_caligraph-NE/spacy-model_goldstandard_26p-all')
             entry_doc = nlp.parse(entry_data['text'])
             entry_doc = list(entry_doc.sents)[0]
             entry_text = entry_doc.text
