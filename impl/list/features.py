@@ -45,16 +45,8 @@ def make_enum_entity_features(lp_data: dict) -> list:
 
         entries = section_data['entries']
         for entry_idx, entry_data in enumerate(entries):
-            if not entry_data['text'].strip():
-                continue
-
-            # use only first sentence of every entry
             entry_text = entry_data['text']
             entry_doc = nlp(entry_text)
-            first_sentence = list(entry_doc.sents)[0].text
-            if first_sentence != entry_text:
-                entry_text = first_sentence
-                entry_doc = nlp(first_sentence)
 
             entities = entry_data['entities']
             # add link type (blue/red) to entities and collect entity boundaries
