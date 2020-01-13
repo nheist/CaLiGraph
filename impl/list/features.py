@@ -8,6 +8,7 @@ import impl.category.store as cat_store
 import impl.category.base as cat_base
 import impl.util.nlp as nlp_util
 import impl.util.hypernymy as hyper_util
+import impl.util.rdf as rdf_util
 import pandas as pd
 import numpy as np
 import util
@@ -15,6 +16,7 @@ from sklearn.preprocessing import OneHotEncoder
 from collections import defaultdict
 import operator
 from _collections import Counter
+import spacy
 
 
 # COMPUTATION OF BASIC ENTITY FEATURES OF ENUM LISTPAGES
@@ -43,11 +45,34 @@ def make_enum_entity_features(lp_data: dict) -> list:
         for entry_idx, entry_data in enumerate(entries):
             if not entry_data['text'].strip():
                 continue
-            entry_doc = nlp_util.parse(entry_data['text'], disable_normalization=True)
-            entry_doc = list(entry_doc.sents)[0]  # use only first sentence of entry
+
+            # load enum-specific NE-tagging model and use only first sentence of every entry
+            # TODO: proper wrapping of NE model
+            nlp = spacy.load('data_caligraph-NE/spacy-model_goldstandard_26p-full')
+            entry_doc = nlp.parse(entry_data['text'])
+            entry_doc = list(entry_doc.sents)[0]
             entry_text = entry_doc.text
 
             entities = entry_data['entities']
+            # add link type (blue/red) to entities and collect entity boundaries
+            entity_character_idxs = set()
+            for entity_data in entities:
+                entity_data['link_type'] = 'blue' if entity_data['uri'] in dbp_store.get_raw_resources() else 'red'
+                start = entity_data['idx']
+                end = start + len(entity_data['text'])
+                entity_character_idxs.update(range(start, end))
+
+            # find previously unlinked entities
+            for ent in entry_doc.ents:
+                start = ent.start_char
+                end = ent.end_char
+                text = ent.text
+                if not entity_character_idxs.intersection(set(range(start, end))):
+                    uri = rdf_util.name2uri(text, lp_uri + '#')
+                    entities.append({'uri': uri, 'text': text, 'idx': start, 'link_type': 'grey'})
+            entities = sorted(entities, key=lambda x: x['idx'])
+
+            # collect features
             lp_entry_depths.append(entry_data['depth'])
             lp_entry_entities.append(len(entities))
             lp_entry_words.append(len(entry_text.split(' ')))
@@ -72,6 +97,7 @@ def make_enum_entity_features(lp_data: dict) -> list:
                     '_section_name': section_name or '',
                     '_entry_idx': entry_idx,
                     '_entity_uri': entity_uri,
+                    '_link_type': entity_data['link_type'],
                     # ENTITY FEATURES
                     'section_pos': _get_relative_position(section_idx, len(sections)),
                     'section_invpos': _get_relative_position(section_idx, len(sections), inverse=True),
