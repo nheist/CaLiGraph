@@ -22,6 +22,9 @@ import spacy
 
 def make_enum_entity_features(lp_data: dict) -> list:
     """Return a set of features for every entity in a enumeration list page."""
+    # TODO: proper wrapping of NE model
+    nlp = spacy.load('data_caligraph-NE/spacy-model_goldstandard_26p-all')
+
     lp_uri = lp_data['uri']
     sections = lp_data['sections']
 
@@ -46,8 +49,6 @@ def make_enum_entity_features(lp_data: dict) -> list:
                 continue
 
             # load enum-specific NE-tagging model and use only first sentence of every entry
-            # TODO: proper wrapping of NE model
-            nlp = spacy.load('data_caligraph-NE/spacy-model_goldstandard_26p-all')
             entry_doc = nlp(entry_data['text'])
             entry_doc = list(entry_doc.sents)[0]
             entry_text = entry_doc.text
