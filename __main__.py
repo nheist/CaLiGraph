@@ -30,7 +30,7 @@ if __name__ == '__main__':
         cali_base.serialize_final_graph()  # run the complete extraction cycle and end with serializing CaLiGraph
         nlp_util.persist_cache()  # persist the spaCy cache to rerun extraction more quickly
 
-        success_msg = 'Starting extraction of CaLiGraph version 1.'
+        success_msg = 'Finished extraction of CaLiGraph version 1.'
         mailer.send_success(success_msg)
         util.get_logger().info(success_msg)
     except Exception as e:
