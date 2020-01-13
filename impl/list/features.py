@@ -48,10 +48,13 @@ def make_enum_entity_features(lp_data: dict) -> list:
             if not entry_data['text'].strip():
                 continue
 
-            # load enum-specific NE-tagging model and use only first sentence of every entry
-            entry_doc = nlp(entry_data['text'])
-            entry_doc = list(entry_doc.sents)[0]
-            entry_text = entry_doc.text
+            # use only first sentence of every entry
+            entry_text = entry_data['text']
+            entry_doc = nlp(entry_text)
+            first_sentence = list(entry_doc.sents)[0].text
+            if first_sentence != entry_text:
+                entry_text = first_sentence
+                entry_doc = nlp(first_sentence)
 
             entities = entry_data['entities']
             # add link type (blue/red) to entities and collect entity boundaries
