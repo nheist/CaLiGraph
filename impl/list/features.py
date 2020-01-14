@@ -2,6 +2,7 @@
 
 import impl.list.mapping as list_mapping
 import impl.list.util as list_util
+import impl.list.nlp as list_nlp
 import impl.dbpedia.store as dbp_store
 import impl.dbpedia.heuristics as dbp_heur
 import impl.category.store as cat_store
@@ -15,16 +16,12 @@ import util
 from sklearn.preprocessing import OneHotEncoder
 from collections import defaultdict, Counter
 import operator
-import spacy
 
 
 # COMPUTATION OF BASIC ENTITY FEATURES OF ENUM LISTPAGES
 
 def make_enum_entity_features(lp_data: dict) -> list:
     """Return a set of features for every entity in a enumeration list page."""
-    # TODO: proper wrapping of NE model
-    nlp = spacy.load('data_caligraph-NE/spacy-model_goldstandard_50p-all')
-
     lp_uri = lp_data['uri']
     sections = lp_data['sections']
 
@@ -46,7 +43,7 @@ def make_enum_entity_features(lp_data: dict) -> list:
         entries = section_data['entries']
         for entry_idx, entry_data in enumerate(entries):
             entry_text = entry_data['text']
-            entry_doc = nlp(entry_text)
+            entry_doc = list_nlp.parse(entry_text)
 
             entities = entry_data['entities']
             # add link type (blue/red) to entities and collect entity boundaries
