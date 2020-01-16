@@ -88,10 +88,7 @@ def _get_lines_ontology(graph) -> list:
         lines_ontology.extend([serialize_util.as_object_triple(node, rdf_util.PREDICATE_SUBCLASS_OF, p) for p in parents])
     # properties
     for prop in graph.get_all_properties():
-        lines_ontology.extend([
-            serialize_util.as_object_triple(prop, rdf_util.PREDICATE_TYPE, rdf_util.CLASS_OWL_CLASS),
-            serialize_util.as_object_triple(prop, rdf_util.PREDICATE_SUBPROPERTY_OF, rdf_util.CLASS_PROPERTY),
-        ])
+        lines_ontology.append(serialize_util.as_object_triple(prop, rdf_util.PREDICATE_TYPE, rdf_util.CLASS_PROPERTY))
     # restrictions
     defined_restrictions = set()
     for node in graph.nodes:
