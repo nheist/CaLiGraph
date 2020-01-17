@@ -245,7 +245,7 @@ cache:
   dbpedia_listpage_enum_features:
     filename: 'dbpedia-listpage-enum-features'
     version: 1
-    store_as_hdf: True
+    store_as_csv: True
   dbpedia_listpage_table_features:
     filename: 'dbpedia-listpage-table-features'
     version: 1
