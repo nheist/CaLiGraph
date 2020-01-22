@@ -60,7 +60,7 @@ def make_enum_entity_features(lp_data: dict) -> list:
                 end = ent.end_char
                 text = ent.text
                 if not entity_character_idxs.intersection(set(range(start, end))):
-                    uri = rdf_util.name2uri(text, lp_uri + '#')
+                    uri = rdf_util.name2uri(text, lp_uri + '__')
                     entities.append({'uri': uri, 'text': text, 'idx': start, 'link_type': 'grey'})
             entities = sorted(entities, key=lambda x: x['idx'])
 
@@ -316,7 +316,7 @@ def assign_entity_labels(graph, df: pd.DataFrame):
             listpage_types[listpage_uri].update(dbp_store.get_independent_types(graph.get_dbpedia_types(n)))
 
     # assign positive and negative labels that are induced directly from the taxonomy
-    df['label'] = df.apply(lambda row: _compute_label_for_entity(row['_listpage_uri'], row['_entity_uri'], listpage_valid_resources, listpage_types), axis=1)
+    df['label'] = df.apply(lambda row: _compute_label_for_entity(row['_listpage_uri'], row['_entity_uri'], row['_link_type'], listpage_valid_resources, listpage_types), axis=1)
 
     if util.get_config('list.extraction.use_negative_evidence_assumption'):
         # -- ASSUMPTION: an entry of a list page has at most one positive example --
@@ -337,8 +337,11 @@ def _get_entry_id(df: pd.DataFrame, row: pd.Series) -> tuple:
         return row['_listpage_uri'], row['_section_name'], row['_table_idx'], row['_row_idx']
 
 
-def _compute_label_for_entity(listpage_uri: str, entity_uri: str, lp_valid_resources: dict, lp_types: dict) -> int:
+def _compute_label_for_entity(listpage_uri: str, entity_uri: str, link_type: str, lp_valid_resources: dict, lp_types: dict) -> int:
     """Return a label for the entity based on links in the taxonomy graph."""
+    if link_type == 'grey':
+        return -1
+
     entity_types = dbp_store.get_types(entity_uri)
     if entity_uri in lp_valid_resources[listpage_uri]:
         return 1
