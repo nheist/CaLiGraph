@@ -5,7 +5,7 @@ from spacy.tokens import Doc
 
 # initialization
 # TODO: implement learning of model
-parser = spacy.load('data_caligraph-NE/spacy-model_goldstandard_50p-all')
+parser = spacy.load('data_caligraph-NE/spacy-model_bluelink-goldstandard')
 
 
 def parse(text: str) -> Doc:
