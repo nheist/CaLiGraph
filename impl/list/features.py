@@ -199,6 +199,7 @@ def make_table_entity_features(lp_data: dict) -> list:
                             '_column_idx': column_idx,
                             '_column_name': column_name,
                             '_entity_uri': entity_uri,
+                            '_link_type': '',
                             # ENTITY FEATURES
                             'section_pos': _get_relative_position(section_idx, len(sections)),
                             'section_invpos': _get_relative_position(section_idx, len(sections), inverse=True),
