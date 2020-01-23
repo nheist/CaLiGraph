@@ -1,6 +1,6 @@
 # CaLiGraph
 
-\- A Large Semantic Knowledge Graph from Wikipedia Categories and Listpages \-
+\- A Large Semantic Knowledge Graph from Wikipedia Categories and List Pages \-
 
 For information about the general idea, extraction statistics, and resources of CaLiGraph, visit the [CaLiGraph website](http://caligraph.org).
 
