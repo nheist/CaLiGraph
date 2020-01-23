@@ -21,7 +21,7 @@ import operator
 # COMPUTATION OF BASIC ENTITY FEATURES OF ENUM LISTPAGES
 
 def make_enum_entity_features(lp_data: dict) -> list:
-    """Return a set of features for every entity in a enumeration list page."""
+    """Return a set of features for every entity in an enumeration list page."""
     lp_uri = lp_data['uri']
     sections = lp_data['sections']
 
@@ -55,13 +55,14 @@ def make_enum_entity_features(lp_data: dict) -> list:
                 entity_character_idxs.update(range(start, end))
 
             # find previously unlinked entities
-            for ent in entry_doc.ents:
-                start = ent.start_char
-                end = ent.end_char
-                text = ent.text
-                if not entity_character_idxs.intersection(set(range(start, end))):
-                    uri = rdf_util.name2uri(text, lp_uri + '__')
-                    entities.append({'uri': uri, 'text': text, 'idx': start, 'link_type': 'grey'})
+            if util.get_config('list.extraction.extract_unlinked_entities'):
+                for ent in entry_doc.ents:
+                    start = ent.start_char
+                    end = ent.end_char
+                    text = ent.text
+                    if not entity_character_idxs.intersection(set(range(start, end))):
+                        uri = rdf_util.name2uri(text, lp_uri + '__')
+                        entities.append({'uri': uri, 'text': text, 'idx': start, 'link_type': 'grey'})
             entities = sorted(entities, key=lambda x: x['idx'])
 
             # collect features
