@@ -94,7 +94,7 @@ class BaseGraph:
         if attr in self.graph.nodes[node]:
             del self.graph.nodes[node][attr]
 
-    def traverse_topdown(self) -> Iterator:
+    def traverse_nodes_topdown(self) -> Iterator:
         """Traverse nodes in such a way that all parents of a node have been traversed before the node itself.
         The graph has to be fully-connected and cycle-free.
         """
@@ -111,7 +111,16 @@ class BaseGraph:
             node_queue.extend(self.children(node))
             yield node
 
-    def traverse_bottomup(self) -> Iterator:
+    def traverse_edges_topdown(self) -> Iterator:
+        """Traverse edges in such a way that the target of an edge must have been
+        the source of an edge at least once before (except for the root node).
+        The graph has to be fully-connected and cycle-free.
+        """
+        for parent in self.traverse_nodes_topdown():
+            for child in self.children(parent):
+                yield parent, child
+
+    def traverse_nodes_bottomup(self) -> Iterator:
         """Traverse nodes in such a way that all children of a node have been traversed before the node itself.
         The graph has to be fully-connected and cycle-free.
         """

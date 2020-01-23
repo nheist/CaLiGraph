@@ -14,13 +14,13 @@ def find_mappings(graph, use_listpage_resources: bool) -> dict:
     mappings = {node: _find_dbpedia_parents(graph, use_listpage_resources, node) for node in graph.nodes}
 
     # apply complete transitivity to the graph in order to discover disjointnesses
-    for node in graph.traverse_topdown():
+    for node in graph.traverse_nodes_topdown():
         for parent in graph.parents(node):
             for t, score in mappings[parent].items():
                 mappings[node][t] = max(mappings[node][t], score)
 
     # resolve basic disjointnesses
-    for node in graph.traverse_topdown():
+    for node in graph.traverse_nodes_topdown():
         coherent_type_sets = _find_coherent_type_sets(mappings[node])
         if len(coherent_type_sets) <= 1:  # no disjoint sets
             continue
@@ -35,7 +35,7 @@ def find_mappings(graph, use_listpage_resources: bool) -> dict:
         _remove_types_from_mapping(graph, mappings, node, types_to_remove)
 
     # remove transitivity from the mappings and create sets of types
-    for node in graph.traverse_bottomup():
+    for node in graph.traverse_nodes_bottomup():
         parent_types = {t for p in graph.parents(node) for t in mappings[p]}
         node_types = set(mappings[node]).difference(parent_types)
         mappings[node] = dbp_store.get_independent_types(node_types)
@@ -45,7 +45,7 @@ def find_mappings(graph, use_listpage_resources: bool) -> dict:
 
 def resolve_disjointnesses(graph, use_listpage_resources: bool):
     """Resolve violations of disjointness axioms that are created through the mapping to DBpedia types."""
-    for node in graph.traverse_topdown():
+    for node in graph.traverse_nodes_topdown():
         parents = graph.parents(node)
         coherent_type_sets = _find_coherent_type_sets({t: 1 for t in graph.get_dbpedia_types(node, force_recompute=True)})
         if len(coherent_type_sets) > 1:

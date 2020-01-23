@@ -1,5 +1,6 @@
 import networkx as nx
 import util
+from impl.util.base_graph import BaseGraph
 from impl.util.hierarchy_graph import HierarchyGraph
 import impl.util.rdf as rdf_util
 import impl.category.base as cat_base
@@ -249,7 +250,7 @@ class CaLiGraph(HierarchyGraph):
                 util.get_logger().debug(f'CaLiGraph: CategoryMerge - Created names for {idx} of {len(cat_graph.nodes)} nodes.')
             cat_node_names[node] = cls._get_canonical_name(cat_graph.get_name(node))
 
-        for edge_idx, (parent_cat, child_cat) in enumerate(nx.bfs_edges(cat_graph.graph, cat_graph.root_node)):
+        for edge_idx, (parent_cat, child_cat) in enumerate(cat_graph.traverse_edges_topdown()):
             if edge_idx % 1000 == 0:
                 util.get_logger().debug(f'CaLiGraph: CategoryMerge - Processed {edge_idx} of {edge_count} category edges.')
 
@@ -274,7 +275,7 @@ class CaLiGraph(HierarchyGraph):
                 util.get_logger().debug(f'CaLiGraph: ListMerge - Created names for {idx} of {len(list_graph.nodes)} nodes.')
             list_node_names[node] = cls._get_canonical_name(list_graph.get_name(node), disable_normalization=True)
 
-        for edge_idx, (parent_lst, child_lst) in enumerate(nx.bfs_edges(list_graph.graph, list_graph.root_node)):
+        for edge_idx, (parent_lst, child_lst) in enumerate(list_graph.traverse_edges_topdown()):
             if edge_idx % 1000 == 0:
                 util.get_logger().debug(f'CaLiGraph: ListMerge - Processed {edge_idx} of {edge_count} list edges.')
 
@@ -368,8 +369,8 @@ class CaLiGraph(HierarchyGraph):
         node_to_dbp_types_mapping = cali_mapping.find_mappings(self, use_listpage_resources)
 
         # add dbpedia types to caligraph
-        type_graph = dbp_store._get_type_graph()
-        for parent_type, child_type in nx.bfs_edges(type_graph, rdf_util.CLASS_OWL_THING):
+        type_graph = BaseGraph(dbp_store._get_type_graph(), root_node=rdf_util.CLASS_OWL_THING)
+        for parent_type, child_type in type_graph.traverse_edges_topdown():
             # make sure to always use the same of all the equivalent types of a type
             parent_type = dbp_store.get_main_equivalence_type(parent_type)
             child_type = dbp_store.get_main_equivalence_type(child_type)

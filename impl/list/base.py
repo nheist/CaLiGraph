@@ -42,7 +42,7 @@ def get_merged_listgraph() -> ListGraph:
     """Retrieve list graph with filtered edges, resolved cycles, and merged lists."""
     global __MERGED_LISTGRAPH__
     if '__MERGED_LISTGRAPH__' not in globals():
-        initializer = lambda: get_cyclefree_wikitaxonomy_listgraph().merge_nodes()
+        initializer = lambda: get_cyclefree_wikitaxonomy_listgraph().merge_nodes().remove_transitive_edges()
         __MERGED_LISTGRAPH__ = util.load_or_create_cache('listgraph_merged', initializer)
     return __MERGED_LISTGRAPH__
 

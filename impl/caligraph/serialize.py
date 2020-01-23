@@ -77,7 +77,7 @@ def _get_lines_ontology(graph) -> list:
         serialize_util.as_literal_triple(ontology_resource, 'http://www.w3.org/2002/07/owl#versionInfo', util.get_config('caligraph.version')),
     ])
     # classes
-    for node in graph.traverse_topdown():
+    for node in graph.traverse_nodes_topdown():
         if node == rdf_util.CLASS_OWL_THING:
             continue
         lines_ontology.append(serialize_util.as_object_triple(node, rdf_util.PREDICATE_TYPE, rdf_util.CLASS_OWL_CLASS))
@@ -129,7 +129,7 @@ def _serialize_restriction(class_iri: str, prop_iri: str, val: str, restriction_
 def _get_lines_ontology_dbpedia_mapping(graph) -> list:
     """Serialize the DBpedia mapping for types and predicates."""
     lines_ontology_dbpedia_mapping = []
-    for node in graph.traverse_topdown():
+    for node in graph.traverse_nodes_topdown():
         if node == rdf_util.CLASS_OWL_THING:
             continue
         equivalents = {t for t in graph.get_parts(node) if dbp_util.is_dbp_type(t)}
@@ -143,7 +143,7 @@ def _get_lines_ontology_dbpedia_mapping(graph) -> list:
 def _get_lines_ontology_provenance(graph) -> list:
     """Serialize provenance information of the ontology."""
     lines_ontology_provenance = []
-    for node in graph.traverse_topdown():
+    for node in graph.traverse_nodes_topdown():
         if node == rdf_util.CLASS_OWL_THING:
             continue
         sources = {dbp_util.dbp_resource2wikipedia_resource(p) for p in graph.get_parts(node)}
@@ -156,7 +156,7 @@ def _get_lines_instances_types(graph) -> list:
     lines_instances_types = []
 
     caligraph_ancestors = defaultdict(set)
-    for n in graph.traverse_topdown():
+    for n in graph.traverse_nodes_topdown():
         parents = graph.parents(n)
         caligraph_ancestors[n] = parents | {a for p in parents for a in caligraph_ancestors[p]}
 
