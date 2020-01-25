@@ -59,9 +59,13 @@ def get_listpage_entities(graph, listpage: str) -> set:
 
 def _extract_listpage_entities(graph):
     """Extract and return entities for all list pages."""
+    util.get_logger().info('List-Entities: Extracting new entities from list pages.')
+
+    util.get_logger().info('List-Entities: Extracting enum entities.')
     enum_features = get_enum_listpage_entity_features(graph)
     enum_entities = list_extract.extract_enum_entities(enum_features)
 
+    util.get_logger().info('List-Entities: Extracting table entities.')
     table_features = get_table_listpage_entity_features(graph)
     table_entities = list_extract.extract_table_entities(table_features)
 
