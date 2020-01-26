@@ -38,9 +38,9 @@ def _as_triple(sub: str, pred: str, obj: str, obj_type) -> str:
 
 
 def _resource_to_string(resource: str) -> str:
-    for c in RESOURCE_ENCODED_CHARS:
-        resource = resource.replace(c, urllib.parse.quote_plus(c))
-    return resource if resource.startswith('_:') else f'<{resource}>'
+    prefix = resource[:resource.rfind('/')+1]
+    res_name = resource[len(prefix):]
+    return f'<{prefix}{urllib.parse.quote_plus(res_name)}>'
 
 
 def _encode_literal_string(literal: str) -> str:
