@@ -419,4 +419,8 @@ class CaLiGraph(HierarchyGraph):
                 prop = cali_util.dbp_type2clg_type(ax[1])
                 val = cali_util.dbp_resource2clg_resource(ax[2]) if dbp_util.is_dbp_resource(ax[2]) else ax[2]
                 self._node_axioms[node].add((prop, val))
+        # filter out axioms that can be inferred from parents
+        for node in self.nodes:
+            parent_axioms = {ax for p in self.parents(node) for ax in self.get_axioms(p)}
+            self._node_axioms[node] = self._node_axioms[node].difference(parent_axioms)
         return self
