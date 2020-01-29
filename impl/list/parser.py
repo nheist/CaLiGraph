@@ -110,7 +110,7 @@ def _extract_entries_for_list(l: wtp.WikiList) -> list:
 def _extract_table(table: wtp.Table) -> list:
     row_data = []
     try:
-        rows = table.data(span=False)
+        rows = table.data()
     except IndexError:
         return []
 
