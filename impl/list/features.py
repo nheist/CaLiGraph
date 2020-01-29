@@ -261,7 +261,7 @@ def _extract_ne_tag(entity_span) -> str:
     """Return the (most common) named entity tag of an entity span."""
     tags = [w.ent_type_ for w in entity_span]
     if not tags:
-        return 'NONE'
+        return ''
     tag_count = Counter(reversed(tags))  # reverse order to return tag of last entity (at same count)
     return sorted(dict(tag_count).items(), key=lambda x: x[1], reverse=True)[0][0]
 
@@ -323,12 +323,15 @@ def assign_entity_labels(graph, df: pd.DataFrame):
     if util.get_config('list.extraction.use_negative_evidence_assumption'):
         # -- ASSUMPTION: an entry of a list page has at most one positive example --
         # locate all entries that have a positive example
-        positive_examples = set()
+        positive_examples = {}
         for _, row in df[df['label'] == 1].iterrows():
-            positive_examples.add(_get_entry_id(df, row))
+            entry_id = _get_entry_id(df, row)
+            sortkey = _get_sortkey(df, row)
+            positive_examples[entry_id] = min(positive_examples[entry_id], sortkey) if entry_id in positive_examples else sortkey
         # make all candidate examples negative that appear in an entry with a positive example
-        for i, row in df[df['label'] == -1].iterrows():
-            if _get_entry_id(df, row) in positive_examples:
+        for i, row in df[df['label'] != 0].iterrows():
+            entry_id = _get_entry_id(df, row)
+            if entry_id in positive_examples and _get_sortkey(df, row) != positive_examples[entry_id]:
                 df.at[i, 'label'] = 0
 
 
@@ -339,15 +342,25 @@ def _get_entry_id(df: pd.DataFrame, row: pd.Series) -> tuple:
         return row['_listpage_uri'], row['_section_name'], row['_table_idx'], row['_row_idx']
 
 
+def _get_sortkey(df: pd.DataFrame, row: pd.Series):
+    if '_entry_idx' in df.columns:
+        return row['entity_idx']
+    else:
+        return row['_column_idx'], row['entity_idx']
+
+
 def _compute_label_for_entity(listpage_uri: str, entity_uri: str, link_type: str, lp_valid_resources: dict, lp_types: dict) -> int:
     """Return a label for the entity based on links in the taxonomy graph."""
     if link_type == 'grey':
         return -1
 
-    entity_types = dbp_store.get_types(entity_uri)
+    is_possible_dbpedia_resource = dbp_store.is_possible_resource(entity_uri)
+    if not is_possible_dbpedia_resource:
+        return 0
     if entity_uri in lp_valid_resources[listpage_uri]:
         return 1
-    if not dbp_store.is_possible_resource(entity_uri) or any(entity_types.intersection(dbp_heur.get_disjoint_types(t)) for t in lp_types[listpage_uri]):
+    entity_types = dbp_store.get_types(entity_uri)
+    if any(entity_types.intersection(dbp_heur.get_disjoint_types(t)) for t in lp_types[listpage_uri]):
         return 0
     return -1
 
