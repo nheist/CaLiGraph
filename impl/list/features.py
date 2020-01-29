@@ -37,11 +37,15 @@ def make_enum_entity_features(lp_data: dict) -> list:
     lp_first_entity_pos = []
 
     data = []
+    entity_lp_index = 0
+    line_index = -1
     for section_idx, section_data in enumerate(sections):
         section_name = section_data['name']
 
         entries = section_data['entries']
         for entry_idx, entry_data in enumerate(entries):
+            entity_line_index = 0
+            line_index += 1
             entry_text = entry_data['text']
             entry_doc = list_nlp.parse(entry_text)
 
@@ -88,8 +92,11 @@ def make_enum_entity_features(lp_data: dict) -> list:
                     '_id': f'{lp_uri}__{section_name}__{entry_idx}__{entity_uri}',
                     '_listpage_uri': lp_uri,
                     '_section_name': section_name or '',
+                    '_line_idx': line_index,
                     '_entry_idx': entry_idx,
                     '_entity_uri': entity_uri,
+                    '_entity_lp_idx': entity_lp_index,
+                    '_entity_line_idx': entity_line_index,
                     '_link_type': entity_data['link_type'],
                     # ENTITY FEATURES
                     'section_pos': _get_relative_position(section_idx, len(sections)),
@@ -118,6 +125,8 @@ def make_enum_entity_features(lp_data: dict) -> list:
                 }
 
                 data.append(features)
+                entity_lp_index += 1
+                entity_line_index += 1
 
     for feature_set in data:
         # ENTITY-STATS FEATURES
@@ -156,6 +165,8 @@ def make_table_entity_features(lp_data: dict) -> list:
     lp_table_first_entity_column = []
 
     data = []
+    entity_lp_index = 0
+    line_index = -1
     for section_idx, section_data in enumerate(sections):
         section_name = section_data['name']
 
@@ -163,6 +174,8 @@ def make_table_entity_features(lp_data: dict) -> list:
         for table_idx, table in enumerate(tables):
 
             for row_idx, row in enumerate(table):
+                entity_line_index = 0
+                line_index += 1
                 lp_table_row_entities.append(sum([len(col['entities']) for col in row]))
 
                 for column_idx, column_data in enumerate(row):
@@ -194,11 +207,14 @@ def make_table_entity_features(lp_data: dict) -> list:
                             '_id': f'{lp_uri}__{section_name}__{table_idx}__{row_idx}__{column_idx}__{entity_uri}',
                             '_listpage_uri': lp_uri,
                             '_section_name': section_name or '',
+                            '_line_idx': line_index,
                             '_table_idx': table_idx,
                             '_row_idx': row_idx,
                             '_column_idx': column_idx,
                             '_column_name': column_name,
                             '_entity_uri': entity_uri,
+                            '_entity_lp_idx': entity_lp_index,
+                            '_entity_line_idx': entity_line_index,
                             '_link_type': '',
                             # ENTITY FEATURES
                             'section_pos': _get_relative_position(section_idx, len(sections)),
@@ -234,6 +250,8 @@ def make_table_entity_features(lp_data: dict) -> list:
                         }
 
                         data.append(features)
+                        entity_lp_index += 1
+                        entity_line_index += 1
 
     for feature_set in data:
         # ENTITY-STATS FEATURES
@@ -325,28 +343,22 @@ def assign_entity_labels(graph, df: pd.DataFrame):
         # locate all entries that have a positive example
         positive_examples = {}
         for _, row in df[df['label'] == 1].iterrows():
-            entry_id = _get_entry_id(df, row)
-            sortkey = _get_sortkey(df, row)
-            positive_examples[entry_id] = min(positive_examples[entry_id], sortkey) if entry_id in positive_examples else sortkey
+            line_id = _get_listpage_line_id(row)
+            sortkey = _get_sortkey(row)
+            positive_examples[line_id] = min(positive_examples[line_id], sortkey) if line_id in positive_examples else sortkey
         # make all candidate examples negative that appear in an entry with a positive example
         for i, row in df[df['label'] != 0].iterrows():
-            entry_id = _get_entry_id(df, row)
-            if entry_id in positive_examples and _get_sortkey(df, row) != positive_examples[entry_id]:
+            line_id = _get_listpage_line_id(row)
+            if line_id in positive_examples and _get_sortkey(row) != positive_examples[line_id]:
                 df.at[i, 'label'] = 0
 
 
-def _get_entry_id(df: pd.DataFrame, row: pd.Series) -> tuple:
-    if '_entry_idx' in df.columns:
-        return row['_listpage_uri'], row['_section_name'], row['_entry_idx']
-    else:
-        return row['_listpage_uri'], row['_section_name'], row['_table_idx'], row['_row_idx']
+def _get_listpage_line_id(row: pd.Series) -> tuple:
+    return row['_listpage_uri'], row['_line_idx']
 
 
-def _get_sortkey(df: pd.DataFrame, row: pd.Series):
-    if '_entry_idx' in df.columns:
-        return row['entity_idx']
-    else:
-        return row['_column_idx'], row['entity_idx']
+def _get_sortkey(row: pd.Series):
+    return row['_entity_line_idx']
 
 
 def _compute_label_for_entity(listpage_uri: str, entity_uri: str, link_type: str, lp_valid_resources: dict, lp_types: dict) -> int:
