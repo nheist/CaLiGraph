@@ -189,7 +189,7 @@ def make_table_entity_features(lp_data: dict) -> list:
                     lp_table_column_words.append(len(column_text.split(' ')))
                     lp_table_column_chars.append(len(column_text))
 
-                    column_doc = nlp_util.parse(column_text, disable_normalization=True)
+                    column_doc = list_nlp.parse(column_text)
 
                     column_entities = column_data['entities']
                     lp_table_column_entities.append(len(column_entities))
