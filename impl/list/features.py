@@ -44,7 +44,6 @@ def make_enum_entity_features(lp_data: dict) -> list:
 
         entries = section_data['entries']
         for entry_idx, entry_data in enumerate(entries):
-            entity_line_index = 0
             line_index += 1
             entry_text = entry_data['text']
             entry_doc = list_nlp.parse(entry_text)
@@ -96,7 +95,7 @@ def make_enum_entity_features(lp_data: dict) -> list:
                     '_entry_idx': entry_idx,
                     '_entity_uri': entity_uri,
                     '_entity_lp_idx': entity_lp_index,
-                    '_entity_line_idx': entity_line_index,
+                    '_entity_line_idx': entity_idx,
                     '_link_type': entity_data['link_type'],
                     # ENTITY FEATURES
                     'section_pos': _get_relative_position(section_idx, len(sections)),
@@ -126,7 +125,6 @@ def make_enum_entity_features(lp_data: dict) -> list:
 
                 data.append(features)
                 entity_lp_index += 1
-                entity_line_index += 1
 
     for feature_set in data:
         # ENTITY-STATS FEATURES
@@ -176,24 +174,41 @@ def make_table_entity_features(lp_data: dict) -> list:
             for row_idx, row in enumerate(table):
                 entity_line_index = 0
                 line_index += 1
+                first_entity_column_found = False
                 lp_table_row_entities.append(sum([len(col['entities']) for col in row]))
-
-                for column_idx, column_data in enumerate(row):
-                    if column_data['entities']:
-                        lp_table_first_entity_column.append(column_idx)
-                        break
 
                 for column_idx, column_data in enumerate(row):
                     column_name = table[0][column_idx]['text'] if len(table[0]) > column_idx else ''
                     column_text = column_data['text']
+                    column_doc = list_nlp.parse(column_text)
+
                     lp_table_column_words.append(len(column_text.split(' ')))
                     lp_table_column_chars.append(len(column_text))
 
-                    column_doc = list_nlp.parse(column_text)
-
                     column_entities = column_data['entities']
-                    lp_table_column_entities.append(len(column_entities))
+                    # add link type (blue/red) to entities and collect entity boundaries
+                    entity_character_idxs = set()
+                    for entity_data in column_entities:
+                        entity_data['link_type'] = 'blue' if entity_data['uri'] in dbp_store.get_raw_resources() else 'red'
+                        start = entity_data['idx']
+                        end = start + len(entity_data['text'])
+                        entity_character_idxs.update(range(start, end))
+                    # find previously unlinked entities
+                    if util.get_config('list.extraction.extract_unlinked_entities'):
+                        for ent in column_doc.ents:
+                            start = ent.start_char
+                            end = ent.end_char
+                            text = ent.text
+                            if not entity_character_idxs.intersection(set(range(start, end))):
+                                uri = rdf_util.name2uri(text, lp_uri + '__')
+                                column_entities.append({'uri': uri, 'text': text, 'idx': start, 'link_type': 'grey'})
+                    column_entities = sorted(column_entities, key=lambda x: x['idx'])
 
+                    if not first_entity_column_found and column_entities:
+                        lp_table_first_entity_column.append(column_idx)
+                        first_entity_column_found = True
+
+                    lp_table_column_entities.append(len(column_entities))
                     for entity_idx, entity_data in enumerate(column_entities):
                         entity_uri = entity_data['uri']
                         entity_uri = entity_uri[:entity_uri.index('#')] if '#' in entity_uri else entity_uri
@@ -215,7 +230,7 @@ def make_table_entity_features(lp_data: dict) -> list:
                             '_entity_uri': entity_uri,
                             '_entity_lp_idx': entity_lp_index,
                             '_entity_line_idx': entity_line_index,
-                            '_link_type': '',
+                            '_link_type': entity_data['link_type'],
                             # ENTITY FEATURES
                             'section_pos': _get_relative_position(section_idx, len(sections)),
                             'section_invpos': _get_relative_position(section_idx, len(sections), inverse=True),
