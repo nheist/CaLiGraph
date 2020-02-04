@@ -248,6 +248,7 @@ def make_table_entity_features(lp_data: dict) -> list:
                             'column_list_hypernym': _compute_column_list_similarity(_is_hyper, lp_uri, column_name),
                             'entity_link_pos': _get_relative_position(entity_idx, len(column_entities)),
                             'entity_link_invpos': _get_relative_position(entity_idx, len(column_entities), inverse=True),
+                            'entity_line_first': entity_line_index == 0,
                             'entity_first': entity_idx == 0,
                             'entity_last': (entity_idx + 1) == len(column_entities),
                             'entity_count': len(column_entities),
