@@ -355,17 +355,14 @@ def assign_entity_labels(graph, df: pd.DataFrame):
     df['label'] = df.apply(lambda row: _compute_label_for_entity(row['_listpage_uri'], row['_entity_uri'], row['_link_type'], listpage_valid_resources, listpage_types), axis=1)
 
     if util.get_config('list.extraction.use_negative_evidence_assumption'):
-        # -- ASSUMPTION: an entry of a list page has at most one positive example --
+        # ASSUMPTION: if an entry has at least one positive example, all the unknown examples are negative
         # locate all entries that have a positive example
-        positive_examples = {}
+        lines_with_positive_example = set()
         for _, row in df[df['label'] == 1].iterrows():
-            line_id = _get_listpage_line_id(row)
-            sortkey = _get_sortkey(row)
-            positive_examples[line_id] = min(positive_examples[line_id], sortkey) if line_id in positive_examples else sortkey
+            lines_with_positive_example.add(_get_listpage_line_id(row))
         # make all candidate examples negative that appear in an entry with a positive example
-        for i, row in df[df['label'] != 0].iterrows():
-            line_id = _get_listpage_line_id(row)
-            if line_id in positive_examples and _get_sortkey(row) != positive_examples[line_id]:
+        for i, row in df[df['label'] == -1].iterrows():
+            if _get_listpage_line_id(row) in lines_with_positive_example:
                 df.at[i, 'label'] = 0
 
 
