@@ -135,7 +135,7 @@ def _get_lines_ontology_dbpedia_mapping(graph) -> list:
         if node == rdf_util.CLASS_OWL_THING:
             continue
         equivalents = {t for t in graph.get_parts(node) if dbp_util.is_dbp_type(t)}
-        lines_ontology_dbpedia_mapping.extend([serialize_util.as_object_triple(node, rdf_util.PREDICATE_EQUIVALENT_CLASS, e) for e in equivalents])
+        lines_ontology_dbpedia_mapping.extend([serialize_util.as_object_triple(node, rdf_util.PREDICATE_SUBCLASS_OF, e) for e in equivalents])
     for prop in graph.get_all_properties():
         eq_prop = cali_util.clg_type2dbp_type(prop)
         lines_ontology_dbpedia_mapping.append(serialize_util.as_object_triple(prop, rdf_util.PREDICATE_EQUIVALENT_PROPERTY, eq_prop))
