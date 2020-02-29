@@ -115,6 +115,8 @@ results:
 
     dbpedia_instances: 'dbpedia_caligraph-instances.nt.bz2'  # new dbpedia instances found through CaLiGraph
     dbpedia_instance-types: 'dbpedia_caligraph-types.nt.bz2'  # new dbpedia types found through CaLiGraph
+    dbpedia_instance-caligraph-types: 'dbpedia_caligraph-clg-types.nt.bz2'  # all CaLiGraph types that can be assigned to DBpedia resources
+    dbpedia_instance-transitive-caligraph-types: 'dbpedia_caligraph-transitive-clg-types.nt.bz2'  # all transitive CaLiGraph types that can be assigned to DBpedia resources
     dbpedia_instance-relations: 'dbpedia_caligraph-relations.nt.bz2'  #  new dbpedia relations found through CaLiGraph
 
 # -- CACHE FILE CONFIGURATION --
