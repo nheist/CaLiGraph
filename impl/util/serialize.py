@@ -34,7 +34,7 @@ def _as_triple(sub: str, pred: str, obj: str, obj_type) -> str:
         obj_as_string = f'"{obj}"'
         if obj_type in POSTFIXES:
             obj_as_string += f'^^{_resource_to_string(POSTFIXES[obj_type])}'
-    return f'{_resource_to_string(sub)} {_resource_to_string(pred)} {obj_as_string} .\n'
+    return f'{_resource_to_string(sub)} <{pred}> {obj_as_string} .\n'
 
 
 def _resource_to_string(resource: str) -> str:
