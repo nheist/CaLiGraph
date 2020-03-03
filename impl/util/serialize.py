@@ -34,13 +34,13 @@ def _as_triple(sub: str, pred: str, obj: str, obj_type) -> str:
         obj_as_string = f'"{obj}"'
         if obj_type in POSTFIXES:
             obj_as_string += f'^^{_resource_to_string(POSTFIXES[obj_type])}'
-    return f'{_resource_to_string(sub)} <{pred}> {obj_as_string} .\n'
+    return f'{_resource_to_string(sub)} <{_resource_to_string(pred)}> {obj_as_string} .\n'
 
 
 def _resource_to_string(resource: str) -> str:
     prefix = resource[:resource.rfind('/')+1]
     res_name = resource[len(prefix):]
-    return f'<{prefix}{urllib.parse.quote_plus(res_name)}>'
+    return f'<{prefix}{urllib.parse.quote_plus(res_name).replace("%23", "#")}>'
 
 
 def _encode_literal_string(literal: str) -> str:
