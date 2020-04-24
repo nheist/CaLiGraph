@@ -98,6 +98,10 @@ files:
     webisalod_hypernyms:
       filename: 'webisalod_hypernyms.p.bz2'
       url: 'http://data.dws.informatik.uni-mannheim.de/CaLiGraph/data/webisalod_hypernyms.p.bz2'
+  listpages:
+    goldstandard_named-entity-tagging:
+      filename: 'goldstandard_list-page-named-entity-tagging.json'
+      url: 'http://data.dws.informatik.uni-mannheim.de/CaLiGraph/data/goldstandard_list-page-named-entity-tagging.json'
 
 # -- RESULT FILE CONFIGURATION --
 results:
@@ -261,4 +265,10 @@ cache:
     version: 1
   cat2ax_axioms:
     filename: 'cat2ax-axioms'
+    version: 1
+  spacy_listpage_ne-tagging_GS:
+    filename: 'spacy_listpage_ne-tagging_GS'
+    version: 1
+  spacy_listpage_ne-tagging_GS-WLE:
+    filename: 'spacy_listpage_ne-tagging_GS-WLE'
     version: 1
