@@ -23,16 +23,6 @@ def parse(text: str) -> Doc:
 
 # initialization
 
-def _initialise_parser():
-    path_to_model = util._get_cache_path('spacy_listpage_ne-tagging_GS-WLE')
-    if not path_to_model.is_dir():
-        _train_parser()
-    return spacy.load(str(path_to_model))
-
-
-parser = _initialise_parser()
-
-
 NER_LABEL_MAPPING = {
     'PERSON': ['http://dbpedia.org/ontology/Person', 'http://dbpedia.org/ontology/Deity'],
     'NORP': ['http://dbpedia.org/ontology/PoliticalParty', 'http://dbpedia.org/ontology/Family', 'http://dbpedia.org/ontology/EthnicGroup'],
@@ -47,6 +37,13 @@ NER_LABEL_MAPPING = {
     'LANGUAGE': ['http://dbpedia.org/ontology/Language'],
     'SPECIES': ['http://dbpedia.org/ontology/Species']
 }
+
+
+def _initialise_parser():
+    path_to_model = util._get_cache_path('spacy_listpage_ne-tagging_GS-WLE')
+    if not path_to_model.is_dir():
+        _train_parser()
+    return spacy.load(str(path_to_model))
 
 
 def _train_parser():
@@ -157,3 +154,6 @@ def _train_enhanced_spacy_model(training_data: list, output_dir: str, model=None
     if not output_dir.exists():
         output_dir.mkdir()
     nlp.to_disk(output_dir)
+
+
+parser = _initialise_parser()
