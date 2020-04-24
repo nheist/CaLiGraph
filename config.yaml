@@ -160,10 +160,10 @@ cache:
     version: 2
   caligraph_filtered:
     filename: 'caligraph-filtered'
-    version: 2
+    version: 3
   caligraph_axiomatized:
     filename: 'caligraph-axiomatized'
-    version: 2
+    version: 3
   spacy_docs:
     filename: 'spacy-docs'
     version: 1
@@ -254,15 +254,15 @@ cache:
     version: 1
   dbpedia_listpage_enum_features:
     filename: 'dbpedia-listpage-enum-features'
-    version: 2
+    version: 3
     store_as_csv: True
   dbpedia_listpage_table_features:
     filename: 'dbpedia-listpage-table-features'
-    version: 2
+    version: 3
     store_as_csv: True
   dbpedia_listpage_entities:
     filename: 'dbpedia-listpage-entities'
-    version: 2
+    version: 3
   wikitaxonomy_hypernyms:
     filename: 'wikitaxonomy-hypernyms'
     version: 1
