@@ -10,7 +10,7 @@ import networkx as nx
 from typing import Optional
 import inflection
 
-
+# TODO: Replace caching with functools LRU cache
 # DBpedia RESOURCES
 
 
