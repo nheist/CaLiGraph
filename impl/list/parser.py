@@ -57,6 +57,7 @@ def _convert_special_enums(wiki_text: WikiText) -> WikiText:
     return wtp.parse(result)
 
 
+# TODO: ignore enumerations that are contained in a table
 def _get_list_type(wiki_text: WikiText) -> str:
     """Return layout type of the list page by counting whether we have more table rows or enumeration entries."""
     try:
