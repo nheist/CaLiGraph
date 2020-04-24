@@ -40,7 +40,7 @@ def _as_triple(sub: str, pred: str, obj: str, obj_type) -> str:
 def _resource_to_string(resource: str) -> str:
     prefix = resource[:resource.rfind('/')+1]
     res_name = resource[len(prefix):]
-    return f'<{prefix}{urllib.parse.quote_plus(res_name).replace("%23", "#")}>'
+    return f'<{prefix}{urllib.parse.quote_plus(res_name).replace("%23", "#").replace("%3A", ":")}>'
 
 
 def _encode_literal_string(literal: str) -> str:
