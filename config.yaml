@@ -1,3 +1,6 @@
+# -- SYSTEM CONFIGURATION --
+max_cpus: 20
+
 # -- CALIGRAPH CONFIGURATION --
 caligraph:
   version: '1.0'

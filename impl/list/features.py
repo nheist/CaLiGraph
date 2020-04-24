@@ -63,7 +63,7 @@ def make_enum_entity_features(lp_data: dict) -> list:
                     start = ent.start_char
                     end = ent.end_char
                     text = ent.text
-                    if not entity_character_idxs.intersection(set(range(start, end))):
+                    if not entity_character_idxs.intersection(set(range(start, end))) and len(text) > 1:
                         uri = rdf_util.name2uri(text, lp_uri + '__')
                         entities.append({'uri': uri, 'text': text, 'idx': start, 'link_type': 'grey'})
             entities = sorted(entities, key=lambda x: x['idx'])
@@ -199,7 +199,7 @@ def make_table_entity_features(lp_data: dict) -> list:
                             start = ent.start_char
                             end = ent.end_char
                             text = ent.text
-                            if not entity_character_idxs.intersection(set(range(start, end))):
+                            if not entity_character_idxs.intersection(set(range(start, end))) and len(text) > 1:
                                 uri = rdf_util.name2uri(text, lp_uri + '__')
                                 column_entities.append({'uri': uri, 'text': text, 'idx': start, 'link_type': 'grey'})
                     column_entities = sorted(column_entities, key=lambda x: x['idx'])
