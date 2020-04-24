@@ -44,12 +44,12 @@ with open('config.yaml', 'r') as config_file:
 # FILES
 def get_data_file(config_path: str) -> str:
     """Return the file path where the data file is located (given the `config_path` where it is specified)."""
-    file_config = get_config(config_path)
+    config = get_config(config_path)
 
     # download file if not existing
-    filepath = os.path.join(_get_root_path(), 'data', file_config['filename'])
+    filepath = os.path.join(_get_root_path(), 'data', config['filename'])
     if not os.path.isfile(filepath):
-        url = file_config['url']
+        url = config['url']
         get_logger().info(f'Download file from {url}..')
         urllib.request.urlretrieve(url, filepath)
         get_logger().info(f'Finished downloading from {url}')
@@ -74,28 +74,31 @@ def load_or_create_cache(cache_identifier: str, init_func, version=None):
 
 def load_cache(cache_identifier: str, version=None):
     """Return the object cached at `cache_identifier`."""
+    config = get_config('cache.{}'.format(cache_identifier))
     cache_path = _get_cache_path(cache_identifier, version=version)
     if not cache_path.exists():
         return None
-    if _should_store_as_hdf(cache_identifier):
-        return pd.read_hdf(_get_cache_path(cache_identifier, version=version), key='df')
-    if _should_store_as_csv(cache_identifier):
-        return pd.read_csv(_get_cache_path(cache_identifier, version=version), sep=';', index_col=0)
+    if _should_store_as_hdf(config):
+        return pd.read_hdf(cache_path, key='df')
+    if _should_store_as_csv(config):
+        return pd.read_csv(cache_path, sep=';', index_col=0)
     else:
-        open_func = _get_cache_open_func(cache_identifier)
+        open_func = _get_cache_open_func(config)
         with open_func(cache_path, mode='rb') as cache_file:
             return pickle.load(cache_file)
 
 
 def update_cache(cache_identifier: str, cache_obj, version=None):
     """Update the object cached at `cache_identifier` with `cache_obj`."""
-    if _should_store_as_hdf(cache_identifier):
-        cache_obj.to_hdf(_get_cache_path(cache_identifier, version=version), key='df', mode='w')
-    elif _should_store_as_csv(cache_identifier):
-        cache_obj.to_csv(_get_cache_path(cache_identifier, version=version), sep=';')
+    config = get_config('cache.{}'.format(cache_identifier))
+    cache_path = _get_cache_path(cache_identifier, version=version)
+    if _should_store_as_hdf(config):
+        cache_obj.to_hdf(cache_path, key='df', mode='w')
+    elif _should_store_as_csv(config):
+        cache_obj.to_csv(cache_path, sep=';')
     else:
-        open_func = _get_cache_open_func(cache_identifier)
-        with open_func(_get_cache_path(cache_identifier, version=version), mode='wb') as cache_file:
+        open_func = _get_cache_open_func(config)
+        with open_func(cache_path, mode='wb') as cache_file:
             pickle.dump(cache_obj, cache_file, protocol=4)
 
 
@@ -103,32 +106,35 @@ def _get_cache_path(cache_identifier: str, version=None) -> Path:
     config = get_config('cache.{}'.format(cache_identifier))
     filename = config['filename']
     version = version or config['version']
-    if _should_store_as_hdf(cache_identifier):
+    if _should_store_as_folder(config):
+        base_fileformat = ''
+    elif _should_store_as_hdf(config):
         base_fileformat = '.h5'
-    elif _should_store_as_csv(cache_identifier):
+    elif _should_store_as_csv(config):
         base_fileformat = '.csv'
     else:
         base_fileformat = '.p'
-    fileformat = base_fileformat + ('.bz2' if _should_compress_cache(cache_identifier) else '')
+    fileformat = base_fileformat + ('.bz2' if _should_compress_cache(config) else '')
     return Path(os.path.join(_get_root_path(), 'data', 'cache', f'{filename}_v{version}{fileformat}'))
 
 
-def _get_cache_open_func(cache_identifier: str):
-    return bz2.open if _should_compress_cache(cache_identifier) else open
+def _get_cache_open_func(config: dict):
+    return bz2.open if _should_compress_cache(config) else open
 
 
-def _should_compress_cache(cache_identifier: str) -> bool:
-    config = get_config('cache.{}'.format(cache_identifier))
+def _should_compress_cache(config: dict) -> bool:
     return 'compress' in config and config['compress']
 
 
-def _should_store_as_hdf(cache_identifier: str) -> bool:
-    config = get_config('cache.{}'.format(cache_identifier))
+def _should_store_as_folder(config: dict) -> bool:
+    return 'store_as_folder' in config and config['store_as_folder']
+
+
+def _should_store_as_hdf(config: dict) -> bool:
     return 'store_as_hdf' in config and config['store_as_hdf']
 
 
-def _should_store_as_csv(cache_identifier: str) -> bool:
-    config = get_config('cache.{}'.format(cache_identifier))
+def _should_store_as_csv(config: dict) -> bool:
     return 'store_as_csv' in config and config['store_as_csv']
 
 
