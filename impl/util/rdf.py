@@ -42,6 +42,7 @@ def uri2name(uri: str, prefix: str) -> str:
     return uri[len(prefix):].replace('_', ' ')
 
 
+# TODO: replace tabs with underscores
 def name2uri(name: str, prefix: str) -> str:
     return prefix + name.replace(' ', '_')
 
