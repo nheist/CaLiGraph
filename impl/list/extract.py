@@ -8,7 +8,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.feature_selection import SelectKBest
 from xgboost import XGBClassifier, XGBRegressor
 from sklearn.model_selection import GroupShuffleSplit
-from _collections import defaultdict, namedtuple
+from collections import defaultdict, namedtuple
 import multiprocessing as mp
 import util
 
