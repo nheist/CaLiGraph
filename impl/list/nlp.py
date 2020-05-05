@@ -15,10 +15,11 @@ from spacy.util import minibatch, compounding
 
 def parse(text: str) -> Doc:
     """Return `text` as spaCy document."""
-    if parser is None:
-        _initialise_parser()
+    global __PARSER__
+    if '__PARSER__' not in globals():
+        __PARSER__ = _initialise_parser()
 
-    return parser(text)
+    return __PARSER__(text)
 
 
 # initialization
@@ -154,6 +155,3 @@ def _train_enhanced_spacy_model(training_data: list, output_dir: str, model=None
     if not output_dir.exists():
         output_dir.mkdir()
     nlp.to_disk(output_dir)
-
-
-parser = _initialise_parser()
