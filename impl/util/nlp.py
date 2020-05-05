@@ -11,14 +11,6 @@ import inflection
 SPACY_CACHE_ID = 'spacy_docs'
 
 
-# initialization
-parser = spacy.load('en_core_web_lg')
-# manually initializing stop words as they are missing in lg corpus
-for word in parser.Defaults.stop_words:
-    lex = parser.vocab[word]
-    lex.is_stop = True
-
-
 def without_stopwords(text: str) -> set:
     """Return the lemmatized versions of all non-stop-words in `text`."""
     text = remove_parentheses_content(text.replace('-', ' '))
@@ -124,8 +116,16 @@ def parse(text: str, disable_normalization=False, skip_cache=False) -> Doc:
         if len(split_text) == 1 or (len(split_text) > 1 and not (text[1].isupper() or split_text[1].istitle())):
             text = text[0].lower() + text[1:] if len(text) > 1 else text[0].lower()
 
+    # initialize spaCy parser if necessary
+    global __PARSER__
+    if '__PARSER__' not in globals():
+        __PARSER__ = spacy.load('en_core_web_lg')
+        for word in __PARSER__.Defaults.stop_words:  # initialize stop words manually as they are missing in lg corpus
+            lex = __PARSER__.vocab[word]
+            lex.is_stop = True
+
     if skip_cache:
-        return parser(text)
+        return __PARSER__(text)
 
     global __NLP_CACHE__, __NLP_CACHE_CHANGED__
     if '__NLP_CACHE__' not in globals():
@@ -136,7 +136,7 @@ def parse(text: str, disable_normalization=False, skip_cache=False) -> Doc:
     if text_hash in __NLP_CACHE__:
         return __NLP_CACHE__[text_hash]
 
-    parsed_text = parser(text)
+    parsed_text = __PARSER__(text)
     __NLP_CACHE__[text_hash] = parsed_text
     __NLP_CACHE_CHANGED__ = True
     return parsed_text
