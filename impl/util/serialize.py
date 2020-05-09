@@ -8,7 +8,7 @@ POSTFIXES = {
     int: 'http://www.w3.org/2001/XMLSchema#integer',
     datetime.datetime: 'http://www.w3.org/2001/XMLSchema#date'
 }
-RESOURCE_ENCODED_CHARS = ['\\', '\'', '"', '´', '`', '{', '}', '^', ' ']
+RESOURCE_ENCODING_EXCEPTIONS = ['#', ':', ',', ';', '(', ')', '\'', '&', '!', '*', '+', '=', '$']
 LITERAL_ENCODED_CHARS = ['\\', '\'', '"']
 
 
@@ -40,7 +40,14 @@ def _as_triple(sub: str, pred: str, obj: str, obj_type) -> str:
 def _resource_to_string(resource: str) -> str:
     prefix = resource[:resource.rfind('/')+1]
     res_name = resource[len(prefix):]
-    return f'<{prefix}{urllib.parse.quote_plus(res_name).replace("%23", "#").replace("%3A", ":")}>'
+    return f'<{prefix}{_encode_resource(res_name)}>'
+
+
+def _encode_resource(resource: str) -> str:
+    res_name = urllib.parse.quote_plus(resource)
+    for char in RESOURCE_ENCODING_EXCEPTIONS:
+        res_name = res_name.replace(urllib.parse.quote_plus(char), char)
+    return res_name
 
 
 def _encode_literal_string(literal: str) -> str:
