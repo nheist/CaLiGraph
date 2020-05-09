@@ -258,7 +258,7 @@ cache:
     store_as_csv: True
   dbpedia_listpage_table_features:
     filename: 'dbpedia-listpage-table-features'
-    version: 3
+    version: 2  # ISWC: 3
     store_as_csv: True
   dbpedia_listpage_entities:
     filename: 'dbpedia-listpage-entities'
