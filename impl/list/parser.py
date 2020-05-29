@@ -30,7 +30,7 @@ def _parse_listpage(listpage_uri: str, listpage_markup: str) -> dict:
     """Return a single parsed list page in the following hierarchical structure:
 
     Sections > Entries > Entities (for enumeration list pages)
-    Sections > Tables > Rows > Entities (for table list pages)
+    Sections > Tables > Rows > Columns > Entities (for table list pages)
     """
     wiki_text = wtp.parse(listpage_markup)
     cleaned_wiki_text = _convert_special_enums(wiki_text)
