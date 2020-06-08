@@ -85,7 +85,7 @@ def _extract_subject_entities(df: pd.DataFrame, sampling_funcs: list, selection_
     lps = _extract_listpage_data(df)
     lps = _sample_from_listings(lps, df, sampling_funcs)
     lps = _find_subject_entities(lps, df, selection_params)
-    return {lp.uri: df.loc[lp.subject_entities, '_entity_uri'].to_list() for lp in lps}
+    return defaultdict(set, {lp.uri: set(df.loc[lp.subject_entities, '_entity_uri'].to_list()) for lp in lps})
 
 
 # COLLECTIVE EXTRACTION
