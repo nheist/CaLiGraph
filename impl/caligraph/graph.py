@@ -200,7 +200,8 @@ class CaLiGraph(HierarchyGraph):
                 self._dbp_types_disjoint_nodes[dbp_type] = direct_disjoint_nodes | transitive_disjoint_nodes
         if transitive:
             return {n for t in self._node_disjoint_dbp_types_transitive[node] for n in self._dbp_types_disjoint_nodes[t]}
-        direct_disjoint_nodes = {n for t in self._node_disjoint_dbp_types[node] for n in self._dbp_types_disjoint_nodes[t]}
+        disjoint_types = {tt for t in self._node_disjoint_dbp_types[node] for tt in dbp_store.get_transitive_subtype_closure(t)}
+        direct_disjoint_nodes = {n for t in disjoint_types for n in self.get_nodes_for_part(t)}
         minimal_direct_disjoint_nodes = {n for n in direct_disjoint_nodes if not self.ancestors(n).intersection(direct_disjoint_nodes)}
         return minimal_direct_disjoint_nodes
 
