@@ -37,6 +37,7 @@ class CaLiGraph(HierarchyGraph):
         self._node_axioms = defaultdict(set)
         self._node_axioms_transitive = defaultdict(set)
         self._node_disjoints = defaultdict(set)
+        self._node_disjoints_transitive = defaultdict(set)
 
     def _reset_node_indices(self):
         self._node_dbpedia_types = defaultdict(set)
@@ -45,6 +46,7 @@ class CaLiGraph(HierarchyGraph):
         self._resource_provenance = defaultdict(set)
         self._node_resource_stats = defaultdict(dict)
         self._node_disjoints = defaultdict(set)
+        self._node_disjoints_transitive = defaultdict(set)
 
     def _reset_edge_indices(self):
         self._node_dbpedia_types = defaultdict(set)
@@ -53,6 +55,7 @@ class CaLiGraph(HierarchyGraph):
         self._resource_provenance = defaultdict(set)
         self._node_resource_stats = defaultdict(dict)
         self._node_disjoints = defaultdict(set)
+        self._node_disjoints_transitive = defaultdict(set)
 
     def get_label(self, item: str) -> Optional[str]:
         """Return the label of a CaLiGraph type or resource."""
@@ -187,12 +190,14 @@ class CaLiGraph(HierarchyGraph):
             disjoint_dbp_types = {dt for t in dbp_types for dt in dbp_heur.get_disjoint_types(t)}
             transitive_disjoint_dbp_types = {tdt for dt in disjoint_dbp_types for tdt in dbp_store.get_transitive_subtype_closure(dt)}
             disjoint_caligraph_nodes = {n for t in transitive_disjoint_dbp_types for n in self.get_nodes_for_part(t)}
-            minimal_disjoint_caligraph_nodes =  {n for n in disjoint_caligraph_nodes if not self.ancestors(n).intersection(disjoint_caligraph_nodes)}
+            minimal_disjoint_caligraph_nodes = {n for n in disjoint_caligraph_nodes if not self.ancestors(n).intersection(disjoint_caligraph_nodes)}
             self._node_disjoints[node] = minimal_disjoint_caligraph_nodes
         if transitive:
-            transitive_disjoint_nodes = self._node_disjoints[node] | {d for n in self._node_disjoints[node] for d in self.descendants(n)}
+            if node not in self._node_disjoints_transitive:
+                transitive_disjoint_nodes = self._node_disjoints[node] | {d for n in self._node_disjoints[node] for d in self.descendants(n)}
+                self._node_disjoints_transitive[node] = transitive_disjoint_nodes
             transitive_disjoint_nodes_of_parents = {d for p in self.parents(node) for d in self.get_disjoint_nodes(p)}
-            return transitive_disjoint_nodes | transitive_disjoint_nodes_of_parents
+            return self._node_disjoints_transitive[node] | transitive_disjoint_nodes_of_parents
         return self._node_disjoints[node]
 
     @property
