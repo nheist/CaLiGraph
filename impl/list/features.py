@@ -97,6 +97,7 @@ def make_enum_entity_features(lp_data: dict) -> list:
                     '_entity_lp_idx': entity_lp_index,
                     '_entity_line_idx': entity_idx,
                     '_link_type': entity_data['link_type'],
+                    '_text': entity_data['text'],
                     # ENTITY FEATURES
                     'section_pos': _get_relative_position(section_idx, len(sections)),
                     'section_invpos': _get_relative_position(section_idx, len(sections), inverse=True),
@@ -231,6 +232,7 @@ def make_table_entity_features(lp_data: dict) -> list:
                             '_entity_lp_idx': entity_lp_index,
                             '_entity_line_idx': entity_line_index,
                             '_link_type': entity_data['link_type'],
+                            '_text': entity_data['text'],
                             # ENTITY FEATURES
                             'section_pos': _get_relative_position(section_idx, len(sections)),
                             'section_invpos': _get_relative_position(section_idx, len(sections), inverse=True),

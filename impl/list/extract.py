@@ -85,6 +85,15 @@ def _extract_subject_entities(df: pd.DataFrame, sampling_funcs: list, selection_
     lps = _extract_listpage_data(df)
     lps = _sample_from_listings(lps, df, sampling_funcs)
     lps = _find_subject_entities(lps, df, selection_params)
+
+    # Temporary storage of identified entities for development purposes
+    # TODO: Remove after development of disambiguation & merging is done
+    valid_entities = {idx for lp in lps for idx in lp.subject_entities}
+    extraction_type = 'enum' if '_entry_idx' in df else 'table'
+    df.loc[valid_entities, ['_listpage_uri', '_entity_uri', '_text', '_list_type']].to_csv(f'listpage_extracted-{extraction_type}-entities_v4.csv', sep=';', index=False)
+
+    # TODO: Proper disambiguation and merging of identified entities
+
     return defaultdict(set, {lp.uri: set(df.loc[lp.subject_entities, '_entity_uri'].to_list()) for lp in lps})
 
 
@@ -207,9 +216,7 @@ def _find_subject_entities_internal(lp: Listpage, df: pd.DataFrame, selection_pa
         combined_samples = [(cs, _compute_sample_score(df, cs, selection_params['model'])) for cs in combined_samples]
         # take best combined samples into next round
         current_samples = _select_top_samples(combined_samples, selection_params['n_candidates'], selection_params['min_score'])
-    entity_set = set()
-    if current_samples:
-        entity_set = max(current_samples, key=lambda x: x[1])[0].entities
+    entity_set = max(current_samples, key=lambda x: x[1])[0].entities if current_samples else set()
     lp.subject_entities.update(entity_set)
     return lp
 
