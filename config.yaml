@@ -167,6 +167,10 @@ cache:
   spacy_docs:
     filename: 'spacy-docs'
     version: 1
+  dbpedia_page_markup:
+    filename: 'dbpedia-page-markup'
+    version: 1
+    compress: True
   dbpedia_resources:
     filename: 'dbpedia-resources'
     version: 1
@@ -246,9 +250,6 @@ cache:
   dbpedia_list_parents:
     filename: 'dbpedia-list-parents'
     version: 2
-  dbpedia_page_markup:
-    filename: 'dbpedia-page-markup'
-    version: 1
   dbpedia_listpage_markup:
     filename: 'dbpedia-listpage-markup'
     version: 1
