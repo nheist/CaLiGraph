@@ -42,7 +42,7 @@ def get_listpage_markup(listpage: str) -> str:
     """Return the WikiText markup for the given list page."""
     global __LISTPAGE_MARKUP__
     if '__LISTPAGE_MARKUP__' not in globals():
-        __LISTPAGE_MARKUP__ = defaultdict(lambda: '', util.load_or_create_cache('dbpedia_listpage_markup', _fetch_listpage_markup))
+        __LISTPAGE_MARKUP__ = defaultdict(str, util.load_or_create_cache('dbpedia_listpage_markup', _fetch_listpage_markup))
 
     return __LISTPAGE_MARKUP__[listpage]
 
