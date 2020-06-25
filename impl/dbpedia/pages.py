@@ -38,6 +38,8 @@ class WikiPageParser:
             self.title = None
             self.namespace = None
             self.processed_pages += 1
+            if self.processed_pages % 1000 == 0:
+                util.get_logger().debug(f'PAGE MARKUP: Processed {self.processed_pages} pages.')
 
     def end(self, tag):
         if tag.endswith('}title'):
