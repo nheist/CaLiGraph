@@ -95,6 +95,8 @@ def _convert_markup(wiki_text: str) -> Tuple[str, list]:
 
 
 def _extract_entity(text: str) -> Tuple[str, Optional[dict]]:
+    if text is None:
+        return text, None
     wiki_text = wtp.parse(text)
     if not wiki_text.wikilinks:
         return text, None
