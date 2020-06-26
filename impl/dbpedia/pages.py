@@ -17,10 +17,16 @@ def get_all_parsed_pages() -> dict:
 
 def _parse_pages() -> dict:
     # parse all wikipedia pages
-    parsed_pages = {resource: wiki_parse.parse_page(markup) for resource, markup in get_all_pages_markup().items()}
-    # filter out pages without any enumerations or tables
-    filtered_parsed_pages = {r: pr for r, pr in parsed_pages.items() if 'sections' in pr and any(s['enums'] or s['tables'] for s in pr['sections'])}
-    return filtered_parsed_pages
+    parsed_pages = {}
+    for idx, (resource, markup) in enumerate(get_all_pages_markup().items()):
+        if idx % 10000 == 0:
+            util.get_logger().debug(f'DBPEDIA/PAGES: Parsed {idx}/{len(get_all_pages_markup())} pages.')
+
+        parsed_page = wiki_parse.parse_page(markup)
+        # filter out pages without any enumerations or tables
+        if 'sections' in parsed_page and any(s['enums'] or s['tables'] for s in parsed_page['sections']):
+            parsed_pages[resource] = parsed_page
+    return parsed_pages
 
 
 def get_page_markup(resource: str) -> str:
