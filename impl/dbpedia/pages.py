@@ -4,19 +4,38 @@ import util
 from lxml import etree
 import bz2
 import impl.dbpedia.util as dbp_util
+import impl.util.wiki_parse as wiki_parse
 from collections import defaultdict
+
+
+def get_all_parsed_pages() -> dict:
+    global __PARSED_PAGES__
+    if '__PARSED_PAGES__' not in globals():
+        __PARSED_PAGES__ = defaultdict(lambda: None, util.load_or_create_cache('dbpedia_page_parsed', _parse_pages))
+    return __PARSED_PAGES__
+
+
+def _parse_pages() -> dict:
+    # parse all wikipedia pages
+    parsed_pages = {resource: wiki_parse.parse_page(markup) for resource, markup in get_all_pages_markup().items()}
+    # filter out pages without any enumerations or tables
+    filtered_parsed_pages = {r: pr for r, pr in parsed_pages.items() if 'sections' in pr and any(s['enums'] or s['tables'] for s in pr['sections'])}
+    return filtered_parsed_pages
 
 
 def get_page_markup(resource: str) -> str:
     """Return the WikiText markup for the given resource."""
+    return get_all_pages_markup()[resource]
+
+
+def get_all_pages_markup() -> dict:
     global __PAGE_MARKUP__
     if '__PAGE_MARKUP__' not in globals():
         __PAGE_MARKUP__ = defaultdict(str, util.load_or_create_cache('dbpedia_page_markup', _fetch_page_markup))
+    return __PAGE_MARKUP__
 
-    return __PAGE_MARKUP__[resource]
 
-
-def _fetch_page_markup():
+def _fetch_page_markup() -> dict:
     util.get_logger().info('CACHE: Parsing page markup')
     parser = etree.XMLParser(target=WikiPageParser())
     with bz2.open(util.get_data_file('files.dbpedia.pages')) as dbp_pages_file:
