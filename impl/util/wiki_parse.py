@@ -58,7 +58,7 @@ def _extract_table(table: wtp.Table) -> list:
     row_data = []
     try:
         rows = table.data()
-    except IndexError:
+    except:
         return []
 
     for row in rows:
