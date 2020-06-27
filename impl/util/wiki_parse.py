@@ -14,9 +14,18 @@ def parse_page(page_markup: str) -> dict:
     Sections > Tables > Rows > Columns > Entities
     """
     wiki_text = wtp.parse(page_markup)
+    if not _is_page_useful(wiki_text):
+        return None
+
     cleaned_wiki_text = _convert_special_enums(wiki_text)
+    if not _is_page_useful(cleaned_wiki_text):
+        return None
 
     return {'sections': _extract_sections(cleaned_wiki_text)}
+
+
+def _is_page_useful(wiki_text: WikiText) -> bool:
+    return len(wiki_text.lists()) + len(wiki_text.tables) > 0
 
 
 def _convert_special_enums(wiki_text: WikiText) -> WikiText:
@@ -77,9 +86,11 @@ def _convert_markup(wiki_text: str) -> Tuple[str, list]:
     # remove all markup except wikilinks
     current = None
     new = wiki_text
-    while current != new:
+    i = 0
+    while current != new and i < 10:
         current = new
         new = _remove_wikimarkup(wtp.parse(current))
+        i += 1
 
     # extract wikilink-entities and generate final plain text
     entities = []
