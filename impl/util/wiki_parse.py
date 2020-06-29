@@ -2,9 +2,9 @@
 
 import wikitextparser as wtp
 from wikitextparser import WikiText
-from typing import Tuple, Optional
-import re
+from typing import Tuple
 import impl.dbpedia.util as dbp_util
+import util
 
 
 def parse_page(page_markup: str) -> dict:
@@ -25,7 +25,7 @@ def parse_page(page_markup: str) -> dict:
 
 
 def _is_page_useful(wiki_text: WikiText) -> bool:
-    return len(wiki_text.lists()) + len(wiki_text.tables) > 0
+    return len(wiki_text.get_lists()) + len(wiki_text.get_tables()) > 0
 
 
 def _convert_special_enums(wiki_text: WikiText) -> WikiText:
@@ -35,15 +35,15 @@ def _convert_special_enums(wiki_text: WikiText) -> WikiText:
     for et in enum_templates:
         actual_list = et.get_arg('1')
         result = result.replace(et.string, actual_list.string[1:] if actual_list else '')
-    return wtp.parse(result)
+    return wtp.parse(result) if enum_templates else wiki_text
 
 
 def _extract_sections(wiki_text: WikiText) -> list:
     return [{
         'name': section.title.strip() if section.title.strip() else 'Main',
         'content': section.contents,
-        'enums': [_extract_enum(l) for l in section.lists() if l.level == 1],
-        'tables': [_extract_table(t) for t in section.tables]
+        'enums': [_extract_enum(l) for l in section.get_lists()],
+        'tables': [_extract_table(t) for t in section.get_tables()]
     } for section in wiki_text.sections]
 
 
@@ -71,69 +71,46 @@ def _extract_table(table: wtp.Table) -> list:
         return []
 
     for row in rows:
-        parsed_columns = []
-        for column in row:
-            plaintext, entities = _convert_markup(column)
-            parsed_columns.append({
+        parsed_cells = []
+        for cell in row:
+            plaintext, entities = _convert_markup(cell)
+            parsed_cells.append({
                 'text': plaintext,
                 'entities': entities
             })
-        row_data.append(parsed_columns)
+        row_data.append(parsed_cells)
     return row_data
 
 
 def _convert_markup(wiki_text: str) -> Tuple[str, list]:
-    # remove all markup except wikilinks
-    current = None
-    new = wiki_text
-    i = 0
-    while current != new and i < 10:
-        current = new
-        new = _remove_wikimarkup(wtp.parse(current))
-        i += 1
+    parsed_text = wtp.parse(wiki_text)
+    plain_text = parsed_text.plain_text()
 
-    # extract wikilink-entities and generate final plain text
+    # extract wikilink-entities with correct positions in plain text
     entities = []
-    while True:
-        new, entity = _extract_entity(current)
-        if entity is None:
-            break
-        if entity:
-            entities.append(entity)
-        current = new
+    current_entity_index = 0
+    for w in parsed_text.wikilinks:
+        # retrieve entity text
+        text = (w.text or w.target).strip()
+        if '|' in text:  # hot-fixing broken markup
+            util.get_logger().debug(f'Found broken wikilink with text "{text}" in {w}')
+            text = text[text.rindex('|'):].strip()
+        if not text:
+            continue  # skip entity with empty text
 
-    return current, entities
+        # retrieve entity position
+        if text not in plain_text[current_entity_index:]:
+            continue  # skip entity with a text that can not be located
+        entity_position = current_entity_index + plain_text[current_entity_index:].index(text)
+        current_entity_index = entity_position + len(text)
+        entities.append({'idx': entity_position, 'text': text, 'uri': _convert_target_to_uri(w.target)})
+    return plain_text, entities
 
 
-def _extract_entity(text: str) -> Tuple[str, Optional[dict]]:
-    if text is None:
-        return text, None
-    wiki_text = wtp.parse(text)
-    if not wiki_text.wikilinks:
-        return text, None
-
-    link = wiki_text.wikilinks[0]
-    link_text = (link.text.strip() if link.text else link.text) or link.target.strip()
-    link_target = link.target[0].upper() + link.target[1:] if len(link.target) > 1 else link.target.upper()
-
-    if '|' in link_text:
-        link_text = link_text[link_text.rindex('|'):].strip()
-
-    pre = text[:text.index(link.string)].strip()
-    pre = pre + ' ' if pre else ''
-    post = text[text.index(link.string)+len(link.string):].strip()
-    post = ' ' + post if post else ''
-
-    plaintext = f'{pre}{link_text}{post}'
-
-    if '[[' in link_text:
-        return plaintext, {}
-
-    return plaintext, {
-        'uri': dbp_util.name2resource(_remove_language_tag(link_target.strip())),
-        'text': link_text,
-        'idx': len(pre)
-    }
+def _convert_target_to_uri(link_target: str) -> str:
+    link_target = _remove_language_tag(link_target.strip())
+    link_target = link_target[0].upper() + link_target[1:]
+    return dbp_util.name2resource(link_target)
 
 
 def _remove_language_tag(link_target: str) -> str:
@@ -142,31 +119,3 @@ def _remove_language_tag(link_target: str) -> str:
     if len(link_target) < 4 or link_target[3] != ':':
         return link_target[1:]
     return link_target[4:]
-
-
-def _remove_wikimarkup(wiki_text: WikiText) -> str:
-    result = wiki_text.string
-    for tag in wiki_text.tags():
-        if tag._match is not None:
-            result = result.replace(tag.string, _wrap_in_spaces(tag.contents))
-    for link in wiki_text.external_links:
-        try:
-            result = result.replace(link.string, _wrap_in_spaces(link.text) if link.text else ' ')
-        except AttributeError:
-            result = result.replace(link.string, ' ')
-    for template in wiki_text.templates:
-        result = result.replace(template.string, ' ')
-    for comment in wiki_text.comments:
-        result = result.replace(comment.string, ' ')
-
-    return _normalize_text(result)
-
-
-def _wrap_in_spaces(word: str) -> str:
-    return f' {word} '
-
-
-def _normalize_text(text: str) -> str:
-    text = re.sub("'{2,}", '', text)
-    text = re.sub(' +', ' ', text)
-    return text.strip()
