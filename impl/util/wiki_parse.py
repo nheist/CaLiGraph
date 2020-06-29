@@ -79,7 +79,7 @@ def _extract_table(table: wtp.Table) -> list:
     for row in rows:
         parsed_cells = []
         for cell in row:
-            plaintext, entities = _convert_markup(cell)
+            plaintext, entities = _convert_markup(str(cell))
             parsed_cells.append({
                 'text': plaintext,
                 'entities': entities
