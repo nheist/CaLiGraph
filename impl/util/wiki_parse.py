@@ -40,7 +40,7 @@ def _convert_special_enums(wiki_text: WikiText) -> WikiText:
 
 def _extract_sections(wiki_text: WikiText) -> list:
     return [{
-        'name': section.title.strip() if section.title.strip() else 'Main',
+        'name': section.title.strip() if section.title and section.title.strip() else 'Main',
         'content': section.contents,
         'enums': [_extract_enum(l) for l in section.get_lists()],
         'tables': [_extract_table(t) for t in section.get_tables()]
