@@ -84,6 +84,9 @@ def _extract_table(table: wtp.Table) -> list:
 
 def _convert_markup(wiki_text: str) -> Tuple[str, list]:
     parsed_text = wtp.parse(wiki_text)
+    for t in parsed_text.get_tags():
+        if not t._match:
+            t[:] = ''  # manually remove tags without _match as they cause errors in the parser
     plain_text = parsed_text.plain_text()
 
     # extract wikilink-entities with correct positions in plain text
