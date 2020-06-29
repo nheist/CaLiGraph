@@ -40,11 +40,12 @@ def _convert_special_enums(wiki_text: WikiText) -> WikiText:
 
 def _extract_sections(wiki_text: WikiText) -> list:
     return [{
+        'index': section_idx,
         'name': section.title.strip() if section.title and section.title.strip() else 'Main',
-        'content': section.contents,
+        'text': _wikitext_to_plaintext(section),
         'enums': [_extract_enum(l) for l in section.get_lists()],
         'tables': [_extract_table(t) for t in section.get_tables()]
-    } for section in wiki_text.sections]
+    } for section_idx, section in enumerate(wiki_text.sections)]
 
 
 def _extract_enum(l: wtp.WikiList) -> list:
@@ -84,10 +85,7 @@ def _extract_table(table: wtp.Table) -> list:
 
 def _convert_markup(wiki_text: str) -> Tuple[str, list]:
     parsed_text = wtp.parse(wiki_text)
-    for t in parsed_text.get_tags():
-        if not t._match:
-            t[:] = ''  # manually remove tags without _match as they cause errors in the parser
-    plain_text = parsed_text.plain_text()
+    plain_text = _wikitext_to_plaintext(parsed_text)
 
     # extract wikilink-entities with correct positions in plain text
     entities = []
@@ -108,6 +106,13 @@ def _convert_markup(wiki_text: str) -> Tuple[str, list]:
         current_entity_index = entity_position + len(text)
         entities.append({'idx': entity_position, 'text': text, 'uri': _convert_target_to_uri(w.target)})
     return plain_text, entities
+
+
+def _wikitext_to_plaintext(parsed_text: wtp.WikiText) -> str:
+    for t in parsed_text.get_tags():
+        if not t._match:
+            t[:] = ''  # manually remove tags without _match as they cause errors in the parser
+    return parsed_text.plain_text()
 
 
 def _convert_target_to_uri(link_target: str) -> str:
