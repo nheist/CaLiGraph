@@ -38,7 +38,9 @@ def _prepare_wikitext(wiki_text: WikiText) -> WikiText:
         actual_list = et.get_arg('1')
         result = result.replace(et.string, actual_list.string[1:] if actual_list else '')
     # remove bolds and italics
-    result = re.sub(r"'{2,}", "", result)
+    #result = re.sub(r"'{2,}", "", result)
+    # remove html whitespaces
+    #result = result.replace('&nbsp;', ' ')
     return wtp.parse(result)
 
 
