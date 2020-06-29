@@ -116,9 +116,9 @@ def _convert_markup(wiki_text: str) -> Tuple[str, list]:
 
 
 def _wikitext_to_plaintext(parsed_text: wtp.WikiText) -> str:
-    for t in parsed_text.get_tags():
-        if not t._match:
-            t[:] = ''  # manually remove tags without _match as they cause errors in the parser
+    #for t in parsed_text.get_tags():
+    #    if not t._match:
+    #        t[:] = ''  # manually remove tags without _match as they cause errors in the parser
     return parsed_text.plain_text()
 
 
