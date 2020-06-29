@@ -39,8 +39,8 @@ def _prepare_wikitext(wiki_text: WikiText) -> WikiText:
         result = result.replace(et.string, actual_list.string[1:] if actual_list else '')
     # remove bolds and italics
     #result = re.sub(r"'{2,}", "", result)
-    # remove html whitespaces
-    #result = result.replace('&nbsp;', ' ')
+    # convert html whitespaces
+    result = result.replace('&nbsp;', ' ')
     return wtp.parse(result)
 
 
@@ -119,7 +119,7 @@ def _wikitext_to_plaintext(parsed_text: wtp.WikiText) -> str:
     for t in parsed_text.get_tags():
         if not t._match:
             t[:] = ''  # manually remove tags without _match as they cause errors in the parser
-    return parsed_text.plain_text(replace_bolds=False, replace_italics=False)
+    return parsed_text.plain_text()
 
 
 def _convert_target_to_uri(link_target: str) -> str:
