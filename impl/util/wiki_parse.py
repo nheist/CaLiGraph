@@ -5,6 +5,7 @@ from wikitextparser import WikiText
 from typing import Tuple
 import impl.dbpedia.util as dbp_util
 import util
+import re
 
 
 def parse_page(page_markup: str) -> dict:
@@ -17,7 +18,7 @@ def parse_page(page_markup: str) -> dict:
     if not _is_page_useful(wiki_text):
         return None
 
-    cleaned_wiki_text = _convert_special_enums(wiki_text)
+    cleaned_wiki_text = _prepare_wikitext(wiki_text)
     if not _is_page_useful(cleaned_wiki_text):
         return None
 
@@ -28,21 +29,25 @@ def _is_page_useful(wiki_text: WikiText) -> bool:
     return len(wiki_text.get_lists()) + len(wiki_text.get_tables()) > 0
 
 
-def _convert_special_enums(wiki_text: WikiText) -> WikiText:
-    """Remove special templates used as enumerations from the text."""
+def _prepare_wikitext(wiki_text: WikiText) -> WikiText:
+    """Convert special templates used as enumerations from the text and remove bolds&italics."""
     result = wiki_text.string
+    # convert enumeration templates
     enum_templates = [t for t in wiki_text.templates if t.name == 'columns-list']
     for et in enum_templates:
         actual_list = et.get_arg('1')
         result = result.replace(et.string, actual_list.string[1:] if actual_list else '')
-    return wtp.parse(result) if enum_templates else wiki_text
+    # remove bolds and italics
+    result = re.sub(r"'{2,}", "", result)
+    return wtp.parse(result)
 
 
 def _extract_sections(wiki_text: WikiText) -> list:
     return [{
         'index': section_idx,
         'name': section.title.strip() if section.title and section.title.strip() else 'Main',
-        'text': section.contents,
+        'markup': section.contents,
+        'text': _wikitext_to_plaintext(section),
         'enums': [_extract_enum(l) for l in section.get_lists()],
         'tables': [_extract_table(t) for t in section.get_tables()]
     } for section_idx, section in enumerate(wiki_text.sections)]

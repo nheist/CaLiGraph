@@ -32,7 +32,7 @@ def _parse_listpage(listpage_uri: str, listpage_markup: str) -> dict:
     Sections > Tables > Rows > Columns > Entities (for table list pages)
     """
     wiki_text = wtp.parse(listpage_markup)
-    cleaned_wiki_text = wiki_parse._convert_special_enums(wiki_text)
+    cleaned_wiki_text = wiki_parse._prepare_wikitext(wiki_text)
 
     list_type = _get_list_type(cleaned_wiki_text)
     result = {
@@ -46,12 +46,11 @@ def _parse_listpage(listpage_uri: str, listpage_markup: str) -> dict:
     return result
 
 
-# TODO: ignore enumerations that are contained in a table
 def _get_list_type(wiki_text: WikiText) -> str:
     """Return layout type of the list page by counting whether we have more table rows or enumeration entries."""
     try:
-        enum_entry_count = len([entry for enum in wiki_text.lists(pattern=r'\*+') for entry in enum.items])
-        table_row_count = len([row for table in wiki_text.tables for row in table.data(span=False)])
+        enum_entry_count = len([entry for enum in wiki_text.get_lists() for entry in enum.items])
+        table_row_count = len([row for table in wiki_text.tables for row in table.data()])
 
         if not enum_entry_count and not table_row_count:
             return LIST_TYPE_NONE
