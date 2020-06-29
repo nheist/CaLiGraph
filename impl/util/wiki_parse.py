@@ -5,7 +5,6 @@ from wikitextparser import WikiText
 from typing import Tuple
 import impl.dbpedia.util as dbp_util
 import util
-import re
 
 
 def parse_page(page_markup: str) -> dict:
@@ -37,8 +36,6 @@ def _prepare_wikitext(wiki_text: WikiText) -> WikiText:
     for et in enum_templates:
         actual_list = et.get_arg('1')
         result = result.replace(et.string, actual_list.string[1:] if actual_list else '')
-    # remove bolds and italics
-    #result = re.sub(r"'{2,}", "", result)
     # convert html whitespaces
     result = result.replace('&nbsp;', ' ')
     return wtp.parse(result)
@@ -116,10 +113,7 @@ def _convert_markup(wiki_text: str) -> Tuple[str, list]:
 
 
 def _wikitext_to_plaintext(parsed_text: wtp.WikiText) -> str:
-    #for t in parsed_text.get_tags():
-    #    if not t._match:
-    #        t[:] = ''  # manually remove tags without _match as they cause errors in the parser
-    return parsed_text.plain_text()
+    return parsed_text.plain_text().strip(" '\t\n")
 
 
 def _convert_target_to_uri(link_target: str) -> str:
