@@ -42,7 +42,7 @@ def _extract_sections(wiki_text: WikiText) -> list:
     return [{
         'index': section_idx,
         'name': section.title.strip() if section.title and section.title.strip() else 'Main',
-        'text': _wikitext_to_plaintext(section),
+        'text': section.contents,
         'enums': [_extract_enum(l) for l in section.get_lists()],
         'tables': [_extract_table(t) for t in section.get_tables()]
     } for section_idx, section in enumerate(wiki_text.sections)]
