@@ -5,6 +5,7 @@ from wikitextparser import WikiText
 from typing import Tuple
 import impl.dbpedia.util as dbp_util
 import util
+import re
 
 
 def parse_page(page_markup: str) -> dict:
@@ -46,7 +47,7 @@ def _extract_sections(wiki_text: WikiText) -> list:
         'index': section_idx,
         'name': section.title.strip() if section.title and section.title.strip() else 'Main',
         'markup': section.contents,
-        'text': _wikitext_to_plaintext(section),
+        'text': _wikitext_to_plaintext(wtp.parse(section.contents)),
         'enums': [_extract_enum(l) for l in section.get_lists()],
         'tables': [_extract_table(t) for t in section.get_tables()]
     } for section_idx, section in enumerate(wiki_text.sections)]
@@ -78,7 +79,7 @@ def _extract_table(table: wtp.Table) -> list:
     for row in rows:
         parsed_cells = []
         for cell in row:
-            plaintext, entities = _convert_markup(str(cell))
+            plaintext, entities = _convert_markup(cell)
             parsed_cells.append({
                 'text': plaintext,
                 'entities': entities
@@ -113,7 +114,10 @@ def _convert_markup(wiki_text: str) -> Tuple[str, list]:
 
 
 def _wikitext_to_plaintext(parsed_text: wtp.WikiText) -> str:
-    return parsed_text.plain_text().strip(" '\t\n")
+    result = parsed_text.plain_text().strip(" '\t\n")
+    result = re.sub(r'\n+', '\n', result)
+    result = re.sub(r' +', ' ', result)
+    return result
 
 
 def _convert_target_to_uri(link_target: str) -> str:
