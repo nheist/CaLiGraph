@@ -67,7 +67,7 @@ def _extract_enum(l: wtp.WikiList) -> list:
 def _extract_table(table: wtp.Table) -> list:
     row_data = []
     try:
-        rows = table.data()
+        rows = table.data(strip=True)
     except:
         return []
 
@@ -85,7 +85,7 @@ def _extract_table(table: wtp.Table) -> list:
 
 def _convert_markup(wiki_text: str) -> Tuple[str, list]:
     parsed_text = wtp.parse(wiki_text)
-    plain_text = _wikitext_to_plaintext(parsed_text)
+    plain_text = _wikitext_to_plaintext(parsed_text).strip()
 
     # extract wikilink-entities with correct positions in plain text
     entities = []
