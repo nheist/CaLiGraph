@@ -566,11 +566,11 @@
         },
         "wikitextparser": {
             "hashes": [
-                "sha256:6cdba366b6021318899cb0e8ebea9c293aeeeae063d9f013e48492af6a7fcff8",
-                "sha256:dec3d0f488e10da21c073663ca2ac110dba5a079ac49ea87023a3bb6579d0f86"
+                "sha256:458f6513e340c4fd0a36711c681deaa0a61ca8c36764e409eda0bcec371d02e0",
+                "sha256:fe3574c8d5a454e2c8f33d4804d29edf99c44d931c12e6f1866296b2b163b073"
             ],
             "index": "pypi",
-            "version": "==0.37.5"
+            "version": "==0.37.6"
         },
         "xgboost": {
             "hashes": [
