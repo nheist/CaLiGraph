@@ -104,6 +104,7 @@ def _convert_markup(wiki_text: str) -> Tuple[str, list]:
         # retrieve entity text
         text = (w.text or w.target).strip()
         if '|' in text:  # hot-fixing broken markup
+            # TODO: Check if still necessary
             util.get_logger().debug(f'Found broken wikilink with text "{text}" in {w}')
             text = text[text.rindex('|'):].strip()
         if not text:
@@ -119,6 +120,7 @@ def _convert_markup(wiki_text: str) -> Tuple[str, list]:
 
 
 def _wikitext_to_plaintext(parsed_text: wtp.WikiText) -> str:
+    # bolds and italics are already removed during preprocessing to reduce runtime
     result = parsed_text.plain_text(replace_italics=False, replace_bolds=False).strip(" '\t\n")
     result = re.sub(r'\n+', '\n', result)
     result = re.sub(r' +', ' ', result)
