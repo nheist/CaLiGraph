@@ -118,7 +118,7 @@ def _convert_markup(wiki_text: str) -> Tuple[str, list]:
 
 
 def _wikitext_to_plaintext(parsed_text: wtp.WikiText) -> str:
-    result = parsed_text.plain_text().strip(" '\t\n")
+    result = parsed_text.plain_text(replace_italics=False, replace_bolds=False).strip(" '\t\n")
     result = re.sub(r'\n+', '\n', result)
     result = re.sub(r' +', ' ', result)
     return result
