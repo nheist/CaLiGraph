@@ -14,6 +14,10 @@ def parse_page(page_markup: str) -> dict:
     Sections > Enums > Entries > Entities
     Sections > Tables > Rows > Columns > Entities
     """
+    # prepare markup for parsing
+    page_markup = page_markup.replace('&nbsp;', ' ')  # replace html whitespaces
+    page_markup = re.sub(r"'{2,}", '', page_markup)  # remove bold and italic markers
+
     wiki_text = wtp.parse(page_markup)
     if not _is_page_useful(wiki_text):
         return None
@@ -31,15 +35,15 @@ def _is_page_useful(wiki_text: WikiText) -> bool:
 
 def _prepare_wikitext(wiki_text: WikiText) -> WikiText:
     """Convert special templates used as enumerations from the text and remove bolds&italics."""
-    result = wiki_text.string
     # convert enumeration templates
     enum_templates = [t for t in wiki_text.templates if t.name == 'columns-list']
-    for et in enum_templates:
-        actual_list = et.get_arg('1')
-        result = result.replace(et.string, actual_list.string[1:] if actual_list else '')
-    # convert html whitespaces
-    result = result.replace('&nbsp;', ' ')
-    return wtp.parse(result)
+    if enum_templates:
+        result = wiki_text.string
+        for et in enum_templates:
+            actual_list = et.get_arg('1')
+            result = result.replace(et.string, actual_list.string[1:] if actual_list else '')
+        return wtp.parse(result)
+    return wiki_text
 
 
 def _extract_sections(wiki_text: WikiText) -> list:
