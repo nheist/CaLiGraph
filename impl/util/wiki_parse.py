@@ -34,7 +34,7 @@ def _is_page_useful(wiki_text: WikiText) -> bool:
 
 
 def _prepare_wikitext(wiki_text: WikiText) -> WikiText:
-    """Convert special templates used as enumerations from the text and remove bolds&italics."""
+    """Convert special templates used as enumerations from the text."""
     # convert enumeration templates
     enum_templates = [t for t in wiki_text.templates if t.name == 'columns-list']
     if enum_templates:
