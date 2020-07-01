@@ -20,8 +20,10 @@ def _parse_pages() -> dict:
     for idx, (resource, markup) in enumerate(get_all_pages_markup().items()):
         if idx % 10000 == 0:
             util.get_logger().debug(f'DBPEDIA/PAGES: Parsed {idx}/{len(get_all_pages_markup())} pages.')
-        util.get_logger().debug(f'DBPEDIA/PAGES: Now parsing: {resource}')
-        parsed_pages[resource] = wiki_parse.parse_page(markup)
+        try:
+            parsed_pages[resource] = wiki_parse.parse_page(markup)
+        except Exception as e:
+            util.get_logger().error(f'DBPEDIA/PAGES: Failed to parse page {resource}: {e}')
     return parsed_pages
 
 
