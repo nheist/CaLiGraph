@@ -104,9 +104,7 @@ def _convert_markup(wiki_text: str) -> Tuple[str, list]:
         # retrieve entity text
         text = (w.text or w.target).strip()
         if '|' in text:  # hot-fixing broken markup
-            # TODO: Check if still necessary
-            util.get_logger().debug(f'Found broken wikilink with text "{text}" in {w}')
-            text = text[text.rindex('|'):].strip()
+            text = text[text.rindex('|')+1:].strip()
         if not text:
             continue  # skip entity with empty text
 
