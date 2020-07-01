@@ -121,10 +121,10 @@
         },
         "joblib": {
             "hashes": [
-                "sha256:61e49189c84b3c5d99a969d314853f4d1d263316cc694bec17548ebaa9c47b6e",
-                "sha256:6825784ffda353cc8a1be573118085789e5b5d29401856b35b756645ab5aecb5"
+                "sha256:8f52bf24c64b608bf0b2563e0e47d6fcf516abc8cfafe10cfd98ad66d94f92d6",
+                "sha256:d348c5d4ae31496b2aa060d6d9b787864dd204f9480baaa52d18850cb43e9f49"
             ],
-            "version": "==0.15.1"
+            "version": "==0.16.0"
         },
         "lxml": {
             "hashes": [
@@ -566,11 +566,11 @@
         },
         "wikitextparser": {
             "hashes": [
-                "sha256:7f90b5e111a4b90be6f8cb35ceb7dea49864dd5b5492e29cea56a6fd2ec588de",
-                "sha256:a0b4d54508f06ab696a21fad68f20ad555f58f761f32be048f36f466014e19bd"
+                "sha256:400fffc2597121be8275e88721e6555bc614dd7ab75bef47cf87e244653b41e4",
+                "sha256:9a8d48409e39a6ef39b90715357eb3d6b0f66a5ceb0aee3bcb8d9b0e1f73aea7"
             ],
             "index": "pypi",
-            "version": "==0.37.9"
+            "version": "==0.37.10"
         },
         "xgboost": {
             "hashes": [
