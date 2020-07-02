@@ -113,7 +113,9 @@ def _convert_markup(wiki_text: str) -> Tuple[str, list]:
             continue  # skip entity with a text that can not be located
         entity_position = current_entity_index + plain_text[current_entity_index:].index(text)
         current_entity_index = entity_position + len(text)
-        entities.append({'idx': entity_position, 'text': text, 'uri': _convert_target_to_uri(w.target)})
+        entity_uri = _convert_target_to_uri(w.target)
+        if entity_uri:
+            entities.append({'idx': entity_position, 'text': text, 'uri': entity_uri})
     return plain_text, entities
 
 
@@ -127,8 +129,7 @@ def _wikitext_to_plaintext(parsed_text: wtp.WikiText) -> str:
 
 def _convert_target_to_uri(link_target: str) -> str:
     link_target = _remove_language_tag(link_target.strip())
-    link_target = link_target[0].upper() + link_target[1:]
-    return dbp_util.name2resource(link_target)
+    return dbp_util.name2resource(link_target[0].upper() + link_target[1:]) if link_target else None
 
 
 def _remove_language_tag(link_target: str) -> str:

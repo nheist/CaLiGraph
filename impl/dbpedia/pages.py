@@ -9,27 +9,20 @@ from collections import defaultdict
 
 
 def get_all_parsed_pages() -> dict:
-    global __PARSED_PAGES__
-    if '__PARSED_PAGES__' not in globals():
-        __PARSED_PAGES__ = defaultdict(lambda: None, util.load_or_create_cache('dbpedia_page_parsed', _parse_pages))
-    return __PARSED_PAGES__
+    return defaultdict(lambda: None, util.load_or_create_cache('dbpedia_page_parsed', _parse_pages))
 
 
 def _parse_pages() -> dict:
     parsed_pages = {}
-    for idx, (resource, markup) in enumerate(get_all_pages_markup().items()):
+    page_markup = get_all_pages_markup()
+    for idx, (resource, markup) in enumerate(page_markup.items()):
         if idx % 10000 == 0:
-            util.get_logger().debug(f'DBPEDIA/PAGES: Parsed {idx}/{len(get_all_pages_markup())} pages.')
+            util.get_logger().debug(f'DBPEDIA/PAGES: Parsed {idx}/{len(page_markup)} pages.')
         try:
             parsed_pages[resource] = wiki_parse.parse_page(markup)
         except Exception as e:
             util.get_logger().error(f'DBPEDIA/PAGES: Failed to parse page {resource}: {e}')
     return parsed_pages
-
-
-def get_page_markup(resource: str) -> str:
-    """Return the WikiText markup for the given resource."""
-    return get_all_pages_markup()[resource]
 
 
 def get_all_pages_markup() -> dict:
