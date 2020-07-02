@@ -15,7 +15,7 @@ def get_all_parsed_pages() -> dict:
 
 
 def _parse_pages() -> dict:
-    with mp.Pool(processes=5) as pool:  # todo: set chunks to max_cpus if working
+    with mp.Pool(processes=util.get_config('max_cpus')) as pool:
         results = pool.map(_parse_page_chunk, _chunk_dict(get_all_pages_markup(), 10000))
     return {res: parsed_page for chunk_result in results for res, parsed_page in chunk_result.items()}
 
