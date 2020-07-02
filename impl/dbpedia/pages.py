@@ -7,7 +7,7 @@ import impl.dbpedia.util as dbp_util
 import impl.util.wiki_parse as wiki_parse
 from collections import defaultdict
 import multiprocessing as mp
-from itertools import islice
+from typing import Optional
 
 
 def get_all_parsed_pages() -> dict:
@@ -16,27 +16,17 @@ def get_all_parsed_pages() -> dict:
 
 def _parse_pages() -> dict:
     with mp.Pool(processes=util.get_config('max_cpus')) as pool:
-        results = pool.map(_parse_page_chunk, _chunk_dict(get_all_pages_markup(), 1000))
-    return {res: parsed_page for chunk_result in results for res, parsed_page in chunk_result.items()}
+        results = pool.map(_parse_page, get_all_pages_markup().items())
+    return {resource: parsed_page for resource, parsed_page in results if parsed_page}
 
 
-def _chunk_dict(data: dict, chunk_size: int):
-    it = iter(data)
-    for _ in range(0, len(data), chunk_size):
-        yield {s: data[s] for s in islice(it, chunk_size)}
-
-
-def _parse_page_chunk(chunk_of_pages: dict) -> dict:
-    parsed_pages = {}
-    parsing_errors = 0
-    for resource, markup in chunk_of_pages.items():
-        try:
-            parsed_pages[resource] = wiki_parse.parse_page(markup)
-        except Exception as e:
-            parsing_errors += 1
-            util.get_logger().error(f'DBPEDIA/PAGES ({mp.current_process().name}): Failed to parse page {resource}: {e}')
-    util.get_logger().debug(f'DBPEDIA/PAGES ({mp.current_process().name}): Parsed {len(chunk_of_pages)} pages with {parsing_errors} errors.')
-    return parsed_pages
+def _parse_page(resource_and_markup: tuple) -> Optional[tuple]:
+    resource, markup = resource_and_markup
+    try:
+        return resource, wiki_parse.parse_page(markup)
+    except Exception as e:
+        util.get_logger().error(f'DBPEDIA/PAGES ({mp.current_process().name}): Failed to parse page {resource}: {e}')
+    return None
 
 
 def get_all_pages_markup() -> dict:
