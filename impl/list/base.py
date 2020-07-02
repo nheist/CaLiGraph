@@ -106,6 +106,7 @@ def _compute_listpage_entity_features(graph, list_type: str) -> pd.DataFrame:
         elif list_type == list_parser.LIST_TYPE_TABLE:
             entity_features.extend(list_features.make_table_entity_features(lp_data))
     entity_features = pd.DataFrame(data=entity_features)
+    entity_features.to_csv('table_intermediate_save.csv', sep=';')  # TODO: remove
 
     # one-hot-encode name features
     entity_features = list_features.onehotencode_feature(entity_features, '_section_name')
