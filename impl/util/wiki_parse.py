@@ -4,7 +4,6 @@ import wikitextparser as wtp
 from wikitextparser import WikiText
 from typing import Tuple
 import impl.dbpedia.util as dbp_util
-import util
 import re
 
 

@@ -6,6 +6,8 @@ import bz2
 import impl.dbpedia.util as dbp_util
 import impl.util.wiki_parse as wiki_parse
 from collections import defaultdict
+import numpy as np
+import multiprocessing as mp
 
 
 def get_all_parsed_pages() -> dict:
@@ -13,15 +15,21 @@ def get_all_parsed_pages() -> dict:
 
 
 def _parse_pages() -> dict:
+    params = [chunk for chunk in np.array_split(list(get_all_pages_markup().items()), 5)]  # todo: set chunks to max_cpus if working
+    with mp.Pool(processes=len(params)) as pool:
+        results = pool.map(_parse_page_chunk, params)
+    return {res: parsed_page for chunk_result in results for res, parsed_page in chunk_result.items()}
+
+
+def _parse_page_chunk(chunk_of_pages: list) -> dict:
     parsed_pages = {}
-    page_markup = get_all_pages_markup()
-    for idx, (resource, markup) in enumerate(page_markup.items()):
+    for idx, (resource, markup) in enumerate(chunk_of_pages):
         if idx % 10000 == 0:
-            util.get_logger().debug(f'DBPEDIA/PAGES: Parsed {idx}/{len(page_markup)} pages.')
+            util.get_logger().debug(f'DBPEDIA/PAGES ({mp.current_process().name}): Parsed {idx}/{len(chunk_of_pages)} pages.')
         try:
             parsed_pages[resource] = wiki_parse.parse_page(markup)
         except Exception as e:
-            util.get_logger().error(f'DBPEDIA/PAGES: Failed to parse page {resource}: {e}')
+            util.get_logger().error(f'DBPEDIA/PAGES ({mp.current_process().name}): Failed to parse page {resource}: {e}')
     return parsed_pages
 
 
