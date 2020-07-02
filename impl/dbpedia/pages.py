@@ -6,8 +6,8 @@ import bz2
 import impl.dbpedia.util as dbp_util
 import impl.util.wiki_parse as wiki_parse
 from collections import defaultdict
-import numpy as np
 import multiprocessing as mp
+from itertools import islice
 
 
 def get_all_parsed_pages() -> dict:
@@ -15,15 +15,22 @@ def get_all_parsed_pages() -> dict:
 
 
 def _parse_pages() -> dict:
-    params = [chunk for chunk in np.array_split(list(get_all_pages_markup().items()), 5)]  # todo: set chunks to max_cpus if working
-    with mp.Pool(processes=len(params)) as pool:
-        results = pool.map(_parse_page_chunk, params)
+    processes = 5  # todo: set chunks to max_cpus if working
+    with mp.Pool(processes=processes) as pool:
+        results = pool.map(_parse_page_chunk, _chunk_dict(get_all_pages_markup(), processes))
     return {res: parsed_page for chunk_result in results for res, parsed_page in chunk_result.items()}
 
 
-def _parse_page_chunk(chunk_of_pages: list) -> dict:
+def _chunk_dict(data: dict, number_of_chunks: int):
+    chunk_size = len(data) // number_of_chunks + 1
+    it = iter(data)
+    for _ in range(0, len(data), chunk_size):
+        yield {s: data[s] for s in islice(it, chunk_size)}
+
+
+def _parse_page_chunk(chunk_of_pages: dict) -> dict:
     parsed_pages = {}
-    for idx, (resource, markup) in enumerate(chunk_of_pages):
+    for idx, (resource, markup) in enumerate(chunk_of_pages.items()):
         if idx % 10000 == 0:
             util.get_logger().debug(f'DBPEDIA/PAGES ({mp.current_process().name}): Parsed {idx}/{len(chunk_of_pages)} pages.')
         try:
