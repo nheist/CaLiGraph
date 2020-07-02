@@ -15,14 +15,12 @@ def get_all_parsed_pages() -> dict:
 
 
 def _parse_pages() -> dict:
-    processes = 5  # todo: set chunks to max_cpus if working
-    with mp.Pool(processes=processes) as pool:
-        results = pool.map(_parse_page_chunk, _chunk_dict(get_all_pages_markup(), processes))
+    with mp.Pool(processes=5) as pool:  # todo: set chunks to max_cpus if working
+        results = pool.map(_parse_page_chunk, _chunk_dict(get_all_pages_markup(), 10000))
     return {res: parsed_page for chunk_result in results for res, parsed_page in chunk_result.items()}
 
 
-def _chunk_dict(data: dict, number_of_chunks: int):
-    chunk_size = len(data) // number_of_chunks + 1
+def _chunk_dict(data: dict, chunk_size: int):
     it = iter(data)
     for _ in range(0, len(data), chunk_size):
         yield {s: data[s] for s in islice(it, chunk_size)}
@@ -30,13 +28,14 @@ def _chunk_dict(data: dict, number_of_chunks: int):
 
 def _parse_page_chunk(chunk_of_pages: dict) -> dict:
     parsed_pages = {}
-    for idx, (resource, markup) in enumerate(chunk_of_pages.items()):
-        if idx % 10000 == 0:
-            util.get_logger().debug(f'DBPEDIA/PAGES ({mp.current_process().name}): Parsed {idx}/{len(chunk_of_pages)} pages.')
+    parsing_errors = 0
+    for resource, markup in chunk_of_pages.items():
         try:
             parsed_pages[resource] = wiki_parse.parse_page(markup)
         except Exception as e:
+            parsing_errors += 1
             util.get_logger().error(f'DBPEDIA/PAGES ({mp.current_process().name}): Failed to parse page {resource}: {e}')
+    util.get_logger().debug(f'DBPEDIA/PAGES ({mp.current_process().name}): Parsed {len(chunk_of_pages)} pages with {parsing_errors} errors.')
     return parsed_pages
 
 
