@@ -33,10 +33,7 @@ def get_page_markup(resource: str) -> str:
 
 
 def get_all_pages_markup() -> dict:
-    global __PAGE_MARKUP__
-    if '__PAGE_MARKUP__' not in globals():
-        __PAGE_MARKUP__ = defaultdict(str, util.load_or_create_cache('dbpedia_page_markup', _fetch_page_markup))
-    return __PAGE_MARKUP__
+    return defaultdict(str, util.load_or_create_cache('dbpedia_page_markup', _fetch_page_markup))
 
 
 def _fetch_page_markup() -> dict:
