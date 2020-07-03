@@ -7,7 +7,6 @@ import impl.dbpedia.util as dbp_util
 import impl.util.wiki_parse as wiki_parse
 from collections import defaultdict
 import multiprocessing as mp
-from typing import Optional
 
 
 def get_all_parsed_pages() -> dict:
@@ -20,13 +19,13 @@ def _parse_pages() -> dict:
     return {resource: parsed_page for resource, parsed_page in results if parsed_page}
 
 
-def _parse_page(resource_and_markup: tuple) -> Optional[tuple]:
+def _parse_page(resource_and_markup: tuple) -> tuple:
     resource, markup = resource_and_markup
     try:
         return resource, wiki_parse.parse_page(markup)
     except Exception as e:
         util.get_logger().error(f'DBPEDIA/PAGES ({mp.current_process().name}): Failed to parse page {resource}: {e}')
-    return None
+    return resource, None
 
 
 def get_all_pages_markup() -> dict:
