@@ -73,4 +73,4 @@ class WikiPageParser:
         return self.page_markup
 
     def _valid_page(self) -> bool:
-        return self.namespace == '0' and not self.title.startswith('List of ')
+        return self.namespace == '0'
