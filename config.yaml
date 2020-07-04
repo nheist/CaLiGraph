@@ -253,12 +253,9 @@ cache:
   dbpedia_list_parents:
     filename: 'dbpedia-list-parents'
     version: 2
-  dbpedia_listpage_markup:
-    filename: 'dbpedia-listpage-markup'
-    version: 1
   dbpedia_listpage_parsed:
     filename: 'dbpedia-listpage-parsed'
-    version: 1
+    version: 2
   dbpedia_listpage_enum_features:
     filename: 'dbpedia-listpage-enum-features'
     version: 3  # ISWC: 3

@@ -2,9 +2,9 @@
 
 import pandas as pd
 import util
-from . import parser as list_parser
-from . import features as list_features
-from . import extract as list_extract
+import impl.list.store as list_store
+import impl.list.features as list_features
+import impl.list.extract as list_extract
 from impl.list.graph import ListGraph
 from collections import defaultdict
 
@@ -59,13 +59,13 @@ def get_listpage_entities(graph, listpage: str) -> set:
 
 def _extract_listpage_entities(graph):
     """Extract and return entities for all list pages."""
-    util.get_logger().info('List-Entities: Extracting new entities from list pages.')
+    util.get_logger().info('LIST/BASE: Extracting new entities from list pages..')
 
-    util.get_logger().info('List-Entities: Extracting enum entities.')
+    util.get_logger().info('LIST/BASE: Extracting enum entities..')
     enum_features = get_enum_listpage_entity_features(graph)
     enum_entities = list_extract.extract_enum_entities(enum_features)
 
-    util.get_logger().info('List-Entities: Extracting table entities.')
+    util.get_logger().info('LIST/BASE: Extracting table entities..')
     table_features = get_table_listpage_entity_features(graph)
     table_entities = list_extract.extract_table_entities(table_features)
 
@@ -77,7 +77,7 @@ def get_enum_listpage_entity_features(graph) -> pd.DataFrame:
     """Extract entities from enumeration list pages."""
     global __ENUM_LISTPAGE_ENTITY_FEATURES__
     if '__ENUM_LISTPAGE_ENTITY_FEATURES__' not in globals():
-        __ENUM_LISTPAGE_ENTITY_FEATURES__ = util.load_or_create_cache('dbpedia_listpage_enum_features', lambda: _compute_listpage_entity_features(graph, list_parser.LIST_TYPE_ENUM))
+        __ENUM_LISTPAGE_ENTITY_FEATURES__ = util.load_or_create_cache('dbpedia_listpage_enum_features', lambda: _compute_listpage_entity_features(graph, list_store.LIST_TYPE_ENUM))
     return __ENUM_LISTPAGE_ENTITY_FEATURES__
 
 
@@ -85,36 +85,35 @@ def get_table_listpage_entity_features(graph) -> pd.DataFrame:
     """Extract entities from table list pages."""
     global __TABLE_LISTPAGE_ENTITY_FEATURES__
     if '__TABLE_LISTPAGE_ENTITY_FEATURES__' not in globals():
-        __TABLE_LISTPAGE_ENTITY_FEATURES__ = util.load_or_create_cache('dbpedia_listpage_table_features', lambda: _compute_listpage_entity_features(graph, list_parser.LIST_TYPE_TABLE))
+        __TABLE_LISTPAGE_ENTITY_FEATURES__ = util.load_or_create_cache('dbpedia_listpage_table_features', lambda: _compute_listpage_entity_features(graph, list_store.LIST_TYPE_TABLE))
     return __TABLE_LISTPAGE_ENTITY_FEATURES__
 
 
 def _compute_listpage_entity_features(graph, list_type: str) -> pd.DataFrame:
     """Compute entity features depending on the layout type of a list page."""
-    util.get_logger().info(f'List-Entities: Computing entity features for {list_type}..')
+    util.get_logger().info(f'LIST/BASE: Computing entity features for {list_type}..')
 
     entity_features = []
-    parsed_listpages = list_parser.get_parsed_listpages()
+    parsed_listpages = list_store.get_parsed_listpages(list_type)
+    feature_func = list_features.make_enum_entity_features if list_type == list_store.LIST_TYPE_ENUM else list_features.make_table_entity_features
     for idx, (lp, lp_data) in enumerate(parsed_listpages.items()):
         if idx % 1000 == 0:
-            util.get_logger().debug(f'List-Entities: Processed {idx} of {len(parsed_listpages)} listpages.')
-
-        if lp_data['type'] != list_type:
-            continue
-        if list_type == list_parser.LIST_TYPE_ENUM:
-            entity_features.extend(list_features.make_enum_entity_features(lp_data))
-        elif list_type == list_parser.LIST_TYPE_TABLE:
-            entity_features.extend(list_features.make_table_entity_features(lp_data))
+            util.get_logger().debug(f'LIST/BASE: Processed {idx} of {len(parsed_listpages)} listpages.')
+        entity_features.extend(feature_func(lp, lp_data))
     entity_features = pd.DataFrame(data=entity_features)
-    entity_features.to_csv('table_intermediate_save.csv', sep=';')  # TODO: remove
+
+    # TODO: remove this!
+    if list_type == list_store.LIST_TYPE_TABLE:
+        entity_features.to_csv('table_intermediate_save.csv', sep=';')
+    # /TODO: remove this!
 
     # one-hot-encode name features
+    util.get_logger().info('LIST/BASE: One-hot encoding features..')
     entity_features = list_features.onehotencode_feature(entity_features, '_section_name')
     if '_column_name' in entity_features.columns:
         entity_features = list_features.onehotencode_feature(entity_features, '_column_name')
 
-    util.get_logger().info('List-Entities: Assigning entity labels..')
+    util.get_logger().info('LIST/BASE: Assigning entity labels..')
     list_features.assign_entity_labels(graph, entity_features)
 
-    util.get_logger().info('List-Entities: Finished extracting entity features.')
     return entity_features

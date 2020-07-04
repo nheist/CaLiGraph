@@ -17,17 +17,18 @@ from sklearn.preprocessing import OneHotEncoder
 from collections import defaultdict, Counter
 import operator
 
-
+# TODO: Multiprocessing
 # COMPUTATION OF BASIC ENTITY FEATURES OF ENUM LISTPAGES
 
-def make_enum_entity_features(lp_data: dict) -> list:
+
+def make_enum_entity_features(lp_uri: str, lp_data: dict) -> list:
     """Return a set of features for every entity in an enumeration list page."""
-    lp_uri = lp_data['uri']
     sections = lp_data['sections']
 
     # lp feature statistics
     lp_section_count = len(sections)
-    lp_section_entries = [len(section['entries']) for section in sections]
+    lp_section_enums = [len(section['enums']) for section in sections]
+    lp_section_entries = [sum([len(enum) for enum in section['enums']]) for section in sections]
     lp_entry_depths = []
     lp_entry_entities = []
     lp_entry_words = []
@@ -39,93 +40,97 @@ def make_enum_entity_features(lp_data: dict) -> list:
     data = []
     entity_lp_index = 0
     line_index = -1
+    enum_index = -1
     for section_idx, section_data in enumerate(sections):
         section_name = section_data['name']
 
-        entries = section_data['entries']
-        for entry_idx, entry_data in enumerate(entries):
-            line_index += 1
-            entry_text = entry_data['text']
-            entry_doc = list_nlp.parse(entry_text)
+        enums = section_data['enums']
+        for entries in enums:
+            enum_index += 1
+            for entry_idx, entry_data in enumerate(entries):
+                line_index += 1
+                entry_text = entry_data['text']
+                entry_doc = list_nlp.parse(entry_text)
 
-            entities = entry_data['entities']
-            # add link type (blue/red) to entities and collect entity boundaries
-            entity_character_idxs = set()
-            for entity_data in entities:
-                entity_data['link_type'] = 'blue' if entity_data['uri'] in dbp_store.get_raw_resources() else 'red'
-                start = entity_data['idx']
-                end = start + len(entity_data['text'])
-                entity_character_idxs.update(range(start, end))
+                entities = entry_data['entities']
+                # add link type (blue/red) to entities and collect entity boundaries
+                entity_character_idxs = set()
+                for entity_data in entities:
+                    entity_data['link_type'] = 'blue' if entity_data['uri'] in dbp_store.get_raw_resources() else 'red'
+                    start = entity_data['idx']
+                    end = start + len(entity_data['text'])
+                    entity_character_idxs.update(range(start, end))
 
-            # find previously unlinked entities
-            if util.get_config('list.extraction.extract_unlinked_entities'):
-                for ent in entry_doc.ents:
-                    start = ent.start_char
-                    end = ent.end_char
-                    text = ent.text
-                    if not entity_character_idxs.intersection(set(range(start, end))) and len(text) > 1:
-                        uri = rdf_util.name2uri(text, lp_uri + '__')
-                        entities.append({'uri': uri, 'text': text, 'idx': start, 'link_type': 'grey'})
-            entities = sorted(entities, key=lambda x: x['idx'])
+                # find previously unlinked entities
+                if util.get_config('list.extraction.extract_unlinked_entities'):
+                    for ent in entry_doc.ents:
+                        start = ent.start_char
+                        end = ent.end_char
+                        text = ent.text
+                        if not entity_character_idxs.intersection(set(range(start, end))) and len(text) > 1:
+                            uri = rdf_util.name2uri(text, lp_uri + '__')
+                            entities.append({'uri': uri, 'text': text, 'idx': start, 'link_type': 'grey'})
+                entities = sorted(entities, key=lambda x: x['idx'])
 
-            # collect features
-            lp_entry_depths.append(entry_data['depth'])
-            lp_entry_entities.append(len(entities))
-            lp_entry_words.append(len(entry_text.split(' ')))
-            lp_entry_chars.append(len(entry_text))
-            lp_entry_commas.append(entry_text.count(','))
-            for entity_idx, entity_data in enumerate(entities):
-                entity_uri = entity_data['uri']
-                entity_uri = entity_uri[:entity_uri.index('#')] if '#' in entity_uri else entity_uri
+                # collect features
+                lp_entry_depths.append(entry_data['depth'])
+                lp_entry_entities.append(len(entities))
+                lp_entry_words.append(len(entry_text.split(' ')))
+                lp_entry_chars.append(len(entry_text))
+                lp_entry_commas.append(entry_text.count(','))
+                for entity_idx, entity_data in enumerate(entities):
+                    entity_uri = entity_data['uri']
+                    entity_uri = entity_uri[:entity_uri.index('#')] if '#' in entity_uri else entity_uri
 
-                entity_span = _get_span_for_entity(entry_doc, entity_data['text'], entity_data['idx'])
-                if not entity_span:
-                    continue
+                    entity_span = _get_span_for_entity(entry_doc, entity_data['text'], entity_data['idx'])
+                    if not entity_span:
+                        continue
 
-                if entity_idx == 0:
-                    lp_first_entity_idx.append(entity_span.start)
-                    lp_first_entity_pos.append(_get_relative_position(entity_span.start, len(entry_doc)))
+                    if entity_idx == 0:
+                        lp_first_entity_idx.append(entity_span.start)
+                        lp_first_entity_pos.append(_get_relative_position(entity_span.start, len(entry_doc)))
 
-                features = {
-                    # ID
-                    '_id': f'{lp_uri}__{section_name}__{entry_idx}__{entity_uri}',
-                    '_listpage_uri': lp_uri,
-                    '_section_name': section_name or '',
-                    '_line_idx': line_index,
-                    '_entry_idx': entry_idx,
-                    '_entity_uri': entity_uri,
-                    '_entity_lp_idx': entity_lp_index,
-                    '_entity_line_idx': entity_idx,
-                    '_link_type': entity_data['link_type'],
-                    '_text': entity_data['text'],
-                    # ENTITY FEATURES
-                    'section_pos': _get_relative_position(section_idx, len(sections)),
-                    'section_invpos': _get_relative_position(section_idx, len(sections), inverse=True),
-                    'entry_pos': _get_relative_position(entry_idx, len(entries)),
-                    'entry_invpos': _get_relative_position(entry_idx, len(entries), inverse=True),
-                    'entry_depth': entry_data['depth'],
-                    'entry_leaf': entry_data['leaf'],
-                    'entity_count': len(entities),
-                    'entity_idx': entity_span.start,
-                    'entity_invidx': len(entry_doc) - entity_span.end,
-                    'entity_pos': _get_relative_position(entity_span.start, len(entry_doc)),
-                    'entity_invpos': _get_relative_position(entity_span.end - 1, len(entry_doc), inverse=True),
-                    'entity_link_pos': _get_relative_position(entity_idx, len(entities)),
-                    'entity_link_invpos': _get_relative_position(entity_idx, len(entities), inverse=True),
-                    'entity_first': entity_idx == 0,
-                    'entity_last': (entity_idx + 1) == len(entities),
-                    'entity_pn': any(w.tag_ in ['NNP', 'NNPS'] for w in entity_span),
-                    'entity_noun': any(w.pos_ == 'NOUN' for w in entity_span),
-                    'entity_ne': _extract_ne_tag(entity_span),
-                    'prev_pos': entry_doc[entity_span.start - 1].pos_ if entity_span.start > 0 else 'START',
-                    'prev_ne': bool(entry_doc[entity_span.start - 1].ent_type_) if entity_span.start > 0 else False,
-                    'succ_pos': entry_doc[entity_span.end].pos_ if entity_span.end < len(entry_doc) else 'END',
-                    'succ_ne': bool(entry_doc[entity_span.end].ent_type_) if entity_span.end < len(entry_doc) else False,
-                    'comma_idx': len([w for w in entry_doc[0:entity_span.start] if w.text == ','])
-                }
+                    features = {
+                        # ID
+                        '_id': f'{lp_uri}__{section_name}__{entry_idx}__{entity_uri}',
+                        '_listpage_uri': lp_uri,
+                        '_section_name': section_name or '',
+                        '_line_idx': line_index,
+                        '_enum_idx': enum_index,
+                        '_entry_idx': entry_idx,
+                        '_entity_uri': entity_uri,
+                        '_entity_lp_idx': entity_lp_index,
+                        '_entity_line_idx': entity_idx,
+                        '_link_type': entity_data['link_type'],
+                        '_text': entity_data['text'],
+                        # ENTITY FEATURES
+                        'section_pos': _get_relative_position(section_idx, len(sections)),
+                        'section_invpos': _get_relative_position(section_idx, len(sections), inverse=True),
+                        'entry_pos': _get_relative_position(entry_idx, len(entries)),
+                        'entry_invpos': _get_relative_position(entry_idx, len(entries), inverse=True),
+                        'entry_depth': entry_data['depth'],
+                        'entry_leaf': entry_data['leaf'],
+                        'entity_count': len(entities),
+                        'entity_idx': entity_span.start,
+                        'entity_invidx': len(entry_doc) - entity_span.end,
+                        'entity_pos': _get_relative_position(entity_span.start, len(entry_doc)),
+                        'entity_invpos': _get_relative_position(entity_span.end - 1, len(entry_doc), inverse=True),
+                        'entity_link_pos': _get_relative_position(entity_idx, len(entities)),
+                        'entity_link_invpos': _get_relative_position(entity_idx, len(entities), inverse=True),
+                        'entity_first': entity_idx == 0,
+                        'entity_last': (entity_idx + 1) == len(entities),
+                        'entity_pn': any(w.tag_ in ['NNP', 'NNPS'] for w in entity_span),
+                        'entity_noun': any(w.pos_ == 'NOUN' for w in entity_span),
+                        'entity_ne': _extract_ne_tag(entity_span),
+                        'prev_pos': entry_doc[entity_span.start - 1].pos_ if entity_span.start > 0 else 'START',
+                        'prev_ne': bool(entry_doc[entity_span.start - 1].ent_type_) if entity_span.start > 0 else False,
+                        'succ_pos': entry_doc[entity_span.end].pos_ if entity_span.end < len(entry_doc) else 'END',
+                        'succ_ne': bool(entry_doc[entity_span.end].ent_type_) if entity_span.end < len(entry_doc) else False,
+                        'comma_idx': len([w for w in entry_doc[0:entity_span.start] if w.text == ','])
+                    }
 
-                data.append(features)
-                entity_lp_index += 1
+                    data.append(features)
+                    entity_lp_index += 1
 
     for feature_set in data:
         # ENTITY-STATS FEATURES
@@ -134,6 +139,7 @@ def make_enum_entity_features(lp_data: dict) -> list:
 
         # LISTPAGE FEATURES
         feature_set['lp_section_count'] = lp_section_count
+        _assign_avg_and_std_to_feature_set(feature_set, lp_section_enums, 'lp_section_enums')
         _assign_avg_and_std_to_feature_set(feature_set, lp_section_entries, 'lp_section_entry')
         _assign_avg_and_std_to_feature_set(feature_set, lp_entry_depths, 'lp_entry_depth')
         _assign_avg_and_std_to_feature_set(feature_set, lp_entry_entities, 'lp_entry_entity')
@@ -146,9 +152,8 @@ def make_enum_entity_features(lp_data: dict) -> list:
     return data
 
 
-def make_table_entity_features(lp_data: dict) -> list:
+def make_table_entity_features(lp_uri: str, lp_data: dict) -> list:
     """Return a set of features for every entity in a table list page."""
-    lp_uri = lp_data['uri']
     sections = lp_data['sections']
 
     # lp feature statistics
@@ -344,7 +349,7 @@ def assign_entity_labels(graph, df: pd.DataFrame):
     listpage_uris = set(df['_listpage_uri'].unique())
     for idx, listpage_uri in enumerate(listpage_uris):
         if idx % 1000 == 0:
-            util.get_logger().debug(f'List-Entities: Processed {idx} of {len(listpage_uris)}.')
+            util.get_logger().debug(f'LIST/FEATURES: Processed {idx} of {len(listpage_uris)}.')
         listpage_resources = set(df[df['_listpage_uri'] == listpage_uri]['_entity_uri'].unique())
         listpage_category_resources = {res for cat in _get_category_descendants_for_list(listpage_uri) for res in cat_store.get_resources(cat)}
         listpage_valid_resources[listpage_uri] = listpage_resources.intersection(listpage_category_resources)

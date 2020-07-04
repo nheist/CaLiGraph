@@ -5,7 +5,7 @@ import random
 from pathlib import Path
 import impl.util.rdf as rdf_util
 import impl.dbpedia.store as dbp_store
-import impl.list.parser as list_parser
+import impl.list.store as list_store
 import impl.list.mapping as list_mapping
 import json
 import spacy
@@ -77,7 +77,7 @@ def _retrieve_training_data_gs():
 
 
 def _retrieve_training_data_wle():
-    listpages = {lp: data for lp, data in list_parser.get_parsed_listpages().items() if data['type'] == list_parser.LIST_TYPE_ENUM}
+    listpages = {lp: data for lp, data in list_store.get_parsed_listpages(list_store.LIST_TYPE_ENUM).items()}
     lp_to_cat_mapping = {lp: list_mapping.get_equivalent_categories(lp) | list_mapping.get_parent_categories(lp) for lp in listpages}
     lp_to_cat_mapping = {lp: cats for lp, cats in lp_to_cat_mapping.items() if cats}
 
@@ -86,26 +86,27 @@ def _retrieve_training_data_wle():
     for lp, cats in lp_to_cat_mapping.items():
         lp_data = listpages[lp]
         for section_data in lp_data['sections']:
-            for entry_data in section_data['entries']:
-                text = entry_data['text']
-                if not text:
-                    continue
-                entities = entry_data['entities']
-                if not entities:
-                    continue
-                valid_entities = []
-                for entity_data in entities:
-                    entity_tag = _get_tag_for_types(dbp_store.get_independent_types(dbp_store.get_types(entity_data['uri'])))
-                    if not entity_tag:
+            for enum_data in section_data['enums']:
+                for entry_data in enum_data:
+                    text = entry_data['text']
+                    if not text:
                         continue
-                    entity_text = entity_data['text']
-                    start = int(entity_data['idx'])
-                    end = start + len(text)
-                    if end > len(text) or text[start:end] != entity_text:
+                    entities = entry_data['entities']
+                    if not entities:
                         continue
-                    valid_entities.append((start, end, entity_tag))
-                if len(entities) == len(valid_entities):
-                    training_data.append((text, {'entities': valid_entities}))
+                    valid_entities = []
+                    for entity_data in entities:
+                        entity_tag = _get_tag_for_types(dbp_store.get_independent_types(dbp_store.get_types(entity_data['uri'])))
+                        if not entity_tag:
+                            continue
+                        entity_text = entity_data['text']
+                        start = int(entity_data['idx'])
+                        end = start + len(text)
+                        if end > len(text) or text[start:end] != entity_text:
+                            continue
+                        valid_entities.append((start, end, entity_tag))
+                    if len(entities) == len(valid_entities):
+                        training_data.append((text, {'entities': valid_entities}))
     return training_data
 
 

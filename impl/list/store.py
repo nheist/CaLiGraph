@@ -2,12 +2,12 @@
 
 from . import util as list_util
 import impl.dbpedia.store as dbp_store
-import impl.dbpedia.util as dbp_util
+import impl.dbpedia.pages as dbp_pages
 import impl.category.store as cat_store
 import util
-from lxml import etree
-from collections import defaultdict
-import bz2
+
+
+LIST_TYPE_ENUM, LIST_TYPE_TABLE = 'list_type_enum', 'list_type_table'
 
 
 def get_listpages() -> set:
@@ -38,52 +38,33 @@ def get_listcategories() -> set:
     return __LISTCATEGORIES__
 
 
-def get_listpage_markup(listpage: str) -> str:
-    """Return the WikiText markup for the given list page."""
-    global __LISTPAGE_MARKUP__
-    if '__LISTPAGE_MARKUP__' not in globals():
-        __LISTPAGE_MARKUP__ = defaultdict(str, util.load_or_create_cache('dbpedia_listpage_markup', _fetch_listpage_markup))
-
-    return __LISTPAGE_MARKUP__[listpage]
-
-
-def _fetch_listpage_markup():
-    util.get_logger().info('CACHE: Parsing listpage markup')
-    parser = etree.XMLParser(target=WikiListpageParser())
-    with bz2.open(util.get_data_file('files.dbpedia.pages')) as dbp_pages_file:
-        list_markup = etree.parse(dbp_pages_file, parser)
-        return {dbp_util.name2resource(lp): markup for lp, markup in list_markup.items()}
+def get_parsed_listpages(listpage_type: str) -> dict:
+    """Return all list pages of the type `listpage_type` together with their parsed content."""
+    global __PARSED_LISTPAGES__
+    if '__PARSED_LISTPAGES__' not in globals():
+        __PARSED_LISTPAGES__ = util.load_or_create_cache('dbpedia-listpage-parsed', _parse_listpages)
+    return {lp: content for lp, content in __PARSED_LISTPAGES__.items() if content['type'] == listpage_type}
 
 
-class WikiListpageParser:
-    """Parse WikiText as stream and return content based on page markers (only for pages starting with 'List of')."""
-    def __init__(self):
-        self.processed_pages = 0
-        self.list_markup = {}
-        self.title = None
-        self.namespace = None
-        self.tag_content = ''
+def _parse_listpages() -> dict:
+    parsed_listpages = {}
+    for resource, content in dbp_pages.get_all_parsed_pages().items():
+        if not list_util.is_listpage(resource):
+            continue
+        if not content or 'sections' not in content:
+            continue
+        listpage_type = _get_listpage_type(content['sections'])
+        parsed_listpages[resource] = {'sections': content['sections'], 'type': listpage_type}
+    return parsed_listpages
 
-    def start(self, tag, _):
-        if tag.endswith('}page'):
-            self.title = None
-            self.namespace = None
-            self.processed_pages += 1
 
-    def end(self, tag):
-        if tag.endswith('}title'):
-            self.title = self.tag_content.strip()
-        elif tag.endswith('}ns'):
-            self.namespace = self.tag_content.strip()
-        elif tag.endswith('}text') and self._valid_page():
-            self.list_markup[self.title] = self.tag_content.strip()
-        self.tag_content = ''
+def _get_listpage_type(listpage_sections: list) -> str:
+    """Return layout type of the list page based on the count of enumeration entries and table rows."""
+    enum_entry_count = sum([len(enum) for section in listpage_sections for enum in section['enums']])
+    table_row_count = sum([len(table) for section in listpage_sections for table in section['tables']])
+    return LIST_TYPE_ENUM if enum_entry_count > table_row_count else LIST_TYPE_TABLE
 
-    def data(self, chars):
-        self.tag_content += chars
 
-    def close(self) -> dict:
-        return self.list_markup
-
-    def _valid_page(self) -> bool:
-        return self.namespace == '0' and self.title.startswith('List of ')
+def get_listpages_with_markup() -> dict:
+    """Return the WikiText markup for all list pages."""
+    return {page: markup for page, markup in dbp_pages.get_all_pages_markup() if list_util.is_listpage(page)}
