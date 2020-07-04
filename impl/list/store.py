@@ -42,7 +42,7 @@ def get_parsed_listpages(listpage_type: str) -> dict:
     """Return all list pages of the type `listpage_type` together with their parsed content."""
     global __PARSED_LISTPAGES__
     if '__PARSED_LISTPAGES__' not in globals():
-        __PARSED_LISTPAGES__ = util.load_or_create_cache('dbpedia-listpage-parsed', _parse_listpages)
+        __PARSED_LISTPAGES__ = util.load_or_create_cache('dbpedia_listpage_parsed', _parse_listpages)
     return {lp: content for lp, content in __PARSED_LISTPAGES__.items() if content['type'] == listpage_type}
 
 
