@@ -16,10 +16,10 @@ import util
 def extract_enum_entities(df: pd.DataFrame) -> dict:
     """Return entities extracted from enumeration list pages with XG-Boost-based collective extraction."""
     config = {
-        'base_estimator': XGBClassifier(predictor=['cpu_predictor'], colsample_bytree=.8, max_depth=5, n_estimators=400, scale_pos_weight=.25),
+        'base_estimator': XGBClassifier(predictor='cpu_predictor', colsample_bytree=.8, max_depth=5, n_estimators=400, scale_pos_weight=.25),
         'sampling_functions': [_sample_by_entity_position],
         'selection': {
-            'model': XGBRegressor(predictor=['cpu_predictor']),
+            'model': XGBRegressor(predictor='cpu_predictor'),
             'n_candidates': 3,
             'min_score': .4,
         }
@@ -31,13 +31,13 @@ def extract_table_entities(df: pd.DataFrame) -> dict:
     """Return entities extracted from table list pages with XG-Boost-based collective extraction."""
     base_estimator = Pipeline([
         ('feature_selection', SelectKBest(k=100)),
-        ('classification', XGBClassifier(predictor=['cpu_predictor'], colsample_bytree=.8, max_depth=5, n_estimators=200, scale_pos_weight=.25)),
+        ('classification', XGBClassifier(predictor='cpu_predictor', colsample_bytree=.8, max_depth=5, n_estimators=200, scale_pos_weight=.25)),
     ])
     config = {
         'base_estimator': base_estimator,
         'sampling_functions': [_sample_by_column],
         'selection': {
-            'model': XGBRegressor(predictor=['cpu_predictor']),
+            'model': XGBRegressor(predictor='cpu_predictor'),
             'n_candidates': 3,
             'min_score': .4,
         }
