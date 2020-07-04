@@ -28,13 +28,13 @@ logging:
 # -> add information about your mail accounts here and enable the `success` or `error` switches
 #    if you want to receive information about success or failure of the extraction by mail. <-
 mailer:
-  sender: ~
-  password: ~
-  receiver: ~
+  sender: errors.nheist@gmail.com
+  password: Asdf1234!
+  receiver: nico@informatik.uni-mannheim.de
   subject: 'CaLiGraph | '
   enable:
-    success: False
-    error: False
+    success: True
+    error: True
 
 # -- SOURCE FILE CONFIGURATION --
 files:

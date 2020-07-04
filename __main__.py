@@ -6,7 +6,8 @@ import impl.category.cat2ax as cat_axioms
 import impl.util.hypernymy as hypernymy_util
 import impl.caligraph.base as cali_base
 import impl.util.nlp as nlp_util
-
+import impl.list.features as list_features
+import impl.list.base as list_base
 
 def _setup_hypernyms():
     """Initialisation of hypernyms that are extracted from Wikipedia categories using Cat2Ax axioms."""
@@ -24,13 +25,29 @@ def _setup_hypernyms():
 
 if __name__ == '__main__':
     try:
-        util.get_logger().info('Starting extraction of CaLiGraph version 1.1.0.')
+        util.get_logger().info('Starting serialization of caligraph.')
 
-        _setup_hypernyms()  # initialise hypernyms
+#        G = cali_base.get_merged_ontology_graph()
+#        df = list_base._compute_listpage_entity_features(G, 'list_type_enum')
+#        util.update_cache('dbpedia_listpage_enum_features', df, version='3_NE-bluelink-gold')
+
+#        df = list_base._compute_listpage_entity_features(G, 'list_type_table')
+#        util.update_cache('dbpedia_listpage_table_features', df, version='3_NE-bluelink-gold')
+
+
+#        df = util.load_cache('dbpedia_listpage_enum_features', version='3')
+#        list_features.assign_entity_labels(G, df)
+#        util.update_cache('dbpedia_listpage_enum_features', df, version='3')
+
+#        df = util.load_cache('dbpedia_listpage_table_features', version='3')
+#        list_features.assign_entity_labels(G, df)
+#        util.update_cache('dbpedia_listpage_table_features', df, version='3')
+
+#        _setup_hypernyms()  # initialise hypernyms
         cali_base.serialize_final_graph()  # run the complete extraction cycle and end with serializing CaLiGraph
-        nlp_util.persist_cache()  # persist the spaCy cache to rerun extraction more quickly
+#        nlp_util.persist_cache()  # persist the spaCy cache to rerun extraction more quickly
 
-        success_msg = 'Finished extraction of CaLiGraph version 1.1.0.'
+        success_msg = 'Finished serialization of caligraph.'
         mailer.send_success(success_msg)
         util.get_logger().info(success_msg)
     except Exception as e:
