@@ -9,6 +9,7 @@ import impl.util.nlp as nlp_util
 import impl.list.features as list_features
 import impl.list.base as list_base
 
+
 def _setup_hypernyms():
     """Initialisation of hypernyms that are extracted from Wikipedia categories using Cat2Ax axioms."""
     category_graph = cat_base.get_conceptual_category_graph()
