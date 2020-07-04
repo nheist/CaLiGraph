@@ -48,12 +48,14 @@ def _initialise_parser():
 
 
 def _train_parser():
+    util.get_logger().debug('LIST/NLP: Training new spacy model on GS..')
     # specialize spacy model on GS
     filepath_gs = util._get_cache_path('spacy_listpage_ne-tagging_GS')
     if not filepath_gs.is_dir():
         training_data_gs = _retrieve_training_data_gs()
         _train_enhanced_spacy_model(training_data_gs, str(filepath_gs), model='en_core_web_lg')
 
+    util.get_logger().debug('LIST/NLP: Training new spacy model on WLE..')
     # specialize spacy+GS model on WLE
     filepath_wle = util._get_cache_path('spacy_listpage_ne-tagging_GS-WLE')
     training_data_wle = _retrieve_training_data_wle()
@@ -117,7 +119,7 @@ def _get_tag_for_types(dbp_types: set) -> str:
     return _get_tag_for_types(parent_types) if parent_types else None
 
 
-def _train_enhanced_spacy_model(training_data: list, output_dir: str, model=None, n_iter=100):
+def _train_enhanced_spacy_model(training_data: list, output_dir: str, model=None, n_iter=50):
     if model is not None:
         nlp = spacy.load(model)  # load existing spaCy model
     else:
