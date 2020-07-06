@@ -167,6 +167,9 @@ def make_table_entity_features(lp_uri: str, lp_data: dict) -> list:
     lp_table_column_entities = []
     lp_table_first_entity_column = []
 
+    # compute lemmas for listpage-name / column-name similarity
+    lp_lemmas = {w.lemma_ for w in list_nlp.parse(list_util.listpage2name(lp_uri))}
+
     data = []
     entity_lp_index = 0
     line_index = -1
@@ -184,6 +187,7 @@ def make_table_entity_features(lp_uri: str, lp_data: dict) -> list:
 
                 for column_idx, column_data in enumerate(row):
                     column_name = table[0][column_idx]['text'] if len(table[0]) > column_idx else ''
+                    column_name_lemmas = {w.lemma_ for w in list_nlp.parse(str(column_name))}
                     column_text = column_data['text']
                     column_doc = list_nlp.parse(column_text)
 
@@ -249,9 +253,9 @@ def make_table_entity_features(lp_uri: str, lp_data: dict) -> list:
                             'column_pos': _get_relative_position(column_idx, len(row)),
                             'column_invpos': _get_relative_position(column_idx, len(row), inverse=True),
                             'column_count': len(row),
-                            'column_list_similar': _compute_column_list_similarity(operator.eq, lp_uri, column_name),
-                            'column_list_synonym': _compute_column_list_similarity(hyper_util.is_synonym, lp_uri, column_name),
-                            'column_list_hypernym': _compute_column_list_similarity(_is_hyper, lp_uri, column_name),
+                            'column_list_similar': _compute_column_list_similarity(operator.eq, lp_lemmas, column_name_lemmas),
+                            'column_list_synonym': _compute_column_list_similarity(hyper_util.is_synonym, lp_lemmas, column_name_lemmas),
+                            'column_list_hypernym': _compute_column_list_similarity(_is_hyper, lp_lemmas, column_name_lemmas),
                             'entity_link_pos': _get_relative_position(entity_idx, len(column_entities)),
                             'entity_link_invpos': _get_relative_position(entity_idx, len(column_entities), inverse=True),
                             'entity_line_first': entity_line_index == 0,
@@ -306,11 +310,8 @@ def _extract_ne_tag(entity_span) -> str:
     return sorted(dict(tag_count).items(), key=lambda x: x[1], reverse=True)[0][0]
 
 
-def _compute_column_list_similarity(sim_func, listpage_uri, column_name):
+def _compute_column_list_similarity(sim_func, listpage_lemmas: set, column_name_lemmas: set) -> int:
     """Return similarity value of column header and list page name."""
-    listpage_name = list_util.listpage2name(listpage_uri)
-    listpage_lemmas = {w.lemma_ for w in list_nlp.parse(listpage_name)}
-    column_name_lemmas = {w.lemma_ for w in list_nlp.parse(str(column_name))}
     return 1 if any(sim_func(l, c) for l in listpage_lemmas for c in column_name_lemmas) else 0
 
 
