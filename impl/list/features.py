@@ -7,7 +7,6 @@ import impl.dbpedia.store as dbp_store
 import impl.dbpedia.heuristics as dbp_heur
 import impl.category.store as cat_store
 import impl.category.base as cat_base
-import impl.util.nlp as nlp_util
 import impl.util.hypernymy as hyper_util
 import impl.util.rdf as rdf_util
 import pandas as pd
@@ -310,8 +309,8 @@ def _extract_ne_tag(entity_span) -> str:
 def _compute_column_list_similarity(sim_func, listpage_uri, column_name):
     """Return similarity value of column header and list page name."""
     listpage_name = list_util.listpage2name(listpage_uri)
-    listpage_lemmas = {w.lemma_ for w in nlp_util.parse(listpage_name, disable_normalization=True)}
-    column_name_lemmas = {w.lemma_ for w in nlp_util.parse(str(column_name))}
+    listpage_lemmas = {w.lemma_ for w in list_nlp.parse(listpage_name)}
+    column_name_lemmas = {w.lemma_ for w in list_nlp.parse(str(column_name))}
     return 1 if any(sim_func(l, c) for l in listpage_lemmas for c in column_name_lemmas) else 0
 
 

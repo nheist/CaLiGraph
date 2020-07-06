@@ -29,7 +29,8 @@ def parse_page(page_markup: str) -> dict:
 
 
 def _is_page_useful(wiki_text: WikiText) -> bool:
-    return len(wiki_text.get_lists()) + len(wiki_text.get_tables()) > 0
+    # ignore pages without any lists and pages with very small lists (e.g. redirect pages have a list with length of 1)
+    return len(wiki_text.get_lists()) + len(wiki_text.get_tables()) >= 5
 
 
 def _prepare_wikitext(wiki_text: WikiText) -> WikiText:

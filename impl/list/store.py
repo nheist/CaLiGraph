@@ -51,6 +51,8 @@ def _parse_listpages() -> dict:
     for resource, content in dbp_pages.get_all_parsed_pages().items():
         if not list_util.is_listpage(resource):
             continue
+        if resource != dbp_store.resolve_redirect(resource):
+            continue
         if not content or 'sections' not in content:
             continue
         listpage_type = _get_listpage_type(content['sections'])
