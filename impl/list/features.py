@@ -16,7 +16,7 @@ from sklearn.preprocessing import OneHotEncoder
 from collections import defaultdict, Counter
 import operator
 
-# TODO: Multiprocessing
+# TODO: Refactor
 # COMPUTATION OF BASIC ENTITY FEATURES OF ENUM LISTPAGES
 
 
@@ -55,7 +55,11 @@ def make_enum_entity_features(lp_uri: str, lp_data: dict) -> list:
                 # add link type (blue/red) to entities and collect entity boundaries
                 entity_character_idxs = set()
                 for entity_data in entities:
-                    entity_data['link_type'] = 'blue' if entity_data['uri'] in dbp_store.get_raw_resources() else 'red'
+                    if entity_data['uri'] in dbp_store.get_raw_resources():
+                        entity_data['link_type'] = 'blue'
+                    else:
+                        entity_data['link_type'] = 'red'
+                        entity_data['uri'] = rdf_util.name2uri(entity_data['text'], lp_uri + '__')
                     start = entity_data['idx']
                     end = start + len(entity_data['text'])
                     entity_character_idxs.update(range(start, end))
@@ -198,7 +202,11 @@ def make_table_entity_features(lp_uri: str, lp_data: dict) -> list:
                     # add link type (blue/red) to entities and collect entity boundaries
                     entity_character_idxs = set()
                     for entity_data in column_entities:
-                        entity_data['link_type'] = 'blue' if entity_data['uri'] in dbp_store.get_raw_resources() else 'red'
+                        if entity_data['uri'] in dbp_store.get_raw_resources():
+                            entity_data['link_type'] = 'blue'
+                        else:
+                            entity_data['link_type'] = 'red'
+                            entity_data['uri'] = rdf_util.name2uri(entity_data['text'], lp_uri + '__')
                         start = entity_data['idx']
                         end = start + len(entity_data['text'])
                         entity_character_idxs.update(range(start, end))

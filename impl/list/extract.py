@@ -255,10 +255,10 @@ def _compute_feature_similarents(df: pd.DataFrame, entity_sample: EntitySample):
     all_entities = []
     for _, row in df[df.index.isin(entity_sample.entities)].iterrows():
         entity_uri = row['_entity_uri']
-        if row['_link_type'] == 'grey':
-            all_entities.append(entity_uri[entity_uri.rfind('__')+2:])
-        else:
+        if row['_link_type'] == 'blue':
             all_entities.append(entity_uri[entity_uri.rfind('/')+1:])
+        else:
+            all_entities.append(entity_uri[entity_uri.rfind('__')+2:])
     entity_sample.stats['similar_ents'] = len(set(all_entities)) / len(all_entities)
 
 
