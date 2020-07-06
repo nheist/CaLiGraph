@@ -345,11 +345,10 @@ def assign_entity_labels(graph, df: pd.DataFrame):
     listpage_valid_resources = {}
     listpage_types = defaultdict(set)
 
-    listpage_uris = set(df['_listpage_uri'].unique())
-    for idx, listpage_uri in enumerate(listpage_uris):
+    for idx, (listpage_uri, df_group) in enumerate(df.groupby('_listpage_uri')):
         if idx % 1000 == 0:
-            util.get_logger().debug(f'LIST/FEATURES: Processed {idx} of {len(listpage_uris)}.')
-        listpage_resources = set(df[df['_listpage_uri'] == listpage_uri]['_entity_uri'].unique())
+            util.get_logger().debug(f'LIST/FEATURES: Processed {idx} list pages.')
+        listpage_resources = df_group['_entity_uri'].unique()
         listpage_category_resources = {res for cat in _get_category_descendants_for_list(listpage_uri) for res in cat_store.get_resources(cat)}
         listpage_valid_resources[listpage_uri] = listpage_resources.intersection(listpage_category_resources)
 
