@@ -1,12 +1,16 @@
 """Functionality to retrieve cached versions of the list graph and entities in several stages."""
 
 import pandas as pd
+import math
+from itertools import islice
 import util
 import impl.list.store as list_store
 import impl.list.features as list_features
 import impl.list.extract as list_extract
+import impl.list.nlp as list_nlp
 from impl.list.graph import ListGraph
 from collections import defaultdict
+import multiprocessing as mp
 
 
 # LIST HIERARCHY
@@ -93,13 +97,15 @@ def _compute_listpage_entity_features(graph, list_type: str) -> pd.DataFrame:
     """Compute entity features depending on the layout type of a list page."""
     util.get_logger().info(f'LIST/BASE: Computing entity features for {list_type}..')
 
-    entity_features = []
+    # make sure that the spacy list parser is initialized before using it in multiple processes
+    list_nlp._initialise_parser()
+
     parsed_listpages = list_store.get_parsed_listpages(list_type)
     feature_func = list_features.make_enum_entity_features if list_type == list_store.LIST_TYPE_ENUM else list_features.make_table_entity_features
-    for idx, (lp, lp_data) in enumerate(parsed_listpages.items()):
-        if idx % 1000 == 0:
-            util.get_logger().debug(f'LIST/BASE: Processed {idx} of {len(parsed_listpages)} listpages.')
-        entity_features.extend(feature_func(lp, lp_data))
+    number_of_processes = 2  # TODO: increase processes depending on available memory
+    with mp.Pool(processes=number_of_processes) as pool:
+        params = [(lp_chunk, feature_func) for lp_chunk in _chunk_dict(parsed_listpages, number_of_processes)]
+        entity_features = [example for examples in pool.starmap(_run_feature_extraction_for_listpages, params) for example in examples]
     entity_features = pd.DataFrame(data=entity_features)
 
     # TODO: remove this!
@@ -116,4 +122,20 @@ def _compute_listpage_entity_features(graph, list_type: str) -> pd.DataFrame:
     util.get_logger().info('LIST/BASE: Assigning entity labels..')
     list_features.assign_entity_labels(graph, entity_features)
 
+    return entity_features
+
+
+def _chunk_dict(dict_to_chunk: dict, number_of_chunks: int):
+    chunk_size = math.ceil(len(dict_to_chunk) / number_of_chunks)
+    it = iter(dict_to_chunk)
+    for _ in range(0, len(dict_to_chunk), chunk_size):
+        yield {k: dict_to_chunk[k] for k in islice(it, chunk_size)}
+
+
+def _run_feature_extraction_for_listpages(parsed_listpages: dict, feature_func) -> list:
+    entity_features = []
+    for idx, (lp, lp_data) in enumerate(parsed_listpages.items()):
+        if idx % 1000 == 0:
+            util.get_logger().debug(f'LIST/BASE ({mp.current_process().name}): Processed {idx} of {len(parsed_listpages)} listpages.')
+        entity_features.extend(feature_func(lp, lp_data))
     return entity_features
