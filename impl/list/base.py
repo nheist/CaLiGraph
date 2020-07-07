@@ -102,7 +102,7 @@ def _compute_listpage_entity_features(graph, list_type: str) -> pd.DataFrame:
 
     parsed_listpages = list_store.get_parsed_listpages(list_type)
     feature_func = list_features.make_enum_entity_features if list_type == list_store.LIST_TYPE_ENUM else list_features.make_table_entity_features
-    number_of_processes = 2  # TODO: increase processes depending on available memory
+    number_of_processes = round(util.get_config('max_cpus') / 2)
     with mp.Pool(processes=number_of_processes) as pool:
         params = [(lp_chunk, feature_func) for lp_chunk in _chunk_dict(parsed_listpages, number_of_processes)]
         entity_features = [example for examples in pool.starmap(_run_feature_extraction_for_listpages, params) for example in examples]
