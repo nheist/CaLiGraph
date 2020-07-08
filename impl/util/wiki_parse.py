@@ -3,6 +3,7 @@
 import wikitextparser as wtp
 from wikitextparser import WikiText
 from typing import Tuple
+import impl.dbpedia.store as dbp_store
 import impl.dbpedia.util as dbp_util
 import re
 
@@ -22,6 +23,7 @@ def parse_page(page_markup: str) -> dict:
         return None
 
     cleaned_wiki_text = _prepare_wikitext(wiki_text)
+    # TODO: Remove any lists in tables (i.e. iterate over table cells and remove list entries that are contained)
     if not _is_page_useful(cleaned_wiki_text):
         return None
 
@@ -129,7 +131,7 @@ def _wikitext_to_plaintext(parsed_text: wtp.WikiText) -> str:
 
 def _convert_target_to_uri(link_target: str) -> str:
     link_target = _remove_language_tag(link_target.strip())
-    return dbp_util.name2resource(link_target[0].upper() + link_target[1:]) if link_target else None
+    return dbp_store.resolve_redirect(dbp_util.name2resource(link_target[0].upper() + link_target[1:])) if link_target else None
 
 
 def _remove_language_tag(link_target: str) -> str:
