@@ -160,7 +160,7 @@ def _sample_by_entity_position(df: pd.DataFrame, lines: list) -> list:
 
 def _sample_by_column(df: pd.DataFrame, lines: list) -> list:
     column_idxs = df['_column_idx'].unique()
-    return [({f'col-first_{idx}': 1}, list(df.loc[(df['_column_idx'] == idx) & (df['_row_idx'] > 0) & (df['entity_first'])].index)) for idx in column_idxs]
+    return [({f'col-first_{idx}': 1}, list(df.loc[(df['_column_idx'] == idx) & (df['row_isheader'] == False) & (df['entity_first'])].index)) for idx in column_idxs]
 
 
 # FEATURE GENERATION & EXTRACTION

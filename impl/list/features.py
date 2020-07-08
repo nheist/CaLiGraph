@@ -194,6 +194,9 @@ def make_table_entity_features(lp_uri: str, lp_data: dict) -> list:
                     column_name_lemmas = {w.lemma_ for w in list_nlp.parse(str(column_name))}
                     column_text = column_data['text']
                     column_doc = list_nlp.parse(column_text)
+                    column_list_similar = _compute_column_list_similarity(operator.eq, lp_lemmas, column_name_lemmas)
+                    column_list_synonym = _compute_column_list_similarity(hyper_util.is_synonym, lp_lemmas, column_name_lemmas)
+                    column_list_hypernym = _compute_column_list_similarity(_is_hyper, lp_lemmas, column_name_lemmas)
 
                     lp_table_column_words.append(len(column_text.split(' ')))
                     lp_table_column_chars.append(len(column_text))
@@ -258,12 +261,13 @@ def make_table_entity_features(lp_uri: str, lp_data: dict) -> list:
                             'row_pos': _get_relative_position(row_idx, len(table)),
                             'row_invpos': _get_relative_position(row_idx, len(table), inverse=True),
                             'row_count': len(table),
+                            'row_isheader': column_name == column_text,
                             'column_pos': _get_relative_position(column_idx, len(row)),
                             'column_invpos': _get_relative_position(column_idx, len(row), inverse=True),
                             'column_count': len(row),
-                            'column_list_similar': _compute_column_list_similarity(operator.eq, lp_lemmas, column_name_lemmas),
-                            'column_list_synonym': _compute_column_list_similarity(hyper_util.is_synonym, lp_lemmas, column_name_lemmas),
-                            'column_list_hypernym': _compute_column_list_similarity(_is_hyper, lp_lemmas, column_name_lemmas),
+                            'column_list_similar': column_list_similar,
+                            'column_list_synonym': column_list_synonym,
+                            'column_list_hypernym': column_list_hypernym,
                             'entity_link_pos': _get_relative_position(entity_idx, len(column_entities)),
                             'entity_link_invpos': _get_relative_position(entity_idx, len(column_entities), inverse=True),
                             'entity_line_first': entity_line_index == 0,
