@@ -39,13 +39,11 @@ def make_enum_entity_features(lp_uri: str, lp_data: dict) -> list:
     data = []
     entity_lp_index = 0
     line_index = -1
-    enum_index = -1
     for section_idx, section_data in enumerate(sections):
         section_name = section_data['name']
 
         enums = section_data['enums']
-        for entries in enums:
-            enum_index += 1
+        for enum_index, entries in enumerate(enums):
             for entry_idx, entry_data in enumerate(entries):
                 line_index += 1
                 entry_text = entry_data['text']

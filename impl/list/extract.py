@@ -116,17 +116,18 @@ def _extract_listpage_data(df) -> list:
     """Convert list pages into structured data format."""
     util.get_logger().debug(f'LIST/EXTRACT: Extracting list page data..')
     lps = []
-    for lp_uri, entity_indices in df.groupby('_listpage_uri').apply(lambda x: x.index.tolist()).to_dict().items():
+    for lp_uri, df_lp in df.groupby('_listpage_uri'):
         line_collections = defaultdict(lambda: defaultdict(set))
-        for idx, row in df.loc[entity_indices].iterrows():
+        for idx, row in df_lp.iterrows():
             line_collections[_get_listing_id(row)][row['_line_idx']].add(idx)
         listings = [Listing(id=cid, lines=[Line(*ldata) for ldata in cdata.items()], samples=[]) for cid, cdata in line_collections.items()]
-        lps.append(Listpage(uri=lp_uri, listings=listings, entities=entity_indices, subject_entities=set()))
+        lps.append(Listpage(uri=lp_uri, listings=listings, entities=set(df_lp.index), subject_entities=set()))
     return lps
 
 
 def _get_listing_id(row) -> str:
-    return row['_section_name'] if '_entry_idx' in row else f'{row["_section_name"]}_{row["_table_idx"]}'
+    listing_idx = row['_enum_idx'] if '_enum_idx' in row else row['_table_idx']
+    return f'{row["_section_name"]}_{listing_idx}'
 
 
 # SAMPLING
@@ -135,7 +136,7 @@ def _sample_from_listings(lps: list, df: pd.DataFrame, sample_funcs: list) -> li
     util.get_logger().debug(f'LIST/EXTRACT: Sampling from listings..')
     multicore_params = _sample_from_listings_param_generator(lps, df, sample_funcs)
     result = _run_multicore(_sample_from_listings_internal, multicore_params)
-    return [lp for lp in result]
+    return list(result)
 
 
 def _sample_from_listings_param_generator(lps: list, df: pd.DataFrame, sample_funcs: list):
@@ -186,7 +187,8 @@ def _extract_training_data(lp: Listpage, df: pd.DataFrame) -> list:
         entities = set()
         for l in lp.listings:
             entities.update(random.choice(l.samples).entities)
-        lp_data_samples.append(EntitySample({}, entities, {}))
+        if entities:
+            lp_data_samples.append(EntitySample({}, entities, {}))
     # compute features for samples
     for s in lp_data_samples:
         _compute_feature_proba(df, s)
