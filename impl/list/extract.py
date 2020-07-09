@@ -80,9 +80,11 @@ def _train_selection_model(df: pd.DataFrame, sampling_funcs: list, selection_par
     util.get_logger().debug(f'LIST/EXTRACT: Training selection model for collective classification..')
     lps = _extract_listpage_data(df)
     lps = _sample_from_listings(lps, df, sampling_funcs)
+    util.get_logger().debug(f'LIST/EXTRACT: Extracting training data..')
     lp_data_samples = _run_multicore(_extract_training_data, [(lp, df.loc[lp.entities]) for lp in lps])
     data_samples = [s for samples in lp_data_samples for s in samples]
     df_sample = pd.DataFrame([s.stats for s in data_samples])
+    util.get_logger().debug(f'LIST/EXTRACT: Training model..')
     selection_params['model'].fit(df_sample.drop(columns='label'), df_sample['label'])
 
 
@@ -177,7 +179,6 @@ def _sample_by_column(df: pd.DataFrame, lines: list) -> list:
 # FEATURE GENERATION & EXTRACTION
 
 def _extract_training_data(lp: Listpage, df: pd.DataFrame) -> list:
-    util.get_logger().debug(f'LIST/EXTRACT: Extracting training data..')
     # add all base samples to data
     lp_data_samples = [s for l in lp.listings for s in l.samples]
     # add some random combinations of samples as additional data points
@@ -203,10 +204,10 @@ def _compute_feature_label(df: pd.DataFrame, entity_sample: EntitySample):
 
 
 def _find_subject_entities(lps: list, df: pd.DataFrame, selection_params: dict) -> list:
-    util.get_logger().debug(f'LIST/EXTRACT: Finding subject entities..')
+    util.get_logger().debug(f'LIST/EXTRACT: Finding subject entities for {len(lps)} list pages..')
     multicore_params = _find_subject_entities_param_generator(lps, df, selection_params)
     result = _run_multicore(_find_subject_entities_internal, multicore_params)
-    return [lp for lp in result]
+    return list(result)
 
 
 def _find_subject_entities_param_generator(lps: list, df: pd.DataFrame, selection_params: dict):
@@ -215,6 +216,7 @@ def _find_subject_entities_param_generator(lps: list, df: pd.DataFrame, selectio
 
 
 def _find_subject_entities_internal(lp: Listpage, df: pd.DataFrame, selection_params: dict):
+    util.get_logger().debug(f'LIST/EXTRACT ({mp.current_process().name}): Processing list page {lp.uri} with {len(lp.listings)} listings..')
     current_samples = []
     for listing in lp.listings:
         # select best samples from listing
