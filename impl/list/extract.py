@@ -216,30 +216,21 @@ def _find_subject_entities_param_generator(lps: list, df: pd.DataFrame, selectio
 
 
 def _find_subject_entities_internal(lp: Listpage, df: pd.DataFrame, selection_params: dict):
-    util.get_logger().debug(f'LIST/EXTRACT ({mp.current_process().name}): Processing list page {lp.uri} with {len(lp.listings)} listings..')
     current_samples = []
     for listing_idx, listing in enumerate(lp.listings):
-        util.get_logger().debug(f'LIST/EXTRACT ({mp.current_process().name}): Processing listing {listing_idx} of list page {lp.uri}..')
         # select best samples from listing
         listing_samples = [(s, _compute_sample_score(df, s, selection_params['model'])) for s in listing.samples]
-        util.get_logger().debug(f'LIST/EXTRACT ({mp.current_process().name}): Selecting top samples..')
         listing_samples = _select_top_samples(listing_samples, selection_params['n_candidates'], selection_params['min_score'])
         # produce combined samples
         if not listing_samples:
-            util.get_logger().debug(f'LIST/EXTRACT ({mp.current_process().name}): Empty samples; continuing with next listing.')
             continue
         if not current_samples:
-            util.get_logger().debug(f'LIST/EXTRACT ({mp.current_process().name}): Empty current samples; taking initial samples as current samples.')
             current_samples = listing_samples
             continue
-        util.get_logger().debug(f'LIST/EXTRACT ({mp.current_process().name}): Generating combined samples..')
         combined_samples = _generate_combined_samples(current_samples, listing_samples)
-        util.get_logger().debug(f'LIST/EXTRACT ({mp.current_process().name}): Computing sample score for combined samples..')
         combined_samples = [(cs, _compute_sample_score(df, cs, selection_params['model'])) for cs in combined_samples]
         # take best combined samples into next round
-        util.get_logger().debug(f'LIST/EXTRACT ({mp.current_process().name}): Selecting top samples from combined samples..')
         current_samples = _select_top_samples(combined_samples, selection_params['n_candidates'], selection_params['min_score'])
-    util.get_logger().debug(f'LIST/EXTRACT ({mp.current_process().name}): Finished processing of lp; returning entity set..')
     entity_set = max(current_samples, key=lambda x: x[1])[0].entities if current_samples else set()
     lp.subject_entities.update(entity_set)
     return lp
@@ -258,12 +249,10 @@ def _generate_combined_samples(current_samples, new_samples) -> list:
 
 def _compute_sample_score(df: pd.DataFrame, entity_sample: EntitySample, selection_model) -> float:
     # compute relevant stats
-    util.get_logger().debug(f'LIST/EXTRACT ({mp.current_process().name}): Computing features..')
     _compute_feature_proba(df, entity_sample)
     _compute_feature_tagsim(df, entity_sample)
     _compute_feature_similarents(df, entity_sample)
     # compute score
-    util.get_logger().debug(f'LIST/EXTRACT ({mp.current_process().name}): Predicting score..')
     return selection_model.predict(pd.DataFrame([entity_sample.stats]))[0]
 
 
