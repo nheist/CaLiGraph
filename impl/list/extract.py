@@ -21,7 +21,7 @@ def extract_enum_entities(df: pd.DataFrame) -> dict:
         'base_estimator': XGBClassifier(predictor='cpu_predictor', colsample_bytree=.8, max_depth=5, n_estimators=400, scale_pos_weight=.25),
         'sampling_functions': [_sample_by_entity_position],
         'selection': {
-            'model': XGBRegressor(predictor='cpu_predictor'),
+            'model': XGBRegressor(predictor='cpu_predictor', n_jobs=1),
             'n_candidates': 3,
             'min_score': .4,
         }
@@ -40,7 +40,7 @@ def extract_table_entities(df: pd.DataFrame) -> dict:
         'base_estimator': base_estimator,
         'sampling_functions': [_sample_by_column],
         'selection': {
-            'model': XGBRegressor(predictor='cpu_predictor'),
+            'model': XGBRegressor(predictor='cpu_predictor', n_jobs=1),
             'n_candidates': 3,
             'min_score': .4,
         }
@@ -296,7 +296,7 @@ def _select_top_samples(samples: list, n_candidates: int, min_score: float) -> l
 # MISC
 
 def _run_multicore(func, params):
-    number_of_processes = round(util.get_config('max_cpus') / 2)
+    number_of_processes = round(util.get_config('max_cpus'))
     with mp.Pool(processes=number_of_processes) as pool:
         results = pool.starmap(func, params)
     return results
