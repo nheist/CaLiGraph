@@ -100,11 +100,11 @@ def _extract_subject_entities(df: pd.DataFrame, sampling_funcs: list, selection_
     util.get_logger().debug(f'LIST/EXTRACT: Temporarily persisting subject entities..')
     valid_entities = {idx for lp in lps for idx in lp.subject_entities}
     extraction_type = 'enum' if '_entry_idx' in df else 'table'
-    df.loc[df.index.intersection(valid_entities), ['_listpage_uri', '_entity_uri', '_text', '_list_type']].to_csv(f'listpage_extracted-{extraction_type}-entities_v4.csv', sep=';', index=False)
+    df.loc[valid_entities, ['_listpage_uri', '_entity_uri', '_text', '_link_type']].to_csv(f'listpage_extracted-{extraction_type}-entities_v4.csv', sep=';', index=False)
 
     # TODO: Proper disambiguation and merging of identified entities
 
-    return defaultdict(set, {lp.uri: set(df.loc[df.index.intersection(lp.subject_entities), '_entity_uri'].to_list()) for lp in lps})
+    return defaultdict(set, {lp.uri: set(df.loc[lp.subject_entities, '_entity_uri'].to_list()) for lp in lps})
 
 
 # COLLECTIVE EXTRACTION
