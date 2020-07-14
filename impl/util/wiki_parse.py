@@ -22,8 +22,8 @@ def parse_page(page_markup: str) -> Optional[dict]:
     if not _is_page_useful(wiki_text):
         return None
 
-    cleaned_wiki_text = _prepare_wikitext(wiki_text)
-    # TODO: Remove any lists in tables (i.e. iterate over table cells and remove list entries that are contained)
+    cleaned_wiki_text = _convert_special_enums(wiki_text)
+    cleaned_wiki_text = _remove_enums_within_tables(cleaned_wiki_text)
     if not _is_page_useful(cleaned_wiki_text):
         return None
 
@@ -35,7 +35,7 @@ def _is_page_useful(wiki_text: WikiText) -> bool:
     return len(wiki_text.get_lists()) + len(wiki_text.get_tables()) >= 3
 
 
-def _prepare_wikitext(wiki_text: WikiText) -> WikiText:
+def _convert_special_enums(wiki_text: WikiText) -> WikiText:
     """Convert special templates used as enumerations from the text."""
     # convert enumeration templates
     enum_templates = [t for t in wiki_text.templates if t.name == 'columns-list']
@@ -46,6 +46,19 @@ def _prepare_wikitext(wiki_text: WikiText) -> WikiText:
             result = result.replace(et.string, actual_list.string[1:] if actual_list else '')
         return wtp.parse(result)
     return wiki_text
+
+
+def _remove_enums_within_tables(wiki_text: WikiText) -> WikiText:
+    """Remove any enumeration markup that is contained within a table."""
+    something_changed = False
+    for t in wiki_text.tables:
+        for row in t.cells():
+            for cell in row:
+                if cell:
+                    for lst in cell.get_lists():
+                        lst.convert('')
+                        something_changed = True
+    return wtp.parse(wiki_text.string) if something_changed else wiki_text
 
 
 def _extract_sections(wiki_text: WikiText) -> list:

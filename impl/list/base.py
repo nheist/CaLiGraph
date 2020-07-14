@@ -108,11 +108,6 @@ def _compute_listpage_entity_features(graph, list_type: str) -> pd.DataFrame:
         entity_features = [example for examples in pool.starmap(_run_feature_extraction_for_listpages, params) for example in examples]
     entity_features = pd.DataFrame(data=entity_features)
 
-    # TODO: remove this!
-    if list_type == list_store.LIST_TYPE_TABLE:
-        entity_features.to_csv('table_intermediate_save.csv', sep=';')
-    # /TODO: remove this!
-
     # one-hot-encode name features
     util.get_logger().info('LIST/BASE: One-hot encoding features..')
     entity_features = list_features.onehotencode_feature(entity_features, '_section_name')
