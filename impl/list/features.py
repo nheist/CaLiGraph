@@ -392,11 +392,10 @@ def _get_sortkey(row: pd.Series):
 
 def _compute_label_for_entity(listpage_uri: str, entity_uri: str, link_type: str, lp_valid_resources: dict, lp_types: dict) -> int:
     """Return a label for the entity based on links in the taxonomy graph."""
-    if link_type == 'grey':
+    if link_type != 'blue':
         return -1
 
-    is_possible_dbpedia_resource = dbp_store.is_possible_resource(entity_uri)
-    if not is_possible_dbpedia_resource:
+    if not dbp_store.is_possible_resource(entity_uri):
         return 0
     if entity_uri in lp_valid_resources[listpage_uri]:
         return 1

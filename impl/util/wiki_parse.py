@@ -2,13 +2,13 @@
 
 import wikitextparser as wtp
 from wikitextparser import WikiText
-from typing import Tuple
+from typing import Tuple, Optional
 import impl.dbpedia.store as dbp_store
 import impl.dbpedia.util as dbp_util
 import re
 
 
-def parse_page(page_markup: str) -> dict:
+def parse_page(page_markup: str) -> Optional[dict]:
     """Return a single parsed page in the following hierarchical structure:
 
     Sections > Enums > Entries > Entities
@@ -129,9 +129,17 @@ def _wikitext_to_plaintext(parsed_text: wtp.WikiText) -> str:
     return result
 
 
-def _convert_target_to_uri(link_target: str) -> str:
+def _convert_target_to_uri(link_target: str) -> Optional[str]:
     link_target = _remove_language_tag(link_target.strip())
-    return dbp_store.resolve_redirect(dbp_util.name2resource(link_target[0].upper() + link_target[1:])) if link_target else None
+    if not link_target:
+        return None
+    resource_uri = dbp_util.name2resource(link_target[0].upper() + link_target[1:])
+    redirected_uri = dbp_store.resolve_redirect(resource_uri)
+    if dbp_store.is_possible_resource(redirected_uri) and '#' not in redirected_uri:
+        # return redirected uri only if it is an own Wikipedia article and it does not point to an article section
+        return redirected_uri
+    else:
+        return resource_uri
 
 
 def _remove_language_tag(link_target: str) -> str:

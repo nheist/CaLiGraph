@@ -36,7 +36,6 @@ def get_raw_resources() -> set:
 
 def is_possible_resource(obj: str) -> bool:
     """Return True, if the given object is a potential DBpedia resource (i.e. valid URI, no file, no category, ..)."""
-    obj = resolve_redirect(obj)
     return dbp_util.is_dbp_resource(obj) and not dbp_util.is_file_resource(obj) and not cat_util.is_category(obj) and not list_util.is_listpage(obj) and not list_util.is_listspage(obj)
 
 
