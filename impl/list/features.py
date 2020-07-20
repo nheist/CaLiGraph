@@ -5,6 +5,7 @@ import impl.list.util as list_util
 import impl.list.nlp as list_nlp
 import impl.dbpedia.store as dbp_store
 import impl.dbpedia.heuristics as dbp_heur
+import impl.dbpedia.util as dbp_util
 import impl.category.store as cat_store
 import impl.category.base as cat_base
 import impl.util.hypernymy as hyper_util
@@ -57,7 +58,9 @@ def make_enum_entity_features(lp_uri: str, lp_data: dict) -> list:
                         entity_data['link_type'] = 'blue'
                     else:
                         entity_data['link_type'] = 'red'
-                        entity_data['uri'] = rdf_util.name2uri(entity_data['text'], lp_uri + '__')
+                        # red link must be disambiguated, if user is not providing specific details of linked entity
+                        if dbp_util.name2resource('text') == entity_data['uri']:
+                            entity_data['uri'] = rdf_util.name2uri(entity_data['text'], lp_uri + '__')
                     start = entity_data['idx']
                     end = start + len(entity_data['text'])
                     entity_character_idxs.update(range(start, end))
@@ -207,7 +210,9 @@ def make_table_entity_features(lp_uri: str, lp_data: dict) -> list:
                             entity_data['link_type'] = 'blue'
                         else:
                             entity_data['link_type'] = 'red'
-                            entity_data['uri'] = rdf_util.name2uri(entity_data['text'], lp_uri + '__')
+                            # red link must be disambiguated, if user is not providing specific details of linked entity
+                            if dbp_util.name2resource('text') == entity_data['uri']:
+                                entity_data['uri'] = rdf_util.name2uri(entity_data['text'], lp_uri + '__')
                         start = entity_data['idx']
                         end = start + len(entity_data['text'])
                         entity_character_idxs.update(range(start, end))
