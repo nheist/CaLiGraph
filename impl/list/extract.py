@@ -103,6 +103,7 @@ def _extract_subject_entities(df: pd.DataFrame, sampling_funcs: list, selection_
     df.loc[valid_entities, ['_listpage_uri', '_entity_uri', '_text', '_link_type']].to_csv(f'listpage_extracted-{extraction_type}-entities_v4.csv', sep=';', index=False)
 
     # TODO: Proper disambiguation and merging of identified entities
+    # TODO: normalization of merged entity uris / labels (e.g. remove leading symbols like - : .
 
     return defaultdict(set, {lp.uri: set(df.loc[lp.subject_entities, '_entity_uri'].to_list()) for lp in lps})
 

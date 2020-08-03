@@ -136,7 +136,7 @@ def _convert_markup(wiki_text: str) -> Tuple[str, list]:
 
 def _wikitext_to_plaintext(parsed_text: wtp.WikiText) -> str:
     # bolds and italics are already removed during preprocessing to reduce runtime
-    result = parsed_text.plain_text(replace_italics=False, replace_bolds=False).strip(" '\t\n")
+    result = parsed_text.plain_text(replace_bolds_and_italics=False).strip(" '\t\n")
     result = re.sub(r'\n+', '\n', result)
     result = re.sub(r' +', ' ', result)
     return result
