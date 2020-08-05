@@ -43,7 +43,7 @@ def get_parsed_listpages(listpage_type: str) -> dict:
     global __PARSED_LISTPAGES__
     if '__PARSED_LISTPAGES__' not in globals():
         __PARSED_LISTPAGES__ = util.load_or_create_cache('dbpedia_listpage_parsed', _parse_listpages)
-    return {lp: content for lp, content in __PARSED_LISTPAGES__.items() if content['type'] is None or content['type'] == listpage_type}
+    return {lp: content for lp, content in __PARSED_LISTPAGES__.items() if listpage_type in content['type']}
 
 
 def _parse_listpages() -> dict:
@@ -55,16 +55,19 @@ def _parse_listpages() -> dict:
             continue
         if not content or 'sections' not in content:
             continue
-        listpage_type = _get_listpage_type(content['sections'])
-        parsed_listpages[resource] = {'sections': content['sections'], 'type': listpage_type}
+        listpage_types = _get_listpage_types(content['sections'])
+        parsed_listpages[resource] = {'sections': content['sections'], 'types': listpage_types}
     return parsed_listpages
 
-# TODO: Use multiple types for list pages (i.e., if they have enums AND tables)
-def _get_listpage_type(listpage_sections: list) -> str:
-    """Return layout type of the list page based on the count of enumeration entries and table rows."""
-    enum_entry_count = sum([len(enum) for section in listpage_sections for enum in section['enums']])
-    table_row_count = sum([len(table) for section in listpage_sections for table in section['tables']])
-    return LIST_TYPE_ENUM if enum_entry_count > table_row_count else LIST_TYPE_TABLE
+
+def _get_listpage_types(listpage_sections: list) -> list:
+    """Return layout types of the list page based on whether they contain enumeration entries and table rows."""
+    listpage_types = []
+    if any('enums' in section for section in listpage_sections):
+        listpage_types.append(LIST_TYPE_ENUM)
+    if any('tables' in section for section in listpage_sections):
+        listpage_types.append(LIST_TYPE_TABLE)
+    return listpage_types
 
 
 def get_listpages_with_markup() -> dict:
