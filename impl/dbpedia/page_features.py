@@ -1,44 +1,37 @@
-"""Extraction of features and labels for different list page layouts."""
+"""Extraction of features for entities in enumerations and tables."""
 
-import impl.list.mapping as list_mapping
 import impl.list.util as list_util
 import impl.list.nlp as list_nlp
 import impl.dbpedia.store as dbp_store
-import impl.dbpedia.heuristics as dbp_heur
 import impl.dbpedia.util as dbp_util
-import impl.category.store as cat_store
-import impl.category.base as cat_base
 import impl.util.hypernymy as hyper_util
 import impl.util.rdf as rdf_util
 import pandas as pd
 import numpy as np
 import util
 from sklearn.preprocessing import OneHotEncoder
-from collections import defaultdict, Counter
+from collections import Counter
 import operator
 
-# TODO: Refactor
-# COMPUTATION OF BASIC ENTITY FEATURES OF ENUM LISTPAGES
 
+def make_enum_entity_features(page_uri: str, page_data: dict) -> list:
+    """Return a set of features for every entity in an enumeration of a page."""
+    sections = page_data['sections']
 
-def make_enum_entity_features(lp_uri: str, lp_data: dict) -> list:
-    """Return a set of features for every entity in an enumeration list page."""
-    sections = lp_data['sections']
-
-    # lp feature statistics
-    lp_section_count = len(sections)
-    lp_section_enums = [len(section['enums']) for section in sections]
-    lp_section_entries = [sum([len(enum) for enum in section['enums']]) for section in sections]
-    lp_entry_depths = []
-    lp_entry_entities = []
-    lp_entry_words = []
-    lp_entry_chars = []
-    lp_entry_commas = []
-    lp_first_entity_idx = []
-    lp_first_entity_pos = []
+    # page feature statistics
+    page_section_count = len(sections)
+    page_section_enums = [len(section['enums']) for section in sections]
+    page_section_entries = [sum([len(enum) for enum in section['enums']]) for section in sections]
+    page_entry_depths = []
+    page_entry_entities = []
+    page_entry_words = []
+    page_entry_chars = []
+    page_entry_commas = []
+    page_first_entity_idx = []
+    page_first_entity_pos = []
 
     data = []
-    entity_lp_index = 0
+    entity_page_index = 0
     line_index = -1
     for section_idx, section_data in enumerate(sections):
         section_name = section_data['name']
@@ -60,28 +53,28 @@ def make_enum_entity_features(lp_uri: str, lp_data: dict) -> list:
                         entity_data['link_type'] = 'red'
                         # red link must be disambiguated, if user is not providing specific details of linked entity
                         if dbp_util.name2resource('text') == entity_data['uri']:
-                            entity_data['uri'] = rdf_util.name2uri(entity_data['text'], lp_uri + '__')
+                            entity_data['uri'] = rdf_util.name2uri(entity_data['text'], page_uri + '__')
                     start = entity_data['idx']
                     end = start + len(entity_data['text'])
                     entity_character_idxs.update(range(start, end))
 
                 # find previously unlinked entities
-                if util.get_config('list.extraction.extract_unlinked_entities'):
+                if util.get_config('page.extraction.extract_unlinked_entities'):
                     for ent in entry_doc.ents:
                         start = ent.start_char
                         end = ent.end_char
                         text = ent.text
                         if not entity_character_idxs.intersection(set(range(start, end))) and len(text) > 1:
-                            uri = rdf_util.name2uri(text, lp_uri + '__')
+                            uri = rdf_util.name2uri(text, page_uri + '__')
                             entities.append({'uri': uri, 'text': text, 'idx': start, 'link_type': 'grey'})
                 entities = sorted(entities, key=lambda x: x['idx'])
 
                 # collect features
-                lp_entry_depths.append(entry_data['depth'])
-                lp_entry_entities.append(len(entities))
-                lp_entry_words.append(len(entry_text.split(' ')))
-                lp_entry_chars.append(len(entry_text))
-                lp_entry_commas.append(entry_text.count(','))
+                page_entry_depths.append(entry_data['depth'])
+                page_entry_entities.append(len(entities))
+                page_entry_words.append(len(entry_text.split(' ')))
+                page_entry_chars.append(len(entry_text))
+                page_entry_commas.append(entry_text.count(','))
                 for entity_idx, entity_data in enumerate(entities):
                     entity_uri = entity_data['uri']
                     entity_uri = entity_uri[:entity_uri.index('#')] if '#' in entity_uri else entity_uri
@@ -91,19 +84,19 @@ def make_enum_entity_features(lp_uri: str, lp_data: dict) -> list:
                         continue
 
                     if entity_idx == 0:
-                        lp_first_entity_idx.append(entity_span.start)
-                        lp_first_entity_pos.append(_get_relative_position(entity_span.start, len(entry_doc)))
+                        page_first_entity_idx.append(entity_span.start)
+                        page_first_entity_pos.append(_get_relative_position(entity_span.start, len(entry_doc)))
 
                     features = {
                         # ID
-                        '_id': f'{lp_uri}__{section_name}__{entry_idx}__{entity_uri}',
-                        '_listpage_uri': lp_uri,
+                        '_id': f'{page_uri}__{section_name}__{entry_idx}__{entity_uri}',
+                        '_page_uri': page_uri,
                         '_section_name': section_name or '',
                         '_line_idx': line_index,
                         '_enum_idx': enum_index,
                         '_entry_idx': entry_idx,
                         '_entity_uri': entity_uri,
-                        '_entity_lp_idx': entity_lp_index,
+                        '_entity_page_idx': entity_page_index,
                         '_entity_line_idx': entity_idx,
                         '_link_type': entity_data['link_type'],
                         '_text': entity_data['text'],
@@ -134,49 +127,50 @@ def make_enum_entity_features(lp_uri: str, lp_data: dict) -> list:
                     }
 
                     data.append(features)
-                    entity_lp_index += 1
+                    entity_page_index += 1
 
     for feature_set in data:
         # ENTITY-STATS FEATURES
         feature_set['entity_occurrence_count'] = len([fs for fs in data if fs['_entity_uri'] == feature_set['_entity_uri']]) - 1
         feature_set['entity_occurrence'] = feature_set['entity_occurrence_count'] > 0
 
-        # LISTPAGE FEATURES
-        feature_set['lp_section_count'] = lp_section_count
-        _assign_avg_and_std_to_feature_set(feature_set, lp_section_enums, 'lp_section_enums')
-        _assign_avg_and_std_to_feature_set(feature_set, lp_section_entries, 'lp_section_entry')
-        _assign_avg_and_std_to_feature_set(feature_set, lp_entry_depths, 'lp_entry_depth')
-        _assign_avg_and_std_to_feature_set(feature_set, lp_entry_entities, 'lp_entry_entity')
-        _assign_avg_and_std_to_feature_set(feature_set, lp_entry_words, 'lp_entry_word')
-        _assign_avg_and_std_to_feature_set(feature_set, lp_entry_chars, 'lp_entry_char')
-        _assign_avg_and_std_to_feature_set(feature_set, lp_entry_commas, 'lp_entry_comma')
-        _assign_avg_and_std_to_feature_set(feature_set, lp_first_entity_idx, 'lp_first_entity_idx')
-        _assign_avg_and_std_to_feature_set(feature_set, lp_first_entity_pos, 'lp_first_entity_pos')
+        # PAGE FEATURES
+        feature_set['page_section_count'] = page_section_count
+        _assign_avg_and_std_to_feature_set(feature_set, page_section_enums, 'page_section_enums')
+        _assign_avg_and_std_to_feature_set(feature_set, page_section_entries, 'page_section_entry')
+        _assign_avg_and_std_to_feature_set(feature_set, page_entry_depths, 'page_entry_depth')
+        _assign_avg_and_std_to_feature_set(feature_set, page_entry_entities, 'page_entry_entity')
+        _assign_avg_and_std_to_feature_set(feature_set, page_entry_words, 'page_entry_word')
+        _assign_avg_and_std_to_feature_set(feature_set, page_entry_chars, 'page_entry_char')
+        _assign_avg_and_std_to_feature_set(feature_set, page_entry_commas, 'page_entry_comma')
+        _assign_avg_and_std_to_feature_set(feature_set, page_first_entity_idx, 'page_first_entity_idx')
+        _assign_avg_and_std_to_feature_set(feature_set, page_first_entity_pos, 'page_first_entity_pos')
 
     return data
 
 
-def make_table_entity_features(lp_uri: str, lp_data: dict) -> list:
-    """Return a set of features for every entity in a table list page."""
-    sections = lp_data['sections']
+def make_table_entity_features(page_uri: str, page_data: dict) -> list:
+    """Return a set of features for every entity in a table of the page."""
+    sections = page_data['sections']
 
-    # lp feature statistics
-    lp_section_count = len(sections)
-    lp_table_count = sum([len(section['tables']) for section in sections])
-    lp_section_tables = [len(section['tables']) for section in sections]
-    lp_table_rows = [len(table) for section in sections for table in section['tables']]
-    lp_table_columns = [len(row) for section in sections for table in section['tables'] for row in table]
-    lp_table_column_words = []
-    lp_table_column_chars = []
-    lp_table_row_entities = []
-    lp_table_column_entities = []
-    lp_table_first_entity_column = []
+    # page feature statistics
+    page_section_count = len(sections)
+    page_table_count = sum([len(section['tables']) for section in sections])
+    page_section_tables = [len(section['tables']) for section in sections]
+    page_table_rows = [len(table) for section in sections for table in section['tables']]
+    page_table_columns = [len(row) for section in sections for table in section['tables'] for row in table]
+    page_table_column_words = []
+    page_table_column_chars = []
+    page_table_row_entities = []
+    page_table_column_entities = []
+    page_table_first_entity_column = []
 
-    # compute lemmas for listpage-name / column-name similarity
-    lp_lemmas = {w.lemma_ for w in list_nlp.parse(list_util.listpage2name(lp_uri))}
+    # compute lemmas for page-name / column-name similarity
+    page_name = list_util.listpage2name(page_uri) if list_util.is_listpage(page_uri) else dbp_util.resource2name(page_uri)
+    page_lemmas = {w.lemma_ for w in list_nlp.parse(page_name)}
 
     data = []
-    entity_lp_index = 0
+    entity_page_index = 0
     line_index = -1
     for section_idx, section_data in enumerate(sections):
         section_name = section_data['name']
@@ -188,19 +182,19 @@ def make_table_entity_features(lp_uri: str, lp_data: dict) -> list:
                 entity_line_index = 0
                 line_index += 1
                 first_entity_column_found = False
-                lp_table_row_entities.append(sum([len(col['entities']) for col in row]))
+                page_table_row_entities.append(sum([len(col['entities']) for col in row]))
 
                 for column_idx, column_data in enumerate(row):
                     column_name = table[0][column_idx]['text'] if len(table[0]) > column_idx else ''
                     column_name_lemmas = {w.lemma_ for w in list_nlp.parse(str(column_name))}
                     column_text = column_data['text']
                     column_doc = list_nlp.parse(column_text)
-                    column_list_similar = _compute_column_list_similarity(operator.eq, lp_lemmas, column_name_lemmas)
-                    column_list_synonym = _compute_column_list_similarity(hyper_util.is_synonym, lp_lemmas, column_name_lemmas)
-                    column_list_hypernym = _compute_column_list_similarity(_is_hyper, lp_lemmas, column_name_lemmas)
+                    column_page_similar = _compute_column_page_similarity(operator.eq, page_lemmas, column_name_lemmas)
+                    column_page_synonym = _compute_column_page_similarity(hyper_util.is_synonym, page_lemmas, column_name_lemmas)
+                    column_page_hypernym = _compute_column_page_similarity(_is_hyper, page_lemmas, column_name_lemmas)
 
-                    lp_table_column_words.append(len(column_text.split(' ')))
-                    lp_table_column_chars.append(len(column_text))
+                    page_table_column_words.append(len(column_text.split(' ')))
+                    page_table_column_chars.append(len(column_text))
 
                     column_entities = column_data['entities']
                     # add link type (blue/red) to entities and collect entity boundaries
@@ -212,26 +206,26 @@ def make_table_entity_features(lp_uri: str, lp_data: dict) -> list:
                             entity_data['link_type'] = 'red'
                             # red link must be disambiguated, if user is not providing specific details of linked entity
                             if dbp_util.name2resource('text') == entity_data['uri']:
-                                entity_data['uri'] = rdf_util.name2uri(entity_data['text'], lp_uri + '__')
+                                entity_data['uri'] = rdf_util.name2uri(entity_data['text'], page_uri + '__')
                         start = entity_data['idx']
                         end = start + len(entity_data['text'])
                         entity_character_idxs.update(range(start, end))
                     # find previously unlinked entities
-                    if util.get_config('list.extraction.extract_unlinked_entities'):
+                    if util.get_config('page.extraction.extract_unlinked_entities'):
                         for ent in column_doc.ents:
                             start = ent.start_char
                             end = ent.end_char
                             text = ent.text
                             if not entity_character_idxs.intersection(set(range(start, end))) and len(text) > 1:
-                                uri = rdf_util.name2uri(text, lp_uri + '__')
+                                uri = rdf_util.name2uri(text, page_uri + '__')
                                 column_entities.append({'uri': uri, 'text': text, 'idx': start, 'link_type': 'grey'})
                     column_entities = sorted(column_entities, key=lambda x: x['idx'])
 
                     if not first_entity_column_found and column_entities:
-                        lp_table_first_entity_column.append(column_idx)
+                        page_table_first_entity_column.append(column_idx)
                         first_entity_column_found = True
 
-                    lp_table_column_entities.append(len(column_entities))
+                    page_table_column_entities.append(len(column_entities))
                     for entity_idx, entity_data in enumerate(column_entities):
                         entity_uri = entity_data['uri']
                         entity_uri = entity_uri[:entity_uri.index('#')] if '#' in entity_uri else entity_uri
@@ -242,8 +236,8 @@ def make_table_entity_features(lp_uri: str, lp_data: dict) -> list:
 
                         features = {
                             # ID
-                            '_id': f'{lp_uri}__{section_name}__{table_idx}__{row_idx}__{column_idx}__{entity_uri}',
-                            '_listpage_uri': lp_uri,
+                            '_id': f'{page_uri}__{section_name}__{table_idx}__{row_idx}__{column_idx}__{entity_uri}',
+                            '_page_uri': page_uri,
                             '_section_name': section_name or '',
                             '_line_idx': line_index,
                             '_table_idx': table_idx,
@@ -251,7 +245,7 @@ def make_table_entity_features(lp_uri: str, lp_data: dict) -> list:
                             '_column_idx': column_idx,
                             '_column_name': column_name,
                             '_entity_uri': entity_uri,
-                            '_entity_lp_idx': entity_lp_index,
+                            '_entity_page_idx': entity_page_index,
                             '_entity_line_idx': entity_line_index,
                             '_link_type': entity_data['link_type'],
                             '_text': entity_data['text'],
@@ -268,9 +262,9 @@ def make_table_entity_features(lp_uri: str, lp_data: dict) -> list:
                             'column_pos': _get_relative_position(column_idx, len(row)),
                             'column_invpos': _get_relative_position(column_idx, len(row), inverse=True),
                             'column_count': len(row),
-                            'column_list_similar': column_list_similar,
-                            'column_list_synonym': column_list_synonym,
-                            'column_list_hypernym': column_list_hypernym,
+                            'column_page_similar': column_page_similar,
+                            'column_page_synonym': column_page_synonym,
+                            'column_page_hypernym': column_page_hypernym,
                             'entity_link_pos': _get_relative_position(entity_idx, len(column_entities)),
                             'entity_link_invpos': _get_relative_position(entity_idx, len(column_entities), inverse=True),
                             'entity_line_first': entity_line_index == 0,
@@ -291,7 +285,7 @@ def make_table_entity_features(lp_uri: str, lp_data: dict) -> list:
                         }
 
                         data.append(features)
-                        entity_lp_index += 1
+                        entity_page_index += 1
                         entity_line_index += 1
 
     for feature_set in data:
@@ -302,16 +296,16 @@ def make_table_entity_features(lp_uri: str, lp_data: dict) -> list:
         feature_set['entity_in_other_table'] = feature_set['entity_in_other_table_count'] > 0
 
         # LISTPAGE FEATURES
-        feature_set['lp_section_count'] = lp_section_count
-        feature_set['lp_table_count'] = lp_table_count
-        _assign_avg_and_std_to_feature_set(feature_set, lp_section_tables, 'lp_section_tables')
-        _assign_avg_and_std_to_feature_set(feature_set, lp_table_rows, 'lp_table_rows')
-        _assign_avg_and_std_to_feature_set(feature_set, lp_table_row_entities, 'lp_table_row_entities')
-        _assign_avg_and_std_to_feature_set(feature_set, lp_table_columns, 'lp_table_columns')
-        _assign_avg_and_std_to_feature_set(feature_set, lp_table_column_words, 'lp_table_column_words')
-        _assign_avg_and_std_to_feature_set(feature_set, lp_table_column_chars, 'lp_table_column_chars')
-        _assign_avg_and_std_to_feature_set(feature_set, lp_table_column_entities, 'lp_table_column_entities')
-        _assign_avg_and_std_to_feature_set(feature_set, lp_table_first_entity_column, 'lp_table_first_entity_column')
+        feature_set['page_section_count'] = page_section_count
+        feature_set['page_table_count'] = page_table_count
+        _assign_avg_and_std_to_feature_set(feature_set, page_section_tables, 'page_section_tables')
+        _assign_avg_and_std_to_feature_set(feature_set, page_table_rows, 'page_table_rows')
+        _assign_avg_and_std_to_feature_set(feature_set, page_table_row_entities, 'page_table_row_entities')
+        _assign_avg_and_std_to_feature_set(feature_set, page_table_columns, 'page_table_columns')
+        _assign_avg_and_std_to_feature_set(feature_set, page_table_column_words, 'page_table_column_words')
+        _assign_avg_and_std_to_feature_set(feature_set, page_table_column_chars, 'page_table_column_chars')
+        _assign_avg_and_std_to_feature_set(feature_set, page_table_column_entities, 'page_table_column_entities')
+        _assign_avg_and_std_to_feature_set(feature_set, page_table_first_entity_column, 'page_table_first_entity_column')
 
     return data
 
@@ -325,9 +319,9 @@ def _extract_ne_tag(entity_span) -> str:
     return sorted(dict(tag_count).items(), key=lambda x: x[1], reverse=True)[0][0]
 
 
-def _compute_column_list_similarity(sim_func, listpage_lemmas: set, column_name_lemmas: set) -> int:
-    """Return similarity value of column header and list page name."""
-    return 1 if any(sim_func(l, c) for l in listpage_lemmas for c in column_name_lemmas) else 0
+def _compute_column_page_similarity(sim_func, page_lemmas: set, column_name_lemmas: set) -> int:
+    """Return similarity value of column header and page name."""
+    return 1 if any(sim_func(l, c) for l in page_lemmas for c in column_name_lemmas) else 0
 
 
 def _is_hyper(word_a: str, word_b: str) -> bool:
@@ -354,83 +348,9 @@ def _assign_avg_and_std_to_feature_set(feature_set: dict, data: list, name: str)
     feature_set[f'{name}_std'] = np.std(data)
 
 
-# COMPUTATION OF ENTITY LABELS
-
-def assign_entity_labels(graph, df: pd.DataFrame):
-    """Derive labels (1 for True, 0 for False, -1 for Undefined) for all entities in the data frame."""
-    listpage_valid_resources = {}
-    listpage_types = defaultdict(set)
-
-    for idx, (listpage_uri, df_group) in enumerate(df.groupby('_listpage_uri')):
-        if idx % 1000 == 0:
-            util.get_logger().debug(f'LIST/FEATURES: Processed {idx} list pages.')
-        listpage_resources = set(df_group['_entity_uri'].unique())
-        listpage_category_resources = {res for cat in _get_category_descendants_for_list(listpage_uri) for res in cat_store.get_resources(cat)}
-        listpage_valid_resources[listpage_uri] = listpage_resources.intersection(listpage_category_resources)
-
-        caligraph_nodes = graph.get_nodes_for_part(listpage_uri)
-        for n in caligraph_nodes:
-            listpage_types[listpage_uri].update(dbp_store.get_independent_types(graph.get_dbpedia_types(n)))
-
-    # assign positive and negative labels that are induced directly from the taxonomy
-    df['label'] = df.apply(lambda row: _compute_label_for_entity(row['_listpage_uri'], row['_entity_uri'], row['_link_type'], listpage_valid_resources, listpage_types), axis=1)
-
-    if util.get_config('list.extraction.use_negative_evidence_assumption'):
-        # ASSUMPTION: if an entry has at least one positive example, all the unknown examples are negative
-        # locate all entries that have a positive example
-        lines_with_positive_example = set()
-        for _, row in df[df['label'] == 1].iterrows():
-            lines_with_positive_example.add(_get_listpage_line_id(row))
-        # make all candidate examples negative that appear in an entry with a positive example
-        for i, row in df[df['label'] == -1].iterrows():
-            if _get_listpage_line_id(row) in lines_with_positive_example:
-                df.at[i, 'label'] = 0
-
-
-def _get_listpage_line_id(row: pd.Series) -> tuple:
-    return row['_listpage_uri'], row['_line_idx']
-
-
-def _get_sortkey(row: pd.Series):
-    return row['_entity_line_idx']
-
-
-def _compute_label_for_entity(listpage_uri: str, entity_uri: str, link_type: str, lp_valid_resources: dict, lp_types: dict) -> int:
-    """Return a label for the entity based on links in the taxonomy graph."""
-    if link_type != 'blue':
-        return -1
-
-    if not dbp_store.is_possible_resource(entity_uri):
-        return 0
-    if entity_uri in lp_valid_resources[listpage_uri]:
-        return 1
-    entity_types = dbp_store.get_types(entity_uri)
-    if any(entity_types.intersection(dbp_heur.get_disjoint_types(t)) for t in lp_types[listpage_uri]):
-        return 0
-    return -1
-
-
-def _get_category_descendants_for_list(listpage_uri: str) -> set:
-    """Return the category that is most closely related to the given list page as well as all of its children."""
-    categories = set()
-    cat_graph = cat_base.get_merged_graph()
-    mapped_categories = {x for cat in _get_categories_for_list(listpage_uri) for x in cat_graph.get_nodes_for_category(cat)}
-    descendant_categories = {descendant for cat in mapped_categories for descendant in cat_graph.descendants(cat)}
-    for cat in mapped_categories | descendant_categories:
-        categories.update(cat_graph.get_categories(cat))
-    return categories
-
-
-def _get_categories_for_list(listpage_uri: str) -> set:
-    """Return category that is mapped to the list page."""
-    return list_mapping.get_equivalent_categories(listpage_uri) | list_mapping.get_parent_categories(listpage_uri)
-
-
-# ONE-HOT ENCODE FEATURE BASED ON LISTPAGE FREQUENCY
-
 def onehotencode_feature(df: pd.DataFrame, feature_name: str) -> pd.DataFrame:
-    # retrieve the 50 values that appear most often in list pages
-    frequent_values = df[[feature_name, '_listpage_uri']].groupby(by=feature_name)[['_listpage_uri']].nunique().sort_values(by='_listpage_uri', ascending=False).head(50).index.values
+    # retrieve the 50 values that appear most often in the extracted pages
+    frequent_values = df[[feature_name, '_page_uri']].groupby(by=feature_name)[['_page_uri']].nunique().sort_values(by='_page_uri', ascending=False).head(50).index.values
     # one-hot-encode the most frequent values
     encoder = OneHotEncoder(categories={0: frequent_values}, handle_unknown='ignore', sparse=False)
     values = encoder.fit_transform(df[[feature_name]].fillna(value=''))

@@ -1,4 +1,4 @@
-"""NLP methods for the identification of named entities in Wikipedia list pages."""
+"""NLP methods for the identification of named entities in enumerations and tables of Wikipedia articles."""
 
 import util
 import random

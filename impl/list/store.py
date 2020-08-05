@@ -59,7 +59,7 @@ def _parse_listpages() -> dict:
         parsed_listpages[resource] = {'sections': content['sections'], 'type': listpage_type}
     return parsed_listpages
 
-
+# TODO: Use multiple types for list pages (i.e., if they have enums AND tables)
 def _get_listpage_type(listpage_sections: list) -> str:
     """Return layout type of the list page based on the count of enumeration entries and table rows."""
     enum_entry_count = sum([len(enum) for section in listpage_sections for enum in section['enums']])

@@ -11,7 +11,7 @@ caligraph:
     resource: 'http://caligraph.org/resource/'
 category:
   root_category: 'http://dbpedia.org/resource/Category:Main_topic_classifications'
-list:
+page:
   extraction:
       extract_unlinked_entities: True
       use_negative_evidence_assumption: True

@@ -4,8 +4,9 @@ import pandas as pd
 import math
 from itertools import islice
 import util
+import impl.dbpedia.page_features as page_features
 import impl.list.store as list_store
-import impl.list.features as list_features
+import impl.list.entity_labels as list_entity_labels
 import impl.list.extract as list_extract
 import impl.list.nlp as list_nlp
 from impl.list.graph import ListGraph
@@ -101,7 +102,7 @@ def _compute_listpage_entity_features(graph, list_type: str) -> pd.DataFrame:
     list_nlp._initialise_parser()
 
     parsed_listpages = list_store.get_parsed_listpages(list_type)
-    feature_func = list_features.make_enum_entity_features if list_type == list_store.LIST_TYPE_ENUM else list_features.make_table_entity_features
+    feature_func = page_features.make_enum_entity_features if list_type == list_store.LIST_TYPE_ENUM else page_features.make_table_entity_features
     number_of_processes = round(util.get_config('max_cpus') / 2)
     with mp.Pool(processes=number_of_processes) as pool:
         params = [(lp_chunk, feature_func) for lp_chunk in _chunk_dict(parsed_listpages, number_of_processes)]
@@ -110,12 +111,12 @@ def _compute_listpage_entity_features(graph, list_type: str) -> pd.DataFrame:
 
     # one-hot-encode name features
     util.get_logger().info('LIST/BASE: One-hot encoding features..')
-    entity_features = list_features.onehotencode_feature(entity_features, '_section_name')
+    entity_features = page_features.onehotencode_feature(entity_features, '_section_name')
     if '_column_name' in entity_features.columns:
-        entity_features = list_features.onehotencode_feature(entity_features, '_column_name')
+        entity_features = page_features.onehotencode_feature(entity_features, '_column_name')
 
     util.get_logger().info('LIST/BASE: Assigning entity labels..')
-    list_features.assign_entity_labels(graph, entity_features)
+    list_entity_labels.assign_entity_labels(graph, entity_features)
 
     return entity_features
 

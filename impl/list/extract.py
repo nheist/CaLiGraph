@@ -60,7 +60,7 @@ def _extract_entities(df: pd.DataFrame, config: dict) -> dict:
     df_train = df[df['label'] != -1]
     # split into two training sets
     gss = GroupShuffleSplit(n_splits=1, train_size=.5, random_state=42)
-    train1_idxs, train2_idxs = next(gss.split(df_train, y=df_train['label'], groups=df_train['_listpage_uri']))
+    train1_idxs, train2_idxs = next(gss.split(df_train, y=df_train['label'], groups=df_train['_page_uri']))
     # train model for proba and apply
     df_train1 = df_train.iloc[train1_idxs]
     estimator.fit(pd.get_dummies(df_train1.drop(columns=meta_columns)), df_train1['label'])
@@ -100,7 +100,7 @@ def _extract_subject_entities(df: pd.DataFrame, sampling_funcs: list, selection_
     util.get_logger().debug(f'LIST/EXTRACT: Temporarily persisting subject entities..')
     valid_entities = {idx for lp in lps for idx in lp.subject_entities}
     extraction_type = 'enum' if '_entry_idx' in df else 'table'
-    df.loc[valid_entities, ['_listpage_uri', '_entity_uri', '_text', '_link_type']].to_csv(f'listpage_extracted-{extraction_type}-entities_v4.csv', sep=';', index=False)
+    df.loc[valid_entities, ['_page_uri', '_entity_uri', '_text', '_link_type']].to_csv(f'listpage_extracted-{extraction_type}-entities_v4.csv', sep=';', index=False)
 
     # TODO: Proper disambiguation and merging of identified entities
     # TODO: normalization of merged entity uris / labels (e.g. remove leading symbols like - : .
@@ -119,7 +119,7 @@ def _extract_listpage_data(df) -> list:
     """Convert list pages into structured data format."""
     util.get_logger().debug(f'LIST/EXTRACT: Extracting list page data..')
     lps = []
-    for lp_uri, df_lp in df.groupby('_listpage_uri'):
+    for lp_uri, df_lp in df.groupby('_page_uri'):
         line_collections = defaultdict(lambda: defaultdict(set))
         for idx, row in df_lp.iterrows():
             line_collections[_get_listing_id(row)][row['_line_idx']].add(idx)
