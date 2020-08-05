@@ -45,10 +45,37 @@ def extract_table_entities(df: pd.DataFrame) -> dict:
             'min_score': .4,
         }
     }
-    return _extract_entities(df, config)
+    return _extract_entities(df, config) if util.get_config('page.extraction.use_robust_extraction') else _extract_entities_simple(df, base_estimator)
+
+
+def _extract_entities_simple(df: pd.DataFrame, estimator) -> dict:
+    """Return extracted entities with simple classification-based approach"""
+    util.get_logger().info(f'LIST/EXTRACT: Running simple extraction..')
+    util.get_logger().debug(f'LIST/EXTRACT: Training classifier..')
+    df_true = df[df['label'] == 1].copy()
+    df_new = df[df['label'] == -1].copy()
+
+    # prepare data
+    df = df.drop(columns=[c for c in df.columns.values if c.startswith('_')])  # remove id columns
+    df = pd.get_dummies(df)
+    train, candidates = df[df['label'] != -1], df[df['label'] == -1].drop(columns='label')
+    X, y = train.drop(columns='label'), train['label']
+
+    # predict
+    estimator.fit(X, y)
+    df_new['label'] = estimator.predict(candidates)
+
+    # extract true entities
+    util.get_logger().debug(f'LIST/EXTRACT: Applying classifier..')
+    list_entities = defaultdict(set)
+    for idx, row in pd.concat([df_true, df_new[df_new['label'] == 1]]).iterrows():
+        list_entities[row['_page_uri']].add(row['_entity_uri'])
+    return defaultdict(set, list_entities)
 
 
 def _extract_entities(df: pd.DataFrame, config: dict) -> dict:
+    """Return extracted entities with robust holistic approach"""
+    util.get_logger().info(f'LIST/EXTRACT: Running robust extraction..')
     util.get_logger().debug(f'LIST/EXTRACT: Running individual classification..')
     # -- assign mentions the probability of being subject entities (using individual classification) --
     # prepare params
