@@ -10,6 +10,7 @@ import impl.util.rdf as rdf_util
 import datetime
 from collections import defaultdict
 
+# TODO: Add altlabels to serialization
 
 def serialize_graph(graph):
     """Serialize the complete graph as individual files."""

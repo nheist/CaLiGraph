@@ -54,11 +54,11 @@ def get_merged_listgraph() -> ListGraph:
 
 # LIST ENTITIES
 
-def get_listpage_entities(graph, listpage: str) -> set:
+def get_listpage_entities(graph, listpage: str) -> dict:
     """Retrieve the extracted entities of a given list page."""
     global __LISTPAGE_ENTITIES__
     if '__LISTPAGE_ENTITIES__' not in globals():
-        __LISTPAGE_ENTITIES__ = defaultdict(set, util.load_or_create_cache('dbpedia_listpage_entities', lambda: _extract_listpage_entities(graph)))
+        __LISTPAGE_ENTITIES__ = defaultdict(dict, util.load_or_create_cache('dbpedia_listpage_entities', lambda: _extract_listpage_entities(graph)))
     return __LISTPAGE_ENTITIES__[listpage]
 
 
@@ -74,7 +74,12 @@ def _extract_listpage_entities(graph):
     table_features = get_table_listpage_entity_features(graph)
     table_entities = list_extract.extract_table_entities(table_features)
 
-    listpage_entities = {lp: enum_entities[lp] | table_entities[lp] for lp in (set(enum_entities) | set(table_entities))}
+    listpage_entities = {}
+    for lp in set(enum_entities) | set(table_entities):
+        entities = defaultdict(set, enum_entities[lp])
+        for ent, labels in table_entities[lp].items():
+            entities[ent].update(labels)
+        listpage_entities[lp] = entities
     return listpage_entities
 
 

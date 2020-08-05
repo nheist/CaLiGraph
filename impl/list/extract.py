@@ -67,10 +67,16 @@ def _extract_entities_simple(df: pd.DataFrame, estimator) -> dict:
 
     # extract true entities
     util.get_logger().debug(f'LIST/EXTRACT: Applying classifier..')
-    list_entities = defaultdict(set)
-    for idx, row in pd.concat([df_true, df_new[df_new['label'] == 1]]).iterrows():
-        list_entities[row['_page_uri']].add(row['_entity_uri'])
-    return defaultdict(set, list_entities)
+    list_entities = defaultdict(dict)
+    for _, row in pd.concat([df_true, df_new[df_new['label'] == 1]]).iterrows():
+        page_uri = row['_page_uri']
+        entity_uri = row['_entity_uri']
+        label = row['_text']
+        if entity_uri in list_entities[page_uri]:
+            list_entities[page_uri][entity_uri].add(label)
+        else:
+            list_entities[page_uri][entity_uri] = {label}
+    return list_entities
 
 
 def _extract_entities(df: pd.DataFrame, config: dict) -> dict:
@@ -132,7 +138,17 @@ def _extract_subject_entities(df: pd.DataFrame, sampling_funcs: list, selection_
     # TODO: Proper disambiguation and merging of identified entities
     # TODO: normalization of merged entity uris / labels (e.g. remove leading symbols like - : .
 
-    return defaultdict(set, {lp.uri: set(df.loc[lp.subject_entities, '_entity_uri'].to_list()) for lp in lps})
+    list_entities = defaultdict(dict)
+    for lp in lps:
+        for _, row in df.loc[lp.subject_entities].iterrows():
+            page_uri = row['_page_uri']
+            entity_uri = row['_entity_uri']
+            label = row['_text']
+            if entity_uri in list_entities[page_uri]:
+                list_entities[page_uri][entity_uri].add(label)
+            else:
+                list_entities[page_uri][entity_uri] = {label}
+    return list_entities
 
 
 # COLLECTIVE EXTRACTION

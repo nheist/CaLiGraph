@@ -34,6 +34,7 @@ class CaLiGraph(HierarchyGraph):
         self._all_node_resources = set()
         self._resource_nodes = defaultdict(set)
         self._resource_provenance = defaultdict(set)
+        self._resource_altlabels = defaultdict(set)
         self._node_axioms = defaultdict(set)
         self._node_axioms_transitive = defaultdict(set)
         self._node_disjoint_dbp_types = defaultdict(set)
@@ -45,6 +46,7 @@ class CaLiGraph(HierarchyGraph):
         self._node_resources = defaultdict(set)
         self._resource_nodes = defaultdict(set)
         self._resource_provenance = defaultdict(set)
+        self._resource_altlabels = defaultdict(set)
         self._node_resource_stats = defaultdict(dict)
         self._node_disjoint_dbp_types = defaultdict(set)
         self._node_disjoint_dbp_types_transitive = defaultdict(set)
@@ -55,6 +57,7 @@ class CaLiGraph(HierarchyGraph):
         self._node_resources = defaultdict(set)
         self._resource_nodes = defaultdict(set)
         self._resource_provenance = defaultdict(set)
+        self._resource_altlabels = defaultdict(set)
         self._node_resource_stats = defaultdict(dict)
         self._node_disjoint_dbp_types = defaultdict(set)
         self._node_disjoint_dbp_types_transitive = defaultdict(set)
@@ -69,6 +72,18 @@ class CaLiGraph(HierarchyGraph):
             label = nlp_util.remove_parentheses_content(label)
             return label.strip()
         return None
+
+    def get_altlabels(self, item: str) -> set:
+        """Return alternative labels for a CaLiGraph resource."""
+        if not cali_util.is_clg_resource(item):
+            return set()
+        if not self._resource_altlabels:
+            for node in self.nodes:
+                for part in self.get_parts(node):
+                    if list_util.is_listpage(part):
+                        for res, labels in list_base.get_listpage_entities(self, part).items():
+                            self._resource_altlabels[cali_util.dbp_resource2clg_resource(res)].update(labels)
+        return self._resource_altlabels[item]
 
     def get_resources(self, node: str) -> set:
         """Return all resources of a node."""

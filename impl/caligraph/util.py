@@ -41,7 +41,8 @@ def name2clg_resource(name: str) -> str:
 
 
 def clg_resource2name(clg_resource: str) -> str:
-    return clg_resource[len(NAMESPACE_CLG_RESOURCE):].replace('_', ' ')
+    name_part = clg_resource[clg_resource.rfind('__')+2:] if '__' in clg_resource else clg_resource[len(NAMESPACE_CLG_RESOURCE):]
+    return name_part.replace('_', ' ')
 
 
 def dbp_resource2clg_resource(dbp_resource: str) -> str:
