@@ -52,24 +52,19 @@ def extract_table_entities(df: pd.DataFrame) -> dict:
 def _extract_entities_simple(df: pd.DataFrame, estimator) -> dict:
     """Return extracted entities with simple classification-based approach"""
     util.get_logger().info(f'LIST/EXTRACT: Running simple extraction..')
-    util.get_logger().debug(f'LIST/EXTRACT: Training classifier..')
-    df_true = df[df['label'] == 1].copy()
-    df_new = df[df['label'] == -1].copy()
+    # prepare dataset
+    meta_columns = [c for c in df.columns.values if c.startswith('_')] + ['label']
+    df_data = pd.get_dummies(df.drop(columns=meta_columns))
+    df = pd.merge(df_data, df[meta_columns], left_index=True, right_index=True, how='inner')
 
-    # prepare data
-    df = df.drop(columns=[c for c in df.columns.values if c.startswith('_')])  # remove id columns
-    df = pd.get_dummies(df)
-    train, candidates = df[df['label'] != -1], df[df['label'] == -1].drop(columns='label')
-    X, y = train.drop(columns='label'), train['label']
-
-    # predict
-    estimator.fit(X, y)
-    df_new['label'] = estimator.predict(candidates)
+    # train and predict
+    df_train = df[df['label'] != -1]
+    estimator.fit(df_train.drop(columns='label'), df_train['label'])
+    df['pred'] = estimator.predict(df.drop(columns='label'))
 
     # extract true entities
-    util.get_logger().debug(f'LIST/EXTRACT: Applying classifier..')
     list_entities = defaultdict(dict)
-    for _, row in pd.concat([df_true, df_new[df_new['label'] == 1]]).iterrows():
+    for _, row in df[(df['label'] == 1) | (df['pred'] == 1)].iterrows():
         page_uri = row['_page_uri']
         entity_uri = row['_entity_uri']
         label = row['_text']
