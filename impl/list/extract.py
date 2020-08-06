@@ -17,8 +17,9 @@ def extract_enum_entities(df: pd.DataFrame) -> dict:
     """Return entities extracted from enumeration list pages with XG-Boost-based collective extraction."""
     util.get_logger().info(f'LIST/EXTRACT: Extracting entities from enumeration list pages..')
 
+    base_estimator = XGBClassifier(predictor='cpu_predictor', colsample_bytree=.8, max_depth=5, n_estimators=400, scale_pos_weight=.25)
     config = {
-        'base_estimator': XGBClassifier(predictor='cpu_predictor', colsample_bytree=.8, max_depth=5, n_estimators=400, scale_pos_weight=.25),
+        'base_estimator': base_estimator,
         'sampling_functions': [_sample_by_entity_position],
         'selection': {
             'model': XGBRegressor(predictor='cpu_predictor', n_jobs=1),
@@ -26,7 +27,7 @@ def extract_enum_entities(df: pd.DataFrame) -> dict:
             'min_score': .4,
         }
     }
-    return _extract_entities(df, config)
+    return _extract_entities(df, config) if util.get_config('page.extraction.use_robust_extraction') else _extract_entities_simple(df, base_estimator)
 
 
 def extract_table_entities(df: pd.DataFrame) -> dict:
