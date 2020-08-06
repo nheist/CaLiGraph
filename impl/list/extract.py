@@ -59,8 +59,8 @@ def _extract_entities_simple(df: pd.DataFrame, estimator) -> dict:
 
     # train and predict
     df_train = df[df['label'] != -1]
-    estimator.fit(df_train.drop(columns='label'), df_train['label'])
-    df['pred'] = estimator.predict(df.drop(columns='label'))
+    estimator.fit(df_train.drop(columns=meta_columns), df_train['label'])
+    df['pred'] = estimator.predict(df.drop(columns=meta_columns))
 
     # extract true entities
     list_entities = defaultdict(dict)
