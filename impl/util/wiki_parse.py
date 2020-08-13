@@ -97,6 +97,8 @@ def _extract_table(table: wtp.Table) -> list:
         return []
 
     for row in rows:
+        if len(row) > 100:
+            return []  # ignore tables with more than 100 columns as it is likely a markup error
         parsed_cells = []
         for cell in row:
             plaintext, entities = _convert_markup(str(cell))
