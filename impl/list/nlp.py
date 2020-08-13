@@ -77,7 +77,7 @@ def _retrieve_training_data_gs():
 
 
 def _retrieve_training_data_wle():
-    listpages = {lp: data for lp, data in list_store.get_parsed_listpages(list_store.LIST_TYPE_ENUM).items()}
+    listpages = list_store.get_parsed_listpages(list_store.LIST_TYPE_ENUM)
     lp_to_cat_mapping = {lp: list_mapping.get_equivalent_categories(lp) | list_mapping.get_parent_categories(lp) for lp in listpages}
     lp_to_cat_mapping = {lp: cats for lp, cats in lp_to_cat_mapping.items() if cats}
 
