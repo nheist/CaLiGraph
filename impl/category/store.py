@@ -33,7 +33,7 @@ def get_label(category: str) -> str:
     """Return the label for the given category."""
     global __CATEGORY_LABELS__
     if '__CATEGORY_LABELS__' not in globals():
-        __CATEGORY_LABELS__ = rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.categories')], rdf_util.PREDICATE_SKOS_LABEL)
+        __CATEGORY_LABELS__ = rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.categories')], rdf_util.PREDICATE_PREFLABEL)
 
     return __CATEGORY_LABELS__[category] if category in __CATEGORY_LABELS__ else cat_util.category2name(category)
 
@@ -42,7 +42,7 @@ def get_label_category(label: str) -> str:
     """Return the category that fits the given label best."""
     global __INVERSE_CATEGORY_LABELS__
     if '__INVERSE_CATEGORY_LABELS__' not in globals():
-        labels = rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.categories')], rdf_util.PREDICATE_SKOS_LABEL)
+        labels = rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.categories')], rdf_util.PREDICATE_PREFLABEL)
         __INVERSE_CATEGORY_LABELS__ = {v: k for k, v in labels.items()}
     return __INVERSE_CATEGORY_LABELS__[label] if label in __INVERSE_CATEGORY_LABELS__ else cat_util.name2category(label)
 

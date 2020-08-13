@@ -10,7 +10,6 @@ import impl.util.rdf as rdf_util
 import datetime
 from collections import defaultdict
 
-# TODO: Add altlabels to serialization
 
 def serialize_graph(graph):
     """Serialize the complete graph as individual files."""
@@ -202,6 +201,9 @@ def _get_lines_instances_labels(graph) -> list:
         label = graph.get_label(res)
         if label:
             lines_instances_labels.append(serialize_util.as_literal_triple(res, rdf_util.PREDICATE_LABEL, label))
+            lines_instances_labels.append(serialize_util.as_literal_triple(res, rdf_util.PREDICATE_PREFLABEL, label))
+            altlabels = [serialize_util.as_literal_triple(res, rdf_util.PREDICATE_ALTLABEL, l) for l in graph.get_altlabels(res)]
+            lines_instances_labels.extend(altlabels)
     return lines_instances_labels
 
 
