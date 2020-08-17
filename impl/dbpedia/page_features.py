@@ -17,6 +17,7 @@ import operator
 def make_enum_entity_features(page_uri: str, page_data: dict) -> list:
     """Return a set of features for every entity in an enumeration of a page."""
     sections = page_data['sections']
+    top_section_name = ''
 
     # page feature statistics
     page_section_count = len(sections)
@@ -35,6 +36,8 @@ def make_enum_entity_features(page_uri: str, page_data: dict) -> list:
     line_index = -1
     for section_idx, section_data in enumerate(sections):
         section_name = section_data['name']
+        if section_data['level'] <= 2:
+            top_section_name = section_name
 
         enums = section_data['enums']
         for enum_index, entries in enumerate(enums):
@@ -91,6 +94,7 @@ def make_enum_entity_features(page_uri: str, page_data: dict) -> list:
                         # ID
                         '_id': f'{page_uri}__{section_name}__{entry_idx}__{entity_uri}',
                         '_page_uri': page_uri,
+                        '_top_section_name': top_section_name,
                         '_section_name': section_name or '',
                         '_line_idx': line_index,
                         '_enum_idx': enum_index,

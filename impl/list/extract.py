@@ -11,6 +11,7 @@ from sklearn.model_selection import GroupShuffleSplit
 from collections import defaultdict, namedtuple
 import multiprocessing as mp
 import util
+import impl.dbpedia.page_features as page_features
 
 
 def extract_enum_entities(df: pd.DataFrame) -> dict:
@@ -53,6 +54,11 @@ def _extract_entities_simple(df: pd.DataFrame, estimator) -> dict:
     """Return extracted entities with simple classification-based approach"""
     util.get_logger().info(f'LIST/EXTRACT: Running simple extraction..')
     # prepare dataset
+    df = page_features.onehotencode_feature(df, '_section_name')
+    if '_column_name' in df.columns:
+        df = page_features.onehotencode_feature(df, '_top_column_name')
+        df = page_features.onehotencode_feature(df, '_column_name')
+
     meta_columns = [c for c in df.columns.values if c.startswith('_')] + ['label']
     df_data = pd.get_dummies(df.drop(columns=meta_columns))
     df = pd.merge(df_data, df[meta_columns], left_index=True, right_index=True, how='inner')
@@ -82,6 +88,10 @@ def _extract_entities(df: pd.DataFrame, config: dict) -> dict:
     # -- assign mentions the probability of being subject entities (using individual classification) --
     # prepare params
     estimator = config['base_estimator']
+    df = page_features.onehotencode_feature(df, '_section_name')
+    if '_column_name' in df.columns:
+        df = page_features.onehotencode_feature(df, '_top_column_name')
+        df = page_features.onehotencode_feature(df, '_column_name')
     meta_columns = [c for c in df.columns.values if c.startswith('_')] + ['label']
     df_data = pd.get_dummies(df.drop(columns=meta_columns))
     df = pd.merge(df_data, df[meta_columns], left_index=True, right_index=True, how='inner')

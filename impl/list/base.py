@@ -114,12 +114,6 @@ def _compute_listpage_entity_features(graph, list_type: str) -> pd.DataFrame:
         entity_features = [example for examples in pool.starmap(_run_feature_extraction_for_listpages, params) for example in examples]
     entity_features = pd.DataFrame(data=entity_features)
 
-    # one-hot-encode name features
-    util.get_logger().info('LIST/BASE: One-hot encoding features..')
-    entity_features = page_features.onehotencode_feature(entity_features, '_section_name')
-    if '_column_name' in entity_features.columns:
-        entity_features = page_features.onehotencode_feature(entity_features, '_column_name')
-
     util.get_logger().info('LIST/BASE: Assigning entity labels..')
     list_entity_labels.assign_entity_labels(graph, entity_features)
 
