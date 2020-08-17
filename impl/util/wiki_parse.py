@@ -8,6 +8,9 @@ import impl.dbpedia.util as dbp_util
 import re
 
 
+VALID_LIST_PATTERNS = (r'\#', r'\*')
+
+
 def parse_page(page_markup: str) -> Optional[dict]:
     """Return a single parsed page in the following hierarchical structure:
 
@@ -32,7 +35,7 @@ def parse_page(page_markup: str) -> Optional[dict]:
 
 def _is_page_useful(wiki_text: WikiText) -> bool:
     # ignore pages without any lists and pages with very small lists (e.g. redirect pages have a list with length of 1)
-    return len(wiki_text.get_lists()) + len(wiki_text.get_tables()) >= 3
+    return len(wiki_text.get_lists(VALID_LIST_PATTERNS)) + len(wiki_text.get_tables()) >= 3
 
 
 def _convert_special_enums(wiki_text: WikiText) -> WikiText:
@@ -55,7 +58,7 @@ def _remove_enums_within_tables(wiki_text: WikiText) -> WikiText:
         for row in t.cells():
             for cell in row:
                 if cell:
-                    for lst in cell.get_lists():
+                    for lst in cell.get_lists(VALID_LIST_PATTERNS):
                         lst.convert('')
                         something_changed = True
     return wtp.parse(wiki_text.string) if something_changed else wiki_text
@@ -67,8 +70,8 @@ def _extract_sections(wiki_text: WikiText) -> list:
         'name': section.title.strip() if section.title and section.title.strip() else 'Main',
         'level': section.level,
         'markup': section.contents,
-        'text': _wikitext_to_plaintext(wtp.parse(section.contents)),
-        'enums': [_extract_enum(l) for l in section.get_lists()],
+        'text': _wikitext_to_plaintext(wtp.parse(section.contents), remove_listings=True),
+        'enums': [_extract_enum(l) for l in section.get_lists(VALID_LIST_PATTERNS)],
         'tables': [_extract_table(t) for t in section.get_tables()]
     } for section_idx, section in enumerate(wiki_text.get_sections(include_subsections=False))]
 
@@ -136,11 +139,15 @@ def _convert_markup(wiki_text: str) -> Tuple[str, list]:
     return plain_text, entities
 
 
-def _wikitext_to_plaintext(parsed_text: wtp.WikiText) -> str:
+def _wikitext_to_plaintext(parsed_text: wtp.WikiText, remove_listings=False) -> str:
     # bolds and italics are already removed during preprocessing to reduce runtime
     result = parsed_text.plain_text(replace_bolds_and_italics=False).strip(" '\t\n")
     result = re.sub(r'\n+', '\n', result)
     result = re.sub(r' +', ' ', result)
+    if remove_listings:
+        for listing_pattern in ['*', '#', '{|']:
+            if listing_pattern in result:
+                result = result[:result.index(listing_pattern)]
     return result
 
 
