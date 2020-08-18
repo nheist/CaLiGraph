@@ -2,6 +2,7 @@
 
 import util
 import impl.dbpedia.util as dbp_util
+import re
 
 
 NAMESPACE_CLG_BASE = util.get_config('caligraph.namespace.base')
@@ -41,8 +42,10 @@ def name2clg_resource(name: str) -> str:
 
 
 def clg_resource2name(clg_resource: str) -> str:
+    # deal with weird entities of DBpedia that append '__1', '__2', etc to some entities
+    clg_resource = re.sub(r'__\d+$', '', clg_resource)
     name_part = clg_resource[clg_resource.rfind('__')+2:] if '__' in clg_resource else clg_resource[len(NAMESPACE_CLG_RESOURCE):]
-    return name_part.replace('_', ' ')
+    return ' '.join(name_part.replace('_', ' ').split())
 
 
 def dbp_resource2clg_resource(dbp_resource: str) -> str:
