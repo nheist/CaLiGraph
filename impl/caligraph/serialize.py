@@ -202,7 +202,7 @@ def _get_lines_instances_labels(graph) -> list:
         if label:
             lines_instances_labels.append(serialize_util.as_literal_triple(res, rdf_util.PREDICATE_LABEL, label))
             lines_instances_labels.append(serialize_util.as_literal_triple(res, rdf_util.PREDICATE_PREFLABEL, label))
-            altlabels = [serialize_util.as_literal_triple(res, rdf_util.PREDICATE_ALTLABEL, l) for l in graph.get_altlabels(res)]
+            altlabels = [serialize_util.as_literal_triple(res, rdf_util.PREDICATE_ALTLABEL, l) for l in graph.get_altlabels(res) if l != label]
             lines_instances_labels.extend(altlabels)
     return lines_instances_labels
 
