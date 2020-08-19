@@ -156,6 +156,7 @@ def make_enum_entity_features(page_uri: str, page_data: dict) -> list:
 def make_table_entity_features(page_uri: str, page_data: dict) -> list:
     """Return a set of features for every entity in a table of the page."""
     sections = page_data['sections']
+    top_section_name = ''
 
     # page feature statistics
     page_section_count = len(sections)
@@ -178,6 +179,8 @@ def make_table_entity_features(page_uri: str, page_data: dict) -> list:
     line_index = -1
     for section_idx, section_data in enumerate(sections):
         section_name = section_data['name']
+        if section_data['level'] <= 2:
+            top_section_name = section_name
 
         tables = section_data['tables']
         for table_idx, table in enumerate(tables):
@@ -242,6 +245,7 @@ def make_table_entity_features(page_uri: str, page_data: dict) -> list:
                             # ID
                             '_id': f'{page_uri}__{section_name}__{table_idx}__{row_idx}__{column_idx}__{entity_uri}',
                             '_page_uri': page_uri,
+                            '_top_section_name': top_section_name,
                             '_section_name': section_name or '',
                             '_line_idx': line_index,
                             '_table_idx': table_idx,
