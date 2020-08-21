@@ -7,9 +7,6 @@ import impl.category.store as cat_store
 import util
 
 
-LIST_TYPE_ENUM, LIST_TYPE_TABLE = 'list_type_enum', 'list_type_table'
-
-
 def get_listpages() -> set:
     """Return all list pages (with already resolved redirects)."""
     global __LISTPAGES__
@@ -55,21 +52,5 @@ def _parse_listpages() -> dict:
             continue
         if not content or 'sections' not in content:
             continue
-        listpage_types = _get_listpage_types(content['sections'])
-        parsed_listpages[resource] = {'sections': content['sections'], 'types': listpage_types}
+        parsed_listpages[resource] = content
     return parsed_listpages
-
-
-def _get_listpage_types(listpage_sections: list) -> list:
-    """Return layout types of the list page based on whether they contain enumeration entries and table rows."""
-    listpage_types = []
-    if any('enums' in section for section in listpage_sections):
-        listpage_types.append(LIST_TYPE_ENUM)
-    if any('tables' in section for section in listpage_sections):
-        listpage_types.append(LIST_TYPE_TABLE)
-    return listpage_types
-
-
-def get_listpages_with_markup() -> dict:
-    """Return the WikiText markup for all list pages."""
-    return {page: markup for page, markup in dbp_pages.get_all_pages_markup() if list_util.is_listpage(page)}

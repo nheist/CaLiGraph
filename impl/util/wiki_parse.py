@@ -9,6 +9,7 @@ import re
 
 
 VALID_LIST_PATTERNS = (r'\#', r'\*')
+PAGE_TYPE_ENUM, PAGE_TYPE_TABLE = 'enum', 'table'
 
 
 def parse_page(page_markup: str) -> Optional[dict]:
@@ -30,7 +31,13 @@ def parse_page(page_markup: str) -> Optional[dict]:
     if not _is_page_useful(cleaned_wiki_text):
         return None
 
-    return {'sections': _extract_sections(cleaned_wiki_text)}
+    sections = _extract_sections(cleaned_wiki_text)
+    types = set()
+    if any(len(s['enums']) > 0 for s in sections):
+        types.add(PAGE_TYPE_ENUM)
+    if any(len(s['tables']) > 0 for s in sections):
+        types.add(PAGE_TYPE_TABLE)
+    return {'sections': sections, 'types': types}
 
 
 def _is_page_useful(wiki_text: WikiText) -> bool:
