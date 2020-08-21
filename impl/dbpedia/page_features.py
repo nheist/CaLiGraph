@@ -198,7 +198,6 @@ def make_table_entity_features(page_uri: str, page_data: dict) -> list:
                     column_doc = list_nlp.parse(column_text)
                     column_page_similar = _compute_column_page_similarity(operator.eq, page_lemmas, column_name_lemmas)
                     column_page_synonym = _compute_column_page_similarity(hyper_util.is_synonym, page_lemmas, column_name_lemmas)
-                    column_page_hypernym = _compute_column_page_similarity(_is_hyper, page_lemmas, column_name_lemmas)
 
                     page_table_column_words.append(len(column_text.split(' ')))
                     page_table_column_chars.append(len(column_text))
@@ -272,7 +271,6 @@ def make_table_entity_features(page_uri: str, page_data: dict) -> list:
                             'column_count': len(row),
                             'column_page_similar': column_page_similar,
                             'column_page_synonym': column_page_synonym,
-                            'column_page_hypernym': column_page_hypernym,
                             'entity_link_pos': _get_relative_position(entity_idx, len(column_entities)),
                             'entity_link_invpos': _get_relative_position(entity_idx, len(column_entities), inverse=True),
                             'entity_line_first': entity_line_index == 0,
@@ -330,11 +328,6 @@ def _extract_ne_tag(entity_span) -> str:
 def _compute_column_page_similarity(sim_func, page_lemmas: set, column_name_lemmas: set) -> int:
     """Return similarity value of column header and page name."""
     return 1 if any(sim_func(l, c) for l in page_lemmas for c in column_name_lemmas) else 0
-
-
-def _is_hyper(word_a: str, word_b: str) -> bool:
-    """Return True, if there is any kind of hypernymy-relationship between the two words."""
-    return hyper_util.is_hypernym(word_a, word_b) or hyper_util.is_hypernym(word_b, word_a)
 
 
 def _get_span_for_entity(doc, text, idx):
