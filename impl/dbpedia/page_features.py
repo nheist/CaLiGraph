@@ -10,7 +10,7 @@ import pandas as pd
 import numpy as np
 import util
 from sklearn.preprocessing import OneHotEncoder
-from collections import Counter
+from collections import Counter, defaultdict
 import operator
 
 
@@ -198,6 +198,7 @@ def make_table_entity_features(page_uri: str, page_data: dict) -> list:
                     column_doc = list_nlp.parse(column_text)
                     column_page_similar = _compute_column_page_similarity(operator.eq, page_lemmas, column_name_lemmas)
                     column_page_synonym = _compute_column_page_similarity(hyper_util.is_synonym, page_lemmas, column_name_lemmas)
+                    column_page_hypernym = _compute_column_page_similarity(_is_hyper, page_lemmas, column_name_lemmas)
 
                     page_table_column_words.append(len(column_text.split(' ')))
                     page_table_column_chars.append(len(column_text))
@@ -271,6 +272,7 @@ def make_table_entity_features(page_uri: str, page_data: dict) -> list:
                             'column_count': len(row),
                             'column_page_similar': column_page_similar,
                             'column_page_synonym': column_page_synonym,
+                            'column_page_hypernym': column_page_hypernym,
                             'entity_link_pos': _get_relative_position(entity_idx, len(column_entities)),
                             'entity_link_invpos': _get_relative_position(entity_idx, len(column_entities), inverse=True),
                             'entity_line_first': entity_line_index == 0,
@@ -294,11 +296,20 @@ def make_table_entity_features(page_uri: str, page_data: dict) -> list:
                         entity_page_index += 1
                         entity_line_index += 1
 
+    # compute distribution of entities in tables for entity-stats features
+    entities_per_table = defaultdict(lambda: defaultdict(int))
+    for feature_set in data:
+        table_pos = feature_set['table_pos']
+        entity_uri = feature_set['_entity_uri']
+        entities_per_table[table_pos][entity_uri] += 1
+
     for feature_set in data:
         # ENTITY-STATS FEATURES
-        feature_set['entity_in_same_table_count'] = len([fs for fs in data if fs['_entity_uri'] == feature_set['_entity_uri'] and fs['table_pos'] == feature_set['table_pos']]) - 1
+        table_pos = feature_set['table_pos']
+        entity_uri = feature_set['_entity_uri']
+        feature_set['entity_in_same_table_count'] = entities_per_table[table_pos][entity_uri] - 1
         feature_set['entity_in_same_table'] = feature_set['entity_in_same_table_count'] > 0
-        feature_set['entity_in_other_table_count'] = len([fs for fs in data if fs['_entity_uri'] == feature_set['_entity_uri'] and fs['table_pos'] != feature_set['table_pos']])
+        feature_set['entity_in_other_table_count'] = sum(entities_per_table[tp][entity_uri] for tp in entities_per_table if tp != table_pos)
         feature_set['entity_in_other_table'] = feature_set['entity_in_other_table_count'] > 0
 
         # LISTPAGE FEATURES
@@ -328,6 +339,11 @@ def _extract_ne_tag(entity_span) -> str:
 def _compute_column_page_similarity(sim_func, page_lemmas: set, column_name_lemmas: set) -> int:
     """Return similarity value of column header and page name."""
     return 1 if any(sim_func(l, c) for l in page_lemmas for c in column_name_lemmas) else 0
+
+
+def _is_hyper(word_a: str, word_b: str) -> bool:
+    """Return True, if there is any kind of hypernymy-relationship between the two words."""
+    return hyper_util.is_hypernym(word_a, word_b) or hyper_util.is_hypernym(word_b, word_a)
 
 
 def _get_span_for_entity(doc, text, idx):
