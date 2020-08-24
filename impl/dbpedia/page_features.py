@@ -160,8 +160,11 @@ def get_enum_feature_names() -> list:
         'entry_invpos', 'entry_depth', 'entry_leaf', 'entity_count', 'entity_idx', 'entity_invidx', 'entity_pos',
         'entity_invpos', 'entity_link_pos', 'entity_link_invpos', 'entity_first', 'entity_last', 'entity_pn',
         'entity_noun', 'entity_ne', 'prev_pos', 'prev_ne', 'succ_pos', 'succ_ne', 'comma_idx', 'entity_occurrence_count',
-        'entity_occurrence', 'page_section_enums', 'page_section_entry', 'page_entry_depth', 'page_entry_entity',
-        'page_entry_word', 'page_entry_char', 'page_entry_comma', 'page_first_entity_idx', 'page_first_entity_pos'
+        'entity_occurrence', 'page_section_count', 'page_section_enums_avg', 'page_section_entry_avg',
+        'page_entry_depth_avg', 'page_entry_entity_avg', 'page_entry_word_avg', 'page_entry_char_avg',
+        'page_entry_comma_avg', 'page_first_entity_idx_avg', 'page_first_entity_pos_avg', 'page_section_enums_std',
+        'page_section_entry_std', 'page_entry_depth_std', 'page_entry_entity_std', 'page_entry_word_std',
+        'page_entry_char_std', 'page_entry_comma_std', 'page_first_entity_idx_std', 'page_first_entity_pos_std'
     ]
 
 
@@ -349,9 +352,12 @@ def get_table_feature_names() -> list:
         'entity_last', 'entity_count', 'entity_idx', 'entity_invidx', 'entity_pos', 'entity_invpos', 'entity_pn',
         'entity_noun', 'entity_ne', 'prev_pos', 'prev_ne', 'succ_pos', 'succ_ne', 'entity_in_same_table_count',
         'entity_in_same_table', 'entity_in_other_table_count', 'entity_in_other_table', 'page_section_count',
-        'page_table_count', 'page_section_tables', 'page_table_rows', 'page_table_row_entities', 'page_table_columns',
-        'page_table_column_words', 'page_table_column_chars', 'page_table_column_entities',
-        'page_table_first_entity_column'
+        'page_table_count', 'page_section_tables_avg', 'page_table_rows_avg', 'page_table_row_entities_avg',
+        'page_table_columns_avg', 'page_table_column_words_avg', 'page_table_column_chars_avg',
+        'page_table_column_entities_avg', 'page_table_first_entity_column_avg', 'page_section_tables_std',
+        'page_table_rows_std', 'page_table_row_entities_std', 'page_table_columns_std',
+        'page_table_column_words_std', 'page_table_column_chars_std', 'page_table_column_entities_std',
+        'page_table_first_entity_column_std'
     ]
 
 

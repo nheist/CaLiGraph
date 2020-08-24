@@ -8,6 +8,7 @@ import impl.dbpedia.util as dbp_util
 import re
 
 
+LISTING_INDICATORS = ('*', '#', '{|')
 VALID_ENUM_PATTERNS = (r'\#', r'\*')
 PAGE_TYPE_ENUM, PAGE_TYPE_TABLE = 'enum', 'table'
 
@@ -18,6 +19,9 @@ def parse_page(page_markup: str) -> Optional[dict]:
     Sections > Enums > Entries > Entities
     Sections > Tables > Rows > Columns > Entities
     """
+    if not any(indicator in page_markup for indicator in LISTING_INDICATORS):
+        return None  # early return of 'None' if page contains no listings at all
+
     # prepare markup for parsing
     page_markup = page_markup.replace('&nbsp;', ' ')  # replace html whitespaces
     page_markup = re.sub(r"'{2,}", '', page_markup)  # remove bold and italic markers
@@ -92,9 +96,9 @@ def _extract_sections(wiki_text: WikiText) -> list:
 
 def _remove_listing_markup(wiki_text: WikiText) -> str:
     result = wiki_text.string
-    for listing_pattern in ['*', '#', '{|']:
-        if listing_pattern in result:
-            result = result[:result.index(listing_pattern)]
+    for indicator in LISTING_INDICATORS:
+        if indicator in result:
+            result = result[:result.index(indicator)]
     return result
 
 
