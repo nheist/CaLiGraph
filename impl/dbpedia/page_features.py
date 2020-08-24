@@ -150,7 +150,19 @@ def make_enum_entity_features(page_uri: str, page_data: dict) -> list:
         _assign_avg_and_std_to_feature_set(feature_set, page_first_entity_idx, 'page_first_entity_idx')
         _assign_avg_and_std_to_feature_set(feature_set, page_first_entity_pos, 'page_first_entity_pos')
 
-    return data
+    return [tuple(d.values()) for d in data]
+
+
+def get_enum_feature_names() -> list:
+    return [
+        '_id', '_page_uri', '_top_section_name', '_section_name', '_line_idx', '_enum_idx', '_entry_idx', '_entity_uri',
+        '_entity_page_idx', '_entity_line_idx', '_link_type', '_text', 'section_pos', 'section_invpos', 'entry_pos',
+        'entry_invpos', 'entry_depth', 'entry_leaf', 'entity_count', 'entity_idx', 'entity_invidx', 'entity_pos',
+        'entity_invpos', 'entity_link_pos', 'entity_link_invpos', 'entity_first', 'entity_last', 'entity_pn',
+        'entity_noun', 'entity_ne', 'prev_pos', 'prev_ne', 'succ_pos', 'succ_ne', 'comma_idx', 'entity_occurrence_count',
+        'entity_occurrence', 'page_section_enums', 'page_section_entry', 'page_entry_depth', 'page_entry_entity',
+        'page_entry_word', 'page_entry_char', 'page_entry_comma', 'page_first_entity_idx', 'page_first_entity_pos'
+    ]
 
 
 def make_table_entity_features(page_uri: str, page_data: dict) -> list:
@@ -324,7 +336,23 @@ def make_table_entity_features(page_uri: str, page_data: dict) -> list:
         _assign_avg_and_std_to_feature_set(feature_set, page_table_column_entities, 'page_table_column_entities')
         _assign_avg_and_std_to_feature_set(feature_set, page_table_first_entity_column, 'page_table_first_entity_column')
 
-    return data
+    return [tuple(d.values()) for d in data]
+
+
+def get_table_feature_names() -> list:
+    return [
+        '_id', '_page_uri', '_top_section_name', '_section_name', '_line_idx', '_table_idx', '_row_idx', '_column_idx',
+        '_column_name', '_entity_uri', '_entity_page_idx', '_entity_line_idx', '_link_type', '_text', 'section_pos',
+        'section_invpos', 'table_pos', 'table_invpos', 'table_count', 'row_pos', 'row_invpos', 'row_count',
+        'row_isheader', 'column_pos', 'column_invpos', 'column_count', 'column_page_similar', 'column_page_synonym',
+        'column_page_hypernym', 'entity_link_pos', 'entity_link_invpos', 'entity_line_first', 'entity_first',
+        'entity_last', 'entity_count', 'entity_idx', 'entity_invidx', 'entity_pos', 'entity_invpos', 'entity_pn',
+        'entity_noun', 'entity_ne', 'prev_pos', 'prev_ne', 'succ_pos', 'succ_ne', 'entity_in_same_table_count',
+        'entity_in_same_table', 'entity_in_other_table_count', 'entity_in_other_table', 'page_section_count',
+        'page_table_count', 'page_section_tables', 'page_table_rows', 'page_table_row_entities', 'page_table_columns',
+        'page_table_column_words', 'page_table_column_chars', 'page_table_column_entities',
+        'page_table_first_entity_column'
+    ]
 
 
 def _extract_ne_tag(entity_span) -> str:

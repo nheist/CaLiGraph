@@ -113,7 +113,8 @@ def _compute_listpage_entity_features(graph, list_type: str) -> pd.DataFrame:
     with mp.Pool(processes=number_of_processes) as pool:
         params = [(lp_chunk, feature_func) for lp_chunk in _chunk_dict(parsed_listpages, number_of_processes)]
         entity_features = [example for examples in pool.starmap(_run_feature_extraction_for_listpages, params) for example in examples]
-    entity_features = pd.DataFrame(data=entity_features)
+    column_names = page_features.get_enum_feature_names() if list_type == wiki_parse.PAGE_TYPE_ENUM else page_features.get_table_feature_names()
+    entity_features = pd.DataFrame(data=entity_features, columns=column_names)
 
     util.get_logger().info('LIST/BASE: Assigning entity labels..')
     list_entity_labels.assign_entity_labels(graph, entity_features)
