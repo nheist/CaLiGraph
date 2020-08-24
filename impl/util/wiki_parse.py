@@ -8,7 +8,7 @@ import impl.dbpedia.util as dbp_util
 import re
 
 
-VALID_LIST_PATTERNS = (r'\#', r'\*')
+VALID_ENUM_PATTERNS = (r'\#', r'\*')
 PAGE_TYPE_ENUM, PAGE_TYPE_TABLE = 'enum', 'table'
 
 
@@ -42,7 +42,7 @@ def parse_page(page_markup: str) -> Optional[dict]:
 
 def _is_page_useful(wiki_text: WikiText) -> bool:
     # ignore pages without any lists and pages with very small lists (e.g. redirect pages have a list with length of 1)
-    return len(wiki_text.get_lists(VALID_LIST_PATTERNS)) + len(wiki_text.get_tables()) >= 3
+    return len(wiki_text.get_lists(VALID_ENUM_PATTERNS)) + len(wiki_text.get_tables()) >= 3
 
 
 def _convert_special_enums(wiki_text: WikiText) -> WikiText:
@@ -65,22 +65,37 @@ def _remove_enums_within_tables(wiki_text: WikiText) -> WikiText:
         for row in t.cells():
             for cell in row:
                 if cell:
-                    for lst in cell.get_lists(VALID_LIST_PATTERNS):
+                    for lst in cell.get_lists(VALID_ENUM_PATTERNS):
                         lst.convert('')
                         something_changed = True
     return wtp.parse(wiki_text.string) if something_changed else wiki_text
 
 
 def _extract_sections(wiki_text: WikiText) -> list:
-    return [{
-        'index': section_idx,
-        'name': section.title.strip() if section.title and section.title.strip() else 'Main',
-        'level': section.level,
-        'markup': section.contents,
-        'text': _wikitext_to_plaintext(wtp.parse(section.contents), remove_listings=True),
-        'enums': [_extract_enum(l) for l in section.get_lists(VALID_LIST_PATTERNS)],
-        'tables': [_extract_table(t) for t in section.get_tables()]
-    } for section_idx, section in enumerate(wiki_text.get_sections(include_subsections=False))]
+    sections = []
+    for section_idx, section in enumerate(wiki_text.get_sections(include_subsections=False)):
+        markup_without_lists = _remove_listing_markup(section)
+        text, entities = _convert_markup(markup_without_lists)
+        enums = [_extract_enum(l) for l in section.get_lists(VALID_ENUM_PATTERNS)]
+        tables = [_extract_table(t) for t in section.get_tables()]
+        sections.append({
+            'index': section_idx,
+            'name': section.title.strip() if section.title and section.title.strip() else 'Main',
+            'level': section.level,
+            'text': text,
+            'entities': entities,
+            'enums': [e for e in enums if e],
+            'tables': [t for t in tables if t]
+        })
+    return sections
+
+
+def _remove_listing_markup(wiki_text: WikiText) -> str:
+    result = wiki_text.string
+    for listing_pattern in ['*', '#', '{|']:
+        if listing_pattern in result:
+            result = result[:result.index(listing_pattern)]
+    return result
 
 
 def _extract_enum(l: wtp.WikiList) -> list:
@@ -146,15 +161,11 @@ def _convert_markup(wiki_text: str) -> Tuple[str, list]:
     return plain_text, entities
 
 
-def _wikitext_to_plaintext(parsed_text: wtp.WikiText, remove_listings=False) -> str:
+def _wikitext_to_plaintext(parsed_text: wtp.WikiText) -> str:
     # bolds and italics are already removed during preprocessing to reduce runtime
     result = parsed_text.plain_text(replace_bolds_and_italics=False).strip(" '\t\n")
     result = re.sub(r'\n+', '\n', result)
     result = re.sub(r' +', ' ', result)
-    if remove_listings:
-        for listing_pattern in ['*', '#', '{|']:
-            if listing_pattern in result:
-                result = result[:result.index(listing_pattern)]
     return result
 
 
