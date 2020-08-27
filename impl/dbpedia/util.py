@@ -34,7 +34,7 @@ def is_dbp_resource(dbp_resource: str) -> bool:
 
 
 def is_file_resource(dbp_object: str) -> bool:
-    return dbp_object.startswith(NAMESPACE_DBP_RESOURCE + 'File:')
+    return dbp_object.startswith(NAMESPACE_DBP_RESOURCE + 'File:') or dbp_object.startswith(NAMESPACE_DBP_RESOURCE + 'Image:')
 
 
 def dbp_resource2wikipedia_resource(dbp_resource: str) -> str:

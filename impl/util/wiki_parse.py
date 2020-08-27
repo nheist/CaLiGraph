@@ -173,7 +173,9 @@ def _convert_markup(wiki_text: str) -> Tuple[str, list]:
     for w in parsed_text.wikilinks:
         # retrieve entity text
         text = (w.text or w.target).strip()
-        if '|' in text:  # treat File and Image wikilinks
+        if w.target.startswith('File:') or w.target.startswith('Image:'):
+            continue  # ignore files and images
+        if '|' in text:  # deal with invalid markup in wikilinks
             text = text[text.rindex('|')+1:].strip()
         if not text:
             continue  # skip entity with empty text
