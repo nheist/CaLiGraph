@@ -35,6 +35,8 @@ def parse_page(page_markup: str) -> Optional[dict]:
     if not _is_page_useful(cleaned_wiki_text):
         return None
 
+    cleaned_wiki_text = _expand_wikilinks(cleaned_wiki_text)
+
     sections = _extract_sections(cleaned_wiki_text)
     types = set()
     if any(len(s['enums']) > 0 for s in sections):
@@ -73,6 +75,16 @@ def _remove_enums_within_tables(wiki_text: WikiText) -> WikiText:
                         lst.convert('')
                         something_changed = True
     return wtp.parse(wiki_text.string) if something_changed else wiki_text
+
+
+def _expand_wikilinks(wiki_text: WikiText) -> WikiText:
+    # collect all wikilink occurrences and their string pattern
+    text_to_wikilink = {wl.text or wl.target: wl.string for wl in wiki_text.wikilinks}
+    # use regex to replace the occurrences in the markup
+    result = wiki_text.string
+    for text, wl in text_to_wikilink.items():
+        result = re.sub(f'(?<![\\[|]){text}(?![\\]|])', wl, result)
+    return wtp.parse(result)
 
 
 def _extract_sections(wiki_text: WikiText) -> list:
