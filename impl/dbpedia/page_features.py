@@ -177,8 +177,8 @@ def make_table_entity_features(page_uri: str, page_data: dict) -> list:
     page_section_count = len(sections)
     page_table_count = sum([len(section['tables']) for section in sections])
     page_section_tables = [len(section['tables']) for section in sections]
-    page_table_rows = [len(table) for section in sections for table in section['tables']]
-    page_table_columns = [len(row) for section in sections for table in section['tables'] for row in table]
+    page_table_rows = [len(table['data']) for section in sections for table in section['tables']]
+    page_table_columns = [len(row) for section in sections for table in section['tables'] for row in table['data']]
     page_table_column_words = []
     page_table_column_chars = []
     page_table_row_entities = []
@@ -199,15 +199,16 @@ def make_table_entity_features(page_uri: str, page_data: dict) -> list:
 
         tables = section_data['tables']
         for table_idx, table in enumerate(tables):
-
-            for row_idx, row in enumerate(table):
+            table_header = table['header']
+            table_data = table['data']
+            for row_idx, row in enumerate(table_data):
                 entity_line_index = 0
                 line_index += 1
                 first_entity_column_found = False
                 page_table_row_entities.append(sum([len(col['entities']) for col in row]))
 
                 for column_idx, column_data in enumerate(row):
-                    column_name = table[0][column_idx]['text'] if len(table[0]) > column_idx else ''
+                    column_name = table_header[column_idx]['text'] if len(table_header) > column_idx else ''
                     column_name_lemmas = {w.lemma_ for w in list_nlp.parse(str(column_name))}
                     column_text = column_data['text']
                     column_doc = list_nlp.parse(column_text)
@@ -278,9 +279,9 @@ def make_table_entity_features(page_uri: str, page_data: dict) -> list:
                             'table_pos': _get_relative_position(table_idx, len(tables)),
                             'table_invpos': _get_relative_position(table_idx, len(tables), inverse=True),
                             'table_count': len(tables),
-                            'row_pos': _get_relative_position(row_idx, len(table)),
-                            'row_invpos': _get_relative_position(row_idx, len(table), inverse=True),
-                            'row_count': len(table),
+                            'row_pos': _get_relative_position(row_idx, len(table_data)),
+                            'row_invpos': _get_relative_position(row_idx, len(table_data), inverse=True),
+                            'row_count': len(table_data),
                             'row_isheader': column_name == column_text,
                             'column_pos': _get_relative_position(column_idx, len(row)),
                             'column_invpos': _get_relative_position(column_idx, len(row), inverse=True),

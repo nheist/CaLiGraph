@@ -101,7 +101,7 @@ def _extract_sections(wiki_text: WikiText) -> list:
             'text': text,
             'entities': entities,
             'enums': [e for e in enums if len(e) > 2],
-            'tables': [t for t in tables if len(t) > 1 and len(t[0]) > 1]
+            'tables': [t for t in tables if t]
         })
     return sections
 
@@ -130,18 +130,17 @@ def _extract_enum(l: wtp.WikiList) -> list:
     return entries
 
 
-def _extract_table(table: wtp.Table) -> list:
+def _extract_table(table: wtp.Table) -> Optional[dict]:
+    row_header = []
     row_data = []
     try:
         rows = table.data(strip=True, span=True)
     except:
-        return []
-
+        return None
     for row_idx, row in enumerate(rows):
         if len(row) < 2 or len(row) > 100:
-            return []  # ignore tables with only one or more than 100 columns (likely irrelevant or markup error)
-        if _is_header_row(table, row_idx):
-            continue  # skip header rows
+            # ignore tables with only one or more than 100 columns (likely irrelevant or markup error)
+            return None
         parsed_cells = []
         for cell in row:
             plaintext, entities = _convert_markup(str(cell))
@@ -149,8 +148,13 @@ def _extract_table(table: wtp.Table) -> list:
                 'text': plaintext,
                 'entities': entities
             })
-        row_data.append(parsed_cells)
-    return row_data
+        if _is_header_row(table, row_idx):
+            row_header = parsed_cells
+        else:
+            row_data.append(parsed_cells)
+    if len(row_data) < 2:
+        return None  # ignore tables with less than 2 data rows
+    return {'header': row_header, 'data': row_data}
 
 
 def _is_header_row(table: wtp.Table, row_idx: int) -> bool:
