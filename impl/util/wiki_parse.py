@@ -91,15 +91,15 @@ def _extract_sections(wiki_text: WikiText) -> list:
     sections = []
     for section_idx, section in enumerate(wiki_text.get_sections(include_subsections=False)):
         markup_without_lists = _remove_listing_markup(section)
-        text, entities = _convert_markup(markup_without_lists)
+        #text, entities = _convert_markup(markup_without_lists)
         enums = [_extract_enum(l) for l in section.get_lists(VALID_ENUM_PATTERNS)]
         tables = [_extract_table(t) for t in section.get_tables()]
         sections.append({
             'index': section_idx,
             'name': section.title.strip() if section.title and section.title.strip() else 'Main',
             'level': section.level,
-            'text': text,
-            'entities': entities,
+            #'text': text,
+            #'entities': entities,
             'enums': [e for e in enums if len(e) > 2],
             'tables': [t for t in tables if t]
         })
