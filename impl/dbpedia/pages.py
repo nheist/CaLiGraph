@@ -7,6 +7,7 @@ import impl.dbpedia.util as dbp_util
 import impl.util.wiki_parse as wiki_parse
 from collections import defaultdict
 import multiprocessing as mp
+from tqdm import tqdm
 
 
 def get_all_parsed_pages() -> dict:
@@ -15,7 +16,7 @@ def get_all_parsed_pages() -> dict:
 
 def _parse_pages() -> dict:
     with mp.Pool(processes=util.get_config('max_cpus')) as pool:
-        results = pool.map(_parse_page, get_all_pages_markup().items())
+        results = tqdm(pool.imap(_parse_page, get_all_pages_markup().items(), chunksize=2000))
     return {resource: parsed_page for resource, parsed_page in results if parsed_page}
 
 
