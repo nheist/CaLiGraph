@@ -92,7 +92,7 @@ def make_enum_entity_features(page_uri: str, page_data: dict) -> list:
 
                     features = {
                         # ID
-                        '_id': f'{page_uri}__{section_name}__{entry_idx}__{entity_uri}',
+                        '_id': f'{page_uri}__{section_name}__{enum_index}__{entry_idx}__{entity_uri}',
                         '_page_uri': page_uri,
                         '_top_section_name': top_section_name,
                         '_section_name': section_name or '',
