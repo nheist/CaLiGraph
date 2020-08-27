@@ -1,5 +1,5 @@
 # -- SYSTEM CONFIGURATION --
-max_cpus: 10
+max_cpus: 16
 
 # -- CALIGRAPH CONFIGURATION --
 caligraph:
@@ -174,7 +174,7 @@ cache:
     compress: True
   dbpedia_page_parsed:
     filename: 'dbpedia-page-parsed'
-    version: 1
+    version: 2
   dbpedia_resources:
     filename: 'dbpedia-resources'
     version: 1

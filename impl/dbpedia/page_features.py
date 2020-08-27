@@ -14,8 +14,9 @@ from collections import Counter, defaultdict
 import operator
 
 
-def make_enum_entity_features(page_uri: str, page_data: dict) -> list:
+def make_enum_entity_features(page: tuple) -> list:
     """Return a set of features for every entity in an enumeration of a page."""
+    page_uri, page_data = page
     sections = page_data['sections']
     top_section_name = ''
 
@@ -168,8 +169,9 @@ def get_enum_feature_names() -> list:
     ]
 
 
-def make_table_entity_features(page_uri: str, page_data: dict) -> list:
+def make_table_entity_features(page: tuple) -> list:
     """Return a set of features for every entity in a table of the page."""
+    page_uri, page_data = page
     sections = page_data['sections']
     top_section_name = ''
 

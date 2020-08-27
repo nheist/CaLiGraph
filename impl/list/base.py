@@ -1,8 +1,6 @@
 """Functionality to retrieve cached versions of the list graph and entities in several stages."""
 
 import pandas as pd
-import math
-from itertools import islice
 import util
 import impl.dbpedia.page_features as page_features
 import impl.list.store as list_store
@@ -13,6 +11,7 @@ from impl.list.graph import ListGraph
 from collections import defaultdict
 import multiprocessing as mp
 import impl.util.wiki_parse as wiki_parse
+from tqdm import tqdm
 
 
 # LIST HIERARCHY
@@ -109,30 +108,12 @@ def _compute_listpage_entity_features(graph, list_type: str) -> pd.DataFrame:
 
     parsed_listpages = list_store.get_parsed_listpages(list_type)
     feature_func = page_features.make_enum_entity_features if list_type == wiki_parse.PAGE_TYPE_ENUM else page_features.make_table_entity_features
-    number_of_processes = round(util.get_config('max_cpus') / 2)
-    with mp.Pool(processes=number_of_processes) as pool:
-        params = [(lp_chunk, feature_func) for lp_chunk in _chunk_dict(parsed_listpages, number_of_processes)]
-        entity_features = [example for examples in pool.starmap(_run_feature_extraction_for_listpages, params) for example in examples]
+    with mp.Pool(processes=util.get_config('max_cpus')) as pool:
+        entity_features = tqdm(pool.imap(feature_func, parsed_listpages.items(), chunksize=1000), total=len(parsed_listpages))
     column_names = page_features.get_enum_feature_names() if list_type == wiki_parse.PAGE_TYPE_ENUM else page_features.get_table_feature_names()
     entity_features = pd.DataFrame(data=entity_features, columns=column_names)
 
     util.get_logger().info('LIST/BASE: Assigning entity labels..')
     list_entity_labels.assign_entity_labels(graph, entity_features)
 
-    return entity_features
-
-
-def _chunk_dict(dict_to_chunk: dict, number_of_chunks: int):
-    chunk_size = math.ceil(len(dict_to_chunk) / number_of_chunks)
-    it = iter(dict_to_chunk)
-    for _ in range(0, len(dict_to_chunk), chunk_size):
-        yield {k: dict_to_chunk[k] for k in islice(it, chunk_size)}
-
-
-def _run_feature_extraction_for_listpages(parsed_listpages: dict, feature_func) -> list:
-    entity_features = []
-    for idx, (lp, lp_data) in enumerate(parsed_listpages.items()):
-        if idx % 1000 == 0:
-            util.get_logger().debug(f'LIST/BASE ({mp.current_process().name}): Processed {idx} of {len(parsed_listpages)} listpages.')
-        entity_features.extend(feature_func(lp, lp_data))
     return entity_features

@@ -18,6 +18,7 @@ nltk = "*"
 pynif = "*"
 tables = "*"
 xgboost = "*"
+tqdm = "*"
 
 [dev-packages]
 
