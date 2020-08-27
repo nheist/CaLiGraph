@@ -55,7 +55,7 @@ def make_enum_entity_features(page_uri: str, page_data: dict) -> list:
                     else:
                         entity_data['link_type'] = 'red'
                         # red link must be disambiguated, if user is not providing specific details of linked entity
-                        if dbp_util.name2resource('text') == entity_data['uri']:
+                        if dbp_util.name2resource(entity_data['text']) == entity_data['uri']:
                             entity_data['uri'] = rdf_util.name2uri(entity_data['text'], page_uri + '__')
                     start = entity_data['idx']
                     end = start + len(entity_data['text'])
@@ -227,7 +227,7 @@ def make_table_entity_features(page_uri: str, page_data: dict) -> list:
                         else:
                             entity_data['link_type'] = 'red'
                             # red link must be disambiguated, if user is not providing specific details of linked entity
-                            if dbp_util.name2resource('text') == entity_data['uri']:
+                            if dbp_util.name2resource(entity_data['text']) == entity_data['uri']:
                                 entity_data['uri'] = rdf_util.name2uri(entity_data['text'], page_uri + '__')
                         start = entity_data['idx']
                         end = start + len(entity_data['text'])
