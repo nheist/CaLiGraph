@@ -88,8 +88,8 @@ def _extract_sections(wiki_text: WikiText) -> list:
             'level': section.level,
             'text': text,
             'entities': entities,
-            'enums': [e for e in enums if e],
-            'tables': [t for t in tables if t]
+            'enums': [e for e in enums if len(e) > 2],
+            'tables': [t for t in tables if len(t) > 1 and len(t[0]) > 1]
         })
     return sections
 
@@ -121,13 +121,15 @@ def _extract_enum(l: wtp.WikiList) -> list:
 def _extract_table(table: wtp.Table) -> list:
     row_data = []
     try:
-        rows = table.data(strip=True)
+        rows = table.data(strip=True, span=True)
     except:
         return []
 
-    for row in rows:
-        if len(row) > 100:
-            return []  # ignore tables with more than 100 columns as it is likely a markup error
+    for row_idx, row in enumerate(rows):
+        if len(row) < 2 or len(row) > 100:
+            return []  # ignore tables with only one or more than 100 columns (likely irrelevant or markup error)
+        if _is_header_row(table, row_idx):
+            continue  # skip header rows
         parsed_cells = []
         for cell in row:
             plaintext, entities = _convert_markup(str(cell))
@@ -137,6 +139,12 @@ def _extract_table(table: wtp.Table) -> list:
             })
         row_data.append(parsed_cells)
     return row_data
+
+
+def _is_header_row(table: wtp.Table, row_idx: int) -> bool:
+    cells = table.cells(row=row_idx, span=True)
+    is_header_cell = lambda cell: str(cell).strip().startswith('!')
+    return is_header_cell(cells[0]) & is_header_cell(cells[1])
 
 
 def _convert_markup(wiki_text: str) -> Tuple[str, list]:
