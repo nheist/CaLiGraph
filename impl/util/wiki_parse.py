@@ -135,6 +135,7 @@ def _extract_table(table: wtp.Table) -> Optional[dict]:
     row_data = []
     try:
         rows = table.data(strip=True, span=True)
+        rows_with_spans = table.data(strip=True, span=False)
     except:
         return None
     for row_idx, row in enumerate(rows):
@@ -151,13 +152,17 @@ def _extract_table(table: wtp.Table) -> Optional[dict]:
         if _is_header_row(table, row_idx):
             row_header = parsed_cells
         else:
-            row_data.append(parsed_cells)
+            if len(rows_with_spans) > row_idx and len(row) == len(rows_with_spans[row_idx]):
+                # only use rows that are not influenced by row-/colspan
+                row_data.append(parsed_cells)
     if len(row_data) < 2:
         return None  # ignore tables with less than 2 data rows
     return {'header': row_header, 'data': row_data}
 
 
 def _is_header_row(table: wtp.Table, row_idx: int) -> bool:
+    if row_idx == 0:
+        return True
     cells = table.cells(row=row_idx, span=True)
     is_header_cell = lambda cell: str(cell).strip().startswith('!')
     return is_header_cell(cells[0]) & is_header_cell(cells[1])
