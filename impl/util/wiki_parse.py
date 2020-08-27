@@ -90,7 +90,7 @@ def _expand_wikilinks(wiki_text: WikiText) -> WikiText:
 def _extract_sections(wiki_text: WikiText) -> list:
     sections = []
     for section_idx, section in enumerate(wiki_text.get_sections(include_subsections=False)):
-        markup_without_lists = _remove_listing_markup(section)
+        #markup_without_lists = _remove_listing_markup(section)
         #text, entities = _convert_markup(markup_without_lists)
         enums = [_extract_enum(l) for l in section.get_lists(VALID_ENUM_PATTERNS)]
         tables = [_extract_table(t) for t in section.get_tables()]
