@@ -79,11 +79,11 @@ def _remove_enums_within_tables(wiki_text: WikiText) -> WikiText:
 
 def _expand_wikilinks(wiki_text: WikiText) -> WikiText:
     # collect all wikilink occurrences and their string pattern
-    text_to_wikilink = {wl.text or wl.target: wl.string for wl in wiki_text.wikilinks}
+    text_to_wikilink = {wl.text or wl.target: wl.string for wl in wiki_text.wikilinks if not (wl.target.startswith('File:') or wl.target.startswith('Image:'))}
     # use regex to replace the occurrences in the markup
     result = wiki_text.string
     for text, wl in text_to_wikilink.items():
-        result = re.sub(r'(?<![\[\|])\b' + text + r'\b(?![\]\|])', wl, result)
+        result = re.sub(r'(?<![|\[])\b' + text + r'\b(?![|\]])', wl, result)
     return wtp.parse(result)
 
 
