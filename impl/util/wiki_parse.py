@@ -6,6 +6,7 @@ from typing import Tuple, Optional
 import impl.dbpedia.store as dbp_store
 import impl.dbpedia.util as dbp_util
 import re
+import warnings
 
 
 LISTING_INDICATORS = ('*', '#', '{|')
@@ -78,12 +79,14 @@ def _remove_enums_within_tables(wiki_text: WikiText) -> WikiText:
 
 
 def _expand_wikilinks(wiki_text: WikiText) -> WikiText:
-    # collect all wikilink occurrences and their string pattern
-    text_to_wikilink = {wl.text or wl.target: wl.string for wl in wiki_text.wikilinks if not (wl.target.startswith('File:') or wl.target.startswith('Image:'))}
-    # use regex to replace the occurrences in the markup
-    result = wiki_text.string
-    for text, wl in text_to_wikilink.items():
-        result = re.sub(r'(?<![|\[])\b' + text + r'\b(?![|\]])', wl, result)
+    with warnings.catch_warnings():
+        warnings.simplefilter(action='ignore', category=FutureWarning)
+        # collect all wikilink occurrences and their string pattern
+        text_to_wikilink = {wl.text or wl.target: wl.string for wl in wiki_text.wikilinks if not (wl.target.startswith('File:') or wl.target.startswith('Image:'))}
+        # use regex to replace the occurrences in the markup
+        result = wiki_text.string
+        for text, wl in text_to_wikilink.items():
+            result = re.sub(r'(?<![|\[])\b' + text + r'\b(?![|\]])', wl, result)
     return wtp.parse(result)
 
 
