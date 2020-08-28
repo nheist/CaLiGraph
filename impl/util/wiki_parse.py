@@ -6,7 +6,6 @@ from typing import Tuple, Optional
 import impl.dbpedia.store as dbp_store
 import impl.dbpedia.util as dbp_util
 import re
-import warnings
 
 
 LISTING_INDICATORS = ('*', '#', '{|')
@@ -36,9 +35,11 @@ def parse_page(page_markup: str) -> Optional[dict]:
     if not _is_page_useful(cleaned_wiki_text):
         return None
 
-    cleaned_wiki_text = _expand_wikilinks(cleaned_wiki_text)
+    # collect all wikilink occurrences and their string pattern for a later expansion
+    text_to_wikilink = {wl.text or wl.target: wl.string for wl in wiki_text.wikilinks if not (wl.target.startswith('File:') or wl.target.startswith('Image:'))}
+    pattern_to_wikilink = {r'(?<![|\[])\b' + re.escape(text) + r'\b(?![|\]])': wl for text, wl in text_to_wikilink.items()}
 
-    sections = _extract_sections(cleaned_wiki_text)
+    sections = _extract_sections(cleaned_wiki_text, pattern_to_wikilink)
     types = set()
     if any(len(s['enums']) > 0 for s in sections):
         types.add(PAGE_TYPE_ENUM)
@@ -78,25 +79,13 @@ def _remove_enums_within_tables(wiki_text: WikiText) -> WikiText:
     return wtp.parse(wiki_text.string) if something_changed else wiki_text
 
 
-def _expand_wikilinks(wiki_text: WikiText) -> WikiText:
-    with warnings.catch_warnings():
-        warnings.simplefilter(action='ignore', category=FutureWarning)
-        # collect all wikilink occurrences and their string pattern
-        text_to_wikilink = {wl.text or wl.target: wl.string for wl in wiki_text.wikilinks if not (wl.target.startswith('File:') or wl.target.startswith('Image:'))}
-        # use regex to replace the occurrences in the markup
-        result = wiki_text.string
-        for text, wl in text_to_wikilink.items():
-            result = re.sub(r'(?<![|\[])\b' + text + r'\b(?![|\]])', wl, result)
-    return wtp.parse(result)
-
-
-def _extract_sections(wiki_text: WikiText) -> list:
+def _extract_sections(wiki_text: WikiText, pattern_to_wikilink: dict) -> list:
     sections = []
     for section_idx, section in enumerate(wiki_text.get_sections(include_subsections=False)):
         #markup_without_lists = _remove_listing_markup(section)
         #text, entities = _convert_markup(markup_without_lists)
-        enums = [_extract_enum(l) for l in section.get_lists(VALID_ENUM_PATTERNS)]
-        tables = [_extract_table(t) for t in section.get_tables()]
+        enums = [_extract_enum(l, pattern_to_wikilink) for l in section.get_lists(VALID_ENUM_PATTERNS)]
+        tables = [_extract_table(t, pattern_to_wikilink) for t in section.get_tables()]
         sections.append({
             'index': section_idx,
             'name': section.title.strip() if section.title and section.title.strip() else 'Main',
@@ -117,10 +106,10 @@ def _remove_listing_markup(wiki_text: WikiText) -> str:
     return result
 
 
-def _extract_enum(l: wtp.WikiList) -> list:
+def _extract_enum(l: wtp.WikiList, pattern_to_wikilink: dict) -> list:
     entries = []
     for item_idx, item_text in enumerate(l.items):
-        plaintext, entities = _convert_markup(item_text)
+        plaintext, entities = _convert_markup(item_text, pattern_to_wikilink)
         sublists = l.sublists(item_idx)
         entries.append({
             'text': plaintext,
@@ -129,11 +118,11 @@ def _extract_enum(l: wtp.WikiList) -> list:
             'entities': entities
         })
         for sl in sublists:
-            entries.extend(_extract_enum(sl))
+            entries.extend(_extract_enum(sl, pattern_to_wikilink))
     return entries
 
 
-def _extract_table(table: wtp.Table) -> Optional[dict]:
+def _extract_table(table: wtp.Table, pattern_to_wikilink: dict) -> Optional[dict]:
     row_header = []
     row_data = []
     try:
@@ -147,7 +136,7 @@ def _extract_table(table: wtp.Table) -> Optional[dict]:
             return None
         parsed_cells = []
         for cell in row:
-            plaintext, entities = _convert_markup(str(cell))
+            plaintext, entities = _convert_markup(str(cell), pattern_to_wikilink)
             parsed_cells.append({
                 'text': plaintext,
                 'entities': entities
@@ -171,8 +160,8 @@ def _is_header_row(table: wtp.Table, row_idx: int) -> bool:
     return is_header_cell(cells[0]) & is_header_cell(cells[1])
 
 
-def _convert_markup(wiki_text: str) -> Tuple[str, list]:
-    parsed_text = wtp.parse(wiki_text)
+def _convert_markup(wiki_text: str, pattern_to_wikilink: dict) -> Tuple[str, list]:
+    parsed_text = wtp.parse(_expand_wikilinks(wiki_text, pattern_to_wikilink))
     plain_text = _wikitext_to_plaintext(parsed_text).strip()
 
     # extract wikilink-entities with correct positions in plain text
@@ -197,6 +186,16 @@ def _convert_markup(wiki_text: str) -> Tuple[str, list]:
         if entity_uri:
             entities.append({'idx': entity_position, 'text': text, 'uri': entity_uri})
     return plain_text, entities
+
+
+def _expand_wikilinks(wiki_text: str, pattern_dict: dict) -> str:
+    """Replace all textual occurrences of an entity with the respective wikilink."""
+    for pattern, wl in pattern_dict.items():
+        try:
+            wiki_text = re.sub(pattern, wl, wiki_text)
+        except:
+            pass  # ignore any regex key errors
+    return wiki_text
 
 
 def _wikitext_to_plaintext(parsed_text: wtp.WikiText) -> str:
