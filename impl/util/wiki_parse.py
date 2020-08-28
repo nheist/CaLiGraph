@@ -83,7 +83,7 @@ def _expand_wikilinks(wiki_text: WikiText) -> WikiText:
     # use regex to replace the occurrences in the markup
     result = wiki_text.string
     for text, wl in text_to_wikilink.items():
-        result = re.sub(f'(?<![\\[|]){text}(?![\\]|])', wl, result)
+        result = re.sub(r'(?<![\[\|])\b' + text + r'\b(?![\]\|])', wl, result)
     return wtp.parse(result)
 
 
