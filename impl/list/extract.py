@@ -54,14 +54,12 @@ def _extract_entities_simple(df: pd.DataFrame, estimator) -> dict:
     """Return extracted entities with simple classification-based approach"""
     util.get_logger().info(f'LIST/EXTRACT: Running simple extraction..')
     # prepare dataset
+    meta_columns = [c for c in df.columns.values if c.startswith('_')] + ['label']
     df = page_features.onehotencode_feature(df, '_top_section_name')
     df = page_features.onehotencode_feature(df, '_section_name')
     if '_column_name' in df.columns:
         df = page_features.onehotencode_feature(df, '_column_name')
-
-    meta_columns = [c for c in df.columns.values if c.startswith('_')] + ['label']
-    df_data = pd.get_dummies(df.drop(columns=meta_columns))
-    df = pd.merge(df_data, df[meta_columns], left_index=True, right_index=True, how='inner')
+    df = pd.get_dummies(df, columns=['entity_ne', 'prev_pos', 'succ_pos'])
 
     # train and predict
     df_train = df[df['label'] != -1]
@@ -88,13 +86,12 @@ def _extract_entities(df: pd.DataFrame, config: dict) -> dict:
     # -- assign mentions the probability of being subject entities (using individual classification) --
     # prepare params
     estimator = config['base_estimator']
+    meta_columns = [c for c in df.columns.values if c.startswith('_')] + ['label']
     df = page_features.onehotencode_feature(df, '_top_section_name')
     df = page_features.onehotencode_feature(df, '_section_name')
     if '_column_name' in df.columns:
         df = page_features.onehotencode_feature(df, '_column_name')
-    meta_columns = [c for c in df.columns.values if c.startswith('_')] + ['label']
-    df_data = pd.get_dummies(df.drop(columns=meta_columns))
-    df = pd.merge(df_data, df[meta_columns], left_index=True, right_index=True, how='inner')
+    df = pd.get_dummies(df, columns=['entity_ne', 'prev_pos', 'succ_pos'])
     # get training data
     df_train = df[df['label'] != -1]
     # split into two training sets
@@ -104,7 +101,7 @@ def _extract_entities(df: pd.DataFrame, config: dict) -> dict:
     df_train1 = df_train.iloc[train1_idxs]
     estimator.fit(pd.get_dummies(df_train1.drop(columns=meta_columns)), df_train1['label'])
     true_label_idx = np.where(estimator.classes_ == 1)[0][0]
-    df['proba'] = [proba[true_label_idx] for proba in estimator.predict_proba(df_data)]
+    df['proba'] = [proba[true_label_idx] for proba in estimator.predict_proba(df.drop(columns=meta_columns))]
     df_train = df[df['label'] != -1]
 
     util.get_logger().debug(f'LIST/EXTRACT: Running collective classification..')
