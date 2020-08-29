@@ -170,7 +170,7 @@ cache:
     version: 1
   dbpedia_page_markup:
     filename: 'dbpedia-page-markup'
-    version: 1
+    version: 2  # 2: with expanded wikilinks
     compress: True
   dbpedia_page_parsed:
     filename: 'dbpedia-page-parsed'
