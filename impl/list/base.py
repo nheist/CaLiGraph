@@ -110,7 +110,7 @@ def _compute_listpage_entity_features(graph, list_type: str) -> pd.DataFrame:
     parsed_listpages = list_store.get_parsed_listpages(list_type)
     feature_func = page_features.make_enum_entity_features if list_type == wiki_parse.PAGE_TYPE_ENUM else page_features.make_table_entity_features
     with mp.Pool(processes=util.get_config('max_cpus')) as pool:
-        entity_features = [x for examples in tqdm(pool.imap(feature_func, parsed_listpages.items(), chunksize=1000), total=len(parsed_listpages)) for x in examples]
+        entity_features = [x for examples in tqdm(pool.imap_unordered(feature_func, parsed_listpages.items(), chunksize=1000), total=len(parsed_listpages)) for x in examples]
     column_names = page_features.get_enum_feature_names() if list_type == wiki_parse.PAGE_TYPE_ENUM else page_features.get_table_feature_names()
     entity_features = pd.DataFrame(data=entity_features, columns=column_names)
 

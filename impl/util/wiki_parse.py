@@ -151,7 +151,10 @@ def _extract_table(table: wtp.Table) -> Optional[dict]:
 def _is_header_row(table: wtp.Table, row_idx: int) -> bool:
     if row_idx == 0:
         return True
-    return any(c and c.is_header for c in table.cells(row=row_idx, span=True))
+    try:
+        return any(c and c.is_header for c in table.cells(row=row_idx, span=True))
+    except IndexError:
+        return False  # fallback if wtp can't parse the table correctly
 
 
 def _convert_markup(wiki_text: str) -> Tuple[str, list]:
