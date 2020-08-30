@@ -176,9 +176,9 @@ def _convert_markup(wiki_text: str) -> Tuple[str, list]:
             continue  # skip entity with a text that can not be located
         entity_position = current_entity_index + plain_text[current_entity_index:].index(text)
         current_entity_index = entity_position + len(text)
-        entity_uri = _convert_target_to_uri(w.target)
-        if entity_uri:
-            entities.append({'idx': entity_position, 'text': text, 'uri': entity_uri})
+        entity_name = _convert_target_to_name(w.target)
+        if entity_name:
+            entities.append({'idx': entity_position, 'text': text, 'name': entity_name})
     return plain_text, entities
 
 
@@ -190,7 +190,7 @@ def _wikitext_to_plaintext(parsed_text: wtp.WikiText) -> str:
     return result
 
 
-def _convert_target_to_uri(link_target: str) -> Optional[str]:
+def _convert_target_to_name(link_target: str) -> Optional[str]:
     link_target = _remove_language_tag(link_target.strip())
     if not link_target:
         return None
@@ -198,9 +198,10 @@ def _convert_target_to_uri(link_target: str) -> Optional[str]:
     redirected_uri = dbp_store.resolve_redirect(resource_uri)
     if dbp_store.is_possible_resource(redirected_uri) and '#' not in redirected_uri:
         # return redirected uri only if it is an own Wikipedia article and it does not point to an article section
-        return redirected_uri
+        final_uri = redirected_uri
     else:
-        return resource_uri
+        final_uri = resource_uri
+    return dbp_util.resource2name(final_uri)
 
 
 def _remove_language_tag(link_target: str) -> str:

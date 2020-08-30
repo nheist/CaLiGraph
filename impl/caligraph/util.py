@@ -44,7 +44,7 @@ def name2clg_resource(name: str) -> str:
 def clg_resource2name(clg_resource: str) -> str:
     # deal with weird entities of DBpedia that append '__1', '__2', etc to some entities
     clg_resource = re.sub(r'__\d+$', '', clg_resource)
-    name_part = clg_resource[clg_resource.rfind('__')+2:] if '__' in clg_resource else clg_resource[len(NAMESPACE_CLG_RESOURCE):]
+    name_part = clg_resource[clg_resource.rfind('--')+2:] if '--' in clg_resource else clg_resource[len(NAMESPACE_CLG_RESOURCE):]
     return ' '.join(name_part.replace('_', ' ').split())
 
 

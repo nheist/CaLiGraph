@@ -82,7 +82,7 @@ class CaLiGraph(HierarchyGraph):
                 for part in self.get_parts(node):
                     if list_util.is_listpage(part):
                         for res, labels in list_base.get_listpage_entities(self, part).items():
-                            self._resource_altlabels[cali_util.dbp_resource2clg_resource(res)].update(labels)
+                            self._resource_altlabels[cali_util.name2clg_resource(res)].update(labels)
         return self._resource_altlabels[item]
 
     def get_resources(self, node: str) -> set:
@@ -116,7 +116,7 @@ class CaLiGraph(HierarchyGraph):
             if cat_util.is_category(part):
                 resources.update({r for r in cat_store.get_resources(part)})
             elif use_listpage_resources and list_util.is_listpage(part):
-                resources.update({r for r in list_base.get_listpage_entities(self, part)})
+                resources.update({dbp_util.name2resource(r) for r in list_base.get_listpage_entities(self, part)})
         resources = {dbp_store.resolve_redirect(r) for r in resources}
         resources = {r for r in resources if len(r) > len(dbp_util.NAMESPACE_DBP_RESOURCE) and dbp_store.is_possible_resource(r)}
         return resources
@@ -131,7 +131,7 @@ class CaLiGraph(HierarchyGraph):
                             self._resource_provenance[cali_util.dbp_resource2clg_resource(res)].add(part)
                     elif list_util.is_listpage(part):
                         for res in list_base.get_listpage_entities(self, part):
-                            self._resource_provenance[cali_util.dbp_resource2clg_resource(res)].add(part)
+                            self._resource_provenance[cali_util.name2clg_resource(res)].add(part)
         return self._resource_provenance[resource]
 
     def get_dbpedia_types(self, node: str, force_recompute=False) -> set:
@@ -247,7 +247,8 @@ class CaLiGraph(HierarchyGraph):
                     cat_resources = {r for r in cat_store.get_resources(part) if dbp_store.is_possible_resource(r) and not disjoint_types.intersection(dbp_store.get_types(r))}
                     category_instances.update(cat_resources)
                 elif list_util.is_listpage(part):
-                    list_resources = {r for r in list_base.get_listpage_entities(self, part) if dbp_store.is_possible_resource(r) and not disjoint_types.intersection(dbp_store.get_types(r))}
+                    list_resources = {dbp_util.name2resource(r) for r in list_base.get_listpage_entities(self, part)}
+                    list_resources = {r for r in list_resources if dbp_store.is_possible_resource(r) and not disjoint_types.intersection(dbp_store.get_types(r))}
                     list_instances.update(list_resources)
 
         return '\n'.join([

@@ -17,6 +17,7 @@ import operator
 def make_enum_entity_features(page: tuple) -> list:
     """Return a set of features for every entity in an enumeration of a page."""
     page_uri, page_data = page
+    page_name = dbp_util.resource2name(page_uri)
     sections = page_data['sections']
     top_section_name = ''
 
@@ -51,13 +52,13 @@ def make_enum_entity_features(page: tuple) -> list:
                 # add link type (blue/red) to entities and collect entity boundaries
                 entity_character_idxs = set()
                 for entity_data in entities:
-                    if entity_data['uri'] in dbp_store.get_raw_resources():
+                    if dbp_util.name2resource(entity_data['name']) in dbp_store.get_raw_resources():
                         entity_data['link_type'] = 'blue'
                     else:
                         entity_data['link_type'] = 'red'
                         # red link must be disambiguated, if user is not providing specific details of linked entity
-                        if dbp_util.name2resource(entity_data['text']) == entity_data['uri']:
-                            entity_data['uri'] = rdf_util.name2uri(entity_data['text'], page_uri + '__')
+                        if entity_data['text'] == entity_data['name']:
+                            entity_data['name'] = f'{page_name}--{entity_data["text"]}'
                     start = entity_data['idx']
                     end = start + len(entity_data['text'])
                     entity_character_idxs.update(range(start, end))
@@ -69,8 +70,7 @@ def make_enum_entity_features(page: tuple) -> list:
                         end = ent.end_char
                         text = ent.text
                         if not entity_character_idxs.intersection(set(range(start, end))) and len(text) > 1:
-                            uri = rdf_util.name2uri(text, page_uri + '__')
-                            entities.append({'uri': uri, 'text': text, 'idx': start, 'link_type': 'grey'})
+                            entities.append({'name': f'{page_name}--{text}', 'text': text, 'idx': start, 'link_type': 'grey'})
                 entities = sorted(entities, key=lambda x: x['idx'])
 
                 # collect features
@@ -80,8 +80,8 @@ def make_enum_entity_features(page: tuple) -> list:
                 page_entry_chars.append(len(entry_text))
                 page_entry_commas.append(entry_text.count(','))
                 for entity_idx, entity_data in enumerate(entities):
-                    entity_uri = entity_data['uri']
-                    entity_uri = entity_uri[:entity_uri.index('#')] if '#' in entity_uri else entity_uri
+                    entity_name = entity_data['name']
+                    entity_name = entity_name[:entity_name.index('#')] if '#' in entity_name else entity_name
 
                     entity_span = _get_span_for_entity(entry_doc, entity_data['text'], entity_data['idx'])
                     if not entity_span:
@@ -93,14 +93,14 @@ def make_enum_entity_features(page: tuple) -> list:
 
                     features = {
                         # ID
-                        '_id': f'{page_uri}__{section_name}__{enum_index}__{entry_idx}__{entity_uri}',
-                        '_page_uri': page_uri,
+                        '_id': f'{page_name}__{section_name}__{enum_index}__{entry_idx}__{entity_name}',
+                        '_page_name': page_name,
                         '_top_section_name': top_section_name,
                         '_section_name': section_name or '',
                         '_line_idx': line_index,
                         '_enum_idx': enum_index,
                         '_entry_idx': entry_idx,
-                        '_entity_uri': entity_uri,
+                        '_entity_name': entity_name,
                         '_entity_page_idx': entity_page_index,
                         '_entity_line_idx': entity_idx,
                         '_link_type': entity_data['link_type'],
@@ -134,10 +134,21 @@ def make_enum_entity_features(page: tuple) -> list:
                     data.append(features)
                     entity_page_index += 1
 
+    # compute distribution of entities in enums for entity-stats features
+    entities_per_enum = defaultdict(lambda: defaultdict(int))
+    for feature_set in data:
+        enum_idx = (feature_set['_section_name', '_enum_idx'])
+        entity_name = feature_set['_entity_name']
+        entities_per_enum[enum_idx][entity_name] += 1
+
     for feature_set in data:
         # ENTITY-STATS FEATURES
-        feature_set['entity_occurrence_count'] = len([fs for fs in data if fs['_entity_uri'] == feature_set['_entity_uri']]) - 1
-        feature_set['entity_occurrence'] = feature_set['entity_occurrence_count'] > 0
+        enum_idx = (feature_set['_section_name', '_enum_idx'])
+        entity_name = feature_set['_entity_name']
+        feature_set['entity_in_same_enum_count'] = entities_per_enum[enum_idx][entity_name] - 1
+        feature_set['entity_in_same_enum'] = feature_set['entity_in_same_enum_count'] > 0
+        feature_set['entity_in_other_enum_count'] = sum(entities_per_enum[ei][entity_name] for ei in entities_per_enum if ei != enum_idx)
+        feature_set['entity_in_other_enum'] = feature_set['entity_in_other_enum_count'] > 0
 
         # PAGE FEATURES
         feature_set['page_section_count'] = page_section_count
@@ -156,22 +167,23 @@ def make_enum_entity_features(page: tuple) -> list:
 
 def get_enum_feature_names() -> list:
     return [
-        '_id', '_page_uri', '_top_section_name', '_section_name', '_line_idx', '_enum_idx', '_entry_idx', '_entity_uri',
+        '_id', '_page_name', '_top_section_name', '_section_name', '_line_idx', '_enum_idx', '_entry_idx', '_entity_name',
         '_entity_page_idx', '_entity_line_idx', '_link_type', '_text', 'section_pos', 'section_invpos', 'entry_pos',
         'entry_invpos', 'entry_depth', 'entry_leaf', 'entity_count', 'entity_idx', 'entity_invidx', 'entity_pos',
         'entity_invpos', 'entity_link_pos', 'entity_link_invpos', 'entity_first', 'entity_last', 'entity_pn',
-        'entity_noun', 'entity_ne', 'prev_pos', 'prev_ne', 'succ_pos', 'succ_ne', 'comma_idx', 'entity_occurrence_count',
-        'entity_occurrence', 'page_section_count', 'page_section_enums_avg', 'page_section_entry_avg',
-        'page_entry_depth_avg', 'page_entry_entity_avg', 'page_entry_word_avg', 'page_entry_char_avg',
-        'page_entry_comma_avg', 'page_first_entity_idx_avg', 'page_first_entity_pos_avg', 'page_section_enums_std',
-        'page_section_entry_std', 'page_entry_depth_std', 'page_entry_entity_std', 'page_entry_word_std',
-        'page_entry_char_std', 'page_entry_comma_std', 'page_first_entity_idx_std', 'page_first_entity_pos_std'
+        'entity_noun', 'entity_ne', 'prev_pos', 'prev_ne', 'succ_pos', 'succ_ne', 'comma_idx', 'entity_in_same_enum_count',
+        'entity_in_same_enum', 'entity_in_other_enum_count', 'entity_in_other_enum', 'page_section_count',
+        'page_section_enums_avg', 'page_section_entry_avg', 'page_entry_depth_avg', 'page_entry_entity_avg',
+        'page_entry_word_avg', 'page_entry_char_avg', 'page_entry_comma_avg', 'page_first_entity_idx_avg',
+        'page_first_entity_pos_avg', 'page_section_enums_std', 'page_section_entry_std', 'page_entry_depth_std',
+        'page_entry_entity_std', 'page_entry_word_std', 'page_entry_char_std', 'page_entry_comma_std',
+        'page_first_entity_idx_std', 'page_first_entity_pos_std'
     ]
 
 
 def make_table_entity_features(page: tuple) -> list:
     """Return a set of features for every entity in a table of the page."""
-    page_uri, page_data = page
+    page_name, page_data = page
     sections = page_data['sections']
     top_section_name = ''
 
@@ -188,7 +200,7 @@ def make_table_entity_features(page: tuple) -> list:
     page_table_first_entity_column = []
 
     # compute lemmas for page-name / column-name similarity
-    page_name = list_util.listpage2name(page_uri) if list_util.is_listpage(page_uri) else dbp_util.resource2name(page_uri)
+    page_name = list_util.listpage2name(page_name) if list_util.is_listpage(page_name) else dbp_util.resource2name(page_name)
     page_lemmas = {w.lemma_ for w in list_nlp.parse(page_name)}
 
     data = []
@@ -225,13 +237,13 @@ def make_table_entity_features(page: tuple) -> list:
                     # add link type (blue/red) to entities and collect entity boundaries
                     entity_character_idxs = set()
                     for entity_data in column_entities:
-                        if entity_data['uri'] in dbp_store.get_raw_resources():
+                        if dbp_util.name2resource(entity_data['name']) in dbp_store.get_raw_resources():
                             entity_data['link_type'] = 'blue'
                         else:
                             entity_data['link_type'] = 'red'
                             # red link must be disambiguated, if user is not providing specific details of linked entity
-                            if dbp_util.name2resource(entity_data['text']) == entity_data['uri']:
-                                entity_data['uri'] = rdf_util.name2uri(entity_data['text'], page_uri + '__')
+                            if entity_data['text'] == entity_data['name']:
+                                entity_data['name'] = f'{page_name}--{entity_data["text"]}'
                         start = entity_data['idx']
                         end = start + len(entity_data['text'])
                         entity_character_idxs.update(range(start, end))
@@ -242,8 +254,7 @@ def make_table_entity_features(page: tuple) -> list:
                             end = ent.end_char
                             text = ent.text
                             if not entity_character_idxs.intersection(set(range(start, end))) and len(text) > 1:
-                                uri = rdf_util.name2uri(text, page_uri + '__')
-                                column_entities.append({'uri': uri, 'text': text, 'idx': start, 'link_type': 'grey'})
+                                column_entities.append({'name': f'{page_name}--{text}', 'text': text, 'idx': start, 'link_type': 'grey'})
                     column_entities = sorted(column_entities, key=lambda x: x['idx'])
 
                     if not first_entity_column_found and column_entities:
@@ -252,8 +263,8 @@ def make_table_entity_features(page: tuple) -> list:
 
                     page_table_column_entities.append(len(column_entities))
                     for entity_idx, entity_data in enumerate(column_entities):
-                        entity_uri = entity_data['uri']
-                        entity_uri = entity_uri[:entity_uri.index('#')] if '#' in entity_uri else entity_uri
+                        entity_name = entity_data['name']
+                        entity_name = entity_name[:entity_name.index('#')] if '#' in entity_name else entity_name
 
                         entity_span = _get_span_for_entity(column_doc, entity_data['text'], entity_data['idx'])
                         if not entity_span:
@@ -261,8 +272,8 @@ def make_table_entity_features(page: tuple) -> list:
 
                         features = {
                             # ID
-                            '_id': f'{page_uri}__{section_name}__{table_idx}__{row_idx}__{column_idx}__{entity_uri}',
-                            '_page_uri': page_uri,
+                            '_id': f'{page_name}__{section_name}__{table_idx}__{row_idx}__{column_idx}__{entity_name}',
+                            '_page_name': page_name,
                             '_top_section_name': top_section_name,
                             '_section_name': section_name or '',
                             '_line_idx': line_index,
@@ -270,7 +281,7 @@ def make_table_entity_features(page: tuple) -> list:
                             '_row_idx': row_idx,
                             '_column_idx': column_idx,
                             '_column_name': column_name,
-                            '_entity_uri': entity_uri,
+                            '_entity_name': entity_name,
                             '_entity_page_idx': entity_page_index,
                             '_entity_line_idx': entity_line_index,
                             '_link_type': entity_data['link_type'],
@@ -317,17 +328,17 @@ def make_table_entity_features(page: tuple) -> list:
     # compute distribution of entities in tables for entity-stats features
     entities_per_table = defaultdict(lambda: defaultdict(int))
     for feature_set in data:
-        table_pos = feature_set['table_pos']
-        entity_uri = feature_set['_entity_uri']
-        entities_per_table[table_pos][entity_uri] += 1
+        table_idx = (feature_set['_section_name'], feature_set['_table_idx'])
+        entity_name = feature_set['_entity_name']
+        entities_per_table[table_idx][entity_name] += 1
 
     for feature_set in data:
         # ENTITY-STATS FEATURES
-        table_pos = feature_set['table_pos']
-        entity_uri = feature_set['_entity_uri']
-        feature_set['entity_in_same_table_count'] = entities_per_table[table_pos][entity_uri] - 1
+        table_idx = (feature_set['_section_name'], feature_set['_table_idx'])
+        entity_name = feature_set['_entity_name']
+        feature_set['entity_in_same_table_count'] = entities_per_table[table_idx][entity_name] - 1
         feature_set['entity_in_same_table'] = feature_set['entity_in_same_table_count'] > 0
-        feature_set['entity_in_other_table_count'] = sum(entities_per_table[tp][entity_uri] for tp in entities_per_table if tp != table_pos)
+        feature_set['entity_in_other_table_count'] = sum(entities_per_table[ti][entity_name] for ti in entities_per_table if ti != table_idx)
         feature_set['entity_in_other_table'] = feature_set['entity_in_other_table_count'] > 0
 
         # LISTPAGE FEATURES
@@ -347,8 +358,8 @@ def make_table_entity_features(page: tuple) -> list:
 
 def get_table_feature_names() -> list:
     return [
-        '_id', '_page_uri', '_top_section_name', '_section_name', '_line_idx', '_table_idx', '_row_idx', '_column_idx',
-        '_column_name', '_entity_uri', '_entity_page_idx', '_entity_line_idx', '_link_type', '_text', 'section_pos',
+        '_id', '_page_name', '_top_section_name', '_section_name', '_line_idx', '_table_idx', '_row_idx', '_column_idx',
+        '_column_name', '_entity_name', '_entity_page_idx', '_entity_line_idx', '_link_type', '_text', 'section_pos',
         'section_invpos', 'table_pos', 'table_invpos', 'table_count', 'row_pos', 'row_invpos', 'row_count',
         'row_isheader', 'column_pos', 'column_invpos', 'column_count', 'column_page_similar', 'column_page_synonym',
         'column_page_hypernym', 'entity_link_pos', 'entity_link_invpos', 'entity_line_first', 'entity_first',
@@ -404,7 +415,7 @@ def _assign_avg_and_std_to_feature_set(feature_set: dict, data: list, name: str)
 
 def onehotencode_feature(df: pd.DataFrame, feature_name: str) -> pd.DataFrame:
     # retrieve the 50 values that appear most often in the extracted pages
-    frequent_values = df[[feature_name, '_page_uri']].groupby(by=feature_name)[['_page_uri']].nunique().sort_values(by='_page_uri', ascending=False).head(50).index.values
+    frequent_values = df[[feature_name, '_page_name']].groupby(by=feature_name)[['_page_name']].nunique().sort_values(by='_page_name', ascending=False).head(50).index.values
     # one-hot-encode the most frequent values
     encoder = OneHotEncoder(categories={0: frequent_values}, handle_unknown='ignore', sparse=False)
     values = encoder.fit_transform(df[[feature_name]].fillna(value=''))

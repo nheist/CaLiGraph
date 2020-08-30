@@ -69,13 +69,13 @@ def _extract_entities_simple(df: pd.DataFrame, estimator) -> dict:
     # extract true entities
     list_entities = defaultdict(dict)
     for _, row in df[(df['label'] == 1) | (df['pred'] == 1)].iterrows():
-        page_uri = row['_page_uri']
-        entity_uri = row['_entity_uri']
+        page_name = row['_page_name']
+        entity_name = row['_entity_name']
         label = row['_text']
-        if entity_uri in list_entities[page_uri]:
-            list_entities[page_uri][entity_uri].add(label)
+        if entity_name in list_entities[page_name]:
+            list_entities[page_name][entity_name].add(label)
         else:
-            list_entities[page_uri][entity_uri] = {label}
+            list_entities[page_name][entity_name] = {label}
     return list_entities
 
 
@@ -96,7 +96,7 @@ def _extract_entities(df: pd.DataFrame, config: dict) -> dict:
     df_train = df[df['label'] != -1]
     # split into two training sets
     gss = GroupShuffleSplit(n_splits=1, train_size=.5, random_state=42)
-    train1_idxs, train2_idxs = next(gss.split(df_train, y=df_train['label'], groups=df_train['_page_uri']))
+    train1_idxs, train2_idxs = next(gss.split(df_train, y=df_train['label'], groups=df_train['_page_name']))
     # train model for proba and apply
     df_train1 = df_train.iloc[train1_idxs]
     estimator.fit(pd.get_dummies(df_train1.drop(columns=meta_columns)), df_train1['label'])
@@ -136,7 +136,7 @@ def _extract_subject_entities(df: pd.DataFrame, sampling_funcs: list, selection_
     util.get_logger().debug(f'LIST/EXTRACT: Temporarily persisting subject entities..')
     valid_entities = {idx for lp in lps for idx in lp.subject_entities}
     extraction_type = 'enum' if '_entry_idx' in df else 'table'
-    df.loc[valid_entities, ['_page_uri', '_entity_uri', '_text', '_link_type']].to_csv(f'listpage_extracted-{extraction_type}-entities_v4.csv', sep=';', index=False)
+    df.loc[valid_entities, ['_page_name', '_entity_name', '_text', '_link_type']].to_csv(f'listpage_extracted-{extraction_type}-entities_v4.csv', sep=';', index=False)
 
     # TODO: Proper disambiguation and merging of identified entities
     # TODO: normalization of merged entity uris / labels (e.g. remove leading symbols like - : .
@@ -144,13 +144,13 @@ def _extract_subject_entities(df: pd.DataFrame, sampling_funcs: list, selection_
     list_entities = defaultdict(dict)
     for lp in lps:
         for _, row in df.loc[lp.subject_entities].iterrows():
-            page_uri = row['_page_uri']
-            entity_uri = row['_entity_uri']
+            page_name = row['_page_name']
+            entity_name = row['_entity_name']
             label = row['_text']
-            if entity_uri in list_entities[page_uri]:
-                list_entities[page_uri][entity_uri].add(label)
+            if entity_name in list_entities[page_name]:
+                list_entities[page_name][entity_name].add(label)
             else:
-                list_entities[page_uri][entity_uri] = {label}
+                list_entities[page_name][entity_name] = {label}
     return list_entities
 
 
@@ -158,19 +158,19 @@ def _extract_subject_entities(df: pd.DataFrame, sampling_funcs: list, selection_
 Line = namedtuple('Line', ['id', 'entities'])
 EntitySample = namedtuple('EntitySample', ['types', 'entities', 'stats'])
 Listing = namedtuple('Listing', ['id', 'lines', 'samples'])
-Listpage = namedtuple('Listpage', ['uri', 'listings', 'entities', 'subject_entities'])
+Listpage = namedtuple('Listpage', ['name', 'listings', 'entities', 'subject_entities'])
 
 
 def _extract_listpage_data(df) -> list:
     """Convert list pages into structured data format."""
     util.get_logger().debug(f'LIST/EXTRACT: Extracting list page data..')
     lps = []
-    for lp_uri, df_lp in df.groupby('_page_uri'):
+    for lp_name, df_lp in df.groupby('_page_name'):
         line_collections = defaultdict(lambda: defaultdict(set))
         for idx, row in df_lp.iterrows():
             line_collections[_get_listing_id(row)][row['_line_idx']].add(idx)
         listings = [Listing(id=cid, lines=[Line(*ldata) for ldata in cdata.items()], samples=[]) for cid, cdata in line_collections.items()]
-        lps.append(Listpage(uri=lp_uri, listings=listings, entities=set(df_lp.index), subject_entities=set()))
+        lps.append(Listpage(name=lp_name, listings=listings, entities=set(df_lp.index), subject_entities=set()))
     return lps
 
 
@@ -316,11 +316,9 @@ def _compute_feature_tagsim(df: pd.DataFrame, entity_sample: EntitySample):
 def _compute_feature_similarents(df: pd.DataFrame, entity_sample: EntitySample):
     all_entities = []
     for _, row in df[df.index.isin(entity_sample.entities)].iterrows():
-        entity_uri = row['_entity_uri']
-        if row['_link_type'] == 'blue':
-            all_entities.append(entity_uri[entity_uri.rfind('/')+1:])
-        else:
-            all_entities.append(entity_uri[entity_uri.rfind('__')+2:])
+        entity_name = row['_entity_name']
+        entity_name = entity_name[entity_name.rfind('--')+2:] if '--' in entity_name else entity_name
+        all_entities.append(entity_name)
     entity_sample.stats['similar_ents'] = len(set(all_entities)) / len(all_entities)
 
 

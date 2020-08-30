@@ -6,6 +6,7 @@ from pathlib import Path
 import impl.util.rdf as rdf_util
 import impl.util.wiki_parse as wiki_parse
 import impl.dbpedia.store as dbp_store
+import impl.dbpedia.util as dbp_util
 import impl.list.store as list_store
 import impl.list.mapping as list_mapping
 import json
@@ -97,7 +98,8 @@ def _retrieve_training_data_wle():
                         continue
                     valid_entities = []
                     for entity_data in entities:
-                        entity_tag = _get_tag_for_types(dbp_store.get_independent_types(dbp_store.get_types(entity_data['uri'])))
+                        entity_uri = dbp_util.name2resource(entity_data['name'])
+                        entity_tag = _get_tag_for_types(dbp_store.get_independent_types(dbp_store.get_types(entity_uri)))
                         if not entity_tag:
                             continue
                         entity_text = entity_data['text']

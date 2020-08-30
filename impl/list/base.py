@@ -3,6 +3,7 @@
 import pandas as pd
 import util
 import impl.dbpedia.page_features as page_features
+import impl.dbpedia.util as dbp_util
 import impl.list.store as list_store
 import impl.list.entity_labels as list_entity_labels
 import impl.list.extract as list_extract
@@ -54,12 +55,12 @@ def get_merged_listgraph() -> ListGraph:
 
 # LIST ENTITIES
 
-def get_listpage_entities(graph, listpage: str) -> dict:
+def get_listpage_entities(graph, listpage_uri: str) -> dict:
     """Retrieve the extracted entities of a given list page."""
     global __LISTPAGE_ENTITIES__
     if '__LISTPAGE_ENTITIES__' not in globals():
         __LISTPAGE_ENTITIES__ = defaultdict(dict, util.load_or_create_cache('dbpedia_listpage_entities', lambda: _extract_listpage_entities(graph)))
-    return __LISTPAGE_ENTITIES__[listpage]
+    return __LISTPAGE_ENTITIES__[dbp_util.resource2name(listpage_uri)]
 
 
 def _extract_listpage_entities(graph):

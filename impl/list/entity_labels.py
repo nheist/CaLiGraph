@@ -3,6 +3,7 @@
 import impl.list.mapping as list_mapping
 import impl.dbpedia.store as dbp_store
 import impl.dbpedia.heuristics as dbp_heur
+import impl.dbpedia.util as dbp_util
 import impl.category.store as cat_store
 import impl.category.base as cat_base
 import pandas as pd
@@ -15,19 +16,20 @@ def assign_entity_labels(graph, df: pd.DataFrame):
     listpage_valid_resources = {}
     listpage_types = defaultdict(set)
 
-    for idx, (listpage_uri, df_group) in enumerate(df.groupby('_page_uri')):
+    for idx, (listpage_name, df_group) in enumerate(df.groupby('_page_name')):
         if idx % 1000 == 0:
             util.get_logger().debug(f'LIST/FEATURES: Processed {idx} list pages.')
-        listpage_resources = set(df_group['_entity_uri'].unique())
-        listpage_category_resources = {res for cat in _get_category_descendants_for_list(listpage_uri) for res in cat_store.get_resources(cat)}
-        listpage_valid_resources[listpage_uri] = listpage_resources.intersection(listpage_category_resources)
+        listpage_uri = dbp_util.name2resource(listpage_name)
+        listpage_resource_names = set(df_group['_entity_name'].unique())
+        listpage_category_resources = {dbp_util.resource2name(res) for cat in _get_category_descendants_for_list(listpage_uri) for res in cat_store.get_resources(cat)}
+        listpage_valid_resources[listpage_name] = listpage_resource_names.intersection(listpage_category_resources)
 
         caligraph_nodes = graph.get_nodes_for_part(listpage_uri)
         for n in caligraph_nodes:
-            listpage_types[listpage_uri].update(dbp_store.get_independent_types(graph.get_dbpedia_types(n)))
+            listpage_types[listpage_name].update(dbp_store.get_independent_types(graph.get_dbpedia_types(n)))
 
     # assign positive and negative labels that are induced directly from the taxonomy
-    df['label'] = df.apply(lambda row: _compute_label_for_entity(row['_page_uri'], row['_entity_uri'], row['_link_type'], listpage_valid_resources, listpage_types), axis=1)
+    df['label'] = df.apply(lambda row: _compute_label_for_entity(row['_page_name'], row['_entity_name'], row['_link_type'], listpage_valid_resources, listpage_types), axis=1)
 
     if util.get_config('page.extraction.use_negative_evidence_assumption'):
         # ASSUMPTION: if an entry has at least one positive example, all the unknown examples are negative
@@ -42,24 +44,24 @@ def assign_entity_labels(graph, df: pd.DataFrame):
 
 
 def _get_listpage_line_id(row: pd.Series) -> tuple:
-    return row['_page_uri'], row['_line_idx']
+    return row['_page_name'], row['_line_idx']
 
 
 def _get_sortkey(row: pd.Series):
     return row['_entity_line_idx']
 
 
-def _compute_label_for_entity(listpage_uri: str, entity_uri: str, link_type: str, lp_valid_resources: dict, lp_types: dict) -> int:
+def _compute_label_for_entity(listpage_name: str, entity_name: str, link_type: str, lp_valid_resources: dict, lp_types: dict) -> int:
     """Return a label for the entity based on links in the taxonomy graph."""
     if link_type != 'blue':
         return -1
-
+    entity_uri = dbp_util.name2resource(entity_name)
     if not dbp_store.is_possible_resource(entity_uri):
         return 0
-    if entity_uri in lp_valid_resources[listpage_uri]:
+    if entity_name in lp_valid_resources[listpage_name]:
         return 1
     entity_types = dbp_store.get_types(entity_uri)
-    if any(entity_types.intersection(dbp_heur.get_disjoint_types(t)) for t in lp_types[listpage_uri]):
+    if any(entity_types.intersection(dbp_heur.get_disjoint_types(t)) for t in lp_types[listpage_name]):
         return 0
     return -1
 
