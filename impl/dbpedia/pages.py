@@ -15,18 +15,20 @@ def get_all_parsed_pages() -> dict:
 
 
 def _parse_pages() -> dict:
+    page_markup = get_all_pages_markup()
     with mp.Pool(processes=util.get_config('max_cpus')) as pool:
-        parsed_pages = {r: parsed for r, parsed in tqdm(pool.imap(_parse_page, get_all_pages_markup().items(), chunksize=2000), desc='Parsing pages', total=len(get_all_pages_markup())) if parsed}
+        parsed_pages = {r: parsed for r, parsed in tqdm(pool.imap(_parse_page, page_markup.items(), chunksize=2000), desc='Parsing pages', total=len(page_markup)) if parsed}
     return parsed_pages
 
 
 def _parse_page(resource_and_markup: tuple) -> tuple:
     resource, markup = resource_and_markup
     try:
-        return resource, wiki_parse.parse_page(markup)
-    except Exception as e:
+        parsed_markup = wiki_parse.parse_page(markup)
+    except AttributeError as e:
         util.get_logger().error(f'DBPEDIA/PAGES ({mp.current_process().name}): Failed to parse page {resource}: {e}')
-    return resource, None
+        parsed_markup = None
+    return resource, parsed_markup
 
 
 def get_all_pages_markup() -> dict:
