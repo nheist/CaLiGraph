@@ -41,12 +41,14 @@ def parse_page(page_markup: str) -> Optional[dict]:
         types.add(PAGE_TYPE_ENUM)
     if any(len(s['tables']) > 0 for s in sections):
         types.add(PAGE_TYPE_TABLE)
+    if not types:
+        return None  # ignore pages without useful lists
     return {'sections': sections, 'types': types}
 
 
 def _is_page_useful(wiki_text: WikiText) -> bool:
     # ignore pages without any lists and pages with very small lists (e.g. redirect pages have a list with length of 1)
-    return len(wiki_text.get_lists(VALID_ENUM_PATTERNS)) + len(wiki_text.get_tables()) >= 3
+    return len(wiki_text.get_lists(VALID_ENUM_PATTERNS)) + len(wiki_text.get_tables()) >= 0
 
 
 def _convert_special_enums(wiki_text: WikiText) -> WikiText:
