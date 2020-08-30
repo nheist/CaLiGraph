@@ -151,8 +151,7 @@ def _extract_table(table: wtp.Table) -> Optional[dict]:
 def _is_header_row(table: wtp.Table, row_idx: int) -> bool:
     if row_idx == 0:
         return True
-    cells = table.cells(row=row_idx, span=True)
-    return cells[0].is_header & cells[1].is_header  # define row as header row if at least two cells are header cells
+    return any(c and c.is_header for c in table.cells(row=row_idx, span=True))
 
 
 def _convert_markup(wiki_text: str) -> Tuple[str, list]:
