@@ -17,7 +17,7 @@ def get_all_parsed_pages() -> dict:
 def _parse_pages() -> dict:
     page_markup = get_all_pages_markup()
     with mp.Pool(processes=util.get_config('max_cpus')) as pool:
-        parsed_pages = {r: parsed for r, parsed in tqdm(pool.imap(_parse_page, page_markup.items(), chunksize=2000), desc='Parsing pages', total=len(page_markup)) if parsed}
+        parsed_pages = {r: parsed for r, parsed in tqdm(pool.imap_unordered(_parse_page, page_markup.items(), chunksize=2000), desc='Parsing pages', total=len(page_markup)) if parsed}
     return parsed_pages
 
 
