@@ -48,7 +48,7 @@ def parse_page(page_markup: str) -> Optional[dict]:
 
 def _is_page_useful(wiki_text: WikiText) -> bool:
     # ignore pages without any lists and pages with very small lists (e.g. redirect pages have a list with length of 1)
-    return len(wiki_text.get_lists(VALID_ENUM_PATTERNS)) + len(wiki_text.get_tables()) >= 0
+    return len(wiki_text.get_lists(VALID_ENUM_PATTERNS)) + len(wiki_text.get_tables()) > 0
 
 
 def _convert_special_enums(wiki_text: WikiText) -> WikiText:
@@ -125,6 +125,7 @@ def _extract_table(table: wtp.Table) -> Optional[dict]:
     row_data = []
     try:
         rows = table.data(strip=True, span=True)
+        cells = table.cells(span=True)
         rows_with_spans = table.data(strip=True, span=False)
     except:
         return None
@@ -139,7 +140,7 @@ def _extract_table(table: wtp.Table) -> Optional[dict]:
                 'text': plaintext,
                 'entities': entities
             })
-        if _is_header_row(table, row_idx):
+        if _is_header_row(cells, row_idx):
             row_header = parsed_cells
         else:
             if len(rows_with_spans) > row_idx and len(row) == len(rows_with_spans[row_idx]):
@@ -150,11 +151,9 @@ def _extract_table(table: wtp.Table) -> Optional[dict]:
     return {'header': row_header, 'data': row_data}
 
 
-def _is_header_row(table: wtp.Table, row_idx: int) -> bool:
-    if row_idx == 0:
-        return True
+def _is_header_row(cells, row_idx: int) -> bool:
     try:
-        return any(c and c.is_header for c in table.cells(row=row_idx, span=True))
+        return row_idx == 0 or any(c and c.is_header for c in cells[row_idx])
     except IndexError:
         return False  # fallback if wtp can't parse the table correctly
 
