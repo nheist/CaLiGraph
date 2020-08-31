@@ -137,13 +137,13 @@ def make_enum_entity_features(page: tuple) -> list:
     # compute distribution of entities in enums for entity-stats features
     entities_per_enum = defaultdict(lambda: defaultdict(int))
     for feature_set in data:
-        enum_idx = (feature_set['_section_name', '_enum_idx'])
+        enum_idx = (feature_set['_section_name'], feature_set['_enum_idx'])
         entity_name = feature_set['_entity_name']
         entities_per_enum[enum_idx][entity_name] += 1
 
     for feature_set in data:
         # ENTITY-STATS FEATURES
-        enum_idx = (feature_set['_section_name', '_enum_idx'])
+        enum_idx = (feature_set['_section_name'], feature_set['_enum_idx'])
         entity_name = feature_set['_entity_name']
         feature_set['entity_in_same_enum_count'] = entities_per_enum[enum_idx][entity_name] - 1
         feature_set['entity_in_same_enum'] = feature_set['entity_in_same_enum_count'] > 0
