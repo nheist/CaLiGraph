@@ -5,7 +5,6 @@ import impl.list.nlp as list_nlp
 import impl.dbpedia.store as dbp_store
 import impl.dbpedia.util as dbp_util
 import impl.util.hypernymy as hyper_util
-import impl.util.rdf as rdf_util
 import pandas as pd
 import numpy as np
 import util
@@ -93,7 +92,6 @@ def make_enum_entity_features(page: tuple) -> list:
 
                     features = {
                         # ID
-                        '_id': f'{page_name}__{section_name}__{enum_index}__{entry_idx}__{entity_name}',
                         '_page_name': page_name,
                         '_top_section_name': top_section_name,
                         '_section_name': section_name or '',
@@ -167,7 +165,7 @@ def make_enum_entity_features(page: tuple) -> list:
 
 def get_enum_feature_names() -> list:
     return [
-        '_id', '_page_name', '_top_section_name', '_section_name', '_line_idx', '_enum_idx', '_entry_idx', '_entity_name',
+        '_page_name', '_top_section_name', '_section_name', '_line_idx', '_enum_idx', '_entry_idx', '_entity_name',
         '_entity_page_idx', '_entity_line_idx', '_link_type', '_text', 'section_pos', 'section_invpos', 'entry_pos',
         'entry_invpos', 'entry_depth', 'entry_leaf', 'entity_count', 'entity_idx', 'entity_invidx', 'entity_pos',
         'entity_invpos', 'entity_link_pos', 'entity_link_invpos', 'entity_first', 'entity_last', 'entity_pn',
@@ -272,7 +270,6 @@ def make_table_entity_features(page: tuple) -> list:
 
                         features = {
                             # ID
-                            '_id': f'{page_name}__{section_name}__{table_idx}__{row_idx}__{column_idx}__{entity_name}',
                             '_page_name': page_name,
                             '_top_section_name': top_section_name,
                             '_section_name': section_name or '',
@@ -358,7 +355,7 @@ def make_table_entity_features(page: tuple) -> list:
 
 def get_table_feature_names() -> list:
     return [
-        '_id', '_page_name', '_top_section_name', '_section_name', '_line_idx', '_table_idx', '_row_idx', '_column_idx',
+        '_page_name', '_top_section_name', '_section_name', '_line_idx', '_table_idx', '_row_idx', '_column_idx',
         '_column_name', '_entity_name', '_entity_page_idx', '_entity_line_idx', '_link_type', '_text', 'section_pos',
         'section_invpos', 'table_pos', 'table_invpos', 'table_count', 'row_pos', 'row_invpos', 'row_count',
         'row_isheader', 'column_pos', 'column_invpos', 'column_count', 'column_page_similar', 'column_page_synonym',
