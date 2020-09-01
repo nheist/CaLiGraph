@@ -13,10 +13,13 @@ from collections import defaultdict
 
 def assign_entity_labels(graph, df: pd.DataFrame):
     """Derive labels (1 for True, 0 for False, -1 for Undefined) for all entities in the data frame."""
+    df['label'] = -1
+    df_lp = df[df['_page_name'].str.startswith('List of')]  # TODO: Replace with page_type == 'List'
+
+    # find valid resources and types for list pages
     listpage_valid_resources = {}
     listpage_types = defaultdict(set)
-
-    for idx, (listpage_name, df_group) in enumerate(df.groupby('_page_name')):
+    for idx, (listpage_name, df_group) in enumerate(df_lp.groupby('_page_name')):
         if idx % 1000 == 0:
             util.get_logger().debug(f'LIST/FEATURES: Processed {idx} list pages.')
         listpage_uri = dbp_util.name2resource(listpage_name)
@@ -29,16 +32,16 @@ def assign_entity_labels(graph, df: pd.DataFrame):
             listpage_types[listpage_name].update(dbp_store.get_independent_types(graph.get_dbpedia_types(n)))
 
     # assign positive and negative labels that are induced directly from the taxonomy
-    df['label'] = df.apply(lambda row: _compute_label_for_entity(row['_page_name'], row['_entity_name'], row['_link_type'], listpage_valid_resources, listpage_types), axis=1)
+    df.loc[df_lp.index, 'label'] = df_lp.apply(lambda row: _compute_label_for_entity(row['_page_name'], row['_entity_name'], row['_link_type'], listpage_valid_resources, listpage_types), axis=1)
 
     if util.get_config('page.extraction.use_negative_evidence_assumption'):
         # ASSUMPTION: if an entry has at least one positive example, all the unknown examples are negative
         # locate all entries that have a positive example
         lines_with_positive_example = set()
-        for _, row in df[df['label'] == 1].iterrows():
+        for _, row in df_lp[df_lp['label'] == 1].iterrows():
             lines_with_positive_example.add(_get_listpage_line_id(row))
         # make all candidate examples negative that appear in an entry with a positive example
-        for i, row in df[df['label'] == -1].iterrows():
+        for i, row in df_lp[df_lp['label'] == -1].iterrows():
             if _get_listpage_line_id(row) in lines_with_positive_example:
                 df.at[i, 'label'] = 0
 
