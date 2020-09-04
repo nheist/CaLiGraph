@@ -198,8 +198,8 @@ def make_table_entity_features(page: tuple) -> list:
     page_table_first_entity_column = []
 
     # compute lemmas for page-name / column-name similarity
-    page_name = list_util.listpage2name(page_name) if list_util.is_listpage(page_name) else dbp_util.resource2name(page_name)
-    page_lemmas = {w.lemma_ for w in list_nlp.parse(page_name)}
+    page_lemma_text = page_name[len('List of '):] if page_name.startswith('List of ') else page_name
+    page_lemmas = {w.lemma_ for w in list_nlp.parse(page_lemma_text)}
 
     data = []
     entity_page_index = 0
