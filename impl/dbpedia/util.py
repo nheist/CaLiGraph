@@ -21,6 +21,10 @@ def resource2name(resource: str) -> str:
     return rdf_util.uri2name(resource, NAMESPACE_DBP_RESOURCE)
 
 
+def name2type(name: str) -> str:
+    return rdf_util.name2uri(name, NAMESPACE_DBP_ONTOLOGY)
+
+
 def type2name(dbp_type: str) -> str:
     return rdf_util.uri2name(dbp_type, NAMESPACE_DBP_ONTOLOGY)
 

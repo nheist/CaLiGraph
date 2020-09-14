@@ -1,6 +1,5 @@
 """Extraction of features for entities in enumerations and tables."""
 
-import impl.list.util as list_util
 import impl.list.nlp as list_nlp
 import impl.dbpedia.store as dbp_store
 import impl.dbpedia.util as dbp_util
@@ -181,7 +180,8 @@ def get_enum_feature_names() -> list:
 
 def make_table_entity_features(page: tuple) -> list:
     """Return a set of features for every entity in a table of the page."""
-    page_name, page_data = page
+    page_uri, page_data = page
+    page_name = dbp_util.resource2name(page_uri)
     sections = page_data['sections']
     top_section_name = ''
 
