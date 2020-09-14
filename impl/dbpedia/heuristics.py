@@ -70,25 +70,25 @@ def get_disjoint_types(dbp_type) -> set:
 def _compute_disjoint_types() -> dict:
     disjoint_types = defaultdict(set)
 
+    # compute direct disjointnesses
     type_property_weights = _compute_type_property_weights()
     dbp_types = dbp_store.get_all_types().difference({rdf_util.CLASS_OWL_THING})
     while len(dbp_types) > 0:
         dbp_type = dbp_types.pop()
         for other_dbp_type in dbp_types:
             if _compute_type_similarity(dbp_type, other_dbp_type, type_property_weights) <= util.get_config('dbpedia.disjointness_threshold'):
-                dbp_type_closure = dbp_store.get_transitive_subtype_closure(dbp_type)
-                other_dbp_type_closure = dbp_store.get_transitive_subtype_closure(other_dbp_type)
-                for t in dbp_type_closure:
-                    disjoint_types[t].update(other_dbp_type_closure)
-                for t in other_dbp_type_closure:
-                    disjoint_types[t].update(dbp_type_closure)
+                disjoint_types[dbp_type].add(other_dbp_type)
+                disjoint_types[other_dbp_type].add(dbp_type)
 
-    # remove any disjointness axioms that would violate the ontology hierarchy
-    # i.e. if two types share a common subtype then they can't be disjoint
+    # remove any disjointnesses that would violate the ontology hierarchy
+    # i.e. if two types share a common subtype, they can't be disjoint
     for t in dbp_store.get_all_types().difference({rdf_util.CLASS_OWL_THING}):
         transitive_types = dbp_store.get_transitive_supertype_closure(t)
         for tt in transitive_types:
             disjoint_types[tt] = disjoint_types[tt].difference(transitive_types)
+
+    # add transitive disjointnesses
+    disjoint_types = {t: {tdt for dt in dts for tdt in dbp_store.get_transitive_subtype_closure(dt)} for t, dts in disjoint_types.items()}
 
     return disjoint_types
 
@@ -111,7 +111,7 @@ def _compute_property_frequencies() -> dict:
         for pred, values in dbp_store.get_properties(r).items():
             for t in types:
                 property_frequencies[t][pred] += len(values)
-    return defaultdict(lambda: defaultdict(float), {t: defaultdict(float, {pred: (1 + math.log2(count) if count > 0 else 0) for pred, count in property_frequencies[t].items()}) for t in property_frequencies})
+    return defaultdict(lambda: defaultdict(float), {t: defaultdict(float, {pred: (1 + math.log(count) if count > 0 else 0) for pred, count in property_frequencies[t].items()}) for t in property_frequencies})
 
 
 def _compute_inverse_type_frequencies() -> dict:
@@ -121,7 +121,7 @@ def _compute_inverse_type_frequencies() -> dict:
             predicate_types[pred].update(dbp_store.get_transitive_types(r))
 
     overall_type_count = len(dbp_store.get_all_types())
-    return {pred: math.log2(overall_type_count / (len(predicate_types[pred]) + 1)) for pred in dbp_store.get_all_predicates()}
+    return {pred: math.log(overall_type_count / (len(predicate_types[pred]) + 1)) for pred in dbp_store.get_all_predicates()}
 
 
 def _compute_type_similarity(type_a: str, type_b: str, type_property_weights: dict) -> float:
@@ -129,7 +129,7 @@ def _compute_type_similarity(type_a: str, type_b: str, type_property_weights: di
         return 1
 
     numerator = sum(type_property_weights[type_a][pred] * type_property_weights[type_b][pred] for pred in type_property_weights[type_a])
-    denominator_a = math.sqrt(sum([type_property_weights[type_a][pred] ** 2 for pred in type_property_weights[type_a]]))
-    denominator_b = math.sqrt(sum([type_property_weights[type_b][pred] ** 2 for pred in type_property_weights[type_b]]))
+    denominator_a = math.sqrt(sum(type_property_weights[type_a][pred] ** 2 for pred in type_property_weights[type_a]))
+    denominator_b = math.sqrt(sum(type_property_weights[type_b][pred] ** 2 for pred in type_property_weights[type_b]))
     return numerator / (denominator_a * denominator_b) if denominator_a * denominator_b > 0 else 1
 
