@@ -42,3 +42,12 @@ pipenv run python3 .
 
 All the required resources, like DBpedia files, will be downloaded automatically during execution.
 CaLiGraph is serialized in N-Triple format. The resulting files are placed in the `results` folder.
+
+
+## Tests
+
+Run the tests with pipenv:
+
+```
+pipenv run pytest
+```

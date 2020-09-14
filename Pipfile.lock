@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "b970fc3f7ff96ef773ffa12201572169263d6f680d5de69bc46e48f1885b15c6"
+            "sha256": "1be88fefe58bc14c45bddcd9efefdd653cad5efe5717cba3c52a636974dfafac"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -380,6 +380,14 @@
             "index": "pypi",
             "version": "==6.0.2"
         },
+        "pytest-check": {
+            "hashes": [
+                "sha256:2c668e513bd13c707df8e12b532d4f9cdbfc6ddbef259bdee52463dc04d21de0",
+                "sha256:496b455ee0889783d9977c15c81d0983fb9ebe69ce85af9dc3dccce7c0cf592b"
+            ],
+            "index": "pypi",
+            "version": "==0.3.9"
+        },
         "python-dateutil": {
             "hashes": [
                 "sha256:73ebfe9dbf22e832286dafa60473e4cd239f8592f699aa5adaf10050e6e1823c",
@@ -608,11 +616,11 @@
         },
         "tqdm": {
             "hashes": [
-                "sha256:1a336d2b829be50e46b84668691e0a2719f26c97c62846298dd5ae2937e4d5cf",
-                "sha256:564d632ea2b9cb52979f7956e093e831c28d441c11751682f84c86fc46e4fd21"
+                "sha256:8f3c5815e3b5e20bc40463fa6b42a352178859692a68ffaa469706e6d38342a5",
+                "sha256:faf9c671bd3fad5ebaeee366949d969dca2b2be32c872a7092a1e1a9048d105b"
             ],
             "index": "pypi",
-            "version": "==4.48.2"
+            "version": "==4.49.0"
         },
         "urllib3": {
             "hashes": [
@@ -638,11 +646,11 @@
         },
         "wikitextparser": {
             "hashes": [
-                "sha256:08591211296b5208c8e875a792f02ed5d91877644987c63757d5643cb5507514",
-                "sha256:09340fecc85e2888c0ad6a9312621e601f52da496125ca01a9fe5c9d8ccd526a"
+                "sha256:dff60daad5c9c102bec524f3ef33d88c3ff6e3042a9b58352b0ac79bfda6114e",
+                "sha256:fdbcc04a67f4bb87711d7d71de1419491ecfc7e8e60d7893c938930ac0432d48"
             ],
             "index": "pypi",
-            "version": "==0.44.1"
+            "version": "==0.45.0"
         },
         "xgboost": {
             "hashes": [
