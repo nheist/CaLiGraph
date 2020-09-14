@@ -6,6 +6,7 @@ import re
 from typing import Iterator
 from collections import defaultdict
 import functools
+import urllib.parse
 
 # predicates
 PREDICATE_EQUIVALENT_CLASS = 'http://www.w3.org/2002/07/owl#equivalentClass'
@@ -43,7 +44,6 @@ def uri2name(uri: str, prefix: str) -> str:
     return uri[len(prefix):].replace('_', ' ')
 
 
-# TODO: replace tabs with underscores
 def name2uri(name: str, prefix: str) -> str:
     return prefix + name.replace(' ', '_')
 
@@ -65,12 +65,16 @@ def parse_triples_from_file(filepath: str) -> Iterator[Triple]:
             object_triple = object_pattern.match(line)
             if object_triple:
                 [sub, pred, obj] = object_triple.groups()
-                yield Triple(sub=sub.decode('utf-8'), pred=pred.decode('utf-8'), obj=obj.decode('utf-8'))
+                sub = urllib.parse.unquote_plus(sub.decode('utf-8'))
+                pred = pred.decode('utf-8')
+                obj = urllib.parse.unquote_plus(obj.decode('utf-8'))
+                yield Triple(sub=sub, pred=pred, obj=obj)
             else:
                 literal_triple = literal_pattern.match(line)
                 if literal_triple:
                     [sub, pred, obj] = literal_triple.groups()
-                    yield Triple(sub=sub.decode('utf-8'), pred=pred.decode('utf-8'), obj=obj.decode('utf-8'))
+                    sub = urllib.parse.unquote_plus(sub.decode('utf-8'))
+                    yield Triple(sub=sub, pred=pred.decode('utf-8'), obj=obj.decode('utf-8'))
 
 
 def create_set_from_rdf(filepaths: list, valid_pred: str, valid_obj: str) -> set:
