@@ -9,6 +9,8 @@ caligraph:
     base: 'http://caligraph.org/'
     ontology: 'http://caligraph.org/ontology/'
     resource: 'http://caligraph.org/resource/'
+dbpedia:
+  disjointness_threshold: 0.25  # in the paper: 0.17
 category:
   root_category: 'http://dbpedia.org/resource/Category:Main_topic_classifications'
 page:

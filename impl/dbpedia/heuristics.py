@@ -10,7 +10,6 @@ import math
 
 DOMAIN_THRESHOLD = .96
 RANGE_THRESHOLD = .77
-DISJOINT_THRESHOLD = .17
 
 
 def get_domain(dbp_predicate: str) -> Optional[str]:
@@ -76,7 +75,7 @@ def _compute_disjoint_types() -> dict:
     while len(dbp_types) > 0:
         dbp_type = dbp_types.pop()
         for other_dbp_type in dbp_types:
-            if _compute_type_similarity(dbp_type, other_dbp_type, type_property_weights) <= DISJOINT_THRESHOLD:
+            if _compute_type_similarity(dbp_type, other_dbp_type, type_property_weights) <= util.get_config('dbpedia.disjointness_threshold'):
                 dbp_type_closure = dbp_store.get_transitive_subtype_closure(dbp_type)
                 other_dbp_type_closure = dbp_store.get_transitive_subtype_closure(other_dbp_type)
                 for t in dbp_type_closure:
