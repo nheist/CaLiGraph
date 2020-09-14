@@ -19,6 +19,7 @@ pynif = "*"
 tables = "*"
 xgboost = "*"
 tqdm = "*"
+pytest = "*"
 
 [dev-packages]
 
