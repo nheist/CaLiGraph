@@ -4,6 +4,7 @@ import util
 from typing import Optional
 import impl.util.rdf as rdf_util
 import impl.dbpedia.store as dbp_store
+from impl.dbpedia.util import NAMESPACE_DBP_ONTOLOGY as dbo
 from collections import defaultdict
 import math
 
@@ -87,10 +88,28 @@ def _compute_disjoint_types() -> dict:
         for tt in transitive_types:
             disjoint_types[tt] = disjoint_types[tt].difference(transitive_types)
 
+    # make sure that there are no disjointnesses between place and organisation
+    place_types = dbp_store.get_transitive_subtype_closure(f'{dbo}Place') | {f'{dbo}Location'}
+    orga_types = dbp_store.get_transitive_subtype_closure(f'{dbo}Organisation')
+    for pt in place_types:
+        disjoint_types[pt] = disjoint_types[pt].difference(orga_types)
+    for ot in orga_types:
+        disjoint_types[ot] = disjoint_types[ot].difference(place_types)
+
     # add transitive disjointnesses
     disjoint_types = {t: {tdt for dt in dts for tdt in dbp_store.get_transitive_subtype_closure(dt)} for t, dts in disjoint_types.items()}
 
     return disjoint_types
+
+
+def _compute_type_similarity(type_a: str, type_b: str, type_property_weights: dict) -> float:
+    if type_a == type_b or type_a in dbp_store.get_transitive_subtypes(type_b) or type_b in dbp_store.get_transitive_subtypes(type_a):
+        return 1
+
+    numerator = sum(type_property_weights[type_a][pred] * type_property_weights[type_b][pred] for pred in type_property_weights[type_a])
+    denominator_a = math.sqrt(sum(type_property_weights[type_a][pred] ** 2 for pred in type_property_weights[type_a]))
+    denominator_b = math.sqrt(sum(type_property_weights[type_b][pred] ** 2 for pred in type_property_weights[type_b]))
+    return numerator / (denominator_a * denominator_b) if denominator_a * denominator_b > 0 else 1
 
 
 def _compute_type_property_weights() -> dict:
@@ -122,14 +141,3 @@ def _compute_inverse_type_frequencies() -> dict:
 
     overall_type_count = len(dbp_store.get_all_types())
     return {pred: math.log(overall_type_count / (len(predicate_types[pred]) + 1)) for pred in dbp_store.get_all_predicates()}
-
-
-def _compute_type_similarity(type_a: str, type_b: str, type_property_weights: dict) -> float:
-    if type_a == type_b or type_a in dbp_store.get_transitive_subtypes(type_b) or type_b in dbp_store.get_transitive_subtypes(type_a):
-        return 1
-
-    numerator = sum(type_property_weights[type_a][pred] * type_property_weights[type_b][pred] for pred in type_property_weights[type_a])
-    denominator_a = math.sqrt(sum(type_property_weights[type_a][pred] ** 2 for pred in type_property_weights[type_a]))
-    denominator_b = math.sqrt(sum(type_property_weights[type_b][pred] ** 2 for pred in type_property_weights[type_b]))
-    return numerator / (denominator_a * denominator_b) if denominator_a * denominator_b > 0 else 1
-

@@ -17,6 +17,12 @@ def without_stopwords(text: str) -> set:
     return {word.lemma_ for word in parse(text) if not word.is_stop}
 
 
+def remove_parentheses_content(text: str) -> str:
+    """Remove all parentheses from the given text."""
+    without_parentheses = re.sub(r'\([^()]*\)', '', text)
+    return _regularize_whitespaces(without_parentheses)
+
+
 def get_canonical_name(text: str, disable_normalization=True) -> str:
     """"Remove parts from the name that Wikipedia adds for organisational reasons (e.g. by-phrases or alphabetical splits)."""
     text = remove_by_phrase(parse(text, disable_normalization=disable_normalization), return_doc=False)  # remove by-phrase
@@ -29,6 +35,13 @@ def get_canonical_name(text: str, disable_normalization=True) -> str:
     text = re.sub(r'\s+([A-Z],\s*)+[A-Z]$', '', text)  # remove trailing alphabetical splits without indicator, e.g. 'Fellows of the Royal Society A, B, C'
     text = re.sub(r'\s*:\s*..?\s*[-–]\s*..?$', '', text)  # remove arbitrary trailing alphabetical splits, e.g. 'Fellows of the Royal Society: ! - K'
     return _regularize_whitespaces(text)
+
+
+def _regularize_whitespaces(text: str) -> str:
+    """Merge multiple whitespaces into one and remove trailing commas."""
+    result = re.sub(r'\s+', ' ', text).strip()
+    result = result[:-1] if result.endswith(',') else result
+    return result
 
 
 def remove_by_phrase(doc: Doc, return_doc=True):
@@ -140,19 +153,6 @@ def parse(text: str, disable_normalization=False, skip_cache=False) -> Doc:
     __NLP_CACHE__[text_hash] = parsed_text
     __NLP_CACHE_CHANGED__ = True
     return parsed_text
-
-
-def remove_parentheses_content(text: str) -> str:
-    """Remove all parentheses from the given text."""
-    without_parentheses = re.sub(r'\([^()]*\)', '', text)
-    return _regularize_whitespaces(without_parentheses)
-
-
-def _regularize_whitespaces(text: str) -> str:
-    """Merge multiple whitespaces into one and remove trailing commas."""
-    result = re.sub(r'\s+', ' ', text).strip()
-    result = result[:-1] if result.endswith(',') else result
-    return result
 
 
 def persist_cache():
