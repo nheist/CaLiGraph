@@ -12,6 +12,11 @@ def test_disjoint_types():
     _assert_disjoint('Person', 'Work')
     _assert_not_disjoint('Person', 'Artist')
     _assert_not_disjoint('Person', 'Agent')
+    # Artist
+    _assert_not_disjoint('Artist', 'Architect')
+    _assert_not_disjoint('Artist', 'Astronaut')
+    _assert_not_disjoint('Artist', 'Coach')
+    _assert_not_disjoint('Artist', 'Monarch')
     # Place
     _assert_disjoint('Place', 'Award')
     _assert_disjoint('Place', 'EthnicGroup')
@@ -62,7 +67,6 @@ def test_disjoint_types():
     _assert_disjoint('Album', 'Event')
     _assert_disjoint('Album', 'Language')
     _assert_disjoint('Album', 'Musical')
-    _assert_disjoint('Album', 'Single')
     # Film
     _assert_disjoint('Film', 'WrittenWork')
     _assert_disjoint('Film', 'Artwork')
