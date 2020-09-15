@@ -27,7 +27,6 @@ def test_disjoint_types():
     _assert_disjoint('Organisation', 'Event')
     _assert_disjoint('Organisation', 'Award')
     _assert_disjoint('Organisation', 'Device')
-    _assert_disjoint('Organisation', 'Infrastructure')
     _assert_disjoint('Organisation', 'Work')
     _assert_disjoint('Organisation', 'UnitOfWork')
     _assert_disjoint('Organisation', 'Species')
