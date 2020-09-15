@@ -86,15 +86,13 @@ class HierarchyGraph(BaseGraph):
 
     def remove_unrelated_edges(self):
         """Remove edges that connect nodes which have head nouns that are neither synonyms nor hypernyms."""
-        valid_edges = set()
-        node_to_headlemmas_mapping = {node: nlp_util.get_head_lemmas(nlp_util.parse(self.get_name(node))) for node in self.nodes}
-        for parent, child in self.edges:
-            parent_lemmas = node_to_headlemmas_mapping[parent]
-            child_lemmas = node_to_headlemmas_mapping[child]
-            if any(hypernymy_util.is_hypernym(pl, cl) for pl in parent_lemmas for cl in child_lemmas):
-                valid_edges.add((parent, child))
+        headlemmas = {node: nlp_util.get_head_lemmas(nlp_util.parse(self.get_name(node))) for node in self.nodes}
+        valid_edges = {(p, c) for p, c in self.edges if self._is_hierarchical_edge(headlemmas[p], headlemmas[c])}
         self._remove_all_edges_except(valid_edges)
         return self
+
+    def _is_hierarchical_edge(self, parent_lemmas: set, child_lemmas: set) -> bool:
+        return any(hypernymy_util.is_hypernym(pl, cl) for pl in parent_lemmas for cl in child_lemmas)
 
     # compound nodes
 

@@ -4,6 +4,11 @@ from .graph import CategoryGraph
 import util
 
 
+# TODO: analyse methods from papers to probably improve the hierarchy:
+#  - 'Derivation of “is a” taxonomy from Wikipedia Category Graph'
+#  - 'Revisiting Taxonomy Induction over Wikipedia'
+
+
 def get_conceptual_category_graph() -> CategoryGraph:
     """Retrieve category graph with filtered categories."""
     global __CONCEPTUAL_CATEGORY_GRAPH__

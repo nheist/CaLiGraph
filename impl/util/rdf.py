@@ -50,8 +50,8 @@ def name2uri(name: str, prefix: str) -> str:
 
 def parse_triples_from_file(filepath: str) -> Iterator[Triple]:
     """Parse triples from file using a regular expression that is only guaranteed to work for DBpedia files."""
-    object_pattern = re.compile(rb'<(.*)> <(.*)> <(.*)> \.\\n')
-    literal_pattern = re.compile(rb'<(.*)> <(.*)> "(.*)"(?:\^\^.*|@en.*)? \.\\n')
+    object_pattern = re.compile(rb'<(.+)> <(.+)> <(.+)> \.\s*\n')
+    literal_pattern = re.compile(rb'<(.+)> <(.+)> "(.+)"(?:\^\^.*|@en.*)? \.\s*\n')
 
     open_file = bz2.open if filepath.endswith('bz2') else open
     with open_file(filepath, mode="rb") as file_reader:
