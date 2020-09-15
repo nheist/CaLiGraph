@@ -48,16 +48,10 @@ def name2uri(name: str, prefix: str) -> str:
     return prefix + name.replace(' ', '_')
 
 
-def get_literal_value(literal_string: str) -> str:
-    string_start = literal_string.find('"')+1
-    string_end = literal_string.rfind('"')
-    return literal_string[string_start:string_end]
-
-
 def parse_triples_from_file(filepath: str) -> Iterator[Triple]:
     """Parse triples from file using a regular expression that is only guaranteed to work for DBpedia files."""
-    object_pattern = re.compile(b'\<(.*)\> \<(.*)\> \<(.*)\> \.\\n')
-    literal_pattern = re.compile(b'\<(.*)\> \<(.*)\> "(.*)"(?:\^\^.*|@en.*)? \.\\n')
+    object_pattern = re.compile(rb'<(.*)> <(.*)> <(.*)> \.\\n')
+    literal_pattern = re.compile(rb'<(.*)> <(.*)> "(.*)"(?:\^\^.*|@en.*)? \.\\n')
 
     open_file = bz2.open if filepath.endswith('bz2') else open
     with open_file(filepath, mode="rb") as file_reader:
