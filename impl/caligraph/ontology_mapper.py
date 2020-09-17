@@ -102,7 +102,10 @@ def _compute_type_lexicalisation_scores(graph, node: str) -> dict:
 
 
 def _compute_type_resource_scores(graph, node: str, use_listpage_resources: bool) -> dict:
-    node_resources = {res for sn in ({node} | graph.descendants(node)) for res in graph.get_direct_dbpedia_resources(sn, use_listpage_resources)}
+    node_resources = graph.get_direct_dbpedia_resources(node, use_listpage_resources)
+    if len([r for r in node_resources if dbp_store.get_types(r)]) < 5:
+        # add resources from children, if we have too few resources to make a decision
+        node_resources.update({r for sn in graph.descendants(node) for r in graph.get_direct_dbpedia_resources(sn, use_listpage_resources)})
     node_resources = node_resources.intersection(dbp_store.get_resources())
     type_counts = defaultdict(int)
     for res in node_resources:
