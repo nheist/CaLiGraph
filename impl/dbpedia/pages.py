@@ -24,7 +24,7 @@ def _parse_pages() -> dict:
 def _parse_page(resource_and_markup: tuple) -> tuple:
     resource, markup = resource_and_markup
     try:
-        parsed_markup = wiki_parse.parse_page(markup)
+        parsed_markup = wiki_parse.parse_page(resource, markup)
     except AttributeError as e:
         util.get_logger().error(f'DBPEDIA/PAGES ({mp.current_process().name}): Failed to parse page {resource}: {e}')
         parsed_markup = None

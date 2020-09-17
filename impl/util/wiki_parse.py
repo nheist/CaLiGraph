@@ -13,7 +13,7 @@ VALID_ENUM_PATTERNS = (r'\#', r'\*')
 PAGE_TYPE_ENUM, PAGE_TYPE_TABLE = 'enum', 'table'
 
 
-def parse_page(page_markup: str) -> Optional[dict]:
+def parse_page(resource: str, page_markup: str) -> Optional[dict]:
     """Return a single parsed page in the following hierarchical structure:
 
     Sections > Enums > Entries > Entities
@@ -36,7 +36,8 @@ def parse_page(page_markup: str) -> Optional[dict]:
         return None
 
     # expand wikilinks
-    cleaned_wiki_text = _expand_wikilinks(cleaned_wiki_text)
+    resource_name = dbp_util.resource2name(resource)
+    cleaned_wiki_text = _expand_wikilinks(cleaned_wiki_text, resource_name)
 
     # extract data from sections
     sections = _extract_sections(cleaned_wiki_text)
@@ -81,9 +82,10 @@ def _remove_enums_within_tables(wiki_text: WikiText) -> WikiText:
     return wtp.parse(wiki_text.string) if something_changed else wiki_text
 
 
-def _expand_wikilinks(wiki_text: WikiText) -> WikiText:
+def _expand_wikilinks(wiki_text: WikiText, resource_name: str) -> WikiText:
     invalid_wikilink_prefixes = ['File:', 'Image:', 'Category:', 'List of']
     text_to_wikilink = {wl.text or wl.target: wl.string for wl in wiki_text.wikilinks if not any(wl.target.startswith(prefix) for prefix in invalid_wikilink_prefixes)}
+    text_to_wikilink[resource_name] = f'[[{resource_name}]]'  # replace mentions of the page title with a link to it
     pattern_to_wikilink = {r'(?<![|\[])\b' + re.escape(text) + r'\b(?![|\]])': wl for text, wl in text_to_wikilink.items()}
     regex = re.compile("|".join(pattern_to_wikilink.keys()))
     try:
