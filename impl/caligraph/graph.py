@@ -410,6 +410,11 @@ class CaLiGraph(HierarchyGraph):
 
     def merge_ontology(self, use_listpage_resources: bool):
         """Combine the category-list-graph with the DBpedia ontology."""
+        # remove edges from graph where clear type conflicts exist
+        conflicting_edges = cali_mapping.find_conflicting_edges(self, use_listpage_resources)
+        self._remove_edges(conflicting_edges)
+        self.append_unconnected()
+
         # compute mapping from caligraph-nodes to dbpedia-types
         node_to_dbp_types_mapping = cali_mapping.find_mappings(self, use_listpage_resources)
 

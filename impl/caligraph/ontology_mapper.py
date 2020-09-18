@@ -121,6 +121,8 @@ def _compute_type_resource_scores(graph, node: str, use_listpage_resources: bool
     if not direct_resources_only or len([r for r in node_resources if dbp_store.get_types(r)]) < 5:
         node_resources.update({r for sn in graph.descendants(node) for r in graph.get_direct_dbpedia_resources(sn, use_listpage_resources)})
     node_resources = node_resources.intersection(dbp_store.get_resources())
+    if len(node_resources) < 5:
+        return {}  # better not return anything, if number of resources is too small
     type_counts = defaultdict(int)
     for res in node_resources:
         for t in dbp_store.get_transitive_types(res):
