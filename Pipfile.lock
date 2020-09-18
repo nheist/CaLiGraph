@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "1be88fefe58bc14c45bddcd9efefdd653cad5efe5717cba3c52a636974dfafac"
+            "sha256": "fe15746984b75cb510c6e630cbf61c45153afcee6c8e1b8187dcd9af6e730c09"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -326,6 +326,13 @@
             ],
             "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3'",
             "version": "==0.13.1"
+        },
+        "polyleven": {
+            "hashes": [
+                "sha256:5d39905c3039b07c7e91078467ee2b6fb33240d03e401182cf31544c8e429ff7"
+            ],
+            "index": "pypi",
+            "version": "==0.5"
         },
         "preshed": {
             "hashes": [

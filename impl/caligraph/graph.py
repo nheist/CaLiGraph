@@ -12,6 +12,7 @@ import impl.list.util as list_util
 from impl.list.graph import ListGraph
 import impl.list.mapping as list_mapping
 import impl.util.nlp as nlp_util
+import impl.util.hypernymy as hypernymy_util
 import numpy as np
 import impl.dbpedia.store as dbp_store
 import impl.dbpedia.util as dbp_util
@@ -19,6 +20,7 @@ import impl.dbpedia.heuristics as dbp_heur
 import impl.caligraph.ontology_mapper as cali_mapping
 import impl.caligraph.cali2ax as cali_axioms
 import impl.caligraph.util as cali_util
+from polyleven import levenshtein
 from collections import defaultdict
 from typing import Optional
 
@@ -381,7 +383,7 @@ class CaLiGraph(HierarchyGraph):
             util.get_logger().debug(f'CaLiGraph: ListMerge - For "{lst}" multiple equivalent nodes have been found: {equivalent_nodes}.')
             equivalent_nodes = {node_id} if node_id in equivalent_nodes else equivalent_nodes
         if equivalent_nodes:
-            main_node_id = equivalent_nodes.pop()  # TODO: use edit distance to find closest node if len is still > 1
+            main_node_id = sorted(equivalent_nodes, key=lambda x: levenshtein(x, node_id))[0]
             self._set_parts(main_node_id, self.get_parts(main_node_id) | node_parts)
             return main_node_id
 
@@ -444,6 +446,14 @@ class CaLiGraph(HierarchyGraph):
         """Add a DBpedia type as node to the graph."""
         name = dbp_store.get_label(dbp_type)
         node_id = cali_util.name2clg_type(name)
+        if not self.has_node(node_id):
+            # If node_id is not in the graph, then we try synonyms with edit-distance of 1
+            # e.g. to cover cases where the type is named 'Organisation' and the category 'Organization'
+            for name_variation in hypernymy_util.get_variations(name):
+                node_id_alternative = cali_util.name2clg_type(name_variation)
+                if self.has_node(node_id_alternative):
+                    node_id = node_id_alternative
+                    break
         node_parts = dbp_store.get_equivalent_types(dbp_type)
         if self.has_node(node_id):
             # extend existing node in graph

@@ -21,6 +21,7 @@ xgboost = "*"
 tqdm = "*"
 pytest = "*"
 pytest-check = "*"
+polyleven = "*"
 
 [dev-packages]
 

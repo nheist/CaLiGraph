@@ -9,6 +9,7 @@ import pickle
 import impl.category.cat2ax as cat_axioms
 import impl.category.nlp as cat_nlp
 import impl.util.nlp as nlp_util
+from polyleven import levenshtein
 
 
 # thresholds of individual sources
@@ -51,6 +52,11 @@ def is_synonym(word: str, another_word: str) -> bool:
 def get_synonyms(word: str) -> set:
     """Returns all synonyms of a word from WordNet."""
     return {lm.name() for syn in wordnet.synsets(word) for lm in syn.lemmas()}
+
+
+def get_variations(word: str) -> set:
+    """Returns all synonyms of a word having an edit-distance of 1."""
+    return {s for s in get_synonyms(word) if levenshtein(s, word) == 1}
 
 
 def compute_hypernyms(category_graph) -> dict:
