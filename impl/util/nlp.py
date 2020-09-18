@@ -49,21 +49,27 @@ def remove_by_phrase(doc: Doc, return_doc=True):
     by_indices = [w.i for w in doc if w.text == 'by']
     if len(by_indices) == 0:
         return doc if return_doc else doc.text
-    last_by_index = by_indices[-1]
-    if last_by_index == 0 or last_by_index == len(doc) - 1:
-        return doc if return_doc else doc.text
-    word_before_by = doc[last_by_index-1]
-    word_after_by = doc[last_by_index+1]
-    if word_after_by.text[0].isupper() or any(w.tag_ == 'NNS' for w in doc[last_by_index+1:]) or word_after_by.text in ['a', 'an', 'the'] or word_before_by.tag_ == 'VBN':
-        return doc if return_doc else doc.text
+    for idx, by_index in enumerate(by_indices):
+        if by_index == 0 or by_index == len(doc) - 1:
+            return doc if return_doc else doc.text
+        current_doc = doc if len(by_indices) == idx+1 else doc[:by_indices[idx+1]]
+        word_before_by = current_doc[by_index - 1]
+        word_after_by = current_doc[by_index + 1]
+        if word_after_by.text.istitle() and not word_after_by.text.isupper():
+            continue
+        if any(w.tag_ == 'NNS' for w in doc[by_index+1:]):
+            continue
+        if word_before_by.tag_ == 'VBN':
+            continue
+        if word_after_by.text in ['a', 'an', 'the']:
+            continue
+        if doc[by_index - 1].text == '(':  # remove possible parenthesis before by phrase
+            by_index -= 1
 
-    if doc[last_by_index - 1].text == '(':  # remove possible parenthesis before by phrase
-        last_by_index -= 1
+        result = doc[:by_index].text.strip()
+        return parse(result, disable_normalization=True, skip_cache=True) if return_doc else result
 
-    result = doc[:last_by_index].text.strip()
-    if return_doc:
-        return parse(result, disable_normalization=True, skip_cache=True)
-    return result
+    return doc if return_doc else doc.text
 
 
 def get_head_lemmas(doc: Doc) -> set:
