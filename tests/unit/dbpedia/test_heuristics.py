@@ -35,6 +35,9 @@ def test_disjoint_types():
     _assert_not_disjoint('Place', 'Company')
     _assert_not_disjoint('Place', 'University')
     _assert_not_disjoint('Place', 'School')
+    # Dam
+    _assert_not_disjoint('Dam', 'HistoricPlace')
+    _assert_not_disjoint('Dam', 'HistoricBuilding')
     # Organisation
     _assert_disjoint('Organisation', 'Activity')
     _assert_disjoint('Organisation', 'Event')
