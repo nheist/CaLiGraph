@@ -96,8 +96,11 @@ def tag_lexical_head(doc: Doc) -> Doc:
         # find the lexical head by looking for plural nouns (and ignore things like parentheses, conjunctions, ..)
         elem = chunk.root
         elem_ne = elem.tag_
-        if elem_ne == 'NNP' and parse(singularize_word(elem.text))[0].tag_ == 'NN':
-            elem_ne = 'NNS'  # fix plural nouns that are parsed incorrectly as proper nouns
+        if elem_ne == 'NNP':
+            # fix plural nouns that are parsed incorrectly as proper nouns
+            singularized_elem = parse(singularize_word(elem.text))
+            if len(singularized_elem) > 0 and singularized_elem[0].tag_ == 'NN':
+                elem_ne = 'NNS'
         if elem.text.istitle() or elem_ne not in ['NN', 'NNS']:
             continue
         if len(doc) > elem.i + 1 and doc[elem.i+1].text[0] in ["'", "´", "`"]:
