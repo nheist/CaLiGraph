@@ -9,9 +9,21 @@ from collections import defaultdict
 import util
 
 
+def find_conflicting_edges(graph, use_listpage_resources: bool) -> set:
+    conflicting_edges = set()
+    direct_mappings = {node: _find_dbpedia_parents(graph, node, use_listpage_resources, True) for node in graph.nodes}
+    for node in graph.traverse_nodes_topdown():
+        for child in graph.children(node):
+            parent_disjoint_types = {dt for t in direct_mappings[node] for dt in dbp_heur.get_disjoint_types(t)}
+            child_types = set(direct_mappings[child])
+            if child_types.intersection(parent_disjoint_types):
+                conflicting_edges.add((node, child))
+    return conflicting_edges
+
+
 def find_mappings(graph, use_listpage_resources: bool) -> dict:
     """Return mappings from nodes in `graph` to DBpedia types retrieved from axioms of the Cat2Ax approach."""
-    mappings = {node: _find_dbpedia_parents(graph, use_listpage_resources, node) for node in graph.nodes}
+    mappings = {node: _find_dbpedia_parents(graph, node, use_listpage_resources, False) for node in graph.nodes}
 
     # apply complete transitivity to the graph in order to discover disjointnesses
     for node in graph.traverse_nodes_topdown():
@@ -50,7 +62,7 @@ def resolve_disjointnesses(graph, use_listpage_resources: bool):
         coherent_type_sets = _find_coherent_type_sets({t: 1 for t in graph.get_dbpedia_types(node, force_recompute=True)})
         if len(coherent_type_sets) > 1:
             transitive_types = {tt for ts in coherent_type_sets for t in ts for tt in dbp_store.get_transitive_supertype_closure(t)}
-            direct_types = {t for t in _find_dbpedia_parents(graph, use_listpage_resources, node)}
+            direct_types = {t for t in _find_dbpedia_parents(graph, node, use_listpage_resources, False)}
             if not direct_types:
                 # compute direct types by finding the best matching type from lex score
                 lex_scores = _compute_type_lexicalisation_scores(graph, node)
@@ -72,13 +84,13 @@ def resolve_disjointnesses(graph, use_listpage_resources: bool):
                 graph._add_edges({(p, node) for p in new_parents})
 
 
-def _find_dbpedia_parents(graph, use_listpage_resources: bool, node: str) -> dict:
+def _find_dbpedia_parents(graph, node: str, use_listpage_resources: bool, direct_resources_only: bool) -> dict:
     """Retrieve DBpedia types that can be used as parents for `node` based on axioms discovered for it.
 
     If `use_listpage_resources` is True, the resources that are extracted from list pages are also taken into account.
     """
     type_lexicalisation_scores = defaultdict(lambda: 0.1, _compute_type_lexicalisation_scores(graph, node))
-    type_resource_scores = defaultdict(lambda: 0.0, _compute_type_resource_scores(graph, node, use_listpage_resources))
+    type_resource_scores = defaultdict(lambda: 0.0, _compute_type_resource_scores(graph, node, use_listpage_resources, direct_resources_only))
 
     overall_scores = {t: type_lexicalisation_scores[t] * type_resource_scores[t] for t in type_resource_scores if dbp_util.is_dbp_type(t)}
     max_score = max(overall_scores.values(), default=0)
@@ -101,10 +113,13 @@ def _compute_type_lexicalisation_scores(graph, node: str) -> dict:
     return cat_axioms._get_type_surface_scores(head_lemmas)
 
 
-def _compute_type_resource_scores(graph, node: str, use_listpage_resources: bool) -> dict:
+def _compute_type_resource_scores(graph, node: str, use_listpage_resources: bool, direct_resources_only: bool) -> dict:
     node_resources = graph.get_direct_dbpedia_resources(node, use_listpage_resources)
-    if len([r for r in node_resources if dbp_store.get_types(r)]) < 5:
-        # add resources from children, if we have too few resources to make a decision
+    if direct_resources_only:
+        if len([r for r in node_resources if dbp_store.get_types(r)]) < 5:
+            # do not return any type results if number of resources is too low for category
+            return {}
+    else:
         node_resources.update({r for sn in graph.descendants(node) for r in graph.get_direct_dbpedia_resources(sn, use_listpage_resources)})
     node_resources = node_resources.intersection(dbp_store.get_resources())
     type_counts = defaultdict(int)
@@ -119,12 +134,14 @@ def _find_coherent_type_sets(dbp_types: dict) -> list:
     coherent_sets = []
     disjoint_type_mapping = {t: set(dbp_types).intersection(dbp_heur.get_disjoint_types(t)) for t in dbp_types}
     for t, score in dbp_types.items():
+        # add a type t to all coherent sets that do not contain disjoint types of t
         disjoint_types = disjoint_type_mapping[t]
         found_set = False
         for cs in coherent_sets:
             if not disjoint_types.intersection(set(cs)):
                 cs[t] = score
                 found_set = True
+        # or create a new coherent set if t can not be added to any existing set
         if not found_set:
             coherent_sets.append({t: score})
 
