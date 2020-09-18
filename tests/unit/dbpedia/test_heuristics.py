@@ -17,6 +17,14 @@ def test_disjoint_types():
     _assert_not_disjoint('Artist', 'Astronaut')
     _assert_not_disjoint('Artist', 'Coach')
     _assert_not_disjoint('Artist', 'Monarch')
+    # Athlete
+    _assert_not_disjoint('Athlete', 'Coach')
+    _assert_not_disjoint('Athlete', 'Comedian')
+    _assert_not_disjoint('Athlete', 'Chancellor')
+    _assert_not_disjoint('Athlete', 'Medician')
+    _assert_not_disjoint('Athlete', 'Philosopher')
+    _assert_not_disjoint('Athlete', 'PlayboyPlaymate')
+    _assert_not_disjoint('Athlete', 'Scientist')
     # Place
     _assert_disjoint('Place', 'Award')
     _assert_disjoint('Place', 'EthnicGroup')
