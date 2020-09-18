@@ -5,10 +5,10 @@ import impl.util.rdf as rdf_util
 from . import util as dbp_util
 import impl.category.util as cat_util
 import impl.list.util as list_util
+import impl.util.nlp as nlp_util
 from collections import defaultdict
 import networkx as nx
 from typing import Optional
-import inflection
 
 # TODO: Replace caching with functools LRU cache
 # DBpedia RESOURCES
@@ -326,7 +326,7 @@ def get_types_by_name(name: str) -> set:
             __TYPE_LABELS__[get_label(t).lower().split()[-1]].add(t)
 
     name = name.lower()
-    return __TYPE_LABELS__[name] if __TYPE_LABELS__[name] else __TYPE_LABELS__[inflection.singularize(name)]
+    return __TYPE_LABELS__[name] if __TYPE_LABELS__[name] else __TYPE_LABELS__[nlp_util.singularize_word(name)]
 
 
 def get_independent_types(dbp_types: set) -> set:
@@ -458,7 +458,7 @@ def get_type_lexicalisations(lemma: str) -> dict:
     if '__TYPE_LEXICALISATIONS__' not in globals():
         __TYPE_LEXICALISATIONS__ = defaultdict(dict, util.load_cache('dbpedia_type_lexicalisations'))
 
-    return __TYPE_LEXICALISATIONS__[lemma] if __TYPE_LEXICALISATIONS__[lemma] else __TYPE_LEXICALISATIONS__[inflection.singularize(lemma)]
+    return __TYPE_LEXICALISATIONS__[lemma] if __TYPE_LEXICALISATIONS__[lemma] else __TYPE_LEXICALISATIONS__[nlp_util.singularize_word(lemma)]
 
 
 def _get_type_graph() -> nx.DiGraph:

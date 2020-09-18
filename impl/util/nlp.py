@@ -71,11 +71,11 @@ def get_head_lemmas(doc: Doc) -> set:
     doc = tag_lexical_head(doc)
     head_lemmas = set()
     for idx, w in enumerate(doc):
-        if w.ent_type_ != 'LH' or w.tag_ != 'NNS':
+        if w.ent_type_ != 'LH' or w.tag_ not in ['NNS', 'NNP']:
             continue
         if idx + 1 < len(doc) and doc[idx+1].ent_type_ == 'LH' and not doc[idx+1].text in ['and', 'or', ',']:
             continue
-        head_lemmas.add(w.lemma_)
+        head_lemmas.add(w.lemma_ if w.tag_ == 'NNS' else singularize_word(w.text))
     return head_lemmas
 
 
@@ -95,7 +95,10 @@ def tag_lexical_head(doc: Doc) -> Doc:
     for chunk in doc.noun_chunks:
         # find the lexical head by looking for plural nouns (and ignore things like parentheses, conjunctions, ..)
         elem = chunk.root
-        if elem.text.istitle() or elem.tag_ not in ['NN', 'NNS']:
+        elem_ne = elem.tag_
+        if elem_ne == 'NNP' and parse(singularize_word(elem.text))[0].tag_ == 'NN':
+            elem_ne = 'NNS'  # fix plural nouns that are parsed incorrectly as proper nouns
+        if elem.text.istitle() or elem_ne not in ['NN', 'NNS']:
             continue
         if len(doc) > elem.i + 1 and doc[elem.i+1].text[0] in ["'", "´", "`"]:
             continue
@@ -113,13 +116,22 @@ def tag_lexical_head(doc: Doc) -> Doc:
 def singularize_phrase(doc: Doc) -> str:
     """Return the singular form of the phrase by looking for head nouns and converting them to the singular form."""
     doc = tag_lexical_head(doc)
-    result = doc.text
+    result = doc.text.strip()
+    if len(doc) == 1:
+        return singularize_word(result)
     for idx, w in enumerate(doc):
         if w.ent_type_ == 'LH' and (len(doc) <= idx+1 or doc[idx+1].text in ['and', 'or', ','] or doc[idx+1].ent_type_ != 'LH'):
-            result = result.replace(w.text, inflection.singularize(w.text))
+            result = result.replace(w.text, singularize_word(w.text))
             if len(doc) > idx+1 and doc[idx+1].text == 'and':
                 result = result.replace('and', 'or')
     return result
+
+
+def singularize_word(word: str) -> str:
+    special_cases = {'caves': 'cave'}
+    if word.lower() in special_cases:
+        return special_cases[word.lower()].title() if word.istitle() else special_cases[word.lower()]
+    return inflection.singularize(word)
 
 
 def parse(text: str, disable_normalization=False, skip_cache=False) -> Doc:
