@@ -159,10 +159,10 @@ def _get_resource_surface_scores(text):
     return resource_surface_scores
 
 
-def _get_type_surface_scores(words):
+def _get_type_surface_scores(words, lemmatize=True):
     """Return type lexicalisation scores for a given set of `words`."""
     lexicalisation_scores = defaultdict(lambda: 0)
-    word_lemmas = [nlp_util.parse(w)[0].lemma_ for w in words]
+    word_lemmas = [nlp_util.parse(w)[0].lemma_ for w in words] if lemmatize else words
     for lemma in word_lemmas:
         for t, score in dbp_store.get_type_lexicalisations(lemma).items():
             lexicalisation_scores[t] += score

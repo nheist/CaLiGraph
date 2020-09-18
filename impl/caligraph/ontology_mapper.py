@@ -11,9 +11,12 @@ import util
 
 def find_conflicting_edges(graph, use_listpage_resources: bool) -> set:
     conflicting_edges = set()
+    head_lemmas = {node: nlp_util.get_head_lemmas(nlp_util.parse(graph.get_name(node) or '')) for node in graph.nodes}
     direct_mappings = {node: _find_dbpedia_parents(graph, node, use_listpage_resources, True) for node in graph.nodes}
     for node in graph.traverse_nodes_topdown():
         for child in graph.children(node):
+            if head_lemmas[node] == head_lemmas[child]:
+                continue
             parent_disjoint_types = {dt for t in direct_mappings[node] for dt in dbp_heur.get_disjoint_types(t)}
             child_types = set(direct_mappings[child])
             if child_types.intersection(parent_disjoint_types):
@@ -110,16 +113,12 @@ def _find_dbpedia_parents(graph, node: str, use_listpage_resources: bool, direct
 def _compute_type_lexicalisation_scores(graph, node: str) -> dict:
     name = graph.get_name(node) or ''
     head_lemmas = nlp_util.get_head_lemmas(nlp_util.parse(name))
-    return cat_axioms._get_type_surface_scores(head_lemmas)
+    return cat_axioms._get_type_surface_scores(head_lemmas, lemmatize=False)
 
 
 def _compute_type_resource_scores(graph, node: str, use_listpage_resources: bool, direct_resources_only: bool) -> dict:
     node_resources = graph.get_direct_dbpedia_resources(node, use_listpage_resources)
-    if direct_resources_only:
-        if len([r for r in node_resources if dbp_store.get_types(r)]) < 5:
-            # do not return any type results if number of resources is too low for category
-            return {}
-    else:
+    if not direct_resources_only or len([r for r in node_resources if dbp_store.get_types(r)]) < 5:
         node_resources.update({r for sn in graph.descendants(node) for r in graph.get_direct_dbpedia_resources(sn, use_listpage_resources)})
     node_resources = node_resources.intersection(dbp_store.get_resources())
     type_counts = defaultdict(int)
@@ -154,10 +153,15 @@ def _find_coherent_type_sets(dbp_types: dict) -> list:
                     cs[t] = score
 
         # remove types that exist in all sets, as they are not disjoint with anything
+        # finally, add them as individual set in case that they have the highest score
+        all_set_types = {}
         for t in dbp_types:
             if all(t in cs for cs in coherent_sets):
                 for cs in coherent_sets:
+                    all_set_types[t] = cs[t]
                     del cs[t]
+        coherent_sets.append(all_set_types)
+        coherent_sets = [cs for cs in coherent_sets if cs]  # remove possibly empty coherent sets
 
     return coherent_sets
 
