@@ -38,7 +38,12 @@ def _as_triple(sub: str, pred: str, obj: str, obj_type) -> str:
 
 
 def _resource_to_string(resource: str) -> str:
-    prefix = resource[:resource.rfind('/resource/') + len('/resource/')]
+    if '/ontology/' in resource:
+        prefix = resource[:resource.rfind('/ontology/') + len('/ontology/')]
+    elif '/resource/' in resource:
+        prefix = resource[:resource.rfind('/resource/') + len('/resource/')]
+    else:
+        prefix = resource[:resource.rfind('/') + 1]
     res_name = resource[len(prefix):]
     return f'<{prefix}{_encode_resource(res_name)}>'
 
