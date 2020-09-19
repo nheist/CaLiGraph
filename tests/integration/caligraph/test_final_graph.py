@@ -32,19 +32,19 @@ def test_class_hierarchy():
 @check_func
 def _is_parent_of(parent: str, child: str):
     G = cali_base.get_axiom_graph()
-    assert child in G.children(parent)
+    assert child in G.children(parent), f'{parent} should be parent of {child}'
 
 
 @check_func
 def _is_ancestor_of(ancestor: str, child: str):
     G = cali_base.get_axiom_graph()
-    assert ancestor in G.ancestors(child)
+    assert ancestor in G.ancestors(child), f'{ancestor} should be ancestor of {child}'
 
 
 @check_func
 def _is_no_parent_of(parent: str, child: str):
     G = cali_base.get_axiom_graph()
-    assert child not in G.children(parent)
+    assert child not in G.children(parent), f'{parent} should not be parent of {child}'
 
 
 def test_node_parts():
@@ -90,22 +90,24 @@ def test_by_phrase_removal():
 @check_func
 def _is_in_graph(node: str):
     G = cali_base.get_axiom_graph()
-    assert node in G.nodes
+    assert node in G.nodes, f'{node} should be in the graph'
 
 
 @check_func
 def _is_not_in_graph(node: str):
     G = cali_base.get_axiom_graph()
-    assert node not in G.nodes
+    assert node not in G.nodes, f'{node} should not be in the graph'
 
 
 @check_func
 def _is_part_of(part: str, node: str):
     G = cali_base.get_axiom_graph()
-    assert part in G.get_parts(node)
+    assert node in G.nodes
+    assert part in G.get_parts(node), f'{part} should be part of {node}'
 
 
 @check_func
 def _is_no_part_of(part: str, node: str):
     G = cali_base.get_axiom_graph()
-    assert part not in G.get_parts(node)
+    if node in G.nodes:
+        assert part not in G.get_parts(node), f'{part} should not be part of {node}'
