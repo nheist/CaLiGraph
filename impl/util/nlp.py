@@ -51,7 +51,7 @@ def remove_by_phrase(doc: Doc, return_doc=True):
     if len(by_indices) == 0:
         return doc if return_doc else doc.text
     # find postfix to keep information after the by phrase (e.g. 'People by city in Honduras')
-    if ' in ' in doc[by_indices[-1]:]:
+    if ' in ' in doc[by_indices[-1]:].text:
         in_index = [w.i for w in doc[by_indices[-1]:] if w.text == 'in'][0]
         postfix = doc[in_index:].text
     else:
