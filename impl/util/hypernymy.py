@@ -54,9 +54,10 @@ def get_synonyms(word: str) -> set:
     return {lm.name() for syn in wordnet.synsets(word) for lm in syn.lemmas()}
 
 
-def get_variations(word: str) -> set:
-    """Returns all synonyms of a word having an edit-distance of 1."""
-    return {s for s in get_synonyms(word) if levenshtein(s, word) == 1}
+def get_variations(text: str) -> set:
+    """Returns all synonyms of a text having an edit-distance of 1."""
+    text = text.replace(' ', '_')
+    return {s.replace('_', ' ') for s in get_synonyms(text) if levenshtein(s, text) == 1}
 
 
 def compute_hypernyms(category_graph) -> dict:

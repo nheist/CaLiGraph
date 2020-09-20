@@ -3,8 +3,8 @@ max_cpus: 16
 
 # -- CALIGRAPH CONFIGURATION --
 caligraph:
-  version: '1.1'
-  creation_date: '2020-06-24'
+  version: '1.1.0'
+  creation_date: '2020-09-20'
   namespace:
     base: 'http://caligraph.org/'
     ontology: 'http://caligraph.org/ontology/'
@@ -25,7 +25,7 @@ cat2ax:
 logging:
   level: 'DEBUG'
   to_file: True
-  filename: 'caligraph_v1_1'
+  filename: 'caligraph_v1_1_0'
 
 # -- ERROR-MAILER CONFIGURATION --
 # -> add information about your mail accounts here and enable the `success` or `error` switches
@@ -133,40 +133,40 @@ results:
 cache:
   catgraph_conceptual:
     filename: 'catgraph-conceptual'
-    version: 1
+    version: 1_1
   catgraph_wikitaxonomy:
     filename: 'catgraph-wikitaxonomy'
-    version: 1
+    version: 1_1
   catgraph_cyclefree:
     filename: 'catgraph-cyclefree'
-    version: 1
+    version: 1_1
   catgraph_merged:
     filename: 'catgraph-merged'
-    version: 2
+    version: 1_1
   listgraph_base:
     filename: 'listgraph-base'
-    version: 1
+    version: 1_1
   listgraph_wikitaxonomy:
     filename: 'listgraph-wikitaxonomy'
-    version: 1
+    version: 1_1
   listgraph_cyclefree:
     filename: 'listgraph-cyclefree'
-    version: 1
+    version: 1_1
   listgraph_merged:
     filename: 'listgraph-merged'
-    version: 2
+    version: 1_1
   caligraph_base:
     filename: 'caligraph-base'
-    version: 2
+    version: 1_1
   caligraph_merged_ontology:
     filename: 'caligraph-merged-ontology'
-    version: 2
+    version: 1_1
   caligraph_filtered:
     filename: 'caligraph-filtered'
-    version: 2  # SIMPLE: 2 // ROBUST: 3
+    version: 1_1  # SIMPLE: 2 // ROBUST: 3
   caligraph_axiomatized:
     filename: 'caligraph-axiomatized'
-    version: 2  # SIMPLE: 2 // ROBUST: 3
+    version: 1_1  # SIMPLE: 2 // ROBUST: 3
   spacy_docs:
     filename: 'spacy-docs'
     version: 1
@@ -234,10 +234,10 @@ cache:
     version: 1
   dbpedia_category_sets:
     filename: 'dbpedia-category-sets'
-    version: 1
+    version: 1_1
   dbpedia_categories_conceptual:
     filename: 'dbpedia-category-conceptual'
-    version: 1
+    version: 1_1
   dbpedia_heuristic_domains:
     filename: 'dbpedia-heuristic-domains'
     version: 1
@@ -249,33 +249,33 @@ cache:
     version: 1
   dbpedia_listpages:
     filename: 'dbpedia-listpages'
-    version: 1
+    version: 1_1
   dbpedia_list_equivalents:
     filename: 'dbpedia-list-equivalents'
-    version: 2
+    version: 1_1
   dbpedia_list_parents:
     filename: 'dbpedia-list-parents'
-    version: 2
+    version: 1_1
   dbpedia_listpage_parsed:
     filename: 'dbpedia-listpage-parsed'
-    version: 2
+    version: 1_1
   dbpedia_listpage_enum_features:
     filename: 'dbpedia-listpage-enum-features'
-    version: 2  # SIMPLE: 2 // ROBUST: 3
+    version: 1_1  # SIMPLE: 2 // ROBUST: 3
     store_as_csv: True
   dbpedia_listpage_table_features:
     filename: 'dbpedia-listpage-table-features'
-    version: 2  # SIMPLE: 2 // ROBUST: 3
+    version: 1_1  # SIMPLE: 2 // ROBUST: 3
     store_as_csv: True
   dbpedia_listpage_entities:
     filename: 'dbpedia-listpage-entities'
-    version: 2  # SIMPLE: 2 // ROBUST: 3
+    version: 1_1  # SIMPLE: 2 // ROBUST: 3
   wikitaxonomy_hypernyms:
     filename: 'wikitaxonomy-hypernyms'
-    version: 1
+    version: 1_1
   cat2ax_axioms:
     filename: 'cat2ax-axioms'
-    version: 1
+    version: 1_1
   spacy_listpage_ne-tagging_GS:
     filename: 'spacy_listpage_ne-tagging_GS'
     version: 1

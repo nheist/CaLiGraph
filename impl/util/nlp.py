@@ -46,16 +46,24 @@ def _regularize_whitespaces(text: str) -> str:
 
 def remove_by_phrase(doc: Doc, return_doc=True):
     """Remove the 'by'-phrase at the end of a category or listpage, e.g. 'People by country' -> 'People'"""
+    # locate all by-phrases
     by_indices = [w.i for w in doc if w.text == 'by']
     if len(by_indices) == 0:
         return doc if return_doc else doc.text
+    # find postfix to keep information after the by phrase (e.g. 'People by city in Honduras')
+    if ' in ' in doc[by_indices[-1]:]:
+        in_index = [w.i for w in doc[by_indices[-1]:] if w.text == 'in'][0]
+        postfix = doc[in_index:].text
+    else:
+        postfix = ''
+    # find valid by-phrases
     for idx, by_index in enumerate(by_indices):
         if by_index == 0 or by_index == len(doc) - 1:
             return doc if return_doc else doc.text
         current_doc = doc if len(by_indices) == idx+1 else doc[:by_indices[idx+1]]
         word_before_by = current_doc[by_index - 1]
         word_after_by = current_doc[by_index + 1]
-        if word_after_by.text.istitle() and not word_after_by.text.isupper():
+        if word_after_by.text.istitle() and not word_after_by.text.isupper() and not word_after_by.text.endswith('.'):
             continue
         if any(w.tag_ == 'NNS' for w in doc[by_index+1:]):
             continue
@@ -66,7 +74,7 @@ def remove_by_phrase(doc: Doc, return_doc=True):
         if doc[by_index - 1].text == '(':  # remove possible parenthesis before by phrase
             by_index -= 1
 
-        result = doc[:by_index].text.strip()
+        result = doc[:by_index].text.strip() + ' ' + postfix
         return parse(result, disable_normalization=True, skip_cache=True) if return_doc else result
 
     return doc if return_doc else doc.text

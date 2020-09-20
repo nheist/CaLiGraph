@@ -11,22 +11,23 @@ def test_classes():
 
 def test_class_hierarchy():
     _is_parent_of(f'{CLGO}Air_force', f'{CLGO}Disbanded_air_force')
-    _is_no_parent_of(f'{CLGO}Air_force', f'{CLGO}Air_force_personnel')  # TODO: Fixed?
+    _is_no_parent_of(f'{CLGO}Air_force', f'{CLGO}Air_force_personnel')
 
     _is_parent_of(f'{CLGO}Bodybuilder', f'{CLGO}Fitness_or_figure_competitor')  # TODO: Fix!
-    _is_no_parent_of(f'{CLGO}Fitness_or_figure_competition', f'{CLGO}Fitness_or_figure_competitor')  # TODO: Fixed?
+    _is_no_parent_of(f'{CLGO}Fitness_or_figure_competition', f'{CLGO}Fitness_or_figure_competitor')  # TODO: Fix!
 
     _is_parent_of(f'{CLGO}Bodybuilding_competition', f'{CLGO}Female_bodybuilding_competition')  # TODO: Fix!
-    _is_no_parent_of(f'{CLGO}Person', f'{CLGO}Female_bodybuilding_competition')  # TODO: Fixed?
+    _is_no_parent_of(f'{CLGO}Person', f'{CLGO}Female_bodybuilding_competition')  # TODO: Fix!
 
-    _is_parent_of(f'{CLGO}University_or_college_person', f'{CLGO}Alumni')
-    _is_no_parent_of(f'{CLGO}Honduran_person', f'{CLGO}Alumni')  # TODO: Fix!
-    _is_no_parent_of(f'{CLGO}Papua_New_Guinean_person', f'{CLGO}Alumni')  # TODO: Fix!
+    _is_parent_of(f'{CLGO}University_and_college_person', f'{CLGO}Alumni')
+    _is_no_parent_of(f'{CLGO}Honduran_person', f'{CLGO}Alumni')  # TODO: Fixed?
+    _is_no_parent_of(f'{CLGO}Papua_New_Guinean_person', f'{CLGO}Alumni')  # TODO: Fixed?
 
     _is_no_parent_of(f'{CLGO}Japanese_sportsperson', f'{CLGO}Association_football_person')  # TODO: Fix!
     _is_parent_of(f'{CLGO}Football_person', f'{CLGO}Association_football_person')
 
     _is_ancestor_of(f'{CLGO}Person', f'{CLGO}Sportswoman')  # TODO: Fixed?
+    _is_parent_of(f'{CLGO}Woman', f'{CLGO}Sportswoman')  # TODO: Fix!
 
 
 @check_func
@@ -52,26 +53,29 @@ def test_node_parts():
 
 
 def test_singularization():
-    _is_part_of(f'{DBR}Category:Engineering_societies_by_country', f'{CLGO}Engineering_society')  # TODO: Fixed?
+    _is_part_of(f'{DBR}Category:Engineering_societies_by_country', f'{CLGO}Engineering_society')
     _is_part_of(f'{DBR}List_of_engineering_societies', f'{CLGO}Engineering_society')
 
-    _is_part_of(f'{DBR}List_of_sportswomen', f'{CLGO}Sportswoman')  # TODO: Fixed?
+    _is_part_of(f'{DBR}List_of_sportswomen', f'{CLGO}Sportswoman')
 
-    _is_no_part_of(f'{DBR}List_of_caves', f'{CLGO}Cafe')  # TODO: Fixed?
+    _is_no_part_of(f'{DBR}List_of_caves', f'{CLGO}Cafe')
 
 
 def test_by_phrase_removal():
+    # TODO: keep part after "in" ?
     _is_part_of(f'{DBR}List_of_countries_by_national_capital_and_largest_cities', f'{CLGO}Country')  # TODO: Fix!
     _is_part_of(f'{DBR}List_of_countries_by_vehicles_per_capita', f'{CLGO}Country')  # TODO: Fix!
     _is_part_of(f'{DBR}List_of_countries_by_Nobel_laureates_per_capita', f'{CLGO}Country')  # TODO: Fix!
     _is_part_of(f'{DBR}List_of_countries_by_number_of_households', f'{CLGO}Country')  # TODO: Fix!
-    _is_part_of(f'{DBR}List_of_countries_by_health_expenditure_covered_by_government', f'{CLGO}Country')  # TODO: Fixed?
+    _is_part_of(f'{DBR}List_of_countries_by_health_expenditure_covered_by_government', f'{CLGO}Country')
     _is_part_of(f'{DBR}Category:Lists_of_countries_by_per_capita_values', f'{CLGO}Country')  # TODO: Fix!
-    _is_part_of(f'{DBR}Category:Lists_of_countries_by_GDP_per_capita', f'{CLGO}Country')  # TODO: Fixed?
-    _is_part_of(f'{DBR}Category:Vehicles_by_brand_controlled_by_Volkswagen_Group', f'{CLGO}Vehicle')  # TODO: Fixed?
-    _is_part_of(f'{DBR}Category:African_films_by_genre_by_country', f'{CLGO}African_film')  # TODO: Fixed?
+    _is_part_of(f'{DBR}Category:Lists_of_countries_by_GDP_per_capita', f'{CLGO}Country')
+    _is_part_of(f'{DBR}Category:Vehicles_by_brand_controlled_by_Volkswagen_Group', f'{CLGO}Vehicle')
+    _is_part_of(f'{DBR}Category:African_films_by_genre_by_country', f'{CLGO}African_film')
+    _is_part_of(f'{DBR}Category:Alumni_by_university_or_college_in_Honduras', f'{CLGO}Alumni_in_Honduras')  # TODO: Fixed?
 
     _is_in_graph(f'{CLGO}Work_by_Roy_Lichtenstein')
+    _is_in_graph(f'{CLGO}Work_by_L._J._Smith')  # TODO: Fixed?
     _is_in_graph(f'{CLGO}Film_produced_by_Harry_Saltzman')
     _is_in_graph(f'{CLGO}20th-century_execution_by_Sweden')
     _is_in_graph(f'{CLGO}United_States_Article_I_federal_judge_appointed_by_Jimmy_Carter')
