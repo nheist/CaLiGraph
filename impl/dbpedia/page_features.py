@@ -212,6 +212,15 @@ def make_table_entity_features(page: tuple) -> list:
         tables = section_data['tables']
         for table_idx, table in enumerate(tables):
             table_header = table['header']
+            table_header_features = []
+            for col_idx, header in enumerate(table_header):
+                column_name_lemmas = {w.lemma_ for w in list_nlp.parse(str(header['text']))}
+                table_header_features.append((
+                    _compute_column_page_similarity(operator.eq, page_lemmas, column_name_lemmas),
+                    _compute_column_page_similarity(hyper_util.is_synonym, page_lemmas, column_name_lemmas),
+                    _compute_column_page_similarity(_is_hyper, page_lemmas, column_name_lemmas)
+                ))
+
             table_data = table['data']
             for row_idx, row in enumerate(table_data):
                 entity_line_index = 0
@@ -220,13 +229,11 @@ def make_table_entity_features(page: tuple) -> list:
                 page_table_row_entities.append(sum([len(col['entities']) for col in row]))
 
                 for column_idx, column_data in enumerate(row):
-                    column_name = table_header[column_idx]['text'] if len(table_header) > column_idx else ''
-                    column_name_lemmas = {w.lemma_ for w in list_nlp.parse(str(column_name))}
+                    column_name = table_header[column_idx]['text'] if column_idx < len(table_header) else ''
+                    column_page_similar, column_page_synonym, column_page_hypernym = table_header_features[column_idx] if column_idx < len(table_header_features) else (0, 0, 0)
+
                     column_text = column_data['text']
                     column_doc = list_nlp.parse(column_text)
-                    column_page_similar = _compute_column_page_similarity(operator.eq, page_lemmas, column_name_lemmas)
-                    column_page_synonym = _compute_column_page_similarity(hyper_util.is_synonym, page_lemmas, column_name_lemmas)
-                    column_page_hypernym = _compute_column_page_similarity(_is_hyper, page_lemmas, column_name_lemmas)
 
                     page_table_column_words.append(len(column_text.split(' ')))
                     page_table_column_chars.append(len(column_text))
