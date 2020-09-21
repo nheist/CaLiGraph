@@ -2,6 +2,7 @@
 
 import util
 import impl.dbpedia.util as dbp_util
+import impl.util.rdf as rdf_util
 import re
 
 
@@ -37,8 +38,7 @@ def is_clg_resource(item: str) -> bool:
 
 
 def name2clg_resource(name: str) -> str:
-    name = name.strip().replace(' ', '_')
-    return NAMESPACE_CLG_RESOURCE + name
+    return rdf_util.name2uri(str(name).strip(), NAMESPACE_CLG_RESOURCE)
 
 
 def clg_resource2name(clg_resource: str) -> str:

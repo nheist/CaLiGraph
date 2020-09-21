@@ -45,7 +45,7 @@ def uri2name(uri: str, prefix: str) -> str:
 
 
 def name2uri(name: str, prefix: str) -> str:
-    return prefix + name.replace(' ', '_')
+    return prefix + str(name).replace(' ', '_')
 
 
 def parse_triples_from_file(filepath: str) -> Iterator[Triple]:
