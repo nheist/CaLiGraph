@@ -53,7 +53,7 @@ def remove_by_phrase(doc: Doc, return_doc=True):
     # find postfix to keep information after the by phrase (e.g. 'People by city in Honduras')
     if ' in ' in doc[by_indices[-1]:].text:
         in_index = [w.i for w in doc[by_indices[-1]:] if w.text == 'in'][0]
-        postfix = doc[in_index:].text
+        postfix = ' ' + doc[in_index:].text
     else:
         postfix = ''
     # find valid by-phrases
@@ -63,7 +63,7 @@ def remove_by_phrase(doc: Doc, return_doc=True):
         current_doc = doc if len(by_indices) == idx+1 else doc[:by_indices[idx+1]]
         word_before_by = current_doc[by_index - 1]
         word_after_by = current_doc[by_index + 1]
-        if word_after_by.text.istitle() and not word_after_by.text.isupper() and not word_after_by.text.endswith('.'):
+        if word_after_by.text.istitle() and (word_after_by.text.endswith('.') or not word_after_by.text.isupper()):
             continue
         if any(w.tag_ == 'NNS' for w in doc[by_index+1:]):
             continue
@@ -74,7 +74,7 @@ def remove_by_phrase(doc: Doc, return_doc=True):
         if doc[by_index - 1].text == '(':  # remove possible parenthesis before by phrase
             by_index -= 1
 
-        result = doc[:by_index].text.strip() + ' ' + postfix
+        result = doc[:by_index].text.strip() + postfix
         return parse(result, disable_normalization=True, skip_cache=True) if return_doc else result
 
     return doc if return_doc else doc.text

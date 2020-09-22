@@ -16,17 +16,17 @@ def test_class_hierarchy():
     _is_parent_of(f'{CLGO}Bodybuilder', f'{CLGO}Fitness_or_figure_competitor')  # TODO: Fix!
     _is_no_parent_of(f'{CLGO}Fitness_or_figure_competition', f'{CLGO}Fitness_or_figure_competitor')  # TODO: Fix!
 
-    _is_parent_of(f'{CLGO}Bodybuilding_competition', f'{CLGO}Female_bodybuilding_competition')  # TODO: Fix!
-    _is_no_parent_of(f'{CLGO}Person', f'{CLGO}Female_bodybuilding_competition')  # TODO: Fix!
+    _is_parent_of(f'{CLGO}Bodybuilding_competition', f'{CLGO}Female_bodybuilding_competition')
+    _is_no_parent_of(f'{CLGO}Person', f'{CLGO}Female_bodybuilding_competition')
 
-    _is_parent_of(f'{CLGO}University_and_college_person', f'{CLGO}Alumni')
-    _is_no_parent_of(f'{CLGO}Honduran_person', f'{CLGO}Alumni')  # TODO: Fixed?
-    _is_no_parent_of(f'{CLGO}Papua_New_Guinean_person', f'{CLGO}Alumni')  # TODO: Fixed?
+    _is_parent_of(f'{CLGO}University_and_college_person', f'{CLGO}Alumni')  # TODO: Fix!
+    _is_no_parent_of(f'{CLGO}Honduran_person', f'{CLGO}Alumni')
+    _is_no_parent_of(f'{CLGO}Papua_New_Guinean_person', f'{CLGO}Alumni')
 
-    _is_no_parent_of(f'{CLGO}Japanese_sportsperson', f'{CLGO}Association_football_person')  # TODO: Fix!
+    _is_no_parent_of(f'{CLGO}Japanese_sportsperson', f'{CLGO}Association_football_person')
     _is_parent_of(f'{CLGO}Football_person', f'{CLGO}Association_football_person')
 
-    _is_ancestor_of(f'{CLGO}Person', f'{CLGO}Sportswoman')  # TODO: Fixed?
+    _is_ancestor_of(f'{CLGO}Person', f'{CLGO}Sportswoman')  # TODO: Fix!
     _is_parent_of(f'{CLGO}Woman', f'{CLGO}Sportswoman')  # TODO: Fix!
 
 
@@ -49,7 +49,7 @@ def _is_no_parent_of(parent: str, child: str):
 
 
 def test_node_parts():
-    _is_part_of(f'{DBO}Organisation', f'{CLGO}Organization')  # TODO: Fixed?
+    _is_part_of(f'{DBO}Organisation', f'{CLGO}Organization')  # TODO: Fixed? XXX
 
 
 def test_singularization():
@@ -62,7 +62,6 @@ def test_singularization():
 
 
 def test_by_phrase_removal():
-    # TODO: keep part after "in" ?
     _is_part_of(f'{DBR}List_of_countries_by_national_capital_and_largest_cities', f'{CLGO}Country')  # TODO: Fix!
     _is_part_of(f'{DBR}List_of_countries_by_vehicles_per_capita', f'{CLGO}Country')  # TODO: Fix!
     _is_part_of(f'{DBR}List_of_countries_by_Nobel_laureates_per_capita', f'{CLGO}Country')  # TODO: Fix!
@@ -72,10 +71,10 @@ def test_by_phrase_removal():
     _is_part_of(f'{DBR}Category:Lists_of_countries_by_GDP_per_capita', f'{CLGO}Country')
     _is_part_of(f'{DBR}Category:Vehicles_by_brand_controlled_by_Volkswagen_Group', f'{CLGO}Vehicle')
     _is_part_of(f'{DBR}Category:African_films_by_genre_by_country', f'{CLGO}African_film')
-    _is_part_of(f'{DBR}Category:Alumni_by_university_or_college_in_Honduras', f'{CLGO}Alumni_in_Honduras')  # TODO: Fixed?
+    _is_part_of(f'{DBR}Category:Alumni_by_university_or_college_in_Honduras', f'{CLGO}Alumni_in_Honduras')
 
     _is_in_graph(f'{CLGO}Work_by_Roy_Lichtenstein')
-    _is_in_graph(f'{CLGO}Work_by_L._J._Smith')  # TODO: Fixed?
+    _is_in_graph(f'{CLGO}Work_by_L._J._Smith')  # TODO: Fixed? XXX
     _is_in_graph(f'{CLGO}Film_produced_by_Harry_Saltzman')
     _is_in_graph(f'{CLGO}20th-century_execution_by_Sweden')
     _is_in_graph(f'{CLGO}United_States_Article_I_federal_judge_appointed_by_Jimmy_Carter')
