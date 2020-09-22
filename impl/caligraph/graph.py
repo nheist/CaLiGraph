@@ -374,7 +374,7 @@ class CaLiGraph(HierarchyGraph):
         if not self.has_node(node_id):
             node_id = self._convert_to_clg_type(lst_name, disable_normalization=True)
         if not self.has_node(node_id):
-            # If node_id is not in the graph, then we try synonyms with edit-distance of 1
+            # If node_id is not in the graph, then we try synonyms with edit-distance of 2
             # e.g. to cover cases where the type is named 'Organisation' and the category 'Organization'
             for name_variation in hypernymy_util.get_variations(lst_name):
                 node_id_alternative = cali_util.name2clg_type(name_variation)

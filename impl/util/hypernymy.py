@@ -57,9 +57,9 @@ def get_synonyms(word: str) -> set:
 
 
 def get_variations(text: str) -> set:
-    """Returns all synonyms of a text having an edit-distance of 1."""
+    """Returns all synonyms of a text having an edit-distance of 2 or less."""
     text = text.replace(' ', '_')
-    return {s.replace('_', ' ') for s in get_synonyms(text) if levenshtein(s, text) == 1}
+    return {s.replace('_', ' ') for s in get_synonyms(text) if levenshtein(s, text) <= 2}
 
 
 def compute_hypernyms(category_graph) -> dict:

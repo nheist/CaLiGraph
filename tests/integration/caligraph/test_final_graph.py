@@ -49,7 +49,7 @@ def _is_no_parent_of(parent: str, child: str):
 
 
 def test_node_parts():
-    _is_part_of(f'{DBO}Organisation', f'{CLGO}Organization')  # TODO: Fixed? XXX
+    _is_part_of(f'{DBO}Organisation', f'{CLGO}Organization')  # TODO: Fixed?
 
 
 def test_singularization():
