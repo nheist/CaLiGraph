@@ -74,7 +74,7 @@ def test_by_phrase_removal():
     _is_part_of(f'{DBR}Category:Alumni_by_university_or_college_in_Honduras', f'{CLGO}Alumni_in_Honduras')
 
     _is_in_graph(f'{CLGO}Work_by_Roy_Lichtenstein')
-    _is_in_graph(f'{CLGO}Work_by_L._J._Smith')  # TODO: Fixed? XXX
+    _is_in_graph(f'{CLGO}Work_by_L._J._Smith')  # TODO: Fixed?
     _is_in_graph(f'{CLGO}Film_produced_by_Harry_Saltzman')
     _is_in_graph(f'{CLGO}20th-century_execution_by_Sweden')
     _is_in_graph(f'{CLGO}United_States_Article_I_federal_judge_appointed_by_Jimmy_Carter')

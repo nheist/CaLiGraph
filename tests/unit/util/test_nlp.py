@@ -24,7 +24,7 @@ def test_remove_by_phrase():
 
 @check_func
 def _without_by_phrase(with_by_phrase: str, without_by_phrase: str):
-    assert nlp_util.remove_by_phrase(nlp_util.parse(with_by_phrase, skip_cache=True)) == without_by_phrase,\
+    assert nlp_util.remove_by_phrase(nlp_util.parse(with_by_phrase, skip_cache=True)).lower() == without_by_phrase.lower(),\
         f'{with_by_phrase} should be converted to {without_by_phrase}'
 
 
