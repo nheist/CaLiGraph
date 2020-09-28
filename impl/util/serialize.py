@@ -9,7 +9,7 @@ POSTFIXES = {
     datetime.datetime: 'http://www.w3.org/2001/XMLSchema#date'
 }
 RESOURCE_ENCODING_EXCEPTIONS = ['#', ':', ',', ';', '(', ')', '\'', '&', '!', '*', '+', '=', '$']
-LITERAL_ENCODED_CHARS = ['\\', '\'', '"', '\r', '\n']
+LITERAL_ENCODED_CHARS = ['\\', '\'', '"']
 
 
 def as_literal_triple(sub: str, pred: str, obj) -> str:
@@ -58,4 +58,4 @@ def _encode_resource(resource: str) -> str:
 def _encode_literal_string(literal: str) -> str:
     for c in LITERAL_ENCODED_CHARS:
         literal = literal.replace(c, f'\\{c}')
-    return literal
+    return ' '.join(literal.split())
