@@ -44,6 +44,7 @@ def _regularize_whitespaces(text: str) -> str:
     return result
 
 
+BY_PHRASE_EXCEPTIONS = {'bell hooks', 'DBC Pierre'}
 def remove_by_phrase(doc: Doc, return_doc=True):
     """Remove the 'by'-phrase at the end of a category or listpage, e.g. 'People by country' -> 'People'"""
     # locate all by-phrases
@@ -61,9 +62,12 @@ def remove_by_phrase(doc: Doc, return_doc=True):
         if by_index == 0 or by_index == len(doc) - 1:
             return doc if return_doc else doc.text
         current_doc = doc if len(by_indices) == idx+1 else doc[:by_indices[idx+1]]
+        text_after_by = current_doc[by_index+1:].text.strip()
         word_before_by = current_doc[by_index - 1]
         word_after_by = current_doc[by_index + 1]
-        if word_after_by.text.istitle() and (word_after_by.text.endswith('.') or not word_after_by.text.isupper()):
+        if text_after_by in BY_PHRASE_EXCEPTIONS:
+            continue
+        if word_after_by.text[0].isupper() and (word_after_by.text.endswith('.') or not word_after_by.text.isupper()):
             continue
         if any(w.tag_ == 'NNS' for w in doc[by_index+1:]):
             continue
