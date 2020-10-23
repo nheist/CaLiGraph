@@ -29,6 +29,8 @@ def test_class_hierarchy():
     _is_ancestor_of(f'{CLGO}Person', f'{CLGO}Sportswoman')  # TODO: Fix!
     _is_parent_of(f'{CLGO}Woman', f'{CLGO}Sportswoman')  # TODO: Fix!
 
+    _is_no_parent_of(f'{CLGO}Place', f'{CLGO}Etymology')  # TODO: Fix!
+
 
 @check_func
 def _is_parent_of(parent: str, child: str):
@@ -72,6 +74,8 @@ def test_by_phrase_removal():
     _is_part_of(f'{DBR}Category:Vehicles_by_brand_controlled_by_Volkswagen_Group', f'{CLGO}Vehicle')
     _is_part_of(f'{DBR}Category:African_films_by_genre_by_country', f'{CLGO}African_film')
     _is_part_of(f'{DBR}Category:Alumni_by_university_or_college_in_Honduras', f'{CLGO}Alumni_in_Honduras')
+    _is_no_part_of(f'{DBR}Category:Books_by_bell_hooks', f'{CLGO}American_book')  # TODO: Fixed?
+    _is_no_part_of(f'{DBR}Category:Novels_by_DBC_Pierre', f'{CLGO}Novel')  # TODO: Fixed?
 
     _is_in_graph(f'{CLGO}Work_by_Roy_Lichtenstein')
     _is_in_graph(f'{CLGO}Work_by_L._J._Smith')
