@@ -5,6 +5,7 @@ from wikitextparser import WikiText
 from typing import Tuple, Optional
 import impl.dbpedia.store as dbp_store
 import impl.dbpedia.util as dbp_util
+import impl.util.nlp as nlp_util
 import re
 
 
@@ -184,9 +185,10 @@ def _convert_markup(wiki_text: str) -> Tuple[str, list]:
     entities = []
     current_entity_index = 0
     for w in parsed_text.wikilinks:
-        # retrieve entity text
+        # retrieve entity text and remove html tags
         text = (w.text or w.target).strip()
-        if w.target.startswith('File:') or w.target.startswith('Image:'):
+        text = nlp_util.remove_parentheses_content(text, angle_brackets=True)
+        if w.target.startswith(('File:', 'Image:')):
             continue  # ignore files and images
         if '|' in text:  # deal with invalid markup in wikilinks
             text = text[text.rindex('|')+1:].strip()

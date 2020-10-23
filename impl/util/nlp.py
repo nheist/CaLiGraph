@@ -17,9 +17,10 @@ def without_stopwords(text: str) -> set:
     return {word.lemma_ for word in parse(text) if not word.is_stop}
 
 
-def remove_parentheses_content(text: str) -> str:
+def remove_parentheses_content(text: str, angle_brackets=False) -> str:
     """Remove all parentheses from the given text."""
-    without_parentheses = re.sub(r'\([^()]*\)', '', text)
+    pattern = r'\<[^>]*\>+' if angle_brackets else r'\([^()]*\)'
+    without_parentheses = re.sub(pattern, '', text)
     return _regularize_whitespaces(without_parentheses)
 
 
