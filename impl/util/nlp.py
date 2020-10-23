@@ -166,9 +166,6 @@ def parse(text: str, disable_normalization=False, skip_cache=False) -> Doc:
     global __PARSER__
     if '__PARSER__' not in globals():
         __PARSER__ = spacy.load('en_core_web_lg')
-        for word in __PARSER__.Defaults.stop_words:  # initialize stop words manually as they are missing in lg corpus
-            lex = __PARSER__.vocab[word]
-            lex.is_stop = True
 
     if skip_cache:
         return __PARSER__(text)
