@@ -119,7 +119,7 @@ class CaLiGraph(HierarchyGraph):
                 resources.update({r for r in cat_store.get_resources(part)})
             elif use_listpage_resources and list_util.is_listpage(part):
                 resources.update({dbp_util.name2resource(r) for r in list_base.get_listpage_entities(self, part)})
-        resources = {dbp_store.resolve_redirect(r) for r in resources}
+        resources = {dbp_store.resolve_spelling_redirect(r) for r in resources}
         resources = {r for r in resources if len(r) > len(dbp_util.NAMESPACE_DBP_RESOURCE) and dbp_store.is_possible_resource(r)}
         return resources
 

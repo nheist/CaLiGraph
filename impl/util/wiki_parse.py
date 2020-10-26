@@ -219,7 +219,7 @@ def _convert_target_to_name(link_target: str) -> Optional[str]:
     if not link_target:
         return None
     resource_uri = dbp_util.name2resource(link_target[0].upper() + link_target[1:])
-    redirected_uri = dbp_store.resolve_redirect(resource_uri)
+    redirected_uri = dbp_store.resolve_spelling_redirect(resource_uri)
     if dbp_store.is_possible_resource(redirected_uri) and '#' not in redirected_uri:
         # return redirected uri only if it is an own Wikipedia article and it does not point to an article section
         final_uri = redirected_uri

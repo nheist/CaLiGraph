@@ -9,6 +9,7 @@ import impl.util.nlp as nlp_util
 from collections import defaultdict
 import networkx as nx
 from typing import Optional
+from polyleven import levenshtein
 
 # TODO: Replace caching with functools LRU cache
 # DBpedia RESOURCES
@@ -185,6 +186,14 @@ def resolve_redirect(dbp_resource: str, visited=None) -> str:
         if dbp_resource not in visited:
             return resolve_redirect(__REDIRECTS__[dbp_resource], visited | {dbp_resource})
     return dbp_resource
+
+
+def resolve_spelling_redirect(dbp_resource: str) -> str:
+    redirect = resolve_redirect(dbp_resource)
+    if levenshtein(dbp_resource, redirect, 2) > 2:
+        # return original resource if the redirect links to a completely different resource
+        return dbp_resource
+    return redirect
 
 
 def get_disambiguation_mapping() -> dict:
