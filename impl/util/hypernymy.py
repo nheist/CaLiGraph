@@ -74,7 +74,7 @@ def compute_hypernyms(category_graph) -> dict:
                 axiom_hypernyms[cl][pl] += 1
 
     # load remaining hypernyms
-    wiki_hypernyms = pickle.load(bz2.open(util.get_data_file('files.dbpedia.wikipedia_hypernyms'), mode='rb'))
+    wiki_hypernyms = util.load_cache('wikipedia_hypernyms')
     webisalod_data = pickle.load(bz2.open(util.get_data_file('files.dbpedia.webisalod_hypernyms'), mode='rb'))
     webisalod_hypernyms = defaultdict(dict)
     for parent, child, conf in webisalod_data:

@@ -3,8 +3,8 @@ max_cpus: 24
 
 # -- CALIGRAPH CONFIGURATION --
 caligraph:
-  version: '1.1.0'
-  creation_date: '2020-09-20'
+  version: '2.0.0'
+  creation_date: '2020-01-11'
   namespace:
     base: 'http://caligraph.org/'
     ontology: 'http://caligraph.org/ontology/'
@@ -25,7 +25,7 @@ cat2ax:
 logging:
   level: 'DEBUG'
   to_file: True
-  filename: 'caligraph_v1_1_0'
+  filename: 'caligraph_v2_0_0'
 
 # -- ERROR-MAILER CONFIGURATION --
 # -> add information about your mail accounts here and enable the `success` or `error` switches
@@ -44,58 +44,49 @@ files:
   dbpedia:
     pages:
       filename: 'pages_articles_en.xml.bz2'
-      url: 'http://downloads.dbpedia.org/2016-10/core-i18n/en/pages_articles_en.xml.bz2'
-    taxonomy_owl:
-      filename: 'dbpedia_2016-10.owl'
-      url: 'http://downloads.dbpedia.org/2016-10/dbpedia_2016-10.owl'
+      url: 'https://dumps.wikimedia.org/enwiki/20200801/enwiki-20200801-pages-articles-multistream.xml.bz2'
     taxonomy:
-      filename: 'dbpedia_2016-10.nt'
-      url: 'http://downloads.dbpedia.org/2016-10/dbpedia_2016-10.nt'
+      filename: 'dbo-snapshots.nt'
+      url: 'https://raw.githubusercontent.com/dbpedia/ontology-tracker/master/databus/dbpedia/ontology/dbo-snapshots/2019.02.21T08.00.00Z/dbo-snapshots.nt'
     labels:
-      filename: 'labels_en.ttl.bz2'
-      url: 'http://downloads.dbpedia.org/2016-10/core-i18n/en/labels_en.ttl.bz2'
+      filename: 'labels_lang=en.ttl.bz2'
+      url: 'https://downloads.dbpedia.org/repo/dbpedia/generic/labels/2020.07.01/labels_lang=en.ttl.bz2'
     long_abstracts:
-      filename: 'long_abstracts_en.ttl.bz2'
-      url: 'http://downloads.dbpedia.org/2016-10/core-i18n/en/long_abstracts_en.ttl.bz2'
-    categories:
-      filename: 'skos_categories_en.ttl.bz2'
-      url: 'http://downloads.dbpedia.org/2016-10/core-i18n/en/skos_categories_en.ttl.bz2'
+      filename: 'long-abstracts_lang=en.ttl.bz2'
+      url: 'https://downloads.dbpedia.org/repo/dbpedia/text/long-abstracts/2020.07.01/long-abstracts_lang=en.ttl.bz2'
+    category_articles:
+      filename: 'categories_lang=en_articles.ttl.bz2'
+      url: 'https://downloads.dbpedia.org/repo/dbpedia/generic/categories/2020.07.01/categories_lang=en_articles.ttl.bz2'
+    category_skos:
+      filename: 'categories_lang=en_skos.ttl.bz2'
+      url: 'https://downloads.dbpedia.org/repo/dbpedia/generic/categories/2020.07.01/categories_lang=en_skos.ttl.bz2'
     topical_concepts:
-      filename: 'topical_concepts_en.ttl.bz2'
-      url: 'http://downloads.dbpedia.org/2016-10/core-i18n/en/topical_concepts_en.ttl.bz2'
-    article_categories:
-      filename: 'article_categories_en.ttl.bz2'
-      url: 'http://downloads.dbpedia.org/2016-10/core-i18n/en/article_categories_en.ttl.bz2'
+      filename: 'topical_concepts_lang=en.ttl.bz2'
+      url: 'https://downloads.dbpedia.org/repo/dbpedia/generic/topical-concepts/2020.07.01/topical-concepts_lang=en.ttl.bz2'
     instance_types:
-      filename: 'instance_types_en.ttl.bz2'
-      url: 'http://downloads.dbpedia.org/2016-10/core-i18n/en/instance_types_en.ttl.bz2'
+      filename: 'instance-types_lang=en_specific.ttl.bz2'
+      url: 'https://downloads.dbpedia.org/repo/dbpedia/mappings/instance-types/2020.08.01/instance-types_lang=en_specific.ttl.bz2'
     transitive_instance_types:
-      filename: 'instance_types_transitive_en.ttl.bz2'
-      url: 'http://downloads.dbpedia.org/2016-10/core-i18n/en/instance_types_transitive_en.ttl.bz2'
-    instance_types_sdtyped:
-      filename: 'instance_types_sdtyped_dbo_en.ttl.bz2'
-      url: 'http://downloads.dbpedia.org/2016-10/core-i18n/en/instance_types_sdtyped_dbo_en.ttl.bz2'
-    instance_types_lhd:
-      filename: 'instance_types_lhd_dbo_en.ttl.bz2'
-      url: 'http://downloads.dbpedia.org/2016-10/core/instance_types_lhd_dbo_en.ttl.bz2'
+      filename: 'instance-types_lang=en_transitive.ttl.bz2'
+      url: 'https://downloads.dbpedia.org/repo/dbpedia/mappings/instance-types/2020.08.01/instance-types_lang=en_transitive.ttl.bz2'
     mappingbased_literals:
-      filename: 'mappingbased_literals_en.ttl.bz2'
-      url: 'http://downloads.dbpedia.org/2016-10/core-i18n/en/mappingbased_literals_en.ttl.bz2'
+      filename: 'mappingbased-literals_lang=en.ttl.bz2'
+      url: 'https://downloads.dbpedia.org/repo/dbpedia/mappings/mappingbased-literals/2020.08.01/mappingbased-literals_lang=en.ttl.bz2'
     mappingbased_objects:
-      filename: 'mappingbased_objects_en.ttl.bz2'
-      url: 'http://downloads.dbpedia.org/2016-10/core-i18n/en/mappingbased_objects_en.ttl.bz2'
+      filename: 'mappingbased-objects_lang=en.ttl.bz2'
+      url: 'https://downloads.dbpedia.org/repo/dbpedia/mappings/mappingbased-objects/2020.08.01/mappingbased-objects_lang=en.ttl.bz2'
     anchor_texts:
       filename: 'anchor_text_en.ttl.bz2'
-      url: 'http://downloads.dbpedia.org/2016-10/core-i18n/en/anchor_text_en.ttl.bz2'
+      url: 'https://downloads.dbpedia.org/repo/dbpedia/generic/anchor-text/2020.08.01/anchor-text_lang=en.ttl.bz2'
     redirects:
-      filename: 'redirects_en.ttl.bz2'
-      url: 'http://downloads.dbpedia.org/2016-10/core-i18n/en/redirects_en.ttl.bz2'
+      filename: 'redirects_lang=en.ttl.bz2'
+      url: 'https://downloads.dbpedia.org/repo/dbpedia/generic/redirects/2020.07.01/redirects_lang=en.ttl.bz2'
     disambiguations:
-      filename: 'disambiguations_en.ttl.bz2'
-      url: 'http://downloads.dbpedia.org/2016-10/core-i18n/en/disambiguations_en.ttl.bz2'
+      filename: 'disambiguations_lang=en.ttl.bz2'
+      url: 'https://downloads.dbpedia.org/repo/dbpedia/generic/disambiguations/2020.07.01/disambiguations_lang=en.ttl.bz2'
     nif_context:
-      filename: 'nif_context_en.ttl.bz2'
-      url: 'http://downloads.dbpedia.org/2016-10/core-i18n/en/nif_context_en.ttl.bz2'
+      filename: 'nif-context_lang=en.ttl.bz2'
+      url: 'https://downloads.dbpedia.org/repo/dbpedia/text/nif-context/2020.07.01/nif-context_lang=en.ttl.bz2'
     maintenance_categories:
       filename: 'maintenance_categories.ttl.bz2'
     wikipedia_hypernyms:
@@ -133,50 +124,50 @@ results:
 cache:
   catgraph_conceptual:
     filename: 'catgraph-conceptual'
-    version: 1_1
+    version: 1
   catgraph_wikitaxonomy:
     filename: 'catgraph-wikitaxonomy'
-    version: 1_1
+    version: 1
   catgraph_cyclefree:
     filename: 'catgraph-cyclefree'
-    version: 1_1
+    version: 1
   catgraph_merged:
     filename: 'catgraph-merged'
-    version: 1_1
+    version: 1
   listgraph_base:
     filename: 'listgraph-base'
-    version: 1_1
+    version: 1
   listgraph_wikitaxonomy:
     filename: 'listgraph-wikitaxonomy'
-    version: 1_1
+    version: 1
   listgraph_cyclefree:
     filename: 'listgraph-cyclefree'
-    version: 1_1
+    version: 1
   listgraph_merged:
     filename: 'listgraph-merged'
-    version: 1_1
+    version: 1
   caligraph_base:
     filename: 'caligraph-base'
-    version: 1_1
+    version: 1
   caligraph_merged_ontology:
     filename: 'caligraph-merged-ontology'
-    version: 1_1
+    version: 1
   caligraph_filtered:
     filename: 'caligraph-filtered'
-    version: 1_1  # SIMPLE: 2 // ROBUST: 3
+    version: 1
   caligraph_axiomatized:
     filename: 'caligraph-axiomatized'
-    version: 1_1  # SIMPLE: 2 // ROBUST: 3
+    version: 1
   spacy_docs:
     filename: 'spacy-docs'
     version: 1
   dbpedia_page_markup:
     filename: 'dbpedia-page-markup'
-    version: 1  # 2: with expanded wikilinks
+    version: 1
     compress: True
   dbpedia_page_parsed:
     filename: 'dbpedia-page-parsed'
-    version: 2
+    version: 1
   dbpedia_resources:
     filename: 'dbpedia-resources'
     version: 1
@@ -234,10 +225,10 @@ cache:
     version: 1
   dbpedia_category_sets:
     filename: 'dbpedia-category-sets'
-    version: 1_1
+    version: 1
   dbpedia_categories_conceptual:
     filename: 'dbpedia-category-conceptual'
-    version: 1_1
+    version: 1
   dbpedia_heuristic_domains:
     filename: 'dbpedia-heuristic-domains'
     version: 1
@@ -249,33 +240,37 @@ cache:
     version: 1
   dbpedia_listpages:
     filename: 'dbpedia-listpages'
-    version: 1_1
+    version: 1
   dbpedia_list_equivalents:
     filename: 'dbpedia-list-equivalents'
-    version: 1_1
+    version: 1
   dbpedia_list_parents:
     filename: 'dbpedia-list-parents'
-    version: 1_1
+    version: 1
   dbpedia_listpage_parsed:
     filename: 'dbpedia-listpage-parsed'
-    version: 1_1
+    version: 1
   dbpedia_listpage_enum_features:
     filename: 'dbpedia-listpage-enum-features'
-    version: 1_1  # SIMPLE: 2 // ROBUST: 3
+    version: 1
     store_as_csv: True
   dbpedia_listpage_table_features:
     filename: 'dbpedia-listpage-table-features'
-    version: 1_1  # SIMPLE: 2 // ROBUST: 3
+    version: 1
     store_as_csv: True
   dbpedia_listpage_entities:
     filename: 'dbpedia-listpage-entities'
-    version: 1_1  # SIMPLE: 2 // ROBUST: 3
+    version: 1
   wikitaxonomy_hypernyms:
     filename: 'wikitaxonomy-hypernyms'
-    version: 1_1
+    version: 1
+    compress: True
+  wikipedia_hypernyms:
+    filename: 'wikipedia-hypernyms'
+    version: 1
   cat2ax_axioms:
     filename: 'cat2ax-axioms'
-    version: 1_1
+    version: 1
   spacy_listpage_ne-tagging_GS:
     filename: 'spacy_listpage_ne-tagging_GS'
     version: 1

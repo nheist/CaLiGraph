@@ -1,7 +1,5 @@
 """Extraction of type lexicalisations from the Wikipedia corpus.
-
-The resulting cache file is already placed at `data/cache/dbpedia-type-lexicalisations_v1.p.bz2`
-but can be recomputed with this script.
+The resulting cache files are already placed in the cache folder but can be recomputed with this script.
 """
 
 import util
@@ -18,6 +16,7 @@ import impl.dbpedia.store as dbp_store
 def extract_type_lexicalisations():
     """Crawl the Wikipedia corpus for hearst patterns that contain type lexicalisations and count the occurrences."""
     type_lexicalisations = defaultdict(lambda: defaultdict(int))
+    wikipedia_hypernyms = defaultdict(lambda: defaultdict(int))
 
     nlp = spacy.load('en_core_web_lg')
     matcher = _init_pattern_matcher(nlp)
@@ -36,6 +35,9 @@ def extract_type_lexicalisations():
                 continue
             res, lex = word_to_chunk_mapping[res], word_to_chunk_mapping[lex]
 
+            # collect hypernym statistics in Wikipedia
+            wikipedia_hypernyms[res.root.lemma_][lex.root.lemma_] += 1
+
             # STEP 2: for each word, count the types that it refers to
             if uri not in dbp_store.get_inverse_lexicalisations(res.text):
                 # discard, if the resource text does not refer to the subject of the article
@@ -45,7 +47,10 @@ def extract_type_lexicalisations():
                 for word in lex:
                     type_lexicalisations[word.lemma_][t] += 1
 
-    type_lexicalisations = {word: {t: count for t, count in tcs.items()} for word, tcs in type_lexicalisations.items()}
+    wikipedia_hypernyms = {word: dict(hypernym_counts) for word, hypernym_counts in wikipedia_hypernyms.items()}
+    util.update_cache('wikipedia_hypernyms', wikipedia_hypernyms)
+
+    type_lexicalisations = {word: dict(type_counts) for word, type_counts in type_lexicalisations.items()}
     util.update_cache('dbpedia_type_lexicalisations', type_lexicalisations)
 
 
