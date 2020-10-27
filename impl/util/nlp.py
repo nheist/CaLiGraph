@@ -19,9 +19,8 @@ def without_stopwords(text: str) -> set:
 
 def remove_parentheses_content(text: str, angle_brackets=False) -> str:
     """Remove all parentheses from the given text."""
-    pattern = r'\<[^>]*\>+' if angle_brackets else r'\([^()]*\)'
-    without_parentheses = re.sub(pattern, '', text)
-    return _regularize_whitespaces(without_parentheses)
+    pattern = r'\s*\<[^>]*\>+\s*' if angle_brackets else r'\s*\([^()]*\)\s*'
+    return re.sub(pattern, ' ', text)
 
 
 def get_canonical_name(text: str, disable_normalization=True) -> str:
