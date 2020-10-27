@@ -11,6 +11,7 @@ import pynif
 import bz2
 from collections import defaultdict
 import impl.dbpedia.store as dbp_store
+from tqdm import tqdm
 
 
 def extract_type_lexicalisations():
@@ -20,7 +21,7 @@ def extract_type_lexicalisations():
 
     nlp = spacy.load('en_core_web_lg')
     matcher = _init_pattern_matcher(nlp)
-    for uri, plaintext in _retrieve_plaintexts():
+    for uri, plaintext in tqdm(_retrieve_plaintexts()):
         doc = nlp(plaintext)
         word_to_chunk_mapping = {word: chunk for chunk in doc.noun_chunks for word in chunk}
         for match in matcher(doc):
