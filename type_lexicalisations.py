@@ -5,13 +5,15 @@ The resulting cache files are already placed in the cache folder but can be reco
 import util
 from typing import Tuple
 import re
-import spacy
-from spacy.matcher import Matcher
 import pynif
 import bz2
 from collections import defaultdict
 import impl.dbpedia.store as dbp_store
 from tqdm import tqdm
+
+import spacy
+from spacy.matcher import Matcher
+spacy.prefer_gpu()
 
 
 def extract_type_lexicalisations():
