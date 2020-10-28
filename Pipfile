@@ -9,7 +9,6 @@ inflection = "*"
 pandas = "*"
 wikitextparser = "*"
 lxml = "*"
-spacy = "*"
 spacy-lookups-data = "*"
 pyyaml = "*"
 networkx = "*"
@@ -28,3 +27,6 @@ polyleven = "*"
 
 [requires]
 python_version = "3.8"
+
+[packages.spacy]
+extras = [ "cuda",]
