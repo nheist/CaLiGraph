@@ -23,10 +23,10 @@ pytest = "*"
 pytest-check = "*"
 polyleven = "*"
 
+[packages.spacy]
+extras = [ "cuda",]
+
 [dev-packages]
 
 [requires]
 python_version = "3.8"
-
-[packages.spacy]
-extras = [ "cuda",]
