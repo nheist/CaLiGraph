@@ -46,8 +46,8 @@ files:
       filename: 'pages_articles_en.xml.bz2'
       url: 'https://dumps.wikimedia.org/enwiki/20200801/enwiki-20200801-pages-articles-multistream.xml.bz2'
     taxonomy:
-      filename: 'dbo-snapshots.nt'
-      url: 'https://raw.githubusercontent.com/dbpedia/ontology-tracker/master/databus/dbpedia/ontology/dbo-snapshots/2019.02.21T08.00.00Z/dbo-snapshots.nt'
+      filename: 'dbpedia_ontology.nt'
+      url: 'http://akswnc7.informatik.uni-leipzig.de/dstreitmatter/archivo/dbpedia.org/ontology--DEV/2020.10.27-031001/ontology--DEV_type=parsed.nt'
     labels:
       filename: 'labels_lang=en.ttl.bz2'
       url: 'https://downloads.dbpedia.org/repo/dbpedia/generic/labels/2020.07.01/labels_lang=en.ttl.bz2'
