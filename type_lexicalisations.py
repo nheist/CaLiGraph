@@ -22,8 +22,8 @@ def extract_type_lexicalisations():
     nlp = spacy.load('en_core_web_lg')
     matcher = _init_pattern_matcher(nlp)
 
-    docs_with_uris = tqdm(nlp.pipe(_retrieve_plaintexts(), as_tuple=True, batch_size=50, n_processes=util.get_config('max_cpus')))
-    for (doc, matches), uri in matcher.pipe(docs_with_uris, as_tuple=True, return_matches=True, batch_size=50, n_processes=util.get_config('max_cpus')):
+    docs_with_uris = tqdm(nlp.pipe(_retrieve_plaintexts(), as_tuples=True, batch_size=50, n_processes=util.get_config('max_cpus')))
+    for (doc, matches), uri in matcher.pipe(docs_with_uris, as_tuples=True, return_matches=True, batch_size=50, n_processes=util.get_config('max_cpus')):
         word_to_chunk_mapping = {word: chunk for chunk in doc.noun_chunks for word in chunk}
         for match in matches:
             # STEP 1: extract resource and lexicalisation from text
