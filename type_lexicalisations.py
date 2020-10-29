@@ -10,10 +10,8 @@ import bz2
 from collections import defaultdict
 import impl.dbpedia.store as dbp_store
 from tqdm import tqdm
-
 import spacy
 from spacy.matcher import Matcher
-spacy.prefer_gpu()
 
 
 def extract_type_lexicalisations():
@@ -23,10 +21,11 @@ def extract_type_lexicalisations():
 
     nlp = spacy.load('en_core_web_lg')
     matcher = _init_pattern_matcher(nlp)
-    for uri, plaintext in tqdm(_retrieve_plaintexts()):
-        doc = nlp(plaintext)
+
+    docs_with_uris = tqdm(nlp.pipe(_retrieve_plaintexts(), as_tuple=True, batch_size=50, n_processes=util.get_config('max_cpus')))
+    for (doc, matches), uri in matcher.pipe(docs_with_uris, as_tuple=True, return_matches=True, batch_size=50, n_processes=util.get_config('max_cpus')):
         word_to_chunk_mapping = {word: chunk for chunk in doc.noun_chunks for word in chunk}
-        for match in matcher(doc):
+        for match in matches:
             # STEP 1: extract resource and lexicalisation from text
             match_id, start, end = match
             if len(doc) <= end:
