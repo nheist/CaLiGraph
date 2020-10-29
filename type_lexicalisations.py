@@ -23,7 +23,7 @@ def extract_type_lexicalisations():
     matcher = _init_pattern_matcher(nlp)
 
     docs_with_uris = tqdm(nlp.pipe(_retrieve_plaintexts(), as_tuples=True, batch_size=50, n_process=util.get_config('max_cpus')))
-    for (doc, matches), uri in matcher.pipe(docs_with_uris, as_tuples=True, return_matches=True, batch_size=50, n_process=util.get_config('max_cpus')):
+    for (doc, matches), uri in matcher.pipe(docs_with_uris, as_tuples=True, return_matches=True, batch_size=50):
         word_to_chunk_mapping = {word: chunk for chunk in doc.noun_chunks for word in chunk}
         for match in matches:
             # STEP 1: extract resource and lexicalisation from text
