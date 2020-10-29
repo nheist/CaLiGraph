@@ -29,6 +29,10 @@ def extract_type_lexicalisations():
         for match in matcher(doc):
             # STEP 1: extract resource and lexicalisation from text
             match_id, start, end = match
+            if len(doc) <= end:
+                # discard, if pattern occurs at the end of the sentence
+                continue
+
             pattern_type = nlp.vocab.strings[match_id]
             res, lex = doc[start - 1], doc[end]
             res, lex = (lex, res) if patterns[pattern_type]['reverse'] else (res, lex)  # revert order based on pattern
