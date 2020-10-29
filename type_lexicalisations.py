@@ -71,7 +71,7 @@ def _retrieve_plaintexts() -> Tuple[str, str]:
             resource_uri = nif_context.original_uri[:nif_context.original_uri.rfind('?')]
             # remove parentheses and line breaks from text for easier parsing
             resource_plaintext = _remove_parentheses_content(nif_context.mention.replace('\n', ' '))
-            yield resource_uri, resource_plaintext
+            yield resource_plaintext, resource_uri
 
 
 parentheses_matcher = re.compile(r' [\(\[].*?[\)\]]')
