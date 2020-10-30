@@ -20,14 +20,11 @@ def extract_type_lexicalisations():
     total_hypernyms = defaultdict(lambda: defaultdict(int))
     total_type_lexicalisations = defaultdict(lambda: defaultdict(int))
 
-    nlp = spacy.load('en_core_web_lg')
-    matcher = _init_pattern_matcher(nlp)
-
+    nlp = _init_spacy()
     N_PROCESSES = round(util.get_config('max_cpus') / 2)
-    docs_with_uris = nlp.pipe(tqdm(_retrieve_plaintexts()), as_tuples=True, batch_size=50, n_process=N_PROCESSES)
+    docs_with_uris = nlp.pipe(tqdm(_retrieve_plaintexts()), as_tuples=True, batch_size=1000, n_process=N_PROCESSES)
     with mp.Pool(processes=N_PROCESSES) as pool:
-        _compute_counts_with_matcher = lambda doc_with_uri: _compute_counts_for_doc(doc_with_uri, nlp, matcher)
-        for hypernyms, type_lexicalisations in pool.imap_unordered(_compute_counts_with_matcher, docs_with_uris, chunksize=50):
+        for hypernyms, type_lexicalisations in pool.imap_unordered(_compute_counts_for_doc, docs_with_uris, chunksize=1000):
             for sub, obj_counts in hypernyms.items():
                 for obj, count in obj_counts:
                     total_hypernyms[sub][obj] += count
@@ -42,7 +39,10 @@ def extract_type_lexicalisations():
     util.update_cache('dbpedia_type_lexicalisations', type_lexicalisations)
 
 
-def _compute_counts_for_doc(doc_with_uri, nlp, matcher) -> tuple:
+def _compute_counts_for_doc(doc_with_uri) -> tuple:
+    nlp = _init_spacy()
+    matcher = _init_pattern_matcher(nlp)
+
     doc, uri = doc_with_uri
     word_to_chunk_mapping = {word: chunk for chunk in doc.noun_chunks for word in chunk}
 
@@ -130,6 +130,10 @@ patterns = {
         'reverse': True
     }
 }
+
+
+def _init_spacy():
+    return spacy.load('en_core_web_lg')
 
 
 def _init_pattern_matcher(nlp) -> Matcher:
