@@ -12,52 +12,70 @@ import impl.dbpedia.store as dbp_store
 from tqdm import tqdm
 import spacy
 from spacy.matcher import Matcher
+import multiprocessing as mp
 
 
 def extract_type_lexicalisations():
     """Crawl the Wikipedia corpus for hearst patterns that contain type lexicalisations and count the occurrences."""
-    type_lexicalisations = defaultdict(lambda: defaultdict(int))
-    wikipedia_hypernyms = defaultdict(lambda: defaultdict(int))
+    total_hypernyms = defaultdict(lambda: defaultdict(int))
+    total_type_lexicalisations = defaultdict(lambda: defaultdict(int))
 
     nlp = spacy.load('en_core_web_lg')
     matcher = _init_pattern_matcher(nlp)
 
-    docs_with_uris = tqdm(nlp.pipe(_retrieve_plaintexts(), as_tuples=True, batch_size=50, n_process=util.get_config('max_cpus')))
-    for (doc, matches), uri in matcher.pipe(docs_with_uris, as_tuples=True, return_matches=True, batch_size=50):
-        word_to_chunk_mapping = {word: chunk for chunk in doc.noun_chunks for word in chunk}
-        for match in matches:
-            # STEP 1: extract resource and lexicalisation from text
-            match_id, start, end = match
-            if len(doc) <= end:
-                # discard, if pattern occurs at the end of the sentence
-                continue
+    N_PROCESSES = round(util.get_config('max_cpus') / 2)
+    docs_with_uris = nlp.pipe(tqdm(_retrieve_plaintexts()), as_tuples=True, batch_size=50, n_process=N_PROCESSES)
+    with mp.Pool(processes=N_PROCESSES) as pool:
+        _compute_counts_with_matcher = lambda doc_with_uri: _compute_counts_for_doc(doc_with_uri, nlp, matcher)
+        for hypernyms, type_lexicalisations in pool.imap_unordered(_compute_counts_with_matcher, docs_with_uris, chunksize=50):
+            for sub, obj_counts in hypernyms.items():
+                for obj, count in obj_counts:
+                    total_hypernyms[sub][obj] += count
+            for sub, obj_counts in type_lexicalisations.items():
+                for obj, count in obj_counts:
+                    total_type_lexicalisations[sub][obj] += count
 
-            pattern_type = nlp.vocab.strings[match_id]
-            res, lex = doc[start - 1], doc[end]
-            res, lex = (lex, res) if patterns[pattern_type]['reverse'] else (res, lex)  # revert order based on pattern
-
-            if res not in word_to_chunk_mapping or lex not in word_to_chunk_mapping:
-                # discard, if resource/lexicalisation is not part of a proper noun chunk ( -> useless)
-                continue
-            res, lex = word_to_chunk_mapping[res], word_to_chunk_mapping[lex]
-
-            # collect hypernym statistics in Wikipedia
-            wikipedia_hypernyms[res.root.lemma_][lex.root.lemma_] += 1
-
-            # STEP 2: for each word, count the types that it refers to
-            if uri not in dbp_store.get_inverse_lexicalisations(res.text):
-                # discard, if the resource text does not refer to the subject of the article
-                continue
-
-            for t in dbp_store.get_independent_types(dbp_store.get_types(uri)):
-                for word in lex:
-                    type_lexicalisations[word.lemma_][t] += 1
-
-    wikipedia_hypernyms = {word: dict(hypernym_counts) for word, hypernym_counts in wikipedia_hypernyms.items()}
+    wikipedia_hypernyms = {word: dict(hypernym_counts) for word, hypernym_counts in total_hypernyms.items()}
     util.update_cache('wikipedia_hypernyms', wikipedia_hypernyms)
 
-    type_lexicalisations = {word: dict(type_counts) for word, type_counts in type_lexicalisations.items()}
+    type_lexicalisations = {word: dict(type_counts) for word, type_counts in total_type_lexicalisations.items()}
     util.update_cache('dbpedia_type_lexicalisations', type_lexicalisations)
+
+
+def _compute_counts_for_doc(doc_with_uri, nlp, matcher) -> tuple:
+    doc, uri = doc_with_uri
+    word_to_chunk_mapping = {word: chunk for chunk in doc.noun_chunks for word in chunk}
+
+    hypernyms = defaultdict(lambda: defaultdict(int)),
+    type_lexicalisations = defaultdict(lambda: defaultdict(int))
+    for match in matcher(doc):
+        # STEP 1: extract resource and lexicalisation from text
+        match_id, start, end = match
+        if len(doc) <= end:
+            # discard, if pattern occurs at the end of the sentence
+            continue
+
+        pattern_type = nlp.vocab.strings[match_id]
+        res, lex = doc[start - 1], doc[end]
+        res, lex = (lex, res) if patterns[pattern_type]['reverse'] else (res, lex)  # revert order based on pattern
+
+        if res not in word_to_chunk_mapping or lex not in word_to_chunk_mapping:
+            # discard, if resource/lexicalisation is not part of a proper noun chunk ( -> useless)
+            continue
+        res, lex = word_to_chunk_mapping[res], word_to_chunk_mapping[lex]
+
+        # collect hypernym statistics in Wikipedia
+        hypernyms[res.root.lemma_][lex.root.lemma_] += 1
+
+        # STEP 2: for each word, count the types that it refers to
+        if uri not in dbp_store.get_inverse_lexicalisations(res.text):
+            # discard, if the resource text does not refer to the subject of the article
+            continue
+
+        for t in dbp_store.get_independent_types(dbp_store.get_types(uri)):
+            for word in lex:
+                type_lexicalisations[word.lemma_][t] += 1
+    return hypernyms, type_lexicalisations
 
 
 # WIKIPEDIA TEXT RETRIEVAL
