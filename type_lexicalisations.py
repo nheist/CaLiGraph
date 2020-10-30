@@ -26,10 +26,10 @@ def extract_type_lexicalisations():
     with mp.Pool(processes=N_PROCESSES) as pool:
         for hypernyms, type_lexicalisations in pool.imap_unordered(_compute_counts_for_doc, docs_with_uris, chunksize=1000):
             for sub, obj_counts in hypernyms.items():
-                for obj, count in obj_counts:
+                for obj, count in obj_counts.items():
                     total_hypernyms[sub][obj] += count
             for sub, obj_counts in type_lexicalisations.items():
-                for obj, count in obj_counts:
+                for obj, count in obj_counts.items():
                     total_type_lexicalisations[sub][obj] += count
 
     wikipedia_hypernyms = {word: dict(hypernym_counts) for word, hypernym_counts in total_hypernyms.items()}
