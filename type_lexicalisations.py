@@ -20,11 +20,8 @@ def extract_type_lexicalisations():
     total_hypernyms = defaultdict(lambda: defaultdict(int))
     total_type_lexicalisations = defaultdict(lambda: defaultdict(int))
 
-    nlp = _init_spacy()
-    N_PROCESSES = round(util.get_config('max_cpus') / 2)
-    docs_with_uris = nlp.pipe(tqdm(_retrieve_plaintexts()), as_tuples=True, batch_size=1000, n_process=N_PROCESSES)
-    with mp.Pool(processes=N_PROCESSES) as pool:
-        for hypernyms, type_lexicalisations in pool.imap_unordered(_compute_counts_for_doc, docs_with_uris, chunksize=1000):
+    with mp.Pool(processes=util.get_config('max_cpus')) as pool:
+        for hypernyms, type_lexicalisations in pool.imap_unordered(_compute_counts_for_resource, tqdm(_retrieve_plaintexts()), chunksize=1000):
             for (sub, obj), count in hypernyms.items():
                 total_hypernyms[sub][obj] += count
             for (sub, obj), count in type_lexicalisations.items():
@@ -37,11 +34,12 @@ def extract_type_lexicalisations():
     util.update_cache('dbpedia_type_lexicalisations', type_lexicalisations)
 
 
-def _compute_counts_for_doc(doc_with_uri) -> tuple:
+def _compute_counts_for_resource(uri_with_text: tuple) -> tuple:
     nlp = _init_spacy()
     matcher = _init_pattern_matcher(nlp)
 
-    doc, uri = doc_with_uri
+    uri, text = uri_with_text
+    doc = nlp(text)
     word_to_chunk_mapping = {word: chunk for chunk in doc.noun_chunks for word in chunk}
 
     hypernyms = defaultdict(int)
@@ -87,7 +85,7 @@ def _retrieve_plaintexts() -> Tuple[str, str]:
             resource_uri = nif_context.original_uri[:nif_context.original_uri.rfind('?')]
             # remove parentheses and line breaks from text for easier parsing
             resource_plaintext = _remove_parentheses_content(nif_context.mention.replace('\n', ' '))
-            yield resource_plaintext, resource_uri
+            yield resource_uri, resource_plaintext
 
 
 parentheses_matcher = re.compile(r' [\(\[].*?[\)\]]')
