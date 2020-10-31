@@ -35,9 +35,6 @@ def extract_type_lexicalisations():
 
 
 def _compute_counts_for_resource(uri_with_text: tuple) -> tuple:
-    nlp = _init_spacy()
-    matcher = _init_pattern_matcher(nlp)
-
     uri, text = uri_with_text
     doc = nlp(text)
     word_to_chunk_mapping = {word: chunk for chunk in doc.noun_chunks for word in chunk}
@@ -141,4 +138,6 @@ def _init_pattern_matcher(nlp) -> Matcher:
 
 
 if __name__ == '__main__':
+    nlp = _init_spacy()
+    matcher = _init_pattern_matcher(nlp)
     extract_type_lexicalisations()
