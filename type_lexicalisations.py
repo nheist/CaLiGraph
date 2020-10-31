@@ -25,12 +25,10 @@ def extract_type_lexicalisations():
     docs_with_uris = nlp.pipe(tqdm(_retrieve_plaintexts()), as_tuples=True, batch_size=1000, n_process=N_PROCESSES)
     with mp.Pool(processes=N_PROCESSES) as pool:
         for hypernyms, type_lexicalisations in pool.imap_unordered(_compute_counts_for_doc, docs_with_uris, chunksize=1000):
-            for sub, obj_counts in hypernyms.items():
-                for obj, count in obj_counts.items():
-                    total_hypernyms[sub][obj] += count
-            for sub, obj_counts in type_lexicalisations.items():
-                for obj, count in obj_counts.items():
-                    total_type_lexicalisations[sub][obj] += count
+            for (sub, obj), count in hypernyms.items():
+                total_hypernyms[sub][obj] += count
+            for (sub, obj), count in type_lexicalisations.items():
+                total_type_lexicalisations[sub][obj] += count
 
     wikipedia_hypernyms = {word: dict(hypernym_counts) for word, hypernym_counts in total_hypernyms.items()}
     util.update_cache('wikipedia_hypernyms', wikipedia_hypernyms)
@@ -46,8 +44,8 @@ def _compute_counts_for_doc(doc_with_uri) -> tuple:
     doc, uri = doc_with_uri
     word_to_chunk_mapping = {word: chunk for chunk in doc.noun_chunks for word in chunk}
 
-    hypernyms = defaultdict(lambda: defaultdict(int)),
-    type_lexicalisations = defaultdict(lambda: defaultdict(int))
+    hypernyms = defaultdict(int)
+    type_lexicalisations = defaultdict(int)
     for match in matcher(doc):
         # STEP 1: extract resource and lexicalisation from text
         match_id, start, end = match
@@ -65,7 +63,7 @@ def _compute_counts_for_doc(doc_with_uri) -> tuple:
         res, lex = word_to_chunk_mapping[res], word_to_chunk_mapping[lex]
 
         # collect hypernym statistics in Wikipedia
-        hypernyms[res.root.lemma_][lex.root.lemma_] += 1
+        hypernyms[(res.root.lemma_, lex.root.lemma_)] += 1
 
         # STEP 2: for each word, count the types that it refers to
         if uri not in dbp_store.get_inverse_lexicalisations(res.text):
@@ -74,7 +72,7 @@ def _compute_counts_for_doc(doc_with_uri) -> tuple:
 
         for t in dbp_store.get_independent_types(dbp_store.get_types(uri)):
             for word in lex:
-                type_lexicalisations[word.lemma_][t] += 1
+                type_lexicalisations[(word.lemma_, t)] += 1
     return hypernyms, type_lexicalisations
 
 
