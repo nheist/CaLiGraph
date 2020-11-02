@@ -9,6 +9,7 @@ inflection = "*"
 pandas = "*"
 wikitextparser = "*"
 lxml = "*"
+spacy = "*"
 spacy-lookups-data = "*"
 pyyaml = "*"
 networkx = "*"
@@ -22,9 +23,6 @@ tqdm = "*"
 pytest = "*"
 pytest-check = "*"
 polyleven = "*"
-
-[packages.spacy]
-extras = [ "cuda",]
 
 [dev-packages]
 

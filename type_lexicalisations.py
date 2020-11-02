@@ -2,6 +2,8 @@
 The resulting cache files are already placed in the cache folder but can be recomputed with this script.
 """
 
+# TODO: Move into caligraph extraction
+
 import util
 from typing import Tuple
 import re
@@ -12,6 +14,7 @@ import impl.dbpedia.store as dbp_store
 from tqdm import tqdm
 import spacy
 from spacy.matcher import Matcher
+from spacy.lang.en.stop_words import STOP_WORDS
 import multiprocessing as mp
 
 
@@ -30,7 +33,7 @@ def extract_type_lexicalisations():
     wikipedia_hypernyms = {word: dict(hypernym_counts) for word, hypernym_counts in total_hypernyms.items()}
     util.update_cache('wikipedia_hypernyms', wikipedia_hypernyms)
 
-    type_lexicalisations = {word: dict(type_counts) for word, type_counts in total_type_lexicalisations.items()}
+    type_lexicalisations = {word: dict(type_counts) for word, type_counts in total_type_lexicalisations.items() if word not in STOP_WORDS}
     util.update_cache('dbpedia_type_lexicalisations', type_lexicalisations)
 
 
@@ -58,7 +61,7 @@ def _compute_counts_for_resource(uri_with_text: tuple) -> tuple:
         res, lex = word_to_chunk_mapping[res], word_to_chunk_mapping[lex]
 
         # collect hypernym statistics in Wikipedia
-        hypernyms[(res.root.lemma_, lex.root.lemma_)] += 1
+        hypernyms[(res.root.lemma_.lower(), lex.root.lemma_.lower())] += 1
 
         # STEP 2: for each word, count the types that it refers to
         if uri not in dbp_store.get_inverse_lexicalisations(res.text):
@@ -67,7 +70,7 @@ def _compute_counts_for_resource(uri_with_text: tuple) -> tuple:
 
         for t in dbp_store.get_independent_types(dbp_store.get_types(uri)):
             for word in lex:
-                type_lexicalisations[(word.lemma_, t)] += 1
+                type_lexicalisations[(word.lemma_.lower(), t)] += 1
     return hypernyms, type_lexicalisations
 
 

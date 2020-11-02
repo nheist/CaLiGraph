@@ -89,9 +89,6 @@ files:
       url: 'https://downloads.dbpedia.org/repo/dbpedia/text/nif-context/2020.07.01/nif-context_lang=en.ttl.bz2'
     maintenance_categories:
       filename: 'maintenance_categories.ttl.bz2'
-    wikipedia_hypernyms:
-      filename: 'wiki_hypernyms_lemmas.p.bz2'
-      url: 'http://data.dws.informatik.uni-mannheim.de/CaLiGraph/data/wiki_hypernyms_lemmas.p.bz2'
     webisalod_hypernyms:
       filename: 'webisalod_hypernyms.p.bz2'
       url: 'http://data.dws.informatik.uni-mannheim.de/CaLiGraph/data/webisalod_hypernyms.p.bz2'
