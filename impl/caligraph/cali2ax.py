@@ -38,17 +38,18 @@ def _extract_axioms(graph, patterns) -> dict:
     for (front_pattern, back_pattern), axiom_patterns in _get_confidence_pattern_set(patterns, True, True).items():
         cat_axioms._fill_dict(enclosing_pattern_dict, list(front_pattern), lambda d: cat_axioms._fill_dict(d, list(reversed(back_pattern)), axiom_patterns))
 
-    for node in graph.nodes.difference({graph.root_node}):
+    for node in graph.content_nodes:
         property_frequencies = graph.get_property_frequencies(node)
+
+        node_labels = set()
         for part in graph.get_parts(node):
             if cat_util.is_category(part):
-                label = cat_util.category2name(part)
+                node_labels.add(cat_util.category2name(part))
             elif list_util.is_listcategory(part) or list_util.is_listpage(part):
-                label = list_util.list2name(part)
-            else:
-                continue
+                node_labels.add(list_util.list2name(part))
 
-            node_doc = nlp_util.parse(label)
+        labels_without_by_phrases = [nlp_util.remove_by_phrase(label, return_doc=True) for label in node_labels]
+        for node_doc in labels_without_by_phrases:
             node_axioms = []
 
             front_prop_axiom = _find_axioms(front_pattern_dict, node, node_doc, property_frequencies)
@@ -81,7 +82,7 @@ def _get_confidence_pattern_set(pattern_set, has_front, has_back):
     for pattern, axiom_patterns in pattern_set.items():
         if bool(pattern[0]) == has_front and bool(pattern[1]) == has_back:
             preds_sum = sum(len(freqs) for freqs in axiom_patterns['preds'].values())
-            result[pattern] = defaultdict(lambda: 0, {p: len(freqs) / preds_sum for p, freqs in axiom_patterns['preds'].items()})
+            result[pattern] = defaultdict(int, {p: len(freqs) / preds_sum for p, freqs in axiom_patterns['preds'].items()})
     return result
 
 

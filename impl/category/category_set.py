@@ -4,7 +4,6 @@ import util
 import impl.util.nlp as nlp_util
 from collections import namedtuple, defaultdict
 import impl.category.store as cat_store
-import impl.category.nlp as cat_nlp
 import operator
 from typing import Tuple, Optional
 
@@ -35,7 +34,7 @@ def _compute_category_sets() -> dict:
     category_sets = {}
     for cat in cat_store.get_usable_cats():
         children = {c for c in cat_store.get_children(cat) if cat_store.is_usable(c)}
-        children_docs = {c: nlp_util.remove_by_phrase(cat_nlp.parse_category(c)) for c in children}
+        children_docs = {c: nlp_util.remove_by_phrase(cat_store.get_label(c)) for c in children}
         child_sets = _find_child_sets(cat, children_docs)
         if child_sets:
             category_sets[cat] = child_sets

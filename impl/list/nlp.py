@@ -15,6 +15,9 @@ from spacy.tokens import Doc
 from spacy.util import minibatch, compounding
 
 
+# TODO: refactor and move to util.spacy as soon as spacy3 is out
+
+
 def parse(text: str) -> Doc:
     """Return `text` as spaCy document."""
     global __PARSER__

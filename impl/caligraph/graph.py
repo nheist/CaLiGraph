@@ -345,9 +345,7 @@ class CaLiGraph(HierarchyGraph):
         util.get_logger().debug(f'CaLiGraph: PostProcessing - Removed {len(edges_to_remove)} transitive root edges.')
 
         # add Wikipedia categories to nodes that have an exact name match
-        for node in graph.nodes:
-            if node == graph.root_node:
-                continue
+        for node in graph.content_nodes:
             cat_name = cat_util.name2category(graph.get_name(node))
             if cat_name in cat_store.get_categories() and cat_name not in graph.get_parts(node):
                 graph._set_parts(node, graph.get_parts(node) | {cat_name})
@@ -413,7 +411,7 @@ class CaLiGraph(HierarchyGraph):
     @classmethod
     def _convert_to_clg_type(cls, caligraph_name: str, disable_normalization=False) -> str:
         """Convert a name into a CaLiGraph type URI."""
-        caligraph_name = nlp_util.singularize_phrase(nlp_util.parse(caligraph_name, disable_normalization=disable_normalization))
+        caligraph_name = nlp_util.singularize_phrase(caligraph_name, disable_normalization)
         return cali_util.name2clg_type(caligraph_name)
 
     def merge_ontology(self, use_listpage_resources: bool):

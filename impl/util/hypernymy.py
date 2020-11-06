@@ -7,7 +7,7 @@ import util
 import bz2
 import pickle
 import impl.category.cat2ax as cat_axioms
-import impl.category.nlp as cat_nlp
+import impl.category.store as cat_store
 import impl.util.nlp as nlp_util
 from polyleven import levenshtein
 
@@ -28,7 +28,7 @@ def is_hypernym(hyper_word: str, hypo_word: str) -> bool:
 
     if is_synonym(hyper_word, hypo_word):
         return True
-    return hyper_word in __WIKITAXONOMY_HYPERNYMS__[hypo_word]
+    return hyper_word.lower() in __WIKITAXONOMY_HYPERNYMS__[hypo_word.lower()]
 
 
 def phrases_are_synonymous(phrase_a: set, phrase_b: set) -> bool:
@@ -69,9 +69,9 @@ def compute_hypernyms(category_graph) -> dict:
     # collect hypernyms from axiom matches between Wikipedia categories
     axiom_hypernyms = defaultdict(lambda: defaultdict(lambda: 0))
     for parent, child in _get_axiom_edges(category_graph):
-        for cl in _get_headlemmas(child):
-            for pl in _get_headlemmas(parent):
-                axiom_hypernyms[cl][pl] += 1
+        for cl in nlp_util.get_head_lemmas(cat_store.get_label(child)):
+            for pl in nlp_util.get_head_lemmas(cat_store.get_label(parent)):
+                axiom_hypernyms[cl.lower()][pl.lower()] += 1
 
     # load remaining hypernyms
     wiki_hypernyms = util.load_cache('wikipedia_hypernyms')
@@ -112,15 +112,3 @@ def _get_axiom_edges(category_graph) -> Set[tuple]:
                 if any(ca.implies(pa) for pa in parent_axioms for ca in child_axioms):
                     valid_axiom_edges.add((parent, child))
     return valid_axiom_edges
-
-
-def _get_headlemmas(category: str) -> set:
-    """Cache head lemmas of categories for multiple use."""
-    global __WIKITAXONOMY_CATEGORY_LEMMAS__
-    if '__WIKITAXONOMY_CATEGORY_LEMMAS__' not in globals():
-        __WIKITAXONOMY_CATEGORY_LEMMAS__ = {}
-
-    if category not in __WIKITAXONOMY_CATEGORY_LEMMAS__:
-        __WIKITAXONOMY_CATEGORY_LEMMAS__[category] = nlp_util.get_head_lemmas(cat_nlp.parse_category(category))
-
-    return __WIKITAXONOMY_CATEGORY_LEMMAS__[category]

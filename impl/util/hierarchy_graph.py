@@ -60,7 +60,7 @@ class HierarchyGraph(BaseGraph):
 
     def append_unconnected(self):
         """Make all unconnected nodes children of the root node."""
-        unconnected_root_nodes = {node for node in self.nodes if not self.parents(node) and node != self.root_node}
+        unconnected_root_nodes = {node for node in self.content_nodes if not self.parents(node)}
         self._add_edges([(self.root_node, node) for node in unconnected_root_nodes])
         return self
 
@@ -86,7 +86,7 @@ class HierarchyGraph(BaseGraph):
 
     def remove_unrelated_edges(self):
         """Remove edges that connect nodes which have head nouns that are neither synonyms nor hypernyms."""
-        headlemmas = {node: nlp_util.get_head_lemmas(nlp_util.parse(self.get_name(node))) for node in self.nodes}
+        headlemmas = {node: nlp_util.get_head_lemmas(self.get_name(node)) for node in self.nodes}
         valid_edges = {(p, c) for p, c in self.edges if self._is_hierarchical_edge(headlemmas[p], headlemmas[c])}
         self._remove_all_edges_except(valid_edges)
         return self

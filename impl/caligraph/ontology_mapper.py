@@ -11,7 +11,7 @@ import util
 
 def find_conflicting_edges(graph, use_listpage_resources: bool) -> set:
     conflicting_edges = set()
-    head_lemmas = {node: nlp_util.get_head_lemmas(nlp_util.parse(graph.get_name(node) or '')) for node in graph.nodes}
+    head_lemmas = {node: nlp_util.get_head_lemmas(graph.get_name(node)) for node in graph.nodes}
     direct_mappings = {node: _find_dbpedia_parents(graph, node, use_listpage_resources, True) for node in graph.nodes}
     for node in graph.traverse_nodes_topdown():
         for child in graph.children(node):
@@ -111,8 +111,7 @@ def _find_dbpedia_parents(graph, node: str, use_listpage_resources: bool, direct
 
 
 def _compute_type_lexicalisation_scores(graph, node: str) -> dict:
-    name = graph.get_name(node) or ''
-    head_lemmas = nlp_util.get_head_lemmas(nlp_util.parse(name))
+    head_lemmas = nlp_util.get_head_lemmas(graph.get_name(node))
     return cat_axioms._get_type_surface_scores(head_lemmas, lemmatize=False)
 
 

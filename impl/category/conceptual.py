@@ -1,7 +1,6 @@
 import util
 import impl.util.nlp as nlp_util
 import impl.category.store as cat_store
-import impl.category.nlp as cat_nlp
 
 
 def is_conceptual_category(category: str) -> bool:
@@ -15,4 +14,4 @@ def is_conceptual_category(category: str) -> bool:
 
 def _compute_conceptual_categories() -> set:
     util.get_logger().info('CACHE: Computing conceptual categories')
-    return {cat for cat in cat_store.get_categories() if nlp_util.get_head_lemmas(cat_nlp.parse_category(cat))}
+    return {cat for cat in cat_store.get_categories() if nlp_util.get_head_lemmas(cat_store.get_label(cat))}

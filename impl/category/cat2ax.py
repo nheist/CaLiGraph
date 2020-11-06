@@ -14,7 +14,6 @@ import impl.dbpedia.store as dbp_store
 import impl.dbpedia.util as dbp_util
 import impl.dbpedia.heuristics as dbp_heur
 import impl.category.category_set as cat_set
-import impl.category.nlp as cat_nlp
 import impl.category.store as cat_store
 import impl.util.nlp as nlp_util
 import impl.util.rdf as rdf_util
@@ -141,7 +140,7 @@ def _extract_patterns(category_graph, candidate_sets):
 
 def _get_match_for_category(category: str, first_words: tuple, last_words: tuple) -> str:
     """Return variable part of the category name."""
-    doc = nlp_util.remove_by_phrase(cat_nlp.parse_category(category))
+    doc = nlp_util.remove_by_phrase(cat_store.get_label(category))
     return doc[len(first_words):len(doc)-len(last_words)].text
 
 
@@ -162,7 +161,7 @@ def _get_resource_surface_scores(text):
 def _get_type_surface_scores(words, lemmatize=True):
     """Return type lexicalisation scores for a given set of `words`."""
     lexicalisation_scores = defaultdict(lambda: 0)
-    word_lemmas = [nlp_util.parse(w)[0].lemma_ for w in words] if lemmatize else words
+    word_lemmas = [word_doc[0].lemma_ for word_doc in nlp_util.parse_texts(words)] if lemmatize else words
     for lemma in word_lemmas:
         for t, score in dbp_store.get_type_lexicalisations(lemma).items():
             lexicalisation_scores[t] += score
@@ -201,7 +200,7 @@ def _extract_axioms(category_graph, pattern_confidence, patterns):
         _fill_dict(enclosing_pattern_dict, list(front_pattern), lambda d: _fill_dict(d, list(reversed(back_pattern)), axiom_patterns))
 
     for cat in category_graph.nodes:
-        cat_doc = nlp_util.remove_by_phrase(cat_nlp.parse_category(cat))
+        cat_doc = nlp_util.remove_by_phrase(cat_store.get_label(cat))
         cat_prop_axioms = []
         cat_type_axioms = []
 

@@ -69,7 +69,6 @@ def _get_label_mapping() -> dict:
     if '__RESOURCE_LABEL_MAPPING__' not in globals():
         initializer = lambda: rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.labels')], rdf_util.PREDICATE_LABEL)
         __RESOURCE_LABEL_MAPPING__ = util.load_or_create_cache('dbpedia_resource_labels', initializer)
-
     return __RESOURCE_LABEL_MAPPING__
 
 
@@ -78,9 +77,8 @@ def get_abstract(dbp_resource: str) -> str:
     global __RESOURCE_ABSTRACTS__
     if '__RESOURCE_ABSTRACTS__' not in globals():
         initializer = lambda: rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.long_abstracts')], rdf_util.PREDICATE_ABSTRACT)
-        __RESOURCE_ABSTRACTS__ = util.load_or_create_cache('dbpedia_resource_abstracts', initializer)
-
-    return __RESOURCE_ABSTRACTS__[dbp_resource] if dbp_resource in __RESOURCE_ABSTRACTS__ else None
+        __RESOURCE_ABSTRACTS__ = defaultdict(str, util.load_or_create_cache('dbpedia_resource_abstracts', initializer))
+    return __RESOURCE_ABSTRACTS__[dbp_resource]
 
 
 def get_lexicalisations(dbp_resource: str) -> dict:
@@ -96,8 +94,8 @@ def get_inverse_lexicalisations(text: str) -> dict:
     """Return all resources that fit to the given lexicalisation."""
     global __RESOURCE_INVERSE_LEXICALISATIONS__
     if '__RESOURCE_INVERSE_LEXICALISATIONS__' not in globals():
-        __RESOURCE_INVERSE_LEXICALISATIONS__ = util.load_or_create_cache('dbpedia_resource_inverse_lexicalisations', _compute_inverse_lexicalisations)
-    return __RESOURCE_INVERSE_LEXICALISATIONS__[text.lower()] if text.lower() in __RESOURCE_INVERSE_LEXICALISATIONS__ else {}
+        __RESOURCE_INVERSE_LEXICALISATIONS__ = defaultdict(dict, util.load_or_create_cache('dbpedia_resource_inverse_lexicalisations', _compute_inverse_lexicalisations))
+    return __RESOURCE_INVERSE_LEXICALISATIONS__[text.lower()]
 
 
 def _compute_inverse_lexicalisations():
@@ -154,7 +152,6 @@ def _get_resource_type_mapping() -> dict:
         ]
         initializer = lambda: rdf_util.create_multi_val_dict_from_rdf(type_files, rdf_util.PREDICATE_TYPE)
         __RESOURCE_TYPE_MAPPING__ = util.load_or_create_cache('dbpedia_resource_type_mapping', initializer)
-
     return __RESOURCE_TYPE_MAPPING__
 
 
@@ -201,7 +198,6 @@ def get_disambiguation_mapping() -> dict:
     if '__DISAMBIGUATIONS__' not in globals():
         initializer = lambda: rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.disambiguations')], rdf_util.PREDICATE_DISAMBIGUATES)
         __DISAMBIGUATIONS__ = defaultdict(set, util.load_or_create_cache('dbpedia_resource_disambiguations', initializer))
-
     return __DISAMBIGUATIONS__
 
 
@@ -228,7 +224,6 @@ def get_resource_property_mapping() -> dict:
         property_files = [util.get_data_file('files.dbpedia.mappingbased_literals'), util.get_data_file('files.dbpedia.mappingbased_objects')]
         initializer = lambda: rdf_util.create_dict_from_rdf(property_files)
         __RESOURCE_PROPERTY_MAPPING__ = util.load_or_create_cache('dbpedia_resource_properties', initializer)
-
     return __RESOURCE_PROPERTY_MAPPING__
 
 
@@ -238,7 +233,6 @@ def get_inverse_resource_property_mapping() -> dict:
     if '__INVERSE_RESOURCE_PROPERTY_MAPPING__' not in globals():
         initializer = lambda: rdf_util.create_dict_from_rdf([util.get_data_file('files.dbpedia.mappingbased_objects')], reverse_key=True)
         __INVERSE_RESOURCE_PROPERTY_MAPPING__ = util.load_or_create_cache('dbpedia_inverse_resource_properties', initializer)
-
     return __INVERSE_RESOURCE_PROPERTY_MAPPING__
 
 
@@ -246,18 +240,16 @@ def get_domain(dbp_predicate: str) -> Optional[str]:
     """Return the domain of a given predicate."""
     global __PREDICATE_DOMAIN__
     if '__PREDICATE_DOMAIN__' not in globals():
-        __PREDICATE_DOMAIN__ = rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_DOMAIN)
-
-    return __PREDICATE_DOMAIN__[dbp_predicate] if dbp_predicate in __PREDICATE_DOMAIN__ else None
+        __PREDICATE_DOMAIN__ = defaultdict(lambda: None, rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_DOMAIN))
+    return __PREDICATE_DOMAIN__[dbp_predicate]
 
 
 def get_range(dbp_predicate: str) -> Optional[str]:
     """Return the range of a given predicate."""
     global __PREDICATE_RANGE__
     if '__PREDICATE_RANGE__' not in globals():
-        __PREDICATE_RANGE__ = rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_RANGE)
-
-    return __PREDICATE_RANGE__[dbp_predicate] if dbp_predicate in __PREDICATE_RANGE__ else None
+        __PREDICATE_RANGE__ = defaultdict(lambda: None, rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_RANGE))
+    return __PREDICATE_RANGE__[dbp_predicate]
 
 
 def get_equivalent_predicates(dbp_predicate: str) -> set:
@@ -265,7 +257,6 @@ def get_equivalent_predicates(dbp_predicate: str) -> set:
     global __EQUIVALENT_PREDICATE__
     if '__EQUIVALENT_PREDICATE__' not in globals():
         __EQUIVALENT_PREDICATE__ = rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_EQUIVALENT_PROPERTY)
-
     return __EQUIVALENT_PREDICATE__[dbp_predicate]
 
 
@@ -282,7 +273,6 @@ def is_object_property(dbp_predicate: str) -> bool:
                 if dbp_predicate in props:
                     __OBJECT_PROPERTY__[dbp_predicate] = dbp_util.is_dbp_resource(props[dbp_predicate].pop())
                     break
-
     return __OBJECT_PROPERTY__[dbp_predicate]
 
 
@@ -290,9 +280,8 @@ def is_functional(dbp_predicate: str) -> bool:
     """Return True, if the predicate is functional (i.e. a resource has at most one value for the given predicate)."""
     global __PREDICATE_FUNCTIONAL__
     if '__PREDICATE_FUNCTIONAL__' not in globals():
-        __PREDICATE_FUNCTIONAL__ = util.load_or_create_cache('dbpedia_functional_predicates', _create_functional_predicate_dict)
-
-    return __PREDICATE_FUNCTIONAL__[dbp_predicate] if dbp_predicate in __PREDICATE_FUNCTIONAL__ else False
+        __PREDICATE_FUNCTIONAL__ = defaultdict(bool, util.load_or_create_cache('dbpedia_functional_predicates', _create_functional_predicate_dict))
+    return __PREDICATE_FUNCTIONAL__[dbp_predicate]
 
 
 def _create_functional_predicate_dict():
@@ -305,7 +294,6 @@ def _create_functional_predicate_dict():
             predicate_resources_count[pred] += 1
             if len(resource_property_mapping[r][pred]) > 1:
                 predicate_nonfunctional_count[pred] += 1
-
     return {pred: (predicate_nonfunctional_count[pred] / predicate_resources_count[pred]) < .05 for pred in get_all_predicates()}
 
 
@@ -314,7 +302,6 @@ def get_all_predicates() -> set:
     global __PREDICATES__
     if '__PREDICATES__' not in globals():
         __PREDICATES__ = {pred for props in get_resource_property_mapping().values() for pred in props}
-
     return __PREDICATES__
 
 
@@ -333,7 +320,6 @@ def get_types_by_name(name: str) -> set:
         __TYPE_LABELS__ = defaultdict(set)
         for t in get_all_types():
             __TYPE_LABELS__[get_label(t).lower().split()[-1]].add(t)
-
     name = name.lower()
     return __TYPE_LABELS__[name] if __TYPE_LABELS__[name] else __TYPE_LABELS__[nlp_util.singularize_word(name)]
 
@@ -357,7 +343,6 @@ def get_transitive_supertypes(dbp_type: str) -> set:
     if dbp_type not in __TRANSITIVE_SUPERTYPE_MAPPING__:
         type_graph = _get_type_graph()
         __TRANSITIVE_SUPERTYPE_MAPPING__[dbp_type] = nx.ancestors(type_graph, dbp_type) if dbp_type in type_graph else set()
-
     return __TRANSITIVE_SUPERTYPE_MAPPING__[dbp_type]
 
 
@@ -380,7 +365,6 @@ def get_transitive_subtypes(dbp_type: str) -> set:
     if dbp_type not in __TRANSITIVE_SUBTYPE_MAPPING__:
         type_graph = _get_type_graph()
         __TRANSITIVE_SUBTYPE_MAPPING__[dbp_type] = nx.descendants(type_graph, dbp_type) if dbp_type in type_graph else set()
-
     return __TRANSITIVE_SUBTYPE_MAPPING__[dbp_type]
 
 
@@ -396,7 +380,6 @@ def get_equivalent_types(dbp_type: str) -> set:
         __EQUIVALENT_TYPE_MAPPING__ = rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_EQUIVALENT_CLASS, reflexive=True)
         # remove external types from equivalent mappings as they are prone to errors
         __EQUIVALENT_TYPE_MAPPING__ = defaultdict(set, {t: {et for et in __EQUIVALENT_TYPE_MAPPING__[t] if dbp_util.is_dbp_type(et) or et == rdf_util.CLASS_OWL_THING} for t in __EQUIVALENT_TYPE_MAPPING__ if dbp_util.is_dbp_type(t) or t == rdf_util.CLASS_OWL_THING})
-
     return {dbp_type} | __EQUIVALENT_TYPE_MAPPING__[dbp_type]
 
 
@@ -433,7 +416,6 @@ def get_disjoint_types(dbp_type: str) -> set:
 
         # completing the subtype of each type with the subtypes of its disjoint types
         __DISJOINT_TYPE_MAPPING__ = defaultdict(set, {t: {st for dt in disjoint_types for st in get_transitive_subtype_closure(dt)} for t, disjoint_types in __DISJOINT_TYPE_MAPPING__.items()})
-
     return __DISJOINT_TYPE_MAPPING__[dbp_type]
 
 
@@ -442,18 +424,16 @@ def get_type_depth(dbp_type: str) -> int:
     global __TYPE_DEPTH__
     if '__TYPE_DEPTH__' not in globals():
         type_graph = _get_type_graph()
-        __TYPE_DEPTH__ = nx.shortest_path_length(type_graph, source=rdf_util.CLASS_OWL_THING)
-
-    return __TYPE_DEPTH__[dbp_type] if dbp_type in __TYPE_DEPTH__ else 1
+        __TYPE_DEPTH__ = defaultdict(lambda: 1, nx.shortest_path_length(type_graph, source=rdf_util.CLASS_OWL_THING))
+    return __TYPE_DEPTH__[dbp_type]
 
 
 def get_type_frequency(dbp_type: str) -> float:
     """Return the amount of resources having `dbp_type` as type."""
     global __TYPE_FREQUENCY__
     if '__TYPE_FREQUENCY__' not in globals():
-        __TYPE_FREQUENCY__ = util.load_or_create_cache('dbpedia_resource_type_frequency', _compute_type_frequency)
-
-    return __TYPE_FREQUENCY__[dbp_type] if dbp_type in __TYPE_FREQUENCY__ else 0
+        __TYPE_FREQUENCY__ = defaultdict(int, util.load_or_create_cache('dbpedia_resource_type_frequency', _compute_type_frequency))
+    return __TYPE_FREQUENCY__[dbp_type]
 
 
 def _compute_type_frequency() -> dict:
@@ -466,7 +446,7 @@ def get_type_lexicalisations(lemma: str) -> dict:
     global __TYPE_LEXICALISATIONS__
     if '__TYPE_LEXICALISATIONS__' not in globals():
         __TYPE_LEXICALISATIONS__ = defaultdict(dict, util.load_cache('dbpedia_type_lexicalisations'))
-
+    lemma = lemma.lower()
     return __TYPE_LEXICALISATIONS__[lemma] if __TYPE_LEXICALISATIONS__[lemma] else __TYPE_LEXICALISATIONS__[nlp_util.singularize_word(lemma)]
 
 
@@ -483,5 +463,4 @@ def _get_type_graph() -> nx.DiGraph:
         # remove non-dbpedia types from ontology
         subtype_mapping = {t: {st for st in sts if dbp_util.is_dbp_type(st) or st == rdf_util.CLASS_OWL_THING} for t, sts in subtype_mapping.items() if dbp_util.is_dbp_type(t) or t == rdf_util.CLASS_OWL_THING}
         __TYPE_GRAPH__ = nx.DiGraph(incoming_graph_data=[(t, st) for t, sts in subtype_mapping.items() for st in sts])
-
     return __TYPE_GRAPH__

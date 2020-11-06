@@ -19,6 +19,10 @@ class BaseGraph:
     def nodes(self) -> set:
         return set(self.graph)
 
+    @property
+    def content_nodes(self) -> set:
+        return set(self.graph).difference({self.root_node})
+
     def has_node(self, node) -> bool:
         return node in self.graph
 
