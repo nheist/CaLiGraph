@@ -416,6 +416,8 @@ class CaLiGraph(HierarchyGraph):
 
     def merge_ontology(self, use_listpage_resources: bool):
         """Combine the category-list-graph with the DBpedia ontology."""
+        util.get_logger().info('CaLiGraph: Starting to merge CaLigraph ontology with DBpedia ontology..')
+        util.get_logger().debug(f'CaLiGraph: Merge with list page resources: {use_listpage_resources}..')
         # remove edges from graph where clear type conflicts exist
         conflicting_edges = cali_mapping.find_conflicting_edges(self, use_listpage_resources)
         self._remove_edges(conflicting_edges)
@@ -425,6 +427,7 @@ class CaLiGraph(HierarchyGraph):
         node_to_dbp_types_mapping = cali_mapping.find_mappings(self, use_listpage_resources)
 
         # add dbpedia types to caligraph
+        util.get_logger().debug('CaLiGraph: Integrating DBpedia types into CaLiGraph..')
         type_graph = BaseGraph(dbp_store._get_type_graph(), root_node=rdf_util.CLASS_OWL_THING)
         for parent_type, child_type in type_graph.traverse_edges_topdown():
             # make sure to always use the same of all the equivalent types of a type
@@ -442,6 +445,7 @@ class CaLiGraph(HierarchyGraph):
             self._add_edges({(pn, cn) for pn in parent_nodes for cn in child_nodes if pn != cn})
 
         # connect caligraph-nodes with dbpedia-types
+        util.get_logger().debug('CaLiGraph: Connecting added DBpedia types to existing CaLiGraph nodes..')
         for node, dbp_types in node_to_dbp_types_mapping.items():
             parent_nodes = {n for t in dbp_types for n in self.get_nodes_for_part(t)}.difference({node})
             if parent_nodes:
@@ -478,6 +482,7 @@ class CaLiGraph(HierarchyGraph):
 
     def compute_axioms(self):
         """Compute axioms for all nodes in the graph."""
+        util.get_logger().info('CaLiGraph: Computing Cat2Ax axioms for CaLiGraph..')
         for node, axioms in cali_axioms.extract_axioms(self).items():
             for ax in axioms:
                 prop = cali_util.dbp_type2clg_type(ax[1])

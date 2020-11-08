@@ -10,6 +10,7 @@ import util
 
 
 def find_conflicting_edges(graph, use_listpage_resources: bool) -> set:
+    util.get_logger().debug('CaLiGraph: Removing conflicting edges in CaLiGraph..')
     conflicting_edges = set()
     head_lemmas = {node: nlp_util.get_head_lemmas(graph.get_name(node)) for node in graph.nodes}
     direct_mappings = {node: _find_dbpedia_parents(graph, node, use_listpage_resources, True) for node in graph.nodes}
@@ -21,11 +22,13 @@ def find_conflicting_edges(graph, use_listpage_resources: bool) -> set:
             child_types = set(direct_mappings[child])
             if child_types.intersection(parent_disjoint_types):
                 conflicting_edges.add((node, child))
+    util.get_logger().debug(f'CaLiGraph: Found {len(conflicting_edges)} to remove.')
     return conflicting_edges
 
 
 def find_mappings(graph, use_listpage_resources: bool) -> dict:
     """Return mappings from nodes in `graph` to DBpedia types retrieved from axioms of the Cat2Ax approach."""
+    util.get_logger().debug('CaLiGraph: Retrieving mappings from DBpedia to CaLiGraph..')
     mappings = {node: _find_dbpedia_parents(graph, node, use_listpage_resources, False) for node in graph.nodes}
 
     # apply complete transitivity to the graph in order to discover disjointnesses
@@ -60,6 +63,7 @@ def find_mappings(graph, use_listpage_resources: bool) -> dict:
 
 def resolve_disjointnesses(graph, use_listpage_resources: bool):
     """Resolve violations of disjointness axioms that are created through the mapping to DBpedia types."""
+    util.get_logger().debug('CaLiGraph: Resolving disjointnesses in CaLiGraph from integrated DBpedia types..')
     for node in graph.traverse_nodes_topdown():
         parents = graph.parents(node)
         coherent_type_sets = _find_coherent_type_sets({t: 1 for t in graph.get_dbpedia_types(node, force_recompute=True)})

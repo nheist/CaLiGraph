@@ -22,7 +22,6 @@ def _setup_hypernyms():
 
 
 if __name__ == '__main__':
-    # TODO: consistent logging (especially during debugging)
     try:
         util.get_logger().info('Starting serialization of caligraph.')
 
