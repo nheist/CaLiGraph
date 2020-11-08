@@ -46,7 +46,7 @@ def _create_list_equivalents_mapping():
     # 2) find equivalent categories by synonym match
     list_to_cat_synonym_mapping = defaultdict(set)
 
-    cats_important_words = {cat: nlp_util.without_stopwords(nlp_util.get_canonical_name(cat_graph.get_name(cat), disable_normalization=False)) for cat in cat_graph.nodes}
+    cats_important_words = {cat: nlp_util.without_stopwords(nlp_util.get_canonical_name(cat_graph.get_name(cat))) for cat in cat_graph.nodes}
 
     remaining_lists = list_graph.nodes.difference(set(list_to_cat_exact_mapping))
     for lst in remaining_lists:
@@ -89,10 +89,11 @@ def _create_list_parents_mapping():
     # 1) find parent categories by hypernym match
     list_to_cat_hypernym_mapping = defaultdict(set)
 
-    cats_headlemmas = {cat: nlp_util.get_head_lemmas(cat_graph.get_name(cat)) for cat in cat_graph.nodes}
+    node_names = [cat_graph.get_name(c) for c in cat_graph.nodes]
+    cats_headlemmas = dict(zip(cat_graph.nodes, nlp_util.get_head_lemmas(node_names)))
 
     unmapped_lists = {lst for lst in list_graph.nodes if not get_equivalent_categories(lst)}
-    lsts_headlemmas = {lst: nlp_util.get_head_lemmas(list_util.list2name(lst), disable_normalization=True) for lst in unmapped_lists}
+    lsts_headlemmas = {lst: nlp_util.get_head_lemmas(list_util.list2name(lst)) for lst in unmapped_lists}
     for lst, lst_headlemmas in lsts_headlemmas.items():
         if list_util.is_listcategory(lst):
             candidates = cat_store.get_parents(lst)

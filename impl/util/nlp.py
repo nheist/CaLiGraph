@@ -2,7 +2,7 @@
 
 import impl.util.spacy as spacy_util
 from spacy.tokens import Doc
-from typing import Iterable, Iterator
+from typing import Iterable, Iterator, Optional, Callable
 import re
 import inflection
 
@@ -19,9 +19,9 @@ def remove_parentheses_content(text: str, angle_brackets=False) -> str:
     return re.sub(pattern, ' ', text)
 
 
-def get_canonical_name(text: str, disable_normalization=True) -> str:
+def get_canonical_name(text: str) -> str:
     """"Remove parts from the name that Wikipedia adds for organisational reasons (e.g. by-phrases or alphabetical splits)."""
-    text = remove_by_phrase(text, return_doc=False, disable_normalization=disable_normalization)  # remove by-phrase
+    text = remove_by_phrase(text, return_doc=False)  # remove by-phrase
     text = re.sub(r'\s*/[A-Za-z]+:\s*[A-Za-z](\s*[-–]\s*[A-Za-z])?$', '', text)  # remove trailing alphabetical splits with slash and type, e.g. 'Fellows of the Royal Society/name: A-C'
     text = re.sub(r'\s+\([^()]+[-–][^()]+\)$', '', text)  # remove trailing parentheses with number or letter ranges, e.g. 'Interstate roads (1-10)'
     text = re.sub(r'\s+\([A-Z]\)$', '', text)  # remove trailing parentheses with single letter, e.g. 'Interstate roads (Y)'
@@ -40,25 +40,22 @@ def _regularize_whitespaces(text: str) -> str:
     return result
 
 
-def remove_by_phrase(text: str, return_doc=True, disable_normalization=False):
+def remove_by_phrase(text: str, return_doc=True):
     """Remove the 'by'-phrase at the end of a category or listpage, e.g. 'People by country' -> 'People'"""
-    doc = parse_set(text, disable_normalization=disable_normalization)
+    doc = parse_set(text)
     result = ''.join([w.text_with_ws for w in doc if w.ent_type_ != 'BY'])
     return parse_set(result) if return_doc else result
 
 
-def get_head_lemmas(text: str, disable_normalization=False) -> set:
+def get_head_lemmas(set_or_sets) -> set:
     """Return the lexical head subjects of `doc` as lemmas."""
-    if not text:
-        return set()
-    doc = parse_set(text, disable_normalization)
-    return {w.lemma_ for w in doc if w.ent_type_ == 'LHS'}
+    head_lemma_func = lambda doc: {w.lemma_ for w in doc if w.ent_type_ == 'LHS'}
+    return _process_one_or_many_sets(set_or_sets, head_lemma_func)
 
 
-# TODO: REMOVE DISABLE_NORMALIZATION?
-def singularize_phrase(text: str, disable_normalization: bool) -> str:
+def singularize_phrase(text: str) -> str:
     """Return the singular form of the phrase by looking for head nouns and converting them to the singular form."""
-    doc = parse_set(text, disable_normalization)
+    doc = parse_set(text)
     result = doc.text.strip()
     if len(doc) == 1:
         return singularize_word(result)
@@ -77,13 +74,18 @@ def singularize_word(word: str) -> str:
     return inflection.singularize(word)
 
 
-def parse_set(taxonomic_set: str, disable_normalization=False) -> Doc:
-    return next(parse_sets([taxonomic_set], disable_normalization))
+def _process_one_or_many_sets(set_or_sets, func: Callable):
+    if type(set_or_sets) == str:
+        return func(parse_set(set_or_sets)) if set_or_sets else None
+    return [func(s) if s else None for s in parse_sets(set_or_sets)]
 
 
-def parse_sets(taxonomic_sets: Iterable, disable_normalization=False) -> Iterator[Doc]:
-    taxonomic_sets = list(taxonomic_sets) if disable_normalization else [_normalize_text(t) for t in taxonomic_sets]
-    return spacy_util.parse_sets(taxonomic_sets)
+def parse_set(taxonomic_set: str) -> Optional[Doc]:
+    return next(parse_sets([taxonomic_set]))
+
+
+def parse_sets(taxonomic_sets: Iterable) -> Iterator[Optional[Doc]]:
+    return spacy_util.parse_sets(list(taxonomic_sets))
 
 
 def parse_text(text: str) -> Doc:
@@ -92,12 +94,3 @@ def parse_text(text: str) -> Doc:
 
 def parse_texts(texts: Iterable) -> Iterator[Doc]:
     return spacy_util.parse_texts(list(texts))
-
-
-def _normalize_text(text: str) -> str:
-    if not text or len(text) <= 1:
-        return text
-    split_text = text.split(' ')
-    if len(split_text) == 1 or (len(split_text) > 1 and not (text[1].isupper() or split_text[1].istitle())):
-        return text[0].lower() + text[1:]
-    return text

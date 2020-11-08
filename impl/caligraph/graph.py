@@ -318,7 +318,7 @@ class CaLiGraph(HierarchyGraph):
         for idx, node in enumerate(list_graph.nodes):
             if idx % 10000 == 0:
                 util.get_logger().debug(f'CaLiGraph: ListMerge - Created names for {idx} of {len(list_graph.nodes)} nodes.')
-            list_node_names[node] = cls._get_canonical_name(list_graph.get_name(node), disable_normalization=True)
+            list_node_names[node] = cls._get_canonical_name(list_graph.get_name(node))
 
         for edge_idx, (parent_lst, child_lst) in enumerate(list_graph.traverse_edges_topdown()):
             if edge_idx % 1000 == 0:
@@ -368,9 +368,7 @@ class CaLiGraph(HierarchyGraph):
 
     def _add_list_to_graph(self, lst: str, lst_name: str, list_graph: ListGraph) -> str:
         """Add a list as new node to the graph."""
-        node_id = self._convert_to_clg_type(lst_name, disable_normalization=False)
-        if not self.has_node(node_id):
-            node_id = self._convert_to_clg_type(lst_name, disable_normalization=True)
+        node_id = self._convert_to_clg_type(lst_name)
         if not self.has_node(node_id):
             # If node_id is not in the graph, then we try synonyms with max. edit-distance of 2
             # e.g. to cover cases where the type is named 'Organisation' and the category 'Organization'
@@ -403,15 +401,15 @@ class CaLiGraph(HierarchyGraph):
         return node_id
 
     @staticmethod
-    def _get_canonical_name(name: str, disable_normalization=False) -> str:
+    def _get_canonical_name(name: str) -> str:
         """Convert a name into the canonical format (c.f. `get_canonical_name` in nlp_util)."""
         name = name[4:] if name.startswith('the ') else name
-        return nlp_util.get_canonical_name(name, disable_normalization=disable_normalization)
+        return nlp_util.get_canonical_name(name)
 
     @classmethod
-    def _convert_to_clg_type(cls, caligraph_name: str, disable_normalization=False) -> str:
+    def _convert_to_clg_type(cls, caligraph_name: str) -> str:
         """Convert a name into a CaLiGraph type URI."""
-        caligraph_name = nlp_util.singularize_phrase(caligraph_name, disable_normalization)
+        caligraph_name = nlp_util.singularize_phrase(caligraph_name)
         return cali_util.name2clg_type(caligraph_name)
 
     def merge_ontology(self, use_listpage_resources: bool):

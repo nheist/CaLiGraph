@@ -12,7 +12,7 @@ import util
 def find_conflicting_edges(graph, use_listpage_resources: bool) -> set:
     util.get_logger().debug('CaLiGraph: Removing conflicting edges in CaLiGraph..')
     conflicting_edges = set()
-    head_lemmas = {node: nlp_util.get_head_lemmas(graph.get_name(node)) for node in graph.nodes}
+    head_lemmas = dict(zip(graph.nodes, nlp_util.get_head_lemmas(graph.nodes)))
     direct_mappings = {node: _find_dbpedia_parents(graph, node, use_listpage_resources, True) for node in graph.nodes}
     for node in graph.traverse_nodes_topdown():
         for child in graph.children(node):
