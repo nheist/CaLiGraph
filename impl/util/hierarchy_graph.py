@@ -66,10 +66,13 @@ class HierarchyGraph(BaseGraph):
 
     def resolve_cycles(self):
         """Resolve cycles by removing cycle edges that point from a node with a higher depth to a node with a lower depth."""
+        util.get_logger().debug('HierarchyGraph: Looking for cycles to resolve..')
+        num_edges = len(self.edges)
         # remove all edges N1-->N2 of a cycle with depth(N1) > depth(N2)
         self._remove_cycle_edges_by_node_depth(lambda x, y: x > y)
         # remove all edges N1-->N2 of a cycle with depth(N1) >= depth(N2)
         self._remove_cycle_edges_by_node_depth(lambda x, y: x >= y)
+        util.get_logger().debug(f'HierarchyGraph: Removed {len(self.edges) - num_edges} to resolve cycles.')
         return self
 
     def _remove_cycle_edges_by_node_depth(self, comparator):
