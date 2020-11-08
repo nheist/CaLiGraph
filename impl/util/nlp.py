@@ -75,7 +75,7 @@ def singularize_word(word: str) -> str:
 
 
 def _process_one_or_many_sets(set_or_sets, func: Callable):
-    if type(set_or_sets) == str:
+    if type(set_or_sets) in [str, None]:
         return func(parse_set(set_or_sets)) if set_or_sets else None
     return [func(s) if s else None for s in parse_sets(set_or_sets)]
 
