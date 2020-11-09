@@ -33,6 +33,8 @@ class CaLiGraph(HierarchyGraph):
         self._node_dbpedia_types = defaultdict(set)
         self._node_resource_stats = defaultdict(dict)
         self._node_resources = defaultdict(set)
+        self._node_direct_cat_resources = defaultdict(set)
+        self._node_direct_list_resources = defaultdict(set)
         self._all_node_resources = set()
         self._resource_nodes = defaultdict(set)
         self._resource_provenance = defaultdict(set)
@@ -46,6 +48,8 @@ class CaLiGraph(HierarchyGraph):
     def _reset_node_indices(self):
         self._node_dbpedia_types = defaultdict(set)
         self._node_resources = defaultdict(set)
+        self._node_direct_cat_resources = defaultdict(set)
+        self._node_direct_list_resources = defaultdict(set)
         self._resource_nodes = defaultdict(set)
         self._resource_provenance = defaultdict(set)
         self._resource_altlabels = defaultdict(set)
@@ -57,6 +61,8 @@ class CaLiGraph(HierarchyGraph):
     def _reset_edge_indices(self):
         self._node_dbpedia_types = defaultdict(set)
         self._node_resources = defaultdict(set)
+        self._node_direct_cat_resources = defaultdict(set)
+        self._node_direct_list_resources = defaultdict(set)
         self._resource_nodes = defaultdict(set)
         self._resource_provenance = defaultdict(set)
         self._resource_altlabels = defaultdict(set)
@@ -64,6 +70,18 @@ class CaLiGraph(HierarchyGraph):
         self._node_disjoint_dbp_types = defaultdict(set)
         self._node_disjoint_dbp_types_transitive = defaultdict(set)
         self._dbp_types_disjoint_nodes = defaultdict(set)
+
+    def get_category_parts(self, node: str) -> set:
+        self._check_node_exists(node)
+        return {p for p in self.get_parts(node) if cat_util.is_category(p)}
+
+    def get_list_parts(self, node: str) -> set:
+        self._check_node_exists(node)
+        return {p for p in self.get_parts(node) if list_util.is_listpage(p)}
+
+    def get_type_parts(self, node: str) -> set:
+        self._check_node_exists(node)
+        return {p for p in self.get_parts(node) if dbp_util.is_dbp_type(p)}
 
     def get_label(self, item: str) -> Optional[str]:
         """Return the label of a CaLiGraph type or resource."""
@@ -81,18 +99,16 @@ class CaLiGraph(HierarchyGraph):
             return set()
         if not self._resource_altlabels:
             for node in self.nodes:
-                for part in self.get_parts(node):
-                    if list_util.is_listpage(part):
-                        for res, labels in list_base.get_listpage_entities(self, part).items():
-                            self._resource_altlabels[cali_util.name2clg_resource(res)].update(labels)
+                for part in self.get_list_parts(node):
+                    for res, labels in list_base.get_listpage_entities(self, part).items():
+                        self._resource_altlabels[cali_util.name2clg_resource(res)].update(labels)
         return self._resource_altlabels[item]
 
     def get_resources(self, node: str) -> set:
         """Return all resources of a node."""
         if node not in self._node_resources:
-            direct_dbp_types = {t for t in self.get_parts(node) if dbp_util.is_dbp_type(t)}
             disjoint_dbp_types = {dt for t in self.get_dbpedia_types(node) for dt in dbp_heur.get_disjoint_types(t)}
-            dbp_resources = self.get_direct_dbpedia_resources(node) | {r for t in direct_dbp_types for r in dbp_store.get_direct_resources_for_type(t)}
+            dbp_resources = self.get_direct_dbpedia_resources(node) | {r for t in self.get_type_parts(node) for r in dbp_store.get_direct_resources_for_type(t)}
             dbp_resources = {r for r in dbp_resources if not disjoint_dbp_types.intersection(dbp_store.get_types(r))}
             self._node_resources[node] = {cali_util.dbp_resource2clg_resource(r) for r in dbp_resources}
         return self._node_resources[node]
@@ -113,35 +129,40 @@ class CaLiGraph(HierarchyGraph):
 
     def get_direct_dbpedia_resources(self, node: str, use_listpage_resources=True) -> set:
         """Return all DBpedia resources associated with the node (or its parts)."""
-        resources = set()
-        for part in self.get_parts(node):
-            if cat_util.is_category(part):
-                resources.update({r for r in cat_store.get_resources(part)})
-            elif use_listpage_resources and list_util.is_listpage(part):
-                resources.update({dbp_util.name2resource(r) for r in list_base.get_listpage_entities(self, part)})
-        resources = {dbp_store.resolve_spelling_redirect(r) for r in resources}
-        resources = {r for r in resources if len(r) > len(dbp_util.NAMESPACE_DBP_RESOURCE) and dbp_store.is_possible_resource(r)}
+        if node not in self._node_direct_cat_resources:
+            cat_resources = {r for cat in self.get_category_parts(node) for r in cat_store.get_resources(cat)}
+            self._node_direct_cat_resources[node] = self._filter_invalid_resources(cat_resources)
+        if use_listpage_resources and node not in self._node_direct_list_resources:
+            list_resources = {dbp_util.name2resource(r) for lst in self.get_list_parts(node) for r in list_base.get_listpage_entities(self, lst)}
+            self._node_direct_list_resources[node] = self._filter_invalid_resources(list_resources)
+
+        resources = self._node_direct_cat_resources[node]
+        if use_listpage_resources:
+            resources.update(self._node_direct_list_resources[node])
         return resources
+
+    @staticmethod
+    def _filter_invalid_resources(resources: set) -> set:
+        resources = {dbp_store.resolve_spelling_redirect(r) for r in resources}
+        return {r for r in resources if len(r) > len(dbp_util.NAMESPACE_DBP_RESOURCE) and dbp_store.is_possible_resource(r)}
 
     def get_resource_provenance(self, resource: str) -> set:
         """Return provenance information of a resource (i.e. which categories and lists have been used to extract it)."""
         if not self._resource_provenance:
             for node in self.nodes:
-                for part in self.get_parts(node):
-                    if cat_util.is_category(part):
-                        for res in cat_store.get_resources(part):
-                            self._resource_provenance[cali_util.dbp_resource2clg_resource(res)].add(part)
-                    elif list_util.is_listpage(part):
-                        for res in list_base.get_listpage_entities(self, part):
-                            self._resource_provenance[cali_util.name2clg_resource(res)].add(part)
+                for cat in self.get_category_parts(node):
+                    for res in cat_store.get_resources(cat):
+                        self._resource_provenance[cali_util.dbp_resource2clg_resource(res)].add(cat)
+                for lst in self.get_list_parts(node):
+                    for res in list_base.get_listpage_entities(self, lst):
+                        self._resource_provenance[cali_util.name2clg_resource(res)].add(lst)
         return self._resource_provenance[resource]
 
     def get_dbpedia_types(self, node: str, force_recompute=False) -> set:
         """Return all mapped DBpedia types of a node."""
         if node not in self._node_dbpedia_types or force_recompute:
-            node_types = {p for p in self.get_parts(node) if dbp_util.is_dbp_type(p)}
             parent_types = {t for parent in self.parents(node) for t in self.get_dbpedia_types(parent)}
-            self._node_dbpedia_types[node] = node_types | parent_types
+            self._node_dbpedia_types[node] = self.get_type_parts(node) | parent_types
         return self._node_dbpedia_types[node]
 
     def get_property_frequencies(self, node: str) -> dict:
@@ -206,8 +227,7 @@ class CaLiGraph(HierarchyGraph):
 
     def get_disjoint_nodes(self, node: str, transitive=True):
         if node not in self._node_disjoint_dbp_types:  # fetch disjoint dbp types of node
-            dbp_types = {t for t in self.get_parts(node) if dbp_util.is_dbp_type(t)}
-            self._node_disjoint_dbp_types[node] = {dt for t in dbp_types for dt in dbp_heur.get_disjoint_types(t)}
+            self._node_disjoint_dbp_types[node] = {dt for t in self.get_type_parts(node) for dt in dbp_heur.get_disjoint_types(t)}
             transitive_dbp_types = self.get_dbpedia_types(node)
             self._node_disjoint_dbp_types_transitive[node] = {dt for t in transitive_dbp_types for dt in dbp_heur.get_disjoint_types(t)}
         for dbp_type in self._node_disjoint_dbp_types_transitive[node]:  # check that disjoint nodes are available for all types
@@ -233,8 +253,8 @@ class CaLiGraph(HierarchyGraph):
         predicate_count = len({pred for axioms in self._node_axioms.values() for pred, _ in axioms})
         axiom_count = sum([len(axioms) for axioms in self._node_axioms.values()])
         parts_count = len({p for n in self.nodes for p in self.get_parts(n)})
-        cat_parts_count = len({p for n in self.nodes for p in self.get_parts(n) if cat_util.is_category(p)})
-        list_parts_count = len({p for n in self.nodes for p in self.get_parts(n) if list_util.is_listpage(p)})
+        cat_parts_count = len({p for n in self.nodes for p in self.get_category_parts(n)})
+        list_parts_count = len({p for n in self.nodes for p in self.get_list_parts(n)})
         listcat_parts_count = len({p for n in self.nodes for p in self.get_parts(n) if list_util.is_listcategory(p)})
         classtree_depth_avg = np.mean([node_depths[node] for node in leaf_nodes])
         branching_factor_avg = np.mean([d for _, d in self.graph.out_degree if d > 0])
@@ -347,7 +367,7 @@ class CaLiGraph(HierarchyGraph):
         # add Wikipedia categories to nodes that have an exact name match
         for node in graph.content_nodes:
             cat_name = cat_util.name2category(graph.get_name(node))
-            if cat_name in cat_store.get_categories() and cat_name not in graph.get_parts(node):
+            if cat_name in cat_store.get_categories() and cat_name not in graph.get_category_parts(node):
                 graph._set_parts(node, graph.get_parts(node) | {cat_name})
 
         return graph
