@@ -50,7 +50,7 @@ def remove_by_phrase(text: str, return_doc=True):
 def get_head_lemmas(set_or_sets) -> set:
     """Return the lexical head subjects of `doc` as lemmas."""
     head_lemma_func = lambda doc: {w.lemma_ for w in doc if w.ent_type_ == 'LHS'}
-    return _process_one_or_many_sets(set_or_sets, head_lemma_func)
+    return _process_one_or_many_sets(set_or_sets, head_lemma_func, default=set())
 
 
 def singularize_phrase(text: str) -> str:
@@ -74,12 +74,12 @@ def singularize_word(word: str) -> str:
     return inflection.singularize(word)
 
 
-def _process_one_or_many_sets(set_or_sets, func: Callable):
+def _process_one_or_many_sets(set_or_sets, func: Callable, default=None):
     if set_or_sets is None:
-        return None
+        return default
     if type(set_or_sets) == str:
         return func(parse_set(set_or_sets))
-    return [func(doc) if doc else None for doc in parse_sets(set_or_sets)]
+    return [func(doc) if doc else default for doc in parse_sets(set_or_sets)]
 
 
 def parse_set(taxonomic_set: str) -> Optional[Doc]:
