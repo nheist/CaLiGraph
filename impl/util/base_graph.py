@@ -102,17 +102,18 @@ class BaseGraph:
         """Traverse nodes in such a way that all parents of a node have been traversed before the node itself.
         The graph has to be fully-connected and cycle-free.
         """
-        visited_nodes = set()
         node_queue = [self.root_node]
+        visited_nodes = set(node_queue)
+        processed_nodes = set()
         while node_queue:
             node = node_queue.pop(0)
-            if node in visited_nodes:
-                continue
-            if not self.parents(node).issubset(visited_nodes):
+            if not self.parents(node).issubset(processed_nodes):
                 node_queue.append(node)
                 continue
-            visited_nodes.add(node)
-            node_queue.extend(self.children(node))
+            children_to_queue = self.children(node).difference(visited_nodes)
+            node_queue.extend(children_to_queue)
+            visited_nodes.update(children_to_queue)
+            processed_nodes.add(node)
             yield node
 
     def traverse_edges_topdown(self) -> Iterator:
@@ -128,15 +129,16 @@ class BaseGraph:
         """Traverse nodes in such a way that all children of a node have been traversed before the node itself.
         The graph has to be fully-connected and cycle-free.
         """
-        visited_nodes = set()
         node_queue = [n for n in self.nodes if not self.children(n)]
+        visited_nodes = set(node_queue)
+        processed_nodes = set()
         while node_queue:
             node = node_queue.pop(0)
-            if node in visited_nodes:
-                continue
-            if not self.children(node).issubset(visited_nodes):
+            if not self.children(node).issubset(processed_nodes):
                 node_queue.append(node)
                 continue
-            visited_nodes.add(node)
-            node_queue.extend(self.parents(node))
+            parents_to_queue = self.parents(node).difference(visited_nodes)
+            node_queue.extend(parents_to_queue)
+            visited_nodes.update(parents_to_queue)
+            processed_nodes.add(node)
             yield node
