@@ -3,6 +3,7 @@ import networkx as nx
 import util
 import impl.util.nlp as nlp_util
 import impl.util.hypernymy as hypernymy_util
+import impl.category.cat2ax as cat_axioms
 from impl.util.base_graph import BaseGraph
 from collections import defaultdict
 import copy
@@ -89,13 +90,27 @@ class HierarchyGraph(BaseGraph):
 
     def remove_unrelated_edges(self):
         """Remove edges that connect nodes which have head nouns that are neither synonyms nor hypernyms."""
+        self._setup_hypernyms()
         node_names = [self.get_name(node) for node in self.nodes]
         headlemmas = dict(zip(self.nodes, nlp_util.get_head_lemmas(node_names)))
         valid_edges = {(p, c) for p, c in self.edges if self._is_hierarchical_edge(headlemmas[p], headlemmas[c])}
         self._remove_all_edges_except(valid_edges)
         return self
 
-    def _is_hierarchical_edge(self, parent_lemmas: set, child_lemmas: set) -> bool:
+    def _setup_hypernyms(self):
+        """Initialisation of hypernyms that are extracted from Wikipedia categories using Cat2Ax axioms."""
+        if util.load_cache('wikitaxonomy_hypernyms') is not None:
+            return  # only compute hypernyms if they are not existing already
+        # initialise cat2ax axioms
+        cat2ax_confidence = util.get_config('cat2ax.pattern_confidence')
+        cat2ax_axioms = cat_axioms.extract_category_axioms(self, cat2ax_confidence)
+        util.update_cache('cat2ax_axioms', cat2ax_axioms)
+        # initialise wikitaxonomy hypernyms
+        wikitaxonomy_hypernyms = hypernymy_util.compute_hypernyms(self)
+        util.update_cache('wikitaxonomy_hypernyms', wikitaxonomy_hypernyms)
+
+    @staticmethod
+    def _is_hierarchical_edge(parent_lemmas: set, child_lemmas: set) -> bool:
         return any(hypernymy_util.is_hypernym(pl, cl) for pl in parent_lemmas for cl in child_lemmas)
 
     # compound nodes
