@@ -16,7 +16,7 @@ def get_all_parsed_pages() -> dict:
 
 def _parse_pages() -> dict:
     page_markup = get_all_pages_markup()
-    with mp.Pool(processes=util.get_config('max_cpus')) as pool:
+    with mp.Pool(processes=round(util.get_config('max_cpus')/2)) as pool:
         parsed_pages = {r: parsed for r, parsed in tqdm(pool.imap_unordered(_parse_page, page_markup.items(), chunksize=2000), desc='Parsing pages', total=len(page_markup)) if parsed}
     return parsed_pages
 
@@ -57,7 +57,7 @@ class WikiPageParser:
             self.title = None
             self.namespace = None
             self.processed_pages += 1
-            if self.processed_pages % 1000 == 0:
+            if self.processed_pages % 100000 == 0:
                 util.get_logger().debug(f'PAGE MARKUP: Processed {self.processed_pages} pages.')
 
     def end(self, tag):
