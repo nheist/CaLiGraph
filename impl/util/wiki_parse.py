@@ -18,7 +18,7 @@ PAGE_TYPE_ENUM, PAGE_TYPE_TABLE = 'enum', 'table'
 
 def parse_page_with_timeout(resource_and_markup: tuple) -> tuple:
     signal.signal(signal.SIGALRM, _timeout_handler)
-    signal.alarm(60)  # timeout of 60 seconds per page
+    signal.alarm(5 * 60)  # timeout of 5 minutes per page
 
     resource = resource_and_markup[0]
     try:
