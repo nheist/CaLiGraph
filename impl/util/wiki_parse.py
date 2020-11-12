@@ -7,6 +7,8 @@ import impl.dbpedia.store as dbp_store
 import impl.dbpedia.util as dbp_util
 import impl.util.nlp as nlp_util
 import re
+import signal
+import util
 
 
 LISTING_INDICATORS = ('*', '#', '{|')
@@ -14,14 +16,29 @@ VALID_ENUM_PATTERNS = (r'\#', r'\*')
 PAGE_TYPE_ENUM, PAGE_TYPE_TABLE = 'enum', 'table'
 
 
-def parse_page(resource: str, page_markup: str) -> Optional[dict]:
+def parse_page_with_timeout(resource_and_markup: tuple) -> tuple:
+    signal.signal(signal.SIGALRM, _timeout_handler)
+    signal.alarm(60)  # timeout of 60 seconds per page
+
+    resource = resource_and_markup[0]
+    try:
+        result = parse_page(resource_and_markup)
+        signal.alarm(0)  # reset alarm as parsing was successful
+        return result
+    except Exception as e:
+        util.get_logger().error(f'UTIL/WIKIPARSE: Failed to parse page {resource}: {e}')
+        return resource, None
+
+
+def parse_page(resource_and_markup: tuple) -> tuple:
     """Return a single parsed page in the following hierarchical structure:
 
     Sections > Enums > Entries > Entities
     Sections > Tables > Rows > Columns > Entities
     """
+    resource, page_markup = resource_and_markup
     if not any(indicator in page_markup for indicator in LISTING_INDICATORS):
-        return None  # early return of 'None' if page contains no listings at all
+        return resource, None  # early return of 'None' if page contains no listings at all
 
     # prepare markup for parsing
     page_markup = page_markup.replace('&nbsp;', ' ')  # replace html whitespaces
@@ -29,12 +46,12 @@ def parse_page(resource: str, page_markup: str) -> Optional[dict]:
 
     wiki_text = wtp.parse(page_markup)
     if not _is_page_useful(wiki_text):
-        return None
+        return resource, None
 
     cleaned_wiki_text = _convert_special_enums(wiki_text)
     cleaned_wiki_text = _remove_enums_within_tables(cleaned_wiki_text)
     if not _is_page_useful(cleaned_wiki_text):
-        return None
+        return resource, None
 
     # expand wikilinks
     resource_name = dbp_util.resource2name(resource)
@@ -48,8 +65,8 @@ def parse_page(resource: str, page_markup: str) -> Optional[dict]:
     if any(len(s['tables']) > 0 for s in sections):
         types.add(PAGE_TYPE_TABLE)
     if not types:
-        return None  # ignore pages without useful lists
-    return {'sections': sections, 'types': types}
+        return resource, None  # ignore pages without useful lists
+    return resource, {'sections': sections, 'types': types}
 
 
 def _is_page_useful(wiki_text: WikiText) -> bool:
@@ -92,7 +109,9 @@ def _expand_wikilinks(wiki_text: WikiText, resource_name: str) -> WikiText:
     try:
         # For each match, look up the corresponding value in the dictionary
         return wtp.parse(regex.sub(lambda match: text_to_wikilink[match.group(0)], wiki_text.string))
-    except:
+    except Exception as e:
+        if type(e) == ParsingTimeoutException:
+            raise e
         return wiki_text
 
 
@@ -146,7 +165,9 @@ def _extract_table(table: wtp.Table) -> Optional[dict]:
         rows = table.data(strip=True, span=True)
         cells = table.cells(span=True)
         rows_with_spans = table.data(strip=True, span=False)
-    except:
+    except Exception as e:
+        if type(e) == ParsingTimeoutException:
+            raise e
         return None
     for row_idx, row in enumerate(rows):
         if len(row) < 2 or len(row) > 100:
@@ -234,3 +255,14 @@ def _remove_language_tag(link_target: str) -> str:
     if len(link_target) < 4 or link_target[3] != ':':
         return link_target[1:]
     return link_target[4:]
+
+
+# define functionality for parsing timeouts
+
+
+class ParsingTimeoutException(Exception):
+    pass
+
+
+def _timeout_handler(signum, frame):
+    raise ParsingTimeoutException('Parsing timeout.')
