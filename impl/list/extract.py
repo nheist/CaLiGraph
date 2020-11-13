@@ -15,10 +15,10 @@ import impl.dbpedia.page_features as page_features
 
 
 def extract_enum_entities(df: pd.DataFrame) -> dict:
-    """Return entities extracted from enumeration list pages with XG-Boost-based collective extraction."""
+    """Return entities extracted from enumeration list pages with XG-Boost-based simple/collective extraction."""
     util.get_logger().info(f'LIST/EXTRACT: Extracting entities from enumeration list pages..')
 
-    base_estimator = XGBClassifier(predictor='cpu_predictor', colsample_bytree=.8, max_depth=5, n_estimators=400, scale_pos_weight=.25)
+    base_estimator = XGBClassifier(predictor='cpu_predictor', colsample_bytree=.8, scale_pos_weight=.25)
     config = {
         'base_estimator': base_estimator,
         'sampling_functions': [_sample_by_entity_position],
@@ -32,11 +32,11 @@ def extract_enum_entities(df: pd.DataFrame) -> dict:
 
 
 def extract_table_entities(df: pd.DataFrame) -> dict:
-    """Return entities extracted from table list pages with XG-Boost-based collective extraction."""
+    """Return entities extracted from table list pages with XG-Boost-based simple/collective extraction."""
     util.get_logger().info(f'LIST/EXTRACT: Extracting entities from table list pages..')
     base_estimator = Pipeline([
         ('feature_selection', SelectKBest(k=100)),
-        ('classification', XGBClassifier(predictor='cpu_predictor', colsample_bytree=.8, max_depth=5, n_estimators=200, scale_pos_weight=.25)),
+        ('classification', XGBClassifier(predictor='cpu_predictor', colsample_bytree=.8, scale_pos_weight=.25)),
     ])
     config = {
         'base_estimator': base_estimator,
