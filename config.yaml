@@ -165,9 +165,6 @@ cache:
   dbpedia_page_parsed:
     filename: 'dbpedia-page-parsed'
     version: 1
-  dbpedia_resources:
-    filename: 'dbpedia-resources'
-    version: 1
   dbpedia_resource_type_frequency:
     filename: 'dbpedia-resource-type-frequency'
     version: 1
@@ -235,17 +232,11 @@ cache:
   dbpedia_heuristic_disjoint_types:
     filename: 'dbpedia-heuristic-disjoint-types'
     version: 1
-  dbpedia_listpages:
-    filename: 'dbpedia-listpages'
-    version: 1
   dbpedia_list_equivalents:
     filename: 'dbpedia-list-equivalents'
     version: 1
   dbpedia_list_parents:
     filename: 'dbpedia-list-parents'
-    version: 1
-  dbpedia_listpage_parsed:
-    filename: 'dbpedia-listpage-parsed'
     version: 1
   dbpedia_listpage_enum_features:
     filename: 'dbpedia-listpage-enum-features'

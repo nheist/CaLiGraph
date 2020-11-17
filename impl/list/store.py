@@ -4,7 +4,6 @@ from . import util as list_util
 import impl.dbpedia.store as dbp_store
 import impl.dbpedia.pages as dbp_pages
 import impl.category.store as cat_store
-import util
 
 
 def get_listpages() -> set:
@@ -20,8 +19,7 @@ def get_listpages_with_redirects() -> set:
     """Return all list pages."""
     global __LISTPAGES_WITH_REDIRECTS__
     if '__LISTPAGES_WITH_REDIRECTS__' not in globals():
-        initializer = lambda: {(res[:res.find('__')] if '__' in res else res) for res in dbp_store.get_raw_resources() if list_util.is_listpage(res)}
-        __LISTPAGES_WITH_REDIRECTS__ = util.load_or_create_cache('dbpedia_listpages', initializer)
+        __LISTPAGES_WITH_REDIRECTS__ = {(res[:res.find('__')] if '__' in res else res) for res in dbp_store.get_raw_resources() if list_util.is_listpage(res)}
 
     return __LISTPAGES_WITH_REDIRECTS__
 
@@ -39,7 +37,7 @@ def get_parsed_listpages(listpage_type: str = None) -> dict:
     """Return all list pages of the type `listpage_type` together with their parsed content."""
     global __PARSED_LISTPAGES__
     if '__PARSED_LISTPAGES__' not in globals():
-        __PARSED_LISTPAGES__ = util.load_or_create_cache('dbpedia_listpage_parsed', _parse_listpages)
+        __PARSED_LISTPAGES__ = _parse_listpages()
     return {lp: content for lp, content in __PARSED_LISTPAGES__.items() if listpage_type is None or listpage_type in content['types']}
 
 

@@ -19,12 +19,8 @@ def get_resources() -> set:
     """Return all resources that are neither files nor lists."""
     global __RESOURCES__
     if '__RESOURCES__' not in globals():
-        __RESOURCES__ = util.load_or_create_cache('dbpedia_resources', _compute_resources)
+        __RESOURCES__ = {res for res in get_raw_resources() if not list_util.is_listpage(res) and not list_util.is_listspage(res) and not dbp_util.is_file_resource(res)}
     return __RESOURCES__
-
-
-def _compute_resources() -> set:
-    return {res for res in get_raw_resources() if not list_util.is_listpage(res) and not list_util.is_listspage(res) and not dbp_util.is_file_resource(res)}
 
 
 def get_raw_resources() -> set:
