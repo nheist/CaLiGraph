@@ -1,5 +1,5 @@
 from spacy.tokens import Doc, Span
-import inflection
+import impl.util.words as words_util
 
 
 # TAGGING OF LEXICAL HEAD OF A CATEGORY OR LIST PAGE
@@ -20,20 +20,19 @@ def tag_lexical_head(doc: Doc) -> Doc:
     for chunk in doc.noun_chunks:
         # find the lexical head by looking for plural nouns (and ignore things like parentheses, conjunctions, ..)
         elem = chunk.root
-        if elem.tag_ == 'NNP':
-            # fix plural nouns that are parsed incorrectly as proper nouns
-            singularized_elem = inflection.singularize(elem.text)
-            if len(singularized_elem) > 0 and singularized_elem != elem.text:
-                elem.tag = doc.vocab.strings['NNS']
-        if elem.text.istitle() or elem.tag_ not in ['NN', 'NNS']:
+        if elem.tag_ == 'NNP' and words_util.is_english_plural_word(elem.text):
+            # fix plural nouns that are parsed incorrectly as proper nouns due to capitalization in the beginning
+            elem.tag = doc.vocab.strings['NNS']
+        if elem.tag_ not in ['NN', 'NNS']:
             continue
-        if len(doc) > elem.i + 1 and doc[elem.i+1].text[0] in ["'", "´", "`"]:
-            continue
-        if len(doc) > elem.i + 1 and doc[elem.i+1].text in ['(', ')', '–'] and doc[-1].text != ')':
-            continue
-        if (len(doc) > elem.i + 1 and doc[elem.i + 1].tag_ in ['NN', 'NNS']) or (len(doc) > elem.i + 2 and doc[elem.i+1].text in ['and', 'or', ','] and doc[elem.i+2] in chunk_words):
-            lexhead_start = lexhead_start if lexhead_start is not None else chunk.start
-            continue
+        if len(doc) > elem.i + 1:
+            if doc[elem.i+1].text[0] in ["'", "´", "`"]:
+                continue
+            if doc[elem.i+1].text in ['(', ')', '–'] and doc[-1].text != ')':
+                continue
+            if doc[elem.i + 1].tag_ in ['NN', 'NNS'] or (len(doc) > elem.i + 2 and doc[elem.i+1].text in ['and', 'or', ','] and doc[elem.i+2] in chunk_words):
+                lexhead_start = lexhead_start if lexhead_start is not None else chunk.start
+                continue
         lexhead_start = lexhead_start if lexhead_start is not None else chunk.start
         doc.ents = [Span(doc, i, i+1, label=doc.vocab.strings['LH']) for i in range(lexhead_start, chunk.end)]
         break

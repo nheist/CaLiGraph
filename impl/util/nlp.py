@@ -68,9 +68,9 @@ def singularize_phrase(text: str) -> str:
 
 
 def singularize_word(word: str) -> str:
-    special_cases = {'caves': 'cave'}
-    if word.lower() in special_cases:
-        return special_cases[word.lower()].title() if word.istitle() else special_cases[word.lower()]
+    doc = parse_text(word)[0]
+    if doc.tag_ in ['NNS', 'NNPS']:
+        return doc.lemma_
     return inflection.singularize(word)
 
 

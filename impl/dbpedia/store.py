@@ -446,8 +446,7 @@ def get_type_lexicalisations(lemma: str) -> dict:
     global __TYPE_LEXICALISATIONS__
     if '__TYPE_LEXICALISATIONS__' not in globals():
         __TYPE_LEXICALISATIONS__ = defaultdict(dict, util.load_cache('dbpedia_type_lexicalisations'))
-    lemma = lemma.lower()
-    return __TYPE_LEXICALISATIONS__[lemma] if __TYPE_LEXICALISATIONS__[lemma] else __TYPE_LEXICALISATIONS__[nlp_util.singularize_word(lemma)]
+    return __TYPE_LEXICALISATIONS__[lemma.lower()]
 
 
 def _get_type_graph() -> nx.DiGraph:
