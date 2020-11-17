@@ -251,13 +251,15 @@ class CaLiGraph(HierarchyGraph):
         class_count = len(self.nodes)
         edge_count = len(self.edges)
         predicate_count = len({pred for axioms in self._node_axioms.values() for pred, _ in axioms})
-        axiom_count = sum([len(axioms) for axioms in self._node_axioms.values()])
         parts_count = len({p for n in self.nodes for p in self.get_parts(n)})
         cat_parts_count = len({p for n in self.nodes for p in self.get_category_parts(n)})
         list_parts_count = len({p for n in self.nodes for p in self.get_list_parts(n)})
         listcat_parts_count = len({p for n in self.nodes for p in self.get_parts(n) if list_util.is_listcategory(p)})
         classtree_depth_avg = np.mean([node_depths[node] for node in leaf_nodes])
         branching_factor_avg = np.mean([d for _, d in self.graph.out_degree if d > 0])
+        axiom_count = sum([len(axioms) for axioms in self._node_axioms.values()])
+        direct_node_axiom_count = len({n for n in self.nodes if self.get_axioms(n, transitive=False)})
+        node_axiom_count = len({n for n in self.nodes if self.get_axioms(n, transitive=True)})
 
         category_instances = set()
         list_instances = set()
@@ -280,13 +282,15 @@ class CaLiGraph(HierarchyGraph):
             '{:<30} | {:>7}'.format('nodes below root', len(self.children(self.root_node))),
             '{:<30} | {:>7}'.format('edges', edge_count),
             '{:<30} | {:>7}'.format('predicates', predicate_count),
-            '{:<30} | {:>7}'.format('axioms', axiom_count),
             '{:<30} | {:>7}'.format('parts', parts_count),
             '{:<30} | {:>7}'.format('category parts', cat_parts_count),
             '{:<30} | {:>7}'.format('list parts', list_parts_count),
             '{:<30} | {:>7}'.format('listcat parts', listcat_parts_count),
             '{:<30} | {:>7.2f}'.format('classtree depth', classtree_depth_avg),
             '{:<30} | {:>7.2f}'.format('branching factor', branching_factor_avg),
+            '{:<30} | {:>7}'.format('axioms', axiom_count),
+            '{:<30} | {:>7}'.format('nodes with direct axiom', direct_node_axiom_count),
+            '{:<30} | {:>7}'.format('nodes with axiom', node_axiom_count),
             '-' * 40,
             '{:<30} | {:>7}'.format('instances', len(category_instances | list_instances)),
             '{:<30} | {:>7}'.format('category instances', len(category_instances)),
