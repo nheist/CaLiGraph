@@ -316,8 +316,7 @@ def get_types_by_name(name: str) -> set:
         __TYPE_LABELS__ = defaultdict(set)
         for t in get_all_types():
             __TYPE_LABELS__[get_label(t).lower().split()[-1]].add(t)
-    name = name.lower()
-    return __TYPE_LABELS__[name] if __TYPE_LABELS__[name] else __TYPE_LABELS__[nlp_util.singularize_word(name)]
+    return __TYPE_LABELS__[name.lower()]
 
 
 def get_independent_types(dbp_types: set) -> set:

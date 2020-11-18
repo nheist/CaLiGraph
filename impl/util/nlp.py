@@ -1,7 +1,7 @@
 """NLP methods mainly for the identification of head nouns of Wikipedia categories."""
 
 import impl.util.spacy as spacy_util
-from spacy.tokens import Doc
+from spacy.tokens import Doc, Token
 from typing import Iterable, Iterator, Optional, Callable
 import re
 import inflection
@@ -58,20 +58,19 @@ def singularize_phrase(text: str) -> str:
     doc = parse_set(text)
     result = doc.text.strip()
     if len(doc) == 1:
-        return singularize_word(result)
+        return singularize_word(doc[0])
     for idx, w in enumerate(doc):
         if w.ent_type_ == 'LHS':
-            result = result.replace(w.text, singularize_word(w.text))
+            result = result.replace(w.text, singularize_word(w))
             if len(doc) > idx+1 and doc[idx+1].text == 'and':
                 result = result.replace('and', 'or')
     return result
 
 
-def singularize_word(word: str) -> str:
-    doc = parse_text(word)[0]
-    if doc.tag_ in ['NNS', 'NNPS']:
-        return doc.lemma_
-    return inflection.singularize(word)
+def singularize_word(word: Token) -> str:
+    if word.tag_ in ['NNS', 'NNPS']:
+        return word.lemma_
+    return inflection.singularize(word.text)
 
 
 def _process_one_or_many_sets(set_or_sets, func: Callable, default=None):
