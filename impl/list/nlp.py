@@ -102,7 +102,7 @@ def _retrieve_training_data_wle():
                     valid_entities = []
                     for entity_data in entities:
                         entity_uri = dbp_util.name2resource(entity_data['name'])
-                        entity_tag = _get_tag_for_types(dbp_store.get_independent_types(dbp_store.get_types(entity_uri)))
+                        entity_tag = _get_tag_for_types(dbp_store.get_types(entity_uri))
                         if not entity_tag:
                             continue
                         entity_text = entity_data['text']

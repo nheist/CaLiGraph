@@ -23,7 +23,11 @@ def extract_wiki_corpus_resources():
     total_hypernyms = defaultdict(lambda: defaultdict(int))
     total_type_lexicalisations = defaultdict(lambda: defaultdict(int))
 
-    spacy_util.get_hearst_pairs('')  # run matcher once before running multiprocessing to reduce initialization time
+    # initialize some caches to reduce the setup time of the individual processes
+    dbp_store.get_types('')
+    dbp_store.get_inverse_lexicalisations('')
+    spacy_util.get_hearst_pairs('')
+
     with mp.Pool(processes=util.get_config('max_cpus')) as pool:
         for hypernyms, type_lexicalisations in pool.imap_unordered(_compute_counts_for_resource, tqdm(_retrieve_plaintexts()), chunksize=1000):
             for (sub, obj), count in hypernyms.items():
@@ -49,7 +53,7 @@ def _compute_counts_for_resource(uri_with_text: tuple) -> tuple:
         # for each word, count the types that it refers to
         if uri not in dbp_store.get_inverse_lexicalisations(sub.text):
             continue  # discard, if the resource text does not refer to the subject of the article
-        for t in dbp_store.get_independent_types(dbp_store.get_types(uri)):
+        for t in dbp_store.get_types(uri):
             for word in obj:
                 type_lexicalisations[(word.lemma_.lower(), t)] += 1
     return hypernyms, type_lexicalisations

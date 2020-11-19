@@ -66,9 +66,6 @@ files:
     instance_types:
       filename: 'instance-types_lang=en_specific.ttl.bz2'
       url: 'https://downloads.dbpedia.org/repo/dbpedia/mappings/instance-types/2020.08.01/instance-types_lang=en_specific.ttl.bz2'
-    transitive_instance_types:
-      filename: 'instance-types_lang=en_transitive.ttl.bz2'
-      url: 'https://downloads.dbpedia.org/repo/dbpedia/mappings/instance-types/2020.08.01/instance-types_lang=en_transitive.ttl.bz2'
     mappingbased_literals:
       filename: 'mappingbased-literals_lang=en.ttl.bz2'
       url: 'https://downloads.dbpedia.org/repo/dbpedia/mappings/mappingbased-literals/2020.08.01/mappingbased-literals_lang=en.ttl.bz2'

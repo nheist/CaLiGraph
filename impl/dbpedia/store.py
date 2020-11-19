@@ -5,7 +5,6 @@ import impl.util.rdf as rdf_util
 from . import util as dbp_util
 import impl.category.util as cat_util
 import impl.list.util as list_util
-import impl.util.nlp as nlp_util
 from collections import defaultdict
 import networkx as nx
 from typing import Optional
@@ -113,6 +112,12 @@ def get_types(dbp_resource: str) -> set:
     return {t for t in _get_resource_type_mapping()[dbp_resource] if dbp_util.is_dbp_type(t)}
 
 
+def get_transitive_types(dbp_resource: str) -> set:
+    """Return a resource's types as well as the transitive closure of these types."""
+    transitive_types = {tt for t in get_types(dbp_resource) for tt in get_transitive_supertype_closure(t)}
+    return {t for t in transitive_types if dbp_util.is_dbp_type(t)}
+
+
 def get_direct_resources_for_type(dbp_type: str) -> set:
     """Return all direct resources for a given DBpedia type (i.e. having dbp_type as the most specific type)."""
     global __TYPE_DIRECT_RESOURCE_MAPPING__
@@ -142,19 +147,9 @@ def get_all_resources_for_type(dbp_type: str) -> set:
 def _get_resource_type_mapping() -> dict:
     global __RESOURCE_TYPE_MAPPING__
     if '__RESOURCE_TYPE_MAPPING__' not in globals():
-        type_files = [
-            util.get_data_file('files.dbpedia.instance_types'),
-            util.get_data_file('files.dbpedia.transitive_instance_types'),
-        ]
-        initializer = lambda: rdf_util.create_multi_val_dict_from_rdf(type_files, rdf_util.PREDICATE_TYPE)
+        initializer = lambda: rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.instance_types')], rdf_util.PREDICATE_TYPE)
         __RESOURCE_TYPE_MAPPING__ = util.load_or_create_cache('dbpedia_resource_type_mapping', initializer)
     return __RESOURCE_TYPE_MAPPING__
-
-
-def get_transitive_types(dbp_resource: str) -> set:
-    """Return a resource's types as well as the transitive closure of these types."""
-    transitive_types = {tt for t in get_types(dbp_resource) for tt in get_transitive_supertype_closure(t)}
-    return {t for t in transitive_types if dbp_util.is_dbp_type(t)}
 
 
 def get_properties(dbp_resource: str) -> dict:
