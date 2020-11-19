@@ -1,7 +1,9 @@
 import spacy
+from spacy.tokens import Span
 from impl.util.spacy.components import tag_lexical_head, tag_lexical_head_subjects, tag_by_phrase
+import impl.util.spacy.hearst_matcher as hearst_matcher
 import util
-from typing import Iterator
+from typing import Iterator, List, Tuple
 from collections import defaultdict
 
 
@@ -33,9 +35,20 @@ def parse_sets(taxonomic_sets: list) -> Iterator:
 
 def parse_texts(texts: list) -> Iterator:
     """Parse plain texts like the content of a Wikipedia page or a listing item."""
-    global __TEXT_PARSER__
-    if '__TEXT_PARSER__' not in globals():
-        __TEXT_PARSER__ = spacy.load('en_core_web_lg')
+    bp = _get_base_parser()
     if len(texts) <= BATCH_SIZE:
-        return iter([__TEXT_PARSER__(t) for t in texts])
-    return __TEXT_PARSER__.pipe(texts, batch_size=BATCH_SIZE, n_process=N_PROCESSES)
+        return iter([bp(t) for t in texts])
+    return bp.pipe(texts, batch_size=BATCH_SIZE, n_process=N_PROCESSES)
+
+
+def get_hearst_pairs(text: str) -> List[Tuple[Span, Span]]:
+    """Parse text and retrieve (sub, obj) pairs for every occurrence of a hearst pattern."""
+    bp = _get_base_parser()
+    return hearst_matcher.get_hearst_matches(text, bp)
+
+
+def _get_base_parser():
+    global __BASE_PARSER__
+    if '__BASE_PARSER__' not in globals():
+        __BASE_PARSER__ = spacy.load('en_core_web_lg')
+    return __BASE_PARSER__

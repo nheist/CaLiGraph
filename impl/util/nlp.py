@@ -9,14 +9,21 @@ import inflection
 
 def without_stopwords(text: str) -> set:
     """Return the lemmatized versions of all non-stop-words in `text`."""
-    text = remove_parentheses_content(text.replace('-', ' '))
+    text = remove_bracket_content(text.replace('-', ' '))
     return {word.lemma_ for word in parse_set(text) if not word.is_stop}
 
 
-def remove_parentheses_content(text: str, angle_brackets=False) -> str:
+def remove_bracket_content(text: str, bracket_type='(', substitute=' ') -> str:
     """Remove all parentheses from the given text."""
-    pattern = r'\s*\<[^>]*\>+\s*' if angle_brackets else r'\s*\([^()]*\)\s*'
-    return re.sub(pattern, ' ', text)
+    if bracket_type == '(':
+        pattern = r'\s*\([^()]*\)\s*'
+    elif bracket_type == '[':
+        pattern = r'\s*\[[^\[\]]*\]\s*'
+    elif bracket_type == '<':
+        pattern = r'\s*\<[^>]*\>+\s*'
+    else:
+        raise ValueError(f'Invalid bracket type "{bracket_type}" for the removal of bracket content.')
+    return re.sub(pattern, substitute, text)
 
 
 def get_canonical_name(text: str) -> str:

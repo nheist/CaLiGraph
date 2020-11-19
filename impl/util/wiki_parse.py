@@ -208,7 +208,7 @@ def _convert_markup(wiki_text: str) -> Tuple[str, list]:
     for w in parsed_text.wikilinks:
         # retrieve entity text and remove html tags
         text = (w.text or w.target).strip()
-        text = nlp_util.remove_parentheses_content(text, angle_brackets=True)
+        text = nlp_util.remove_bracket_content(text, bracket_type='<')
         if w.target.startswith(('File:', 'Image:')):
             continue  # ignore files and images
         if '|' in text:  # deal with invalid markup in wikilinks

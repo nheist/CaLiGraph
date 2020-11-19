@@ -89,7 +89,7 @@ class CaLiGraph(HierarchyGraph):
             return cali_util.clg_type2name(item)
         if cali_util.is_clg_resource(item):
             label = cali_util.clg_resource2name(item)
-            label = nlp_util.remove_parentheses_content(label)
+            label = nlp_util.remove_bracket_content(label)
             return label.strip()
         return None
 
