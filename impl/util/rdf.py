@@ -94,9 +94,9 @@ def create_multi_val_dict_from_rdf(filepaths: list, valid_pred: str, reverse_key
     return data_dict
 
 
-def create_multi_val_freq_dict_from_rdf(filepaths: list, valid_pred: str, reverse_key=False) -> dict:
+def create_multi_val_count_dict_from_rdf(filepaths: list, valid_pred: str, reverse_key=False) -> dict:
     """Create a key-value dict with frequencies from a given triple file."""
-    data_dict = defaultdict(functools.partial(defaultdict, float))
+    data_dict = defaultdict(functools.partial(defaultdict, int))
     for fp in filepaths:
         for sub, pred, obj in parse_triples_from_file(fp):
             if pred == valid_pred:
@@ -106,8 +106,7 @@ def create_multi_val_freq_dict_from_rdf(filepaths: list, valid_pred: str, revers
                         data_dict[cleaned_obj][sub] += 1
                     else:
                         data_dict[sub][cleaned_obj] += 1
-
-    return defaultdict(dict, {sub: {obj: count / sum(data_dict[sub].values()) for obj, count in data_dict[sub].items()} for sub in data_dict})
+    return data_dict
 
 
 def create_single_val_dict_from_rdf(filepaths: list, valid_pred: str, reverse_key=False, reflexive=False) -> dict:

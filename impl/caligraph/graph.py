@@ -249,6 +249,7 @@ class CaLiGraph(HierarchyGraph):
         node_depths = self.depths()
 
         class_count = len(self.nodes)
+        classes_connected_to_dbpedia_count = len({n for n in self.nodes if self.get_dbpedia_types(n)})
         edge_count = len(self.edges)
         predicate_count = len({pred for axioms in self._node_axioms.values() for pred, _ in axioms})
         parts_count = len({p for n in self.nodes for p in self.get_parts(n)})
@@ -280,6 +281,7 @@ class CaLiGraph(HierarchyGraph):
             '=' * 40,
             '{:<30} | {:>7}'.format('nodes', class_count),
             '{:<30} | {:>7}'.format('nodes below root', len(self.children(self.root_node))),
+            '{:<30} | {:>7}'.format('nodes connected to DBpedia', classes_connected_to_dbpedia_count),
             '{:<30} | {:>7}'.format('edges', edge_count),
             '{:<30} | {:>7}'.format('predicates', predicate_count),
             '{:<30} | {:>7}'.format('parts', parts_count),

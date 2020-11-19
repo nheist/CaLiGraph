@@ -76,15 +76,6 @@ def get_abstract(dbp_resource: str) -> str:
     return __RESOURCE_ABSTRACTS__[dbp_resource]
 
 
-def get_lexicalisations(dbp_resource: str) -> dict:
-    """Return all lexicalisations (i.e. anchor texts) of the given resource."""
-    global __RESOURCE_LEXICALISATIONS__
-    if '__RESOURCE_LEXICALISATIONS__' not in globals():
-        initializer = lambda: rdf_util.create_multi_val_freq_dict_from_rdf([util.get_data_file('files.dbpedia.anchor_texts')], rdf_util.PREDICATE_ANCHOR_TEXT)
-        __RESOURCE_LEXICALISATIONS__ = util.load_or_create_cache('dbpedia_resource_lexicalisations', initializer)
-    return __RESOURCE_LEXICALISATIONS__[dbp_resource]
-
-
 def get_inverse_lexicalisations(text: str) -> dict:
     """Return all resources that fit to the given lexicalisation."""
     global __RESOURCE_INVERSE_LEXICALISATIONS__
@@ -94,17 +85,17 @@ def get_inverse_lexicalisations(text: str) -> dict:
 
 
 def _compute_inverse_lexicalisations():
-    inverse_lexicalisation_dict = rdf_util.create_multi_val_freq_dict_from_rdf([util.get_data_file('files.dbpedia.anchor_texts')], rdf_util.PREDICATE_ANCHOR_TEXT, reverse_key=True)
-    for lex, resources in inverse_lexicalisation_dict.items():
-        for res in set(resources.keys()):
+    # count how often a lexicalisation points to a given resource
+    inv_lex_counts = rdf_util.create_multi_val_count_dict_from_rdf([util.get_data_file('files.dbpedia.anchor_texts')], rdf_util.PREDICATE_ANCHOR_TEXT, reverse_key=True)
+    # make sure that redirects are taken into account
+    for lex, resources in inv_lex_counts.items():
+        for res, cnt in resources.items():
             redirect_res = resolve_redirect(res)
             if res != redirect_res:
-                if redirect_res in inverse_lexicalisation_dict[lex]:
-                    inverse_lexicalisation_dict[lex][redirect_res] += inverse_lexicalisation_dict[lex][res]
-                else:
-                    inverse_lexicalisation_dict[lex][redirect_res] = inverse_lexicalisation_dict[lex][res]
-                del inverse_lexicalisation_dict[lex][res]
-    return inverse_lexicalisation_dict
+                inv_lex_counts[lex][redirect_res] += inv_lex_counts[lex][res]
+                del inv_lex_counts[lex][res]
+    # convert to frequencies before returning
+    return defaultdict(dict, {sub: {obj: count / sum(inv_lex_counts[sub].values()) for obj, count in obj_counts.items()} for sub, obj_counts in inv_lex_counts.items()})
 
 
 def get_types(dbp_resource: str) -> set:
