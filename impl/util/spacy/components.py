@@ -40,14 +40,22 @@ def tag_lexical_head(doc: Doc) -> Doc:
 
 
 def tag_lexical_head_subjects(doc: Doc) -> Doc:
-    """Tag the main subjects of lexical heads with 'LHS'."""
+    """Tag the main subjects of lexical heads with 'LHS' - but only if they are in plural."""
     lh_entities = list(doc.ents)
     lhs_entities = []
-    for idx, w in enumerate(doc):
-        # identify subject lexical heads at the end of the phrase or composite lexical heads connected by and/or/,
-        if w.ent_type_ == 'LH' and (len(doc) == idx+1 or doc[idx+1].ent_type_ != 'LH' or doc[idx+1].text in ['and', 'or', ',']):
-            lhs_entities.append(Span(doc, idx, idx+1, label=doc.vocab.strings['LHS']))
-            lh_entities = [e for e in lh_entities if e.start != idx]
+
+    subject_connectors = ['and', 'or', ',']
+    # iterate over the lexical head of the doc in reversed order and mark the plural nouns as subjects
+    for w in [w for w in reversed(doc) if w.ent_type_ == 'LH']:
+        if w.text in subject_connectors:
+            continue  # ignore subject connectors
+        if w.tag_ != 'NNS':
+            break  # LHS are at the end of the LH, so we stop if we are not looking at a plural noun
+        # add current word to LHS
+        lhs_entities.append(Span(doc, w.i, w.i+1, label=doc.vocab.strings['LHS']))
+        lh_entities = [e for e in lh_entities if e.start != w.i]
+        if w.i == 0 or doc[w.i-1].text not in subject_connectors:
+            break  # if the previous word is not a subject connector we found all LHS
     doc.ents = lh_entities + lhs_entities
     return doc
 
