@@ -1,6 +1,5 @@
 """Compute hypernyms with methods similar to Ponzetto & Strube: Deriving a large scale taxonomy from Wikipedia."""
 
-from nltk.corpus import wordnet
 from typing import Set
 from collections import defaultdict
 import util
@@ -9,6 +8,7 @@ import pickle
 import impl.category.cat2ax as cat_axioms
 import impl.category.store as cat_store
 import impl.util.nlp as nlp_util
+import impl.util.words as words_util
 from polyleven import levenshtein
 
 
@@ -48,18 +48,13 @@ def is_synonym(word: str, another_word: str) -> bool:
     if (word.istitle() or another_word.istitle()) and (word.lower().startswith(another_word.lower()) or another_word.lower().startswith(word.lower())):
         # better recognition of inflectional forms of countries (e.g. recognise 'Simbabwe' and 'Simbabwean' as synonyms)
         return True
-    return word in get_synonyms(another_word)
-
-
-def get_synonyms(word: str) -> set:
-    """Returns all synonyms of a word from WordNet."""
-    return {lm.name() for syn in wordnet.synsets(word) for lm in syn.lemmas()}
+    return word in words_util.get_synonyms(another_word)
 
 
 def get_variations(text: str) -> set:
     """Returns all synonyms of a text having an edit-distance of 2 or less."""
     text = text.replace(' ', '_')
-    return {s.replace('_', ' ') for s in get_synonyms(text) if levenshtein(s, text, 2) <= 2}
+    return {s.replace('_', ' ') for s in words_util.get_synonyms(text) if levenshtein(s, text, 2) <= 2}
 
 
 def compute_hypernyms(category_graph) -> dict:

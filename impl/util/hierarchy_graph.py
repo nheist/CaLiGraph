@@ -73,7 +73,7 @@ class HierarchyGraph(BaseGraph):
         self._remove_cycle_edges_by_node_depth(lambda x, y: x > y)
         # remove all edges N1-->N2 of a cycle with depth(N1) >= depth(N2)
         self._remove_cycle_edges_by_node_depth(lambda x, y: x >= y)
-        util.get_logger().debug(f'HierarchyGraph: Removed {num_edges - len(self.edges)} to resolve cycles.')
+        util.get_logger().debug(f'HierarchyGraph: Removed {num_edges - len(self.edges)} edges to resolve cycles.')
         return self
 
     def _remove_cycle_edges_by_node_depth(self, comparator):
