@@ -5,6 +5,8 @@ from nltk.corpus import words, wordnet
 def is_english_plural_word(word: str) -> bool:
     """Check whether the given word is the plural form of an English word."""
     singular_word = inflection.singularize(word)
+    if word == singular_word:
+        return False
     return singular_word in get_english_words() or singular_word.lower() in get_english_words()
 
 
