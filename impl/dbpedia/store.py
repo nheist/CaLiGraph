@@ -89,7 +89,7 @@ def _compute_inverse_lexicalisations():
     inv_lex_counts = rdf_util.create_multi_val_count_dict_from_rdf([util.get_data_file('files.dbpedia.anchor_texts')], rdf_util.PREDICATE_ANCHOR_TEXT, reverse_key=True)
     # make sure that redirects are taken into account
     for lex, resources in inv_lex_counts.items():
-        for res, cnt in resources.items():
+        for res in set(resources):
             redirect_res = resolve_redirect(res)
             if res != redirect_res:
                 inv_lex_counts[lex][redirect_res] += inv_lex_counts[lex][res]
