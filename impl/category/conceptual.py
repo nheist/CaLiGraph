@@ -8,7 +8,6 @@ def is_conceptual_category(category: str) -> bool:
     global __CONCEPTUAL_CATEGORIES__
     if '__CONCEPTUAL_CATEGORIES__' not in globals():
         __CONCEPTUAL_CATEGORIES__ = util.load_or_create_cache('dbpedia_categories_conceptual', _compute_conceptual_categories)
-
     return category in __CONCEPTUAL_CATEGORIES__
 
 
