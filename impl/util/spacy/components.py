@@ -94,7 +94,9 @@ def tag_by_phrase(doc: Doc) -> Doc:
             continue
         if word_after_by.text in ['a', 'an', 'the']:
             continue
+        if any(w.ent_type_ in ['LH', 'LHS'] for w in current_doc[by_index:]):
+            continue
         if doc[by_index - 1].text == '(':  # include possible parenthesis before by phrase
             by_index -= 1
-        doc.ents = [Span(doc, by_index, end_index, label=doc.vocab.strings['BY'])]
+        doc.ents = doc.ents + [Span(doc, by_index, end_index, label=doc.vocab.strings['BY'])]
     return doc
