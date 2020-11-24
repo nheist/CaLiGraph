@@ -20,7 +20,7 @@ def tag_lexical_head(doc: Doc) -> Doc:
     for chunk in doc.noun_chunks:
         # find the lexical head by looking for plural nouns (and ignore things like parentheses, conjunctions, ..)
         elem = chunk.root
-        if elem.tag_ == 'NNP' and words_util.is_english_plural_word(elem.text):
+        if elem.i == 0 and elem.tag_ == 'NNP' and words_util.is_english_plural_word(elem.text):
             # fix plural nouns that are parsed incorrectly as proper nouns due to capitalization in the beginning
             elem.tag = doc.vocab.strings['NNS']
         if elem.tag_ not in ['NN', 'NNS']:
