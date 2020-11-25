@@ -121,7 +121,9 @@ class HierarchyGraph(BaseGraph):
 
     @staticmethod
     def _find_parents_for_node_in_candidates(node_LH, candidates, target_LH):
-        # find nodes that have the highest overlap in lexical head
+        # get rid of candidates that contain information which is not contained in node
+        candidates = {cand for cand in candidates if not target_LH[cand].difference(node_LH)}
+        # find candidates that have the highest overlap in lexical head
         lemma_matches = {cand: len(target_LH[cand].intersection(node_LH)) for cand in candidates}
         highest_match_score = max(lemma_matches.values(), default=0)
         if highest_match_score > 0:
