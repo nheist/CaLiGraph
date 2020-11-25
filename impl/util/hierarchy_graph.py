@@ -50,19 +50,61 @@ class HierarchyGraph(BaseGraph):
             self._node_by_name = {self.get_name(node): node for node in self.nodes}
         return self._node_by_name[name] if name in self._node_by_name else None
 
+    def get_node_LHS(self) -> dict:
+        nodes = list(self.content_nodes)
+        node_names = [self.get_name(n) for n in nodes]
+        return dict(zip(nodes, nlp_util.get_head_subject_lemmas(node_names)))
+
+    def get_node_LH(self) -> dict:
+        nodes = list(self.content_nodes)
+        node_names = [self.get_name(n) for n in nodes]
+        return dict(zip(nodes, nlp_util.get_head_lemmas(node_names)))
+
     # graph connectivity
 
-    def remove_unconnected(self):
-        """Remove all nodes that are not connected to the root node."""
-        valid_nodes = {self.root_node} | self.descendants(self.root_node)
-        self._remove_all_nodes_except(valid_nodes)
+    def append_unconnected(self, discard_remaining=False):
+        """Make all unconnected nodes children of the next closest parent node or the root node.
+
+        For example, the category 'Israeli speculative fiction writers' has no parents and should be connected to other nodes.
+        We look for similar nodes based on their lexical head, i.e. we connect it to 'Israeli writers' and 'Speculative fiction writers'.
+        """
+        graph_LHS = self.get_node_LHS()
+        graph_LH = self.get_node_LH()
+        unconnected_head_nodes = [node for node in self.content_nodes if not self.parents(node)]
+
+        nodes_LHS_LH = [(node, graph_LHS[node], graph_LH[node]) for node in unconnected_head_nodes]
+        nodes_to_parents_mapping = self.find_parents_by_headlemma_match(nodes_LHS_LH)
+        self._add_edges([(parent, node) for node, parents in nodes_to_parents_mapping.items() for parent in parents])
+
+        if discard_remaining:  # discard nodes without any valid parents
+            unconnected_nodes = self.content_nodes.difference(self.descendants(self.root_node))
+            self._remove_nodes(unconnected_nodes)
+        else:  # or set root_node as parent for nodes without any valid parents
+            remaining_unconnected_root_nodes = {node for node in self.content_nodes if not self.parents(node)}
+            self._add_edges([(self.root_node, node) for node in remaining_unconnected_root_nodes])
         return self
 
-    def append_unconnected(self):
-        """Make all unconnected nodes children of the root node."""
-        unconnected_root_nodes = {node for node in self.content_nodes if not self.parents(node)}
-        self._add_edges([(self.root_node, node) for node in unconnected_root_nodes])
-        return self
+    def find_parents_by_headlemma_match(self, unconnected_nodes_with_LHS_LH: list) -> dict:
+        """For every node in unconnected_nodes, find a set of parents that matches the lexical head best."""
+        connected_nodes = self.descendants(self.root_node)
+        graph_LH = self.get_node_LH()
+        graph_LHS = self.get_node_LHS()
+        # compute mapping from head lemmas to nodes in graph
+        lhs_to_node_mapping = defaultdict(set)
+        for graph_node, lhs in graph_LHS.items():
+            for lemma in lhs:
+                lhs_to_node_mapping[lemma].add(graph_node)
+
+        nodes_to_parents_mapping = {}
+        for node, LHS, LH in unconnected_nodes_with_LHS_LH:
+            parent_node_candidates = {n for subject_lemma in LHS for n in lhs_to_node_mapping[subject_lemma]}.intersection(connected_nodes)
+            # find nodes that have the highest overlap in lexical head
+            lemma_matches = {cand: len(graph_LH[cand].intersection(LH)) for cand in parent_node_candidates}
+            highest_match_score = max(lemma_matches.values(), default=None)
+            best_parents = {cand for cand, score in lemma_matches.items() if score == highest_match_score}
+            nodes_to_parents_mapping[node] = best_parents
+
+        return nodes_to_parents_mapping
 
     def resolve_cycles(self):
         """Resolve cycles by removing cycle edges that point from a node with a higher depth to a node with a lower depth."""
@@ -89,9 +131,8 @@ class HierarchyGraph(BaseGraph):
 
     def remove_unrelated_edges(self):
         """Remove edges that connect nodes which have head nouns that are neither synonyms nor hypernyms."""
-        node_names = [self.get_name(node) for node in self.nodes]
-        headlemmas = dict(zip(self.nodes, nlp_util.get_head_lemmas(node_names)))
-        valid_edges = {(p, c) for p, c in self.edges if self._is_hierarchical_edge(headlemmas[p], headlemmas[c])}
+        lexhead_subjects = self.get_node_LHS()
+        valid_edges = {(p, c) for p, c in self.edges if self._is_hierarchical_edge(lexhead_subjects[p], lexhead_subjects[c])}
         self._remove_all_edges_except(valid_edges)
         return self
 

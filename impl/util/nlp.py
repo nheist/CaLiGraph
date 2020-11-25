@@ -2,7 +2,7 @@
 
 import impl.util.spacy as spacy_util
 from spacy.tokens import Doc, Token
-from typing import Iterable, Iterator, Optional, Callable
+from typing import Iterable, Iterator, Optional, Callable, Union
 import re
 import inflection
 
@@ -54,10 +54,16 @@ def remove_by_phrase(text: str, return_doc=True):
     return parse_set(result) if return_doc else result
 
 
-def get_head_lemmas(set_or_sets) -> set:
+def get_head_subject_lemmas(set_or_sets) -> Union[set, list]:
     """Return the lexical head subjects of `doc` as lemmas."""
-    head_lemma_func = lambda doc: {w.lemma_ for w in doc if w.ent_type_ == 'LHS'}
-    return _process_one_or_many_sets(set_or_sets, head_lemma_func, default=set())
+    func = lambda doc: {w.lemma_ for w in doc if w.ent_type_ == 'LHS'}
+    return _process_one_or_many_sets(set_or_sets, func, default=set())
+
+
+def get_head_lemmas(set_or_sets) -> Union[set, list]:
+    """Return the non-subject part of the lexical head of `doc` as lemmas."""
+    func = lambda doc: {w.lemma_ for w in doc if w.ent_type_ == 'LH'}
+    return _process_one_or_many_sets(set_or_sets, func, default=set())
 
 
 def singularize_phrase(text: str) -> str:
@@ -84,8 +90,8 @@ def _process_one_or_many_sets(set_or_sets, func: Callable, default=None):
     if set_or_sets is None:
         return default
     if type(set_or_sets) == str:
-        return func(parse_set(set_or_sets))
-    return [func(doc) if doc else default for doc in parse_sets(set_or_sets)]
+        return func(parse_set(set_or_sets))  # process single set
+    return [func(doc) if doc else default for doc in parse_sets(set_or_sets)]  # process multiple sets
 
 
 def parse_set(taxonomic_set: str) -> Optional[Doc]:

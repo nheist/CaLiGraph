@@ -27,12 +27,14 @@ class BaseGraph:
         return node in self.graph
 
     def _add_nodes(self, nodes):
-        self.graph.add_nodes_from(nodes)
-        self._reset_node_indices()
+        if nodes:
+            self.graph.add_nodes_from(nodes)
+            self._reset_node_indices()
 
     def _remove_nodes(self, nodes: set):
-        self.graph.remove_nodes_from(nodes)
-        self._reset_node_indices()
+        if nodes:
+            self.graph.remove_nodes_from(nodes)
+            self._reset_node_indices()
 
     def _remove_all_nodes_except(self, valid_nodes: set):
         self._remove_nodes(self.nodes.difference(valid_nodes))
@@ -48,12 +50,14 @@ class BaseGraph:
         return set(self.graph.edges)
 
     def _add_edges(self, edges):
-        self.graph.add_edges_from(edges)
-        self._reset_edge_indices()
+        if edges:
+            self.graph.add_edges_from(edges)
+            self._reset_edge_indices()
 
     def _remove_edges(self, edges):
-        self.graph.remove_edges_from(edges)
-        self._reset_edge_indices()
+        if edges:
+            self.graph.remove_edges_from(edges)
+            self._reset_edge_indices()
 
     def _remove_all_edges_except(self, valid_edges: set):
         invalid_edges = self.edges.difference(valid_edges)

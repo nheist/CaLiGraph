@@ -62,10 +62,11 @@ def compute_hypernyms(category_graph) -> dict:
     hypernyms = defaultdict(set)
 
     # collect hypernyms from axiom matches between Wikipedia categories
+    cat_headlemmas = category_graph.get_node_LHS()
     axiom_hypernyms = defaultdict(lambda: defaultdict(lambda: 0))
     for parent, child in _get_axiom_edges(category_graph):
-        for cl in nlp_util.get_head_lemmas(cat_store.get_label(child)):
-            for pl in nlp_util.get_head_lemmas(cat_store.get_label(parent)):
+        for cl in cat_headlemmas[child]:
+            for pl in cat_headlemmas[parent]:
                 axiom_hypernyms[cl.lower()][pl.lower()] += 1
 
     # load remaining hypernyms

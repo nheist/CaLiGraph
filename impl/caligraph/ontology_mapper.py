@@ -12,11 +12,11 @@ import util
 def find_conflicting_edges(graph, use_listpage_resources: bool) -> set:
     util.get_logger().debug('CaLiGraph: Removing conflicting edges in CaLiGraph..')
     conflicting_edges = set()
-    head_lemmas = dict(zip(graph.nodes, nlp_util.get_head_lemmas(graph.nodes)))
+    head_subject_lemmas = graph.get_node_LHS()
     direct_mappings = {node: _find_dbpedia_parents(graph, node, use_listpage_resources, True) for node in graph.nodes}
     for node in graph.traverse_nodes_topdown():
         for child in graph.children(node):
-            if head_lemmas[node] == head_lemmas[child]:
+            if head_subject_lemmas[node] == head_subject_lemmas[child]:
                 continue
             parent_disjoint_types = {dt for t in direct_mappings[node] for dt in dbp_heur.get_disjoint_types(t)}
             child_types = set(direct_mappings[child])
@@ -115,8 +115,8 @@ def _find_dbpedia_parents(graph, node: str, use_listpage_resources: bool, direct
 
 
 def _compute_type_lexicalisation_scores(graph, node: str) -> dict:
-    head_lemmas = nlp_util.get_head_lemmas(graph.get_name(node))
-    return cat_axioms._get_type_surface_scores(head_lemmas, lemmatize=False)
+    head_subject_lemmas = nlp_util.get_head_subject_lemmas(graph.get_name(node))
+    return cat_axioms._get_type_surface_scores(head_subject_lemmas, lemmatize=False)
 
 
 def _compute_type_resource_scores(graph, node: str, use_listpage_resources: bool, direct_resources_only: bool) -> dict:

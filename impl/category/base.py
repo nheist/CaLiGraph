@@ -13,7 +13,7 @@ def get_conceptual_category_graph() -> CategoryGraph:
     """Retrieve category graph with filtered categories."""
     global __CONCEPTUAL_CATEGORY_GRAPH__
     if '__CONCEPTUAL_CATEGORY_GRAPH__' not in globals():
-        initializer = lambda: CategoryGraph.create_from_dbpedia().remove_unconnected().make_conceptual()
+        initializer = lambda: CategoryGraph.create_from_dbpedia().make_conceptual().append_unconnected(discard_remaining=True)
         __CONCEPTUAL_CATEGORY_GRAPH__ = util.load_or_create_cache('catgraph_conceptual', initializer)
     return __CONCEPTUAL_CATEGORY_GRAPH__
 
