@@ -88,6 +88,9 @@ def _compute_disjoint_types() -> dict:
         for tt in transitive_types:
             disjoint_types[tt] = disjoint_types[tt].difference(transitive_types)
 
+    # add transitive disjointnesses
+    disjoint_types = {t: {tdt for dt in dts for tdt in dbp_store.get_transitive_subtype_closure(dt)} for t, dts in disjoint_types.items()}
+
     # make sure that there are no disjointnesses between place and organisation
     place_types = dbp_store.get_transitive_subtype_closure(f'{dbo}Place') | {f'{dbo}Location'}
     orga_types = dbp_store.get_transitive_subtype_closure(f'{dbo}Organisation') | {f'{dbo}Agent'}
@@ -95,9 +98,6 @@ def _compute_disjoint_types() -> dict:
         disjoint_types[pt] = disjoint_types[pt].difference(orga_types)
     for ot in orga_types:
         disjoint_types[ot] = disjoint_types[ot].difference(place_types)
-
-    # add transitive disjointnesses
-    disjoint_types = {t: {tdt for dt in dts for tdt in dbp_store.get_transitive_subtype_closure(dt)} for t, dts in disjoint_types.items()}
 
     return disjoint_types
 
