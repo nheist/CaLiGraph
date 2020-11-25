@@ -49,7 +49,7 @@ class TypeAxiom(Axiom):
         return super().implies(other) or other.value in dbp_store.get_transitive_supertype_closure(self.value)
 
     def contradicts(self, other):
-        return other.value in dbp_heur.get_disjoint_types(self.value)
+        return type(other) == TypeAxiom and other.value in dbp_heur.get_disjoint_types(self.value)
 
     def accepts_resource(self, dbp_resource: str) -> bool:
         return self.value in dbp_store.get_transitive_types(dbp_resource)
@@ -60,6 +60,8 @@ class TypeAxiom(Axiom):
 
 class RelationAxiom(Axiom):
     def contradicts(self, other):
+        if type(other) != RelationAxiom:
+            return False
         if self.predicate != other.predicate or not dbp_store.is_functional(self.predicate):
             return False
         return dbp_store.resolve_redirect(self.value) != dbp_store.resolve_redirect(other.value)

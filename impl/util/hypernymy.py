@@ -100,11 +100,10 @@ def compute_hypernyms(category_graph) -> dict:
 def _get_axiom_edges(category_graph) -> Set[tuple]:
     """Return all edges that are confirmed by axioms (i.e. the child axiom implies the parent axiom."""
     valid_axiom_edges = set()
-    for parent in category_graph.nodes:
+    for parent in category_graph.content_nodes:
         parent_axioms = cat_axioms.get_axioms(parent)
         for child in category_graph.children(parent):
             child_axioms = cat_axioms.get_axioms(child)
             if not any(pa.contradicts(ca) for pa in parent_axioms for ca in child_axioms):
-                if any(ca.implies(pa) for pa in parent_axioms for ca in child_axioms):
-                    valid_axiom_edges.add((parent, child))
+                valid_axiom_edges.add((parent, child))
     return valid_axiom_edges
