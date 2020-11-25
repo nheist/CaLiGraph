@@ -10,7 +10,6 @@ __pycache__/
 # Project
 data/*
 data/cache/*
-!data/cache/dbpedia-type-lexicalisations_v1.p.bz2
 !data/maintenance_categories.ttl.bz2
 
 results/*
