@@ -24,7 +24,7 @@ def tag_lexical_head(doc: Doc) -> Doc:
             # fix plural nouns that are parsed incorrectly as proper nouns due to capitalization in the beginning
             elem.tag = doc.vocab.strings['NNS']
         if elem.tag_ not in ['NN', 'NNS']:
-            continue
+            break
         if len(doc) > elem.i + 1:
             if doc[elem.i+1].text[0] in ["'", "´", "`"]:
                 continue
