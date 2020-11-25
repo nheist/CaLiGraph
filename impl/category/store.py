@@ -73,6 +73,7 @@ def get_children(category: str) -> set:
     if '__CHILDREN__' not in globals():
         initializer = lambda: rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.category_skos')], rdf_util.PREDICATE_BROADER, reverse_key=True)
         __CHILDREN__ = util.load_or_create_cache('dbpedia_category_children', initializer)
+        # TODO: create additional cache file by going through category pages in dbpedia_pages and extract parent categories
 
     return __CHILDREN__[category].difference({category})
 

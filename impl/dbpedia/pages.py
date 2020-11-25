@@ -16,6 +16,7 @@ def get_all_parsed_pages() -> dict:
 
 def _parse_pages() -> dict:
     page_markup = get_all_pages_markup()
+    # TODO: first identify and extract templates; then pass templates to actual parsing so that they can be resolved
     with mp.Pool(processes=round(util.get_config('max_cpus')/2)) as pool:
         parsed_pages = {r: parsed for r, parsed in tqdm(pool.imap_unordered(wiki_parse.parse_page_with_timeout, page_markup.items(), chunksize=2000), desc='Parsing pages', total=len(page_markup)) if parsed}
     return parsed_pages
@@ -66,4 +67,4 @@ class WikiPageParser:
         return self.page_markup
 
     def _valid_page(self) -> bool:
-        return self.namespace == '0'
+        return self.namespace in ['0', '10', '14']  # 0 = Page, 10 = Template, 14 = Category
