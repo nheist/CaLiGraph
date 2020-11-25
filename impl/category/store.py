@@ -25,7 +25,7 @@ def get_usable_cats() -> set:
 def is_usable(category: str) -> bool:
     """Return categories that are no maintenance or organisational ones (using indicators in the category name)."""
     category_tokens = {t.lower() for t in cat_util.remove_category_prefix(category).split('_')}
-    indicators = {'wikipedia', 'wikiproject', 'lists', 'redirects', 'mediawiki', 'template', 'templates', 'user', 'portal', 'categories', 'articles', 'pages', 'navigational', 'stubs'}
+    indicators = {'wikipedia', 'wikipedians', 'wikimedia', 'wikiproject', 'lists', 'redirects', 'mediawiki', 'template', 'templates', 'user', 'portal', 'categories', 'articles', 'pages', 'navigational', 'stubs'}
     return category not in get_maintenance_categories() and not category_tokens.intersection(indicators)
 
 
