@@ -115,8 +115,8 @@ def _find_dbpedia_parents(graph, node: str, use_listpage_resources: bool, direct
 
 
 def _compute_type_lexicalisation_scores(graph, node: str) -> dict:
-    head_subject_lemmas = nlp_util.get_head_subject_lemmas(graph.get_name(node))
-    return cat_axioms._get_type_surface_scores(head_subject_lemmas, lemmatize=False)
+    lexhead_subject_lemmas = nlp_util.get_lexhead_subjects(graph.get_name(node))
+    return cat_axioms._get_type_surface_scores(lexhead_subject_lemmas, lemmatize=False)
 
 
 def _compute_type_resource_scores(graph, node: str, use_listpage_resources: bool, direct_resources_only: bool) -> dict:

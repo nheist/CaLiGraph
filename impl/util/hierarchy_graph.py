@@ -50,20 +50,20 @@ class HierarchyGraph(BaseGraph):
             self._node_by_name = {self.get_name(node): node for node in self.nodes}
         return self._node_by_name[name] if name in self._node_by_name else None
 
-    def get_node_LHS(self) -> dict:
+    def get_node_LHS(self, lemmatize=True) -> dict:
         nodes = list(self.content_nodes)
         node_names = [self.get_name(n) for n in nodes]
-        return dict(zip(nodes, nlp_util.get_head_subject_lemmas(node_names)))
+        return dict(zip(nodes, nlp_util.get_lexhead_subjects(node_names, lemmatize=lemmatize)))
 
     def get_node_LH(self) -> dict:
         nodes = list(self.content_nodes)
         node_names = [self.get_name(n) for n in nodes]
-        return dict(zip(nodes, nlp_util.get_head_lemmas(node_names)))
+        return dict(zip(nodes, nlp_util.get_lexhead_remainder(node_names)))
 
     def get_node_NH(self) -> dict:
         nodes = list(self.content_nodes)
         node_names = [self.get_name(n) for n in nodes]
-        return dict(zip(nodes, nlp_util.get_nonhead_part(node_names)))
+        return dict(zip(nodes, nlp_util.get_nonlexhead_part(node_names)))
 
     # graph connectivity
 
@@ -88,7 +88,7 @@ class HierarchyGraph(BaseGraph):
     def find_parents_by_headlemma_match(self, unconnected_nodes: set, source_graph) -> dict:
         """For every node in unconnected_nodes, find a set of parents that matches the lexical head best."""
         connected_nodes = self.descendants(self.root_node)
-        target_LHS = self.get_node_LHS()
+        target_LHS = self.get_node_LHS(lemmatize=False)
         target_LH = self.get_node_LH()
         target_NH = self.get_node_NH()
         if source_graph == self:
@@ -96,7 +96,7 @@ class HierarchyGraph(BaseGraph):
             source_LH = target_LH
             source_NH = target_NH
         else:
-            source_LHS = source_graph.get_node_LHS()
+            source_LHS = source_graph.get_node_LHS(lemmatize=False)
             source_LH = source_graph.get_node_LH()
             source_NH = source_graph.get_node_NH()
         # compute mapping from head lemmas to nodes in graph

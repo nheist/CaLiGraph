@@ -15,4 +15,4 @@ def _compute_conceptual_categories() -> set:
     util.get_logger().info('CACHE: Computing conceptual categories')
     categories = cat_store.get_categories()
     category_names = [cat_store.get_label(cat) for cat in categories]
-    return {cat for cat, hsls in zip(categories, nlp_util.get_head_subject_lemmas(category_names)) if hsls}
+    return {cat for cat, hsls in zip(categories, nlp_util.get_lexhead_subjects(category_names)) if hsls}
