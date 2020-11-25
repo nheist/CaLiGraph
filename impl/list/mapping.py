@@ -76,7 +76,6 @@ def _create_list_parents_mapping():
     cats_LHS = cat_graph.get_node_LHS()
     list_graph = list_base.get_merged_listgraph()
     lists_LHS = list_graph.get_node_LHS()
-    lists_LH = list_graph.get_node_LH()
 
     # 1) find parent categories by hypernym match
     list_to_cat_hypernym_mapping = defaultdict(set)
@@ -91,10 +90,9 @@ def _create_list_parents_mapping():
 
     # 2) map listcategory to headlemma category as a mapping to the root category is the only alternative
     unmapped_lists = unmapped_lists.difference(set(list_to_cat_hypernym_mapping))
-    unmapped_head_lists = [lst for lst in unmapped_lists if list_graph.root_node in list_graph.parents(lst)]
+    unmapped_head_lists = {lst for lst in unmapped_lists if list_graph.root_node in list_graph.parents(lst)}
 
-    lists_LHS_LH = [(lst, lists_LHS[lst], lists_LH[lst]) for lst in unmapped_head_lists]
-    list_to_cat_headlemma_mapping = defaultdict(set, cat_graph.find_parents_by_headlemma_match(lists_LHS_LH))
+    list_to_cat_headlemma_mapping = defaultdict(set, cat_graph.find_parents_by_headlemma_match(unmapped_head_lists, list_graph))
     util.get_logger().debug(f'Headlemma Mapping: Mapped {len(list_to_cat_headlemma_mapping)} lists to {sum(len(cat) for cat in list_to_cat_headlemma_mapping.values())} categories.')
 
     # merge mappings

@@ -60,6 +60,11 @@ class HierarchyGraph(BaseGraph):
         node_names = [self.get_name(n) for n in nodes]
         return dict(zip(nodes, nlp_util.get_head_lemmas(node_names)))
 
+    def get_node_NH(self) -> dict:
+        nodes = list(self.content_nodes)
+        node_names = [self.get_name(n) for n in nodes]
+        return dict(zip(nodes, nlp_util.get_nonhead_part(node_names)))
+
     # graph connectivity
 
     def append_unconnected(self, discard_remaining=False):
@@ -68,12 +73,8 @@ class HierarchyGraph(BaseGraph):
         For example, the category 'Israeli speculative fiction writers' has no parents and should be connected to other nodes.
         We look for similar nodes based on their lexical head, i.e. we connect it to 'Israeli writers' and 'Speculative fiction writers'.
         """
-        graph_LHS = self.get_node_LHS()
-        graph_LH = self.get_node_LH()
-        unconnected_head_nodes = [node for node in self.content_nodes if not self.parents(node)]
-
-        nodes_LHS_LH = [(node, graph_LHS[node], graph_LH[node]) for node in unconnected_head_nodes]
-        nodes_to_parents_mapping = self.find_parents_by_headlemma_match(nodes_LHS_LH)
+        unconnected_head_nodes = {node for node in self.content_nodes if not self.parents(node)}
+        nodes_to_parents_mapping = self.find_parents_by_headlemma_match(unconnected_head_nodes, self)
         self._add_edges([(parent, node) for node, parents in nodes_to_parents_mapping.items() for parent in parents])
 
         if discard_remaining:  # discard nodes without any valid parents
@@ -84,31 +85,51 @@ class HierarchyGraph(BaseGraph):
             self._add_edges([(self.root_node, node) for node in remaining_unconnected_root_nodes])
         return self
 
-    def find_parents_by_headlemma_match(self, unconnected_nodes_with_LHS_LH: list) -> dict:
+    def find_parents_by_headlemma_match(self, unconnected_nodes: set, source_graph) -> dict:
         """For every node in unconnected_nodes, find a set of parents that matches the lexical head best."""
         connected_nodes = self.descendants(self.root_node)
-        graph_LH = self.get_node_LH()
-        graph_LHS = self.get_node_LHS()
+        target_LHS = self.get_node_LHS()
+        target_LH = self.get_node_LH()
+        target_NH = self.get_node_NH()
+        if source_graph == self:
+            source_LHS = target_LHS
+            source_LH = target_LH
+            source_NH = target_NH
+        else:
+            source_LHS = source_graph.get_node_LHS()
+            source_LH = source_graph.get_node_LH()
+            source_NH = source_graph.get_node_NH()
         # compute mapping from head lemmas to nodes in graph
         lhs_to_node_mapping = defaultdict(set)
-        for graph_node, lhs in graph_LHS.items():
+        for graph_node, lhs in target_LHS.items():
             for lemma in lhs:
                 lhs_to_node_mapping[lemma].add(graph_node)
 
         nodes_to_parents_mapping = {}
-        for node, LHS, LH in unconnected_nodes_with_LHS_LH:
-            parent_node_candidates = {n for subject_lemma in LHS for n in lhs_to_node_mapping[subject_lemma]}.intersection(connected_nodes)
-            # find nodes that have the highest overlap in lexical head
-            lemma_matches = {cand: len(graph_LH[cand].intersection(LH)) for cand in parent_node_candidates}
-            highest_match_score = max(lemma_matches.values(), default=0)
-            if highest_match_score > 0:
-                best_parents = {cand for cand, score in lemma_matches.items() if score == highest_match_score}
-            else:
-                # if no related nodes are found, use the most generic node (if available)
-                best_parents = {cand for cand in parent_node_candidates if len(graph_LH[cand]) == 0}
+        for node in unconnected_nodes:
+            LHS = source_LHS[node]
+            NH = source_NH[node]
+            exact_parent_node_candidates = {n for subject_lemma in LHS for n in lhs_to_node_mapping[subject_lemma] if NH == target_NH[n]}.intersection(connected_nodes)
+            best_parents = self._find_parents_for_node_in_candidates(source_LH[node], exact_parent_node_candidates, target_LH)
+            if not best_parents and len(NH) > 0:
+                # if we do not find any best parents, we try to find candidates without NH
+                nonhead_parent_node_candidates = {n for subject_lemma in LHS for n in lhs_to_node_mapping[subject_lemma] if len(target_NH[n]) == 0}.intersection(connected_nodes)
+                best_parents = self._find_parents_for_node_in_candidates(source_LH[node], nonhead_parent_node_candidates, target_LH)
             nodes_to_parents_mapping[node] = best_parents
 
         return nodes_to_parents_mapping
+
+    @staticmethod
+    def _find_parents_for_node_in_candidates(node_LH, candidates, target_LH):
+        # find nodes that have the highest overlap in lexical head
+        lemma_matches = {cand: len(target_LH[cand].intersection(node_LH)) for cand in candidates}
+        highest_match_score = max(lemma_matches.values(), default=0)
+        if highest_match_score > 0:
+            # select the nodes that have the best matching lexical head
+            return {cand for cand, score in lemma_matches.items() if score == highest_match_score}
+        else:
+            # if no related nodes are found, use the most generic node (if available)
+            return {cand for cand in candidates if len(target_LH[cand]) == 0}
 
     def resolve_cycles(self):
         """Resolve cycles by removing cycle edges that point from a node with a higher depth to a node with a lower depth."""

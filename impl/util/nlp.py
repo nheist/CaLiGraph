@@ -47,13 +47,6 @@ def _regularize_whitespaces(text: str) -> str:
     return result
 
 
-def remove_by_phrase(text: str, return_doc=True):
-    """Remove the 'by'-phrase at the end of a category or listpage, e.g. 'People by country' -> 'People'"""
-    doc = parse_set(text)
-    result = ''.join([w.text_with_ws for w in doc if w.ent_type_ != 'BY'])
-    return parse_set(result) if return_doc else result
-
-
 def get_head_subject_lemmas(set_or_sets) -> Union[set, list]:
     """Return the lexical head subjects of `doc` as lemmas."""
     func = lambda doc: {w.lemma_ for w in doc if w.ent_type_ == 'LHS'}
@@ -64,6 +57,19 @@ def get_head_lemmas(set_or_sets) -> Union[set, list]:
     """Return the non-subject part of the lexical head of `doc` as lemmas."""
     func = lambda doc: {w.lemma_ for w in doc if w.ent_type_ == 'LH'}
     return _process_one_or_many_sets(set_or_sets, func, default=set())
+
+
+def remove_by_phrase(text: str, return_doc=True):
+    """Remove the 'by'-phrase at the end of a category or listpage, e.g. 'People by country' -> 'People'"""
+    doc = parse_set(text)
+    result = ''.join([w.text_with_ws for w in doc if w.ent_type_ != 'BY'])
+    return parse_set(result) if return_doc else result
+
+
+def get_nonhead_part(set_or_sets) -> Union[str, list]:
+    """Return the words not contained in the lexical head or by-phrase of `doc`."""
+    func = lambda doc: ''.join([w.text_with_ws for w in doc if w.ent_type_ not in ['LH', 'LHS', 'BY']])
+    return _process_one_or_many_sets(set_or_sets, func, default='')
 
 
 def singularize_phrase(text: str) -> str:
