@@ -100,8 +100,12 @@ class HierarchyGraph(BaseGraph):
             parent_node_candidates = {n for subject_lemma in LHS for n in lhs_to_node_mapping[subject_lemma]}.intersection(connected_nodes)
             # find nodes that have the highest overlap in lexical head
             lemma_matches = {cand: len(graph_LH[cand].intersection(LH)) for cand in parent_node_candidates}
-            highest_match_score = max(lemma_matches.values(), default=None)
-            best_parents = {cand for cand, score in lemma_matches.items() if score == highest_match_score}
+            highest_match_score = max(lemma_matches.values(), default=0)
+            if highest_match_score > 0:
+                best_parents = {cand for cand, score in lemma_matches.items() if score == highest_match_score}
+            else:
+                # if no related nodes are found, use the most generic node (if available)
+                best_parents = {cand for cand in parent_node_candidates if len(graph_LH[cand]) == 0}
             nodes_to_parents_mapping[node] = best_parents
 
         return nodes_to_parents_mapping
