@@ -48,7 +48,7 @@ def is_synonym(word: str, another_word: str) -> bool:
     if (word.istitle() or another_word.istitle()) and (word.lower().startswith(another_word.lower()) or another_word.lower().startswith(word.lower())):
         # better recognition of inflectional forms of countries (e.g. recognise 'Simbabwe' and 'Simbabwean' as synonyms)
         return True
-    return word in words_util.get_synonyms(another_word)
+    return any(word in s for s in words_util.get_synonyms(another_word)) or any(another_word in s for s in words_util.get_synonyms(word))
 
 
 def get_variations(text: str) -> set:
