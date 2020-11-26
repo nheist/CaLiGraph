@@ -10,7 +10,7 @@ caligraph:
     ontology: 'http://caligraph.org/ontology/'
     resource: 'http://caligraph.org/resource/'
 dbpedia:
-  disjointness_threshold: 0.12  # in the original paper: 0.17
+  disjointness_threshold: 0.132  # in the original paper: 0.17
 category:
   root_category: 'http://dbpedia.org/resource/Category:Main_topic_classifications'
 page:
