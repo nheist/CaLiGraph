@@ -246,7 +246,7 @@ def is_object_property(dbp_predicate: str) -> bool:
     """Return True, if the predicate always has a resource as object."""
     global __OBJECT_PROPERTY__
     if '__OBJECT_PROPERTY__' not in globals():
-        __OBJECT_PROPERTY__ = defaultdict(lambda: False)
+        __OBJECT_PROPERTY__ = defaultdict(bool)
     if dbp_predicate not in __OBJECT_PROPERTY__:
         if get_range(dbp_predicate):
             __OBJECT_PROPERTY__[dbp_predicate] = dbp_util.is_dbp_type(get_range(dbp_predicate))

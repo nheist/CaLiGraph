@@ -162,13 +162,13 @@ def _get_resource_surface_scores(text):
 
 def _get_type_surface_scores(words, lemmatize=True):
     """Return type lexicalisation scores for a given set of `words`."""
-    lexicalisation_scores = defaultdict(lambda: 0)
+    lexicalisation_scores = defaultdict(int)
     word_lemmas = [word_doc[0].lemma_ for word_doc in nlp_util.parse_texts(words)] if lemmatize else words
     for lemma in word_lemmas:
         for t, score in dbp_store.get_type_lexicalisations(lemma).items():
             lexicalisation_scores[t] += score
     total_scores = sum(lexicalisation_scores.values())
-    type_surface_scores = defaultdict(lambda: 0.0, {t: score / total_scores for t, score in lexicalisation_scores.items()})
+    type_surface_scores = defaultdict(float, {t: score / total_scores for t, score in lexicalisation_scores.items()})
 
     # make sure that exact matches get at least appropriate probability
     for lemma in word_lemmas:
@@ -253,8 +253,8 @@ def _get_confidence_pattern_set(pattern_set, has_front, has_back):
             preds_sum = sum(len(freqs) for freqs in preds.values())
             types_sum = sum(len(freqs) for freqs in types.values())
             result[pattern] = {
-                'preds': defaultdict(lambda: 0, {p: len(freqs) / preds_sum for p, freqs in preds.items()}),
-                'types': defaultdict(lambda: 0, {t: len(freqs) / types_sum for t, freqs in types.items()})
+                'preds': defaultdict(int, {p: len(freqs) / preds_sum for p, freqs in preds.items()}),
+                'types': defaultdict(int, {t: len(freqs) / types_sum for t, freqs in types.items()})
             }
     return result
 

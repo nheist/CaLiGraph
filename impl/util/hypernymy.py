@@ -6,8 +6,6 @@ import util
 import bz2
 import pickle
 import impl.category.cat2ax as cat_axioms
-import impl.category.store as cat_store
-import impl.util.nlp as nlp_util
 import impl.util.words as words_util
 from polyleven import levenshtein
 
@@ -63,7 +61,7 @@ def compute_hypernyms(category_graph) -> dict:
 
     # collect hypernyms from axiom matches between Wikipedia categories
     cat_headlemmas = category_graph.get_node_LHS()
-    axiom_hypernyms = defaultdict(lambda: defaultdict(lambda: 0))
+    axiom_hypernyms = defaultdict(lambda: defaultdict(int))
     for parent, child in _get_axiom_edges(category_graph):
         for cl in cat_headlemmas[child]:
             for pl in cat_headlemmas[parent]:
@@ -79,7 +77,7 @@ def compute_hypernyms(category_graph) -> dict:
     # merge hypernyms
     candidates = set(axiom_hypernyms) | set(wiki_hypernyms) | set(webisalod_hypernyms)
     for candidate in candidates:
-        hyper_count = defaultdict(lambda: 0)
+        hyper_count = defaultdict(int)
         if candidate in axiom_hypernyms:
             for word, count in axiom_hypernyms[candidate].items():
                 if count >= THRESHOLD_AXIOM:

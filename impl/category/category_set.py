@@ -73,7 +73,7 @@ def _find_child_sets(parent: str, category_docs: dict, current_pattern=((), ()))
 
 def _find_best_group(category_docs: dict, idx: int) -> Tuple[set, Optional[str]]:
     """Locate the best group of categories by checking which words appear most frequently at the current index."""
-    word_counts = defaultdict(lambda: 0)
+    word_counts = defaultdict(int)
     for d in category_docs.values():
         if len(d) > idx and len(d) >= -idx:  # take positive and negative indices into account
             word_counts[d[idx].text] += 1
