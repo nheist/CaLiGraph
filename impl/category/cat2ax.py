@@ -31,6 +31,9 @@ class Axiom:
     def implies(self, other):
         return self.predicate == other.predicate and self.value == other.value
 
+    def is_consistent_with(self, other):
+        return self.predicate == other.predicate
+
     def contradicts(self, other):
         raise NotImplementedError("Please use the subclasses.")
 
@@ -47,6 +50,9 @@ class TypeAxiom(Axiom):
 
     def implies(self, other):
         return super().implies(other) or other.value in dbp_store.get_transitive_supertype_closure(self.value)
+
+    def is_consistent_with(self, other):
+        return super().is_consistent_with(other) and other.value in dbp_store.get_transitive_supertype_closure(self.value)
 
     def contradicts(self, other):
         return type(other) == TypeAxiom and other.value in dbp_heur.get_disjoint_types(self.value)
@@ -201,7 +207,7 @@ def _extract_axioms(category_graph, pattern_confidence, patterns):
     for (front_pattern, back_pattern), axiom_patterns in _get_confidence_pattern_set(patterns, True, True).items():
         _fill_dict(enclosing_pattern_dict, list(front_pattern), lambda d: _fill_dict(d, list(reversed(back_pattern)), axiom_patterns))
 
-    for cat in category_graph.nodes:
+    for cat in category_graph.content_nodes:
         cat_doc = nlp_util.remove_by_phrase(cat_store.get_label(cat))
         cat_prop_axioms = []
         cat_type_axioms = []
