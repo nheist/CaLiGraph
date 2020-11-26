@@ -31,9 +31,6 @@ class Axiom:
     def implies(self, other):
         return self.predicate == other.predicate and self.value == other.value
 
-    def is_consistent_with(self, other):
-        return self.predicate == other.predicate
-
     def contradicts(self, other):
         raise NotImplementedError("Please use the subclasses.")
 
@@ -51,12 +48,6 @@ class TypeAxiom(Axiom):
     def implies(self, other):
         return super().implies(other) or other.value in dbp_store.get_transitive_supertype_closure(self.value)
 
-    def is_consistent_with(self, other):
-        return super().is_consistent_with(other) and other.value in dbp_store.get_transitive_supertype_closure(self.value)
-
-    def contradicts(self, other):
-        return type(other) == TypeAxiom and other.value in dbp_heur.get_disjoint_types(self.value)
-
     def accepts_resource(self, dbp_resource: str) -> bool:
         return self.value in dbp_store.get_transitive_types(dbp_resource)
 
@@ -65,13 +56,6 @@ class TypeAxiom(Axiom):
 
 
 class RelationAxiom(Axiom):
-    def contradicts(self, other):
-        if type(other) != RelationAxiom:
-            return False
-        if self.predicate != other.predicate or not dbp_store.is_functional(self.predicate):
-            return False
-        return dbp_store.resolve_redirect(self.value) != dbp_store.resolve_redirect(other.value)
-
     def accepts_resource(self, dbp_resource: str) -> bool:
         props = dbp_store.get_properties(dbp_resource)
         return self.predicate in props and (self.value in props[self.predicate] or dbp_store.resolve_redirect(self.value) in props[self.predicate])
@@ -81,6 +65,11 @@ class RelationAxiom(Axiom):
             return False
         props = dbp_store.get_properties(dbp_resource)
         return self.predicate in props and self.value not in props[self.predicate] and dbp_store.resolve_redirect(self.value) not in props[self.predicate]
+
+
+def get_type_axioms(category: str) -> set:
+    """Return all type axioms created by the Cat2Ax approach."""
+    return {a for a in get_axioms(category) if type(a) == TypeAxiom}
 
 
 def get_axioms(category: str) -> set:

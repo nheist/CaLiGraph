@@ -10,13 +10,6 @@ import impl.util.words as words_util
 from polyleven import levenshtein
 
 
-# thresholds of individual sources
-THRESHOLD_STRICT_AXIOM = 10
-THRESHOLD_AXIOM = 100
-THRESHOLD_WIKI = 100
-THRESHOLD_WEBISALOD = .4
-
-
 def is_hypernym(hyper_word: str, hypo_word: str) -> bool:
     """Returns True, if `hyper_word` and `hypo_word` are synonyms or if the former is a hypernym of the latter."""
     global __WIKITAXONOMY_HYPERNYMS__
@@ -56,20 +49,20 @@ def get_variations(text: str) -> set:
     return {s.replace('_', ' ') for s in words_util.get_synonyms(text) if levenshtein(s, text, 2) <= 2}
 
 
+# thresholds of individual hypernym sources
+THRESHOLD_AXIOM = 10
+THRESHOLD_WIKI = 100
+THRESHOLD_WEBISALOD = .4
+
+
 def compute_hypernyms(category_graph) -> dict:
     """Retrieves all hypernym relationships from the three sources (Wiki corpus, WebIsALOD, Category axioms)."""
     hypernyms = defaultdict(set)
 
     # collect hypernyms from axiom matches between Wikipedia categories
     cat_headlemmas = category_graph.get_node_LHS()
-    axiom_strict_hypernyms = defaultdict(lambda: defaultdict(int))
-    for parent, child in _get_strict_axiom_edges(category_graph):
-        for cl in cat_headlemmas[child]:
-            for pl in cat_headlemmas[parent]:
-                axiom_strict_hypernyms[cl.lower()][pl.lower()] += 1
-
     axiom_hypernyms = defaultdict(lambda: defaultdict(int))
-    for parent, child in _get_approximate_axiom_edges(category_graph):
+    for parent, child in _get_axiom_edges(category_graph):
         for cl in cat_headlemmas[child]:
             for pl in cat_headlemmas[parent]:
                 axiom_hypernyms[cl.lower()][pl.lower()] += 1
@@ -85,14 +78,10 @@ def compute_hypernyms(category_graph) -> dict:
     candidates = set(axiom_hypernyms) | set(wiki_hypernyms) | set(webisalod_hypernyms)
     for candidate in candidates:
         hyper_count = defaultdict(int)
-        if candidate in axiom_strict_hypernyms:
-            for word, count in axiom_strict_hypernyms[candidate].items():
-                if count >= THRESHOLD_STRICT_AXIOM:
-                    hyper_count[word] += 1
         if candidate in axiom_hypernyms:
             for word, count in axiom_hypernyms[candidate].items():
                 if count >= THRESHOLD_AXIOM:
-                    hyper_count[word] += 1
+                    hyper_count[word] += 2
         if candidate in wiki_hypernyms:
             for word, count in wiki_hypernyms[candidate].items():
                 if count >= THRESHOLD_WIKI:
@@ -106,26 +95,15 @@ def compute_hypernyms(category_graph) -> dict:
     return hypernyms
 
 
-def _get_strict_axiom_edges(category_graph) -> Set[tuple]:
-    """Return all edges that are confirmed by axioms (i.e. the child axiom implies the parent axiom)."""
-    valid_axiom_edges = set()
-    for parent in category_graph.content_nodes:
-        parent_axioms = cat_axioms.get_axioms(parent)
-        for child in category_graph.children(parent):
-            child_axioms = cat_axioms.get_axioms(child)
-            if not any(pa.contradicts(ca) for pa in parent_axioms for ca in child_axioms):
-                if any(ca.implies(pa) for pa in parent_axioms for ca in child_axioms):
-                    valid_axiom_edges.add((parent, child))
-    return valid_axiom_edges
-
-
-def _get_approximate_axiom_edges(category_graph) -> Set[tuple]:
+def _get_axiom_edges(category_graph) -> Set[tuple]:
     """Return all edges that are loosely confirmed by axioms (i.e. most children share the same pattern)."""
     valid_axiom_edges = set()
     for parent in category_graph.content_nodes:
+        parent_axioms = cat_axioms.get_type_axioms(parent)
         children = tuple(category_graph.children(parent))
-        if children:
-            consistent_child_axioms = any(sum(bool(any(a.is_consistent_with(x) for x in cat_axioms.get_axioms(c))) for c in children) / len(children) > .5 for a in cat_axioms.get_axioms(children[0]))
-            if consistent_child_axioms:
-                valid_axiom_edges.update({(parent, c) for c in children})
+        child_axioms = {c: {a for a in cat_axioms.get_type_axioms(c)} for c in children}
+        consistent_child_axioms = len(children) > 2 and any(all(any(a.implies(x) for x in child_axioms[c]) for c in children) for a in child_axioms[children[0]])
+        for c in children:
+            if consistent_child_axioms or any(ca.implies(pa) for ca in child_axioms[c] for pa in parent_axioms):
+                valid_axiom_edges.add((parent, c))
     return valid_axiom_edges
