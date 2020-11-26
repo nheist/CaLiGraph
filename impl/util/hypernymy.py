@@ -11,7 +11,8 @@ from polyleven import levenshtein
 
 
 # thresholds of individual sources
-THRESHOLD_AXIOM = 10
+THRESHOLD_STRICT_AXIOM = 10
+THRESHOLD_AXIOM = 100
 THRESHOLD_WIKI = 100
 THRESHOLD_WEBISALOD = .4
 
@@ -61,8 +62,14 @@ def compute_hypernyms(category_graph) -> dict:
 
     # collect hypernyms from axiom matches between Wikipedia categories
     cat_headlemmas = category_graph.get_node_LHS()
+    axiom_strict_hypernyms = defaultdict(lambda: defaultdict(int))
+    for parent, child in _get_axiom_edges(category_graph, True):
+        for cl in cat_headlemmas[child]:
+            for pl in cat_headlemmas[parent]:
+                axiom_strict_hypernyms[cl.lower()][pl.lower()] += 1
+
     axiom_hypernyms = defaultdict(lambda: defaultdict(int))
-    for parent, child in _get_axiom_edges(category_graph):
+    for parent, child in _get_axiom_edges(category_graph, False):
         for cl in cat_headlemmas[child]:
             for pl in cat_headlemmas[parent]:
                 axiom_hypernyms[cl.lower()][pl.lower()] += 1
@@ -78,10 +85,14 @@ def compute_hypernyms(category_graph) -> dict:
     candidates = set(axiom_hypernyms) | set(wiki_hypernyms) | set(webisalod_hypernyms)
     for candidate in candidates:
         hyper_count = defaultdict(int)
+        if candidate in axiom_strict_hypernyms:
+            for word, count in axiom_strict_hypernyms[candidate].items():
+                if count >= THRESHOLD_STRICT_AXIOM:
+                    hyper_count[word] += 1
         if candidate in axiom_hypernyms:
             for word, count in axiom_hypernyms[candidate].items():
                 if count >= THRESHOLD_AXIOM:
-                    hyper_count[word] += 2
+                    hyper_count[word] += 1
         if candidate in wiki_hypernyms:
             for word, count in wiki_hypernyms[candidate].items():
                 if count >= THRESHOLD_WIKI:
@@ -95,7 +106,7 @@ def compute_hypernyms(category_graph) -> dict:
     return hypernyms
 
 
-def _get_axiom_edges(category_graph) -> Set[tuple]:
+def _get_axiom_edges(category_graph, child_must_imply_parent: bool) -> Set[tuple]:
     """Return all edges that are confirmed by axioms (i.e. the child axiom implies the parent axiom."""
     valid_axiom_edges = set()
     for parent in category_graph.content_nodes:
@@ -103,5 +114,6 @@ def _get_axiom_edges(category_graph) -> Set[tuple]:
         for child in category_graph.children(parent):
             child_axioms = cat_axioms.get_axioms(child)
             if not any(pa.contradicts(ca) for pa in parent_axioms for ca in child_axioms):
-                valid_axiom_edges.add((parent, child))
+                if not child_must_imply_parent or any(ca.implies(pa) for pa in parent_axioms for ca in child_axioms):
+                    valid_axiom_edges.add((parent, child))
     return valid_axiom_edges
