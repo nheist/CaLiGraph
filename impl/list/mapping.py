@@ -107,5 +107,4 @@ def _get_candidate_categories_for_list(lst, cat_graph) -> set:
         candidates = cat_store.get_parents(lst)
     else:  # list page
         candidates = cat_store.get_topic_categories(lst) | cat_store.get_resource_categories(lst)
-    candidates = candidates.intersection(cat_graph.get_all_categories())
     return {n for cat in candidates for n in cat_graph.get_nodes_for_category(cat)}
