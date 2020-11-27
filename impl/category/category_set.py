@@ -32,8 +32,8 @@ def _compute_category_sets() -> dict:
     3) For each category, retrieve all its children and search for name patterns (see '_find_child_sets')
     """
     category_sets = {}
-    for cat in cat_store.get_usable_cats():
-        children = {c for c in cat_store.get_children(cat) if cat_store.is_usable(c)}
+    for cat in cat_store.get_usable_categories():
+        children = cat_store.get_children(cat).intersection(cat_store.get_usable_categories())
         children_docs = {c: nlp_util.remove_by_phrase(cat_store.get_label(c)) for c in children}
         child_sets = _find_child_sets(cat, children_docs)
         if child_sets:

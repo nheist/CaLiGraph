@@ -1,9 +1,9 @@
 import networkx as nx
 import impl.category.util as cat_util
 import impl.category.store as cat_store
-from impl.category.conceptual import is_conceptual_category
 from impl.util.hierarchy_graph import HierarchyGraph
 import util
+import impl.util.nlp as nlp_util
 
 
 class CategoryGraph(HierarchyGraph):
@@ -54,7 +54,9 @@ class CategoryGraph(HierarchyGraph):
 
     def make_conceptual(self):
         """Remove all nodes that are non-conceptual (i.e. that do not represent a class in a taxonomy)."""
-        categories = {c for c in self.nodes if cat_store.is_usable(c) and is_conceptual_category(c)}
+        categories = self.nodes.intersection(cat_store.get_usable_categories())
+        cat_names = [cat_store.get_label(cat) for cat in categories]
+        conceptual_categories = {cat for cat, hsls in zip(categories, nlp_util.get_lexhead_subjects(cat_names)) if hsls}
         # clearing the graph of any invalid nodes
-        self._remove_all_nodes_except(categories | {self.root_node})
+        self._remove_all_nodes_except(conceptual_categories | {self.root_node})
         return self

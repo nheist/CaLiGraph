@@ -17,16 +17,31 @@ def get_categories() -> set:
     return __CATEGORIES__
 
 
-def get_usable_cats() -> set:
-    """Return only usable categories (cf. 'is_usable')."""
-    return {cat for cat in get_categories() if is_usable(cat)}
+def get_usable_categories() -> set:
+    """Return only usable categories, i.e. categories that are not used for maintenance and organisational purposes."""
+    global __USABLE_CATEGORIES__
+    if '__USABLE_CATEGORIES__' not in globals():
+        __USABLE_CATEGORIES__ = get_categories()
+        maintenance_parent_categories = {
+            'Disambiguation categories', 'Hidden categories', 'Maintenance categories', 'Namespace-specific categories',
+            'All redirect categories', 'Wikipedia soft redirected categories', 'Tracking categories'
+        }
+        for mpc in maintenance_parent_categories:
+            mpc_child_closure = {mpc} | get_transitive_children(mpc)
+            __USABLE_CATEGORIES__ = __USABLE_CATEGORIES__.difference(mpc_child_closure)
 
+        maintenance_category_indicators = {
+            'wikipedia', 'wikipedians', 'wikimedia', 'wikiproject', 'lists', 'redirects', 'mediawiki', 'template',
+            'templates', 'user', 'portal', 'categories', 'articles', 'pages', 'navigational', 'stubs'
+        }
+        maintenance_categories = set()
+        for c in __USABLE_CATEGORIES__:
+            category_tokens = {t.lower() for t in cat_util.remove_category_prefix(c).split('_')}
+            if category_tokens.intersection(maintenance_category_indicators):
+                maintenance_categories.add(c)
+        __USABLE_CATEGORIES__ = __USABLE_CATEGORIES__.difference(maintenance_categories)
 
-def is_usable(category: str) -> bool:
-    """Return categories that are no maintenance or organisational ones (using indicators in the category name)."""
-    category_tokens = {t.lower() for t in cat_util.remove_category_prefix(category).split('_')}
-    indicators = {'wikipedia', 'wikipedians', 'wikimedia', 'wikiproject', 'lists', 'redirects', 'mediawiki', 'template', 'templates', 'user', 'portal', 'categories', 'articles', 'pages', 'navigational', 'stubs'}
-    return category not in get_maintenance_categories() and not category_tokens.intersection(indicators)
+    return __USABLE_CATEGORIES__
 
 
 def get_label(category: str) -> str:
@@ -76,6 +91,11 @@ def get_children(category: str) -> set:
         # TODO: create additional cache file by going through category pages in dbpedia_pages and extract parent categories
 
     return __CHILDREN__[category].difference({category})
+
+
+def get_transitive_children(category: str) -> set:
+    children = get_children(category)
+    return children | {tc for c in children for tc in get_transitive_children(c)}
 
 
 def get_parents(category: str) -> set:

@@ -84,8 +84,6 @@ files:
     nif_context:
       filename: 'nif-context_lang=en.ttl.bz2'
       url: 'https://downloads.dbpedia.org/repo/dbpedia/text/nif-context/2020.07.01/nif-context_lang=en.ttl.bz2'
-    maintenance_categories:
-      filename: 'maintenance_categories.ttl.bz2'
     webisalod_hypernyms:
       filename: 'webisalod_hypernyms.p.bz2'
       url: 'http://data.dws.informatik.uni-mannheim.de/CaLiGraph/data/webisalod_hypernyms.p.bz2'
@@ -216,9 +214,6 @@ cache:
     version: 1
   dbpedia_category_sets:
     filename: 'dbpedia-category-sets'
-    version: 1
-  dbpedia_categories_conceptual:
-    filename: 'dbpedia-category-conceptual'
     version: 1
   dbpedia_heuristic_domains:
     filename: 'dbpedia-heuristic-domains'
