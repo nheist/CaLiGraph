@@ -53,17 +53,20 @@ class HierarchyGraph(BaseGraph):
     def get_node_LHS(self, lemmatize=True) -> dict:
         nodes = list(self.content_nodes)
         node_names = [self.get_name(n) for n in nodes]
-        return dict(zip(nodes, nlp_util.get_lexhead_subjects(node_names, lemmatize=lemmatize)))
+        node_LHS = dict(zip(nodes, nlp_util.get_lexhead_subjects(node_names, lemmatize=lemmatize)))
+        return defaultdict(set, node_LHS)
 
     def get_node_LH(self) -> dict:
         nodes = list(self.content_nodes)
         node_names = [self.get_name(n) for n in nodes]
-        return dict(zip(nodes, nlp_util.get_lexhead_remainder(node_names)))
+        node_LH = dict(zip(nodes, nlp_util.get_lexhead_remainder(node_names)))
+        return defaultdict(set, node_LH)
 
     def get_node_NH(self) -> dict:
         nodes = list(self.content_nodes)
         node_names = [self.get_name(n) for n in nodes]
-        return dict(zip(nodes, nlp_util.get_nonlexhead_part(node_names)))
+        node_NH = dict(zip(nodes, nlp_util.get_nonlexhead_part(node_names)))
+        return defaultdict(set, node_NH)
 
     # graph connectivity
 
