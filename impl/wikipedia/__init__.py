@@ -18,8 +18,8 @@ def extract_parent_categories() -> dict:
 
 def _get_raw_categories_and_templates_from_xml() -> tuple:
     raw_markup = _get_raw_markup_from_xml()
-    categories = {name: markup for name, markup in raw_markup if CATEGORY_PREFIX in name}
-    templates = {name: markup for name, markup in raw_markup if TEMPLATE_PREFIX in name}
+    categories = {name: markup for name, markup in raw_markup.items() if CATEGORY_PREFIX in name}
+    templates = {name: markup for name, markup in raw_markup.items() if TEMPLATE_PREFIX in name}
     return categories, templates
 
 
