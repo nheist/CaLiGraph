@@ -83,7 +83,10 @@ def _replace_templates_in_category(category_content: WikiText, template_definiti
 def _get_template_content(template: Template, template_definitions: dict) -> Optional[str]:
     if not template or not template.string.startswith('{{'):
         return None
-    name = template.normal_name(capitalize=True)
+    try:
+        name = template.normal_name(capitalize=True)
+    except IndexError:
+        return None
     content = wtp.parse(template_definitions[name])
     content = _apply_parameters(content, _get_template_arguments(template))
     for it in content.templates:
