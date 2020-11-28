@@ -1,22 +1,14 @@
 from collections import defaultdict
 import util
-from tqdm import tqdm
-import multiprocessing as mp
 from .nif_parser import extract_wiki_corpus_resources
 from .xml_parser import _parse_raw_markup_from_xml
-from .article_parser import _parse_article_with_timeout
+from .article_parser import _parse_articles
 from .category_parser import _extract_parent_categories_from_markup, TEMPLATE_PREFIX, CATEGORY_PREFIX
 
 
 def get_parsed_articles() -> dict:
-    return defaultdict(lambda: None, util.load_or_create_cache('wikipedia_parsed_articles', _parse_articles))
-
-
-def _parse_articles() -> dict:
-    article_markup = _get_raw_articles_from_xml()
-    with mp.Pool(processes=round(util.get_config('max_cpus')/2)) as pool:
-        parsed_articles = {r: parsed for r, parsed in tqdm(pool.imap_unordered(_parse_article_with_timeout, article_markup.items(), chunksize=2000), total=len(article_markup)) if parsed}
-    return parsed_articles
+    initializer = lambda: _parse_articles(_get_raw_articles_from_xml())
+    return defaultdict(lambda: None, util.load_or_create_cache('wikipedia_parsed_articles', initializer))
 
 
 def extract_parent_categories() -> dict:

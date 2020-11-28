@@ -9,11 +9,19 @@ import impl.util.nlp as nlp_util
 import re
 import signal
 import util
+from tqdm import tqdm
+import multiprocessing as mp
 
 
 LISTING_INDICATORS = ('*', '#', '{|')
 VALID_ENUM_PATTERNS = (r'\#', r'\*')
 ARTICLE_TYPE_ENUM, ARTICLE_TYPE_TABLE = 'enum', 'table'
+
+
+def _parse_articles(articles_markup) -> dict:
+    with mp.Pool(processes=round(util.get_config('max_cpus')/2)) as pool:
+        parsed_articles = {r: parsed for r, parsed in tqdm(pool.imap_unordered(_parse_article_with_timeout, articles_markup.items(), chunksize=2000), total=len(articles_markup)) if parsed}
+    return parsed_articles
 
 
 def _parse_article_with_timeout(resource_and_markup: tuple) -> tuple:
