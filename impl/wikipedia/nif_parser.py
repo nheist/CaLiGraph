@@ -1,6 +1,4 @@
-"""Extraction of type lexicalisations from the Wikipedia corpus.
-The resulting cache files are already placed in the cache folder but can be recomputed with this script.
-"""
+"""Extraction of type lexicalisations from the Wikipedia corpus via NIF files."""
 
 import util
 from typing import Tuple
@@ -17,9 +15,10 @@ import impl.util.spacy as spacy_util
 
 def extract_wiki_corpus_resources():
     """Crawl the Wikipedia corpus for hearst patterns to retrieve hypernyms and type lexicalisations."""
-    if util.load_cache('dbpedia_type_lexicalisations') is not None:
+    if util.load_cache('wikipedia_type_lexicalisations') is not None:
         return  # only compute hypernyms and type lexicalisations if they are not existing already
 
+    util.get_logger().info('WIKIPEDIA/NIF: Computing wikipedia hypernyms and type lexicalisations..')
     total_hypernyms = defaultdict(lambda: defaultdict(int))
     total_type_lexicalisations = defaultdict(lambda: defaultdict(int))
 
@@ -39,7 +38,7 @@ def extract_wiki_corpus_resources():
     util.update_cache('wikipedia_hypernyms', wikipedia_hypernyms)
 
     type_lexicalisations = {word: dict(type_counts) for word, type_counts in total_type_lexicalisations.items() if word not in STOP_WORDS}
-    util.update_cache('dbpedia_type_lexicalisations', type_lexicalisations)
+    util.update_cache('wikipedia_type_lexicalisations', type_lexicalisations)
 
 
 def _compute_counts_for_resource(uri_with_text: tuple) -> tuple:

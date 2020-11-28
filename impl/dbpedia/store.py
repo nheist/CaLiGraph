@@ -426,7 +426,7 @@ def get_type_lexicalisations(lemma: str) -> dict:
     """Return the type lexicalisation score for a set of lemmas (i.e. the probabilities of types given `lemmas`)."""
     global __TYPE_LEXICALISATIONS__
     if '__TYPE_LEXICALISATIONS__' not in globals():
-        __TYPE_LEXICALISATIONS__ = defaultdict(dict, util.load_cache('dbpedia_type_lexicalisations'))
+        __TYPE_LEXICALISATIONS__ = defaultdict(dict, util.load_cache('wikipedia_type_lexicalisations'))
     return __TYPE_LEXICALISATIONS__[lemma.lower()]
 
 

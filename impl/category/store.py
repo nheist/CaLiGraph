@@ -3,6 +3,7 @@
 from . import util as cat_util
 import impl.util.rdf as rdf_util
 import impl.dbpedia.store as dbp_store
+import impl.wikipedia as wikipedia
 import util
 from collections import defaultdict
 
@@ -18,7 +19,9 @@ def get_categories() -> set:
 
 
 def get_usable_categories() -> set:
-    """Return only usable categories, i.e. categories that are not used for maintenance and organisational purposes."""
+    """Return only usable categories, i.e. categories that are not used for maintenance and organisational purposes.
+    See https://en.wikipedia.org/wiki/Category:Wikipedia_categories for an overview of maintenance categories.
+    """
     global __USABLE_CATEGORIES__
     if '__USABLE_CATEGORIES__' not in globals():
         __USABLE_CATEGORIES__ = get_categories()
@@ -82,33 +85,35 @@ def get_resource_categories(dbp_resource: str) -> set:
     return __RESOURCE_CATEGORIES__[dbp_resource]
 
 
-def get_children(category: str) -> set:
-    """Return all subcategories for the given category."""
-    global __CHILDREN__
-    if '__CHILDREN__' not in globals():
-        initializer = lambda: rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.category_skos')], rdf_util.PREDICATE_BROADER, reverse_key=True)
-        __CHILDREN__ = util.load_or_create_cache('dbpedia_category_children', initializer)
-        # TODO: create additional cache file by going through category pages in dbpedia_pages and extract parent categories
+def get_parents(category: str) -> set:
+    """Return all direct supercategories for the given category."""
+    global __PARENTS__
+    if '__PARENTS__' not in globals():
+        # use parent category relationships extracted from dbpedia extraction framework
+        __PARENTS__ = defaultdict(set, rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.category_skos')], rdf_util.PREDICATE_BROADER))
+        # combine them with parent categories extracted directly from wikimarkup (including parent categories expressed in templates)
+        for child, parents in wikipedia.extract_parent_categories().items():
+            __PARENTS__[child].update(parents)
+        __PARENTS__ = defaultdict(set, {child: parents.difference({child}) for child, parents in __PARENTS__.items()})
+    return __PARENTS__[category]
 
-    return __CHILDREN__[category].difference({category})
+
+def get_children(category: str) -> set:
+    """Return all direct subcategories for the given category."""
+    global __CHILDREN__, __PARENTS__
+    if '__CHILDREN__' not in globals():
+        get_parents('')  # make sure that __PARENTS__ is initialized
+        __CHILDREN__ = defaultdict(set)
+        for child, parents in __PARENTS__.items():
+            for parent in parents:
+                __CHILDREN__[parent].add(child)
+    return __CHILDREN__[category]
 
 
 def get_transitive_children(category: str) -> set:
+    """Return all (including transitive) subcategories for the given category."""
     children = get_children(category)
     return children | {tc for c in children for tc in get_transitive_children(c)}
-
-
-def get_parents(category: str) -> set:
-    global __PARENTS__, __CHILDREN__
-    if '__PARENTS__' not in globals():
-        get_children('')  # make sure that __CHILDREN__ is initialized
-        __PARENTS__ = defaultdict(set)
-        for child, parents in __CHILDREN__.items():
-            for parent in parents:
-                if parent != child:
-                    __PARENTS__[parent].add(child)
-
-    return __PARENTS__[category]
 
 
 def get_topics(category: str) -> set:

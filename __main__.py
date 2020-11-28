@@ -1,7 +1,7 @@
 import traceback
 import util
 import mailer
-import impl.util.wiki_corpus as wiki_corpus
+import impl.wikipedia as wikipedia
 import impl.category.base as cat_base
 import impl.category.cat2ax as cat_axioms
 import impl.util.hypernymy as hypernymy_util
@@ -28,7 +28,7 @@ if __name__ == '__main__':
 
         # prepare resources like type lexicalisations from hearst patterns and wikitaxonomy hypernyms
         util.get_logger().info('Preparing resources..')
-        wiki_corpus.extract_wiki_corpus_resources()
+        wikipedia.extract_wiki_corpus_resources()
         _setup_hypernyms()
 
         # run the complete extraction cycle and end with serializing CaLiGraph

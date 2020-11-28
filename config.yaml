@@ -41,10 +41,11 @@ mailer:
 
 # -- SOURCE FILE CONFIGURATION --
 files:
-  dbpedia:
+  wikipedia:
     pages:
       filename: 'pages_articles_en.xml.bz2'
       url: 'https://dumps.wikimedia.org/enwiki/20200801/enwiki-20200801-pages-articles-multistream.xml.bz2'
+  dbpedia:
     taxonomy:
       filename: 'dbpedia_ontology.nt'
       url: 'http://akswnc7.informatik.uni-leipzig.de/dstreitmatter/archivo/dbpedia.org/ontology--DEV/2020.10.27-031001/ontology--DEV_type=parsed.nt'
@@ -153,13 +154,27 @@ cache:
   spacy_docs:
     filename: 'spacy-docs'
     version: 1
-  dbpedia_page_markup:
-    filename: 'dbpedia-page-markup'
+  wikipedia_raw_markup:
+    filename: 'wikipedia-raw-markup'
     version: 1
     compress: True
-  dbpedia_page_parsed:
-    filename: 'dbpedia-page-parsed'
+  wikipedia_parsed_articles:
+    filename: 'wikipedia-parsed-articles'
     version: 1
+  wikipedia_parent_categories:
+    filename: 'wikipedia-parent-categories'
+    version: 1
+  wikipedia_type_lexicalisations:
+    filename: 'wikipedia-type-lexicalisations'
+    version: 1
+    compress: True
+  wikipedia_hypernyms:
+    filename: 'wikipedia-hypernyms'
+    version: 1
+  wikitaxonomy_hypernyms:
+    filename: 'wikitaxonomy-hypernyms'
+    version: 1
+    compress: True
   dbpedia_resource_type_frequency:
     filename: 'dbpedia-resource-type-frequency'
     version: 1
@@ -193,10 +208,6 @@ cache:
   dbpedia_resource_disambiguations:
     filename: 'dbpedia-resource-disambiguations'
     version: 1
-  dbpedia_type_lexicalisations:
-    filename: 'dbpedia-type-lexicalisations'
-    version: 1
-    compress: True
   dbpedia_functional_predicates:
     filename: 'dbpedia-functional-predicates'
     version: 1
@@ -205,9 +216,6 @@ cache:
     version: 1
   dbpedia_category_resources:
     filename: 'dbpedia-category-resources'
-    version: 1
-  dbpedia_category_children:
-    filename: 'dbpedia-category-children'
     version: 1
   dbpedia_category_statistics:
     filename: 'dbpedia-category-statistics'
@@ -240,13 +248,6 @@ cache:
     store_as_csv: True
   dbpedia_listpage_entities:
     filename: 'dbpedia-listpage-entities'
-    version: 1
-  wikitaxonomy_hypernyms:
-    filename: 'wikitaxonomy-hypernyms'
-    version: 1
-    compress: True
-  wikipedia_hypernyms:
-    filename: 'wikipedia-hypernyms'
     version: 1
   cat2ax_axioms:
     filename: 'cat2ax-axioms'

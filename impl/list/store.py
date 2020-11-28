@@ -2,7 +2,7 @@
 
 from . import util as list_util
 import impl.dbpedia.store as dbp_store
-import impl.dbpedia.pages as dbp_pages
+import impl.wikipedia as wikipedia
 import impl.category.store as cat_store
 
 
@@ -43,7 +43,7 @@ def get_parsed_listpages(listpage_type: str = None) -> dict:
 
 def _parse_listpages() -> dict:
     parsed_listpages = {}
-    for resource, content in dbp_pages.get_all_parsed_pages().items():
+    for resource, content in wikipedia.get_parsed_articles().items():
         if not list_util.is_listpage(resource):
             continue
         if resource != dbp_store.resolve_redirect(resource):

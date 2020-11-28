@@ -1,35 +1,15 @@
-"""Retrieve page information of articles in DBpedia."""
+"""Process the Wikipedia XML dump and return articles, categories, and templates."""
 
 import util
 from lxml import etree
 import bz2
 import impl.dbpedia.util as dbp_util
-import impl.util.wiki_parse as wiki_parse
-from collections import defaultdict
-import multiprocessing as mp
-from tqdm import tqdm
 
 
-def get_all_parsed_pages() -> dict:
-    return defaultdict(lambda: None, util.load_or_create_cache('dbpedia_page_parsed', _parse_pages))
-
-
-def _parse_pages() -> dict:
-    page_markup = get_all_pages_markup()
-    # TODO: first identify and extract templates; then pass templates to actual parsing so that they can be resolved
-    with mp.Pool(processes=round(util.get_config('max_cpus')/2)) as pool:
-        parsed_pages = {r: parsed for r, parsed in tqdm(pool.imap_unordered(wiki_parse.parse_page_with_timeout, page_markup.items(), chunksize=2000), desc='Parsing pages', total=len(page_markup)) if parsed}
-    return parsed_pages
-
-
-def get_all_pages_markup() -> dict:
-    return defaultdict(str, util.load_or_create_cache('dbpedia_page_markup', _fetch_page_markup))
-
-
-def _fetch_page_markup() -> dict:
-    util.get_logger().info('CACHE: Parsing page markup')
+def _parse_raw_markup_from_xml() -> dict:
+    util.get_logger().info('WIKIPEDIA/XML: Parsing raw markup from XML dump..')
     parser = etree.XMLParser(target=WikiPageParser())
-    with bz2.open(util.get_data_file('files.dbpedia.pages')) as dbp_pages_file:
+    with bz2.open(util.get_data_file('files.wikipedia.pages')) as dbp_pages_file:
         page_markup = etree.parse(dbp_pages_file, parser)
         return {dbp_util.name2resource(p): markup for p, markup in page_markup.items()}
 
