@@ -73,28 +73,30 @@ def _filter_for_onlyinclude(text: str) -> str:
 
 def _replace_templates_in_category(category_content: WikiText, template_definitions: dict) -> WikiText:
     for template in category_content.templates:
-        template_content = _get_template_content(template, template_definitions)
+        template_content = _get_template_content(template, template_definitions, set())
         if template_content is None:
             continue
         category_content[slice(*template.span)] = template_content
     return category_content
 
 
-def _get_template_content(template: Template, template_definitions: dict) -> Optional[str]:
+def _get_template_content(template: Template, template_definitions: dict, visited_templates: set) -> Optional[str]:
     if not template or not template.string.startswith('{{'):
         return None
     try:
         name = template.normal_name(capitalize=True)
     except IndexError:
-        return None
+        return ''
+    if name in visited_templates:
+        return ''
+    visited_templates.add(name)
+
     content = wtp.parse(template_definitions[name])
     content = _apply_parameters(content, _get_template_arguments(template))
     for it in content.templates:
-        if not it or not it.string.startswith('{{'):
-            continue
-        it_name = it.normal_name(capitalize=True)
-        it_content = _get_template_content(it, template_definitions) if it_name != name else ''
-        content[slice(*it.span)] = it_content
+        it_content = _get_template_content(it, template_definitions, visited_templates)
+        if it_content is not None:
+            content[slice(*it.span)] = it_content
     return content.string
 
 
