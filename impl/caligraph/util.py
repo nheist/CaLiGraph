@@ -3,6 +3,7 @@
 import util
 import impl.dbpedia.util as dbp_util
 import impl.util.rdf as rdf_util
+import impl.util.string as str_util
 import re
 
 
@@ -16,9 +17,7 @@ def is_clg_type(item: str) -> bool:
 
 
 def name2clg_type(name: str) -> str:
-    name = name.strip().replace(' ', '_')
-    name = name[0].upper() + name[1:] if len(name) > 1 else name[0].upper()
-    return NAMESPACE_CLG_ONTOLOGY + name
+    return NAMESPACE_CLG_ONTOLOGY + str_util.capitalize(name.strip().replace(' ', '_'))
 
 
 def clg_type2name(clg_type: str) -> str:

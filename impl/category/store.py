@@ -3,7 +3,7 @@
 from . import util as cat_util
 import impl.util.rdf as rdf_util
 import impl.dbpedia.store as dbp_store
-import impl.wikipedia as wikipedia
+from impl import wikipedia
 import util
 from collections import defaultdict
 

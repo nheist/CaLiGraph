@@ -1,7 +1,7 @@
 import traceback
 import util
 import mailer
-import impl.wikipedia as wikipedia
+from impl import wikipedia
 import impl.category.base as cat_base
 import impl.category.cat2ax as cat_axioms
 import impl.util.hypernymy as hypernymy_util

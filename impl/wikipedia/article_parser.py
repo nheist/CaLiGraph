@@ -6,6 +6,7 @@ from typing import Tuple, Optional
 import impl.dbpedia.store as dbp_store
 import impl.dbpedia.util as dbp_util
 import impl.util.nlp as nlp_util
+import impl.util.string as str_util
 import re
 import signal
 import util
@@ -244,10 +245,10 @@ def _wikitext_to_plaintext(parsed_text: wtp.WikiText) -> str:
 
 
 def _convert_target_to_name(link_target: str) -> Optional[str]:
-    link_target = _remove_language_tag(link_target.strip())
     if not link_target:
         return None
-    resource_uri = dbp_util.name2resource(link_target[0].upper() + link_target[1:])
+    link_target = _remove_language_tag(link_target.strip())
+    resource_uri = dbp_util.name2resource(str_util.capitalize(link_target))
     redirected_uri = dbp_store.resolve_spelling_redirect(resource_uri)
     if dbp_store.is_possible_resource(redirected_uri) and '#' not in redirected_uri:
         # return redirected uri only if it is an own Wikipedia article and it does not point to an article section
@@ -258,7 +259,7 @@ def _convert_target_to_name(link_target: str) -> Optional[str]:
 
 
 def _remove_language_tag(link_target: str) -> str:
-    if len(link_target) == 0 or link_target[0] != ':':
+    if link_target[0] != ':':
         return link_target
     if len(link_target) < 4 or link_target[3] != ':':
         return link_target[1:]

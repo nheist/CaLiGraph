@@ -4,7 +4,7 @@ import util
 import random
 from pathlib import Path
 import impl.util.rdf as rdf_util
-import impl.util.wiki_parse as wiki_parse
+from impl import wikipedia
 import impl.dbpedia.store as dbp_store
 import impl.dbpedia.util as dbp_util
 import impl.list.store as list_store
@@ -82,7 +82,7 @@ def _retrieve_training_data_gs():
 
 
 def _retrieve_training_data_wle():
-    listpages = list_store.get_parsed_listpages(wiki_parse.PAGE_TYPE_ENUM)
+    listpages = list_store.get_parsed_listpages(wikipedia.ARTICLE_TYPE_ENUM)
     lp_to_cat_mapping = {lp: list_mapping.get_equivalent_categories(lp) | list_mapping.get_parent_categories(lp) for lp in listpages}
     lp_to_cat_mapping = {lp: cats for lp, cats in lp_to_cat_mapping.items() if cats}
 

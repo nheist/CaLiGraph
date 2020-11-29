@@ -1,4 +1,5 @@
 import util
+import impl.util.string as str_util
 from collections import defaultdict
 import wikitextparser as wtp
 from wikitextparser import WikiText, Template
@@ -10,6 +11,7 @@ import multiprocessing as mp
 
 DBPEDIA_PREFIX = 'http://dbpedia.org/resource/'
 CATEGORY_PREFIX = 'Category:'
+DBPEDIA_CATEGORY_PREFIX = DBPEDIA_PREFIX + CATEGORY_PREFIX
 TEMPLATE_PREFIX = 'Template:'
 DBPEDIA_TEMPLATE_PREFIX = DBPEDIA_PREFIX + TEMPLATE_PREFIX
 
@@ -28,9 +30,10 @@ def _extract_parent_categories_from_markup(categories_and_templates_markup: tupl
 def _extract_parents_for_category(data: tuple) -> tuple:
     cat, markup, template_definitions = data
     content = _replace_templates_in_category(wtp.parse(markup), template_definitions)
-    category_targets = {link.target for link in content.wikilinks if link.target.startswith('Category:')}
-    category_parents = {DBPEDIA_PREFIX + t.replace(' ', '_') for t in category_targets}
-    return cat, category_parents
+    parent_names = {link.target[len(CATEGORY_PREFIX):] for link in content.wikilinks if link.target.startswith(CATEGORY_PREFIX)}
+    parent_names = map(str_util.capitalize, parent_names)  # make sure that first letter of category is uppercase
+    parent_uris = {DBPEDIA_CATEGORY_PREFIX + name.replace(' ', '_') for name in parent_names}
+    return cat, parent_uris
 
 
 # PREPARE & APPLY TEMPLATES
@@ -40,8 +43,7 @@ def _prepare_template_definitions(templates_markup: dict) -> dict:
     template_definitions = defaultdict(str)
     # extract parts of the template that will be placed on the page the template is applied to
     for name, content in templates_markup.items():
-        name = name[len(DBPEDIA_TEMPLATE_PREFIX):].replace('_', ' ')
-        name = name[0].upper() + name[1:]
+        name = str_util.capitalize(name[len(DBPEDIA_TEMPLATE_PREFIX):].replace('_', ' '))
         content = re.sub(r'</?includeonly>', '', content)  # remove includeonly-tags
         content = re.sub(r'<noinclude>(.|\n)*?</noinclude>', '', content)  # remove content in noinclude-tags
         content = _filter_for_onlyinclude(content)

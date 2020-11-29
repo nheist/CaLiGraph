@@ -1,8 +1,8 @@
 """Functionality to retrieve everything list-related from DBpedia resources."""
 
 from . import util as list_util
+from impl import wikipedia
 import impl.dbpedia.store as dbp_store
-import impl.wikipedia as wikipedia
 import impl.category.store as cat_store
 
 

@@ -11,7 +11,7 @@ import impl.list.nlp as list_nlp
 from impl.list.graph import ListGraph
 from collections import defaultdict
 import multiprocessing as mp
-import impl.util.wiki_parse as wiki_parse
+from impl import wikipedia
 from tqdm import tqdm
 
 
@@ -88,7 +88,7 @@ def get_enum_listpage_entity_features(graph) -> pd.DataFrame:
     """Extract entities from enumeration list pages."""
     global __ENUM_LISTPAGE_ENTITY_FEATURES__
     if '__ENUM_LISTPAGE_ENTITY_FEATURES__' not in globals():
-        __ENUM_LISTPAGE_ENTITY_FEATURES__ = util.load_or_create_cache('dbpedia_listpage_enum_features', lambda: _compute_listpage_entity_features(graph, wiki_parse.PAGE_TYPE_ENUM))
+        __ENUM_LISTPAGE_ENTITY_FEATURES__ = util.load_or_create_cache('dbpedia_listpage_enum_features', lambda: _compute_listpage_entity_features(graph, wikipedia.ARTICLE_TYPE_ENUM))
     return __ENUM_LISTPAGE_ENTITY_FEATURES__
 
 
@@ -96,7 +96,7 @@ def get_table_listpage_entity_features(graph) -> pd.DataFrame:
     """Extract entities from table list pages."""
     global __TABLE_LISTPAGE_ENTITY_FEATURES__
     if '__TABLE_LISTPAGE_ENTITY_FEATURES__' not in globals():
-        __TABLE_LISTPAGE_ENTITY_FEATURES__ = util.load_or_create_cache('dbpedia_listpage_table_features', lambda: _compute_listpage_entity_features(graph, wiki_parse.PAGE_TYPE_TABLE))
+        __TABLE_LISTPAGE_ENTITY_FEATURES__ = util.load_or_create_cache('dbpedia_listpage_table_features', lambda: _compute_listpage_entity_features(graph, wikipedia.ARTICLE_TYPE_TABLE))
     return __TABLE_LISTPAGE_ENTITY_FEATURES__
 
 
@@ -108,10 +108,10 @@ def _compute_listpage_entity_features(graph, list_type: str) -> pd.DataFrame:
     list_nlp._initialise_parser()
 
     parsed_listpages = list_store.get_parsed_listpages(list_type)
-    feature_func = page_features.make_enum_entity_features if list_type == wiki_parse.PAGE_TYPE_ENUM else page_features.make_table_entity_features
+    feature_func = page_features.make_enum_entity_features if list_type == wikipedia.ARTICLE_TYPE_ENUM else page_features.make_table_entity_features
     with mp.Pool(processes=round(util.get_config('max_cpus') / 2)) as pool:
         entity_features = [x for examples in tqdm(pool.imap_unordered(feature_func, parsed_listpages.items(), chunksize=1000), total=len(parsed_listpages)) for x in examples]
-    column_names = page_features.get_enum_feature_names() if list_type == wiki_parse.PAGE_TYPE_ENUM else page_features.get_table_feature_names()
+    column_names = page_features.get_enum_feature_names() if list_type == wikipedia.ARTICLE_TYPE_ENUM else page_features.get_table_feature_names()
     entity_features = pd.DataFrame(data=entity_features, columns=column_names)
 
     util.get_logger().info('LIST/BASE: Assigning entity labels..')
