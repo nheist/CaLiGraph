@@ -31,7 +31,7 @@ def get_cyclefree_wikitaxonomy_graph() -> CategoryGraph:
     """Retrieve the cycle-free category graph with filtered categories and edges."""
     global __CYCLEFREE_WIKITAXONOMY_GRAPH__
     if '__CYCLEFREE_WIKITAXONOMY_GRAPH__' not in globals():
-        initializer = lambda: get_wikitaxonomy_graph().resolve_cycles().append_unconnected()
+        initializer = lambda: get_wikitaxonomy_graph().append_unconnected()
         __CYCLEFREE_WIKITAXONOMY_GRAPH__ = util.load_or_create_cache('catgraph_cyclefree', initializer)
     return __CYCLEFREE_WIKITAXONOMY_GRAPH__
 

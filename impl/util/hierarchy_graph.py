@@ -34,6 +34,7 @@ class HierarchyGraph(BaseGraph):
             raise Exception(f'Node {node} not in graph.')
 
     def _reset_node_indices(self):
+        super()._reset_node_indices()
         self._node_by_name = None
 
     def get_name(self, node: str) -> str:
@@ -76,8 +77,11 @@ class HierarchyGraph(BaseGraph):
         For example, the category 'Israeli speculative fiction writers' has no parents and should be connected to other nodes.
         We look for similar nodes based on their lexical head, i.e. we connect it to 'Israeli writers' and 'Speculative fiction writers'.
         """
+        self._resolve_cycles()  # make sure the graph is cycle-free before making any changes to the hierarchy
+
         unconnected_head_nodes = {node for node in self.content_nodes if not self.parents(node)}
         nodes_to_parents_mapping = self.find_parents_by_headlemma_match(unconnected_head_nodes, self)
+        nodes_to_parents_mapping = {n: parents.difference(self.descendants(n)) for n, parents in nodes_to_parents_mapping.items()}
         self._add_edges([(parent, node) for node, parents in nodes_to_parents_mapping.items() for parent in parents])
 
         if discard_remaining:  # discard nodes without any valid parents
@@ -86,7 +90,19 @@ class HierarchyGraph(BaseGraph):
         else:  # or set root_node as parent for nodes without any valid parents
             remaining_unconnected_root_nodes = {node for node in self.content_nodes if not self.parents(node)}
             self._add_edges([(self.root_node, node) for node in remaining_unconnected_root_nodes])
-        return self.resolve_cycles()
+
+        return self
+
+    def _resolve_cycles(self):
+        """Resolve cycles by removing cycle edges that point from a node with a higher depth to a node with a lower depth."""
+        util.get_logger().debug('UTIL/HIERARCHY: Looking for cycles to resolve..')
+        num_edges = len(self.edges)
+        # remove all edges N1-->N2 of a cycle with depth(N1) > depth(N2)
+        self._remove_cycle_edges_by_node_depth(lambda x, y: x > y)
+        # remove all edges N1-->N2 of a cycle with depth(N1) >= depth(N2)
+        self._remove_cycle_edges_by_node_depth(lambda x, y: x >= y)
+        util.get_logger().debug(f'UTIL/HIERARCHY: Removed {num_edges - len(self.edges)} edges to resolve cycles.')
+        return self
 
     def find_parents_by_headlemma_match(self, unconnected_nodes: set, source_graph) -> dict:
         """For every node in unconnected_nodes, find a set of parents that matches the lexical head best."""
@@ -135,17 +151,6 @@ class HierarchyGraph(BaseGraph):
         else:
             # if no related nodes are found, use the most generic node (if available)
             return {cand for cand in candidates if len(target_LH[cand]) == 0}
-
-    def resolve_cycles(self):
-        """Resolve cycles by removing cycle edges that point from a node with a higher depth to a node with a lower depth."""
-        util.get_logger().debug('UTIL/HIERARCHY: Looking for cycles to resolve..')
-        num_edges = len(self.edges)
-        # remove all edges N1-->N2 of a cycle with depth(N1) > depth(N2)
-        self._remove_cycle_edges_by_node_depth(lambda x, y: x > y)
-        # remove all edges N1-->N2 of a cycle with depth(N1) >= depth(N2)
-        self._remove_cycle_edges_by_node_depth(lambda x, y: x >= y)
-        util.get_logger().debug(f'UTIL/HIERARCHY: Removed {num_edges - len(self.edges)} edges to resolve cycles.')
-        return self
 
     def _remove_cycle_edges_by_node_depth(self, comparator):
         edges_to_remove = set()

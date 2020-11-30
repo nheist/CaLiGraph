@@ -39,7 +39,7 @@ def get_cyclefree_wikitaxonomy_listgraph() -> ListGraph:
     """Retrieve list graph with filtered edges and resolved cycles."""
     global __CYCLEFREE_WIKITAXONOMY_LISTGRAPH__
     if '__CYCLEFREE_WIKITAXONOMY_LISTGRAPH__' not in globals():
-        initializer = lambda: get_wikitaxonomy_listgraph().resolve_cycles().append_unconnected()
+        initializer = lambda: get_wikitaxonomy_listgraph().append_unconnected()
         __CYCLEFREE_WIKITAXONOMY_LISTGRAPH__ = util.load_or_create_cache('listgraph_cyclefree', initializer)
     return __CYCLEFREE_WIKITAXONOMY_LISTGRAPH__
 

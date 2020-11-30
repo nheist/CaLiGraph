@@ -46,30 +46,24 @@ class CaLiGraph(HierarchyGraph):
         self._dbp_types_disjoint_nodes = defaultdict(set)
 
     def _reset_node_indices(self):
+        super()._reset_node_indices()
         self._node_dbpedia_types = defaultdict(set)
+        self._node_resource_stats = defaultdict(dict)
         self._node_resources = defaultdict(set)
         self._node_direct_cat_resources = defaultdict(set)
         self._node_direct_list_resources = defaultdict(set)
+        self._all_node_resources = set()
         self._resource_nodes = defaultdict(set)
         self._resource_provenance = defaultdict(set)
         self._resource_altlabels = defaultdict(set)
-        self._node_resource_stats = defaultdict(dict)
+        self._node_axioms = defaultdict(set)
+        self._node_axioms_transitive = defaultdict(set)
         self._node_disjoint_dbp_types = defaultdict(set)
         self._node_disjoint_dbp_types_transitive = defaultdict(set)
         self._dbp_types_disjoint_nodes = defaultdict(set)
 
     def _reset_edge_indices(self):
-        self._node_dbpedia_types = defaultdict(set)
-        self._node_resources = defaultdict(set)
-        self._node_direct_cat_resources = defaultdict(set)
-        self._node_direct_list_resources = defaultdict(set)
-        self._resource_nodes = defaultdict(set)
-        self._resource_provenance = defaultdict(set)
-        self._resource_altlabels = defaultdict(set)
-        self._node_resource_stats = defaultdict(dict)
-        self._node_disjoint_dbp_types = defaultdict(set)
-        self._node_disjoint_dbp_types_transitive = defaultdict(set)
-        self._dbp_types_disjoint_nodes = defaultdict(set)
+        self._reset_node_indices()
 
     def get_category_parts(self, node: str) -> set:
         self._check_node_exists(node)
@@ -161,7 +155,9 @@ class CaLiGraph(HierarchyGraph):
     def get_dbpedia_types(self, node: str, force_recompute=False) -> set:
         """Return all mapped DBpedia types of a node."""
         if node not in self._node_dbpedia_types or force_recompute:
-            parent_types = {t for parent in self.parents(node) for t in self.get_dbpedia_types(parent)}
+            if force_recompute:
+                util.get_logger().debug(f'RETRIEVING DBPEDIA TYPES FOR {node} with parents {self.parents(node)}')
+            parent_types = {t for parent in self.parents(node) for t in self.get_dbpedia_types(parent, force_recompute)}
             self._node_dbpedia_types[node] = self.get_type_parts(node) | parent_types
         return self._node_dbpedia_types[node]
 
@@ -476,7 +472,7 @@ class CaLiGraph(HierarchyGraph):
                 self._remove_edges({(self.root_node, node)})
                 self._add_edges({(parent, node) for parent in parent_nodes})
 
-        self.resolve_cycles().append_unconnected()
+        self.append_unconnected()
         cali_mapping.resolve_disjointnesses(self, use_listpage_resources)
 
         return self
