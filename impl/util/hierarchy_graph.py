@@ -90,18 +90,6 @@ class HierarchyGraph(BaseGraph):
         else:  # or set root_node as parent for nodes without any valid parents
             remaining_unconnected_root_nodes = {node for node in self.content_nodes if not self.parents(node)}
             self._add_edges([(self.root_node, node) for node in remaining_unconnected_root_nodes])
-
-        return self
-
-    def _resolve_cycles(self):
-        """Resolve cycles by removing cycle edges that point from a node with a higher depth to a node with a lower depth."""
-        util.get_logger().debug('UTIL/HIERARCHY: Looking for cycles to resolve..')
-        num_edges = len(self.edges)
-        # remove all edges N1-->N2 of a cycle with depth(N1) > depth(N2)
-        self._remove_cycle_edges_by_node_depth(lambda x, y: x > y)
-        # remove all edges N1-->N2 of a cycle with depth(N1) >= depth(N2)
-        self._remove_cycle_edges_by_node_depth(lambda x, y: x >= y)
-        util.get_logger().debug(f'UTIL/HIERARCHY: Removed {num_edges - len(self.edges)} edges to resolve cycles.')
         return self
 
     def find_parents_by_headlemma_match(self, unconnected_nodes: set, source_graph) -> dict:
@@ -151,6 +139,17 @@ class HierarchyGraph(BaseGraph):
         else:
             # if no related nodes are found, use the most generic node (if available)
             return {cand for cand in candidates if len(target_LH[cand]) == 0}
+
+    def _resolve_cycles(self):
+        """Resolve cycles by removing cycle edges that point from a node with a higher depth to a node with a lower depth."""
+        util.get_logger().debug('UTIL/HIERARCHY: Looking for cycles to resolve..')
+        num_edges = len(self.edges)
+        # remove all edges N1-->N2 of a cycle with depth(N1) > depth(N2)
+        self._remove_cycle_edges_by_node_depth(lambda x, y: x > y)
+        # remove all edges N1-->N2 of a cycle with depth(N1) >= depth(N2)
+        self._remove_cycle_edges_by_node_depth(lambda x, y: x >= y)
+        util.get_logger().debug(f'UTIL/HIERARCHY: Removed {num_edges - len(self.edges)} edges to resolve cycles.')
+        return self
 
     def _remove_cycle_edges_by_node_depth(self, comparator):
         edges_to_remove = set()

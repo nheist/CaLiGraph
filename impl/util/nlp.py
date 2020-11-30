@@ -49,26 +49,32 @@ def _regularize_whitespaces(text: str) -> str:
 
 def get_lexhead_subjects(set_or_sets, lemmatize=True) -> Union[set, list]:
     """Return the lexical head subjects of `doc` as lemmas or lowercased text."""
-    func = lambda doc: {w.lemma_ if lemmatize else w.text.lower() for w in doc if w.ent_type_ == 'LHS'}
+    func = lambda doc: {w.lemma_ if lemmatize else w.text.lower() for w in doc if w.ent_type_.startswith(spacy_util.LEXICAL_HEAD_SUBJECT)}
     return _process_one_or_many_sets(set_or_sets, func, default=set())
+
+
+def has_plural_lexhead_subjects(set_or_sets) -> Union[bool, list]:
+    """Return True, if the lexical head of `text` is in plural form."""
+    func = lambda doc: any(w.ent_type_ == spacy_util.LEXICAL_HEAD_SUBJECT_PLURAL for w in doc)
+    return _process_one_or_many_sets(set_or_sets, func, default=False)
 
 
 def get_lexhead_remainder(set_or_sets) -> Union[set, list]:
     """Return the non-subject part of the lexical head of `doc` as lemmas."""
-    func = lambda doc: {w.lemma_ for w in doc if w.ent_type_ == 'LH'}
+    func = lambda doc: {w.lemma_ for w in doc if w.ent_type_ == spacy_util.LEXICAL_HEAD}
     return _process_one_or_many_sets(set_or_sets, func, default=set())
 
 
 def get_nonlexhead_part(set_or_sets) -> Union[str, list]:
     """Return the words not contained in the lexical head of `doc`."""
-    func = lambda doc: ''.join([w.text_with_ws for w in doc if w.ent_type_ not in ['LH', 'LHS']])
+    func = lambda doc: ''.join([w.text_with_ws for w in doc if not w.ent_type_.startswith(spacy_util.LEXICAL_HEAD)])
     return _process_one_or_many_sets(set_or_sets, func, default='')
 
 
 def remove_by_phrase(text: str, return_doc=True):
     """Remove the 'by'-phrase at the end of a category or listpage, e.g. 'People by country' -> 'People'"""
     doc = parse_set(text)
-    result = ''.join([w.text_with_ws for w in doc if w.ent_type_ != 'BY'])
+    result = ''.join([w.text_with_ws for w in doc if w.ent_type_ != spacy_util.BY_PHRASE])
     return parse_set(result) if return_doc else result
 
 
@@ -79,7 +85,7 @@ def singularize_phrase(text: str) -> str:
     if len(doc) == 1:
         return singularize_word(doc[0])
     for idx, w in enumerate(doc):
-        if w.ent_type_ == 'LHS':
+        if w.ent_type_ == spacy_util.LEXICAL_HEAD_SUBJECT_PLURAL:
             result = result.replace(w.text, singularize_word(w))
             if len(doc) > idx+1 and doc[idx+1].text == 'and':
                 result = result.replace('and', 'or')

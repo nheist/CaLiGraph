@@ -155,8 +155,6 @@ class CaLiGraph(HierarchyGraph):
     def get_dbpedia_types(self, node: str, force_recompute=False) -> set:
         """Return all mapped DBpedia types of a node."""
         if node not in self._node_dbpedia_types or force_recompute:
-            if force_recompute:
-                util.get_logger().debug(f'RETRIEVING DBPEDIA TYPES FOR {node} with parents {self.parents(node)}')
             parent_types = {t for parent in self.parents(node) for t in self.get_dbpedia_types(parent, force_recompute)}
             self._node_dbpedia_types[node] = self.get_type_parts(node) | parent_types
         return self._node_dbpedia_types[node]

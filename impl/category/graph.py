@@ -56,7 +56,7 @@ class CategoryGraph(HierarchyGraph):
         """Remove all nodes that are non-conceptual (i.e. that do not represent a class in a taxonomy)."""
         categories = self.nodes.intersection(cat_store.get_usable_categories())
         cat_names = [cat_store.get_label(cat) for cat in categories]
-        conceptual_categories = {cat for cat, hsls in zip(categories, nlp_util.get_lexhead_subjects(cat_names)) if hsls}
+        conceptual_categories = {cat for cat, has_plural_lexhead in zip(categories, nlp_util.has_plural_lexhead_subjects(cat_names)) if has_plural_lexhead}
         # clearing the graph of any invalid nodes
         self._remove_all_nodes_except(conceptual_categories | {self.root_node})
         return self

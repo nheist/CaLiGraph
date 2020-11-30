@@ -3,6 +3,9 @@ import impl.util.words as words_util
 
 
 # TAGGING OF LEXICAL HEAD OF A CATEGORY OR LIST PAGE
+LEXICAL_HEAD = 'LH'
+LEXICAL_HEAD_SUBJECT = 'LHS'
+LEXICAL_HEAD_SUBJECT_PLURAL = 'LHSP'
 
 
 def tag_lexical_head(doc: Doc) -> Doc:
@@ -12,7 +15,7 @@ def tag_lexical_head(doc: Doc) -> Doc:
 
     # ensure that numbers are also regarded as nouns if being stand-alone
     if doc[0].tag_ == 'CD' and (len(doc) < 2 or not doc[1].tag_.startswith('NN')):
-        doc.ents = [Span(doc, 0, 1, label=doc.vocab.strings['LH'])]
+        doc.ents = [Span(doc, 0, 1, label=doc.vocab.strings[LEXICAL_HEAD])]
         return doc
 
     chunk_words = {w for chunk in doc.noun_chunks for w in chunk}
@@ -34,25 +37,26 @@ def tag_lexical_head(doc: Doc) -> Doc:
                 lexhead_start = lexhead_start if lexhead_start is not None else chunk.start
                 continue
         lexhead_start = lexhead_start if lexhead_start is not None else chunk.start
-        doc.ents = [Span(doc, i, i+1, label=doc.vocab.strings['LH']) for i in range(lexhead_start, chunk.end)]
+        doc.ents = [Span(doc, i, i+1, label=doc.vocab.strings[LEXICAL_HEAD]) for i in range(lexhead_start, chunk.end)]
         break
     return doc
 
 
 def tag_lexical_head_subjects(doc: Doc) -> Doc:
-    """Tag the main subjects of lexical heads with 'LHS' - but only if they are in plural."""
+    """Tag the main subjects of lexical heads with 'LHS(P)'."""
     lh_entities = list(doc.ents)
     lhs_entities = []
 
     subject_connectors = ['and', 'or', ',']
     # iterate over the lexical head of the doc in reversed order and mark the plural nouns as subjects
-    for w in [w for w in reversed(doc) if w.ent_type_ == 'LH']:
+    for w in [w for w in reversed(doc) if w.ent_type_ == LEXICAL_HEAD]:
         if w.text in subject_connectors:
             continue  # ignore subject connectors
-        if w.tag_ != 'NNS':
-            break  # LHS are at the end of the LH, so we stop if we are not looking at a plural noun
+        if not w.tag_.startswith('NN'):
+            break  # LHS are at the end of the LH, so we stop if we are not looking at a noun
         # add current word to LHS
-        lhs_entities.append(Span(doc, w.i, w.i+1, label=doc.vocab.strings['LHS']))
+        ent_tag = LEXICAL_HEAD_SUBJECT_PLURAL if w.tag_ == 'NNS' else LEXICAL_HEAD_SUBJECT
+        lhs_entities.append(Span(doc, w.i, w.i+1, label=doc.vocab.strings[ent_tag]))
         lh_entities = [e for e in lh_entities if e.start != w.i]
         if w.i == 0 or doc[w.i-1].text not in subject_connectors:
             break  # if the previous word is not a subject connector we found all LHS
@@ -63,6 +67,7 @@ def tag_lexical_head_subjects(doc: Doc) -> Doc:
 # TAGGING OF THE BY-PHRASE OF A CATEGORY OR LIST PAGE
 
 
+BY_PHRASE = 'BY'
 BY_PHRASE_EXCEPTIONS = {'bell hooks', 'DBC Pierre', 'KT Tunstall', 'U-Wei Saari', '`Abdu\'l-Bahá', 'ibn Hazm'}
 
 
@@ -94,10 +99,10 @@ def tag_by_phrase(doc: Doc) -> Doc:
             continue
         if word_after_by.text in ['a', 'an', 'the']:
             continue
-        if any(w.ent_type_ in ['LH', 'LHS'] for w in current_doc[by_index:]):
+        if any(w.ent_type_.startswith(LEXICAL_HEAD) for w in current_doc[by_index:]):
             continue
         if doc[by_index - 1].text == '(':  # include possible parenthesis before by phrase
             by_index -= 1
-        doc.ents = [*doc.ents, Span(doc, by_index, end_index, label=doc.vocab.strings['BY'])]
+        doc.ents = [*doc.ents, Span(doc, by_index, end_index, label=doc.vocab.strings[BY_PHRASE])]
         break
     return doc
