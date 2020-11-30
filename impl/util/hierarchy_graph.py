@@ -78,7 +78,6 @@ class HierarchyGraph(BaseGraph):
         """
         unconnected_head_nodes = {node for node in self.content_nodes if not self.parents(node)}
         nodes_to_parents_mapping = self.find_parents_by_headlemma_match(unconnected_head_nodes, self)
-        nodes_to_parents_mapping = {n: parents.difference(self.descendants(n)) for n, parents in nodes_to_parents_mapping.items()}
         self._add_edges([(parent, node) for node, parents in nodes_to_parents_mapping.items() for parent in parents])
 
         if discard_remaining:  # discard nodes without any valid parents
@@ -87,7 +86,7 @@ class HierarchyGraph(BaseGraph):
         else:  # or set root_node as parent for nodes without any valid parents
             remaining_unconnected_root_nodes = {node for node in self.content_nodes if not self.parents(node)}
             self._add_edges([(self.root_node, node) for node in remaining_unconnected_root_nodes])
-        return self
+        return self.resolve_cycles()
 
     def find_parents_by_headlemma_match(self, unconnected_nodes: set, source_graph) -> dict:
         """For every node in unconnected_nodes, find a set of parents that matches the lexical head best."""
@@ -139,13 +138,13 @@ class HierarchyGraph(BaseGraph):
 
     def resolve_cycles(self):
         """Resolve cycles by removing cycle edges that point from a node with a higher depth to a node with a lower depth."""
-        util.get_logger().debug('HierarchyGraph: Looking for cycles to resolve..')
+        util.get_logger().debug('UTIL/HIERARCHY: Looking for cycles to resolve..')
         num_edges = len(self.edges)
         # remove all edges N1-->N2 of a cycle with depth(N1) > depth(N2)
         self._remove_cycle_edges_by_node_depth(lambda x, y: x > y)
         # remove all edges N1-->N2 of a cycle with depth(N1) >= depth(N2)
         self._remove_cycle_edges_by_node_depth(lambda x, y: x >= y)
-        util.get_logger().debug(f'HierarchyGraph: Removed {num_edges - len(self.edges)} edges to resolve cycles.')
+        util.get_logger().debug(f'UTIL/HIERARCHY: Removed {num_edges - len(self.edges)} edges to resolve cycles.')
         return self
 
     def _remove_cycle_edges_by_node_depth(self, comparator):
@@ -201,7 +200,7 @@ class HierarchyGraph(BaseGraph):
             if node_name != canonical_name:
                 nodes_canonical_names[node] = canonical_name
         remaining_nodes_to_merge = set(nodes_canonical_names)
-        util.get_logger().debug(f'Found {len(remaining_nodes_to_merge)} nodes to merge.')
+        util.get_logger().debug(f'UTIL/HIERARCHY: Found {len(remaining_nodes_to_merge)} nodes to merge.')
 
         # 1) compute direct merge and synonym merge
         direct_merges = defaultdict(set)
@@ -216,7 +215,7 @@ class HierarchyGraph(BaseGraph):
 
                 if all(any(hypernymy_util.is_synonym(niw, piw) for piw in parent_important_words) for niw in node_important_words):
                     direct_merges[node].add(parent)
-        util.get_logger().debug(f'Found {len(direct_merges)} nodes to merge directly.')
+        util.get_logger().debug(f'UTIL/HIERARCHY: Found {len(direct_merges)} nodes to merge directly.')
 
         # 2) compute category set merge
         catset_merges = defaultdict(set)
@@ -229,10 +228,10 @@ class HierarchyGraph(BaseGraph):
                 similar_children_count = len({child for child in self.children(parent) if child in nodes_canonical_names and nodes_canonical_names[child] == node_canonical_name})
                 if similar_children_count > 1:
                     catset_merges[node].add(parent)
-        util.get_logger().debug(f'Found {len(catset_merges)} nodes to merge via category sets.')
+        util.get_logger().debug(f'UTIL/HIERARCHY: Found {len(catset_merges)} nodes to merge via category sets.')
 
         remaining_nodes_to_merge = remaining_nodes_to_merge.difference(set(catset_merges))
-        util.get_logger().debug(f'The {len(remaining_nodes_to_merge)} remaining nodes will not be merged.')
+        util.get_logger().debug(f'UTIL/HIERARCHY: The {len(remaining_nodes_to_merge)} remaining nodes will not be merged.')
 
         # 3) conduct merge
         nodes_to_merge = set(direct_merges) | set(catset_merges)
@@ -241,7 +240,7 @@ class HierarchyGraph(BaseGraph):
         iteration = 0
         while all_merges:
             independent_nodes = set(all_merges).difference({merge_target for mts in all_merges.values() for merge_target in mts})
-            util.get_logger().debug(f'Merge iteration {iteration}: Merging {len(independent_nodes)} of remaining {len(all_merges)} nodes.')
+            util.get_logger().debug(f'UTIL/HIERARCHY: Merging {len(independent_nodes)} of remaining {len(all_merges)} nodes (iteration {iteration}).')
             for node_to_merge in independent_nodes:
                 merge_targets = all_merges[node_to_merge]
                 del all_merges[node_to_merge]
