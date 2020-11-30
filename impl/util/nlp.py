@@ -87,7 +87,7 @@ def singularize_phrase(text: str) -> str:
 
 
 def singularize_word(word: Token) -> str:
-    if word.tag_ in ['NNS', 'NNPS']:
+    if word.tag_ in ['NNS', 'NNPS'] and word.text != word.lemma_:
         return word.lemma_
     return inflection.singularize(word.text)
 
