@@ -18,8 +18,12 @@ def parse_sets(taxonomic_sets: list) -> Iterator:
     if '__SET_PARSER__' not in globals():
         __SET_PARSER__ = spacy.load('en_core_web_lg')
         __SET_PARSER__.remove_pipe('ner')
+        __SET_PARSER__.vocab.strings.add(LEXICAL_HEAD)
         __SET_PARSER__.add_pipe(tag_lexical_head, name='lexhead')
+        __SET_PARSER__.vocab.strings.add(LEXICAL_HEAD_SUBJECT)
+        __SET_PARSER__.vocab.strings.add(LEXICAL_HEAD_SUBJECT_PLURAL)
         __SET_PARSER__.add_pipe(tag_lexical_head_subjects, name='lexheadsub')
+        __SET_PARSER__.vocab.strings.add(BY_PHRASE)
         __SET_PARSER__.add_pipe(tag_by_phrase, name='byphrase')
 
     unknown_sets = [s for s in taxonomic_sets if s and s not in __SET_DOCUMENT_CACHE__]
