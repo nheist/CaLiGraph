@@ -33,6 +33,8 @@ def _extract_parents_for_category(data: tuple) -> tuple:
     parent_names = {link.target[len(CATEGORY_PREFIX):] for link in content.wikilinks if link.target.startswith(CATEGORY_PREFIX)}
     parent_names = map(str_util.capitalize, parent_names)  # make sure that first letter of category is uppercase
     parent_uris = {DBPEDIA_CATEGORY_PREFIX + name.replace(' ', '_') for name in parent_names}
+    if '__HIDDENCAT__' in content.string:
+        parent_uris.add(f'{DBPEDIA_CATEGORY_PREFIX}Hidden_categories')
     return cat, parent_uris
 
 
