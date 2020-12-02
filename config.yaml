@@ -4,7 +4,7 @@ max_cpus: 16
 # -- CALIGRAPH CONFIGURATION --
 caligraph:
   version: '2.0.0'
-  creation_date: '2020-01-11'
+  creation_date: '2020-12-01'
   namespace:
     base: 'http://caligraph.org/'
     ontology: 'http://caligraph.org/ontology/'
@@ -44,44 +44,41 @@ files:
   wikipedia:
     pages:
       filename: 'pages_articles_en.xml.bz2'
-      url: 'https://dumps.wikimedia.org/enwiki/20200801/enwiki-20200801-pages-articles-multistream.xml.bz2'
+      url: 'https://dumps.wikimedia.org/enwiki/20201001/enwiki-20201001-pages-articles-multistream.xml.bz2'
   dbpedia:
     taxonomy:
       filename: 'dbpedia_ontology.nt'
-      url: 'http://akswnc7.informatik.uni-leipzig.de/dstreitmatter/archivo/dbpedia.org/ontology--DEV/2020.10.27-031001/ontology--DEV_type=parsed.nt'
+      url: 'http://akswnc7.informatik.uni-leipzig.de/dstreitmatter/archivo/dbpedia.org/ontology--DEV/2020.12.02-031001/ontology--DEV_type=parsed.nt'
     labels:
       filename: 'labels_lang=en.ttl.bz2'
-      url: 'https://downloads.dbpedia.org/repo/dbpedia/generic/labels/2020.07.01/labels_lang=en.ttl.bz2'
-    long_abstracts:
-      filename: 'long-abstracts_lang=en.ttl.bz2'
-      url: 'https://downloads.dbpedia.org/repo/dbpedia/text/long-abstracts/2020.07.01/long-abstracts_lang=en.ttl.bz2'
+      url: 'https://downloads.dbpedia.org/repo/dbpedia/generic/labels/2020.10.01/labels_lang=en.ttl.bz2'
     category_articles:
       filename: 'categories_lang=en_articles.ttl.bz2'
-      url: 'https://downloads.dbpedia.org/repo/dbpedia/generic/categories/2020.07.01/categories_lang=en_articles.ttl.bz2'
+      url: 'https://downloads.dbpedia.org/repo/dbpedia/generic/categories/2020.10.01/categories_lang=en_articles.ttl.bz2'
     category_skos:
       filename: 'categories_lang=en_skos.ttl.bz2'
-      url: 'https://downloads.dbpedia.org/repo/dbpedia/generic/categories/2020.07.01/categories_lang=en_skos.ttl.bz2'
+      url: 'https://downloads.dbpedia.org/repo/dbpedia/generic/categories/2020.10.01/categories_lang=en_skos.ttl.bz2'
     topical_concepts:
       filename: 'topical_concepts_lang=en.ttl.bz2'
-      url: 'https://downloads.dbpedia.org/repo/dbpedia/generic/topical-concepts/2020.07.01/topical-concepts_lang=en.ttl.bz2'
+      url: 'https://downloads.dbpedia.org/repo/dbpedia/generic/topical-concepts/2020.10.01/topical-concepts_lang=en.ttl.bz2'
     instance_types:
       filename: 'instance-types_lang=en_specific.ttl.bz2'
-      url: 'https://downloads.dbpedia.org/repo/dbpedia/mappings/instance-types/2020.08.01/instance-types_lang=en_specific.ttl.bz2'
+      url: 'https://downloads.dbpedia.org/repo/dbpedia/mappings/instance-types/2020.10.01/instance-types_lang=en_specific.ttl.bz2'
     mappingbased_literals:
       filename: 'mappingbased-literals_lang=en.ttl.bz2'
-      url: 'https://downloads.dbpedia.org/repo/dbpedia/mappings/mappingbased-literals/2020.08.01/mappingbased-literals_lang=en.ttl.bz2'
+      url: 'https://downloads.dbpedia.org/repo/dbpedia/mappings/mappingbased-literals/2020.10.01/mappingbased-literals_lang=en.ttl.bz2'
     mappingbased_objects:
       filename: 'mappingbased-objects_lang=en.ttl.bz2'
-      url: 'https://downloads.dbpedia.org/repo/dbpedia/mappings/mappingbased-objects/2020.08.01/mappingbased-objects_lang=en.ttl.bz2'
+      url: 'https://downloads.dbpedia.org/repo/dbpedia/mappings/mappingbased-objects/2020.10.01/mappingbased-objects_lang=en.ttl.bz2'
     anchor_texts:
       filename: 'anchor_text_en.ttl.bz2'
-      url: 'https://downloads.dbpedia.org/repo/dbpedia/generic/anchor-text/2020.08.01/anchor-text_lang=en.ttl.bz2'
+      url: 'https://downloads.dbpedia.org/repo/dbpedia/generic/anchor-text/2020.10.01/anchor-text_lang=en.ttl.bz2'
     redirects:
       filename: 'redirects_lang=en.ttl.bz2'
-      url: 'https://downloads.dbpedia.org/repo/dbpedia/generic/redirects/2020.07.01/redirects_lang=en.ttl.bz2'
+      url: 'https://downloads.dbpedia.org/repo/dbpedia/generic/redirects/2020.10.01/redirects_lang=en.ttl.bz2'
     disambiguations:
       filename: 'disambiguations_lang=en.ttl.bz2'
-      url: 'https://downloads.dbpedia.org/repo/dbpedia/generic/disambiguations/2020.07.01/disambiguations_lang=en.ttl.bz2'
+      url: 'https://downloads.dbpedia.org/repo/dbpedia/generic/disambiguations/2020.10.01/disambiguations_lang=en.ttl.bz2'
     nif_context:
       filename: 'nif-context_lang=en.ttl.bz2'
       url: 'https://downloads.dbpedia.org/repo/dbpedia/text/nif-context/2020.07.01/nif-context_lang=en.ttl.bz2'
