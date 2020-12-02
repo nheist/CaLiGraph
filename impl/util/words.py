@@ -14,7 +14,8 @@ def get_english_words() -> set:
     """Return all English words in the dictionary of nltk."""
     global __WORDS__
     if '__WORDS__' not in globals():
-        __WORDS__ = set(words.words())
+        wikipedia_specific_words = {'bandleader'}
+        __WORDS__ = set(words.words()) | wikipedia_specific_words
     return __WORDS__
 
 

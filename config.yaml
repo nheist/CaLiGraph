@@ -184,9 +184,6 @@ cache:
   dbpedia_resource_labels:
     filename: 'dbpedia-resource-labels'
     version: 1
-  dbpedia_resource_abstracts:
-    filename: 'dbpedia-resource-abstracts'
-    version: 1
   dbpedia_resource_lexicalisations:
     filename: 'dbpedia-resource-lexicalisations'
     version: 1

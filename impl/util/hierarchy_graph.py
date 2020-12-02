@@ -71,7 +71,7 @@ class HierarchyGraph(BaseGraph):
 
     # graph connectivity
 
-    def append_unconnected(self, discard_remaining=False):
+    def append_unconnected(self):
         """Make all unconnected nodes children of the next closest parent node or the root node.
 
         For example, the category 'Israeli speculative fiction writers' has no parents and should be connected to other nodes.
@@ -79,17 +79,16 @@ class HierarchyGraph(BaseGraph):
         """
         self._resolve_cycles()  # make sure the graph is cycle-free before making any changes to the hierarchy
 
+        # attach node to closest node by lexical head
         unconnected_head_nodes = {node for node in self.content_nodes if not self.parents(node)}
         nodes_to_parents_mapping = self.find_parents_by_headlemma_match(unconnected_head_nodes, self)
         nodes_to_parents_mapping = {n: parents.difference(self.descendants(n)) for n, parents in nodes_to_parents_mapping.items()}
         self._add_edges([(parent, node) for node, parents in nodes_to_parents_mapping.items() for parent in parents])
 
-        if discard_remaining:  # discard nodes without any valid parents
-            unconnected_nodes = self.content_nodes.difference(self.descendants(self.root_node))
-            self._remove_nodes(unconnected_nodes)
-        else:  # or set root_node as parent for nodes without any valid parents
-            remaining_unconnected_root_nodes = {node for node in self.content_nodes if not self.parents(node)}
-            self._add_edges([(self.root_node, node) for node in remaining_unconnected_root_nodes])
+        # set root_node as parent for nodes without any valid parents
+        remaining_unconnected_root_nodes = {node for node in self.content_nodes if not self.parents(node)}
+        self._add_edges([(self.root_node, node) for node in remaining_unconnected_root_nodes])
+
         return self
 
     def find_parents_by_headlemma_match(self, unconnected_nodes: set, source_graph) -> dict:

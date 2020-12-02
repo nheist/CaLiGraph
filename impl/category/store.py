@@ -6,45 +6,58 @@ import impl.dbpedia.store as dbp_store
 from impl import wikipedia
 import util
 from collections import defaultdict
+import networkx as nx
 
 
 def get_categories() -> set:
-    """Return all categories."""
-    global __CATEGORIES__
-    if '__CATEGORIES__' not in globals():
-        initializer = lambda: set(rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.category_skos')], rdf_util.PREDICATE_TYPE))
-        __CATEGORIES__ = util.load_or_create_cache('dbpedia_categories', initializer)
-
-    return __CATEGORIES__
+    """Return all categories that are not hidden or used as any kind of organisational category."""
+    return set(_get_category_graph())
 
 
-def get_usable_categories() -> set:
-    """Return only usable categories, i.e. categories that are not used for maintenance and organisational purposes.
-    See https://en.wikipedia.org/wiki/Category:Wikipedia_categories for an overview of maintenance categories.
-    """
-    global __USABLE_CATEGORIES__
-    if '__USABLE_CATEGORIES__' not in globals():
-        __USABLE_CATEGORIES__ = get_categories()
-        maintenance_parent_categories = {
-            'Disambiguation categories', 'Hidden categories', 'Maintenance categories', 'Namespace-specific categories',
-            'All redirect categories', 'Wikipedia soft redirected categories', 'Tracking categories'
-        }
-        for mpc in maintenance_parent_categories:
-            mpc_child_closure = {mpc} | get_transitive_children(mpc)
-            __USABLE_CATEGORIES__ = __USABLE_CATEGORIES__.difference(mpc_child_closure)
+def get_parents(category: str) -> set:
+    """Return all direct supercategories for the given category."""
+    category_graph = _get_category_graph()
+    return set(category_graph.predecessors(category)) if category in category_graph else set()
 
-        maintenance_category_indicators = {
-            'wikipedia', 'wikipedians', 'wikimedia', 'wikiproject', 'lists', 'redirects', 'mediawiki', 'template',
-            'templates', 'user', 'portal', 'categories', 'articles', 'pages', 'navigational', 'stubs'
-        }
-        maintenance_categories = set()
-        for c in __USABLE_CATEGORIES__:
-            category_tokens = {t.lower() for t in cat_util.remove_category_prefix(c).split('_')}
-            if category_tokens.intersection(maintenance_category_indicators):
-                maintenance_categories.add(c)
-        __USABLE_CATEGORIES__ = __USABLE_CATEGORIES__.difference(maintenance_categories)
 
-    return __USABLE_CATEGORIES__
+def get_children(category: str) -> set:
+    """Return all direct subcategories for the given category."""
+    category_graph = _get_category_graph()
+    return set(category_graph.successors(category)) if category in category_graph else set()
+
+
+def _get_category_graph() -> nx.DiGraph:
+    global __CATEGORY_GRAPH__
+    if '__CATEGORY_GRAPH__' not in globals():
+        __CATEGORY_GRAPH__ = util.load_or_create_cache('dbpedia_categories', _create_category_graph)
+    return __CATEGORY_GRAPH__
+
+
+def _create_category_graph() -> nx.DiGraph:
+    wiki_category_edges = [(p, c) for c, ps in wikipedia.extract_parent_categories().items() for p in ps if p != c]
+    graph = nx.DiGraph(incoming_graph_data=wiki_category_edges)
+    # identify hidden/tracking categories
+    invalid_categories = set(graph.successors(cat_util.name2category('Hidden categories')))
+    invalid_categories.update(graph.successors(cat_util.name2category('Tracking categories')))
+    # identify disambiguation and redirect categories
+    invalid_categories.update(nx.descendants(graph, cat_util.name2category('Disambiguation categories')))
+    invalid_categories.update(nx.descendants(graph, cat_util.name2category('All redirect categories')))
+    # add nodes/edges from skos-categories file (this is done on purpose AFTER identification of disambiguations/redirects to avoid false edges when using descendants)
+    skos_nodes = list(rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.category_skos')], rdf_util.PREDICATE_TYPE))
+    graph.add_nodes_from(skos_nodes)
+    skos_edges = rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.category_skos')], rdf_util.PREDICATE_BROADER)
+    graph.add_edges_from([(p, c) for c, parents in skos_edges.items() for p in parents if p != c])
+    # identify any remaining maintenance categories
+    maintenance_category_indicators = {
+        'wikipedia', 'wikipedians', 'wikimedia', 'wikiproject', 'lists', 'redirects', 'mediawiki', 'template',
+        'templates', 'user', 'portal', 'categories', 'articles', 'pages', 'navigational', 'stubs'
+    }
+    for cat in graph:
+        cat_tokens = {t.lower() for t in cat_util.remove_category_prefix(cat).split('_')}
+        if cat_tokens.intersection(maintenance_category_indicators):
+            invalid_categories.add(cat)
+    graph.remove_nodes_from(invalid_categories)
+    return graph
 
 
 def get_label(category: str) -> str:
@@ -85,37 +98,6 @@ def get_resource_categories(dbp_resource: str) -> set:
     return __RESOURCE_CATEGORIES__[dbp_resource]
 
 
-def get_parents(category: str) -> set:
-    """Return all direct supercategories for the given category."""
-    global __PARENTS__
-    if '__PARENTS__' not in globals():
-        # use parent category relationships extracted from dbpedia extraction framework
-        __PARENTS__ = defaultdict(set, rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.category_skos')], rdf_util.PREDICATE_BROADER))
-        # combine them with parent categories extracted directly from wikimarkup (including parent categories expressed in templates)
-        for child, parents in wikipedia.extract_parent_categories().items():
-            __PARENTS__[child].update(parents)
-        __PARENTS__ = defaultdict(set, {child: parents.difference({child}) for child, parents in __PARENTS__.items()})
-    return __PARENTS__[category]
-
-
-def get_children(category: str) -> set:
-    """Return all direct subcategories for the given category."""
-    global __CHILDREN__, __PARENTS__
-    if '__CHILDREN__' not in globals():
-        get_parents('')  # make sure that __PARENTS__ is initialized
-        __CHILDREN__ = defaultdict(set)
-        for child, parents in __PARENTS__.items():
-            for parent in parents:
-                __CHILDREN__[parent].add(child)
-    return __CHILDREN__[category]
-
-
-def get_transitive_children(category: str) -> set:
-    """Return all (including transitive) subcategories for the given category."""
-    children = get_children(category)
-    return children | {tc for c in children for tc in get_transitive_children(c)}
-
-
 def get_topics(category: str) -> set:
     """Return the topics for the given category."""
     global __TOPICS__
@@ -134,15 +116,6 @@ def get_topic_categories(dbp_resource: str) -> set:
             for topic in get_topics(cat):
                 __TOPIC_CATEGORIES__[topic].add(cat)
     return __TOPIC_CATEGORIES__[dbp_resource]
-
-
-def get_maintenance_categories() -> set:
-    """Return all categories that are used solely for maintenance purposes in Wikipedia."""
-    global __MAINTENANCE_CATS__
-    if '__MAINTENANCE_CATS__' not in globals():
-        __MAINTENANCE_CATS__ = set(rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.maintenance_categories')], rdf_util.PREDICATE_TYPE))
-
-    return __MAINTENANCE_CATS__
 
 
 def get_statistics(category: str) -> dict:
