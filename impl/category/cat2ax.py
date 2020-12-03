@@ -8,6 +8,7 @@ The extraction is performed in three steps:
 
 import util
 from collections import defaultdict
+from typing import List
 import operator
 import numpy as np
 import impl.dbpedia.store as dbp_store
@@ -181,7 +182,7 @@ def _get_type_surface_scores(words, lemmatize=True):
 def _extract_axioms(category_graph, patterns):
     """Return axioms extracted from `category_graph` by applying `patterns` to all categories."""
     util.get_logger().debug('CATEGORY/CAT2AX: Extracting axioms..')
-    category_axioms = defaultdict(set)
+    category_axioms = defaultdict(list)
 
     # process front/back/front+back patterns individually to reduce computational complexity
     front_pattern_dict = {}
@@ -197,43 +198,8 @@ def _extract_axioms(category_graph, patterns):
         _fill_dict(enclosing_pattern_dict, list(front_pattern), lambda d: _fill_dict(d, list(reversed(back_pattern)), axiom_patterns))
 
     for cat in category_graph.content_nodes:
-        cat_doc = nlp_util.remove_by_phrase(cat_store.get_label(cat))
-        cat_prop_axioms = []
-        cat_type_axioms = []
-
-        front_prop_axiom, front_type_axiom = _detect_and_apply_patterns(front_pattern_dict, cat, cat_doc)
-        if front_prop_axiom:
-            cat_prop_axioms.append(front_prop_axiom)
-        if front_type_axiom:
-            cat_type_axioms.append(front_type_axiom)
-
-        back_prop_axiom, back_type_axiom = _detect_and_apply_patterns(back_pattern_dict, cat, cat_doc)
-        if back_prop_axiom:
-            cat_prop_axioms.append(back_prop_axiom)
-        if back_type_axiom:
-            cat_type_axioms.append(back_type_axiom)
-
-        enclosing_prop_axiom, enclosing_type_axiom = _detect_and_apply_patterns(enclosing_pattern_dict, cat, cat_doc)
-        if enclosing_prop_axiom:
-            cat_prop_axioms.append(enclosing_prop_axiom)
-        if enclosing_type_axiom:
-            cat_type_axioms.append(enclosing_type_axiom)
-
-        # apply selection of axioms (multiple axioms can be selected if they do not contradict each other)
-        prop_axioms_by_pred = {a[1]: {x for x in cat_prop_axioms if x[1] == a[1]} for a in cat_prop_axioms}
-        for pred, similar_prop_axioms in prop_axioms_by_pred.items():
-            if dbp_store.is_object_property(pred):
-                res_labels = {a[2]: dbp_store.get_label(a[2]) for a in similar_prop_axioms}
-                similar_prop_axioms = {a for a in similar_prop_axioms if all(res_labels[a[2]] == val or res_labels[a[2]] not in val for val in res_labels.values())}
-            best_prop_axiom = max(similar_prop_axioms, key=operator.itemgetter(3))
-            category_axioms[cat].add(RelationAxiom(best_prop_axiom[1], best_prop_axiom[2], best_prop_axiom[3]))
-
-        best_type_axiom = None
-        for type_axiom in sorted(cat_type_axioms, key=operator.itemgetter(3), reverse=True):
-            if not best_type_axiom or type_axiom[2] in dbp_store.get_transitive_subtypes(best_type_axiom[2]):
-                best_type_axiom = type_axiom
-        if best_type_axiom:
-            category_axioms[cat].add(TypeAxiom(best_type_axiom[2], best_type_axiom[3]))
+        cat_context = (cat, nlp_util.remove_by_phrase(cat_store.get_label(cat)), cat_store.get_statistics(cat), front_pattern_dict, back_pattern_dict, enclosing_pattern_dict)
+        category_axioms[cat] = _extract_axioms_for_cat(cat_context)
 
     util.get_logger().debug(f'CATEGORY/CAT2AX: Extracted {sum(len(axioms) for axioms in category_axioms.values())} axioms for {len(category_axioms)} categories.')
     return category_axioms
@@ -271,7 +237,52 @@ def _fill_dict(dictionary, elements, leaf):
         _fill_dict(dictionary[elements[0]], elements[1:], leaf)
 
 
-def _detect_and_apply_patterns(pattern_dict, cat, cat_doc):
+def _extract_axioms_for_cat(cat_context: tuple) -> List[Axiom]:
+    cat, cat_doc, cat_stats, front_pattern_dict, back_pattern_dict, enclosing_pattern_dict = cat_context
+
+    # find all axiom candidates for cat
+    cat_prop_axioms = []
+    cat_type_axioms = []
+
+    front_prop_axiom, front_type_axiom = _detect_and_apply_patterns(front_pattern_dict, cat, cat_doc, cat_stats)
+    if front_prop_axiom:
+        cat_prop_axioms.append(front_prop_axiom)
+    if front_type_axiom:
+        cat_type_axioms.append(front_type_axiom)
+
+    back_prop_axiom, back_type_axiom = _detect_and_apply_patterns(back_pattern_dict, cat, cat_doc, cat_stats)
+    if back_prop_axiom:
+        cat_prop_axioms.append(back_prop_axiom)
+    if back_type_axiom:
+        cat_type_axioms.append(back_type_axiom)
+
+    enclosing_prop_axiom, enclosing_type_axiom = _detect_and_apply_patterns(enclosing_pattern_dict, cat, cat_doc, cat_stats)
+    if enclosing_prop_axiom:
+        cat_prop_axioms.append(enclosing_prop_axiom)
+    if enclosing_type_axiom:
+        cat_type_axioms.append(enclosing_type_axiom)
+
+    # select consistent set of axioms (multiple axioms can be selected if they do not contradict each other)
+    cat_axioms = []
+    prop_axioms_by_pred = {a[1]: {x for x in cat_prop_axioms if x[1] == a[1]} for a in cat_prop_axioms}
+    for pred, similar_prop_axioms in prop_axioms_by_pred.items():
+        if dbp_store.is_object_property(pred):
+            res_labels = {a[2]: dbp_store.get_label(a[2]) for a in similar_prop_axioms}
+            similar_prop_axioms = {a for a in similar_prop_axioms if all(res_labels[a[2]] == val or res_labels[a[2]] not in val for val in res_labels.values())}
+        best_prop_axiom = max(similar_prop_axioms, key=operator.itemgetter(3))
+        cat_axioms.append(RelationAxiom(best_prop_axiom[1], best_prop_axiom[2], best_prop_axiom[3]))
+
+    best_type_axiom = None
+    for type_axiom in sorted(cat_type_axioms, key=operator.itemgetter(3), reverse=True):
+        if not best_type_axiom or type_axiom[2] in dbp_store.get_transitive_subtypes(best_type_axiom[2]):
+            best_type_axiom = type_axiom
+    if best_type_axiom:
+        cat_axioms.append(TypeAxiom(best_type_axiom[2], best_type_axiom[3]))
+
+    return cat_axioms
+
+
+def _detect_and_apply_patterns(pattern_dict, cat, cat_doc, cat_stats):
     """Iterate over possible patterns to extract and return best axioms."""
     cat_words = [w.text for w in cat_doc]
     axiom_patterns, pattern_lengths = _detect_patterns(pattern_dict, cat_words)
@@ -284,7 +295,7 @@ def _detect_and_apply_patterns(pattern_dict, cat, cat_doc):
             words_same += cat_words[:front_pattern_idx]
         if back_pattern_idx:
             words_same += cat_words[back_pattern_idx:]
-        return _apply_patterns_to_cat(axiom_patterns, cat, text_diff, words_same)
+        return _apply_patterns_to_cat(axiom_patterns, cat, cat_stats, text_diff, words_same)
     return None, None
 
 
@@ -306,15 +317,14 @@ def _detect_patterns(pattern_dict, words):
     return None, None
 
 
-def _apply_patterns_to_cat(axiom_patterns, cat, text_diff, words_same):
+def _apply_patterns_to_cat(axiom_patterns, cat, cat_stats, text_diff, words_same):
     """Return axioms by applying the best matching pattern to a category."""
     prop_axiom = None
     type_axiom = None
 
-    statistics = cat_store.get_statistics(cat)
     pred_patterns = axiom_patterns['preds']
     possible_values = _get_resource_surface_scores(text_diff)
-    props_scores = {(p, v): freq * pred_patterns[p] * possible_values[v] for (p, v), freq in statistics['property_frequencies'].items() if p in pred_patterns and v in possible_values}
+    props_scores = {(p, v): freq * pred_patterns[p] * possible_values[v] for (p, v), freq in cat_stats['property_frequencies'].items() if p in pred_patterns and v in possible_values}
     prop, max_prop_score = max(props_scores.items(), key=operator.itemgetter(1), default=((None, None), 0))
     if max_prop_score >= PATTERN_CONF:
         pred, val = prop
@@ -322,7 +332,7 @@ def _apply_patterns_to_cat(axiom_patterns, cat, text_diff, words_same):
 
     type_patterns = axiom_patterns['types']
     type_surface_scores = _get_type_surface_scores(words_same)
-    types_scores = {t: freq * type_patterns[t] * type_surface_scores[t] for t, freq in statistics['type_frequencies'].items() if t in type_patterns}
+    types_scores = {t: freq * type_patterns[t] * type_surface_scores[t] for t, freq in cat_stats['type_frequencies'].items() if t in type_patterns}
     t, max_type_score = max(types_scores.items(), key=operator.itemgetter(1), default=(None, 0))
     if max_type_score >= PATTERN_CONF:
         type_axiom = (cat, rdf_util.PREDICATE_TYPE, t, max_type_score)
