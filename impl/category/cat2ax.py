@@ -199,12 +199,12 @@ def _extract_axioms(category_graph, patterns):
     for (front_pattern, back_pattern), axiom_patterns in _get_confidence_pattern_set(patterns, True, True).items():
         _fill_dict(enclosing_pattern_dict, list(front_pattern), lambda d: _fill_dict(d, list(reversed(back_pattern)), axiom_patterns))
 
-    cat_contexts = {cat: (
+    cat_contexts = [(
         cat,
         nlp_util.remove_by_phrase(cat_store.get_label(cat)),
         cat_store.get_statistics(cat),
         front_pattern_dict, back_pattern_dict, enclosing_pattern_dict
-    ) for cat in category_graph.content_nodes}
+    ) for cat in category_graph.content_nodes]
 
     with mp.Pool(processes=round(util.get_config('max_cpus') / 2)) as pool:
         category_axioms = {cat: axioms for cat, axioms in tqdm(pool.imap_unordered(_extract_axioms_for_cat, cat_contexts, chunksize=1000), total=len(cat_contexts), desc='CATEGORY/CAT2AX: Extracting axioms')}
