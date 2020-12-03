@@ -78,23 +78,23 @@ def get_axioms(category: str) -> set:
     if '__CATEGORY_AXIOMS__' not in globals():
         __CATEGORY_AXIOMS__ = util.load_cache('cat2ax_axioms')
         if not __CATEGORY_AXIOMS__:
-            raise ValueError('cat2ax_axioms not initialised. Run axiom extraction once to create the necessary cache!')
+            raise ValueError('CATEGORY/CAT2AX: Axioms not initialised. Run axiom extraction before using them!')
 
     return __CATEGORY_AXIOMS__[category]
 
 
-def extract_category_axioms(category_graph, pattern_confidence):
+def extract_category_axioms(category_graph):
     """Run extraction for the given graph with a confidence of `pattern_confidence`."""
     candidate_sets = cat_set.get_category_sets()
     patterns = _extract_patterns(category_graph, candidate_sets)
-    return _extract_axioms(category_graph, pattern_confidence, patterns)
+    return _extract_axioms(category_graph, patterns)
 
 
 # --- PATTERN EXTRACTION ---
 
 def _extract_patterns(category_graph, candidate_sets):
     """Return property/type patterns extracted from `category_graph` for each set in `candidate_sets`."""
-    util.get_logger().debug('Cat2Ax: Extracting patterns..')
+    util.get_logger().debug('CATEGORY/CAT2AX: Extracting patterns..')
     patterns = defaultdict(lambda: {'preds': defaultdict(list), 'types': defaultdict(list)})
 
     for parent, children, (first_words, last_words) in candidate_sets:
@@ -131,7 +131,7 @@ def _extract_patterns(category_graph, candidate_sets):
                     for t in types:
                         patterns[(tuple(first_words), tuple(last_words))]['types'][t].append(max_median)
 
-    util.get_logger().debug(f'Cat2Ax: Extracted {len(patterns)} patterns.')
+    util.get_logger().debug(f'CATEGORY/CAT2AX: Extracted {len(patterns)} patterns.')
     return patterns
 
 
@@ -178,9 +178,9 @@ def _get_type_surface_scores(words, lemmatize=True):
 # --- PATTERN APPLICATION ---
 
 
-def _extract_axioms(category_graph, pattern_confidence, patterns):
+def _extract_axioms(category_graph, patterns):
     """Return axioms extracted from `category_graph` by applying `patterns` to all categories."""
-    util.get_logger().debug('Cat2Ax: Extracting axioms..')
+    util.get_logger().debug('CATEGORY/CAT2AX: Extracting axioms..')
     category_axioms = defaultdict(set)
 
     # process front/back/front+back patterns individually to reduce computational complexity
@@ -201,19 +201,19 @@ def _extract_axioms(category_graph, pattern_confidence, patterns):
         cat_prop_axioms = []
         cat_type_axioms = []
 
-        front_prop_axiom, front_type_axiom = _find_axioms(pattern_confidence, front_pattern_dict, cat, cat_doc)
+        front_prop_axiom, front_type_axiom = _detect_and_apply_patterns(front_pattern_dict, cat, cat_doc)
         if front_prop_axiom:
             cat_prop_axioms.append(front_prop_axiom)
         if front_type_axiom:
             cat_type_axioms.append(front_type_axiom)
 
-        back_prop_axiom, back_type_axiom = _find_axioms(pattern_confidence, back_pattern_dict, cat, cat_doc)
+        back_prop_axiom, back_type_axiom = _detect_and_apply_patterns(back_pattern_dict, cat, cat_doc)
         if back_prop_axiom:
             cat_prop_axioms.append(back_prop_axiom)
         if back_type_axiom:
             cat_type_axioms.append(back_type_axiom)
 
-        enclosing_prop_axiom, enclosing_type_axiom = _find_axioms(pattern_confidence, enclosing_pattern_dict, cat, cat_doc)
+        enclosing_prop_axiom, enclosing_type_axiom = _detect_and_apply_patterns(enclosing_pattern_dict, cat, cat_doc)
         if enclosing_prop_axiom:
             cat_prop_axioms.append(enclosing_prop_axiom)
         if enclosing_type_axiom:
@@ -235,7 +235,7 @@ def _extract_axioms(category_graph, pattern_confidence, patterns):
         if best_type_axiom:
             category_axioms[cat].add(TypeAxiom(best_type_axiom[2], best_type_axiom[3]))
 
-    util.get_logger().debug(f'Cat2Ax: Extracted {sum(len(axioms) for axioms in category_axioms.values())} axioms for {len(category_axioms)} categories.')
+    util.get_logger().debug(f'CATEGORY/CAT2AX: Extracted {sum(len(axioms) for axioms in category_axioms.values())} axioms for {len(category_axioms)} categories.')
     return category_axioms
 
 
@@ -271,7 +271,24 @@ def _fill_dict(dictionary, elements, leaf):
         _fill_dict(dictionary[elements[0]], elements[1:], leaf)
 
 
-def _detect_pattern(pattern_dict, words):
+def _detect_and_apply_patterns(pattern_dict, cat, cat_doc):
+    """Iterate over possible patterns to extract and return best axioms."""
+    cat_words = [w.text for w in cat_doc]
+    axiom_patterns, pattern_lengths = _detect_patterns(pattern_dict, cat_words)
+    if axiom_patterns:
+        front_pattern_idx = pattern_lengths[0] or None
+        back_pattern_idx = -1 * pattern_lengths[1] or None
+        text_diff = cat_doc[front_pattern_idx:back_pattern_idx].text
+        words_same = []
+        if front_pattern_idx:
+            words_same += cat_words[:front_pattern_idx]
+        if back_pattern_idx:
+            words_same += cat_words[back_pattern_idx:]
+        return _apply_patterns_to_cat(axiom_patterns, cat, text_diff, words_same)
+    return None, None
+
+
+def _detect_patterns(pattern_dict, words):
     """Search for a pattern of `words` in `pattern_dict` and return if found - else return None."""
     pattern_length = 0
     ctx = pattern_dict
@@ -283,13 +300,13 @@ def _detect_pattern(pattern_dict, words):
         if MARKER_HIT in ctx:
             return ctx[MARKER_HIT], pattern_length
         if MARKER_REVERSE in ctx:
-            preds, back_pattern_length = _detect_pattern(ctx[MARKER_REVERSE], list(reversed(words)))
+            preds, back_pattern_length = _detect_patterns(ctx[MARKER_REVERSE], list(reversed(words)))
             return preds, (pattern_length, back_pattern_length)
         return None, None
     return None, None
 
 
-def _get_axioms_for_cat(pattern_confidence, axiom_patterns, cat, text_diff, words_same):
+def _apply_patterns_to_cat(axiom_patterns, cat, text_diff, words_same):
     """Return axioms by applying the best matching pattern to a category."""
     prop_axiom = None
     type_axiom = None
@@ -299,7 +316,7 @@ def _get_axioms_for_cat(pattern_confidence, axiom_patterns, cat, text_diff, word
     possible_values = _get_resource_surface_scores(text_diff)
     props_scores = {(p, v): freq * pred_patterns[p] * possible_values[v] for (p, v), freq in statistics['property_frequencies'].items() if p in pred_patterns and v in possible_values}
     prop, max_prop_score = max(props_scores.items(), key=operator.itemgetter(1), default=((None, None), 0))
-    if max_prop_score >= pattern_confidence:
+    if max_prop_score >= PATTERN_CONF:
         pred, val = prop
         prop_axiom = (cat, pred, val, max_prop_score)
 
@@ -307,24 +324,7 @@ def _get_axioms_for_cat(pattern_confidence, axiom_patterns, cat, text_diff, word
     type_surface_scores = _get_type_surface_scores(words_same)
     types_scores = {t: freq * type_patterns[t] * type_surface_scores[t] for t, freq in statistics['type_frequencies'].items() if t in type_patterns}
     t, max_type_score = max(types_scores.items(), key=operator.itemgetter(1), default=(None, 0))
-    if max_type_score >= pattern_confidence:
+    if max_type_score >= PATTERN_CONF:
         type_axiom = (cat, rdf_util.PREDICATE_TYPE, t, max_type_score)
 
     return prop_axiom, type_axiom
-
-
-def _find_axioms(pattern_confidence, pattern_dict, cat, cat_doc):
-    """Iterate over possible patterns to extract and return best axioms."""
-    cat_words = [w.text for w in cat_doc]
-    axiom_patterns, pattern_lengths = _detect_pattern(pattern_dict, cat_words)
-    if axiom_patterns:
-        front_pattern_idx = pattern_lengths[0] or None
-        back_pattern_idx = -1 * pattern_lengths[1] or None
-        text_diff = cat_doc[front_pattern_idx:back_pattern_idx].text
-        words_same = []
-        if front_pattern_idx:
-            words_same += cat_words[:front_pattern_idx]
-        if back_pattern_idx:
-            words_same += cat_words[back_pattern_idx:]
-        return _get_axioms_for_cat(pattern_confidence, axiom_patterns, cat, text_diff, words_same)
-    return None, None

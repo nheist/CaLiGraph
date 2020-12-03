@@ -14,8 +14,7 @@ def _setup_hypernyms():
         return  # only compute hypernyms if they are not existing already
     ccg = cat_base.get_conceptual_category_graph()
     # initialise cat2ax axioms
-    cat2ax_confidence = util.get_config('cat2ax.pattern_confidence')
-    cat2ax_axioms = cat_axioms.extract_category_axioms(ccg, cat2ax_confidence)
+    cat2ax_axioms = cat_axioms.extract_category_axioms(ccg)
     util.update_cache('cat2ax_axioms', cat2ax_axioms)
     # initialise wikitaxonomy hypernyms
     wikitaxonomy_hypernyms = hypernymy_util.compute_hypernyms(ccg)

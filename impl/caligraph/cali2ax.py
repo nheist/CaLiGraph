@@ -89,7 +89,7 @@ def _get_confidence_pattern_set(pattern_set, has_front, has_back):
 def _find_axioms(pattern_dict, node, node_doc, property_frequencies):
     """Iterate over possible patterns to extract and return best axioms."""
     node_words = [w.text for w in node_doc]
-    axiom_patterns, pattern_lengths = cat_axioms._detect_pattern(pattern_dict, node_words)
+    axiom_patterns, pattern_lengths = cat_axioms._detect_patterns(pattern_dict, node_words)
     if axiom_patterns:
         front_pattern_idx = pattern_lengths[0] or None
         back_pattern_idx = -1 * pattern_lengths[1] or None
