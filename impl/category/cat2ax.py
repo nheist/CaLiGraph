@@ -8,9 +8,11 @@ The extraction is performed in three steps:
 
 import util
 from collections import defaultdict
-from typing import List
+from typing import List, Tuple
 import operator
 import numpy as np
+import multiprocessing as mp
+from tqdm import tqdm
 import impl.dbpedia.store as dbp_store
 import impl.dbpedia.util as dbp_util
 import impl.dbpedia.heuristics as dbp_heur
@@ -68,16 +70,16 @@ class RelationAxiom(Axiom):
         return self.predicate in props and self.value not in props[self.predicate] and dbp_store.resolve_redirect(self.value) not in props[self.predicate]
 
 
-def get_type_axioms(category: str) -> set:
+def get_type_axioms(category: str) -> list:
     """Return all type axioms created by the Cat2Ax approach."""
-    return {a for a in get_axioms(category) if type(a) == TypeAxiom}
+    return [a for a in get_axioms(category) if type(a) == TypeAxiom]
 
 
-def get_axioms(category: str) -> set:
+def get_axioms(category: str) -> list:
     """Return all axioms created by the Cat2Ax approach."""
     global __CATEGORY_AXIOMS__
     if '__CATEGORY_AXIOMS__' not in globals():
-        __CATEGORY_AXIOMS__ = util.load_cache('cat2ax_axioms')
+        __CATEGORY_AXIOMS__ = defaultdict(list, util.load_cache('cat2ax_axioms'))
         if not __CATEGORY_AXIOMS__:
             raise ValueError('CATEGORY/CAT2AX: Axioms not initialised. Run axiom extraction before using them!')
 
@@ -197,9 +199,16 @@ def _extract_axioms(category_graph, patterns):
     for (front_pattern, back_pattern), axiom_patterns in _get_confidence_pattern_set(patterns, True, True).items():
         _fill_dict(enclosing_pattern_dict, list(front_pattern), lambda d: _fill_dict(d, list(reversed(back_pattern)), axiom_patterns))
 
-    for cat in category_graph.content_nodes:
-        cat_context = (cat, nlp_util.remove_by_phrase(cat_store.get_label(cat)), cat_store.get_statistics(cat), front_pattern_dict, back_pattern_dict, enclosing_pattern_dict)
-        category_axioms[cat] = _extract_axioms_for_cat(cat_context)
+    cat_contexts = {cat: (
+        cat,
+        nlp_util.remove_by_phrase(cat_store.get_label(cat)),
+        cat_store.get_statistics(cat),
+        front_pattern_dict, back_pattern_dict, enclosing_pattern_dict
+    ) for cat in category_graph.content_nodes}
+
+    with mp.Pool(processes=round(util.get_config('max_cpus') / 2)) as pool:
+        category_axioms = {cat: axioms for cat, axioms in tqdm(pool.imap_unordered(_extract_axioms_for_cat, cat_contexts, chunksize=1000), total=len(cat_contexts), desc='CATEGORY/CAT2AX: Extracting axioms')}
+    category_axioms = {cat: axioms for cat, axioms in category_axioms if axioms}  # filter out empty axioms
 
     util.get_logger().debug(f'CATEGORY/CAT2AX: Extracted {sum(len(axioms) for axioms in category_axioms.values())} axioms for {len(category_axioms)} categories.')
     return category_axioms
@@ -237,7 +246,7 @@ def _fill_dict(dictionary, elements, leaf):
         _fill_dict(dictionary[elements[0]], elements[1:], leaf)
 
 
-def _extract_axioms_for_cat(cat_context: tuple) -> List[Axiom]:
+def _extract_axioms_for_cat(cat_context: tuple) -> Tuple[str, List[Axiom]]:
     cat, cat_doc, cat_stats, front_pattern_dict, back_pattern_dict, enclosing_pattern_dict = cat_context
 
     # find all axiom candidates for cat
@@ -279,7 +288,7 @@ def _extract_axioms_for_cat(cat_context: tuple) -> List[Axiom]:
     if best_type_axiom:
         cat_axioms.append(TypeAxiom(best_type_axiom[2], best_type_axiom[3]))
 
-    return cat_axioms
+    return cat, cat_axioms
 
 
 def _detect_and_apply_patterns(pattern_dict, cat, cat_doc, cat_stats):
