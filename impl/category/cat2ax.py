@@ -208,7 +208,7 @@ def _extract_axioms(category_graph, patterns):
 
     with mp.Pool(processes=round(util.get_config('max_cpus') / 2)) as pool:
         category_axioms = {cat: axioms for cat, axioms in tqdm(pool.imap_unordered(_extract_axioms_for_cat, cat_contexts, chunksize=1000), total=len(cat_contexts), desc='CATEGORY/CAT2AX: Extracting axioms')}
-    category_axioms = {cat: axioms for cat, axioms in category_axioms if axioms}  # filter out empty axioms
+    category_axioms = {cat: axioms for cat, axioms in category_axioms.items() if axioms}  # filter out empty axioms
 
     util.get_logger().debug(f'CATEGORY/CAT2AX: Extracted {sum(len(axioms) for axioms in category_axioms.values())} axioms for {len(category_axioms)} categories.')
     return category_axioms
