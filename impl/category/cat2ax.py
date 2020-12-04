@@ -206,7 +206,7 @@ def _extract_axioms(category_graph, patterns):
         front_pattern_dict, back_pattern_dict, enclosing_pattern_dict
     ) for cat in category_graph.content_nodes]
 
-    with mp.Pool(processes=round(utils.get_config('max_cpus') / 2)) as pool:
+    with mp.Pool(processes=utils.get_config('max_cpus')) as pool:
         category_axioms = {cat: axioms for cat, axioms in tqdm(pool.imap_unordered(_extract_axioms_for_cat, cat_contexts, chunksize=1000), total=len(cat_contexts), desc='CATEGORY/CAT2AX: Extracting axioms')}
     category_axioms = {cat: axioms for cat, axioms in category_axioms.items() if axioms}  # filter out empty axioms
 
