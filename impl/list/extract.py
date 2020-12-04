@@ -330,7 +330,7 @@ def _select_top_samples(samples: list, n_candidates: int, min_score: float) -> l
 # MISC
 
 def _run_multicore(func, params):
-    number_of_processes = round(util.get_config('max_cpus'))
+    number_of_processes = round(utils.get_config('max_cpus'))
     with mp.Pool(processes=number_of_processes) as pool:
         results = pool.starmap(func, params)
     return results

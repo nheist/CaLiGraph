@@ -107,7 +107,7 @@ def _get_lines_ontology(graph) -> list:
 
 
 def _get_creation_date() -> datetime.datetime:
-    return datetime.datetime.strptime(util.get_config('caligraph.creation_date'), '%Y-%m-%d')
+    return datetime.datetime.strptime(utils.get_config('caligraph.creation_date'), '%Y-%m-%d')
 
 
 def _serialize_restriction(class_iri: str, prop_iri: str, val: str, restriction_is_defined: bool) -> list:
