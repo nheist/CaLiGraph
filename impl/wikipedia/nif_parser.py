@@ -1,6 +1,6 @@
 """Extraction of type lexicalisations from the Wikipedia corpus via NIF files."""
 
-import util
+import utils
 from typing import Tuple
 import pynif
 import bz2
@@ -15,10 +15,10 @@ import impl.util.spacy as spacy_util
 
 def extract_wiki_corpus_resources():
     """Crawl the Wikipedia corpus for hearst patterns to retrieve hypernyms and type lexicalisations."""
-    if util.load_cache('wikipedia_type_lexicalisations') is not None:
+    if utils.load_cache('wikipedia_type_lexicalisations') is not None:
         return  # only compute hypernyms and type lexicalisations if they are not existing already
 
-    util.get_logger().info('WIKIPEDIA/NIF: Computing wikipedia hypernyms and type lexicalisations..')
+    utils.get_logger().info('WIKIPEDIA/NIF: Computing wikipedia hypernyms and type lexicalisations..')
     total_hypernyms = defaultdict(lambda: defaultdict(int))
     total_type_lexicalisations = defaultdict(lambda: defaultdict(int))
 
@@ -27,7 +27,7 @@ def extract_wiki_corpus_resources():
     dbp_store.get_inverse_lexicalisations('')
     spacy_util.get_hearst_pairs('')
 
-    with mp.Pool(processes=util.get_config('max_cpus')) as pool:
+    with mp.Pool(processes=utils.get_config('max_cpus')) as pool:
         for hypernyms, type_lexicalisations in pool.imap_unordered(_compute_counts_for_resource, tqdm(_retrieve_plaintexts()), chunksize=1000):
             for (sub, obj), count in hypernyms.items():
                 total_hypernyms[sub][obj] += count
@@ -35,10 +35,10 @@ def extract_wiki_corpus_resources():
                 total_type_lexicalisations[sub][obj] += count
 
     wikipedia_hypernyms = {word: dict(hypernym_counts) for word, hypernym_counts in total_hypernyms.items()}
-    util.update_cache('wikipedia_hypernyms', wikipedia_hypernyms)
+    utils.update_cache('wikipedia_hypernyms', wikipedia_hypernyms)
 
     type_lexicalisations = {word: dict(type_counts) for word, type_counts in total_type_lexicalisations.items() if word not in STOP_WORDS}
-    util.update_cache('wikipedia_type_lexicalisations', type_lexicalisations)
+    utils.update_cache('wikipedia_type_lexicalisations', type_lexicalisations)
 
 
 def _compute_counts_for_resource(uri_with_text: tuple) -> tuple:
@@ -60,7 +60,7 @@ def _compute_counts_for_resource(uri_with_text: tuple) -> tuple:
 
 def _retrieve_plaintexts() -> Tuple[str, str]:
     """Return an iterator over DBpedia resources and their Wikipedia plaintexts."""
-    with bz2.open(util.get_data_file('files.dbpedia.nif_context'), mode='rb') as nif_file:
+    with bz2.open(utils.get_data_file('files.dbpedia.nif_context'), mode='rb') as nif_file:
         nif_collection = pynif.NIFCollection.loads(nif_file.read(), format='turtle')
         for nif_context in nif_collection.contexts:
             resource_uri = nif_context.original_uri[:nif_context.original_uri.rfind('?')]

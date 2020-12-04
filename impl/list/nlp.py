@@ -1,6 +1,6 @@
 """NLP methods for the identification of named entities in enumerations and tables of Wikipedia articles."""
 
-import util
+import utils
 import random
 from pathlib import Path
 import impl.util.rdf as rdf_util
@@ -46,30 +46,30 @@ NER_LABEL_MAPPING = {
 
 
 def _initialise_parser():
-    path_to_model = util._get_cache_path('spacy_listpage_ne-tagging_GS-WLE')
+    path_to_model = utils._get_cache_path('spacy_listpage_ne-tagging_GS-WLE')
     if not path_to_model.is_dir():
         _train_parser()
     return spacy.load(str(path_to_model))
 
 
 def _train_parser():
-    util.get_logger().debug('LIST/NLP: Training new spacy model on GS..')
+    utils.get_logger().debug('LIST/NLP: Training new spacy model on GS..')
     # specialize spacy model on GS
-    filepath_gs = util._get_cache_path('spacy_listpage_ne-tagging_GS')
+    filepath_gs = utils._get_cache_path('spacy_listpage_ne-tagging_GS')
     if not filepath_gs.is_dir():
         training_data_gs = _retrieve_training_data_gs()
         _train_enhanced_spacy_model(training_data_gs, str(filepath_gs), model='en_core_web_lg')
 
-    util.get_logger().debug('LIST/NLP: Training new spacy model on WLE..')
+    utils.get_logger().debug('LIST/NLP: Training new spacy model on WLE..')
     # specialize spacy+GS model on WLE
-    filepath_wle = util._get_cache_path('spacy_listpage_ne-tagging_GS-WLE')
+    filepath_wle = utils._get_cache_path('spacy_listpage_ne-tagging_GS-WLE')
     training_data_wle = _retrieve_training_data_wle()
     _train_enhanced_spacy_model(training_data_wle, str(filepath_wle), model=filepath_gs)
 
 
 def _retrieve_training_data_gs():
     training_data = []
-    with open(util.get_data_file('files.listpages.goldstandard_named-entity-tagging'), mode='r') as f:
+    with open(utils.get_data_file('files.listpages.goldstandard_named-entity-tagging'), mode='r') as f:
         for line in f:
             data = json.loads(line)
             text = data['content']

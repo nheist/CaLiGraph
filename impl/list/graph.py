@@ -5,7 +5,7 @@ import impl.category.store as cat_store
 import impl.category.util as cat_util
 import impl.list.store as list_store
 import impl.list.util as list_util
-import util
+import utils
 
 
 class ListGraph(HierarchyGraph):
@@ -13,7 +13,7 @@ class ListGraph(HierarchyGraph):
 
     # initialisations
     def __init__(self, graph: nx.DiGraph, root_node: str = None):
-        super().__init__(graph, root_node or util.get_config('category.root_category'))
+        super().__init__(graph, root_node or utils.get_config('category.root_category'))
 
     # node lists
     def get_all_lists(self) -> set:

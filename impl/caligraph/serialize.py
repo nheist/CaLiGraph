@@ -1,6 +1,6 @@
 """Functionality to serialize the individual parts of CaLiGraph."""
 
-import util
+import utils
 import impl.dbpedia.store as dbp_store
 import impl.dbpedia.util as dbp_util
 import impl.caligraph.util as cali_util
@@ -32,7 +32,7 @@ def serialize_graph(graph):
 
 
 def _write_lines_to_file(lines: list, filepath_config: str):
-    filepath = util.get_results_file(filepath_config)
+    filepath = utils.get_results_file(filepath_config)
     with bz2.open(filepath, mode='wt') as f:
         f.writelines(lines)
 
@@ -76,7 +76,7 @@ def _get_lines_ontology(graph) -> list:
         serialize_util.as_object_triple(ontology_resource, rdf_util.PREDICATE_TYPE, 'http://www.w3.org/2002/07/owl#Ontology'),
         serialize_util.as_literal_triple(ontology_resource, 'http://purl.org/dc/terms/created', _get_creation_date()),
         serialize_util.as_literal_triple(ontology_resource, rdf_util.PREDICATE_LABEL, 'CaLiGraph Ontology'),
-        serialize_util.as_literal_triple(ontology_resource, 'http://www.w3.org/2002/07/owl#versionInfo', util.get_config('caligraph.version')),
+        serialize_util.as_literal_triple(ontology_resource, 'http://www.w3.org/2002/07/owl#versionInfo', utils.get_config('caligraph.version')),
     ])
     # classes
     for node in graph.traverse_nodes_topdown():

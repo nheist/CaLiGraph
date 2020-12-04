@@ -2,7 +2,7 @@
 
 from typing import Set
 from collections import defaultdict
-import util
+import utils
 import bz2
 import pickle
 import impl.category.cat2ax as cat_axioms
@@ -14,7 +14,7 @@ def is_hypernym(hyper_word: str, hypo_word: str) -> bool:
     """Returns True, if `hyper_word` and `hypo_word` are synonyms or if the former is a hypernym of the latter."""
     global __WIKITAXONOMY_HYPERNYMS__
     if '__WIKITAXONOMY_HYPERNYMS__' not in globals():
-        __WIKITAXONOMY_HYPERNYMS__ = util.load_cache('wikitaxonomy_hypernyms')
+        __WIKITAXONOMY_HYPERNYMS__ = utils.load_cache('wikitaxonomy_hypernyms')
         if not __WIKITAXONOMY_HYPERNYMS__:
             raise ValueError('wikitaxonomy_hypernyms not initialised. Run hypernym extraction once to create the necessary cache!')
 
@@ -68,8 +68,8 @@ def compute_hypernyms(category_graph) -> dict:
                 axiom_hypernyms[cl.lower()][pl.lower()] += 1
 
     # load remaining hypernyms
-    wiki_hypernyms = util.load_cache('wikipedia_hypernyms')
-    webisalod_data = pickle.load(bz2.open(util.get_data_file('files.dbpedia.webisalod_hypernyms'), mode='rb'))
+    wiki_hypernyms = utils.load_cache('wikipedia_hypernyms')
+    webisalod_data = pickle.load(bz2.open(utils.get_data_file('files.dbpedia.webisalod_hypernyms'), mode='rb'))
     webisalod_hypernyms = defaultdict(dict)
     for parent, child, conf in webisalod_data:
         webisalod_hypernyms[child][parent] = conf

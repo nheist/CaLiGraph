@@ -1,5 +1,5 @@
 from collections import defaultdict
-import util
+import utils
 from .nif_parser import extract_wiki_corpus_resources
 from .xml_parser import _parse_raw_markup_from_xml
 from .article_parser import _parse_articles, ARTICLE_TYPE_ENUM, ARTICLE_TYPE_TABLE
@@ -8,12 +8,12 @@ from .category_parser import _extract_parent_categories_from_markup, TEMPLATE_PR
 
 def get_parsed_articles() -> dict:
     initializer = lambda: _parse_articles(_get_raw_articles_from_xml())
-    return defaultdict(lambda: None, util.load_or_create_cache('wikipedia_parsed_articles', initializer))
+    return defaultdict(lambda: None, utils.load_or_create_cache('wikipedia_parsed_articles', initializer))
 
 
 def extract_parent_categories() -> dict:
     initializer = lambda: _extract_parent_categories_from_markup(_get_raw_categories_and_templates_from_xml())
-    return util.load_or_create_cache('wikipedia_parent_categories', initializer)
+    return utils.load_or_create_cache('wikipedia_parent_categories', initializer)
 
 
 def _get_raw_categories_and_templates_from_xml() -> tuple:
@@ -28,4 +28,4 @@ def _get_raw_articles_from_xml() -> dict:
 
 
 def _get_raw_markup_from_xml() -> dict:
-    return defaultdict(str, util.load_or_create_cache('wikipedia_raw_markup', _parse_raw_markup_from_xml))
+    return defaultdict(str, utils.load_or_create_cache('wikipedia_raw_markup', _parse_raw_markup_from_xml))

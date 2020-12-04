@@ -6,7 +6,7 @@ import impl.dbpedia.util as dbp_util
 import impl.util.hypernymy as hyper_util
 import pandas as pd
 import numpy as np
-import util
+import utils
 from sklearn.preprocessing import OneHotEncoder
 from collections import Counter, defaultdict
 import operator
@@ -62,7 +62,7 @@ def make_enum_entity_features(page: tuple) -> list:
                     entity_character_idxs.update(range(start, end))
 
                 # find previously unlinked entities
-                if util.get_config('page.extraction.extract_unlinked_entities'):
+                if utils.get_config('page.extraction.extract_unlinked_entities'):
                     for ent in entry_doc.ents:
                         start = ent.start_char
                         end = ent.end_char
@@ -253,7 +253,7 @@ def make_table_entity_features(page: tuple) -> list:
                         end = start + len(entity_data['text'])
                         entity_character_idxs.update(range(start, end))
                     # find previously unlinked entities
-                    if util.get_config('page.extraction.extract_unlinked_entities'):
+                    if utils.get_config('page.extraction.extract_unlinked_entities'):
                         for ent in column_doc.ents:
                             start = ent.start_char
                             end = ent.end_char

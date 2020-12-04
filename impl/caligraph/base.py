@@ -3,7 +3,7 @@
 from impl.caligraph.graph import CaLiGraph
 import impl.caligraph.serialize as cali_serialize
 import impl.list.base as list_base
-import util
+import utils
 
 
 def get_base_graph() -> CaLiGraph:
@@ -11,7 +11,7 @@ def get_base_graph() -> CaLiGraph:
     global __BASE_GRAPH__
     if '__BASE_GRAPH__' not in globals():
         initializer = lambda: CaLiGraph.build_graph().append_unconnected()
-        __BASE_GRAPH__ = util.load_or_create_cache('caligraph_base', initializer)
+        __BASE_GRAPH__ = utils.load_or_create_cache('caligraph_base', initializer)
     return __BASE_GRAPH__
 
 
@@ -20,7 +20,7 @@ def get_merged_ontology_graph() -> CaLiGraph:
     global __MERGED_ONTOLOGY_GRAPH__
     if '__MERGED_ONTOLOGY_GRAPH__' not in globals():
         initializer = lambda: get_base_graph().copy().merge_ontology(False).append_unconnected()
-        __MERGED_ONTOLOGY_GRAPH__ = util.load_or_create_cache('caligraph_merged_ontology', initializer)
+        __MERGED_ONTOLOGY_GRAPH__ = utils.load_or_create_cache('caligraph_merged_ontology', initializer)
     return __MERGED_ONTOLOGY_GRAPH__
 
 
@@ -32,7 +32,7 @@ def get_filtered_graph() -> CaLiGraph:
         list_base.get_listpage_entities(get_merged_ontology_graph(), '')
 
         initializer = lambda: get_base_graph().copy().merge_ontology(True).append_unconnected()
-        __FILTERED_GRAPH__ = util.load_or_create_cache('caligraph_filtered', initializer)
+        __FILTERED_GRAPH__ = utils.load_or_create_cache('caligraph_filtered', initializer)
     return __FILTERED_GRAPH__
 
 
@@ -41,7 +41,7 @@ def get_axiom_graph() -> CaLiGraph:
     global __AXIOM_GRAPH__
     if '__AXIOM_GRAPH__' not in globals():
         initializer = lambda: get_filtered_graph().compute_axioms().remove_transitive_edges()
-        __AXIOM_GRAPH__ = util.load_or_create_cache('caligraph_axiomatized', initializer)
+        __AXIOM_GRAPH__ = utils.load_or_create_cache('caligraph_axiomatized', initializer)
     return __AXIOM_GRAPH__
 
 

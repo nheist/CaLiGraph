@@ -2,13 +2,13 @@ import spacy
 from spacy.tokens import Span
 from impl.util.spacy.components import tag_lexical_head, tag_lexical_head_subjects, tag_by_phrase, LEXICAL_HEAD, LEXICAL_HEAD_SUBJECT, LEXICAL_HEAD_SUBJECT_PLURAL, BY_PHRASE
 import impl.util.spacy.hearst_matcher as hearst_matcher
-import util
+import utils
 from typing import Iterator, List, Tuple
 from collections import defaultdict
 
 
 BATCH_SIZE = 100
-N_PROCESSES = util.get_config('max_cpus')
+N_PROCESSES = utils.get_config('max_cpus')
 __SET_DOCUMENT_CACHE__ = defaultdict(lambda: None)
 
 

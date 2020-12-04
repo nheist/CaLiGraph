@@ -1,6 +1,6 @@
 """Extract sets of categories that have the same parent and share a common pre- and/or postfix."""
 
-import util
+import utils
 import impl.util.nlp as nlp_util
 from collections import namedtuple, defaultdict
 import impl.category.store as cat_store
@@ -19,7 +19,7 @@ def get_category_sets() -> list:
 def _get_parent_to_category_set_mapping() -> dict:
     global __CATEGORY_SETS__
     if '__CATEGORY_SETS__' not in globals():
-        __CATEGORY_SETS__ = util.load_or_create_cache('dbpedia_category_sets', _compute_category_sets)
+        __CATEGORY_SETS__ = utils.load_or_create_cache('dbpedia_category_sets', _compute_category_sets)
 
     return __CATEGORY_SETS__
 

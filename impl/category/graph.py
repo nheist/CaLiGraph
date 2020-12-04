@@ -2,7 +2,7 @@ import networkx as nx
 import impl.category.util as cat_util
 import impl.category.store as cat_store
 from impl.util.hierarchy_graph import HierarchyGraph
-import util
+import utils
 import impl.util.nlp as nlp_util
 
 
@@ -10,7 +10,7 @@ class CategoryGraph(HierarchyGraph):
     """A graph of categories retrieved from Wikipedia categories."""
     # initialisations
     def __init__(self, graph: nx.DiGraph, root_node: str = None):
-        super().__init__(graph, root_node or util.get_config('category.root_category'))
+        super().__init__(graph, root_node or utils.get_config('category.root_category'))
 
     # node categories
     def get_all_categories(self) -> set:

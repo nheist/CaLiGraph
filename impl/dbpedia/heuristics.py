@@ -1,6 +1,6 @@
 """Implementing heuristics from Töpper et al. 2012 - DBpedia Ontology Enrichment for Inconsistency Detection"""
 
-import util
+import utils
 from typing import Optional
 import impl.util.rdf as rdf_util
 import impl.dbpedia.store as dbp_store
@@ -16,7 +16,7 @@ RANGE_THRESHOLD = .77
 def get_domain(dbp_predicate: str) -> Optional[str]:
     global __DOMAINS__
     if '__DOMAINS__' not in globals():
-        __DOMAINS__ = defaultdict(lambda: None, util.load_or_create_cache('dbpedia_heuristic_domains', _compute_domains))
+        __DOMAINS__ = defaultdict(lambda: None, utils.load_or_create_cache('dbpedia_heuristic_domains', _compute_domains))
     return dbp_store.get_domain(dbp_predicate) or __DOMAINS__[dbp_predicate]
 
 
@@ -27,7 +27,7 @@ def _compute_domains() -> dict:
 def get_range(dbp_predicate: str) -> Optional[str]:
     global __RANGES__
     if '__RANGES__' not in globals():
-        __RANGES__ = defaultdict(lambda: None, util.load_or_create_cache('dbpedia_heuristic_ranges', _compute_ranges))
+        __RANGES__ = defaultdict(lambda: None, utils.load_or_create_cache('dbpedia_heuristic_ranges', _compute_ranges))
     return dbp_store.get_range(dbp_predicate) or __RANGES__[dbp_predicate]
 
 
@@ -63,7 +63,7 @@ def _compute_predicate_types(resource_property_mapping: dict, threshold: float) 
 def get_disjoint_types(dbp_type) -> set:
     global __DISJOINT_TYPES__
     if '__DISJOINT_TYPES__' not in globals():
-        __DISJOINT_TYPES__ = util.load_or_create_cache('dbpedia_heuristic_disjoint_types', _compute_disjoint_types)
+        __DISJOINT_TYPES__ = utils.load_or_create_cache('dbpedia_heuristic_disjoint_types', _compute_disjoint_types)
 
     return __DISJOINT_TYPES__[dbp_type]
 
@@ -77,7 +77,7 @@ def _compute_disjoint_types() -> dict:
     while len(dbp_types) > 0:
         dbp_type = dbp_types.pop()
         for other_dbp_type in dbp_types:
-            if _compute_type_similarity(dbp_type, other_dbp_type, type_property_weights) <= util.get_config('dbpedia.disjointness_threshold'):
+            if _compute_type_similarity(dbp_type, other_dbp_type, type_property_weights) <= utils.get_config('dbpedia.disjointness_threshold'):
                 disjoint_types[dbp_type].add(other_dbp_type)
                 disjoint_types[other_dbp_type].add(dbp_type)
 

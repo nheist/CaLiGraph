@@ -1,10 +1,10 @@
 """Functionality to retrieve everything related to categories."""
 
-from . import util as cat_util
+import impl.category.util as cat_util
 import impl.util.rdf as rdf_util
 import impl.dbpedia.store as dbp_store
 from impl import wikipedia
-import util
+import utils
 from collections import defaultdict
 import networkx as nx
 
@@ -29,7 +29,7 @@ def get_children(category: str) -> set:
 def _get_category_graph() -> nx.DiGraph:
     global __CATEGORY_GRAPH__
     if '__CATEGORY_GRAPH__' not in globals():
-        __CATEGORY_GRAPH__ = util.load_or_create_cache('dbpedia_categories', _create_category_graph)
+        __CATEGORY_GRAPH__ = utils.load_or_create_cache('dbpedia_categories', _create_category_graph)
     return __CATEGORY_GRAPH__
 
 
@@ -43,9 +43,9 @@ def _create_category_graph() -> nx.DiGraph:
     invalid_categories.update(nx.descendants(graph, cat_util.name2category('Disambiguation categories')))
     invalid_categories.update(nx.descendants(graph, cat_util.name2category('All redirect categories')))
     # add nodes/edges from skos-categories file (this is done on purpose AFTER identification of disambiguations/redirects to avoid false edges when using descendants)
-    skos_nodes = list(rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.category_skos')], rdf_util.PREDICATE_TYPE))
+    skos_nodes = list(rdf_util.create_single_val_dict_from_rdf([utils.get_data_file('files.dbpedia.category_skos')], rdf_util.PREDICATE_TYPE))
     graph.add_nodes_from(skos_nodes)
-    skos_edges = rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.category_skos')], rdf_util.PREDICATE_BROADER)
+    skos_edges = rdf_util.create_multi_val_dict_from_rdf([utils.get_data_file('files.dbpedia.category_skos')], rdf_util.PREDICATE_BROADER)
     graph.add_edges_from([(p, c) for c, parents in skos_edges.items() for p in parents if p != c])
     # identify any remaining maintenance categories
     maintenance_category_indicators = {
@@ -64,7 +64,7 @@ def get_label(category: str) -> str:
     """Return the label for the given category."""
     global __CATEGORY_LABELS__
     if '__CATEGORY_LABELS__' not in globals():
-        __CATEGORY_LABELS__ = rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.category_skos')], rdf_util.PREDICATE_PREFLABEL)
+        __CATEGORY_LABELS__ = rdf_util.create_single_val_dict_from_rdf([utils.get_data_file('files.dbpedia.category_skos')], rdf_util.PREDICATE_PREFLABEL)
 
     return __CATEGORY_LABELS__[category] if category in __CATEGORY_LABELS__ else cat_util.category2name(category)
 
@@ -73,7 +73,7 @@ def get_label_category(label: str) -> str:
     """Return the category that fits the given label best."""
     global __INVERSE_CATEGORY_LABELS__
     if '__INVERSE_CATEGORY_LABELS__' not in globals():
-        labels = rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.category_skos')], rdf_util.PREDICATE_PREFLABEL)
+        labels = rdf_util.create_single_val_dict_from_rdf([utils.get_data_file('files.dbpedia.category_skos')], rdf_util.PREDICATE_PREFLABEL)
         __INVERSE_CATEGORY_LABELS__ = {v: k for k, v in labels.items()}
     return __INVERSE_CATEGORY_LABELS__[label] if label in __INVERSE_CATEGORY_LABELS__ else cat_util.name2category(label)
 
@@ -82,8 +82,8 @@ def get_resources(category: str) -> set:
     """Return all resources of the given category."""
     global __CATEGORY_RESOURCES__
     if '__CATEGORY_RESOURCES__' not in globals():
-        initializer = lambda: rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.category_articles')], rdf_util.PREDICATE_SUBJECT, reverse_key=True)
-        __CATEGORY_RESOURCES__ = util.load_or_create_cache('dbpedia_category_resources', initializer)
+        initializer = lambda: rdf_util.create_multi_val_dict_from_rdf([utils.get_data_file('files.dbpedia.category_articles')], rdf_util.PREDICATE_SUBJECT, reverse_key=True)
+        __CATEGORY_RESOURCES__ = utils.load_or_create_cache('dbpedia_category_resources', initializer)
 
     return __CATEGORY_RESOURCES__[category]
 
@@ -92,8 +92,8 @@ def get_resource_categories(dbp_resource: str) -> set:
     """Return all categories the given resource is contained in."""
     global __RESOURCE_CATEGORIES__
     if '__RESOURCE_CATEGORIES__' not in globals():
-        initializer = lambda: rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.category_articles')], rdf_util.PREDICATE_SUBJECT)
-        __RESOURCE_CATEGORIES__ = util.load_or_create_cache('dbpedia_resource_categories', initializer)
+        initializer = lambda: rdf_util.create_multi_val_dict_from_rdf([utils.get_data_file('files.dbpedia.category_articles')], rdf_util.PREDICATE_SUBJECT)
+        __RESOURCE_CATEGORIES__ = utils.load_or_create_cache('dbpedia_resource_categories', initializer)
 
     return __RESOURCE_CATEGORIES__[dbp_resource]
 
@@ -102,7 +102,7 @@ def get_topics(category: str) -> set:
     """Return the topics for the given category."""
     global __TOPICS__
     if '__TOPICS__' not in globals():
-        __TOPICS__ = rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.topical_concepts')], rdf_util.PREDICATE_SUBJECT)
+        __TOPICS__ = rdf_util.create_multi_val_dict_from_rdf([utils.get_data_file('files.dbpedia.topical_concepts')], rdf_util.PREDICATE_SUBJECT)
 
     return __TOPICS__[category]
 
@@ -122,7 +122,7 @@ def get_statistics(category: str) -> dict:
     """Return information about the amounts/frequencies of types and properties of a category's resources."""
     global __CATEGORY_STATISTICS__
     if '__CATEGORY_STATISTICS__' not in globals():
-        __CATEGORY_STATISTICS__ = util.load_or_create_cache('dbpedia_category_statistics', _compute_category_statistics)
+        __CATEGORY_STATISTICS__ = utils.load_or_create_cache('dbpedia_category_statistics', _compute_category_statistics)
     return __CATEGORY_STATISTICS__[category]
 
 

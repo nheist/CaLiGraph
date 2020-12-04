@@ -1,6 +1,6 @@
 """Application of the Cat2Ax approach to the CaLiGraph."""
 
-import util
+import utils
 from collections import defaultdict
 import operator
 import impl.dbpedia.store as dbp_store
@@ -23,7 +23,7 @@ def extract_axioms(graph) -> dict:
 
 def _extract_axioms(graph, patterns) -> dict:
     """Run actual axiom extraction on CaLiGraph."""
-    util.get_logger().debug('CaLi2Ax: Extracting axioms..')
+    utils.get_logger().debug('CaLi2Ax: Extracting axioms..')
     axioms = defaultdict(set)
 
     front_pattern_dict = {}
@@ -72,7 +72,7 @@ def _extract_axioms(graph, patterns) -> dict:
                 best_prop_axiom = max(similar_prop_axioms, key=operator.itemgetter(3))
                 axioms[node].add(best_prop_axiom)
 
-    util.get_logger().debug(f'CaLi2Ax: Extracted {sum(len(axioms) for axioms in axioms.values())} axioms for {len(axioms)} categories.')
+    utils.get_logger().debug(f'CaLi2Ax: Extracted {sum(len(axioms) for axioms in axioms.values())} axioms for {len(axioms)} categories.')
     return axioms
 
 

@@ -6,7 +6,7 @@ The extraction is performed in three steps:
 3) Apply patterns to all categories to extract axioms
 """
 
-import util
+import utils
 from collections import defaultdict
 from typing import List, Tuple
 import operator
@@ -22,7 +22,7 @@ import impl.util.nlp as nlp_util
 import impl.util.rdf as rdf_util
 
 
-PATTERN_CONF = util.get_config('cat2ax.pattern_confidence')
+PATTERN_CONF = utils.get_config('cat2ax.pattern_confidence')
 
 
 class Axiom:
@@ -79,7 +79,7 @@ def get_axioms(category: str) -> list:
     """Return all axioms created by the Cat2Ax approach."""
     global __CATEGORY_AXIOMS__
     if '__CATEGORY_AXIOMS__' not in globals():
-        __CATEGORY_AXIOMS__ = defaultdict(list, util.load_cache('cat2ax_axioms'))
+        __CATEGORY_AXIOMS__ = defaultdict(list, utils.load_cache('cat2ax_axioms'))
         if not __CATEGORY_AXIOMS__:
             raise ValueError('CATEGORY/CAT2AX: Axioms not initialised. Run axiom extraction before using them!')
 
@@ -97,7 +97,7 @@ def extract_category_axioms(category_graph):
 
 def _extract_patterns(category_graph, candidate_sets):
     """Return property/type patterns extracted from `category_graph` for each set in `candidate_sets`."""
-    util.get_logger().debug('CATEGORY/CAT2AX: Extracting patterns..')
+    utils.get_logger().debug('CATEGORY/CAT2AX: Extracting patterns..')
     patterns = defaultdict(lambda: {'preds': defaultdict(list), 'types': defaultdict(list)})
 
     for parent, children, (first_words, last_words) in candidate_sets:
@@ -134,7 +134,7 @@ def _extract_patterns(category_graph, candidate_sets):
                     for t in types:
                         patterns[(tuple(first_words), tuple(last_words))]['types'][t].append(max_median)
 
-    util.get_logger().debug(f'CATEGORY/CAT2AX: Extracted {len(patterns)} patterns.')
+    utils.get_logger().debug(f'CATEGORY/CAT2AX: Extracted {len(patterns)} patterns.')
     return patterns
 
 
@@ -183,7 +183,7 @@ def _get_type_surface_scores(words, lemmatize=True):
 
 def _extract_axioms(category_graph, patterns):
     """Return axioms extracted from `category_graph` by applying `patterns` to all categories."""
-    util.get_logger().debug('CATEGORY/CAT2AX: Extracting axioms..')
+    utils.get_logger().debug('CATEGORY/CAT2AX: Extracting axioms..')
     category_axioms = defaultdict(list)
 
     # process front/back/front+back patterns individually to reduce computational complexity
@@ -210,7 +210,7 @@ def _extract_axioms(category_graph, patterns):
         category_axioms = {cat: axioms for cat, axioms in tqdm(pool.imap_unordered(_extract_axioms_for_cat, cat_contexts, chunksize=1000), total=len(cat_contexts), desc='CATEGORY/CAT2AX: Extracting axioms')}
     category_axioms = {cat: axioms for cat, axioms in category_axioms.items() if axioms}  # filter out empty axioms
 
-    util.get_logger().debug(f'CATEGORY/CAT2AX: Extracted {sum(len(axioms) for axioms in category_axioms.values())} axioms for {len(category_axioms)} categories.')
+    utils.get_logger().debug(f'CATEGORY/CAT2AX: Extracted {sum(len(axioms) for axioms in category_axioms.values())} axioms for {len(category_axioms)} categories.')
     return category_axioms
 
 

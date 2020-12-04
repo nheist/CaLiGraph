@@ -10,13 +10,13 @@ from xgboost import XGBClassifier, XGBRegressor
 from sklearn.model_selection import GroupShuffleSplit
 from collections import defaultdict, namedtuple
 import multiprocessing as mp
-import util
+import utils
 import impl.dbpedia.page_features as page_features
 
 
 def extract_enum_entities(df: pd.DataFrame) -> dict:
     """Return entities extracted from enumeration list pages with XG-Boost-based simple/collective extraction."""
-    util.get_logger().info(f'LIST/EXTRACT: Extracting entities from enumeration list pages..')
+    utils.get_logger().info(f'LIST/EXTRACT: Extracting entities from enumeration list pages..')
 
     base_estimator = XGBClassifier(predictor='cpu_predictor', n_jobs=1, colsample_bytree=.8, scale_pos_weight=.25)
     config = {
@@ -28,12 +28,12 @@ def extract_enum_entities(df: pd.DataFrame) -> dict:
             'min_score': .4,
         }
     }
-    return _extract_entities(df, config) if util.get_config('page.extraction.use_robust_extraction') else _extract_entities_simple(df, base_estimator)
+    return _extract_entities(df, config) if utils.get_config('page.extraction.use_robust_extraction') else _extract_entities_simple(df, base_estimator)
 
 
 def extract_table_entities(df: pd.DataFrame) -> dict:
     """Return entities extracted from table list pages with XG-Boost-based simple/collective extraction."""
-    util.get_logger().info(f'LIST/EXTRACT: Extracting entities from table list pages..')
+    utils.get_logger().info(f'LIST/EXTRACT: Extracting entities from table list pages..')
     base_estimator = Pipeline([
         ('feature_selection', SelectKBest(k=100)),
         ('classification', XGBClassifier(predictor='cpu_predictor', n_jobs=1, colsample_bytree=.8, scale_pos_weight=.25)),
@@ -47,12 +47,12 @@ def extract_table_entities(df: pd.DataFrame) -> dict:
             'min_score': .4,
         }
     }
-    return _extract_entities(df, config) if util.get_config('page.extraction.use_robust_extraction') else _extract_entities_simple(df, base_estimator)
+    return _extract_entities(df, config) if utils.get_config('page.extraction.use_robust_extraction') else _extract_entities_simple(df, base_estimator)
 
 
 def _extract_entities_simple(df: pd.DataFrame, estimator) -> dict:
     """Return extracted entities with simple classification-based approach"""
-    util.get_logger().info(f'LIST/EXTRACT: Running simple extraction..')
+    utils.get_logger().info(f'LIST/EXTRACT: Running simple extraction..')
     # prepare dataset
     meta_columns = [c for c in df.columns.values if c.startswith('_')] + ['label']
     df = page_features.onehotencode_feature(df, '_top_section_name')
@@ -81,8 +81,8 @@ def _extract_entities_simple(df: pd.DataFrame, estimator) -> dict:
 
 def _extract_entities(df: pd.DataFrame, config: dict) -> dict:
     """Return extracted entities with robust holistic approach"""
-    util.get_logger().info(f'LIST/EXTRACT: Running robust extraction..')
-    util.get_logger().debug(f'LIST/EXTRACT: Running individual classification..')
+    utils.get_logger().info(f'LIST/EXTRACT: Running robust extraction..')
+    utils.get_logger().debug(f'LIST/EXTRACT: Running individual classification..')
     # -- assign mentions the probability of being subject entities (using individual classification) --
     # prepare params
     estimator = config['base_estimator']
@@ -104,7 +104,7 @@ def _extract_entities(df: pd.DataFrame, config: dict) -> dict:
     df['proba'] = [proba[true_label_idx] for proba in estimator.predict_proba(df.drop(columns=meta_columns))]
     df_train = df[df['label'] != -1]
 
-    util.get_logger().debug(f'LIST/EXTRACT: Running collective classification..')
+    utils.get_logger().debug(f'LIST/EXTRACT: Running collective classification..')
     # -- collectively extract best set of subject entities --
     df_train2 = df_train.iloc[train2_idxs]
     _train_selection_model(df_train2, config['sampling_functions'], config['selection'])
@@ -113,27 +113,27 @@ def _extract_entities(df: pd.DataFrame, config: dict) -> dict:
 
 def _train_selection_model(df: pd.DataFrame, sampling_funcs: list, selection_params: dict):
     """Train regression model for the collective evaluation of entity sets."""
-    util.get_logger().debug(f'LIST/EXTRACT: Training selection model for collective classification..')
+    utils.get_logger().debug(f'LIST/EXTRACT: Training selection model for collective classification..')
     lps = _extract_listpage_data(df)
     lps = _sample_from_listings(lps, df, sampling_funcs)
-    util.get_logger().debug(f'LIST/EXTRACT: Extracting training data..')
+    utils.get_logger().debug(f'LIST/EXTRACT: Extracting training data..')
     lp_data_samples = _run_multicore(_extract_training_data, [(lp, df.loc[lp.entities]) for lp in lps])
     data_samples = [s for samples in lp_data_samples for s in samples]
     df_sample = pd.DataFrame([s.stats for s in data_samples])
-    util.get_logger().debug(f'LIST/EXTRACT: Training model..')
+    utils.get_logger().debug(f'LIST/EXTRACT: Training model..')
     selection_params['model'].fit(df_sample.drop(columns='label'), df_sample['label'])
 
 
 def _extract_subject_entities(df: pd.DataFrame, sampling_funcs: list, selection_params: dict) -> dict:
     """Identify subject entities in list pages with collective extraction."""
-    util.get_logger().debug(f'LIST/EXTRACT: Extracting subject entities using the selection model..')
+    utils.get_logger().debug(f'LIST/EXTRACT: Extracting subject entities using the selection model..')
     lps = _extract_listpage_data(df)
     lps = _sample_from_listings(lps, df, sampling_funcs)
     lps = _find_subject_entities(lps, df, selection_params)
 
     # Temporary storage of identified entities for development purposes
     # TODO: Remove after development of disambiguation & merging is done
-    util.get_logger().debug(f'LIST/EXTRACT: Temporarily persisting subject entities..')
+    utils.get_logger().debug(f'LIST/EXTRACT: Temporarily persisting subject entities..')
     valid_entities = {idx for lp in lps for idx in lp.subject_entities}
     extraction_type = 'enum' if '_entry_idx' in df else 'table'
     df.loc[valid_entities, ['_page_name', '_entity_name', '_text', '_link_type']].to_csv(f'listpage_extracted-{extraction_type}-entities_v4.csv', sep=';', index=False)
@@ -163,7 +163,7 @@ Listpage = namedtuple('Listpage', ['name', 'listings', 'entities', 'subject_enti
 
 def _extract_listpage_data(df) -> list:
     """Convert list pages into structured data format."""
-    util.get_logger().debug(f'LIST/EXTRACT: Extracting list page data..')
+    utils.get_logger().debug(f'LIST/EXTRACT: Extracting list page data..')
     lps = []
     for lp_name, df_lp in df.groupby('_page_name'):
         line_collections = defaultdict(lambda: defaultdict(set))
@@ -182,7 +182,7 @@ def _get_listing_id(row) -> str:
 # SAMPLING
 
 def _sample_from_listings(lps: list, df: pd.DataFrame, sample_funcs: list) -> list:
-    util.get_logger().debug(f'LIST/EXTRACT: Sampling from listings..')
+    utils.get_logger().debug(f'LIST/EXTRACT: Sampling from listings..')
     multicore_params = _sample_from_listings_param_generator(lps, df, sample_funcs)
     result = _run_multicore(_sample_from_listings_internal, multicore_params)
     return list(result)
@@ -251,7 +251,7 @@ def _compute_feature_label(df: pd.DataFrame, entity_sample: EntitySample):
 
 
 def _find_subject_entities(lps: list, df: pd.DataFrame, selection_params: dict) -> list:
-    util.get_logger().debug(f'LIST/EXTRACT: Finding subject entities for {len(lps)} list pages..')
+    utils.get_logger().debug(f'LIST/EXTRACT: Finding subject entities for {len(lps)} list pages..')
     multicore_params = _find_subject_entities_param_generator(lps, df, selection_params)
     result = _run_multicore(_find_subject_entities_internal, multicore_params)
     return list(result)

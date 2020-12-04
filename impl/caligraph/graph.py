@@ -1,5 +1,5 @@
 import networkx as nx
-import util
+import utils
 from impl.util.base_graph import BaseGraph
 from impl.util.hierarchy_graph import HierarchyGraph
 import impl.util.rdf as rdf_util
@@ -297,27 +297,27 @@ class CaLiGraph(HierarchyGraph):
     @classmethod
     def build_graph(cls):
         """Initialise the graph by merging the category graph and the list graph."""
-        util.get_logger().info('CaLiGraph: Starting to merge CategoryGraph and ListGraph..')
+        utils.get_logger().info('CaLiGraph: Starting to merge CategoryGraph and ListGraph..')
         graph = CaLiGraph(nx.DiGraph())
 
         # add root node
         graph._add_nodes({graph.root_node})
-        graph._set_parts(graph.root_node, {graph.root_node, util.get_config('category.root_category')})
+        graph._set_parts(graph.root_node, {graph.root_node, utils.get_config('category.root_category')})
 
         cat_graph = cat_base.get_merged_graph()
         edge_count = len(cat_graph.edges)
 
         # initialise from category graph
-        util.get_logger().debug('CaLiGraph: Starting CategoryMerge..')
+        utils.get_logger().debug('CaLiGraph: Starting CategoryMerge..')
         cat_node_names = {}
         for idx, node in enumerate(cat_graph.nodes):
             if idx % 10000 == 0:
-                util.get_logger().debug(f'CaLiGraph: CategoryMerge - Created names for {idx} of {len(cat_graph.nodes)} nodes.')
+                utils.get_logger().debug(f'CaLiGraph: CategoryMerge - Created names for {idx} of {len(cat_graph.nodes)} nodes.')
             cat_node_names[node] = cls._get_canonical_name(cat_graph.get_name(node))
 
         for edge_idx, (parent_cat, child_cat) in enumerate(cat_graph.traverse_edges_topdown()):
             if edge_idx % 1000 == 0:
-                util.get_logger().debug(f'CaLiGraph: CategoryMerge - Processed {edge_idx} of {edge_count} category edges.')
+                utils.get_logger().debug(f'CaLiGraph: CategoryMerge - Processed {edge_idx} of {edge_count} category edges.')
 
             parent_nodes = graph.get_nodes_for_part(parent_cat)
             if not parent_nodes:
@@ -330,19 +330,19 @@ class CaLiGraph(HierarchyGraph):
             graph._add_edges({(pn, cn) for pn in parent_nodes for cn in child_nodes})
 
         # merge with list graph
-        util.get_logger().debug('CaLiGraph: Starting ListMerge..')
+        utils.get_logger().debug('CaLiGraph: Starting ListMerge..')
         list_graph = list_base.get_merged_listgraph()
         edge_count = len(list_graph.edges)
 
         list_node_names = {}
         for idx, node in enumerate(list_graph.nodes):
             if idx % 10000 == 0:
-                util.get_logger().debug(f'CaLiGraph: ListMerge - Created names for {idx} of {len(list_graph.nodes)} nodes.')
+                utils.get_logger().debug(f'CaLiGraph: ListMerge - Created names for {idx} of {len(list_graph.nodes)} nodes.')
             list_node_names[node] = cls._get_canonical_name(list_graph.get_name(node))
 
         for edge_idx, (parent_lst, child_lst) in enumerate(list_graph.traverse_edges_topdown()):
             if edge_idx % 1000 == 0:
-                util.get_logger().debug(f'CaLiGraph: ListMerge - Processed {edge_idx} of {edge_count} list edges.')
+                utils.get_logger().debug(f'CaLiGraph: ListMerge - Processed {edge_idx} of {edge_count} list edges.')
 
             parent_nodes = graph.get_nodes_for_part(parent_lst)
             if not parent_nodes:
@@ -362,7 +362,7 @@ class CaLiGraph(HierarchyGraph):
                 edges_to_remove.add((graph.root_node, node))
 
         graph._remove_edges(edges_to_remove)
-        util.get_logger().debug(f'CaLiGraph: PostProcessing - Removed {len(edges_to_remove)} transitive root edges.')
+        utils.get_logger().debug(f'CaLiGraph: PostProcessing - Removed {len(edges_to_remove)} transitive root edges.')
 
         # add Wikipedia categories to nodes that have an exact name match
         for node in graph.content_nodes:
@@ -404,7 +404,7 @@ class CaLiGraph(HierarchyGraph):
         if self.has_node(node_id):
             equivalent_nodes.add(node_id)
         if len(equivalent_nodes) > 1:
-            util.get_logger().debug(f'CaLiGraph: ListMerge - For "{lst}" multiple equivalent nodes have been found: {equivalent_nodes}.')
+            utils.get_logger().debug(f'CaLiGraph: ListMerge - For "{lst}" multiple equivalent nodes have been found: {equivalent_nodes}.')
             equivalent_nodes = {node_id} if node_id in equivalent_nodes else equivalent_nodes
         if equivalent_nodes:
             main_node_id = sorted(equivalent_nodes, key=lambda x: levenshtein(x, node_id))[0]
@@ -434,8 +434,8 @@ class CaLiGraph(HierarchyGraph):
 
     def merge_ontology(self, use_listpage_resources: bool):
         """Combine the category-list-graph with the DBpedia ontology."""
-        util.get_logger().info('CaLiGraph: Starting to merge CaLigraph ontology with DBpedia ontology..')
-        util.get_logger().debug(f'CaLiGraph: Merge with list page resources: {use_listpage_resources}..')
+        utils.get_logger().info('CaLiGraph: Starting to merge CaLigraph ontology with DBpedia ontology..')
+        utils.get_logger().debug(f'CaLiGraph: Merge with list page resources: {use_listpage_resources}..')
         # remove edges from graph where clear type conflicts exist
         conflicting_edges = cali_mapping.find_conflicting_edges(self, use_listpage_resources)
         self._remove_edges(conflicting_edges)
@@ -445,7 +445,7 @@ class CaLiGraph(HierarchyGraph):
         node_to_dbp_types_mapping = cali_mapping.find_mappings(self, use_listpage_resources)
 
         # add dbpedia types to caligraph
-        util.get_logger().debug('CaLiGraph: Integrating DBpedia types into CaLiGraph..')
+        utils.get_logger().debug('CaLiGraph: Integrating DBpedia types into CaLiGraph..')
         type_graph = BaseGraph(dbp_store._get_type_graph(), root_node=rdf_util.CLASS_OWL_THING)
         for parent_type, child_type in type_graph.traverse_edges_topdown():
             # make sure to always use the same of all the equivalent types of a type
@@ -463,7 +463,7 @@ class CaLiGraph(HierarchyGraph):
             self._add_edges({(pn, cn) for pn in parent_nodes for cn in child_nodes if pn != cn})
 
         # connect caligraph-nodes with dbpedia-types
-        util.get_logger().debug('CaLiGraph: Connecting added DBpedia types to existing CaLiGraph nodes..')
+        utils.get_logger().debug('CaLiGraph: Connecting added DBpedia types to existing CaLiGraph nodes..')
         for node, dbp_types in node_to_dbp_types_mapping.items():
             parent_nodes = {n for t in dbp_types for n in self.get_nodes_for_part(t)}.difference({node})
             if parent_nodes:
@@ -500,7 +500,7 @@ class CaLiGraph(HierarchyGraph):
 
     def compute_axioms(self):
         """Compute axioms for all nodes in the graph."""
-        util.get_logger().info('CaLiGraph: Computing Cat2Ax axioms for CaLiGraph..')
+        utils.get_logger().info('CaLiGraph: Computing Cat2Ax axioms for CaLiGraph..')
         for node, axioms in cali_axioms.extract_axioms(self).items():
             for ax in axioms:
                 prop = cali_util.dbp_type2clg_type(ax[1])

@@ -1,15 +1,15 @@
 """Utilities to work with CaLiGraph resources, types, and predicates."""
 
-import util
+import utils
 import impl.dbpedia.util as dbp_util
 import impl.util.rdf as rdf_util
 import impl.util.string as str_util
 import re
 
 
-NAMESPACE_CLG_BASE = util.get_config('caligraph.namespace.base')
-NAMESPACE_CLG_ONTOLOGY = util.get_config('caligraph.namespace.ontology')
-NAMESPACE_CLG_RESOURCE = util.get_config('caligraph.namespace.resource')
+NAMESPACE_CLG_BASE = utils.get_config('caligraph.namespace.base')
+NAMESPACE_CLG_ONTOLOGY = utils.get_config('caligraph.namespace.ontology')
+NAMESPACE_CLG_RESOURCE = utils.get_config('caligraph.namespace.resource')
 
 
 def is_clg_type(item: str) -> bool:

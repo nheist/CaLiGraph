@@ -1,8 +1,8 @@
 """Functionality to retrieve everything related to DBpedia resources, properties, and types."""
 
-import util
+import utils
 import impl.util.rdf as rdf_util
-from . import util as dbp_util
+import impl.dbpedia.util as dbp_util
 import impl.category.util as cat_util
 import impl.list.util as list_util
 from collections import defaultdict
@@ -40,7 +40,7 @@ def get_label(dbp_object: str) -> str:
     global __RESOURCE_LABELS__
     if '__RESOURCE_LABELS__' not in globals():
         __RESOURCE_LABELS__ = dict(_get_label_mapping())
-        __RESOURCE_LABELS__.update(rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_LABEL))
+        __RESOURCE_LABELS__.update(rdf_util.create_single_val_dict_from_rdf([utils.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_LABEL))
     return __RESOURCE_LABELS__[dbp_object] if dbp_object in __RESOURCE_LABELS__ else dbp_util.object2name(dbp_object)
 
 
@@ -50,7 +50,7 @@ def get_object_for_label(label: str) -> str:
     global __ONTOLOGY_INVERSE_LABELS__
     if '__RESOURCE_INVERSE_LABELS__' not in globals():
         __RESOURCE_INVERSE_LABELS__ = {v: k for k, v in _get_label_mapping().items()}
-        ontology_labels = rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_LABEL)
+        ontology_labels = rdf_util.create_single_val_dict_from_rdf([utils.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_LABEL)
         __ONTOLOGY_INVERSE_LABELS__ = {v: k for k, v in ontology_labels.items()}
     if label in __ONTOLOGY_INVERSE_LABELS__:
         return __ONTOLOGY_INVERSE_LABELS__[label]
@@ -62,8 +62,8 @@ def get_object_for_label(label: str) -> str:
 def _get_label_mapping() -> dict:
     global __RESOURCE_LABEL_MAPPING__
     if '__RESOURCE_LABEL_MAPPING__' not in globals():
-        initializer = lambda: rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.labels')], rdf_util.PREDICATE_LABEL)
-        __RESOURCE_LABEL_MAPPING__ = util.load_or_create_cache('dbpedia_resource_labels', initializer)
+        initializer = lambda: rdf_util.create_single_val_dict_from_rdf([utils.get_data_file('files.dbpedia.labels')], rdf_util.PREDICATE_LABEL)
+        __RESOURCE_LABEL_MAPPING__ = utils.load_or_create_cache('dbpedia_resource_labels', initializer)
     return __RESOURCE_LABEL_MAPPING__
 
 
@@ -71,13 +71,13 @@ def get_inverse_lexicalisations(text: str) -> dict:
     """Return all resources that fit to the given lexicalisation."""
     global __RESOURCE_INVERSE_LEXICALISATIONS__
     if '__RESOURCE_INVERSE_LEXICALISATIONS__' not in globals():
-        __RESOURCE_INVERSE_LEXICALISATIONS__ = defaultdict(dict, util.load_or_create_cache('dbpedia_resource_inverse_lexicalisations', _compute_inverse_lexicalisations))
+        __RESOURCE_INVERSE_LEXICALISATIONS__ = defaultdict(dict, utils.load_or_create_cache('dbpedia_resource_inverse_lexicalisations', _compute_inverse_lexicalisations))
     return __RESOURCE_INVERSE_LEXICALISATIONS__[text.lower()]
 
 
 def _compute_inverse_lexicalisations():
     # count how often a lexicalisation points to a given resource
-    inv_lex_counts = rdf_util.create_multi_val_count_dict_from_rdf([util.get_data_file('files.dbpedia.anchor_texts')], rdf_util.PREDICATE_ANCHOR_TEXT, reverse_key=True)
+    inv_lex_counts = rdf_util.create_multi_val_count_dict_from_rdf([utils.get_data_file('files.dbpedia.anchor_texts')], rdf_util.PREDICATE_ANCHOR_TEXT, reverse_key=True)
     # make sure that redirects are taken into account
     for lex, resources in inv_lex_counts.items():
         for res in set(resources):
@@ -129,8 +129,8 @@ def get_all_resources_for_type(dbp_type: str) -> set:
 def _get_resource_type_mapping() -> dict:
     global __RESOURCE_TYPE_MAPPING__
     if '__RESOURCE_TYPE_MAPPING__' not in globals():
-        initializer = lambda: rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.instance_types')], rdf_util.PREDICATE_TYPE)
-        __RESOURCE_TYPE_MAPPING__ = util.load_or_create_cache('dbpedia_resource_type_mapping', initializer)
+        initializer = lambda: rdf_util.create_multi_val_dict_from_rdf([utils.get_data_file('files.dbpedia.instance_types')], rdf_util.PREDICATE_TYPE)
+        __RESOURCE_TYPE_MAPPING__ = utils.load_or_create_cache('dbpedia_resource_type_mapping', initializer)
     return __RESOURCE_TYPE_MAPPING__
 
 
@@ -148,8 +148,8 @@ def resolve_redirect(dbp_resource: str, visited=None) -> str:
     """Return the resource to which `dbp_resource` redirects (if any) or `dbp_resource` itself."""
     global __REDIRECTS__
     if '__REDIRECTS__' not in globals():
-        initializer = lambda: rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.redirects')], rdf_util.PREDICATE_REDIRECTS)
-        __REDIRECTS__ = util.load_or_create_cache('dbpedia_resource_redirects', initializer)
+        initializer = lambda: rdf_util.create_single_val_dict_from_rdf([utils.get_data_file('files.dbpedia.redirects')], rdf_util.PREDICATE_REDIRECTS)
+        __REDIRECTS__ = utils.load_or_create_cache('dbpedia_resource_redirects', initializer)
 
     if dbp_resource in __REDIRECTS__:
         visited = visited or set()
@@ -169,8 +169,8 @@ def resolve_spelling_redirect(dbp_resource: str) -> str:
 def get_disambiguation_mapping() -> dict:
     global __DISAMBIGUATIONS__
     if '__DISAMBIGUATIONS__' not in globals():
-        initializer = lambda: rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.disambiguations')], rdf_util.PREDICATE_DISAMBIGUATES)
-        __DISAMBIGUATIONS__ = defaultdict(set, util.load_or_create_cache('dbpedia_resource_disambiguations', initializer))
+        initializer = lambda: rdf_util.create_multi_val_dict_from_rdf([utils.get_data_file('files.dbpedia.disambiguations')], rdf_util.PREDICATE_DISAMBIGUATES)
+        __DISAMBIGUATIONS__ = defaultdict(set, utils.load_or_create_cache('dbpedia_resource_disambiguations', initializer))
     return __DISAMBIGUATIONS__
 
 
@@ -194,9 +194,9 @@ def get_resource_property_mapping() -> dict:
     """Return a mapping from DBpedia resources to a dict containing property-value assignments (containing facts of DBpedia)."""
     global __RESOURCE_PROPERTY_MAPPING__
     if '__RESOURCE_PROPERTY_MAPPING__' not in globals():
-        property_files = [util.get_data_file('files.dbpedia.mappingbased_literals'), util.get_data_file('files.dbpedia.mappingbased_objects')]
+        property_files = [utils.get_data_file('files.dbpedia.mappingbased_literals'), utils.get_data_file('files.dbpedia.mappingbased_objects')]
         initializer = lambda: rdf_util.create_dict_from_rdf(property_files)
-        __RESOURCE_PROPERTY_MAPPING__ = util.load_or_create_cache('dbpedia_resource_properties', initializer)
+        __RESOURCE_PROPERTY_MAPPING__ = utils.load_or_create_cache('dbpedia_resource_properties', initializer)
     return __RESOURCE_PROPERTY_MAPPING__
 
 
@@ -204,8 +204,8 @@ def get_inverse_resource_property_mapping() -> dict:
     """Return a mapping from DBpedia resources to a dict containing property-value assignments (containing inverted facts of DBpedia)."""
     global __INVERSE_RESOURCE_PROPERTY_MAPPING__
     if '__INVERSE_RESOURCE_PROPERTY_MAPPING__' not in globals():
-        initializer = lambda: rdf_util.create_dict_from_rdf([util.get_data_file('files.dbpedia.mappingbased_objects')], reverse_key=True)
-        __INVERSE_RESOURCE_PROPERTY_MAPPING__ = util.load_or_create_cache('dbpedia_inverse_resource_properties', initializer)
+        initializer = lambda: rdf_util.create_dict_from_rdf([utils.get_data_file('files.dbpedia.mappingbased_objects')], reverse_key=True)
+        __INVERSE_RESOURCE_PROPERTY_MAPPING__ = utils.load_or_create_cache('dbpedia_inverse_resource_properties', initializer)
     return __INVERSE_RESOURCE_PROPERTY_MAPPING__
 
 
@@ -213,7 +213,7 @@ def get_domain(dbp_predicate: str) -> Optional[str]:
     """Return the domain of a given predicate."""
     global __PREDICATE_DOMAIN__
     if '__PREDICATE_DOMAIN__' not in globals():
-        __PREDICATE_DOMAIN__ = defaultdict(lambda: None, rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_DOMAIN))
+        __PREDICATE_DOMAIN__ = defaultdict(lambda: None, rdf_util.create_single_val_dict_from_rdf([utils.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_DOMAIN))
     return __PREDICATE_DOMAIN__[dbp_predicate]
 
 
@@ -221,7 +221,7 @@ def get_range(dbp_predicate: str) -> Optional[str]:
     """Return the range of a given predicate."""
     global __PREDICATE_RANGE__
     if '__PREDICATE_RANGE__' not in globals():
-        __PREDICATE_RANGE__ = defaultdict(lambda: None, rdf_util.create_single_val_dict_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_RANGE))
+        __PREDICATE_RANGE__ = defaultdict(lambda: None, rdf_util.create_single_val_dict_from_rdf([utils.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_RANGE))
     return __PREDICATE_RANGE__[dbp_predicate]
 
 
@@ -229,7 +229,7 @@ def get_equivalent_predicates(dbp_predicate: str) -> set:
     """Return all equivalent predicates of a given predicate."""
     global __EQUIVALENT_PREDICATE__
     if '__EQUIVALENT_PREDICATE__' not in globals():
-        __EQUIVALENT_PREDICATE__ = rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_EQUIVALENT_PROPERTY)
+        __EQUIVALENT_PREDICATE__ = rdf_util.create_multi_val_dict_from_rdf([utils.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_EQUIVALENT_PROPERTY)
     return __EQUIVALENT_PREDICATE__[dbp_predicate]
 
 
@@ -253,7 +253,7 @@ def is_functional(dbp_predicate: str) -> bool:
     """Return True, if the predicate is functional (i.e. a resource has at most one value for the given predicate)."""
     global __PREDICATE_FUNCTIONAL__
     if '__PREDICATE_FUNCTIONAL__' not in globals():
-        __PREDICATE_FUNCTIONAL__ = defaultdict(bool, util.load_or_create_cache('dbpedia_functional_predicates', _create_functional_predicate_dict))
+        __PREDICATE_FUNCTIONAL__ = defaultdict(bool, utils.load_or_create_cache('dbpedia_functional_predicates', _create_functional_predicate_dict))
     return __PREDICATE_FUNCTIONAL__[dbp_predicate]
 
 
@@ -349,7 +349,7 @@ def get_equivalent_types(dbp_type: str) -> set:
     """Return the set of equivalent types to the given type (including itself)."""
     global __EQUIVALENT_TYPE_MAPPING__
     if '__EQUIVALENT_TYPE_MAPPING__' not in globals():
-        __EQUIVALENT_TYPE_MAPPING__ = rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_EQUIVALENT_CLASS, reflexive=True)
+        __EQUIVALENT_TYPE_MAPPING__ = rdf_util.create_multi_val_dict_from_rdf([utils.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_EQUIVALENT_CLASS, reflexive=True)
         # remove external types from equivalent mappings as they are prone to errors
         __EQUIVALENT_TYPE_MAPPING__ = defaultdict(set, {t: {et for et in __EQUIVALENT_TYPE_MAPPING__[t] if dbp_util.is_dbp_type(et) or et == rdf_util.CLASS_OWL_THING} for t in __EQUIVALENT_TYPE_MAPPING__ if dbp_util.is_dbp_type(t) or t == rdf_util.CLASS_OWL_THING})
     return {dbp_type} | __EQUIVALENT_TYPE_MAPPING__[dbp_type]
@@ -369,7 +369,7 @@ def get_main_equivalence_type(dbp_type: str) -> str:
 def get_main_equivalence_types() -> set:
     global __MAIN_EQUIVALENCE_TYPES__
     if '__MAIN_EQUIVALENCE_TYPES__' not in globals():
-        __MAIN_EQUIVALENCE_TYPES__ = rdf_util.create_set_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_SUBCLASS_OF, None)
+        __MAIN_EQUIVALENCE_TYPES__ = rdf_util.create_set_from_rdf([utils.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_SUBCLASS_OF, None)
     return __MAIN_EQUIVALENCE_TYPES__
 
 
@@ -379,7 +379,7 @@ def get_disjoint_types(dbp_type: str) -> set:
     """Return all types that are disjoint with `dbp_type` (excluding the wrong disjointness Agent<->Place)."""
     global __DISJOINT_TYPE_MAPPING__
     if '__DISJOINT_TYPE_MAPPING__' not in globals():
-        __DISJOINT_TYPE_MAPPING__ = rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_DISJOINT_WITH, reflexive=True)
+        __DISJOINT_TYPE_MAPPING__ = rdf_util.create_multi_val_dict_from_rdf([utils.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_DISJOINT_WITH, reflexive=True)
         # add/remove custom axioms
         __DISJOINT_TYPE_MAPPING__ = defaultdict(set, {k: {v for v in values if {k, v} not in REMOVED_DISJOINTNESS_AXIOMS} for k, values in __DISJOINT_TYPE_MAPPING__.items()})
         for a, b in ADDED_DISJOINTNESS_AXIOMS:
@@ -404,7 +404,7 @@ def get_type_frequency(dbp_type: str) -> float:
     """Return the amount of resources having `dbp_type` as type."""
     global __TYPE_FREQUENCY__
     if '__TYPE_FREQUENCY__' not in globals():
-        __TYPE_FREQUENCY__ = defaultdict(int, util.load_or_create_cache('dbpedia_resource_type_frequency', _compute_type_frequency))
+        __TYPE_FREQUENCY__ = defaultdict(int, utils.load_or_create_cache('dbpedia_resource_type_frequency', _compute_type_frequency))
     return __TYPE_FREQUENCY__[dbp_type]
 
 
@@ -417,7 +417,7 @@ def get_type_lexicalisations(lemma: str) -> dict:
     """Return the type lexicalisation score for a set of lemmas (i.e. the probabilities of types given `lemmas`)."""
     global __TYPE_LEXICALISATIONS__
     if '__TYPE_LEXICALISATIONS__' not in globals():
-        __TYPE_LEXICALISATIONS__ = defaultdict(dict, util.load_cache('wikipedia_type_lexicalisations'))
+        __TYPE_LEXICALISATIONS__ = defaultdict(dict, utils.load_cache('wikipedia_type_lexicalisations'))
     return __TYPE_LEXICALISATIONS__[lemma.lower()]
 
 
@@ -425,9 +425,9 @@ def _get_type_graph() -> nx.DiGraph:
     """Return the initialised graph of DBpedia types."""
     global __TYPE_GRAPH__
     if '__TYPE_GRAPH__' not in globals():
-        subtype_mapping = rdf_util.create_multi_val_dict_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_SUBCLASS_OF, reverse_key=True)
+        subtype_mapping = rdf_util.create_multi_val_dict_from_rdf([utils.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_SUBCLASS_OF, reverse_key=True)
         # add missing types (i.e. those, that do not have subclasses at all)
-        all_types = rdf_util.create_set_from_rdf([util.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_TYPE, rdf_util.CLASS_OWL_CLASS)
+        all_types = rdf_util.create_set_from_rdf([utils.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_TYPE, rdf_util.CLASS_OWL_CLASS)
         subtype_mapping.update({et: set() for t in all_types for et in get_equivalent_types(t) if et not in subtype_mapping})
         # completing subtypes with subtypes of equivalent types
         subtype_mapping = {t: {est for et in get_equivalent_types(t) for st in subtype_mapping[et] for est in get_equivalent_types(st)} for t in set(subtype_mapping)}
