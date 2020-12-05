@@ -316,7 +316,7 @@ class CaLiGraph(HierarchyGraph):
             cat_node_names[node] = cls._get_canonical_name(cat_graph.get_name(node))
 
         for edge_idx, (parent_cat, child_cat) in enumerate(cat_graph.traverse_edges_topdown()):
-            if edge_idx % 1000 == 0:
+            if edge_idx % 10000 == 0:
                 utils.get_logger().debug(f'CaLiGraph: CategoryMerge - Processed {edge_idx} of {edge_count} category edges.')
 
             parent_nodes = graph.get_nodes_for_part(parent_cat)
@@ -341,7 +341,7 @@ class CaLiGraph(HierarchyGraph):
             list_node_names[node] = cls._get_canonical_name(list_graph.get_name(node))
 
         for edge_idx, (parent_lst, child_lst) in enumerate(list_graph.traverse_edges_topdown()):
-            if edge_idx % 1000 == 0:
+            if edge_idx % 10000 == 0:
                 utils.get_logger().debug(f'CaLiGraph: ListMerge - Processed {edge_idx} of {edge_count} list edges.')
 
             parent_nodes = graph.get_nodes_for_part(parent_lst)
@@ -365,9 +365,10 @@ class CaLiGraph(HierarchyGraph):
         utils.get_logger().debug(f'CaLiGraph: PostProcessing - Removed {len(edges_to_remove)} transitive root edges.')
 
         # add Wikipedia categories to nodes that have an exact name match
+        all_categories = cat_store.get_categories()
         for node in graph.content_nodes:
             cat_name = cat_util.name2category(graph.get_name(node))
-            if cat_name in cat_store.get_categories() and cat_name not in graph.get_category_parts(node):
+            if cat_name in all_categories and cat_name not in graph.get_category_parts(node):
                 graph._set_parts(node, graph.get_parts(node) | {cat_name})
 
         return graph
