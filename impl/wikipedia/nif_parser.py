@@ -47,14 +47,14 @@ def _compute_counts_for_resource(uri_with_text: tuple) -> tuple:
     type_lexicalisations = defaultdict(int)
     for sub, obj in spacy_util.get_hearst_pairs(text):
         # collect hypernym statistics in Wikipedia
-        hypernyms[(sub.root.lemma_.lower(), obj.root.lemma_.lower())] += 1
+        hypernyms[(nlp_util.lemmatize_token(sub.root).lower(), nlp_util.lemmatize_token(obj.root).lower())] += 1
 
         # for each word, count the types that it refers to
         if uri not in dbp_store.get_inverse_lexicalisations(sub.text):
             continue  # discard, if the resource text does not refer to the subject of the article
         for t in dbp_store.get_types(uri):
             for word in obj:
-                type_lexicalisations[(word.lemma_.lower(), t)] += 1
+                type_lexicalisations[(nlp_util.lemmatize_token(word).lower(), t)] += 1
     return hypernyms, type_lexicalisations
 
 

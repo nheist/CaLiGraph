@@ -1,6 +1,7 @@
 """NLP methods mainly for the identification of head nouns of Wikipedia categories."""
 
 import impl.util.spacy as spacy_util
+import impl.util.string as str_util
 from spacy.tokens import Doc, Token
 from typing import Iterable, Iterator, Optional, Callable, Union
 import re
@@ -10,7 +11,7 @@ import inflection
 def without_stopwords(text: str) -> set:
     """Return the lemmatized versions of all non-stop-words in `text`."""
     text = remove_bracket_content(text.replace('-', ' '))
-    return {word.lemma_ for word in parse_set(text) if not word.is_stop}
+    return {lemmatize_token(word) for word in parse_set(text) if not word.is_stop}
 
 
 def remove_bracket_content(text: str, bracket_type='(', substitute=' ') -> str:
@@ -37,19 +38,12 @@ def get_canonical_name(text: str) -> str:
     text = re.sub(r'\s*/([A-Z],\s*)*[A-Z]$', '', text)  # remove trailing alphabetical splits with slash, e.g. 'Fellows of the Royal Society/A'
     text = re.sub(r'\s+([A-Z],\s*)+[A-Z]$', '', text)  # remove trailing alphabetical splits without indicator, e.g. 'Fellows of the Royal Society A, B, C'
     text = re.sub(r'\s*:\s*..?\s*[-–]\s*..?$', '', text)  # remove arbitrary trailing alphabetical splits, e.g. 'Fellows of the Royal Society: ! - K'
-    return _regularize_whitespaces(text)
+    return str_util.regularize_spaces(text).rstrip(',')
 
 
-def _regularize_whitespaces(text: str) -> str:
-    """Merge multiple whitespaces into one and remove trailing commas."""
-    result = re.sub(r'\s+', ' ', text).strip()
-    result = result[:-1] if result.endswith(',') else result
-    return result
-
-
-def get_lexhead_subjects(set_or_sets, lemmatize=True) -> Union[set, list]:
+def get_lexhead_subjects(set_or_sets) -> Union[set, list]:
     """Return the lexical head subjects of `doc` as lemmas or lowercased text."""
-    func = lambda doc: {w.lemma_ if lemmatize else w.text.lower() for w in doc if w.ent_type_.startswith(spacy_util.LEXICAL_HEAD_SUBJECT)}
+    func = lambda doc: {lemmatize_token(w) for w in doc if w.ent_type_.startswith(spacy_util.LEXICAL_HEAD_SUBJECT)}
     return _process_one_or_many_sets(set_or_sets, func, default=set())
 
 
@@ -85,19 +79,19 @@ def singularize_phrase(text: str) -> str:
     doc = parse_set(text)
     result = doc.text.strip()
     if len(doc) == 1:
-        return singularize_word(doc[0])
+        return lemmatize_token(doc[0])
     for idx, w in enumerate(doc):
         if w.ent_type_ == spacy_util.LEXICAL_HEAD_SUBJECT_PLURAL:
-            result = result.replace(w.text, singularize_word(w))
+            result = result.replace(w.text, lemmatize_token(w))
             if len(doc) > idx+1 and doc[idx+1].text == 'and':
                 result = result.replace('and', 'or')
     return result
 
 
-def singularize_word(word: Token) -> str:
-    if word.tag_ in ['NNS', 'NNPS'] and word.text != word.lemma_:
-        return word.lemma_
-    return inflection.singularize(word.text)
+def lemmatize_token(word: Token) -> str:
+    if word.tag_ in ['NNS', 'NNPS'] and word.text == word.lemma_:
+        return inflection.singularize(word.text)
+    return word.lemma_
 
 
 def _process_one_or_many_sets(set_or_sets, func: Callable, default=None):

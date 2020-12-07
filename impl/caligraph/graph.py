@@ -130,7 +130,7 @@ class CaLiGraph(HierarchyGraph):
             list_resources = {dbp_util.name2resource(r) for lst in self.get_list_parts(node) for r in list_base.get_listpage_entities(self, lst)}
             self._node_direct_list_resources[node] = self._filter_invalid_resources(list_resources)
 
-        resources = self._node_direct_cat_resources[node]
+        resources = set(self._node_direct_cat_resources[node])
         if use_listpage_resources:
             resources.update(self._node_direct_list_resources[node])
         return resources
