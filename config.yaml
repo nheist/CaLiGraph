@@ -16,7 +16,7 @@ category:
 page:
   extraction:
     use_negative_evidence_assumption: True
-    extract_unlinked_entities: False
+    extract_unlinked_entities: True
     use_robust_extraction: False
 cat2ax:
   pattern_confidence: 0.05
