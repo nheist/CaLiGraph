@@ -55,8 +55,10 @@ def get_lexhead_subjects(set_or_sets, lemmatize=True) -> Union[set, list]:
 
 def has_plural_lexhead_subjects(set_or_sets) -> Union[bool, list]:
     """Return True, if the lexical head of `text` is in plural form."""
-    func = lambda doc: any(w.ent_type_ == spacy_util.LEXICAL_HEAD_SUBJECT_PLURAL for w in doc)
-    return _process_one_or_many_sets(set_or_sets, func, default=False)
+    singular_lexhead_func = lambda doc: any(w.ent_type_ == spacy_util.LEXICAL_HEAD_SUBJECT for w in doc)
+    plural_lexhead_func = lambda doc: any(w.ent_type_ == spacy_util.LEXICAL_HEAD_SUBJECT_PLURAL for w in doc)
+    plural_lexhead_only_func = lambda doc: plural_lexhead_func(doc) and not singular_lexhead_func(doc)
+    return _process_one_or_many_sets(set_or_sets, plural_lexhead_only_func, default=False)
 
 
 def get_lexhead_remainder(set_or_sets) -> Union[set, list]:
