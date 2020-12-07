@@ -1,6 +1,7 @@
 """Functionality to retrieve everything related to categories."""
 
 import impl.category.util as cat_util
+import impl.list.util as list_util
 import impl.util.rdf as rdf_util
 import impl.dbpedia.store as dbp_store
 from impl import wikipedia
@@ -9,21 +10,27 @@ from collections import defaultdict
 import networkx as nx
 
 
-def get_categories() -> set:
+def get_categories(include_listcategories=False) -> set:
     """Return all categories that are not hidden or used as any kind of organisational category."""
-    return set(_get_category_graph())
+    return {n for n in _get_category_graph() if include_listcategories or not list_util.is_listcategory(n)}
 
 
-def get_parents(category: str) -> set:
+def get_parents(category: str, include_listcategories=False) -> set:
     """Return all direct supercategories for the given category."""
     category_graph = _get_category_graph()
-    return set(category_graph.predecessors(category)) if category in category_graph else set()
+    if category not in category_graph:
+        return set()
+    parents = category_graph.predecessors(category)
+    return {p for p in parents if include_listcategories or not list_util.is_listcategory(p)}
 
 
-def get_children(category: str) -> set:
+def get_children(category: str, include_listcategories=False) -> set:
     """Return all direct subcategories for the given category."""
     category_graph = _get_category_graph()
-    return set(category_graph.successors(category)) if category in category_graph else set()
+    if category not in category_graph:
+        return set()
+    children = category_graph.successors(category)
+    return {c for c in children if include_listcategories or not list_util.is_listcategory(c)}
 
 
 def _get_category_graph() -> nx.DiGraph:
@@ -47,14 +54,15 @@ def _create_category_graph() -> nx.DiGraph:
     graph.add_nodes_from(skos_nodes)
     skos_edges = rdf_util.create_multi_val_dict_from_rdf([utils.get_data_file('files.dbpedia.category_skos')], rdf_util.PREDICATE_BROADER)
     graph.add_edges_from([(p, c) for c, parents in skos_edges.items() for p in parents if p != c])
-    # identify any remaining maintenance categories
+    # identify any remaining invalid categories (maintenance categories etc)
+    ignored_category_endings = ('files', 'images', 'lists', 'articles', 'stubs', 'pages', 'categories')
     maintenance_category_indicators = {
-        'wikipedia', 'wikipedians', 'wikimedia', 'wikiproject', 'lists', 'redirects', 'mediawiki', 'template',
-        'templates', 'user', 'portal', 'categories', 'articles', 'pages', 'navigational', 'stubs'
+        'wikipedia', 'wikipedians', 'wikimedia', 'wikiproject', 'redirects',
+        'mediawiki', 'template', 'templates', 'user', 'portal', 'navigational'
     }
     for cat in graph:
         cat_tokens = {t.lower() for t in cat_util.remove_category_prefix(cat).split('_')}
-        if cat_tokens.intersection(maintenance_category_indicators):
+        if cat.lower().endswith(ignored_category_endings) or cat_tokens.intersection(maintenance_category_indicators):
             invalid_categories.add(cat)
     graph.remove_nodes_from(invalid_categories)
     return graph

@@ -37,7 +37,7 @@ class ListGraph(HierarchyGraph):
         nodes = list_store.get_listcategories()
         edges = set()
         for listcat in nodes:
-            listcat_children = {child for child in cat_store.get_children(listcat) if child in nodes}
+            listcat_children = {child for child in cat_store.get_children(listcat, include_listcategories=True) if child in nodes}
             edges.update({(listcat, child) for child in listcat_children})
 
         # add nodes and edges for listpages

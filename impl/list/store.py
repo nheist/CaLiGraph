@@ -28,7 +28,7 @@ def get_listcategories() -> set:
     """Return all list categories (i.e. categories starting with 'Lists of')."""
     global __LISTCATEGORIES__
     if '__LISTCATEGORIES__' not in globals():
-        __LISTCATEGORIES__ = {lc for lc in cat_store.get_categories() if list_util.is_listcategory(lc)}
+        __LISTCATEGORIES__ = {lc for lc in cat_store.get_categories(include_listcategories=True) if list_util.is_listcategory(lc)}
 
     return __LISTCATEGORIES__
 
