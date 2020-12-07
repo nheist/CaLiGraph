@@ -31,8 +31,10 @@ def _extract_parents_for_category(data: tuple) -> tuple:
     cat, markup, template_definitions = data
     content = _replace_templates_in_category(wtp.parse(markup), template_definitions)
     parent_names = {link.target[len(CATEGORY_PREFIX):] for link in content.wikilinks if link.target.startswith(CATEGORY_PREFIX)}
+    parent_names = {pn for pn in parent_names if '<!--' not in pn and '{{' not in pn}  # get rid of parsing errors
     parent_names = map(str_util.capitalize, parent_names)  # make sure that first letter of category is uppercase
     parent_uris = {DBPEDIA_CATEGORY_PREFIX + name.replace(' ', '_') for name in parent_names}
+    parent_uris = {puri for puri in parent_uris if not puri.endswith('_')}  # get rid of incomplete categories
     if '__HIDDENCAT__' in content.string:
         parent_uris.add(f'{DBPEDIA_CATEGORY_PREFIX}Hidden_categories')
     return cat, parent_uris
