@@ -18,7 +18,7 @@ def extract_enum_entities(df: pd.DataFrame) -> dict:
     """Return entities extracted from enumeration list pages with XG-Boost-based simple/collective extraction."""
     utils.get_logger().info(f'LIST/EXTRACT: Extracting entities from enumeration list pages..')
 
-    base_estimator = XGBClassifier(predictor='cpu_predictor', n_jobs=1, colsample_bytree=.8, scale_pos_weight=.25)
+    base_estimator = XGBClassifier(predictor='cpu_predictor', n_jobs=1, scale_pos_weight=.5)
     config = {
         'base_estimator': base_estimator,
         'sampling_functions': [_sample_by_entity_position],
@@ -36,7 +36,7 @@ def extract_table_entities(df: pd.DataFrame) -> dict:
     utils.get_logger().info(f'LIST/EXTRACT: Extracting entities from table list pages..')
     base_estimator = Pipeline([
         ('feature_selection', SelectKBest(k=100)),
-        ('classification', XGBClassifier(predictor='cpu_predictor', n_jobs=1, colsample_bytree=.8, scale_pos_weight=.25)),
+        ('classification', XGBClassifier(predictor='cpu_predictor', n_jobs=1, scale_pos_weight=.3)),
     ])
     config = {
         'base_estimator': base_estimator,
