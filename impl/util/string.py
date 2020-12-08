@@ -7,4 +7,4 @@ def capitalize(text: str) -> str:
 
 
 def regularize_spaces(text: str) -> str:
-    return ''.join(text.split())
+    return ' '.join(text.split())
