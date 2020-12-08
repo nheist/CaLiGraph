@@ -41,20 +41,21 @@ def _get_category_graph() -> nx.DiGraph:
 
 
 def _create_category_graph() -> nx.DiGraph:
-    wiki_category_edges = [(p, c) for c, ps in wikipedia.extract_parent_categories().items() for p in ps if p != c]
-    graph = nx.DiGraph(incoming_graph_data=wiki_category_edges)
-    # identify hidden/tracking categories
-    invalid_categories = set(graph.successors(cat_util.name2category('Hidden categories')))
-    invalid_categories.update(graph.successors(cat_util.name2category('Tracking categories')))
-    # identify disambiguation and redirect categories
-    invalid_categories.update(nx.descendants(graph, cat_util.name2category('Disambiguation categories')))
-    invalid_categories.update(nx.descendants(graph, cat_util.name2category('All redirect categories')))
-    # add nodes/edges from skos-categories file (this is done on purpose AFTER identification of disambiguations/redirects to avoid false edges when using descendants)
-    skos_nodes = rdf_util.create_single_val_dict_from_rdf([utils.get_data_file('files.dbpedia.category_skos')], rdf_util.PREDICATE_TYPE)
-    graph.add_nodes_from(list(skos_nodes))
+    skos_nodes = set(rdf_util.create_single_val_dict_from_rdf([utils.get_data_file('files.dbpedia.category_skos')], rdf_util.PREDICATE_TYPE))
     skos_edges = rdf_util.create_multi_val_dict_from_rdf([utils.get_data_file('files.dbpedia.category_skos')], rdf_util.PREDICATE_BROADER)
-    graph.add_edges_from([(p, c) for c, parents in skos_edges.items() for p in parents if p != c])
-    # identify any remaining invalid categories (maintenance categories etc)
+    skos_edges = [(p, c) for c, parents in skos_edges.items() for p in parents if p != c]
+    wiki_category_edges = [(p, c) for c, ps in wikipedia.extract_parent_categories().items() for p in ps if p != c]
+    graph = nx.DiGraph(incoming_graph_data=skos_edges + wiki_category_edges)
+    graph.add_nodes_from(skos_nodes)
+
+    # identify maintenance categories
+    invalid_parent_categories = [
+        'Hidden categories', 'Tracking categories', 'Disambiguation categories', 'Non-empty disambiguation categories',
+        'All redirect categories', 'Wikipedia soft redirected categories', 'Category redirects with possibilities',
+        'Wikipedia non-empty soft redirected categories'
+    ]
+    invalid_categories = {c for ipc in invalid_parent_categories for c in graph.successors(cat_util.name2category(ipc))}
+    # identify any remaining invalid categories (maintenance categories etc) using indicator tokens
     ignored_category_endings = ('files', 'images', 'lists', 'articles', 'stubs', 'pages', 'categories')
     maintenance_category_indicators = {
         'wikipedia', 'wikipedians', 'wikimedia', 'wikiproject', 'redirects',
@@ -64,7 +65,8 @@ def _create_category_graph() -> nx.DiGraph:
         cat_tokens = {t.lower() for t in cat_util.remove_category_prefix(cat).split('_')}
         if cat.lower().endswith(ignored_category_endings) or cat_tokens.intersection(maintenance_category_indicators):
             invalid_categories.add(cat)
-    invalid_categories.update(set(graph.nodes).difference(set(skos_nodes)))  # only keep categories mentioned in skos
+    invalid_categories.update(set(graph.nodes).difference(skos_nodes))  # only keep categories mentioned in skos
+    invalid_categories.discard(utils.get_config('category.root_category'))  # make sure to keep root node
     graph.remove_nodes_from(invalid_categories)
     return graph
 
