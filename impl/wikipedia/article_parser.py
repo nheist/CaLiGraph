@@ -40,6 +40,8 @@ def _parse_article_with_timeout(resource_and_markup: tuple) -> tuple:
         signal.alarm(0)  # reset alarm as parsing was successful
         return result
     except Exception as e:
+        if type(e) == KeyboardInterrupt:
+            raise e
         utils.get_logger().error(f'WIKIPEDIA/ARTICLES: Failed to parse page {resource}: {e}')
         return resource, None
 
@@ -119,7 +121,7 @@ def _expand_wikilinks(wiki_text: WikiText, resource_name: str) -> WikiText:
         # For each match, look up the corresponding value in the dictionary
         return wtp.parse(regex.sub(lambda match: text_to_wikilink[match.group(0)], wiki_text.string))
     except Exception as e:
-        if type(e) == ParsingTimeoutException:
+        if type(e) in [KeyboardInterrupt, ParsingTimeoutException]:
             raise e
         return wiki_text
 
@@ -175,7 +177,7 @@ def _extract_table(table: wtp.Table) -> Optional[dict]:
         cells = table.cells(span=True)
         rows_with_spans = table.data(strip=True, span=False)
     except Exception as e:
-        if type(e) == ParsingTimeoutException:
+        if type(e) in [KeyboardInterrupt, ParsingTimeoutException]:
             raise e
         return None
     for row_idx, row in enumerate(rows):
