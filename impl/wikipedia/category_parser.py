@@ -4,7 +4,7 @@ from collections import defaultdict
 import wikitextparser as wtp
 from wikitextparser import WikiText, Template
 import re
-from typing import Optional
+from typing import Tuple, Optional
 from tqdm import tqdm
 import multiprocessing as mp
 
@@ -29,12 +29,12 @@ def _extract_parent_categories_from_markup(categories_and_templates_markup: tupl
 
 def _extract_parents_for_category(data: tuple) -> tuple:
     cat, markup, template_definitions = data
-    content = _replace_templates_in_category(wtp.parse(markup), template_definitions)
+    content, visited_templates = _replace_templates_in_category(wtp.parse(markup), template_definitions)
     parent_names = {link.target[len(CATEGORY_PREFIX):] for link in content.wikilinks if link.target.startswith(CATEGORY_PREFIX)}
     parent_names = map(str_util.regularize_spaces, parent_names)
     parent_names = map(str_util.capitalize, parent_names)  # make sure that first letter of category is uppercase
     parent_uris = {DBPEDIA_CATEGORY_PREFIX + name.replace(' ', '_') for name in parent_names}
-    if '__HIDDENCAT__' in content.string:
+    if '__HIDDENCAT__' in content.string or 'Maintenance category' in visited_templates:
         parent_uris.add(f'{DBPEDIA_CATEGORY_PREFIX}Hidden_categories')
     return cat, parent_uris
 
@@ -76,33 +76,35 @@ def _filter_for_onlyinclude(text: str) -> str:
     return text[onlyinclude_start:onlyinclude_end]
 
 
-def _replace_templates_in_category(category_content: WikiText, template_definitions: dict) -> WikiText:
+def _replace_templates_in_category(category_content: WikiText, template_definitions: dict) -> Tuple[WikiText, set]:
+    all_visited_templates = set()
     for template in category_content.templates:
-        template_content = _get_template_content(template, template_definitions, set())
+        template_content, visited_templates = _get_template_content(template, template_definitions, set())
         if template_content is None:
             continue
         category_content[slice(*template.span)] = template_content
-    return category_content
+        all_visited_templates.update(visited_templates)
+    return category_content, all_visited_templates
 
 
-def _get_template_content(template: Template, template_definitions: dict, visited_templates: set) -> Optional[str]:
+def _get_template_content(template: Template, template_definitions: dict, visited_templates: set) -> Tuple[Optional[str], set]:
     if not template or not template.string.startswith('{{'):
-        return None
+        return None, visited_templates
     try:
         name = template.normal_name(capitalize=True)
     except IndexError:
-        return ''
+        return '', visited_templates
     if name in visited_templates:
-        return ''
+        return '', visited_templates
     visited_templates.add(name)
 
     content = wtp.parse(template_definitions[name])
     content = _apply_parameters(content, _get_template_arguments(template))
     for it in content.templates:
-        it_content = _get_template_content(it, template_definitions, visited_templates)
+        it_content, _ = _get_template_content(it, template_definitions, visited_templates)
         if it_content is not None:
             content[slice(*it.span)] = it_content
-    return content.string
+    return content.string, visited_templates
 
 
 def _get_template_arguments(template: Template) -> dict:
