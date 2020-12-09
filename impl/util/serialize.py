@@ -2,6 +2,7 @@
 
 import datetime
 import urllib.parse
+import impl.util.string as str_util
 
 TYPE_RESOURCE = 'type_resource'
 POSTFIXES = {
@@ -58,4 +59,4 @@ def _encode_resource(resource: str) -> str:
 def _encode_literal_string(literal: str) -> str:
     for c in LITERAL_ENCODED_CHARS:
         literal = literal.replace(c, f'\\{c}')
-    return ' '.join(literal.split())
+    return str_util.regularize_spaces(literal)

@@ -50,10 +50,6 @@ def _get_listpage_line_id(row: pd.Series) -> tuple:
     return row['_page_name'], row['_line_idx']
 
 
-def _get_sortkey(row: pd.Series):
-    return row['_entity_line_idx']
-
-
 def _compute_label_for_entity(listpage_name: str, entity_name: str, link_type: str, lp_valid_resources: dict, lp_types: dict) -> int:
     """Return a label for the entity based on links in the taxonomy graph."""
     if link_type != 'blue':

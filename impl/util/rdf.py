@@ -7,6 +7,7 @@ from typing import Iterator
 from collections import defaultdict
 import functools
 import urllib.parse
+import impl.util.string as str_util
 
 # predicates
 PREDICATE_EQUIVALENT_CLASS = 'http://www.w3.org/2002/07/owl#equivalentClass'
@@ -97,7 +98,7 @@ def create_multi_val_count_dict_from_rdf(filepaths: list, valid_pred: str, rever
     for fp in filepaths:
         for sub, pred, obj in parse_triples_from_file(fp):
             if pred == valid_pred:
-                cleaned_obj = ' '.join(obj.lower().split())
+                cleaned_obj = str_util.regularize_spaces(obj.lower())
                 if cleaned_obj:
                     if reverse_key:
                         data_dict[cleaned_obj][sub] += 1

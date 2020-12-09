@@ -12,6 +12,7 @@ from collections import defaultdict, namedtuple
 import multiprocessing as mp
 import utils
 import impl.dbpedia.page_features as page_features
+import impl.util.string as str_util
 
 
 def extract_enum_entities(df: pd.DataFrame) -> dict:
@@ -71,7 +72,7 @@ def _extract_entities_simple(df: pd.DataFrame, estimator) -> dict:
     for _, row in df[(df['label'] == 1) | (df['pred'] == 1)].iterrows():
         page_name = str(row['_page_name'])
         entity_name = str(row['_entity_name'])
-        label = ' '.join(str(row['_text']).split())
+        label = str_util.regularize_spaces(str(row['_text']))
         if entity_name in list_entities[page_name]:
             list_entities[page_name][entity_name].add(label)
         else:
@@ -146,7 +147,7 @@ def _extract_subject_entities(df: pd.DataFrame, sampling_funcs: list, selection_
         for _, row in df.loc[lp.subject_entities].iterrows():
             page_name = str(row['_page_name'])
             entity_name = str(row['_entity_name'])
-            label = ' '.join(str(row['_text']).split())
+            label = str_util.regularize_spaces(str(row['_text']))
             if entity_name in list_entities[page_name]:
                 list_entities[page_name][entity_name].add(label)
             else:
