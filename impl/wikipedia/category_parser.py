@@ -34,8 +34,11 @@ def _extract_parents_for_category(data: tuple) -> tuple:
     parent_names = map(str_util.regularize_spaces, parent_names)
     parent_names = map(str_util.capitalize, parent_names)  # make sure that first letter of category is uppercase
     parent_uris = {DBPEDIA_CATEGORY_PREFIX + name.replace(' ', '_') for name in parent_names}
+    # use markers in markup or used templates to find parent categories (as we can't resolve macros in markup)
     if '__HIDDENCAT__' in content.string or 'Maintenance category' in visited_templates:
         parent_uris.add(f'{DBPEDIA_CATEGORY_PREFIX}Hidden_categories')
+    if 'Category disambiguation' in visited_templates or 'Category ambiguous' in visited_templates:
+        parent_uris.add(f'{DBPEDIA_CATEGORY_PREFIX}Disambiguation_categories')
     return cat, parent_uris
 
 
