@@ -82,7 +82,8 @@ def singularize_phrase(text: str) -> str:
         return lemmatize_token(doc[0])
     for idx, w in enumerate(doc):
         if w.ent_type_ == spacy_util.LEXICAL_HEAD_SUBJECT_PLURAL:
-            result = result.replace(w.text, lemmatize_token(w))
+            singularized_word = str_util.transfer_word_casing(w.text, lemmatize_token(w))
+            result = result.replace(w.text, singularized_word)
             if len(doc) > idx+1 and doc[idx+1].text == 'and':
                 result = result.replace('and', 'or')
     return result
