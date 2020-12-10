@@ -66,15 +66,12 @@ class CaLiGraph(HierarchyGraph):
         self._reset_node_indices()
 
     def get_category_parts(self, node: str) -> set:
-        self._check_node_exists(node)
         return {p for p in self.get_parts(node) if cat_util.is_category(p)}
 
     def get_list_parts(self, node: str) -> set:
-        self._check_node_exists(node)
         return {p for p in self.get_parts(node) if list_util.is_listpage(p)}
 
     def get_type_parts(self, node: str) -> set:
-        self._check_node_exists(node)
         return {p for p in self.get_parts(node) if dbp_util.is_dbp_type(p)}
 
     def get_label(self, item: str) -> Optional[str]:
@@ -155,6 +152,8 @@ class CaLiGraph(HierarchyGraph):
     def get_dbpedia_types(self, node: str, force_recompute=False) -> set:
         """Return all mapped DBpedia types of a node."""
         if node not in self._node_dbpedia_types or force_recompute:
+            if force_recompute:
+                utils.get_logger().debug(f'RESOLVING TYPES FOR NODE "{node}" WITH PARENTS: {self.parents(node)}')
             parent_types = {t for parent in self.parents(node) for t in self.get_dbpedia_types(parent, force_recompute)}
             self._node_dbpedia_types[node] = self.get_type_parts(node) | parent_types
         return self._node_dbpedia_types[node]
