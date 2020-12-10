@@ -87,7 +87,8 @@ def resolve_disjointnesses(graph, use_listpage_resources: bool):
             graph._remove_edges({(p, node) for p in parents.difference(new_parents)})
             if not new_parents and direct_types:
                 independent_types = dbp_store.get_independent_types(direct_types)
-                new_parents = {n for t in independent_types for n in graph.get_nodes_for_part(t) if n != node}
+                node_descendant_closure = {node} | graph.descendants(node)
+                new_parents = {p for t in independent_types for p in graph.get_nodes_for_part(t) if p not in node_descendant_closure}
                 graph._add_edges({(p, node) for p in new_parents})
 
 
