@@ -68,7 +68,7 @@ def tag_lexical_head_subjects(doc: Doc) -> Doc:
 
 
 BY_PHRASE = 'BY'
-BY_PHRASE_EXCEPTIONS = {'bell hooks', 'DBC Pierre', 'KT Tunstall', 'U-Wei Saari', '`Abdu\'l-Bahá', 'ibn Hazm'}
+BY_PHRASE_EXCEPTIONS = {'bell hooks', 'DBC Pierre', 'KT Tunstall', 'U-Wei Saari', '`Abdu\'l-Bahá', 'ibn Hazm', '2XL Games'}
 
 
 def tag_by_phrase(doc: Doc) -> Doc:
