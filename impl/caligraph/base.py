@@ -40,7 +40,7 @@ def get_axiom_graph() -> CaLiGraph:
     """Retrieve CaLiGraph enriched with axioms from the Cat2Ax approach."""
     global __AXIOM_GRAPH__
     if '__AXIOM_GRAPH__' not in globals():
-        initializer = lambda: get_filtered_graph().compute_axioms().remove_transitive_edges()
+        initializer = lambda: get_filtered_graph().remove_transitive_edges().compute_axioms()
         __AXIOM_GRAPH__ = utils.load_or_create_cache('caligraph_axiomatized', initializer)
     return __AXIOM_GRAPH__
 
