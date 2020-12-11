@@ -97,12 +97,12 @@ def _find_dbpedia_parents(graph, node: str, use_listpage_resources: bool, direct
 
     If `use_listpage_resources` is True, the resources that are extracted from list pages are also taken into account.
     """
-    type_lexicalisation_scores = defaultdict(lambda: 0.1, _compute_type_lexicalisation_scores(graph, node))
+    type_lexicalisation_scores = defaultdict(lambda: 0.2, _compute_type_lexicalisation_scores(graph, node))
     type_resource_scores = defaultdict(lambda: 0.0, _compute_type_resource_scores(graph, node, use_listpage_resources, direct_resources_only))
 
     overall_scores = {t: type_lexicalisation_scores[t] * type_resource_scores[t] for t in type_resource_scores if dbp_util.is_dbp_type(t)}
     max_score = max(overall_scores.values(), default=0)
-    if max_score < utils.get_config('cat2ax.pattern_confidence'):
+    if max_score < utils.get_config('cali2ax.pattern_confidence'):
         return defaultdict(float)
 
     mapped_types = {t: score for t, score in overall_scores.items() if score >= max_score}

@@ -20,6 +20,8 @@ page:
     use_robust_extraction: False
 cat2ax:
   pattern_confidence: 0.05
+cali2ax:
+  pattern_confidence: 0.17
 
 # -- LOGGING CONFIGURATION --
 logging:
