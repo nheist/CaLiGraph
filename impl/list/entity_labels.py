@@ -29,7 +29,7 @@ def assign_entity_labels(graph, df: pd.DataFrame):
 
         caligraph_nodes = graph.get_nodes_for_part(listpage_uri)
         for n in caligraph_nodes:
-            listpage_types[listpage_name].update(dbp_store.get_independent_types(graph.get_dbpedia_types(n)))
+            listpage_types[listpage_name].update(dbp_store.get_independent_types(graph.get_transitive_dbpedia_types(n)))
 
     # assign positive and negative labels that are induced directly from the taxonomy
     df.loc[df_lp.index, 'label'] = df_lp.apply(lambda row: _compute_label_for_entity(row['_page_name'], row['_entity_name'], row['_link_type'], listpage_valid_resources, listpage_types), axis=1)

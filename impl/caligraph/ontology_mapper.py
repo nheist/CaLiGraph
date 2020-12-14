@@ -66,7 +66,7 @@ def resolve_disjointnesses(graph, use_listpage_resources: bool):
     utils.get_logger().debug('CaLiGraph: Resolving disjointnesses in CaLiGraph from integrated DBpedia types..')
     for node in graph.traverse_nodes_topdown():
         parents = graph.parents(node)
-        coherent_type_sets = _find_coherent_type_sets({t: 1 for t in graph.get_dbpedia_types(node, force_recompute=True)})
+        coherent_type_sets = _find_coherent_type_sets({t: 1 for t in graph.get_transitive_dbpedia_types(node, force_recompute=True)})
         if len(coherent_type_sets) > 1:
             transitive_types = {tt for ts in coherent_type_sets for t in ts for tt in dbp_store.get_transitive_supertype_closure(t)}
             direct_types = {t for t in _find_dbpedia_parents(graph, node, use_listpage_resources, False)}
@@ -83,7 +83,7 @@ def resolve_disjointnesses(graph, use_listpage_resources: bool):
             direct_types = {tt for t in direct_types for tt in dbp_store.get_transitive_supertype_closure(t)}
 
             invalid_types = transitive_types.difference(direct_types)
-            new_parents = {p for p in parents if not invalid_types.intersection(graph.get_dbpedia_types(p))}
+            new_parents = {p for p in parents if not invalid_types.intersection(graph.get_transitive_dbpedia_types(p))}
             graph._remove_edges({(p, node) for p in parents.difference(new_parents)})
             if not new_parents and direct_types:
                 independent_types = dbp_store.get_independent_types(direct_types)

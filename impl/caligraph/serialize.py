@@ -93,7 +93,7 @@ def _get_lines_ontology(graph) -> list:
         lines_ontology.append(serialize_util.as_object_triple(prop, rdf_util.PREDICATE_TYPE, rdf_util.CLASS_PROPERTY))
     # disjointnesses
     for node in graph.nodes:
-        for disjoint_node in graph.get_disjoint_nodes(node, transitive=False):
+        for disjoint_node in graph.get_disjoint_nodes(node):
             if node < disjoint_node:  # make sure that disjointnesses are only serialized once
                 lines_ontology.append(serialize_util.as_object_triple(node, rdf_util.PREDICATE_DISJOINT_WITH, disjoint_node))
     # restrictions
@@ -258,7 +258,7 @@ def _get_lines_dbpedia_instance_types(graph) -> list:
     """Serialize new types for DBpedia resources in DBpedia namespace."""
     new_dbpedia_types = defaultdict(set)
     for node in graph.nodes:
-        node_types = graph.get_dbpedia_types(node, force_recompute=True)
+        node_types = graph.get_transitive_dbpedia_types(node, force_recompute=True)
         transitive_node_types = {tt for t in node_types for tt in dbp_store.get_transitive_supertype_closure(t)}.difference({rdf_util.CLASS_OWL_THING})
         for res in graph.get_resources(node):
             dbp_res = cali_util.clg_resource2dbp_resource(res)

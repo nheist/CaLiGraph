@@ -43,7 +43,6 @@ class CaLiGraph(HierarchyGraph):
         self._node_axioms_transitive = defaultdict(set)
         self._node_disjoint_dbp_types = defaultdict(set)
         self._node_disjoint_dbp_types_transitive = defaultdict(set)
-        self._dbp_types_disjoint_nodes = defaultdict(set)
 
     def _reset_node_indices(self):
         super()._reset_node_indices()
@@ -60,7 +59,6 @@ class CaLiGraph(HierarchyGraph):
         self._node_axioms_transitive = defaultdict(set)
         self._node_disjoint_dbp_types = defaultdict(set)
         self._node_disjoint_dbp_types_transitive = defaultdict(set)
-        self._dbp_types_disjoint_nodes = defaultdict(set)
 
     def _reset_edge_indices(self):
         self._reset_node_indices()
@@ -98,7 +96,7 @@ class CaLiGraph(HierarchyGraph):
     def get_resources(self, node: str) -> set:
         """Return all resources of a node."""
         if node not in self._node_resources:
-            disjoint_dbp_types = {dt for t in self.get_dbpedia_types(node) for dt in dbp_heur.get_disjoint_types(t)}
+            disjoint_dbp_types = self.get_disjoint_dbp_types(node, transitive=True)
             dbp_resources = self.get_direct_dbpedia_resources(node) | {r for t in self.get_type_parts(node) for r in dbp_store.get_direct_resources_for_type(t)}
             dbp_resources = {r for r in dbp_resources if not disjoint_dbp_types.intersection(dbp_store.get_types(r))}
             self._node_resources[node] = {cali_util.dbp_resource2clg_resource(r) for r in dbp_resources}
@@ -149,10 +147,10 @@ class CaLiGraph(HierarchyGraph):
                         self._resource_provenance[cali_util.name2clg_resource(res)].add(lst)
         return self._resource_provenance[resource]
 
-    def get_dbpedia_types(self, node: str, force_recompute=False) -> set:
+    def get_transitive_dbpedia_types(self, node: str, force_recompute=False) -> set:
         """Return all mapped DBpedia types of a node."""
         if node not in self._node_dbpedia_types or force_recompute:
-            parent_types = {t for parent in self.parents(node) for t in self.get_dbpedia_types(parent, force_recompute)}
+            parent_types = {t for parent in self.parents(node) for t in self.get_transitive_dbpedia_types(parent, force_recompute)}
             self._node_dbpedia_types[node] = self.get_type_parts(node) | parent_types
         return self._node_dbpedia_types[node]
 
@@ -216,19 +214,14 @@ class CaLiGraph(HierarchyGraph):
         """Return all properties used in CaLiGraph."""
         return {p for axioms in self._node_axioms.values() for p, _ in axioms}
 
-    def get_disjoint_nodes(self, node: str, transitive=True):
+    def get_disjoint_dbp_types(self, node: str, transitive=True):
         if node not in self._node_disjoint_dbp_types:  # fetch disjoint dbp types of node
             self._node_disjoint_dbp_types[node] = {dt for t in self.get_type_parts(node) for dt in dbp_heur.get_disjoint_types(t)}
-            transitive_dbp_types = self.get_dbpedia_types(node)
-            self._node_disjoint_dbp_types_transitive[node] = {dt for t in transitive_dbp_types for dt in dbp_heur.get_disjoint_types(t)}
-        for dbp_type in self._node_disjoint_dbp_types_transitive[node]:  # check that disjoint nodes are available for all types
-            if dbp_type not in self._dbp_types_disjoint_nodes:
-                direct_disjoint_nodes = {n for tt in dbp_store.get_transitive_subtype_closure(dbp_type) for n in self.get_nodes_for_part(tt)}
-                transitive_disjoint_nodes = {d for n in direct_disjoint_nodes for d in self.descendants(n)}
-                self._dbp_types_disjoint_nodes[dbp_type] = direct_disjoint_nodes | transitive_disjoint_nodes
-        if transitive:
-            return {n for t in self._node_disjoint_dbp_types_transitive[node] for n in self._dbp_types_disjoint_nodes[t]}
-        disjoint_types = {tt for t in self._node_disjoint_dbp_types[node] for tt in dbp_store.get_transitive_subtype_closure(t)}
+            self._node_disjoint_dbp_types_transitive[node] = {dt for t in self.get_transitive_dbpedia_types(node) for dt in dbp_heur.get_disjoint_types(t)}
+        return self._node_disjoint_dbp_types_transitive[node] if transitive else self._node_disjoint_dbp_types[node]
+
+    def get_disjoint_nodes(self, node: str):
+        disjoint_types = {tt for t in self.get_disjoint_dbp_types(node, transitive=False) for tt in dbp_store.get_transitive_subtype_closure(t)}
         direct_disjoint_nodes = {n for t in disjoint_types for n in self.get_nodes_for_part(t)}
         minimal_direct_disjoint_nodes = {n for n in direct_disjoint_nodes if not self.ancestors(n).intersection(direct_disjoint_nodes)}
         return minimal_direct_disjoint_nodes
@@ -240,7 +233,7 @@ class CaLiGraph(HierarchyGraph):
         node_depths = self.depths()
 
         class_count = len(self.nodes)
-        classes_connected_to_dbpedia_count = len({n for n in self.nodes if self.get_dbpedia_types(n)})
+        classes_connected_to_dbpedia_count = len({n for n in self.nodes if self.get_transitive_dbpedia_types(n)})
         edge_count = len(self.edges)
         predicate_count = len({pred for axioms in self._node_axioms.values() for pred, _ in axioms})
         parts_count = len({p for n in self.nodes for p in self.get_parts(n)})
@@ -257,7 +250,7 @@ class CaLiGraph(HierarchyGraph):
         list_instances = set()
 
         for node in self.nodes:
-            disjoint_types = {dt for t in self.get_dbpedia_types(node) for dt in dbp_heur.get_disjoint_types(t)}
+            disjoint_types = self.get_disjoint_dbp_types(node, transitive=True)
             for part in self.get_parts(node):
                 if cat_util.is_category(part):
                     cat_resources = {r for r in cat_store.get_resources(part) if dbp_store.is_possible_resource(r) and not disjoint_types.intersection(dbp_store.get_types(r))}
