@@ -63,6 +63,23 @@ class CaLiGraph(HierarchyGraph):
     def _reset_edge_indices(self):
         self._reset_node_indices()
 
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        # Remove entries that should not be pickled
+        del state['_node_dbpedia_types']
+        del state['_node_axioms_transitive']
+        del state['_node_disjoint_dbp_types']
+        del state['_node_disjoint_dbp_types_transitive']
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        # initialize non-pickled entries
+        self._node_dbpedia_types = defaultdict(set)
+        self._node_axioms_transitive = defaultdict(set)
+        self._node_disjoint_dbp_types = defaultdict(set)
+        self._node_disjoint_dbp_types_transitive = defaultdict(set)
+
     def get_category_parts(self, node: str) -> set:
         return {p for p in self.get_parts(node) if cat_util.is_category(p)}
 
