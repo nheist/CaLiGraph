@@ -47,9 +47,9 @@ def find_mappings(graph, use_listpage_resources: bool) -> dict:
         max_set_score = max([cs[1] for cs in coherent_type_sets])
         max_set_score_count = len([cs for cs in coherent_type_sets if cs[1] == max_set_score])
         if max_set_score_count > 1:  # no single superior set -> remove all type mappings
-            types_to_remove = {t for cs in coherent_type_sets for t in cs[0]}
+            types_to_remove = {t: mappings[node][t] for cs in coherent_type_sets for t in cs[0]}
         else:  # there is one superior set -> remove types from all sets except for superior set
-            types_to_remove = {t for cs in coherent_type_sets for t in cs[0] if cs[1] < max_set_score}
+            types_to_remove = {t: mappings[node][t] for cs in coherent_type_sets for t in cs[0] if cs[1] < max_set_score}
         _remove_types_from_mapping(graph, mappings, node, types_to_remove)
 
     # remove transitivity from the mappings and create sets of types
@@ -172,11 +172,11 @@ def _find_coherent_type_sets(dbp_types: dict) -> list:
     return coherent_sets
 
 
-def _remove_types_from_mapping(graph, mappings: dict, node: str, types_to_remove: set):
+def _remove_types_from_mapping(graph, mappings: dict, node: str, types_to_remove: dict):
     """Remove `types_to_remove` from a mapping for a node in order to resolve disjointnesses."""
-    types_to_remove = {tt for t in types_to_remove for tt in dbp_store.get_transitive_subtype_closure(t)}
+    types_to_remove = {tt: score for t, score in types_to_remove.items() for tt in dbp_store.get_transitive_subtype_closure(t)}
 
-    node_closure = {node} | graph.descendants(node)
-    node_closure.update({a for n in node_closure for a in graph.ancestors(n)})
+    node_closure = graph.ancestors(node)
+    node_closure.update({d for n in node_closure for d in graph.descendants(n)})
     for n in node_closure:
-        mappings[n] = {t: score for t, score in mappings[n].items() if t not in types_to_remove}
+        mappings[n] = {t: score for t, score in mappings[n].items() if t not in types_to_remove or score > types_to_remove[t]}
