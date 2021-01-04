@@ -43,6 +43,8 @@ def _resource_to_string(resource: str) -> str:
         prefix = resource[:resource.rfind('/ontology/') + len('/ontology/')]
     elif '/resource/' in resource:
         prefix = resource[:resource.rfind('/resource/') + len('/resource/')]
+    elif '/wiki/' in resource:
+        prefix = resource[:resource.rfind('/wiki/') + len('/wiki/')]
     else:
         prefix = resource[:resource.rfind('/') + 1]
     res_name = resource[len(prefix):]
