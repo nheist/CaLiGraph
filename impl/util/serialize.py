@@ -9,7 +9,7 @@ POSTFIXES = {
     int: 'http://www.w3.org/2001/XMLSchema#integer',
     datetime.datetime: 'http://www.w3.org/2001/XMLSchema#date'
 }
-RESOURCE_ENCODING_EXCEPTIONS = ['#', ':', ',', ';', '(', ')', '\'', '&', '!', '*', '+', '=', '$']
+RESOURCE_ENCODING_EXCEPTIONS = ['#', ':', ',', ';', '(', ')', '\'', '&', '!', '*', '=', '$']
 LITERAL_ENCODED_CHARS = ['\\', '\'', '"']
 
 
@@ -52,9 +52,9 @@ def _resource_to_string(resource: str) -> str:
 
 
 def _encode_resource(resource: str) -> str:
-    res_name = urllib.parse.quote_plus(resource)
+    res_name = urllib.parse.quote(resource)
     for char in RESOURCE_ENCODING_EXCEPTIONS:
-        res_name = res_name.replace(urllib.parse.quote_plus(char), char)
+        res_name = res_name.replace(urllib.parse.quote(char), char)
     return res_name
 
 

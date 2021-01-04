@@ -57,15 +57,15 @@ def parse_triples_from_file(filepath: str) -> Iterator[Triple]:
             object_triple = object_pattern.match(line)
             if object_triple:
                 [sub, pred, obj] = object_triple.groups()
-                sub = urllib.parse.unquote_plus(sub.decode('utf-8'))
+                sub = urllib.parse.unquote(sub.decode('utf-8'))
                 pred = pred.decode('utf-8')
-                obj = urllib.parse.unquote_plus(obj.decode('utf-8'))
+                obj = urllib.parse.unquote(obj.decode('utf-8'))
                 yield Triple(sub=sub, pred=pred, obj=obj)
             else:
                 literal_triple = literal_pattern.match(line)
                 if literal_triple:
                     [sub, pred, obj] = literal_triple.groups()
-                    sub = urllib.parse.unquote_plus(sub.decode('utf-8'))
+                    sub = urllib.parse.unquote(sub.decode('utf-8'))
                     yield Triple(sub=sub, pred=pred.decode('utf-8'), obj=obj.decode('utf-8'))
 
 
