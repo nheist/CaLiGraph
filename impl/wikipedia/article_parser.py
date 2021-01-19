@@ -54,6 +54,7 @@ def _parse_article(resource_and_markup: tuple) -> tuple:
     # prepare markup for parsing
     page_markup = page_markup.replace('&nbsp;', ' ')  # replace html whitespaces
     page_markup = re.sub(r"'{2,}", '', page_markup)  # remove bold and italic markers
+    page_markup = re.sub(r'<ref>.*?</ref>', '', page_markup)
 
     wiki_text = wtp.parse(page_markup)
     if not _is_page_useful(wiki_text):
