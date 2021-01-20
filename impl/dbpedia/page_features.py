@@ -4,6 +4,7 @@ import impl.list.nlp as list_nlp
 import impl.dbpedia.store as dbp_store
 import impl.dbpedia.util as dbp_util
 import impl.util.hypernymy as hyper_util
+import impl.util.string as str_util
 import pandas as pd
 import numpy as np
 import utils
@@ -66,7 +67,7 @@ def make_enum_entity_features(page: tuple) -> list:
                     for ent in entry_doc.ents:
                         start = ent.start_char
                         end = ent.end_char
-                        text = ent.text
+                        text = str_util.regularize_spaces(ent.text)
                         if not entity_character_idxs.intersection(set(range(start, end))) and len(text) > 1:
                             entities.append({'name': f'{page_name}--{text}', 'text': text, 'idx': start, 'link_type': 'grey'})
                 entities = sorted(entities, key=lambda x: x['idx'])
@@ -230,7 +231,7 @@ def make_table_entity_features(page: tuple) -> list:
 
                 for column_idx, column_data in enumerate(row):
                     column_name = table_header[column_idx]['text'] if column_idx < len(table_header) else ''
-                    column_page_similar, column_page_synonym, column_page_hypernym = table_header_features[column_idx] if column_idx < len(table_header_features) else (0, 0, 0)
+                    column_page_similar, column_page_synonym, column_page_hypernym = table_header_features[column_idx] if column_idx < len(table_header_features) else (False, False, False)
 
                     column_text = column_data['text']
                     column_doc = list_nlp.parse(column_text)
@@ -257,7 +258,7 @@ def make_table_entity_features(page: tuple) -> list:
                         for ent in column_doc.ents:
                             start = ent.start_char
                             end = ent.end_char
-                            text = ent.text
+                            text = str_util.regularize_spaces(ent.text)
                             if not entity_character_idxs.intersection(set(range(start, end))) and len(text) > 1:
                                 column_entities.append({'name': f'{page_name}--{text}', 'text': text, 'idx': start, 'link_type': 'grey'})
                     column_entities = sorted(column_entities, key=lambda x: x['idx'])
