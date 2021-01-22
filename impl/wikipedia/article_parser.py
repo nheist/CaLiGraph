@@ -53,8 +53,11 @@ def _parse_article(resource_and_markup: tuple) -> tuple:
 
     # prepare markup for parsing
     page_markup = page_markup.replace('&nbsp;', ' ')  # replace html whitespaces
-    page_markup = re.sub(r"'{2,}", '', page_markup)  # remove bold and italic markers
+    page_markup = page_markup.replace('<br/>', '\n')  # replace html line breaks
+    page_markup = page_markup.replace('<br>', '\n')  # replace html line breaks
     page_markup = re.sub(r'<ref>.*?</ref>', '', page_markup)
+    # todo: maybe leave them in to give additional hint to BERT (also need to remove the stripping of ' further down)
+    page_markup = re.sub(r"'{2,}", '', page_markup)  # remove bold and italic markers
 
     wiki_text = wtp.parse(page_markup)
     if not _is_page_useful(wiki_text):
