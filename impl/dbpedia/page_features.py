@@ -384,7 +384,7 @@ def _extract_ne_tag(entity_span) -> str:
     """Return the (most common) named entity tag of an entity span."""
     tags = [w.ent_type_ for w in entity_span]
     if not tags:
-        return ''
+        return 'NONE'
     tag_count = Counter(reversed(tags))  # reverse order to return tag of last entity (at same count)
     return sorted(dict(tag_count).items(), key=lambda x: x[1], reverse=True)[0][0]
 
