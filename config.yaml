@@ -3,8 +3,8 @@ max_cpus: 16
 
 # -- CALIGRAPH CONFIGURATION --
 caligraph:
-  version: '2.0.0'
-  creation_date: '2020-12-01'
+  version: '1.3.2'
+  creation_date: '2021-02-01'
   namespace:
     base: 'http://caligraph.org/'
     ontology: 'http://caligraph.org/ontology/'
@@ -16,7 +16,7 @@ category:
 page:
   extraction:
     use_negative_evidence_assumption: True
-    extract_unlinked_entities: True
+    extract_unlinked_entities: False
     use_robust_extraction: False
 cat2ax:
   pattern_confidence: 0.05
@@ -27,7 +27,7 @@ cali2ax:
 logging:
   level: 'DEBUG'
   to_file: True
-  filename: 'caligraph_v2_0_0'
+  filename: 'caligraph_v1_3_2'
 
 # -- ERROR-MAILER CONFIGURATION --
 # -> add information about your mail accounts here and enable the `success` or `error` switches
@@ -146,20 +146,17 @@ cache:
     version: 1
   caligraph_filtered:
     filename: 'caligraph-filtered'
-    version: 1
+    version: 2
   caligraph_axiomatized:
     filename: 'caligraph-axiomatized'
-    version: 1
-  spacy_docs:
-    filename: 'spacy-docs'
-    version: 1
+    version: 2
   wikipedia_raw_markup:
     filename: 'wikipedia-raw-markup'
-    version: 1
+    version: 2
     compress: True
   wikipedia_parsed_articles:
     filename: 'wikipedia-parsed-articles'
-    version: 1
+    version: 2
   wikipedia_parent_categories:
     filename: 'wikipedia-parent-categories'
     version: 1
@@ -236,23 +233,23 @@ cache:
     version: 1
   dbpedia_listpage_enum_features:
     filename: 'dbpedia-listpage-enum-features'
-    version: 1
+    version: 2
     store_as_csv: True
   dbpedia_listpage_table_features:
     filename: 'dbpedia-listpage-table-features'
-    version: 1
+    version: 2
     store_as_csv: True
   dbpedia_listpage_entities:
     filename: 'dbpedia-listpage-entities'
-    version: 1
+    version: 2
   cat2ax_axioms:
     filename: 'cat2ax-axioms'
     version: 1
   spacy_listpage_ne-tagging_GS:
     filename: 'spacy_listpage_ne-tagging_GS'
-    version: 1
+    version: 2
     store_as_folder: True
   spacy_listpage_ne-tagging_GS-WLE:
     filename: 'spacy_listpage_ne-tagging_GS-WLE'
-    version: 1
+    version: 2
     store_as_folder: True
