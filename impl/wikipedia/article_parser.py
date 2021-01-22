@@ -214,7 +214,9 @@ def _is_header_row(cells, row_idx: int) -> bool:
 
 
 def _convert_markup(wiki_text: str) -> Tuple[str, list]:
-    parsed_text = wtp.parse(wiki_text)
+    # first, remove inner wikilinks that might have been created by wikilink-expansion
+    parsed_text = _remove_inner_wikilinks(wtp.parse(wiki_text))
+
     plain_text = _wikitext_to_plaintext(parsed_text).strip()
 
     # extract wikilink-entities with correct positions in plain text
@@ -240,6 +242,15 @@ def _convert_markup(wiki_text: str) -> Tuple[str, list]:
         if entity_name:
             entities.append({'idx': entity_position, 'text': text, 'name': entity_name})
     return plain_text, entities
+
+
+def _remove_inner_wikilinks(parsed_text: wtp.WikiText) -> wtp.WikiText:
+    for wikilink in parsed_text.wikilinks:
+        if not wikilink or not wikilink.string.startswith('[['):
+            continue
+        for wl in reversed(wikilink.wikilinks):
+            parsed_text[slice(*wl.span)] = wl.text or wl.target
+    return parsed_text
 
 
 def _wikitext_to_plaintext(parsed_text: wtp.WikiText) -> str:
