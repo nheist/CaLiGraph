@@ -144,7 +144,7 @@ def _extract_sections(wiki_text: WikiText) -> list:
             'level': section.level,
             #'text': text,
             #'entities': entities,
-            'enums': [e for e in enums if len(e) > 2],
+            'enums': [e for e in enums if len(e) >= 2],
             'tables': [t for t in tables if t]
         })
     return sections
