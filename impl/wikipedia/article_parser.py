@@ -56,6 +56,7 @@ def _parse_article(resource_and_markup: tuple) -> tuple:
     page_markup = page_markup.replace('<br/>', '\n')  # replace html line breaks
     page_markup = page_markup.replace('<br>', '\n')  # replace html line breaks
     page_markup = re.sub(r'<ref>.*?</ref>', '', page_markup)
+    page_markup = re.sub(r'<ref[^>]*?/>', '', page_markup)
     # todo: maybe leave them in to give additional hint to BERT (also need to remove the stripping of ' further down)
     page_markup = re.sub(r"'{2,}", '', page_markup)  # remove bold and italic markers
 
@@ -214,8 +215,9 @@ def _is_header_row(cells, row_idx: int) -> bool:
 
 
 def _convert_markup(wiki_text: str) -> Tuple[str, list]:
-    # first, remove inner wikilinks that might have been created by wikilink-expansion
+    # preprocess markup text
     parsed_text = _remove_inner_wikilinks(wtp.parse(wiki_text))
+    parsed_text = _convert_sortname_templates(parsed_text)
 
     plain_text = _wikitext_to_plaintext(parsed_text).strip()
 
@@ -245,11 +247,33 @@ def _convert_markup(wiki_text: str) -> Tuple[str, list]:
 
 
 def _remove_inner_wikilinks(parsed_text: wtp.WikiText) -> wtp.WikiText:
+    """Remove inner wikilinks that might have been created by wikilink-expansion."""
     for wikilink in parsed_text.wikilinks:
         if not wikilink or not wikilink.string.startswith('[['):
             continue
         for wl in reversed(wikilink.wikilinks):
             parsed_text[slice(*wl.span)] = wl.text or wl.target
+    return parsed_text
+
+
+def _convert_sortname_templates(parsed_text: wtp.WikiText) -> wtp.WikiText:
+    """Convert Sortname template (typically found in tables) into a simple wikilink.
+
+    Documentation of Sortname template: https://en.wikipedia.org/wiki/Template:Sortname
+    """
+    for t in parsed_text.templates:
+        if not t.string.startswith('{{') or t.normal_name(capitalize=True) != 'Sortname':
+            continue
+        text = (t.get_arg('1').value + ' ' + t.get_arg('2').value).strip()
+        if t.has_arg('nolink'):
+            result = text
+        else:
+            if t.has_arg('3'):
+                link = t.get_arg('3').value
+                result = f'[[{link}|{text}]]'
+            else:
+                result = f'[[{text}]]'
+        parsed_text[slice(*t.span)] = result
     return parsed_text
 
 
