@@ -20,6 +20,7 @@ import impl.dbpedia.heuristics as dbp_heur
 import impl.caligraph.ontology_mapper as cali_mapping
 import impl.caligraph.cali2ax as cali_axioms
 import impl.caligraph.util as cali_util
+from impl import subject_entity
 from polyleven import levenshtein
 from collections import defaultdict
 from typing import Optional
@@ -106,7 +107,7 @@ class CaLiGraph(HierarchyGraph):
         if not self._resource_altlabels:
             for node in self.nodes:
                 for part in self.get_list_parts(node):
-                    for res, labels in list_base.get_listpage_entities(self, part).items():
+                    for res, labels in subject_entity.get_listpage_entities(self, part).items():
                         self._resource_altlabels[cali_util.name2clg_resource(res)].update(labels)
         return self._resource_altlabels[item]
 
@@ -139,7 +140,7 @@ class CaLiGraph(HierarchyGraph):
             cat_resources = {r for cat in self.get_category_parts(node) for r in cat_store.get_resources(cat)}
             self._node_direct_cat_resources[node] = self._filter_invalid_resources(cat_resources)
         if use_listpage_resources and node not in self._node_direct_list_resources:
-            list_resources = {dbp_util.name2resource(r) for lst in self.get_list_parts(node) for r in list_base.get_listpage_entities(self, lst)}
+            list_resources = {dbp_util.name2resource(r) for lst in self.get_list_parts(node) for r in subject_entity.get_listpage_entities(self, lst)}
             self._node_direct_list_resources[node] = self._filter_invalid_resources(list_resources)
 
         resources = set(self._node_direct_cat_resources[node])
@@ -160,7 +161,7 @@ class CaLiGraph(HierarchyGraph):
                     for res in cat_store.get_resources(cat):
                         self._resource_provenance[cali_util.dbp_resource2clg_resource(res)].add(cat)
                 for lst in self.get_list_parts(node):
-                    for res in list_base.get_listpage_entities(self, lst):
+                    for res in subject_entity.get_listpage_entities(self, lst):
                         self._resource_provenance[cali_util.name2clg_resource(res)].add(lst)
         return self._resource_provenance[resource]
 
@@ -273,7 +274,7 @@ class CaLiGraph(HierarchyGraph):
                     cat_resources = {r for r in cat_store.get_resources(part) if dbp_store.is_possible_resource(r) and not disjoint_types.intersection(dbp_store.get_types(r))}
                     category_instances.update(cat_resources)
                 elif list_util.is_listpage(part):
-                    list_resources = {dbp_util.name2resource(r) for r in list_base.get_listpage_entities(self, part)}
+                    list_resources = {dbp_util.name2resource(r) for r in subject_entity.get_listpage_entities(self, part)}
                     list_resources = {r for r in list_resources if dbp_store.is_possible_resource(r) and not disjoint_types.intersection(dbp_store.get_types(r))}
                     list_instances.update(list_resources)
 

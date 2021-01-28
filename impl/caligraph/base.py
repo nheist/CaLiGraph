@@ -2,7 +2,7 @@
 
 from impl.caligraph.graph import CaLiGraph
 import impl.caligraph.serialize as cali_serialize
-import impl.list.base as list_base
+from impl import subject_entity
 import utils
 
 
@@ -29,7 +29,7 @@ def get_filtered_graph() -> CaLiGraph:
     global __FILTERED_GRAPH__
     if '__FILTERED_GRAPH__' not in globals():
         # first make sure that resources have already been extracted using the merged ontology graph
-        list_base.get_listpage_entities(get_merged_ontology_graph(), '')
+        subject_entity.get_listpage_entities(get_merged_ontology_graph(), '')
 
         initializer = lambda: get_base_graph().copy().merge_ontology(True).append_unconnected()
         __FILTERED_GRAPH__ = utils.load_or_create_cache('caligraph_filtered', initializer)

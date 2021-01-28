@@ -3,7 +3,7 @@ max_cpus: 16
 
 # -- CALIGRAPH CONFIGURATION --
 caligraph:
-  version: '1.3.2'
+  version: '1.4.0'
   creation_date: '2021-02-01'
   namespace:
     base: 'http://caligraph.org/'
@@ -13,11 +13,6 @@ dbpedia:
   disjointness_threshold: 0.132  # in the original paper: 0.17
 category:
   root_category: 'http://dbpedia.org/resource/Category:Main_topic_classifications'
-page:
-  extraction:
-    use_negative_evidence_assumption: True
-    extract_unlinked_entities: False
-    use_robust_extraction: False
 cat2ax:
   pattern_confidence: 0.05
 cali2ax:
@@ -27,7 +22,7 @@ cali2ax:
 logging:
   level: 'DEBUG'
   to_file: True
-  filename: 'caligraph_v1_3_2'
+  filename: 'caligraph_v1_4_0'
 
 # -- ERROR-MAILER CONFIGURATION --
 # -> add information about your mail accounts here and enable the `success` or `error` switches
@@ -231,17 +226,6 @@ cache:
   dbpedia_list_parents:
     filename: 'dbpedia-list-parents'
     version: 1
-  dbpedia_listpage_enum_features:
-    filename: 'dbpedia-listpage-enum-features'
-    version: 2
-    store_as_csv: True
-  dbpedia_listpage_table_features:
-    filename: 'dbpedia-listpage-table-features'
-    version: 2
-    store_as_csv: True
-  dbpedia_listpage_entities:
-    filename: 'dbpedia-listpage-entities'
-    version: 2
   cat2ax_axioms:
     filename: 'cat2ax-axioms'
     version: 1
@@ -252,4 +236,17 @@ cache:
   spacy_listpage_ne-tagging_GS-WLE:
     filename: 'spacy_listpage_ne-tagging_GS-WLE'
     version: 2
+    store_as_folder: True
+  subject_entity_training_data:
+    filename: 'subject-entity-training-data'
+    version: 1
+  subject_entity_page_data:
+    filename: 'subject-entity-page-data'
+    version: 1
+  subject_entity_predictions:
+    filename: 'subject-entity-predictions'
+    version: 1
+  bert_for_SE_tagging:
+    filename: 'bert-for-SE-tagging'
+    version: 1
     store_as_folder: True

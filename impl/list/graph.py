@@ -67,6 +67,5 @@ class ListGraph(HierarchyGraph):
         return list_graph
 
     def remove_leaf_listcategories(self):
-        self._remove_nodes({n for n in self.nodes if list_util.is_listcategory(n) and not self.children(n)
-                            and not any(list_util.is_listpage(p) for p in self.get_lists(n))})
+        self._remove_nodes({n for n in self.nodes if list_util.is_listcategory(n) and not self.children(n) and not any(list_util.is_listpage(p) for p in self.get_lists(n))})
         return self
