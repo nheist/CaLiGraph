@@ -23,6 +23,9 @@ tqdm = "*"
 pytest = "*"
 pytest-check = "*"
 polyleven = "*"
+torch = "*"
+torchvision = '*'
+transformers = "*"
 
 [dev-packages]
 
