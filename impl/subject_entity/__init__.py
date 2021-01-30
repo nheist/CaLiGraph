@@ -49,7 +49,7 @@ def _retrieve_training_data(graph) -> tuple:
     train_tokens, train_labels = [], []
     with mp.Pool(processes=utils.get_config('max_cpus')) as pool:
         ctx = [(lp_uri, lp_data, graph) for lp_uri, lp_data in list_store.get_parsed_listpages().items()]
-        for token_lists, label_lists in tqdm(pool.imap_unordered(tokenize.page_to_tokens_and_labels, ctx, chunksize=50), desc='Extracting BERT training data'):
+        for token_lists, label_lists in tqdm(pool.imap_unordered(tokenize.page_to_tokens_and_labels, ctx, chunksize=50), desc='Extracting BERT training data', total=len(ctx)):
             train_tokens.extend(token_lists)
             train_labels.extend(label_lists)
     return train_tokens, train_labels

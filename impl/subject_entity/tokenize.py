@@ -85,7 +85,7 @@ def _entry_to_tokens(entry) -> list:
 def _row_to_tokens(row) -> list:
     tokens = []
     for cell in row:
-        cell_tokens, _ = _text_to_tokens(cell['text'], None, None)
+        cell_tokens, _ = _text_to_tokens(list_nlp.parse(cell['text']), None, None)
         tokens += [TOKEN_COL] + cell_tokens
     if tokens:
         tokens[0] = TOKEN_ROW  # make start of table row similar to start of enum entry
