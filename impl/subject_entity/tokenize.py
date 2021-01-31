@@ -285,7 +285,7 @@ def _context_to_tokens(ctx: list, table_header=[]) -> list:
     # add basic context, separated by [CTX] special tokens
     spacy_tokenizer = _get_spacy_tokenizer()
     for text in ctx:
-        plain_text = wtp.parse(text).plain_text()
+        plain_text = _remove_wikitext_markup(text)
         ctx_tokens.extend([w.text for w in spacy_tokenizer(plain_text)])
         ctx_tokens.append(TOKEN_CTX)
 
@@ -304,6 +304,13 @@ def _get_spacy_tokenizer():
         nlp = English()
         __SPACY_TOKENIZER__ = nlp.Defaults.create_tokenizer(nlp)
     return __SPACY_TOKENIZER__
+
+
+def _remove_wikitext_markup(text: str) -> str:
+    try:
+        return wtp.parse(text).plain_text()
+    except AttributeError:
+        return text
 
 
 def _text_to_tokens(doc, entities: list, subject_entities: set) -> tuple:
