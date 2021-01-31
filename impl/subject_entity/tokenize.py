@@ -76,7 +76,7 @@ def _listing_to_token_groups(listing_data, max_group_size):
 
 
 def _entry_to_tokens(entry) -> list:
-    entry_doc = list_nlp.parse(entry['text'])
+    entry_doc = _get_spacy_tokenizer()(entry['text'])
     depth = entry['depth']
     tokens, _ = _text_to_tokens(entry_doc, None, None)
     return [f'[E{depth}]'] + tokens
@@ -85,7 +85,7 @@ def _entry_to_tokens(entry) -> list:
 def _row_to_tokens(row) -> list:
     tokens = []
     for cell in row:
-        cell_tokens, _ = _text_to_tokens(list_nlp.parse(cell['text']), None, None)
+        cell_tokens, _ = _text_to_tokens(_get_spacy_tokenizer()(cell['text']), None, None)
         tokens += [TOKEN_COL] + cell_tokens
     if tokens:
         tokens[0] = TOKEN_ROW  # make start of table row similar to start of enum entry
