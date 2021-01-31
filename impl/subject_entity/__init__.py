@@ -63,8 +63,9 @@ def _get_page_data() -> dict:
 
 
 def _retrieve_page_data() -> dict:
-    page_data = {}
-    with mp.Pool(processes=utils.get_config('max_cpus')) as pool:
-        for page_uri, page_token_batches in tqdm(pool.imap_unordered(tokenize.page_to_tokens, wikipedia.get_parsed_articles().items(), chunksize=5000), desc='Extracting BERT page data'):
-            page_data[page_uri] = page_token_batches
-    return page_data
+    return dict([tokenize.page_to_tokens(page_tuple) for page_tuple in tqdm(wikipedia.get_parsed_articles().items(), desc='Extracting BERT page data')])
+    #page_data = {}
+    #with mp.Pool(processes=utils.get_config('max_cpus')) as pool:
+    #    for page_uri, page_token_batches in tqdm(pool.imap_unordered(tokenize.page_to_tokens, wikipedia.get_parsed_articles().items(), chunksize=5000), desc='Extracting BERT page data'):
+    #        page_data[page_uri] = page_token_batches
+    #return page_data
