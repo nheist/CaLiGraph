@@ -11,9 +11,19 @@ from transformers import Trainer, TrainingArguments, BertTokenizerFast, BertForT
 
 
 # APPLY BERT MODEL
+MAX_BATCHES = 100
 
 
 def extract_subject_entities(page_batches: list, bert_tokenizer, bert_model) -> dict:
+    subject_entity_dict = defaultdict(lambda: defaultdict(set))
+
+    for i in range(0, len(page_batches), MAX_BATCHES):
+        _extract_subject_entity_batches(page_batches[i:i+MAX_BATCHES], bert_tokenizer, bert_model, subject_entity_dict)
+
+    return {ts: {s: e for s, e in subject_entity_dict[ts].items()} for ts in subject_entity_dict}
+
+
+def _extract_subject_entity_batches(page_batches: list, bert_tokenizer, bert_model, subject_entity_dict):
     inputs = bert_tokenizer(page_batches, is_split_into_words=True, padding=True, truncation=True, return_offsets_mapping=True, return_tensors="pt")
     offset_mapping = inputs.offset_mapping
     inputs.pop('offset_mapping')
@@ -24,7 +34,6 @@ def extract_subject_entities(page_batches: list, bert_tokenizer, bert_model) -> 
     prediction_batches = torch.argmax(outputs, dim=2)
     del inputs, outputs
 
-    subject_entities = defaultdict(lambda: defaultdict(set))
     for word_tokens, predictions, prediction_offsets in zip(page_batches, prediction_batches, offset_mapping):
         predictions = np.array(predictions)
         prediction_offsets = np.array(prediction_offsets)
@@ -39,15 +48,13 @@ def extract_subject_entities(page_batches: list, bert_tokenizer, bert_model) -> 
                 continue
             if label != 2 and current_entity:
                 if not found_entity:
-                    subject_entities[topsection_name][section_name].add(_entity_tokens2name(current_entity))
+                    subject_entity_dict[topsection_name][section_name].add(_entity_tokens2name(current_entity))
                     found_entity = True
                 current_entity = []
             if label != 0:
                 current_entity.append(token)
         if current_entity and not found_entity:
-            subject_entities[topsection_name][section_name].add(_entity_tokens2name(current_entity))
-
-    return {ts: {s: e for s, e in subject_entities[ts].items()} for ts in subject_entities}
+            subject_entity_dict[topsection_name][section_name].add(_entity_tokens2name(current_entity))
 
 
 def _extract_context(word_tokens: list) -> tuple:
