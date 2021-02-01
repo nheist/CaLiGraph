@@ -35,7 +35,7 @@ def _get_subject_entity_predictions(graph) -> dict:
 
 def _make_subject_entity_predictions(graph) -> dict:
     tokenizer, model = extract.get_bert_tokenizer_and_model(lambda: _get_training_data(graph))
-    return {p: extract.extract_subject_entities(batches, tokenizer, model) for p, batches in _get_page_data().items()}
+    return {p: extract.extract_subject_entities(batches, tokenizer, model) for p, batches in tqdm(_get_page_data().items(), desc='Predicting subject entities')}
 
 
 def _get_training_data(graph) -> tuple:
