@@ -22,7 +22,7 @@ def _extract_listpage_entities(graph) -> dict:
     # enrich subject entity labels with dbpedia entity information
     lp_subject_entities = combine.enrich_subject_entity_labels(lp_subject_entity_labels)
     # get rid of top-section and section information
-    lp_subject_entities = {lp: {e: labels for ts in lp_subject_entities[lp] for s in lp_subject_entities[lp][ts] for e, labels in lp_subject_entities[ts][s].items()} for lp in lp_subject_entities}
+    lp_subject_entities = {lp: {e: labels for ts in lp_subject_entities[lp] for s in lp_subject_entities[lp][ts] for e, labels in lp_subject_entities[lp][ts][s].items()} for lp in lp_subject_entities}
     return lp_subject_entities
 
 

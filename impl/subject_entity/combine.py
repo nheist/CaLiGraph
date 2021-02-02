@@ -23,7 +23,7 @@ def enrich_subject_entity_labels(subject_entities_per_page: dict) -> dict:
                         ent_name = f'{page_name}--{ent_text}'
                     enriched_entities[ts][s][ent_name] = {ent_text}
 
-        enriched_entities_per_page[page_uri] = {ts: {s: e for s, e in enriched_entities[ts].items()} for ts in enriched_entities}
+        enriched_entities_per_page[page_uri] = {ts: dict(enriched_entities[ts]) for ts in enriched_entities}
 
     return enriched_entities_per_page
 

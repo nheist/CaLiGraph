@@ -20,7 +20,7 @@ def extract_subject_entities(page_batches: list, bert_tokenizer, bert_model) -> 
     for i in range(0, len(page_batches), MAX_BATCHES):
         _extract_subject_entity_batches(page_batches[i:i+MAX_BATCHES], bert_tokenizer, bert_model, subject_entity_dict)
 
-    return {ts: {s: e for s, e in subject_entity_dict[ts].items()} for ts in subject_entity_dict}
+    return {ts: dict(subject_entity_dict[ts]) for ts in subject_entity_dict}  # convert to standard dict
 
 
 def _extract_subject_entity_batches(page_batches: list, bert_tokenizer, bert_model, subject_entity_dict):
