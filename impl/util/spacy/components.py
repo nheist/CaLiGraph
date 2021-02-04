@@ -86,7 +86,7 @@ def tag_by_phrase(doc: Doc) -> Doc:
         if by_index == 0 or by_index == len(doc) - 1:
             continue
         current_doc = doc[:end_index] if len(by_indices) == idx+1 else doc[:by_indices[idx+1]]
-        text_after_by = current_doc[by_index+1:].text_with_ws.strip()
+        text_after_by = current_doc[by_index+1:].text.strip()
         word_before_by = current_doc[by_index - 1]
         word_after_by = current_doc[by_index + 1]
         if text_after_by in BY_PHRASE_EXCEPTIONS:

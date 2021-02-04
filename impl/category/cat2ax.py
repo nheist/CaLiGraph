@@ -141,7 +141,7 @@ def _extract_patterns(category_graph, candidate_sets):
 def _get_match_for_category(category: str, first_words: tuple, last_words: tuple) -> str:
     """Return variable part of the category name."""
     doc = nlp_util.remove_by_phrase(cat_store.get_label(category))
-    return doc[len(first_words):len(doc)-len(last_words)].text_with_ws.strip()
+    return doc[len(first_words):len(doc)-len(last_words)].text
 
 
 def _get_resource_surface_scores(text):
