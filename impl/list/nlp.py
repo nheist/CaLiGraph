@@ -1,21 +1,18 @@
 """NLP methods for the identification of named entities in enumerations and tables of Wikipedia articles."""
 
 import utils
-import random
-from pathlib import Path
 import impl.util.rdf as rdf_util
 from impl import wikipedia
 import impl.dbpedia.store as dbp_store
 import impl.dbpedia.util as dbp_util
 import impl.list.store as list_store
 import impl.list.mapping as list_mapping
+from impl.util.spacy.training import train_ner_model
 import json
 import spacy
+from spacy.language import Language
 from spacy.tokens import Doc
-from spacy.util import minibatch, compounding
-
-
-# TODO: refactor and move to util.spacy as soon as spacy3 is out
+from spacy.training import Example
 
 
 def parse(text: str) -> Doc:
@@ -57,17 +54,15 @@ def _train_parser():
     # specialize spacy model on GS
     filepath_gs = utils._get_cache_path('spacy_listpage_ne-tagging_GS')
     if not filepath_gs.is_dir():
-        training_data_gs = _retrieve_training_data_gs()
-        _train_enhanced_spacy_model(training_data_gs, str(filepath_gs), model='en_core_web_lg')
+        train_ner_model(_retrieve_training_data_gs, str(filepath_gs), model='en_core_web_lg')
 
     utils.get_logger().debug('LIST/NLP: Training new spacy model on WLE..')
     # specialize spacy+GS model on WLE
     filepath_wle = utils._get_cache_path('spacy_listpage_ne-tagging_GS-WLE')
-    training_data_wle = _retrieve_training_data_wle()
-    _train_enhanced_spacy_model(training_data_wle, str(filepath_wle), model=filepath_gs)
+    train_ner_model(_retrieve_training_data_wle, str(filepath_wle), model=filepath_gs)
 
 
-def _retrieve_training_data_gs():
+def _retrieve_training_data_gs(nlp: Language):
     training_data = []
     with open(utils.get_data_file('files.listpages.goldstandard_named-entity-tagging'), mode='r') as f:
         for line in f:
@@ -77,11 +72,11 @@ def _retrieve_training_data_gs():
             for annotation in data['annotation']:
                 point = annotation['points'][0]
                 entities.append((point['start'], point['end']+1, annotation['label'][0]))
-            training_data.append((text, {'entities': entities}))
+            training_data.append(Example.from_dict(nlp.make_doc(text), {'entities': entities}))
     return training_data
 
 
-def _retrieve_training_data_wle():
+def _retrieve_training_data_wle(nlp: Language):
     listpages = list_store.get_parsed_listpages(wikipedia.ARTICLE_TYPE_ENUM)
     lp_to_cat_mapping = {lp: list_mapping.get_equivalent_categories(lp) | list_mapping.get_parent_categories(lp) for lp in listpages}
     lp_to_cat_mapping = {lp: cats for lp, cats in lp_to_cat_mapping.items() if cats}
@@ -112,7 +107,7 @@ def _retrieve_training_data_wle():
                             continue
                         valid_entities.append((start, end, entity_tag))
                     if len(entities) == len(valid_entities):
-                        training_data.append((text, {'entities': valid_entities}))
+                        training_data.append(Example.from_dict(nlp.make_doc(text), {'entities': valid_entities}))
     return training_data
 
 
@@ -124,43 +119,3 @@ def _get_tag_for_types(dbp_types: set) -> str:
             return type_to_tag_mapping[t]
     parent_types = {pt for t in dbp_types for pt in dbp_store.get_supertypes(t)}
     return _get_tag_for_types(parent_types) if parent_types else None
-
-
-def _train_enhanced_spacy_model(training_data: list, output_dir: str, model=None, n_iter=50):
-    if model is not None:
-        nlp = spacy.load(model)  # load existing spaCy model
-    else:
-        nlp = spacy.blank("en")  # create blank Language class
-
-    if "ner" not in nlp.pipe_names:
-        ner = nlp.create_pipe("ner")
-        nlp.add_pipe(ner, last=True)
-    else:
-        ner = nlp.get_pipe("ner")
-    # add unkonwn labels to ner tagger
-    for label in NER_LABEL_MAPPING:
-        ner.add_label(label)
-
-    # train new model
-    other_pipes = [pipe for pipe in nlp.pipe_names if pipe != "ner"]
-    with nlp.disable_pipes(*other_pipes):  # only train NER
-        if model is None:
-            nlp.begin_training()  # initialize training if necessary
-        for itn in range(n_iter):
-            random.shuffle(training_data)
-            losses = {}
-            batches = minibatch(training_data, size=compounding(4.0, 32.0, 1.001))
-            for batch in batches:
-                texts, annotations = zip(*batch)
-                nlp.update(
-                    texts,  # batch of texts
-                    annotations,  # batch of annotations
-                    drop=0.5,  # dropout - make it harder to memorise data
-                    losses=losses,
-                )
-
-    # save model to output directory
-    output_dir = Path(output_dir)
-    if not output_dir.exists():
-        output_dir.mkdir()
-    nlp.to_disk(output_dir)

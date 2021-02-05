@@ -1,3 +1,4 @@
+from spacy.language import Language
 from spacy.tokens import Doc, Span
 import impl.util.words as words_util
 
@@ -8,6 +9,7 @@ LEXICAL_HEAD_SUBJECT = 'LHS'
 LEXICAL_HEAD_SUBJECT_PLURAL = 'LHSP'
 
 
+@Language.component('tag_lexical_head')
 def tag_lexical_head(doc: Doc) -> Doc:
     """Tag the lexical head of a set with the entity tag 'LH'."""
     if len(doc) == 0:
@@ -42,6 +44,7 @@ def tag_lexical_head(doc: Doc) -> Doc:
     return doc
 
 
+@Language.component('tag_lexical_head_subjects')
 def tag_lexical_head_subjects(doc: Doc) -> Doc:
     """Tag the main subjects of lexical heads with 'LHS(P)'."""
     lh_entities = list(doc.ents)
@@ -71,6 +74,7 @@ BY_PHRASE = 'BY'
 BY_PHRASE_EXCEPTIONS = {'bell hooks', 'DBC Pierre', 'KT Tunstall', 'U-Wei Saari', '`Abdu\'l-Bahá', 'ibn Hazm', '2XL Games'}
 
 
+@Language.component('tag_by_phrase')
 def tag_by_phrase(doc: Doc) -> Doc:
     """Tag the 'by'-phrase at the end of a taxonomic set with 'BY', e.g. 'People by country' -> tag 'by country'"""
     # locate all by-phrases

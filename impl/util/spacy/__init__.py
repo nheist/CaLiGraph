@@ -1,6 +1,6 @@
 import spacy
 from spacy.tokens import Span
-from impl.util.spacy.components import tag_lexical_head, tag_lexical_head_subjects, tag_by_phrase, LEXICAL_HEAD, LEXICAL_HEAD_SUBJECT, LEXICAL_HEAD_SUBJECT_PLURAL, BY_PHRASE
+from impl.util.spacy.components import LEXICAL_HEAD, LEXICAL_HEAD_SUBJECT, LEXICAL_HEAD_SUBJECT_PLURAL, BY_PHRASE
 import impl.util.spacy.hearst_matcher as hearst_matcher
 import utils
 from typing import Iterator, List, Tuple
@@ -18,13 +18,15 @@ def parse_sets(taxonomic_sets: list) -> Iterator:
     if '__SET_PARSER__' not in globals():
         __SET_PARSER__ = spacy.load('en_core_web_lg')
         __SET_PARSER__.remove_pipe('ner')
+
         __SET_PARSER__.vocab.strings.add(LEXICAL_HEAD)
-        __SET_PARSER__.add_pipe(tag_lexical_head, name='lexhead')
         __SET_PARSER__.vocab.strings.add(LEXICAL_HEAD_SUBJECT)
         __SET_PARSER__.vocab.strings.add(LEXICAL_HEAD_SUBJECT_PLURAL)
-        __SET_PARSER__.add_pipe(tag_lexical_head_subjects, name='lexheadsub')
         __SET_PARSER__.vocab.strings.add(BY_PHRASE)
-        __SET_PARSER__.add_pipe(tag_by_phrase, name='byphrase')
+
+        __SET_PARSER__.add_pipe('tag_lexical_head')
+        __SET_PARSER__.add_pipe('tag_lexical_head_subjects')
+        __SET_PARSER__.add_pipe('tag_by_phrase')
 
     unknown_sets = [s for s in taxonomic_sets if s and s not in __SET_DOCUMENT_CACHE__]
     if len(unknown_sets) <= BATCH_SIZE * N_PROCESSES:
