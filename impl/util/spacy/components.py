@@ -91,14 +91,16 @@ def tag_by_phrase(doc: Doc) -> Doc:
             continue
         current_doc = doc[:end_index] if len(by_indices) == idx+1 else doc[:by_indices[idx+1]]
         text_after_by = current_doc[by_index+1:].text.strip()
-        word_before_by = current_doc[by_index - 1]
-        word_after_by = current_doc[by_index + 1]
+        if not text_after_by:
+            continue
         if text_after_by in BY_PHRASE_EXCEPTIONS:
             continue
+        word_after_by = current_doc[by_index + 1]
         if word_after_by.text[0].isupper() and (word_after_by.text.endswith('.') or not word_after_by.text.isupper()):
             continue
         if any(w.tag_ == 'NNS' for w in doc[by_index+1:]):
             continue
+        word_before_by = current_doc[by_index - 1]
         if word_before_by.tag_ == 'VBN':
             continue
         if word_after_by.text in ['a', 'an', 'the']:
