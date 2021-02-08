@@ -310,8 +310,7 @@ def _context_to_tokens(ctx: list, table_header=[]) -> list:
 def _get_spacy_tokenizer():
     global __SPACY_TOKENIZER__
     if '__SPACY_TOKENIZER__' not in globals():
-        nlp = English()
-        __SPACY_TOKENIZER__ = nlp.Defaults.create_tokenizer(nlp)
+        __SPACY_TOKENIZER__ = English().tokenizer
     return __SPACY_TOKENIZER__
 
 
