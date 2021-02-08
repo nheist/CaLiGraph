@@ -6,6 +6,22 @@ NAMESPACE_DBP_ONTOLOGY = 'http://dbpedia.org/ontology/'
 NAMESPACE_DBP_RESOURCE = 'http://dbpedia.org/resource/'
 
 
+NER_LABEL_MAPPING = {
+    'PERSON': ['http://dbpedia.org/ontology/Person', 'http://dbpedia.org/ontology/Deity'],
+    'NORP': ['http://dbpedia.org/ontology/PoliticalParty', 'http://dbpedia.org/ontology/Family', 'http://dbpedia.org/ontology/EthnicGroup'],
+    'FAC': ['http://dbpedia.org/ontology/ArchitecturalStructure', 'http://dbpedia.org/ontology/Mine', 'http://dbpedia.org/ontology/Monument'],
+    'ORG': ['http://dbpedia.org/ontology/Organisation'],
+    'GPE': ['http://dbpedia.org/ontology/PopulatedPlace'],
+    'LOC': ['http://dbpedia.org/ontology/Place', 'http://dbpedia.org/ontology/Location'],
+    'PRODUCT': ['http://dbpedia.org/ontology/Food', 'http://dbpedia.org/ontology/MeanOfTransportation', 'http://dbpedia.org/ontology/Software', 'http://dbpedia.org/ontology/Device'],
+    'EVENT': ['http://dbpedia.org/ontology/Event'],
+    'WORK_OF_ART': ['http://dbpedia.org/ontology/Work', 'http://dbpedia.org/ontology/Award'],
+    'LAW': ['http://dbpedia.org/ontology/Law', 'http://dbpedia.org/ontology/LegalCase', 'http://dbpedia.org/ontology/Treaty'],
+    'LANGUAGE': ['http://dbpedia.org/ontology/Language'],
+    'SPECIES': ['http://dbpedia.org/ontology/Species']
+}
+
+
 def object2name(dbp_object: str) -> str:
     if dbp_object.startswith(NAMESPACE_DBP_ONTOLOGY):
         return type2name(dbp_object)

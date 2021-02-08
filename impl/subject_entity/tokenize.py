@@ -14,7 +14,7 @@ import wikitextparser as wtp
 
 
 # size of token batch for BERT
-MAX_EXAMPLE_SIZE = 512 / 2  # use a lower example size to account for WordPiece Tokenization
+MAX_EXAMPLE_SIZE = 256  # use a lower example size to account for WordPiece Tokenization
 # special tokens
 TOKEN_CTX = '[CTX]'
 TOKEN_SEP = '[SEP]'
@@ -96,9 +96,9 @@ def _row_to_tokens(row) -> list:
 
 
 LABEL_NONE = 'O'
-LABEL_BEGIN = 'B-SE'
-LABEL_IN = 'I-SE'
-ALL_LABELS = [LABEL_NONE, LABEL_BEGIN, LABEL_IN]
+LABEL_OTHER = 'OTHER'
+ALL_LABELS = [LABEL_NONE] + list(dbp_util.NER_LABEL_MAPPING) + [LABEL_OTHER]
+ALL_LABEL_IDS = {label: idx for idx, label in enumerate(ALL_LABELS)}
 
 
 def page_to_tokens_and_labels(params) -> tuple:
@@ -132,7 +132,7 @@ def page_to_tokens_and_labels(params) -> tuple:
     return page_tokens, page_labels
 
 
-def _listing_to_token_label_groups(listing_data, positive_SEs, negative_SEs, max_group_size):
+def _listing_to_token_label_groups(listing_data: list, positive_SEs: dict, negative_SEs: set, max_group_size: int):
     current_group_size = 0
     current_group_tokens = []
     current_group_labels = []
@@ -158,7 +158,7 @@ def _listing_to_token_label_groups(listing_data, positive_SEs, negative_SEs, max
         yield current_group_tokens, current_group_labels
 
 
-def _entry_to_tokens_and_labels(entry, positive_SEs, negative_SEs) -> tuple:
+def _entry_to_tokens_and_labels(entry: dict, positive_SEs: dict, negative_SEs: set) -> tuple:
     entry_text = entry['text']
     entry_doc = list_nlp.parse(entry_text)
     depth = entry['depth']
@@ -177,7 +177,7 @@ def _entry_to_tokens_and_labels(entry, positive_SEs, negative_SEs) -> tuple:
     return [f'[E{depth}]'] + tokens, [LABEL_NONE] + labels
 
 
-def _row_to_tokens_and_labels(row, positive_SEs, negative_SEs) -> tuple:
+def _row_to_tokens_and_labels(row: list, positive_SEs: dict, negative_SEs: set) -> tuple:
     cell_docs = [list_nlp.parse(cell['text']) for cell in row]
     # check whether row is valid training data
     row_entities = []
@@ -222,25 +222,25 @@ def _get_untagged_entities(doc, entities: list):
             end -= 1
             text = text[:-1]
         if not entity_character_idxs.intersection(set(range(start, end))) and len(text.strip()) > 1:
-            untagged_entities.append({'name': 'DEFINITELY-NOT-IN-EXISTING-ENTITIES'})
+            untagged_entities.append({'name': 'UNKNOWN-ENTITY-ZONK'})
     return untagged_entities
 
 
-def _create_entity_label_map(entities: list, subject_entities: set):
+def _create_entity_label_map(entities: list, subject_entities: dict):
     label_map = defaultdict(lambda: LABEL_NONE)
     for ent in entities:
         if ent['name'] not in subject_entities:
             continue
         idx = ent['idx']
         text_length = len(ent['text'])
+        label = subject_entities[ent['name']]
         for i in range(idx, idx + text_length):
-            label = LABEL_BEGIN if i == idx else LABEL_IN
             label_map[i] = label
     return label_map
 
 
-def _compute_labeled_entities_for_listpage(page_uri, page_data, graph) -> tuple:
-    positive_SEs, negative_SEs = set(), set()
+def _compute_labeled_entities_for_listpage(page_uri: str, page_data: dict, graph) -> tuple:
+    positive_SEs, negative_SEs = dict(), set()
     # compute potential subject entities for list page
     page_potential_SEs = {dbp_util.resource2name(res) for cat in _get_category_descendants_for_list(page_uri) for res in cat_store.get_resources(cat)}
     # compute types of list page
@@ -254,7 +254,7 @@ def _compute_labeled_entities_for_listpage(page_uri, page_data, graph) -> tuple:
         if not dbp_store.is_possible_resource(ent_uri):
             negative_SEs.add(ent)
         elif ent in page_potential_SEs:
-            positive_SEs.add(ent)
+            positive_SEs[ent] = _compute_entity_label(ent_uri)
         elif page_disjoint_types.intersection(dbp_store.get_types(ent_uri)):
             negative_SEs.add(ent)
     return positive_SEs, negative_SEs
@@ -274,6 +274,15 @@ def _get_category_descendants_for_list(listpage_uri: str) -> set:
 def _get_categories_for_list(listpage_uri: str) -> set:
     """Return category that is mapped to the list page."""
     return list_mapping.get_equivalent_categories(listpage_uri) | list_mapping.get_parent_categories(listpage_uri)
+
+
+TYPE_LABEL_MAPPING = {t: label for label, types in dbp_util.NER_LABEL_MAPPING.items() for t in types}
+def _compute_entity_label(resource_uri: str) -> str:
+    resource_types = dbp_store.get_transitive_types(resource_uri)
+    for t in resource_types:
+        if t in TYPE_LABEL_MAPPING:
+            return TYPE_LABEL_MAPPING[t]
+    return LABEL_OTHER
 
 
 # SHARED METHODS
@@ -313,7 +322,7 @@ def _remove_wikitext_markup(text: str) -> str:
         return text
 
 
-def _text_to_tokens(doc, entities: list, subject_entities: set) -> tuple:
+def _text_to_tokens(doc, entities: list, subject_entities: dict) -> tuple:
     if not entities or not subject_entities:
         tokens = [w.text for w in doc]
         return tokens, [LABEL_NONE] * len(tokens)

@@ -17,12 +17,12 @@ def get_listpage_entities(graph, listpage_uri: str) -> dict:
 
 
 def _extract_listpage_entities(graph) -> dict:
-    # retrieve labels of subject entities for list pages
-    lp_subject_entity_labels = {p: data for p, data in _get_subject_entity_predictions(graph).items() if list_util.is_listpage(p)}
-    # enrich subject entity labels with dbpedia entity information
-    lp_subject_entities = combine.enrich_subject_entity_labels(lp_subject_entity_labels)
-    # get rid of top-section and section information
-    lp_subject_entities = {lp: {e: labels for ts in lp_subject_entities[lp] for s in lp_subject_entities[lp][ts] for e, labels in lp_subject_entities[lp][ts][s].items()} for lp in lp_subject_entities}
+    # retrieve names and NE tags of subject entities for list pages
+    lp_subject_entites = {p: data for p, data in _get_subject_entity_predictions(graph).items() if list_util.is_listpage(p)}
+    # enrich subject entities with dbpedia entity information (URIs)
+    lp_subject_entities = combine.match_entities_with_uris(lp_subject_entites)
+    # get rid of top-section, section, and NE tag information
+    lp_subject_entities = {lp: {e: e_info['name'] for ts in lp_subject_entities[lp] for s in lp_subject_entities[lp][ts] for e, e_info in lp_subject_entities[lp][ts][s].items()} for lp in lp_subject_entities}
     return lp_subject_entities
 
 
@@ -64,8 +64,3 @@ def _get_page_data() -> dict:
 
 def _retrieve_page_data() -> dict:
     return dict([tokenize.page_to_tokens(page_tuple) for page_tuple in tqdm(wikipedia.get_parsed_articles().items(), desc='Extracting BERT page data')])
-    #page_data = {}
-    #with mp.Pool(processes=utils.get_config('max_cpus')) as pool:
-    #    for page_uri, page_token_batches in tqdm(pool.imap_unordered(tokenize.page_to_tokens, wikipedia.get_parsed_articles().items(), chunksize=5000), desc='Extracting BERT page data'):
-    #        page_data[page_uri] = page_token_batches
-    #return page_data

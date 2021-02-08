@@ -26,21 +26,6 @@ def parse(text: str) -> Doc:
 
 # initialization
 
-NER_LABEL_MAPPING = {
-    'PERSON': ['http://dbpedia.org/ontology/Person', 'http://dbpedia.org/ontology/Deity'],
-    'NORP': ['http://dbpedia.org/ontology/PoliticalParty', 'http://dbpedia.org/ontology/Family', 'http://dbpedia.org/ontology/EthnicGroup'],
-    'FAC': ['http://dbpedia.org/ontology/ArchitecturalStructure', 'http://dbpedia.org/ontology/Mine', 'http://dbpedia.org/ontology/Monument'],
-    'ORG': ['http://dbpedia.org/ontology/Organisation'],
-    'GPE': ['http://dbpedia.org/ontology/PopulatedPlace'],
-    'LOC': ['http://dbpedia.org/ontology/Place', 'http://dbpedia.org/ontology/Location'],
-    'PRODUCT': ['http://dbpedia.org/ontology/Food', 'http://dbpedia.org/ontology/MeanOfTransportation', 'http://dbpedia.org/ontology/Software', 'http://dbpedia.org/ontology/Device'],
-    'EVENT': ['http://dbpedia.org/ontology/Event'],
-    'WORK_OF_ART': ['http://dbpedia.org/ontology/Work', 'http://dbpedia.org/ontology/Award'],
-    'LAW': ['http://dbpedia.org/ontology/Law', 'http://dbpedia.org/ontology/LegalCase', 'http://dbpedia.org/ontology/Treaty'],
-    'LANGUAGE': ['http://dbpedia.org/ontology/Language'],
-    'SPECIES': ['http://dbpedia.org/ontology/Species']
-}
-
 
 def _initialise_parser():
     path_to_model = utils._get_cache_path('spacy_listpage_ne-tagging_GS-WLE')
@@ -112,7 +97,7 @@ def _retrieve_training_data_wle(nlp: Language):
 
 
 def _get_tag_for_types(dbp_types: set) -> str:
-    type_to_tag_mapping = {tp: tag for tag, types in NER_LABEL_MAPPING.items() for tp in types}
+    type_to_tag_mapping = {tp: tag for tag, types in dbp_util.NER_LABEL_MAPPING.items() for tp in types}
     dbp_types = {t for t in dbp_types if t is not None and t != rdf_util.CLASS_OWL_THING}
     for t in dbp_types:
         if t in type_to_tag_mapping:

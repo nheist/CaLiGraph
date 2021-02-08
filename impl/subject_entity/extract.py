@@ -6,7 +6,7 @@ import numpy as np
 import utils
 import datetime
 from collections import defaultdict
-from .tokenize import TOKEN_ROW, TOKENS_ENTRY, TOKEN_CTX, TOKEN_SEP, ADDITIONAL_SPECIAL_TOKENS, ALL_LABELS
+from .tokenize import TOKEN_ROW, TOKENS_ENTRY, TOKEN_CTX, TOKEN_SEP, ADDITIONAL_SPECIAL_TOKENS, ALL_LABEL_IDS
 from transformers import Trainer, TrainingArguments, BertTokenizerFast, BertForTokenClassification
 
 
@@ -15,7 +15,7 @@ MAX_BATCHES = 100
 
 
 def extract_subject_entities(page_batches: list, bert_tokenizer, bert_model) -> dict:
-    subject_entity_dict = defaultdict(lambda: defaultdict(set))
+    subject_entity_dict = defaultdict(lambda: defaultdict(dict))
 
     for i in range(0, len(page_batches), MAX_BATCHES):
         _extract_subject_entity_batches(page_batches[i:i+MAX_BATCHES], bert_tokenizer, bert_model, subject_entity_dict)
@@ -42,19 +42,24 @@ def _extract_subject_entity_batches(page_batches: list, bert_tokenizer, bert_mod
 
         found_entity = False  # only predict one entity per row/entry
         current_entity = []
+        current_entity_label = None
         for token, label in zip(word_tokens, word_predictions):
             if token in (TOKENS_ENTRY + [TOKEN_ROW]):
                 found_entity = False
                 continue
-            if label != 2 and current_entity:
-                if not found_entity:
-                    subject_entity_dict[topsection_name][section_name].add(_entity_tokens2name(current_entity))
+            if label == 0:
+                if current_entity and not found_entity:
+                    entity_name = _entity_tokens2name(current_entity)
+                    subject_entity_dict[topsection_name][section_name][entity_name] = current_entity_label
                     found_entity = True
                 current_entity = []
-            if label != 0:
+                current_entity_label = None
+            else:
+                current_entity_label = current_entity_label or label
                 current_entity.append(token)
         if current_entity and not found_entity:
-            subject_entity_dict[topsection_name][section_name].add(_entity_tokens2name(current_entity))
+            entity_name = _entity_tokens2name(current_entity)
+            subject_entity_dict[topsection_name][section_name][entity_name] = current_entity_label
 
 
 def _extract_context(word_tokens: list) -> tuple:
@@ -75,7 +80,6 @@ def _entity_tokens2name(entity_tokens: list) -> str:
 
 
 BERT_BASE_MODEL = 'bert-base-cased'
-LABEL2ID = {label: idx for idx, label in enumerate(ALL_LABELS)}
 
 
 def get_bert_tokenizer_and_model(training_data_retrieval_func):
@@ -95,7 +99,7 @@ def _train_bert(training_data_retrieval_func):
     tokens, labels = training_data_retrieval_func()
     train_dataset = _get_datasets(tokens, labels, tokenizer)
 
-    model = BertForTokenClassification.from_pretrained(BERT_BASE_MODEL, num_labels=len(ALL_LABELS))
+    model = BertForTokenClassification.from_pretrained(BERT_BASE_MODEL, num_labels=len(ALL_LABEL_IDS))
     model.resize_token_embeddings(len(tokenizer))
 
     run_id = '{}_{}'.format(datetime.datetime.now().strftime('%Y%m%d-%H%M%S'), utils.get_config('logging.filename'))
@@ -133,7 +137,7 @@ def _get_datasets(tokens, tags, tokenizer) -> tuple:
 
 
 def _encode_tags(tags, encodings):
-    labels = [[LABEL2ID[tag] for tag in doc] for doc in tags]
+    labels = [[ALL_LABEL_IDS[tag] for tag in doc] for doc in tags]
     encoded_labels = []
     for doc_labels, doc_offset in zip(labels, encodings.offset_mapping):
         # create an empty array of -100

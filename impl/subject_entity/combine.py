@@ -6,7 +6,7 @@ from collections import defaultdict
 import impl.dbpedia.util as dbp_util
 
 
-def enrich_subject_entity_labels(subject_entities_per_page: dict) -> dict:
+def match_entities_with_uris(subject_entities_per_page: dict) -> dict:
     enriched_entities_per_page = {}
 
     parsed_pages = wikipedia.get_parsed_articles()
@@ -16,12 +16,12 @@ def enrich_subject_entity_labels(subject_entities_per_page: dict) -> dict:
         page_entity_map = _create_page_entity_map(parsed_pages[page_uri])
         for ts, entities_per_s in entities_per_ts.items():
             for s, entities in entities_per_s.items():
-                for ent_text in entities:
+                for ent_text, ent_tag in entities.items():
                     if ent_text in page_entity_map[ts][s]:
                         ent_name = page_entity_map[ts][s][ent_text]
                     else:
                         ent_name = f'{page_name}--{ent_text}'
-                    enriched_entities[ts][s][ent_name] = {ent_text}
+                    enriched_entities[ts][s][ent_name] = {'name': ent_text, 'tag': ent_tag}
 
         enriched_entities_per_page[page_uri] = {ts: dict(enriched_entities[ts]) for ts in enriched_entities}
 

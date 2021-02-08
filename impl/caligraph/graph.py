@@ -107,8 +107,8 @@ class CaLiGraph(HierarchyGraph):
         if not self._resource_altlabels:
             for node in self.nodes:
                 for part in self.get_list_parts(node):
-                    for res, labels in subject_entity.get_listpage_entities(self, part).items():
-                        self._resource_altlabels[cali_util.name2clg_resource(res)].update(labels)
+                    for res, label in subject_entity.get_listpage_entities(self, part).items():
+                        self._resource_altlabels[cali_util.name2clg_resource(res)].add(label)
         return self._resource_altlabels[item]
 
     def get_resources(self, node: str) -> set:
