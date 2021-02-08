@@ -16,10 +16,10 @@ def is_listspage(obj: str) -> bool:
     return obj.startswith(NAMESPACE_DBP_LISTS)
 
 
-def listpage2name(listpage: str) -> str:
-    if is_listpage(listpage):
-        return rdf_util.uri2name(listpage, NAMESPACE_DBP_LIST)
-    return rdf_util.uri2name(listpage, NAMESPACE_DBP_LISTS)
+def listpage2name(lp: str) -> str:
+    if is_listpage(lp):
+        return rdf_util.uri2name(lp, NAMESPACE_DBP_LIST)
+    return rdf_util.uri2name(lp, NAMESPACE_DBP_LISTS)
 
 
 def is_listcategory(obj: str) -> bool:

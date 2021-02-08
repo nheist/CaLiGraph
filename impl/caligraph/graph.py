@@ -3,14 +3,14 @@ import utils
 from impl.util.base_graph import BaseGraph
 from impl.util.hierarchy_graph import HierarchyGraph
 import impl.util.rdf as rdf_util
-import impl.category.base as cat_base
+from impl import category
 import impl.category.store as cat_store
 import impl.category.util as cat_util
 from impl.category.graph import CategoryGraph
-import impl.list.base as list_base
-import impl.list.util as list_util
-from impl.list.graph import ListGraph
-import impl.list.mapping as list_mapping
+from impl import listpage
+import impl.listpage.util as list_util
+from impl.listpage.graph import ListGraph
+import impl.listpage.mapping as list_mapping
 import impl.util.nlp as nlp_util
 import impl.util.hypernymy as hypernymy_util
 import numpy as np
@@ -312,7 +312,7 @@ class CaLiGraph(HierarchyGraph):
         graph._add_nodes({graph.root_node})
         graph._set_parts(graph.root_node, {graph.root_node, utils.get_config('category.root_category')})
 
-        cat_graph = cat_base.get_merged_graph()
+        cat_graph = category.get_merged_graph()
         edge_count = len(cat_graph.edges)
 
         # initialise from category graph
@@ -339,7 +339,7 @@ class CaLiGraph(HierarchyGraph):
 
         # merge with list graph
         utils.get_logger().debug('CaLiGraph: Starting ListMerge..')
-        list_graph = list_base.get_merged_listgraph()
+        list_graph = listpage.get_merged_listgraph()
         edge_count = len(list_graph.edges)
 
         list_node_names = {}

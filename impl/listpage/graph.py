@@ -3,8 +3,8 @@ from impl.util.hierarchy_graph import HierarchyGraph
 import impl.dbpedia.store as dbp_store
 import impl.category.store as cat_store
 import impl.category.util as cat_util
-import impl.list.store as list_store
-import impl.list.util as list_util
+import impl.listpage.store as list_store
+import impl.listpage.util as list_util
 import utils
 
 
@@ -45,7 +45,7 @@ class ListGraph(HierarchyGraph):
             listpages = {dbp_store.resolve_redirect(page) for page in cat_store.get_resources(listcat) if list_util.is_listpage(page)}
             listpages = {lp for lp in listpages if list_util.is_listpage(lp)}  # filter out redirects on non-listpages
             nodes.update(listpages)
-            edges.update({(listcat, listpage) for listpage in listpages})
+            edges.update({(listcat, lp) for lp in listpages})
 
         # make sure that all listpages are in the graph
         nodes.update(list_store.get_listpages())

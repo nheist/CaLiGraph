@@ -9,10 +9,10 @@ A mapping can have one of two types:
   - the only parent of the list is root -> append it to root
 """
 
-import impl.category.base as cat_base
+from impl import category
 import impl.category.store as cat_store
-import impl.list.util as list_util
-import impl.list.base as list_base
+import impl.listpage.util as list_util
+from impl import listpage
 import utils
 import impl.util.nlp as nlp_util
 import impl.util.hypernymy as hypernymy_util
@@ -29,8 +29,8 @@ def get_equivalent_categories(lst: str) -> set:
 def _create_list_equivalents_mapping():
     utils.get_logger().info('CACHE: Creating list-equivalents mapping')
 
-    cat_graph = cat_base.get_merged_graph()
-    list_graph = list_base.get_merged_listgraph()
+    cat_graph = category.get_merged_graph()
+    list_graph = listpage.get_merged_listgraph()
 
     # 1) find equivalent categories by exact name match
     name_to_cat_mapping = {cat_graph.get_name(node).replace('-', ' ').lower(): node for node in cat_graph.nodes}
@@ -72,9 +72,9 @@ def get_parent_categories(lst: str) -> set:
 def _create_list_parents_mapping():
     utils.get_logger().info('CACHE: Creating list-parents mapping')
 
-    cat_graph = cat_base.get_merged_graph()
+    cat_graph = category.get_merged_graph()
     cats_LHS = cat_graph.get_node_LHS()
-    list_graph = list_base.get_merged_listgraph()
+    list_graph = listpage.get_merged_listgraph()
     lists_LHS = list_graph.get_node_LHS()
 
     # 1) find parent categories by hypernym match

@@ -5,16 +5,16 @@ from collections import defaultdict
 import operator
 import impl.dbpedia.store as dbp_store
 import impl.category.category_set as cat_set
-import impl.category.base as cat_base
+from impl import category
 import impl.util.nlp as nlp_util
 import impl.category.cat2ax as cat_axioms
 import impl.category.util as cat_util
-import impl.list.util as list_util
+import impl.listpage.util as list_util
 
 
 def extract_axioms(graph) -> dict:
     """Run extraction for the given graph reusing the category sets and patterns from the initial approach."""
-    category_graph = cat_base.get_conceptual_category_graph()
+    category_graph = category.get_conceptual_category_graph()
     candidate_sets = cat_set.get_category_sets()
     patterns = cat_axioms._extract_patterns(category_graph, candidate_sets)
 

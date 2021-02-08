@@ -1,5 +1,5 @@
 from pytest_check import check_func
-import impl.caligraph.base as cali_base
+from impl import caligraph
 from impl.caligraph.util import NAMESPACE_CLG_ONTOLOGY as CLGO
 from impl.caligraph.util import NAMESPACE_CLG_RESOURCE as CLGR
 from impl.dbpedia.util import NAMESPACE_DBP_ONTOLOGY as DBO
@@ -84,57 +84,57 @@ def test_by_phrase_removal():
 
 @check_func
 def _is_parent_of(parent: str, child: str):
-    G = cali_base.get_axiom_graph()
+    G = caligraph.get_axiom_graph()
     assert child in G.children(parent), f'{parent} should be parent of {child}'
 
 
 @check_func
 def _is_ancestor_of(ancestor: str, child: str):
-    G = cali_base.get_axiom_graph()
+    G = caligraph.get_axiom_graph()
     assert ancestor in G.ancestors(child), f'{ancestor} should be ancestor of {child}'
 
 
 @check_func
 def _is_no_parent_of(parent: str, child: str):
-    G = cali_base.get_axiom_graph()
+    G = caligraph.get_axiom_graph()
     assert child not in G.children(parent), f'{parent} should not be parent of {child}'
 
 
 @check_func
 def _is_in_graph(node: str):
-    G = cali_base.get_axiom_graph()
+    G = caligraph.get_axiom_graph()
     assert node in G.nodes, f'{node} should be in the graph'
 
 
 @check_func
 def _is_not_in_graph(node: str):
-    G = cali_base.get_axiom_graph()
+    G = caligraph.get_axiom_graph()
     assert node not in G.nodes, f'{node} should not be in the graph'
 
 
 @check_func
 def _is_part_of(part: str, node: str):
-    G = cali_base.get_axiom_graph()
+    G = caligraph.get_axiom_graph()
     assert node in G.nodes
     assert part in G.get_parts(node), f'{part} should be part of {node}'
 
 
 @check_func
 def _is_no_part_of(part: str, node: str):
-    G = cali_base.get_axiom_graph()
+    G = caligraph.get_axiom_graph()
     if node in G.nodes:
         assert part not in G.get_parts(node), f'{part} should not be part of {node}'
 
 
 @check_func
 def _is_resource_of(res: str, node: str):
-    G = cali_base.get_axiom_graph()
+    G = caligraph.get_axiom_graph()
     assert node in G.nodes
     assert res in G.get_resources(node), f'{res} should be contained in {node}'
 
 
 @check_func
 def _is_no_resource_of(res: str, node: str):
-    G = cali_base.get_axiom_graph()
+    G = caligraph.get_axiom_graph()
     if node in G.nodes:
         assert res not in G.get_resources(node), f'{res} should not be contained in {node}'

@@ -4,7 +4,7 @@ import utils
 import impl.util.rdf as rdf_util
 import impl.dbpedia.util as dbp_util
 import impl.category.util as cat_util
-import impl.list.util as list_util
+import impl.listpage.util as list_util
 from collections import defaultdict
 import networkx as nx
 from typing import Optional

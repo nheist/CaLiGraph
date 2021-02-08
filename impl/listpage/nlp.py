@@ -5,8 +5,8 @@ import impl.util.rdf as rdf_util
 from impl import wikipedia
 import impl.dbpedia.store as dbp_store
 import impl.dbpedia.util as dbp_util
-import impl.list.store as list_store
-import impl.list.mapping as list_mapping
+import impl.listpage.store as list_store
+import impl.listpage.mapping as list_mapping
 from impl.util.spacy.training import train_ner_model
 import json
 import spacy

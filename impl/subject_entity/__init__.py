@@ -1,6 +1,6 @@
 from collections import defaultdict
-import impl.list.store as list_store
-import impl.list.util as list_util
+import impl.listpage.store as list_store
+import impl.listpage.util as list_util
 import utils
 from tqdm import tqdm
 import multiprocessing as mp

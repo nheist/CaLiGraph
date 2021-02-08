@@ -2,17 +2,17 @@ import traceback
 import utils
 import mailer
 from impl import wikipedia
-import impl.category.base as cat_base
 import impl.category.cat2ax as cat_axioms
 import impl.util.hypernymy as hypernymy_util
-import impl.caligraph.base as cali_base
+from impl import category
+from impl import caligraph
 
 
 def _setup_hypernyms():
     """Initialisation of hypernyms that are extracted from Wikipedia categories using Cat2Ax axioms."""
     if utils.load_cache('wikitaxonomy_hypernyms') is not None:
         return  # only compute hypernyms if they are not existing already
-    ccg = cat_base.get_conceptual_category_graph()
+    ccg = category.get_conceptual_category_graph()
     # initialise cat2ax axioms
     cat2ax_axioms = cat_axioms.extract_category_axioms(ccg)
     utils.update_cache('cat2ax_axioms', cat2ax_axioms)
@@ -32,7 +32,7 @@ if __name__ == '__main__':
 
         # run the complete extraction cycle and end with serializing CaLiGraph
         utils.get_logger().info('Running extraction..')
-        cali_base.serialize_final_graph()
+        caligraph.serialize_final_graph()
 
         success_msg = 'Finished extraction of CaLiGraph.'
         mailer.send_success(success_msg)

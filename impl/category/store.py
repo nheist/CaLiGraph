@@ -1,7 +1,7 @@
 """Functionality to retrieve everything related to categories."""
 
 import impl.category.util as cat_util
-import impl.list.util as list_util
+import impl.listpage.util as list_util
 import impl.util.rdf as rdf_util
 import impl.dbpedia.store as dbp_store
 from impl import wikipedia
@@ -15,21 +15,21 @@ def get_categories(include_listcategories=False) -> set:
     return {n for n in _get_category_graph() if include_listcategories or not list_util.is_listcategory(n)}
 
 
-def get_parents(category: str, include_listcategories=False) -> set:
+def get_parents(cat: str, include_listcategories=False) -> set:
     """Return all direct supercategories for the given category."""
     category_graph = _get_category_graph()
-    if category not in category_graph:
+    if cat not in category_graph:
         return set()
-    parents = category_graph.predecessors(category)
+    parents = category_graph.predecessors(cat)
     return {p for p in parents if include_listcategories or not list_util.is_listcategory(p)}
 
 
-def get_children(category: str, include_listcategories=False) -> set:
+def get_children(cat: str, include_listcategories=False) -> set:
     """Return all direct subcategories for the given category."""
     category_graph = _get_category_graph()
-    if category not in category_graph:
+    if cat not in category_graph:
         return set()
-    children = category_graph.successors(category)
+    children = category_graph.successors(cat)
     return {c for c in children if include_listcategories or not list_util.is_listcategory(c)}
 
 

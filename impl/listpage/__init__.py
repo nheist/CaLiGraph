@@ -1,7 +1,7 @@
 """Functionality to retrieve cached versions of the list graph in several stages."""
 
 import utils
-from impl.list.graph import ListGraph
+from impl.listpage.graph import ListGraph
 
 
 # LIST HIERARCHY

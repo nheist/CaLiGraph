@@ -6,10 +6,10 @@ import impl.dbpedia.store as dbp_store
 import impl.dbpedia.util as dbp_util
 import impl.dbpedia.heuristics as dbp_heur
 import impl.category.store as cat_store
-import impl.category.base as cat_base
-import impl.list.mapping as list_mapping
-import impl.list.nlp as list_nlp
-import impl.list.util as list_util
+from impl import category
+import impl.listpage.mapping as list_mapping
+import impl.listpage.nlp as list_nlp
+import impl.listpage.util as list_util
 import wikitextparser as wtp
 
 
@@ -263,7 +263,7 @@ def _compute_labeled_entities_for_listpage(page_uri: str, page_data: dict, graph
 def _get_category_descendants_for_list(listpage_uri: str) -> set:
     """Return the category that is most closely related to the given list page as well as all of its children."""
     categories = set()
-    cat_graph = cat_base.get_merged_graph()
+    cat_graph = category.get_merged_graph()
     mapped_categories = {x for cat in _get_categories_for_list(listpage_uri) for x in cat_graph.get_nodes_for_category(cat)}
     descendant_categories = {descendant for cat in mapped_categories for descendant in cat_graph.descendants(cat)}
     for cat in mapped_categories | descendant_categories:

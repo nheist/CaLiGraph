@@ -70,12 +70,12 @@ class RelationAxiom(Axiom):
         return self.predicate in props and self.value not in props[self.predicate] and dbp_store.resolve_redirect(self.value) not in props[self.predicate]
 
 
-def get_type_axioms(category: str) -> list:
+def get_type_axioms(cat: str) -> list:
     """Return all type axioms created by the Cat2Ax approach."""
-    return [a for a in get_axioms(category) if type(a) == TypeAxiom]
+    return [a for a in get_axioms(cat) if type(a) == TypeAxiom]
 
 
-def get_axioms(category: str) -> list:
+def get_axioms(cat: str) -> list:
     """Return all axioms created by the Cat2Ax approach."""
     global __CATEGORY_AXIOMS__
     if '__CATEGORY_AXIOMS__' not in globals():
@@ -83,7 +83,7 @@ def get_axioms(category: str) -> list:
         if not __CATEGORY_AXIOMS__:
             raise ValueError('CATEGORY/CAT2AX: Axioms not initialised. Run axiom extraction before using them!')
 
-    return __CATEGORY_AXIOMS__[category]
+    return __CATEGORY_AXIOMS__[cat]
 
 
 def extract_category_axioms(category_graph):
