@@ -6,7 +6,7 @@ import numpy as np
 import utils
 import datetime
 from collections import defaultdict
-from .tokenize import TOKEN_ROW, TOKENS_ENTRY, TOKEN_CTX, TOKEN_SEP, ADDITIONAL_SPECIAL_TOKENS, ALL_LABEL_IDS
+from .tokenize import TOKEN_ROW, TOKENS_ENTRY, TOKEN_CTX, TOKEN_SEP, ADDITIONAL_SPECIAL_TOKENS, ALL_LABELS, ALL_LABEL_IDS
 from transformers import Trainer, TrainingArguments, BertTokenizerFast, BertForTokenClassification
 
 
@@ -55,7 +55,7 @@ def _extract_subject_entity_batches(page_batches: list, bert_tokenizer, bert_mod
                 current_entity = []
                 current_entity_label = None
             else:
-                current_entity_label = current_entity_label or label
+                current_entity_label = current_entity_label or ALL_LABELS[label]
                 current_entity.append(token)
         if current_entity and not found_entity:
             entity_name = _entity_tokens2name(current_entity)

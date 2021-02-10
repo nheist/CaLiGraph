@@ -20,7 +20,7 @@ TOKEN_CTX = '[CTX]'
 TOKEN_SEP = '[SEP]'
 TOKEN_ROW = '[ROW]'
 TOKEN_COL = '[COL]'
-TOKENS_ENTRY = [f'E{i}' for i in range(1, 6)]
+TOKENS_ENTRY = [f'[E{i}]' for i in range(1, 6)]
 ADDITIONAL_SPECIAL_TOKENS = TOKENS_ENTRY + [TOKEN_ROW, TOKEN_COL]
 
 
