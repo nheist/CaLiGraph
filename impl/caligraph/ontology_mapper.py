@@ -9,11 +9,11 @@ from collections import defaultdict
 import utils
 
 
-def find_conflicting_edges(graph, use_listpage_resources: bool) -> set:
+def find_conflicting_edges(graph) -> set:
     utils.get_logger().debug('CaLiGraph: Removing conflicting edges in CaLiGraph..')
     conflicting_edges = set()
     head_subject_lemmas = graph.get_node_LHS()
-    direct_mappings = {node: _find_dbpedia_parents(graph, node, use_listpage_resources, True) for node in graph.nodes}
+    direct_mappings = {node: _find_dbpedia_parents(graph, node, True) for node in graph.nodes}
     for node in graph.traverse_nodes_topdown():
         for child in graph.children(node):
             if head_subject_lemmas[node] == head_subject_lemmas[child]:
@@ -26,10 +26,10 @@ def find_conflicting_edges(graph, use_listpage_resources: bool) -> set:
     return conflicting_edges
 
 
-def find_mappings(graph, use_listpage_resources: bool) -> dict:
+def find_mappings(graph) -> dict:
     """Return mappings from nodes in `graph` to DBpedia types retrieved from axioms of the Cat2Ax approach."""
     utils.get_logger().debug('CaLiGraph: Retrieving mappings from DBpedia to CaLiGraph..')
-    mappings = {node: _find_dbpedia_parents(graph, node, use_listpage_resources, False) for node in graph.nodes}
+    mappings = {node: _find_dbpedia_parents(graph, node, False) for node in graph.nodes}
 
     # apply complete transitivity to the graph in order to discover disjointnesses
     for node in graph.traverse_nodes_topdown():
@@ -61,7 +61,7 @@ def find_mappings(graph, use_listpage_resources: bool) -> dict:
     return mappings
 
 
-def resolve_disjointnesses(graph, use_listpage_resources: bool):
+def resolve_disjointnesses(graph):
     """Resolve violations of disjointness axioms that are created through the mapping to DBpedia types."""
     utils.get_logger().debug('CaLiGraph: Resolving disjointnesses in CaLiGraph from integrated DBpedia types..')
     for node in graph.traverse_nodes_topdown():
@@ -69,7 +69,7 @@ def resolve_disjointnesses(graph, use_listpage_resources: bool):
         coherent_type_sets = _find_coherent_type_sets({t: 1 for t in graph.get_transitive_dbpedia_types(node, force_recompute=True)})
         if len(coherent_type_sets) > 1:
             transitive_types = {tt for ts in coherent_type_sets for t in ts for tt in dbp_store.get_transitive_supertype_closure(t)}
-            direct_types = {t for t in _find_dbpedia_parents(graph, node, use_listpage_resources, False)}
+            direct_types = {t for t in _find_dbpedia_parents(graph, node, False)}
             if not direct_types:
                 # compute direct types by finding the best matching type from lex score
                 lex_scores = _compute_type_lexicalisation_scores(graph, node)
@@ -92,13 +92,10 @@ def resolve_disjointnesses(graph, use_listpage_resources: bool):
                 graph._add_edges({(p, node) for p in new_parents})
 
 
-def _find_dbpedia_parents(graph, node: str, use_listpage_resources: bool, direct_resources_only: bool) -> dict:
-    """Retrieve DBpedia types that can be used as parents for `node` based on axioms discovered for it.
-
-    If `use_listpage_resources` is True, the resources that are extracted from list pages are also taken into account.
-    """
+def _find_dbpedia_parents(graph, node: str, direct_resources_only: bool) -> dict:
+    """Retrieve DBpedia types that can be used as parents for `node` based on axioms discovered for it."""
     type_lexicalisation_scores = defaultdict(lambda: 0.2, _compute_type_lexicalisation_scores(graph, node))
-    type_resource_scores = defaultdict(lambda: 0.0, _compute_type_resource_scores(graph, node, use_listpage_resources, direct_resources_only))
+    type_resource_scores = defaultdict(lambda: 0.0, _compute_type_resource_scores(graph, node, direct_resources_only))
 
     overall_scores = {t: type_lexicalisation_scores[t] * type_resource_scores[t] for t in type_resource_scores if dbp_util.is_dbp_type(t)}
     max_score = max(overall_scores.values(), default=0)
@@ -120,10 +117,10 @@ def _compute_type_lexicalisation_scores(graph, node: str) -> dict:
     return cat_axioms._get_type_surface_scores(lexhead_subject_lemmas, lemmatize=False)
 
 
-def _compute_type_resource_scores(graph, node: str, use_listpage_resources: bool, direct_resources_only: bool) -> dict:
-    node_resources = graph.get_direct_dbpedia_resources(node, use_listpage_resources)
+def _compute_type_resource_scores(graph, node: str, direct_resources_only: bool) -> dict:
+    node_resources = graph.get_resources_from_categories(node)
     if not direct_resources_only or len([r for r in node_resources if dbp_store.get_types(r)]) < 5:
-        node_resources.update({r for sn in graph.descendants(node) for r in graph.get_direct_dbpedia_resources(sn, use_listpage_resources)})
+        node_resources.update({r for sn in graph.descendants(node) for r in graph.get_resources_from_categories(sn)})
     node_resources = node_resources.intersection(dbp_store.get_resources())
     if len(node_resources) < 5:
         return {}  # better not return anything, if number of resources is too small

@@ -20,10 +20,10 @@ import impl.dbpedia.heuristics as dbp_heur
 import impl.caligraph.ontology_mapper as cali_mapping
 import impl.caligraph.cali2ax as cali_axioms
 import impl.caligraph.util as cali_util
-from impl import subject_entity
 from polyleven import levenshtein
 from collections import defaultdict
 from typing import Optional
+from impl import listing
 
 
 class CaLiGraph(HierarchyGraph):
@@ -31,11 +31,12 @@ class CaLiGraph(HierarchyGraph):
     # initialisations
     def __init__(self, graph: nx.DiGraph, root_node: str = None):
         super().__init__(graph, root_node or rdf_util.CLASS_OWL_THING)
+        self.use_listing_resources = False
         self._node_dbpedia_types = defaultdict(set)
         self._node_resource_stats = defaultdict(dict)
         self._node_resources = defaultdict(set)
         self._node_direct_cat_resources = defaultdict(set)
-        self._node_direct_list_resources = defaultdict(set)
+        self._node_listing_resources = defaultdict(set)
         self._all_node_resources = set()
         self._resource_nodes = defaultdict(set)
         self._resource_provenance = defaultdict(set)
@@ -51,7 +52,7 @@ class CaLiGraph(HierarchyGraph):
         self._node_resource_stats = defaultdict(dict)
         self._node_resources = defaultdict(set)
         self._node_direct_cat_resources = defaultdict(set)
-        self._node_direct_list_resources = defaultdict(set)
+        self._node_listing_resources = defaultdict(set)
         self._all_node_resources = set()
         self._resource_nodes = defaultdict(set)
         self._resource_provenance = defaultdict(set)
@@ -63,6 +64,16 @@ class CaLiGraph(HierarchyGraph):
 
     def _reset_edge_indices(self):
         self._reset_node_indices()
+
+    def enable_listing_resources(self):
+        self.use_listing_resources = True
+        # reset all resource-related indices
+        self._node_resource_stats = defaultdict(dict)
+        self._node_resources = defaultdict(set)
+        self._all_node_resources = set()
+        self._resource_nodes = defaultdict(set)
+        self._resource_provenance = defaultdict(set)
+        self._resource_altlabels = defaultdict(set)
 
     def __getstate__(self):
         state = self.__dict__.copy()
@@ -104,20 +115,20 @@ class CaLiGraph(HierarchyGraph):
         """Return alternative labels for a CaLiGraph resource."""
         if not cali_util.is_clg_resource(item):
             return set()
-        if not self._resource_altlabels:
-            for node in self.nodes:
-                for part in self.get_list_parts(node):
-                    for res, label in subject_entity.get_listpage_entities(self, part).items():
-                        self._resource_altlabels[cali_util.name2clg_resource(res)].add(label)
+        if not self._resource_altlabels and self.use_listing_resources:
+            for res, res_data in listing.get_page_entities(self):
+                self._resource_altlabels[cali_util.name2clg_resource(res)].update(res_data['labels'])
         return self._resource_altlabels[item]
 
     def get_resources(self, node: str) -> set:
         """Return all resources of a node."""
         if node not in self._node_resources:
             disjoint_dbp_types = self.get_disjoint_dbp_types(node, transitive=True)
-            dbp_resources = self.get_direct_dbpedia_resources(node) | {r for t in self.get_type_parts(node) for r in dbp_store.get_direct_resources_for_type(t)}
+            dbp_resources = self.get_resources_from_categories(node) | {r for t in self.get_type_parts(node) for r in dbp_store.get_direct_resources_for_type(t)}
             dbp_resources = {r for r in dbp_resources if not disjoint_dbp_types.intersection(dbp_store.get_types(r))}
             self._node_resources[node] = {cali_util.dbp_resource2clg_resource(r) for r in dbp_resources}
+            if self.use_listing_resources:
+                self._node_resources[node].update(self.get_resources_from_listings(node))
         return self._node_resources[node]
 
     def get_all_resources(self) -> set:
@@ -134,19 +145,22 @@ class CaLiGraph(HierarchyGraph):
                     self._resource_nodes[r].add(node)
         return self._resource_nodes[resource]
 
-    def get_direct_dbpedia_resources(self, node: str, use_listpage_resources=True) -> set:
-        """Return all DBpedia resources associated with the node (or its parts)."""
+    def get_resources_from_categories(self, node: str) -> set:
+        """Return all DBpedia resources directly associated with the node through Wikipedia categories."""
         if node not in self._node_direct_cat_resources:
             cat_resources = {r for cat in self.get_category_parts(node) for r in cat_store.get_resources(cat)}
             self._node_direct_cat_resources[node] = self._filter_invalid_resources(cat_resources)
-        if use_listpage_resources and node not in self._node_direct_list_resources:
-            list_resources = {dbp_util.name2resource(r) for lst in self.get_list_parts(node) for r in subject_entity.get_listpage_entities(self, lst)}
-            self._node_direct_list_resources[node] = self._filter_invalid_resources(list_resources)
+        return set(self._node_direct_cat_resources[node])
 
-        resources = set(self._node_direct_cat_resources[node])
-        if use_listpage_resources:
-            resources.update(self._node_direct_list_resources[node])
-        return resources
+    def get_resources_from_listings(self, node: str) -> set:
+        if not self._node_listing_resources:
+            for res, res_data in listing.get_page_entities(self):
+                res_nodes = {cali_util.name2clg_type(t) for t in res_data['types']}
+                res_nodes.update({n for o in res_data['origins'] for n in self.get_nodes_for_part(o)})
+                res_uri = cali_util.name2clg_resource(res)
+                for n in res_nodes:
+                    self._node_listing_resources[n].add(res_uri)
+        return self._node_listing_resources[node]
 
     @staticmethod
     def _filter_invalid_resources(resources: set) -> set:
@@ -160,9 +174,9 @@ class CaLiGraph(HierarchyGraph):
                 for cat in self.get_category_parts(node):
                     for res in cat_store.get_resources(cat):
                         self._resource_provenance[cali_util.dbp_resource2clg_resource(res)].add(cat)
-                for lst in self.get_list_parts(node):
-                    for res in subject_entity.get_listpage_entities(self, lst):
-                        self._resource_provenance[cali_util.name2clg_resource(res)].add(lst)
+            if self.use_listing_resources:
+                for res, res_data in listing.get_page_entities(self):
+                    self._resource_provenance[cali_util.name2clg_resource(res)].update(res_data['origins'])
         return self._resource_provenance[resource]
 
     def get_transitive_dbpedia_types(self, node: str, force_recompute=False) -> set:
@@ -195,7 +209,7 @@ class CaLiGraph(HierarchyGraph):
             transitive_new_resource_count = 0
             transitive_property_counts = defaultdict(int)
 
-            for res in self.get_direct_dbpedia_resources(node, True):
+            for res in self.get_resources_from_categories(node):
                 if res in dbp_store.get_resources():
                     resource_count += 1
                     transitive_resource_count += 1
@@ -264,20 +278,6 @@ class CaLiGraph(HierarchyGraph):
         direct_node_axiom_count = len({n for n in self.nodes if self.get_axioms(n, transitive=False)})
         node_axiom_count = len({n for n in self.nodes if self.get_axioms(n, transitive=True)})
 
-        category_instances = set()
-        list_instances = set()
-
-        for node in self.nodes:
-            disjoint_types = self.get_disjoint_dbp_types(node, transitive=True)
-            for part in self.get_parts(node):
-                if cat_util.is_category(part):
-                    cat_resources = {r for r in cat_store.get_resources(part) if dbp_store.is_possible_resource(r) and not disjoint_types.intersection(dbp_store.get_types(r))}
-                    category_instances.update(cat_resources)
-                elif list_util.is_listpage(part):
-                    list_resources = {dbp_util.name2resource(r) for r in subject_entity.get_listpage_entities(self, part)}
-                    list_resources = {r for r in list_resources if dbp_store.is_possible_resource(r) and not disjoint_types.intersection(dbp_store.get_types(r))}
-                    list_instances.update(list_resources)
-
         return '\n'.join([
             '{:^40}'.format('STATISTICS'),
             '=' * 40,
@@ -296,10 +296,7 @@ class CaLiGraph(HierarchyGraph):
             '{:<30} | {:>7}'.format('nodes with direct axiom', direct_node_axiom_count),
             '{:<30} | {:>7}'.format('nodes with axiom', node_axiom_count),
             '-' * 40,
-            '{:<30} | {:>7}'.format('instances', len(category_instances | list_instances)),
-            '{:<30} | {:>7}'.format('category instances', len(category_instances)),
-            '{:<30} | {:>7}'.format('list instances', len(list_instances)),
-            '{:<30} | {:>7}'.format('new instances', len(list_instances.difference(dbp_store.get_resources()))),
+            '{:<30} | {:>7}'.format('instances', len(self.get_all_resources())),
             ])
 
     @classmethod
@@ -441,17 +438,16 @@ class CaLiGraph(HierarchyGraph):
         caligraph_name = nlp_util.singularize_phrase(caligraph_name)
         return cali_util.name2clg_type(caligraph_name)
 
-    def merge_ontology(self, use_listpage_resources: bool):
+    def merge_ontology(self):
         """Combine the category-list-graph with the DBpedia ontology."""
         utils.get_logger().info('CaLiGraph: Starting to merge CaLigraph ontology with DBpedia ontology..')
-        utils.get_logger().debug(f'CaLiGraph: Merge with list page resources: {use_listpage_resources}..')
         # remove edges from graph where clear type conflicts exist
-        conflicting_edges = cali_mapping.find_conflicting_edges(self, use_listpage_resources)
+        conflicting_edges = cali_mapping.find_conflicting_edges(self)
         self._remove_edges(conflicting_edges)
         self.append_unconnected()
 
         # compute mapping from caligraph-nodes to dbpedia-types
-        node_to_dbp_types_mapping = cali_mapping.find_mappings(self, use_listpage_resources)
+        node_to_dbp_types_mapping = cali_mapping.find_mappings(self)
 
         # add dbpedia types to caligraph
         utils.get_logger().debug('CaLiGraph: Integrating DBpedia types into CaLiGraph..')
@@ -480,7 +476,7 @@ class CaLiGraph(HierarchyGraph):
                 self._add_edges({(parent, node) for parent in parent_nodes})
 
         self.append_unconnected()
-        cali_mapping.resolve_disjointnesses(self, use_listpage_resources)
+        cali_mapping.resolve_disjointnesses(self)
 
         return self
 

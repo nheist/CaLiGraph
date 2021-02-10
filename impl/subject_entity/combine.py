@@ -21,7 +21,7 @@ def match_entities_with_uris(subject_entities_per_page: dict) -> dict:
                         ent_name = page_entity_map[ts][s][ent_text]
                     else:
                         ent_name = f'{page_name}--{ent_text}'
-                    enriched_entities[ts][s][ent_name] = {'name': ent_text, 'tag': ent_tag}
+                    enriched_entities[ts][s][ent_name] = {'text': ent_text, 'tag': ent_tag}
 
         enriched_entities_per_page[page_uri] = {ts: dict(enriched_entities[ts]) for ts in enriched_entities}
 

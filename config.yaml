@@ -139,9 +139,6 @@ cache:
   caligraph_merged_ontology:
     filename: 'caligraph-merged-ontology'
     version: 1
-  caligraph_filtered:
-    filename: 'caligraph-filtered'
-    version: 2
   caligraph_axiomatized:
     filename: 'caligraph-axiomatized'
     version: 2
@@ -250,3 +247,6 @@ cache:
     filename: 'bert-for-SE-tagging'
     version: 1
     store_as_folder: True
+  listing_page_entities:
+    filename: 'listing-page-entities'
+    version: 1

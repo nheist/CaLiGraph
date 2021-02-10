@@ -1,6 +1,4 @@
-from collections import defaultdict
 import impl.listpage.store as list_store
-import impl.listpage.util as list_util
 import utils
 from tqdm import tqdm
 import multiprocessing as mp
@@ -8,22 +6,9 @@ from . import combine, extract, tokenize
 from impl import wikipedia
 
 
-def get_listpage_entities(graph, listpage_uri: str) -> dict:
-    """Retrieve the extracted entities of a given list page."""
-    global __LISTPAGE_ENTITIES__
-    if '__LISTPAGE_ENTITIES__' not in globals():
-        __LISTPAGE_ENTITIES__ = defaultdict(dict, _extract_listpage_entities(graph))
-    return __LISTPAGE_ENTITIES__[listpage_uri]
-
-
-def _extract_listpage_entities(graph) -> dict:
-    # retrieve names and NE tags of subject entities for list pages
-    lp_subject_entites = {p: data for p, data in _get_subject_entity_predictions(graph).items() if list_util.is_listpage(p)}
-    # enrich subject entities with dbpedia entity information (URIs)
-    lp_subject_entities = combine.match_entities_with_uris(lp_subject_entites)
-    # get rid of top-section, section, and NE tag information
-    lp_subject_entities = {lp: {e: e_info['name'] for ts in lp_subject_entities[lp] for s in lp_subject_entities[lp][ts] for e, e_info in lp_subject_entities[lp][ts][s].items()} for lp in lp_subject_entities}
-    return lp_subject_entities
+def get_page_subject_entities(graph) -> dict:
+    """Retrieve the extracted entities per page with context."""
+    return combine.match_entities_with_uris(_get_subject_entity_predictions(graph))
 
 
 def _get_subject_entity_predictions(graph) -> dict:

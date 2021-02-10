@@ -2,7 +2,7 @@
 
 from impl.caligraph.graph import CaLiGraph
 import impl.caligraph.serialize as cali_serialize
-from impl import subject_entity
+from impl import listing
 import utils
 
 
@@ -24,23 +24,11 @@ def get_merged_ontology_graph() -> CaLiGraph:
     return __MERGED_ONTOLOGY_GRAPH__
 
 
-def get_filtered_graph() -> CaLiGraph:
-    """Retrieve initial CaLiGraph (with resources extracted from list pages)."""
-    global __FILTERED_GRAPH__
-    if '__FILTERED_GRAPH__' not in globals():
-        # first make sure that resources have already been extracted using the merged ontology graph
-        subject_entity.get_listpage_entities(get_merged_ontology_graph(), '')
-
-        initializer = lambda: get_base_graph().copy().merge_ontology(True).append_unconnected()
-        __FILTERED_GRAPH__ = utils.load_or_create_cache('caligraph_filtered', initializer)
-    return __FILTERED_GRAPH__
-
-
 def get_axiom_graph() -> CaLiGraph:
     """Retrieve CaLiGraph enriched with axioms from the Cat2Ax approach."""
     global __AXIOM_GRAPH__
     if '__AXIOM_GRAPH__' not in globals():
-        initializer = lambda: get_filtered_graph().remove_transitive_edges().compute_axioms()
+        initializer = lambda: get_merged_ontology_graph().remove_transitive_edges().compute_axioms()
         __AXIOM_GRAPH__ = utils.load_or_create_cache('caligraph_axiomatized', initializer)
     return __AXIOM_GRAPH__
 
@@ -48,4 +36,8 @@ def get_axiom_graph() -> CaLiGraph:
 def serialize_final_graph():
     """Serialize the final CaLiGraph."""
     graph = get_axiom_graph()
+
+    listing.get_page_entities(graph)  # extract entities from listings all over Wikipedia
+    graph.enable_listing_resources()  # finally, enable use of the extracted listing resources in the graph
+
     cali_serialize.serialize_graph(graph)
