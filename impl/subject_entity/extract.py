@@ -44,9 +44,6 @@ def _extract_subject_entity_batches(page_batches: list, bert_tokenizer, bert_mod
         current_entity = []
         current_entity_label = None
         for token, label in zip(word_tokens, word_predictions):
-            if token in (TOKENS_ENTRY + [TOKEN_ROW]):
-                found_entity = False
-                continue
             if label == 0:
                 if current_entity and not found_entity:
                     entity_name = _entity_tokens2name(current_entity)
@@ -54,6 +51,9 @@ def _extract_subject_entity_batches(page_batches: list, bert_tokenizer, bert_mod
                     found_entity = True
                 current_entity = []
                 current_entity_label = None
+
+                if token in (TOKENS_ENTRY + [TOKEN_ROW]):
+                    found_entity = False  # reset found_entity if entering a new line
             else:
                 current_entity_label = current_entity_label or ALL_LABELS[label]
                 current_entity.append(token)
