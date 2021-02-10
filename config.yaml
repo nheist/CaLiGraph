@@ -3,8 +3,8 @@ max_cpus: 16
 
 # -- CALIGRAPH CONFIGURATION --
 caligraph:
-  version: '1.4.0'
-  creation_date: '2021-02-01'
+  version: '2.0.0'
+  creation_date: '2021-03-01'
   namespace:
     base: 'http://caligraph.org/'
     ontology: 'http://caligraph.org/ontology/'
@@ -22,7 +22,7 @@ cali2ax:
 logging:
   level: 'DEBUG'
   to_file: True
-  filename: 'caligraph_v1_4_0'
+  filename: 'caligraph_v2_0_0'
 
 # -- ERROR-MAILER CONFIGURATION --
 # -> add information about your mail accounts here and enable the `success` or `error` switches
@@ -144,11 +144,11 @@ cache:
     version: 2
   wikipedia_raw_markup:
     filename: 'wikipedia-raw-markup'
-    version: 2
+    version: 1
     compress: True
   wikipedia_parsed_articles:
     filename: 'wikipedia-parsed-articles'
-    version: 2
+    version: 1
   wikipedia_parent_categories:
     filename: 'wikipedia-parent-categories'
     version: 1
@@ -228,11 +228,11 @@ cache:
     version: 1
   spacy_listpage_ne-tagging_GS:
     filename: 'spacy_listpage_ne-tagging_GS'
-    version: 2
+    version: 1
     store_as_folder: True
   spacy_listpage_ne-tagging_GS-WLE:
     filename: 'spacy_listpage_ne-tagging_GS-WLE'
-    version: 2
+    version: 1
     store_as_folder: True
   subject_entity_training_data:
     filename: 'subject-entity-training-data'
