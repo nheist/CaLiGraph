@@ -61,5 +61,5 @@ def _get_hearst_matcher(nlp) -> Matcher:
     if '__HEARST_MATCHER__' not in globals():
         __HEARST_MATCHER__ = Matcher(nlp.vocab)
         for k, vals in HEARST_PATTERNS.items():
-            __HEARST_MATCHER__.add(k, None, *vals['pattern'])
+            __HEARST_MATCHER__.add(k, vals['pattern'])
     return __HEARST_MATCHER__
