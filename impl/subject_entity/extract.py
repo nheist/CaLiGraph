@@ -72,7 +72,10 @@ def _entity_tokens2name(entity_tokens: list) -> str:
     entity_name = ' '.join(entity_tokens)
     entity_name = re.sub(r'\s*,\s*', ', ', entity_name)
     entity_name = re.sub(r'\s*\.\s*', '. ', entity_name)
+    entity_name = re.sub(r'\s*:\s*', ': ', entity_name)
     entity_name = re.sub(r'\s*\?\s*', '? ', entity_name)
+    entity_name = re.sub(r'\s*!\s*', '! ', entity_name)
+    entity_name = re.sub(r"\s*'", "'", entity_name)
     return entity_name.strip()
 
 
