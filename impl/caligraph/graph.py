@@ -287,7 +287,8 @@ class CaLiGraph(HierarchyGraph):
         class_count = len(self.nodes)
         classes_connected_to_dbpedia_count = len({n for n in self.nodes if self.get_transitive_dbpedia_types(n)})
         edge_count = len(self.edges)
-        predicate_count = len({pred for axioms in self._node_axioms.values() for pred, _ in axioms})
+        predicate_count = len(self.get_all_predicates())
+        axiom_predicate_count = len({pred for axioms in self._node_axioms.values() for pred, _ in axioms})
         parts_count = len({p for n in self.nodes for p in self.get_parts(n)})
         cat_parts_count = len({p for n in self.nodes for p in self.get_category_parts(n)})
         list_parts_count = len({p for n in self.nodes for p in self.get_list_parts(n)})
@@ -298,6 +299,12 @@ class CaLiGraph(HierarchyGraph):
         direct_node_axiom_count = len({n for n in self.nodes if self.get_axioms(n, transitive=False)})
         node_axiom_count = len({n for n in self.nodes if self.get_axioms(n, transitive=True)})
 
+        resources = self.get_all_resources()
+        types_per_resource = np.mean([len(self.get_nodes_for_resource(r) | {tt for t in self.get_nodes_for_resource(r) for tt in self.ancestors(t)}) for r in resources])
+        relations = self.get_all_relations()
+        in_degree = len({r for r in relations if clg_util.is_clg_resource(r[2])}) / len(resources)
+        out_degree = len(relations) / len(resources)
+
         return '\n'.join([
             '{:^40}'.format('STATISTICS'),
             '=' * 40,
@@ -306,6 +313,7 @@ class CaLiGraph(HierarchyGraph):
             '{:<30} | {:>7}'.format('nodes connected to DBpedia', classes_connected_to_dbpedia_count),
             '{:<30} | {:>7}'.format('edges', edge_count),
             '{:<30} | {:>7}'.format('predicates', predicate_count),
+            '{:<30} | {:>7}'.format('axiom predicates', axiom_predicate_count),
             '{:<30} | {:>7}'.format('parts', parts_count),
             '{:<30} | {:>7}'.format('category parts', cat_parts_count),
             '{:<30} | {:>7}'.format('list parts', list_parts_count),
@@ -316,7 +324,11 @@ class CaLiGraph(HierarchyGraph):
             '{:<30} | {:>7}'.format('nodes with direct axiom', direct_node_axiom_count),
             '{:<30} | {:>7}'.format('nodes with axiom', node_axiom_count),
             '-' * 40,
-            '{:<30} | {:>7}'.format('instances', len(self.get_all_resources())),
+            '{:<30} | {:>7}'.format('resources', len(resources)),
+            '{:<30} | {:>7}'.format('types per resource', types_per_resource),
+            '{:<30} | {:>7}'.format('relations', len(relations)),
+            '{:<30} | {:>7}'.format('resource in-degree', in_degree),
+            '{:<30} | {:>7}'.format('resource out-degree', out_degree),
             ])
 
     @classmethod
