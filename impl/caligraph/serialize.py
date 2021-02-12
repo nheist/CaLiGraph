@@ -40,17 +40,17 @@ def _write_lines_to_file(lines: list, filepath_config: str):
 def _get_lines_metadata(graph) -> list:
     """Serialize metadata."""
     void_resource = 'http://caligraph.org/.well-known/void'
-    description = 'The CaLiGraph is a large-scale general-purpose knowledge graph that extends DBpedia with a more fine-grained and restrictive ontology as well as additional resources extracted from Wikipedia Listpages.'
+    description = 'CaLiGraph is a large-scale general-purpose knowledge graph that extends DBpedia with a more fine-grained and restrictive ontology as well as additional resources extracted from Wikipedia list pages.'
     entity_count = len(graph.get_all_resources())
     class_count = len(graph.nodes)
-    property_count = len(graph.get_all_properties())
+    predicate_count = len(graph.get_all_predicates())
     return [
         serialize_util.as_object_triple(void_resource, rdf_util.PREDICATE_TYPE, 'http://rdfs.org/ns/void#Dataset'),
         serialize_util.as_literal_triple(void_resource, 'http://purl.org/dc/elements/1.1/title', 'CaLiGraph'),
         serialize_util.as_literal_triple(void_resource, rdf_util.PREDICATE_LABEL, 'CaLiGraph'),
         serialize_util.as_literal_triple(void_resource, 'http://purl.org/dc/elements/1.1/description', description),
         serialize_util.as_object_triple(void_resource, 'http://purl.org/dc/terms/license', 'http://www.gnu.org/copyleft/fdl.html'),
-        serialize_util.as_object_triple(void_resource, 'http://purl.org/dc/terms/license', 'http://creativecommons.org/licenses/by-sa/3.0/'),
+        serialize_util.as_object_triple(void_resource, 'http://purl.org/dc/terms/license', 'http://creativecommons.org/licenses/by-sa/4.0/'),
         serialize_util.as_literal_triple(void_resource, 'http://purl.org/dc/terms/creator', 'Nicolas Heist'),
         serialize_util.as_literal_triple(void_resource, 'http://purl.org/dc/terms/creator', 'Heiko Paulheim'),
         serialize_util.as_literal_triple(void_resource, 'http://purl.org/dc/terms/created', _get_creation_date()),
@@ -59,7 +59,7 @@ def _get_lines_metadata(graph) -> list:
         serialize_util.as_literal_triple(void_resource, 'http://rdfs.org/ns/void#uriSpace', clg_util.NAMESPACE_CLG_RESOURCE),
         serialize_util.as_literal_triple(void_resource, 'http://rdfs.org/ns/void#entities', entity_count),
         serialize_util.as_literal_triple(void_resource, 'http://rdfs.org/ns/void#classes', class_count),
-        serialize_util.as_literal_triple(void_resource, 'http://rdfs.org/ns/void#properties', property_count),
+        serialize_util.as_literal_triple(void_resource, 'http://rdfs.org/ns/void#properties', predicate_count),
         serialize_util.as_object_triple(void_resource, 'http://purl.org/dc/terms/source', 'http://dbpedia.org/resource/DBpedia'),
         serialize_util.as_object_triple(void_resource, 'http://purl.org/dc/terms/source', 'http://dbpedia.org/resource/Wikipedia'),
         serialize_util.as_object_triple(void_resource, 'http://xmlns.com/foaf/0.1/homepage', 'http://caligraph.org'),
@@ -88,9 +88,9 @@ def _get_lines_ontology(graph) -> list:
             lines_ontology.append(serialize_util.as_literal_triple(node, rdf_util.PREDICATE_LABEL, label))
         parents = graph.parents(node) or {rdf_util.CLASS_OWL_THING}
         lines_ontology.extend([serialize_util.as_object_triple(node, rdf_util.PREDICATE_SUBCLASS_OF, p) for p in parents])
-    # properties
-    for prop in graph.get_all_properties():
-        lines_ontology.append(serialize_util.as_object_triple(prop, rdf_util.PREDICATE_TYPE, rdf_util.CLASS_PROPERTY))
+    # predicates
+    for pred in graph.get_all_predicates():
+        lines_ontology.append(serialize_util.as_object_triple(pred, rdf_util.PREDICATE_TYPE, rdf_util.CLASS_PROPERTY))
     # disjointnesses
     for node in graph.nodes:
         for disjoint_node in graph.get_disjoint_nodes(node):
@@ -99,10 +99,10 @@ def _get_lines_ontology(graph) -> list:
     # restrictions
     defined_restrictions = set()
     for node in graph.nodes:
-        for prop, val in graph.get_axioms(node, transitive=False):
-            restriction_is_defined = (prop, val) in defined_restrictions
-            lines_ontology.extend(_serialize_restriction(node, prop, val, restriction_is_defined))
-            defined_restrictions.add((prop, val))
+        for pred, val in graph.get_axioms(node, transitive=False):
+            restriction_is_defined = (pred, val) in defined_restrictions
+            lines_ontology.extend(_serialize_restriction(node, pred, val, restriction_is_defined))
+            defined_restrictions.add((pred, val))
     return lines_ontology
 
 
@@ -141,9 +141,9 @@ def _get_lines_ontology_dbpedia_mapping(graph) -> list:
             continue
         equivalents = {t for t in graph.get_parts(node) if dbp_util.is_dbp_type(t)}
         lines_ontology_dbpedia_mapping.extend([serialize_util.as_object_triple(node, rdf_util.PREDICATE_SUBCLASS_OF, e) for e in equivalents])
-    for prop in graph.get_all_properties():
-        eq_prop = clg_util.clg_type2dbp_type(prop)
-        lines_ontology_dbpedia_mapping.append(serialize_util.as_object_triple(prop, rdf_util.PREDICATE_EQUIVALENT_PROPERTY, eq_prop))
+    for pred in graph.get_all_predicates():
+        eq_pred = clg_util.clg_type2dbp_type(pred)
+        lines_ontology_dbpedia_mapping.append(serialize_util.as_object_triple(pred, rdf_util.PREDICATE_EQUIVALENT_PROPERTY, eq_pred))
     return lines_ontology_dbpedia_mapping
 
 
@@ -210,11 +210,7 @@ def _get_lines_instances_labels(graph) -> list:
 def _get_lines_instances_relations(graph) -> list:
     """Serialize resource facts."""
     lines_instances_relations = []
-    instance_relations = set()
-    for node in graph.nodes:
-        for prop, val in graph.get_axioms(node):
-            instance_relations.update({(res, prop, val) for res in graph.get_resources(node)})
-    for s, p, o in instance_relations:
+    for s, p, o in graph.get_all_relations():
         if clg_util.is_clg_resource(o):
             lines_instances_relations.append(serialize_util.as_object_triple(s, p, o))
         else:

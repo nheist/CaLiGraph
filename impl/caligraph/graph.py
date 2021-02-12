@@ -39,6 +39,7 @@ class CaLiGraph(HierarchyGraph):
         self._node_listing_resources = defaultdict(set)
         self._all_node_resources = set()
         self._resource_nodes = defaultdict(set)
+        self._resource_relations = set()
         self._resource_provenance = defaultdict(set)
         self._resource_altlabels = defaultdict(set)
         self._node_axioms = defaultdict(set)
@@ -55,6 +56,7 @@ class CaLiGraph(HierarchyGraph):
         self._node_listing_resources = defaultdict(set)
         self._all_node_resources = set()
         self._resource_nodes = defaultdict(set)
+        self._resource_relations = set()
         self._resource_provenance = defaultdict(set)
         self._resource_altlabels = defaultdict(set)
         self._node_axioms = defaultdict(set)
@@ -72,6 +74,7 @@ class CaLiGraph(HierarchyGraph):
         self._node_resources = defaultdict(set)
         self._all_node_resources = set()
         self._resource_nodes = defaultdict(set)
+        self._resource_relations = set()
         self._resource_provenance = defaultdict(set)
         self._resource_altlabels = defaultdict(set)
 
@@ -82,6 +85,7 @@ class CaLiGraph(HierarchyGraph):
         del state['_node_axioms_transitive']
         del state['_node_disjoint_dbp_types']
         del state['_node_disjoint_dbp_types_transitive']
+        del state['_resource_relations']
         return state
 
     def __setstate__(self, state):
@@ -91,6 +95,7 @@ class CaLiGraph(HierarchyGraph):
         self._node_axioms_transitive = defaultdict(set)
         self._node_disjoint_dbp_types = defaultdict(set)
         self._node_disjoint_dbp_types_transitive = defaultdict(set)
+        self._resource_relations = set()
 
     def get_category_parts(self, node: str) -> set:
         return {p for p in self.get_parts(node) if cat_util.is_category(p)}
@@ -242,9 +247,24 @@ class CaLiGraph(HierarchyGraph):
             self._node_axioms_transitive[node] = self._node_axioms[node] | {ax for p in self.parents(node) for ax in self.get_axioms(p)}
         return self._node_axioms_transitive[node] if transitive else self._node_axioms[node]
 
-    def get_all_properties(self):
-        """Return all properties used in CaLiGraph."""
-        return {p for axioms in self._node_axioms.values() for p, _ in axioms}
+    def get_all_predicates(self) -> set:
+        """Return all predicates used in CaLiGraph."""
+        return {r[1] for r in self.get_all_relations()}
+
+    def get_all_relations(self) -> set:
+        """Return all relations in CaLiGraph."""
+        if not self._resource_relations:
+            # add relations from axioms
+            for node in self.nodes:
+                for pred, val in self.get_axioms(node):
+                    self._resource_relations.update({(res, pred, val) for res in self.get_resources(node)})
+            # add relations from listings
+            if self.use_listing_resources:
+                for res, res_data in listing.get_page_entities(self):
+                    res_uri = clg_util.name2clg_resource(res)
+                    self._resource_relations.update((res_uri, clg_util.name2clg_type(p), clg_util.name2clg_resource(o)) for p, o in res_data['out'])
+                    self._resource_relations.update((clg_util.name2clg_resource(s), clg_util.name2clg_type(p), res_uri) for p, s in res_data['in'])
+        return self._resource_relations
 
     def get_disjoint_dbp_types(self, node: str, transitive=True):
         if node not in self._node_disjoint_dbp_types:  # fetch disjoint dbp types of node
