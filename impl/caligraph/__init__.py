@@ -1,7 +1,7 @@
 """Functionality to retrieve cached versions of caligraph in several stages."""
 
 from impl.caligraph.graph import CaLiGraph
-import impl.caligraph.serialize as cali_serialize
+import impl.caligraph.serialize as clg_serialize
 from impl import listing
 import utils
 
@@ -40,4 +40,4 @@ def serialize_final_graph():
     listing.get_page_entities(graph)  # extract entities from listings all over Wikipedia
     graph.enable_listing_resources()  # finally, enable use of the extracted listing resources in the graph
 
-    cali_serialize.serialize_graph(graph)
+    clg_serialize.serialize_graph(graph)

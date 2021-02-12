@@ -17,9 +17,9 @@ import numpy as np
 import impl.dbpedia.store as dbp_store
 import impl.dbpedia.util as dbp_util
 import impl.dbpedia.heuristics as dbp_heur
-import impl.caligraph.ontology_mapper as cali_mapping
-import impl.caligraph.cali2ax as cali_axioms
-import impl.caligraph.util as cali_util
+import impl.caligraph.ontology_mapper as clg_mapping
+import impl.caligraph.cali2ax as clg_axioms
+import impl.caligraph.util as clg_util
 from polyleven import levenshtein
 from collections import defaultdict
 from typing import Optional
@@ -103,21 +103,21 @@ class CaLiGraph(HierarchyGraph):
 
     def get_label(self, item: str) -> Optional[str]:
         """Return the label of a CaLiGraph type or resource."""
-        if cali_util.is_clg_type(item):
-            return cali_util.clg_type2name(item)
-        if cali_util.is_clg_resource(item):
-            label = cali_util.clg_resource2name(item)
+        if clg_util.is_clg_type(item):
+            return clg_util.clg_type2name(item)
+        if clg_util.is_clg_resource(item):
+            label = clg_util.clg_resource2name(item)
             label = nlp_util.remove_bracket_content(label)
             return label.strip()
         return None
 
     def get_altlabels(self, item: str) -> set:
         """Return alternative labels for a CaLiGraph resource."""
-        if not cali_util.is_clg_resource(item):
+        if not clg_util.is_clg_resource(item):
             return set()
         if not self._resource_altlabels and self.use_listing_resources:
             for res, res_data in listing.get_page_entities(self):
-                self._resource_altlabels[cali_util.name2clg_resource(res)].update(res_data['labels'])
+                self._resource_altlabels[clg_util.name2clg_resource(res)].update(res_data['labels'])
         return self._resource_altlabels[item]
 
     def get_resources(self, node: str) -> set:
@@ -126,7 +126,7 @@ class CaLiGraph(HierarchyGraph):
             disjoint_dbp_types = self.get_disjoint_dbp_types(node, transitive=True)
             dbp_resources = self.get_resources_from_categories(node) | {r for t in self.get_type_parts(node) for r in dbp_store.get_direct_resources_for_type(t)}
             dbp_resources = {r for r in dbp_resources if not disjoint_dbp_types.intersection(dbp_store.get_types(r))}
-            self._node_resources[node] = {cali_util.dbp_resource2clg_resource(r) for r in dbp_resources}
+            self._node_resources[node] = {clg_util.dbp_resource2clg_resource(r) for r in dbp_resources}
             if self.use_listing_resources:
                 self._node_resources[node].update(self.get_resources_from_listings(node))
         return self._node_resources[node]
@@ -155,9 +155,9 @@ class CaLiGraph(HierarchyGraph):
     def get_resources_from_listings(self, node: str) -> set:
         if not self._node_listing_resources:
             for res, res_data in listing.get_page_entities(self):
-                res_nodes = {cali_util.name2clg_type(t) for t in res_data['types']}
-                res_nodes.update({n for o in res_data['origins'] for n in self.get_nodes_for_part(o)})
-                res_uri = cali_util.name2clg_resource(res)
+                res_nodes = {clg_util.name2clg_type(t) for t in res_data['types']}
+                res_nodes.update({n for o in res_data['origins'] for n in self.get_nodes_for_part(dbp_util.name2resource(o))})
+                res_uri = clg_util.name2clg_resource(res)
                 for n in res_nodes:
                     self._node_listing_resources[n].add(res_uri)
         return self._node_listing_resources[node]
@@ -173,10 +173,10 @@ class CaLiGraph(HierarchyGraph):
             for node in self.nodes:
                 for cat in self.get_category_parts(node):
                     for res in cat_store.get_resources(cat):
-                        self._resource_provenance[cali_util.dbp_resource2clg_resource(res)].add(cat)
+                        self._resource_provenance[clg_util.dbp_resource2clg_resource(res)].add(cat)
             if self.use_listing_resources:
                 for res, res_data in listing.get_page_entities(self):
-                    self._resource_provenance[cali_util.name2clg_resource(res)].update(res_data['origins'])
+                    self._resource_provenance[clg_util.name2clg_resource(res)].update({dbp_util.name2resource(o) for o in res_data['origins']})
         return self._resource_provenance[resource]
 
     def get_transitive_dbpedia_types(self, node: str, force_recompute=False) -> set:
@@ -399,7 +399,7 @@ class CaLiGraph(HierarchyGraph):
             # If node_id is not in the graph, then we try synonyms with max. edit-distance of 2
             # e.g. to cover cases where the type is named 'Organisation' and the category 'Organization'
             for name_variation in hypernymy_util.get_variations(lst_name):
-                node_id_alternative = cali_util.name2clg_type(name_variation)
+                node_id_alternative = clg_util.name2clg_type(name_variation)
                 if self.has_node(node_id_alternative):
                     node_id = node_id_alternative
                     break
@@ -436,18 +436,18 @@ class CaLiGraph(HierarchyGraph):
     def _convert_to_clg_type(cls, caligraph_name: str) -> str:
         """Convert a name into a CaLiGraph type URI."""
         caligraph_name = nlp_util.singularize_phrase(caligraph_name)
-        return cali_util.name2clg_type(caligraph_name)
+        return clg_util.name2clg_type(caligraph_name)
 
     def merge_ontology(self):
         """Combine the category-list-graph with the DBpedia ontology."""
         utils.get_logger().info('CaLiGraph: Starting to merge CaLigraph ontology with DBpedia ontology..')
         # remove edges from graph where clear type conflicts exist
-        conflicting_edges = cali_mapping.find_conflicting_edges(self)
+        conflicting_edges = clg_mapping.find_conflicting_edges(self)
         self._remove_edges(conflicting_edges)
         self.append_unconnected()
 
         # compute mapping from caligraph-nodes to dbpedia-types
-        node_to_dbp_types_mapping = cali_mapping.find_mappings(self)
+        node_to_dbp_types_mapping = clg_mapping.find_mappings(self)
 
         # add dbpedia types to caligraph
         utils.get_logger().debug('CaLiGraph: Integrating DBpedia types into CaLiGraph..')
@@ -476,19 +476,19 @@ class CaLiGraph(HierarchyGraph):
                 self._add_edges({(parent, node) for parent in parent_nodes})
 
         self.append_unconnected()
-        cali_mapping.resolve_disjointnesses(self)
+        clg_mapping.resolve_disjointnesses(self)
 
         return self
 
     def _add_dbp_type_to_graph(self, dbp_type: str) -> str:
         """Add a DBpedia type as node to the graph."""
         name = dbp_store.get_label(dbp_type)
-        node_id = cali_util.name2clg_type(name)
+        node_id = clg_util.name2clg_type(name)
         if not self.has_node(node_id):
             # If node_id is not in the graph, then we try synonyms with max. edit-distance of 2
             # e.g. to cover cases where the type is named 'Organisation' and the category 'Organization'
             for name_variation in hypernymy_util.get_variations(name):
-                node_id_alternative = cali_util.name2clg_type(name_variation)
+                node_id_alternative = clg_util.name2clg_type(name_variation)
                 if self.has_node(node_id_alternative):
                     node_id = node_id_alternative
                     break
@@ -506,10 +506,10 @@ class CaLiGraph(HierarchyGraph):
     def compute_axioms(self):
         """Compute axioms for all nodes in the graph."""
         utils.get_logger().info('CaLiGraph: Computing Cat2Ax axioms for CaLiGraph..')
-        for node, axioms in cali_axioms.extract_axioms(self).items():
+        for node, axioms in clg_axioms.extract_axioms(self).items():
             for ax in axioms:
-                prop = cali_util.dbp_type2clg_type(ax[1])
-                val = cali_util.dbp_resource2clg_resource(ax[2]) if dbp_util.is_dbp_resource(ax[2]) else ax[2]
+                prop = clg_util.dbp_type2clg_type(ax[1])
+                val = clg_util.dbp_resource2clg_resource(ax[2]) if dbp_util.is_dbp_resource(ax[2]) else ax[2]
                 self._node_axioms[node].add((prop, val))
         # filter out axioms that can be inferred from parents
         for node in self.nodes:

@@ -3,7 +3,7 @@
 import utils
 import impl.dbpedia.store as dbp_store
 import impl.dbpedia.util as dbp_util
-import impl.caligraph.util as cali_util
+import impl.caligraph.util as clg_util
 import bz2
 import impl.util.serialize as serialize_util
 import impl.util.rdf as rdf_util
@@ -56,7 +56,7 @@ def _get_lines_metadata(graph) -> list:
         serialize_util.as_literal_triple(void_resource, 'http://purl.org/dc/terms/created', _get_creation_date()),
         serialize_util.as_literal_triple(void_resource, 'http://purl.org/dc/terms/publisher', 'Nicolas Heist'),
         serialize_util.as_literal_triple(void_resource, 'http://purl.org/dc/terms/publisher', 'Heiko Paulheim'),
-        serialize_util.as_literal_triple(void_resource, 'http://rdfs.org/ns/void#uriSpace', cali_util.NAMESPACE_CLG_RESOURCE),
+        serialize_util.as_literal_triple(void_resource, 'http://rdfs.org/ns/void#uriSpace', clg_util.NAMESPACE_CLG_RESOURCE),
         serialize_util.as_literal_triple(void_resource, 'http://rdfs.org/ns/void#entities', entity_count),
         serialize_util.as_literal_triple(void_resource, 'http://rdfs.org/ns/void#classes', class_count),
         serialize_util.as_literal_triple(void_resource, 'http://rdfs.org/ns/void#properties', property_count),
@@ -112,9 +112,9 @@ def _get_creation_date() -> datetime.datetime:
 
 def _serialize_restriction(class_iri: str, prop_iri: str, val: str, restriction_is_defined: bool) -> list:
     """Serialize the restrictions (i.e. relation axioms)."""
-    prop_id = prop_iri[len(cali_util.NAMESPACE_CLG_ONTOLOGY):]
-    val_id = val[len(cali_util.NAMESPACE_CLG_RESOURCE):] if cali_util.is_clg_resource(val) else val
-    restriction_iri = f'{cali_util.NAMESPACE_CLG_ONTOLOGY}RestrictionHasValue_{prop_id}_{val_id}'
+    prop_id = prop_iri[len(clg_util.NAMESPACE_CLG_ONTOLOGY):]
+    val_id = val[len(clg_util.NAMESPACE_CLG_RESOURCE):] if clg_util.is_clg_resource(val) else val
+    restriction_iri = f'{clg_util.NAMESPACE_CLG_ONTOLOGY}RestrictionHasValue_{prop_id}_{val_id}'
 
     if restriction_is_defined:
         result = []
@@ -124,7 +124,7 @@ def _serialize_restriction(class_iri: str, prop_iri: str, val: str, restriction_
             serialize_util.as_literal_triple(restriction_iri, rdf_util.PREDICATE_LABEL, f'Restriction onProperty={prop_id} hasValue={val_id}'),
             serialize_util.as_object_triple(restriction_iri, 'http://www.w3.org/2002/07/owl#onProperty', prop_iri),
         ]
-        if cali_util.is_clg_resource(val):
+        if clg_util.is_clg_resource(val):
             result.append(serialize_util.as_object_triple(restriction_iri, 'http://www.w3.org/2002/07/owl#hasValue', val))
         else:
             result.append(serialize_util.as_literal_triple(restriction_iri, 'http://www.w3.org/2002/07/owl#hasValue', val))
@@ -142,7 +142,7 @@ def _get_lines_ontology_dbpedia_mapping(graph) -> list:
         equivalents = {t for t in graph.get_parts(node) if dbp_util.is_dbp_type(t)}
         lines_ontology_dbpedia_mapping.extend([serialize_util.as_object_triple(node, rdf_util.PREDICATE_SUBCLASS_OF, e) for e in equivalents])
     for prop in graph.get_all_properties():
-        eq_prop = cali_util.clg_type2dbp_type(prop)
+        eq_prop = clg_util.clg_type2dbp_type(prop)
         lines_ontology_dbpedia_mapping.append(serialize_util.as_object_triple(prop, rdf_util.PREDICATE_EQUIVALENT_PROPERTY, eq_prop))
     return lines_ontology_dbpedia_mapping
 
@@ -167,7 +167,7 @@ def _get_lines_instances_types(graph) -> list:
         parents = graph.parents(n)
         caligraph_ancestors[n] = parents | {a for p in parents for a in caligraph_ancestors[p]}
 
-    axiom_resources = {ax[1] for n in graph.nodes for ax in graph.get_axioms(n, transitive=False) if cali_util.is_clg_resource(ax[1])}
+    axiom_resources = {ax[1] for n in graph.nodes for ax in graph.get_axioms(n, transitive=False) if clg_util.is_clg_resource(ax[1])}
     for res in graph.get_all_resources() | axiom_resources:
         lines_instances_types.append(serialize_util.as_object_triple(res, rdf_util.PREDICATE_TYPE, rdf_util.CLASS_OWL_NAMED_INDIVIDUAL))
         types = graph.get_nodes_for_resource(res)
@@ -196,7 +196,7 @@ def _get_lines_instances_transitive_types(graph) -> list:
 def _get_lines_instances_labels(graph) -> list:
     """Serialize resource labels."""
     lines_instances_labels = []
-    axiom_resources = {ax[1] for n in graph.nodes for ax in graph.get_axioms(n, transitive=False) if cali_util.is_clg_resource(ax[1])}
+    axiom_resources = {ax[1] for n in graph.nodes for ax in graph.get_axioms(n, transitive=False) if clg_util.is_clg_resource(ax[1])}
     for res in graph.get_all_resources() | axiom_resources:
         label = graph.get_label(res)
         if label:
@@ -215,7 +215,7 @@ def _get_lines_instances_relations(graph) -> list:
         for prop, val in graph.get_axioms(node):
             instance_relations.update({(res, prop, val) for res in graph.get_resources(node)})
     for s, p, o in instance_relations:
-        if cali_util.is_clg_resource(o):
+        if clg_util.is_clg_resource(o):
             lines_instances_relations.append(serialize_util.as_object_triple(s, p, o))
         else:
             lines_instances_relations.append(serialize_util.as_literal_triple(s, p, o))
@@ -225,9 +225,9 @@ def _get_lines_instances_relations(graph) -> list:
 def _get_lines_instances_dbpedia_mapping(graph) -> list:
     """Serialize DBpedia mapping for resources."""
     lines_instances_dbpedia_mapping = []
-    axiom_resources = {ax[1] for n in graph.nodes for ax in graph.get_axioms(n, transitive=False) if cali_util.is_clg_resource(ax[1])}
+    axiom_resources = {ax[1] for n in graph.nodes for ax in graph.get_axioms(n, transitive=False) if clg_util.is_clg_resource(ax[1])}
     for res in graph.get_all_resources() | axiom_resources:
-        equivalent_res = cali_util.clg_resource2dbp_resource(res)
+        equivalent_res = clg_util.clg_resource2dbp_resource(res)
         if equivalent_res in dbp_store.get_resources():
             lines_instances_dbpedia_mapping.append(serialize_util.as_object_triple(res, rdf_util.PREDICATE_SAME_AS, equivalent_res))
     return lines_instances_dbpedia_mapping
@@ -245,10 +245,10 @@ def _get_lines_instances_provenance(graph) -> list:
 def _get_lines_dbpedia_instances(graph) -> list:
     """Serialize new DBpedia resources in DBpedia namespace."""
     lines_dbpedia_instances = []
-    new_instances = {cali_util.clg_resource2dbp_resource(res) for res in graph.get_all_resources()}.difference(dbp_store.get_resources())
+    new_instances = {clg_util.clg_resource2dbp_resource(res) for res in graph.get_all_resources()}.difference(dbp_store.get_resources())
     for inst in new_instances:
         lines_dbpedia_instances.append(serialize_util.as_object_triple(inst, rdf_util.PREDICATE_TYPE, rdf_util.CLASS_OWL_NAMED_INDIVIDUAL))
-        label = graph.get_label(cali_util.dbp_resource2clg_resource(inst))
+        label = graph.get_label(clg_util.dbp_resource2clg_resource(inst))
         if label:
             lines_dbpedia_instances.append(serialize_util.as_literal_triple(inst, rdf_util.PREDICATE_LABEL, label))
     return lines_dbpedia_instances
@@ -261,7 +261,7 @@ def _get_lines_dbpedia_instance_types(graph) -> list:
         node_types = graph.get_transitive_dbpedia_types(node, force_recompute=True)
         transitive_node_types = {tt for t in node_types for tt in dbp_store.get_transitive_supertype_closure(t)}.difference({rdf_util.CLASS_OWL_THING})
         for res in graph.get_resources(node):
-            dbp_res = cali_util.clg_resource2dbp_resource(res)
+            dbp_res = clg_util.clg_resource2dbp_resource(res)
             if dbp_res in dbp_store.get_resources():
                 new_dbpedia_types[dbp_res].update(transitive_node_types.difference(dbp_store.get_transitive_types(dbp_res)))
             else:
@@ -279,7 +279,7 @@ def _get_lines_dbpedia_instance_caligraph_types(graph) -> list:
         caligraph_ancestors[n] = parents | {a for p in parents for a in caligraph_ancestors[p]}
 
     for res in graph.get_all_resources():
-        dbp_res = cali_util.clg_resource2dbp_resource(res)
+        dbp_res = clg_util.clg_resource2dbp_resource(res)
         if dbp_res not in dbp_store.get_resources():
             continue
 
@@ -299,7 +299,7 @@ def _get_lines_dbpedia_instance_transitive_caligraph_types(graph) -> list:
         caligraph_ancestors[n] = parents | {a for p in parents for a in caligraph_ancestors[p]}
 
     for res in graph.get_all_resources():
-        dbp_res = cali_util.clg_resource2dbp_resource(res)
+        dbp_res = clg_util.clg_resource2dbp_resource(res)
         if dbp_res not in dbp_store.get_resources():
             continue
 
@@ -315,10 +315,10 @@ def _get_lines_dbpedia_instance_relations(graph) -> list:
     new_instance_relations = set()
     for node in graph.nodes:
         for prop, val in graph.get_axioms(node):
-            dbp_prop = cali_util.clg_type2dbp_type(prop)
-            dbp_val = cali_util.clg_resource2dbp_resource(val) if cali_util.is_clg_resource(val) else val
+            dbp_prop = clg_util.clg_type2dbp_type(prop)
+            dbp_val = clg_util.clg_resource2dbp_resource(val) if clg_util.is_clg_resource(val) else val
             for res in graph.get_resources(node):
-                dbp_res = cali_util.clg_resource2dbp_resource(res)
+                dbp_res = clg_util.clg_resource2dbp_resource(res)
                 if dbp_res not in dbp_store.get_resources() or dbp_prop not in dbp_store.get_properties(dbp_res) or dbp_val not in dbp_store.get_properties(dbp_res)[dbp_prop]:
                     new_instance_relations.add((dbp_res, dbp_prop, dbp_val))
     lines_dbpedia_instance_relations = []
