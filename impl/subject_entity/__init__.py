@@ -32,7 +32,7 @@ def _get_training_data(graph) -> tuple:
 
 
 def _retrieve_training_data(graph) -> tuple:
-    list_nlp._initialise_parser()  # make sure that parser has been trained before going into multiprocessing
+    list_nlp.parse('')  # make sure that parser has been trained and initialized before going into multiprocessing
 
     train_tokens, train_labels = [], []
     with mp.Pool(processes=round(utils.get_config('max_cpus') / 4)) as pool:
