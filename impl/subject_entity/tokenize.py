@@ -276,10 +276,9 @@ def _get_categories_for_list(listpage_uri: str) -> set:
     return list_mapping.get_equivalent_categories(listpage_uri) | list_mapping.get_parent_categories(listpage_uri)
 
 
-TYPE_LABEL_MAPPING = {t: label for label, types in dbp_util.NER_LABEL_MAPPING.items() for t in types}
+TYPE_LABEL_MAPPING = {tt: label for label, types in dbp_util.NER_LABEL_MAPPING.items() for t in types for tt in dbp_store.get_transitive_subtype_closure(t)}
 def _compute_entity_label(resource_uri: str) -> str:
-    resource_types = dbp_store.get_transitive_types(resource_uri)
-    for t in resource_types:
+    for t in dbp_store.get_types(resource_uri):
         if t in TYPE_LABEL_MAPPING:
             return TYPE_LABEL_MAPPING[t]
     return LABEL_OTHER
