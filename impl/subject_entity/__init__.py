@@ -35,9 +35,9 @@ def _retrieve_training_data(graph) -> tuple:
     list_nlp._initialise_parser()  # make sure that parser has been trained before going into multiprocessing
 
     train_tokens, train_labels = [], []
-    ctx = [(lp_uri, lp_data, graph) for lp_uri, lp_data in list_store.get_parsed_listpages().items()]
-    with mp.Pool(processes=utils.get_config('max_cpus')) as pool:
-        for token_lists, label_lists in tqdm(pool.imap_unordered(tokenize.page_to_tokens_and_labels, ctx, chunksize=50), desc='Extracting BERT training data', total=len(ctx)):
+    with mp.Pool(processes=utils.get_config('max_cpus') / 4) as pool:
+        ctx = [(lp_uri, lp_data, graph) for lp_uri, lp_data in list_store.get_parsed_listpages().items()]
+        for token_lists, label_lists in tqdm(pool.imap_unordered(tokenize.page_to_tokens_and_labels, ctx, chunksize=200), desc='Extracting BERT training data', total=len(ctx)):
             train_tokens.extend(token_lists)
             train_labels.extend(label_lists)
     return train_tokens, train_labels
