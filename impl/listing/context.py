@@ -38,7 +38,7 @@ def retrieve_page_entity_context(graph) -> pd.DataFrame:
     return df
 
 
-def _assign_entity_types_for_section(df, section_entity):
+def _assign_entity_types_for_section(df: pd.DataFrame, section_entity: str) -> pd.DataFrame:
     """Retrieve the types of section entities."""
     section_types = {}
     for ent in df[section_entity].unique():
@@ -49,7 +49,7 @@ def _assign_entity_types_for_section(df, section_entity):
     return pd.merge(how='left', left=df, right=section_types, left_on=section_entity, right_index=True)
 
 
-def _align_section_entity_types(df):
+def _align_section_entity_types(df: pd.DataFrame) -> pd.DataFrame:
     """Align the types of section entities to the most common entity type aggregated by top-section."""
     section_types = {}
     for ts, s_df in df.groupby('TS_text'):
@@ -68,7 +68,7 @@ def _align_section_entity_types(df):
     return df.drop(columns='S_enttype').rename(columns={'S_enttype_new': 'S_enttype'})
 
 
-def _assign_pagetypes(df):
+def _assign_pagetypes(df: pd.DataFrame) -> pd.DataFrame:
     """Assign (most basic and most specific) page types to the existing dataframe."""
     data = []
     for page_name in df['P'].unique():
@@ -86,7 +86,7 @@ def _assign_pagetypes(df):
     return pd.merge(left=df, right=pd.DataFrame(data, columns=['P', 'P_type', 'P_basetype']), on='P')
 
 
-def _get_basetype(dbp_type: str):
+def _get_basetype(dbp_type: str) -> str:
     """Retrieve the base type of a DBpedia type (i.e., the type below owl:Thing or dbo:Agent)."""
     parent_types = {dbp_type}
     while parent_types and not parent_types.intersection({rdf_util.CLASS_OWL_THING, f'{dbp_util.NAMESPACE_DBP_ONTOLOGY}Agent'}):

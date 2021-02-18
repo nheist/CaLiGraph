@@ -277,7 +277,7 @@ def _extract_new_relations(rule_dfs: list, target: str, source_df: pd.DataFrame,
         key_cols = list(set(df_rule.columns).difference({'rel', 'micro_mean', 'micro_std'}))
         result_df = pd.concat([result_df, pd.merge(how='left', left=df_rule, right=source_df, on=key_cols)])
     # filter out invalid target values
-    result_df = result_df[result_df[target] != 'nan'].dropna(subset=[target])
+    result_df = result_df.dropna(subset=[target])
     result_df = _remove_relations_with_invalid_targets(result_df, target)
     # filter out existing relations
     predicate_mapping = _get_predicate_mapping()

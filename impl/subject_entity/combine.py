@@ -14,7 +14,7 @@ def match_entities_with_uris(subject_entities_per_page: dict) -> dict:
     for page_uri, entities_per_ts in subject_entities_per_page.items():
         page_name = dbp_util.resource2name(page_uri)
         enriched_entities = defaultdict(lambda: defaultdict(dict))
-        page_entity_map, page_sectionentity_map = _create_entity_maps(parsed_pages[page_uri])
+        page_entity_map, section_entity_map = _create_entity_maps(parsed_pages[page_uri])
         for ts, entities_per_s in entities_per_ts.items():
             for s, entities in entities_per_s.items():
                 for ent_text, ent_tag in entities.items():
@@ -25,8 +25,8 @@ def match_entities_with_uris(subject_entities_per_page: dict) -> dict:
                     enriched_entities[ts][s][ent_name] = {
                         'text': ent_text,
                         'tag': ent_tag,
-                        'TS_ent': page_sectionentity_map[ts],
-                        'S_ent': page_sectionentity_map[s]
+                        'TS_ent': section_entity_map[ts],
+                        'S_ent': section_entity_map[s]
                     }
 
         enriched_entities_per_page[page_uri] = {ts: dict(enriched_entities[ts]) for ts in enriched_entities}
@@ -36,12 +36,12 @@ def match_entities_with_uris(subject_entities_per_page: dict) -> dict:
 
 def _create_entity_maps(page_markup: dict) -> tuple:
     page_entity_map = defaultdict(lambda: defaultdict(dict))
-    page_sectionentity_map = defaultdict(dict)
+    section_entity_map = defaultdict(lambda: None)
     top_section_name = ''
     for section_data in page_markup['sections']:
         section_name_markup = section_data['name']
         section_name = wmp.wikitext_to_plaintext(section_name_markup)
-        page_sectionentity_map[section_name] = wmp.get_first_wikilink_entity(section_name_markup)
+        section_entity_map[section_name] = wmp.get_first_wikilink_entity(section_name_markup)
         top_section_name = section_name if section_data['level'] <= 2 else top_section_name
 
         for enum_data in section_data['enums']:
@@ -53,4 +53,4 @@ def _create_entity_maps(page_markup: dict) -> tuple:
                 for cell in row:
                     for entity in cell['entities']:
                         page_entity_map[top_section_name][section_name][entity['text']] = entity['name']
-    return page_entity_map, page_sectionentity_map
+    return page_entity_map, section_entity_map
