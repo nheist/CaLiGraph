@@ -3,10 +3,9 @@
 import wikitextparser as wtp
 from wikitextparser import WikiText
 from typing import Tuple, Optional
-import impl.dbpedia.store as dbp_store
 import impl.dbpedia.util as dbp_util
 import impl.util.nlp as nlp_util
-import impl.util.string as str_util
+from . import wikimarkup_parser as wmp
 import re
 import signal
 import utils
@@ -219,7 +218,7 @@ def _convert_markup(wiki_text: str) -> Tuple[str, list]:
     parsed_text = _remove_inner_wikilinks(wtp.parse(wiki_text))
     parsed_text = _convert_sortname_templates(parsed_text)
 
-    plain_text = _wikitext_to_plaintext(parsed_text).strip()
+    plain_text = wmp.wikitext_to_plaintext(parsed_text).strip()
 
     # extract wikilink-entities with correct positions in plain text
     entities = []
@@ -240,7 +239,7 @@ def _convert_markup(wiki_text: str) -> Tuple[str, list]:
             continue  # skip entity with a text that can not be located
         entity_position = current_entity_index + plain_text[current_entity_index:].index(text)
         current_entity_index = entity_position + len(text)
-        entity_name = _convert_target_to_name(w.target)
+        entity_name = wmp.get_entity_for_wikilink(w)
         if entity_name:
             entities.append({'idx': entity_position, 'text': text, 'name': entity_name})
     return plain_text, entities
@@ -275,36 +274,6 @@ def _convert_sortname_templates(parsed_text: wtp.WikiText) -> wtp.WikiText:
                 result = f'[[{text}]]'
         parsed_text[slice(*t.span)] = result
     return parsed_text
-
-
-def _wikitext_to_plaintext(parsed_text: wtp.WikiText) -> str:
-    # bolds and italics are already removed during preprocessing to reduce runtime
-    result = parsed_text.plain_text(replace_bolds_and_italics=False).strip(" '\t\n")
-    result = re.sub(r'\n+', '\n', result)
-    result = re.sub(r' +', ' ', result)
-    return result
-
-
-def _convert_target_to_name(link_target: str) -> Optional[str]:
-    if not link_target:
-        return None
-    link_target = _remove_language_tag(link_target.strip())
-    resource_uri = dbp_util.name2resource(str_util.capitalize(link_target))
-    redirected_uri = dbp_store.resolve_spelling_redirect(resource_uri)
-    if dbp_store.is_possible_resource(redirected_uri) and '#' not in redirected_uri:
-        # return redirected uri only if it is an own Wikipedia article and it does not point to an article section
-        final_uri = redirected_uri
-    else:
-        final_uri = resource_uri
-    return dbp_util.resource2name(final_uri)
-
-
-def _remove_language_tag(link_target: str) -> str:
-    if link_target[0] != ':':
-        return link_target
-    if len(link_target) < 4 or link_target[3] != ':':
-        return link_target[1:]
-    return link_target[4:]
 
 
 # define functionality for parsing timeouts

@@ -1,7 +1,6 @@
 import pandas as pd
 import numpy as np
 from collections import defaultdict
-import wikitextparser as wtp
 import utils
 from impl.listing import context
 import impl.caligraph.util as clg_util
@@ -78,10 +77,7 @@ def _get_origins_for_entity(df_ent: pd.DataFrame) -> set:
     unique_page_section_combinations = df_ent.groupby(['P', 'S_text']).size().reset_index()
     for _, row in unique_page_section_combinations.iterrows():
         page_text = row['P']
-        try:
-            section_text = wtp.parse(row['S_text']).plain_text()
-        except AttributeError:
-            section_text = row['S_text']
+        section_text = row['S_text']
         origins.add(f'{page_text}#{section_text}')
     return origins
 

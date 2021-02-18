@@ -19,13 +19,11 @@ def retrieve_page_entity_context(graph) -> pd.DataFrame:
         for ts, s_data in ts_data.items():
             for s, entities in s_data.items():
                 for e, e_data in entities.items():
-                    df_data.append((p, e, e_data['text'], e_data['tag'], ts, s))
+                    df_data.append((p, e, e_data['text'], e_data['tag'], ts, e_data['TS_ent'], s, e_data['S_ent']))
 
     # create frame and add further features
-    df = pd.DataFrame(data=df_data, columns=['P', 'E_ent', 'E_text', 'E_tag', 'TS_text', 'S_text'])
+    df = pd.DataFrame(data=df_data, columns=['P', 'E_ent', 'E_text', 'E_tag', 'TS_text', 'TS_ent', 'S_text', 'S_ent'])
     df['E_id'] = df.index.values
-    df['TS_ent'] = df['TS_text'].str.extract(r'.*\[\[([^\]|]+)(?:|[^\]]+)?\]\].*')
-    df['S_ent'] = df['S_text'].str.extract(r'.*\[\[([^\]|]+)(?:|[^\]]+)?\]\].*')
     df = _assign_entity_types_for_section(df, 'TS_ent')
     df = _assign_entity_types_for_section(df, 'S_ent')
     df = _align_section_entity_types(df)

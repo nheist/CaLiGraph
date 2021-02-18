@@ -10,7 +10,7 @@ from impl import category
 import impl.listpage.mapping as list_mapping
 import impl.listpage.nlp as list_nlp
 import impl.listpage.util as list_util
-import wikitextparser as wtp
+import impl.wikipedia.wikimarkup_parser as wmp
 
 
 # size of token batch for BERT
@@ -293,7 +293,7 @@ def _context_to_tokens(ctx: list, table_header=[]) -> list:
     # add basic context, separated by [CTX] special tokens
     spacy_tokenizer = _get_spacy_tokenizer()
     for text in ctx:
-        plain_text = _remove_wikitext_markup(text)
+        plain_text = wmp.wikitext_to_plaintext(text)
         ctx_tokens.extend([w.text for w in spacy_tokenizer(plain_text)])
         ctx_tokens.append(TOKEN_CTX)
 
@@ -311,13 +311,6 @@ def _get_spacy_tokenizer():
     if '__SPACY_TOKENIZER__' not in globals():
         __SPACY_TOKENIZER__ = English().tokenizer
     return __SPACY_TOKENIZER__
-
-
-def _remove_wikitext_markup(text: str) -> str:
-    try:
-        return wtp.parse(text).plain_text()
-    except AttributeError:
-        return text
 
 
 def _text_to_tokens(doc, entities: list, subject_entities: dict) -> tuple:

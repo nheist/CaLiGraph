@@ -44,6 +44,9 @@ def _extract_subject_entity_batches(page_batches: list, bert_tokenizer, bert_mod
         current_entity = []
         current_entity_label = None
         for token, label in zip(word_tokens, word_predictions):
+            if token in ADDITIONAL_SPECIAL_TOKENS:
+                label = 0  # first make sure that special tokens are never entities
+
             if label == 0:
                 if current_entity and not found_entity:
                     entity_name = _tokens2name(' '.join(current_entity))
