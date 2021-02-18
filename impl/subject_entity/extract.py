@@ -46,7 +46,7 @@ def _extract_subject_entity_batches(page_batches: list, bert_tokenizer, bert_mod
         for token, label in zip(word_tokens, word_predictions):
             if label == 0:
                 if current_entity and not found_entity:
-                    entity_name = _entity_tokens2name(current_entity)
+                    entity_name = _tokens2name(' '.join(current_entity))
                     subject_entity_dict[topsection_name][section_name][entity_name] = current_entity_label
                     found_entity = True
                 current_entity = []
@@ -58,18 +58,17 @@ def _extract_subject_entity_batches(page_batches: list, bert_tokenizer, bert_mod
                 current_entity_label = current_entity_label or ALL_LABELS[label]
                 current_entity.append(token)
         if current_entity and not found_entity:
-            entity_name = _entity_tokens2name(current_entity)
+            entity_name = _tokens2name(' '.join(current_entity))
             subject_entity_dict[topsection_name][section_name][entity_name] = current_entity_label
 
 
 def _extract_context(word_tokens: list) -> tuple:
     word_tokens = word_tokens[:word_tokens.index(TOKEN_SEP)]
     context_parts = ' '.join(word_tokens).split(TOKEN_CTX)
-    return context_parts[1].strip(), context_parts[2].strip()
+    return _tokens2name(context_parts[1]), _tokens2name(context_parts[2])
 
 
-def _entity_tokens2name(entity_tokens: list) -> str:
-    entity_name = ' '.join(entity_tokens)
+def _tokens2name(entity_name: str) -> str:
     entity_name = re.sub(r'\s*,\s*', ', ', entity_name)
     entity_name = re.sub(r'\s*\.\s*', '. ', entity_name)
     entity_name = re.sub(r'\s*:\s*', ': ', entity_name)
