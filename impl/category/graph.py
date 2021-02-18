@@ -1,9 +1,11 @@
 import networkx as nx
+from typing import Set
 import impl.category.util as cat_util
 import impl.category.store as cat_store
 from impl.util.hierarchy_graph import HierarchyGraph
 import utils
 import impl.util.nlp as nlp_util
+import impl.category.cat2ax as cat_axioms
 
 
 class CategoryGraph(HierarchyGraph):
@@ -59,3 +61,18 @@ class CategoryGraph(HierarchyGraph):
         # clearing the graph of any invalid nodes
         self._remove_all_nodes_except(conceptual_categories | {self.root_node})
         return self
+
+    # CATEGORY AXIOMS
+
+    def get_axiom_edges(self) -> Set[tuple]:
+        """Return all edges that are loosely confirmed by axioms (i.e. most children share the same pattern)."""
+        valid_axiom_edges = set()
+        for parent in self.content_nodes:
+            parent_axioms = cat_axioms.get_type_axioms(parent)
+            children = tuple(self.children(parent))
+            child_axioms = {c: {a for a in cat_axioms.get_type_axioms(c)} for c in children}
+            consistent_child_axioms = len(children) > 2 and any(all(any(a.implies(x) for x in child_axioms[c]) for c in children) for a in child_axioms[children[0]])
+            for c in children:
+                if consistent_child_axioms or any(ca.implies(pa) for ca in child_axioms[c] for pa in parent_axioms):
+                    valid_axiom_edges.add((parent, c))
+        return valid_axiom_edges

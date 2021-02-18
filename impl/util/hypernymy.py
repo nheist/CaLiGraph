@@ -1,11 +1,9 @@
 """Compute hypernyms with methods similar to Ponzetto & Strube: Deriving a large scale taxonomy from Wikipedia."""
 
-from typing import Set
 from collections import defaultdict
 import utils
 import bz2
 import pickle
-import impl.category.cat2ax as cat_axioms
 import impl.util.words as words_util
 from polyleven import levenshtein
 
@@ -62,7 +60,7 @@ def compute_hypernyms(category_graph) -> dict:
     # collect hypernyms from axiom matches between Wikipedia categories
     cat_headlemmas = category_graph.get_node_LHS()
     axiom_hypernyms = defaultdict(lambda: defaultdict(int))
-    for parent, child in _get_axiom_edges(category_graph):
+    for parent, child in category_graph.get_axiom_edges():
         for cl in cat_headlemmas[child]:
             for pl in cat_headlemmas[parent]:
                 axiom_hypernyms[cl.lower()][pl.lower()] += 1
@@ -93,17 +91,3 @@ def compute_hypernyms(category_graph) -> dict:
         hypernyms[candidate] = {word for word, count in hyper_count.items() if count > 1}
 
     return hypernyms
-
-
-def _get_axiom_edges(category_graph) -> Set[tuple]:
-    """Return all edges that are loosely confirmed by axioms (i.e. most children share the same pattern)."""
-    valid_axiom_edges = set()
-    for parent in category_graph.content_nodes:
-        parent_axioms = cat_axioms.get_type_axioms(parent)
-        children = tuple(category_graph.children(parent))
-        child_axioms = {c: {a for a in cat_axioms.get_type_axioms(c)} for c in children}
-        consistent_child_axioms = len(children) > 2 and any(all(any(a.implies(x) for x in child_axioms[c]) for c in children) for a in child_axioms[children[0]])
-        for c in children:
-            if consistent_child_axioms or any(ca.implies(pa) for ca in child_axioms[c] for pa in parent_axioms):
-                valid_axiom_edges.add((parent, c))
-    return valid_axiom_edges
