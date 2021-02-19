@@ -62,7 +62,7 @@ def _align_section_entity_types(df: pd.DataFrame) -> pd.DataFrame:
         if top_types:
             top_type = list(top_types)[0]
             section_types.update({(ts, se): dbp_util.type2name(top_type) for se in section_ents if top_type in dbp_store.get_transitive_types(dbp_util.name2resource(str(se)))})
-    section_types = pd.Series(section_types, name='SE_enttype_new')
+    section_types = pd.Series(section_types, name='S_enttype_new')
     df = pd.merge(how='left', left=df, right=section_types, left_on=['TS_text', 'S_ent'], right_index=True)
     df['S_enttype_new'].fillna(df['S_enttype'], inplace=True)
     return df.drop(columns='S_enttype').rename(columns={'S_enttype_new': 'S_enttype'})
