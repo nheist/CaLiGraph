@@ -56,8 +56,8 @@ def extract_page_entities(graph) -> dict:
     # extract relations
     df_rels = context.get_entity_relations()
     df_new_relations = _compute_new_relations(df, df_rels, 'P', valid_tags)
-    df_new_relations = pd.concat(df_new_relations, _compute_new_relations(df, df_rels, 'TS_ent', valid_tags))
-    df_new_relations = pd.concat(df_new_relations, _compute_new_relations(df, df_rels, 'S_ent', valid_tags))
+    df_new_relations = pd.concat([df_new_relations, _compute_new_relations(df, df_rels, 'TS_ent', valid_tags)])
+    df_new_relations = pd.concat([df_new_relations, _compute_new_relations(df, df_rels, 'S_ent', valid_tags)])
     for ent, df_ent in df_new_relations.groupby(by='E_ent'):
         page_entities[ent]['labels'].update(set(df_ent['E_text'].unique()))
         page_entities[ent]['origins'].update(_get_origins_for_entity(df_ent))
