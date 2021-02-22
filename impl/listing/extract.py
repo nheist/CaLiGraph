@@ -21,11 +21,14 @@ RULE_PATTERNS = {
 
 
 def extract_page_entities(graph) -> dict:
+    utils.get_logger().info(f'LISTING/EXTRACT: Extracting types and relations for page entities..')
+
     page_entities = defaultdict(lambda: {'labels': set(), 'origins': set(), 'types': set(), 'in': set(), 'out': set()})
 
     df = context.retrieve_page_entity_context(graph)
 
     # extract list page entities
+    utils.get_logger().info(f'LISTING/EXTRACT: Extracting types of list page entities..')
     df_lps = df[df['P_type'] == 'List']
     for lp, df_lp in df_lps.groupby(by='P'):
         clg_types = {clg_util.clg_type2name(t) for t in graph.get_nodes_for_part(dbp_util.name2resource(lp))}
@@ -44,6 +47,7 @@ def extract_page_entities(graph) -> dict:
     valid_tags = context.get_valid_tags_for_entity_types(dft, graph, utils.get_config('listing.valid_tag_threshold'))
 
     # extract types
+    utils.get_logger().info(f'LISTING/EXTRACT: Extracting types of page entities..')
     df_new_types = _compute_new_types(df, dft, df_types, valid_tags)
     for ent, df_ent in df_new_types.groupby(by='E_ent'):
         page_entities[ent]['labels'].update(set(df_ent['E_text'].unique()))
@@ -54,6 +58,7 @@ def extract_page_entities(graph) -> dict:
         page_entities[ent]['types'].update(new_types)
 
     # extract relations
+    utils.get_logger().info(f'LISTING/EXTRACT: Extracting relations of page entities..')
     df_rels = context.get_entity_relations()
     df_new_relations = _compute_new_relations(df, df_rels, 'P', valid_tags)
     df_new_relations = pd.concat([df_new_relations, _compute_new_relations(df, df_rels, 'TS_ent', valid_tags)])
