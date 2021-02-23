@@ -71,7 +71,7 @@ def extract_page_entities(graph) -> dict:
         rels_out = set(map(tuple, df_ent[df_ent['inv']][['pred', 'target']].values))
         page_entities[ent]['out'].update(rels_out)
 
-    return page_entities
+    return dict(page_entities)
 
 
 def _get_origins_for_entity(df_ent: pd.DataFrame) -> set:

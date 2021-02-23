@@ -109,7 +109,7 @@ def _get_transitive_types(resource: str, graph) -> set:
     return {clg_util.clg_type2name(n) for n in transitive_clg_nodes}
 
 
-def get_valid_tags_for_entity_types(dft: pd.DataFrame, graph, threshold) -> dict:
+def get_valid_tags_for_entity_types(dft: pd.DataFrame, graph, threshold: float) -> dict:
     """Compute NE tags that are acceptable for a given type. E.g. for the type Building we would want the tag FAC."""
     tag_probabilities = _get_tag_probabilities(dft)
     valid_tags = tag_probabilities[tag_probabilities['tag_fit'] >= threshold].groupby('E_enttype')['E_tag'].apply(lambda x: x.values.tolist()).to_dict()
