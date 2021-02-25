@@ -121,7 +121,7 @@ class CaLiGraph(HierarchyGraph):
         if not clg_util.is_clg_resource(item):
             return set()
         if not self._resource_altlabels and self.use_listing_resources:
-            for res, res_data in listing.get_page_entities(self):
+            for res, res_data in listing.get_page_entities(self).items():
                 self._resource_altlabels[clg_util.name2clg_resource(res)].update(res_data['labels'])
         return self._resource_altlabels[item]
 
@@ -159,7 +159,7 @@ class CaLiGraph(HierarchyGraph):
 
     def get_resources_from_listings(self, node: str) -> set:
         if not self._node_listing_resources:
-            for res, res_data in listing.get_page_entities(self):
+            for res, res_data in listing.get_page_entities(self).items():
                 res_nodes = {clg_util.name2clg_type(t) for t in res_data['types']}
                 res_nodes.update({n for o in res_data['origins'] for n in self.get_nodes_for_part(dbp_util.name2resource(o))})
                 res_uri = clg_util.name2clg_resource(res)
@@ -180,7 +180,7 @@ class CaLiGraph(HierarchyGraph):
                     for res in cat_store.get_resources(cat):
                         self._resource_provenance[clg_util.dbp_resource2clg_resource(res)].add(cat)
             if self.use_listing_resources:
-                for res, res_data in listing.get_page_entities(self):
+                for res, res_data in listing.get_page_entities(self).items():
                     self._resource_provenance[clg_util.name2clg_resource(res)].update({dbp_util.name2resource(o) for o in res_data['origins']})
         return self._resource_provenance[resource]
 
@@ -260,7 +260,7 @@ class CaLiGraph(HierarchyGraph):
                     self._resource_relations.update({(res, pred, val) for res in self.get_resources(node)})
             # add relations from listings
             if self.use_listing_resources:
-                for res, res_data in listing.get_page_entities(self):
+                for res, res_data in listing.get_page_entities(self).items():
                     res_uri = clg_util.name2clg_resource(res)
                     self._resource_relations.update((res_uri, clg_util.name2clg_type(p), clg_util.name2clg_resource(o)) for p, o in res_data['out'])
                     self._resource_relations.update((clg_util.name2clg_resource(s), clg_util.name2clg_type(p), res_uri) for p, s in res_data['in'])
