@@ -33,11 +33,16 @@ def get_axiom_graph() -> CaLiGraph:
     return __AXIOM_GRAPH__
 
 
-def serialize_final_graph():
-    """Serialize the final CaLiGraph."""
+def get_entity_graph() -> CaLiGraph:
+    """Retrieve CaLiGraph with all entities extracted from listings."""
     graph = get_axiom_graph()
 
     listing.get_page_entities(graph)  # extract entities from listings all over Wikipedia
     graph.enable_listing_resources()  # finally, enable use of the extracted listing resources in the graph
+    return graph
 
+
+def serialize_final_graph():
+    """Serialize the final CaLiGraph."""
+    graph = get_entity_graph()
     clg_serialize.serialize_graph(graph)
