@@ -1,18 +1,19 @@
 # CaLiGraph
 
-\- A Large Semantic Knowledge Graph from Wikipedia Categories and List Pages \-
+\- A Large Semantic Knowledge Graph from Wikipedia Categories and Listings \-
 
 For information about the general idea, extraction statistics, and resources of CaLiGraph, visit the [CaLiGraph website](http://caligraph.org).
 
 ## Configuration
 ### Prerequisites
-- Python 3
-- pipenv (https://pipenv.readthedocs.io/en/latest/)
+- Python 3.7+
+- At least one GPU to run [transformers](https://huggingface.co/transformers/)
+- [pipenv](https://pipenv.readthedocs.io/en/latest/)
 
 Note: If you have problems with your pipenv installation, you can also run the code directly via python. Just make sure to install all the dependencies given in `Pipfile` and `Pipfile.lock`. 
 
 ### System Requirements
-- You need a machine with at least 100 GB of RAM as we load most of DBpedia in memory to speed up the extraction
+- You need a machine with at least 300 GB of RAM as we load most of DBpedia in memory to speed up the extraction
 - During the first execution of an extraction you need a stable internet connection as the required DBpedia files are downloaded automatically 
 
 ### Setup
@@ -48,7 +49,7 @@ CaLiGraph is serialized in N-Triple format. The resulting files are placed in th
 
 ## Tests
 
-Run the tests with pipenv:
+Run tests with pipenv:
 
 ```
 pipenv run pytest
