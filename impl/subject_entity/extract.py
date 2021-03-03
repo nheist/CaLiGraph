@@ -44,8 +44,10 @@ def _extract_subject_entity_batches(page_batches: list, bert_tokenizer, bert_mod
         current_entity = []
         current_entity_label = None
         for token, label in zip(word_tokens, word_predictions):
-            if token in ADDITIONAL_SPECIAL_TOKENS:
-                label = 0  # first make sure that special tokens are never entities
+            if token in ADDITIONAL_SPECIAL_TOKENS and label == 0:
+                # ignore current line, as it is likely an error
+                label = 0
+                found_entity = True
 
             if label == 0:
                 if current_entity and not found_entity:
@@ -78,7 +80,10 @@ def _tokens2name(entity_name: str) -> str:
     entity_name = re.sub(r'\s*\?\s*', '? ', entity_name)
     entity_name = re.sub(r'\s*!\s*', '! ', entity_name)
     entity_name = re.sub(r'\s*-\s*', '-', entity_name)
-    entity_name = re.sub(r"\s*'", "'", entity_name)
+    entity_name = re.sub(r'\s*–\s*', '–', entity_name)  # handle both kinds of dashes
+    entity_name = re.sub(r"'\s(.*)\s'", r"'\1'", entity_name)
+    entity_name = re.sub(r"\s*'\s*", "'", entity_name)
+    entity_name = re.sub(r'"\s(.*)\s"', r'"\1"', entity_name)
     entity_name = re.sub(r'\(\s*', '(', entity_name)
     entity_name = re.sub(r'\s*\)', ')', entity_name)
     entity_name = re.sub(r'\s*n\'t\s*', 'n\'t ', entity_name)
