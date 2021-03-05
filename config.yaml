@@ -22,7 +22,7 @@ listing:
   type_mean_threshold: 0.85
   type_std_threshold: 0.25
   relation_mean_threshold: 0.8
-  relation_std_threshold: 0.2
+  relation_std_threshold: 0.25
 
 # -- LOGGING CONFIGURATION --
 logging:
@@ -112,6 +112,8 @@ results:
     dbpedia_instance-caligraph-types: 'dbpedia_caligraph-clg-types.nt.bz2'  # all CaLiGraph types that can be assigned to DBpedia resources
     dbpedia_instance-transitive-caligraph-types: 'dbpedia_caligraph-transitive-clg-types.nt.bz2'  # all transitive CaLiGraph types that can be assigned to DBpedia resources
     dbpedia_instance-relations: 'dbpedia_caligraph-relations.nt.bz2'  #  new dbpedia relations found through CaLiGraph
+
+    sunburst_type_distribution: 'caligraph_sunburst-type-distribution.json'  # type distribution of CaLiGraph as source for a SolarBurst diagram
 
 # -- CACHE FILE CONFIGURATION --
 cache:

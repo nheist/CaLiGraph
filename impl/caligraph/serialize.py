@@ -9,6 +9,8 @@ import impl.util.serialize as serialize_util
 import impl.util.rdf as rdf_util
 import datetime
 from collections import defaultdict
+import json
+import random
 
 
 def serialize_graph(graph):
@@ -29,6 +31,8 @@ def serialize_graph(graph):
     _write_lines_to_file(_get_lines_dbpedia_instance_caligraph_types(graph), 'results.caligraph.dbpedia_instance-caligraph-types')
     _write_lines_to_file(_get_lines_dbpedia_instance_transitive_caligraph_types(graph), 'results.caligraph.dbpedia_instance-transitive-caligraph-types')
     _write_lines_to_file(_get_lines_dbpedia_instance_relations(graph), 'results.caligraph.dbpedia_instance-relations')
+
+    _serialize_type_distribution(graph, 'results.caligraph.sunburst_type_distribution')
 
 
 def _write_lines_to_file(lines: list, filepath_config: str):
@@ -324,3 +328,41 @@ def _get_lines_dbpedia_instance_relations(graph) -> list:
         else:
             lines_dbpedia_instance_relations.append(serialize_util.as_literal_triple(s, p, o))
     return lines_dbpedia_instance_relations
+
+
+def _serialize_type_distribution(graph, filepath_config: str):
+    type_counts = defaultdict(int)
+    for r in graph.get_all_resources():
+        nodes = graph.get_nodes_for_resource(r)
+        random_node = random.choice(list(nodes))
+        for n in {random_node} | graph.ancestors(random_node):
+            type_counts[n] += 1
+
+    type_distribution = _create_type_distribution(graph, type_counts, graph.root_node)
+    normalized_type_distribution = _normalize_type_distribution(type_distribution, type_distribution['value'])
+    with open(utils.get_results_file(filepath_config), mode='wt') as f:
+        json.dump(normalized_type_distribution, f)
+
+
+def _create_type_distribution(graph, type_counts, current_node):
+    result = {'name': graph.get_label(current_node), 'value': type_counts[current_node]}
+    children = [_create_type_distribution(graph, type_counts, c) for c in graph.children(current_node)]
+    if children:
+        result['children'] = children
+    return result
+
+
+def _normalize_type_distribution(type_distribution, node_weight, level=0):
+    name = type_distribution['name'] or 'Thing'
+    remaining_nodes_name = '...' if level == 0 else '-other-'
+    threshold = .15 if level > 3 else (.1 if level > 0 else .005)
+
+    if 'children' not in type_distribution:
+        return {'name': name, 'value': round(node_weight)}
+    node_value = max(type_distribution['value'], sum(c['value'] for c in type_distribution['children']))
+    valid_children = [c for c in type_distribution['children'] if c['value'] > 0 and c['value'] / node_value > threshold]
+    remaining_value = node_value - sum(c['value'] for c in valid_children)
+    if remaining_value > 0:
+        valid_children.append({'name': remaining_nodes_name, 'value': remaining_value})
+    normalized_children = [_normalize_type_distribution(c, node_weight * c['value'] / node_value, level+1) for c in valid_children]
+    return {'name': name, 'children': normalized_children}
