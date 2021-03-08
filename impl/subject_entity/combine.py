@@ -21,7 +21,8 @@ def match_entities_with_uris(subject_entities_per_page: dict) -> dict:
                     if ent_text in page_entity_map[ts][s]:
                         ent_name = page_entity_map[ts][s][ent_text]
                     else:
-                        ent_name = f'{page_name}--{ent_text}'
+                        section_part = f'#{s}' if s != 'Main' else ''
+                        ent_name = f'{page_name}{section_part}--{ent_text}'
                     enriched_entities[ts][s][ent_name] = {
                         'text': ent_text,
                         'tag': ent_tag,
