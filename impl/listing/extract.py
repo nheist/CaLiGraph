@@ -19,6 +19,8 @@ RULE_PATTERNS = {
     'pattern_TS-Sent': ['P_basetype', 'TS_text', 'S_enttype']
 }
 
+META_SECTIONS = {'See also', 'External links', 'References', 'Notes'}
+
 
 def extract_page_entities(graph) -> dict:
     utils.get_logger().info(f'LISTING/EXTRACT: Extracting types and relations for page entities..')
@@ -26,6 +28,7 @@ def extract_page_entities(graph) -> dict:
     page_entities = defaultdict(lambda: {'labels': set(), 'origins': set(), 'types': set(), 'in': set(), 'out': set()})
 
     df = context.retrieve_page_entity_context(graph)
+    df = df[~df['TS_text'].isin(META_SECTIONS)]  # filter out entity occurrences in meta-sections
 
     # extract list page entities
     utils.get_logger().info(f'LISTING/EXTRACT: Extracting types of list page entities..')
