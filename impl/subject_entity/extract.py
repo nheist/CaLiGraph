@@ -52,7 +52,8 @@ def _extract_subject_entity_batches(page_batches: list, bert_tokenizer, bert_mod
             if label == 0:
                 if current_entity and not found_entity:
                     entity_name = _tokens2name(' '.join(current_entity))
-                    subject_entity_dict[topsection_name][section_name][entity_name] = current_entity_label
+                    if len(entity_name) > 1:
+                        subject_entity_dict[topsection_name][section_name][entity_name] = current_entity_label
                     found_entity = True
                 current_entity = []
                 current_entity_label = None
@@ -64,7 +65,8 @@ def _extract_subject_entity_batches(page_batches: list, bert_tokenizer, bert_mod
                 current_entity.append(token)
         if current_entity and not found_entity:
             entity_name = _tokens2name(' '.join(current_entity))
-            subject_entity_dict[topsection_name][section_name][entity_name] = current_entity_label
+            if len(entity_name) > 1:
+                subject_entity_dict[topsection_name][section_name][entity_name] = current_entity_label
 
 
 def _extract_context(word_tokens: list) -> tuple:
