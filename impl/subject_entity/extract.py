@@ -87,7 +87,7 @@ def _tokens2name(entity_name: str) -> str:
     entity_name = re.sub(r'\(\s*', '(', entity_name)
     entity_name = re.sub(r'\s*\)', ')', entity_name)
     entity_name = re.sub(r'\s*n\'t\s*', 'n\'t ', entity_name)
-    return entity_name.strip()
+    return entity_name.rstrip(',(').strip()
 
 
 # TRAIN BERT MODEL
