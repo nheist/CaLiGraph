@@ -3,8 +3,8 @@ max_cpus: 16
 
 # -- CALIGRAPH CONFIGURATION --
 caligraph:
-  version: '2.0.0'
-  creation_date: '2021-03-01'
+  version: '2.0.1'
+  creation_date: '2021-03-12'
   namespace:
     base: 'http://caligraph.org/'
     ontology: 'http://caligraph.org/ontology/'
@@ -28,7 +28,7 @@ listing:
 logging:
   level: 'DEBUG'
   to_file: True
-  filename: 'caligraph_v2_0_0'
+  filename: 'caligraph_v2_0_1'
 
 # -- ERROR-MAILER CONFIGURATION --
 # -> add information about your mail accounts here and enable the `success` or `error` switches
@@ -154,9 +154,6 @@ cache:
     filename: 'wikipedia-raw-markup'
     version: 1
     compress: True
-  wikipedia_parsed_articles:
-    filename: 'wikipedia-parsed-articles'
-    version: 1
   wikipedia_parent_categories:
     filename: 'wikipedia-parent-categories'
     version: 1
@@ -234,6 +231,9 @@ cache:
   cat2ax_axioms:
     filename: 'cat2ax-axioms'
     version: 1
+  wikipedia_parsed_articles:
+    filename: 'wikipedia-parsed-articles'
+    version: 2
   spacy_listpage_ne-tagging_GS:
     filename: 'spacy_listpage_ne-tagging_GS'
     version: 1
@@ -244,17 +244,17 @@ cache:
     store_as_folder: True
   subject_entity_training_data:
     filename: 'subject-entity-training-data'
-    version: 1
+    version: 2
   subject_entity_page_data:
     filename: 'subject-entity-page-data'
-    version: 1
+    version: 2
   subject_entity_predictions:
     filename: 'subject-entity-predictions'
-    version: 1
+    version: 2
   bert_for_SE_tagging:
     filename: 'bert-for-SE-tagging'
-    version: 1
+    version: 2
     store_as_folder: True
   listing_page_entities:
     filename: 'listing-page-entities'
-    version: 1
+    version: 2
