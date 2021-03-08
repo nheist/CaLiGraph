@@ -20,7 +20,7 @@ ARTICLE_TYPE_ENUM, ARTICLE_TYPE_TABLE = 'enum', 'table'
 
 def _parse_articles(articles_markup) -> dict:
     with mp.Pool(processes=round(utils.get_config('max_cpus') / 2)) as pool:
-        parsed_articles = {r: parsed for r, parsed in tqdm(pool.imap_unordered(_parse_article_with_timeout, articles_markup.items(), chunksize=2000), total=len(articles_markup)) if parsed}
+        parsed_articles = {r: parsed for r, parsed in tqdm(pool.imap_unordered(_parse_article_with_timeout, articles_markup.items(), chunksize=2000), total=len(articles_markup), desc='Parsing articles') if parsed}
     return parsed_articles
 
 
