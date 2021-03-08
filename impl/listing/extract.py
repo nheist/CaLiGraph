@@ -67,6 +67,8 @@ def extract_page_entities(graph) -> dict:
     df_new_relations = pd.concat([df_new_relations, _compute_new_relations(df, df_rels, 'TS_ent', valid_tags)])
     df_new_relations = pd.concat([df_new_relations, _compute_new_relations(df, df_rels, 'S_ent', valid_tags)])
     for ent, df_ent in df_new_relations.groupby(by='E_ent'):
+        if '--' in ent and ent not in page_entities:
+            continue  # discard new relations for unknown entities without type
         page_entities[ent]['labels'].update(set(df_ent['E_text'].unique()))
         page_entities[ent]['origins'].update(_get_origins_for_entity(df_ent))
         rels_in = set(map(tuple, df_ent[~df_ent['inv']][['pred', 'target']].values))
