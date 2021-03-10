@@ -52,7 +52,7 @@ def _extract_subject_entity_batches(page_batches: list, bert_tokenizer, bert_mod
             if label == 0:
                 if current_entity and not found_entity:
                     entity_name = _tokens2name(' '.join(current_entity))
-                    if _is_valid_entity_name():
+                    if _is_valid_entity_name(entity_name):
                         subject_entity_dict[topsection_name][section_name][entity_name] = current_entity_label
                     found_entity = True
                 current_entity = []
@@ -93,7 +93,7 @@ def _tokens2name(entity_name: str) -> str:
 
 
 def _is_valid_entity_name(entity_name: str) -> bool:
-    return len(entity_name) > 1 and not entity_name.isdigit()
+    return len(entity_name) > 2 and not entity_name.isdigit()
 
 
 # TRAIN BERT MODEL
