@@ -19,10 +19,10 @@ cali2ax:
   pattern_confidence: 0.17
 listing:
   valid_tag_threshold: 0.35
-  type_mean_threshold: 0.85
-  type_std_threshold: 0.25
-  relation_mean_threshold: 0.8
-  relation_std_threshold: 0.25
+  type_mean_threshold: 0.9
+  type_std_threshold: 0.2
+  relation_mean_threshold: 0.85
+  relation_std_threshold: 0.2
 
 # -- LOGGING CONFIGURATION --
 logging:
