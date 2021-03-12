@@ -27,6 +27,7 @@ torch = "*"
 torchvision = "*"
 torchaudio = "*"
 transformers = "*"
+tensorboard = "*"
 
 [dev-packages]
 
