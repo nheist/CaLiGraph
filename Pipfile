@@ -25,6 +25,7 @@ pytest-check = "*"
 polyleven = "*"
 torch = "*"
 torchvision = "*"
+torchaudio = "*"
 transformers = "*"
 
 [dev-packages]
