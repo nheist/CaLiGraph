@@ -72,9 +72,9 @@ def extract_page_entities(graph) -> dict:
         page_entities[ent]['labels'].update(set(df_ent['E_text'].unique()))
         page_entities[ent]['origins'].update(_get_origins_for_entity(df_ent))
         rels_in = set(map(tuple, df_ent[~df_ent['inv']][['pred', 'target']].values))
-        page_entities[ent]['in'].update(rels_in)
+        page_entities[ent]['in'].update({(_get_predname(p), t) for p, t in rels_in})
         rels_out = set(map(tuple, df_ent[df_ent['inv']][['pred', 'target']].values))
-        page_entities[ent]['out'].update(rels_out)
+        page_entities[ent]['out'].update({(_get_predname(p), t) for p, t in rels_out})
 
     return dict(page_entities)
 
@@ -322,5 +322,9 @@ def _predinv_to_rel_row(row) -> str:
 
 
 def _predinv_to_rel(pred: str, inv: bool) -> str:
-    pred_name = pred[pred.rindex('/')+1:]
+    pred_name = _get_predname(pred)
     return f'< {pred_name} <' if inv else f'> {pred_name} >'
+
+
+def _get_predname(pred: str) -> str:
+    return pred[pred.rindex('/')+1:]
