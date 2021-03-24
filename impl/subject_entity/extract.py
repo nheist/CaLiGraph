@@ -44,7 +44,7 @@ def _extract_subject_entity_batches(page_batches: list, bert_tokenizer, bert_mod
         current_entity = []
         current_entity_label = None
         for token, label in zip(word_tokens, word_predictions):
-            if token in ADDITIONAL_SPECIAL_TOKENS and label == 0:
+            if token in ADDITIONAL_SPECIAL_TOKENS and label != 0:
                 # ignore current line, as it is likely an error
                 label = 0
                 found_entity = True
