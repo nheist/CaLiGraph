@@ -122,7 +122,8 @@ class CaLiGraph(HierarchyGraph):
             return set()
         if not self._resource_altlabels and self.use_listing_resources:
             for res, res_data in listing.get_page_entities(self).items():
-                self._resource_altlabels[clg_util.name2clg_resource(res)].update(res_data['labels'])
+                altlabels = {l for origin_data in res_data.values() for l in origin_data['labels']}
+                self._resource_altlabels[clg_util.name2clg_resource(res)].update(altlabels)
         return self._resource_altlabels[item]
 
     def get_resources(self, node: str) -> set:
@@ -160,8 +161,8 @@ class CaLiGraph(HierarchyGraph):
     def get_resources_from_listings(self, node: str) -> set:
         if not self._node_listing_resources:
             for res, res_data in listing.get_page_entities(self).items():
-                res_nodes = {clg_util.name2clg_type(t) for t in res_data['types']}
-                res_nodes.update({n for o in res_data['origins'] for n in self.get_nodes_for_part(dbp_util.name2resource(o))})
+                res_nodes = {clg_util.name2clg_type(t) for origin_data in res_data.values() for t in origin_data['types']}
+                res_nodes.update({n for origin in res_data for n in self.get_nodes_for_part(dbp_util.name2resource(origin))})
                 res_uri = clg_util.name2clg_resource(res)
                 for n in res_nodes:
                     self._node_listing_resources[n].add(res_uri)
@@ -181,7 +182,7 @@ class CaLiGraph(HierarchyGraph):
                         self._resource_provenance[clg_util.dbp_resource2clg_resource(res)].add(cat)
             if self.use_listing_resources:
                 for res, res_data in listing.get_page_entities(self).items():
-                    self._resource_provenance[clg_util.name2clg_resource(res)].update({dbp_util.name2resource(o) for o in res_data['origins']})
+                    self._resource_provenance[clg_util.name2clg_resource(res)].update({dbp_util.name2resource(o) for o in res_data})
         return self._resource_provenance[resource]
 
     def get_transitive_dbpedia_types(self, node: str, force_recompute=False) -> set:
@@ -262,8 +263,9 @@ class CaLiGraph(HierarchyGraph):
             if self.use_listing_resources:
                 for res, res_data in listing.get_page_entities(self).items():
                     res_uri = clg_util.name2clg_resource(res)
-                    self._resource_relations.update((res_uri, clg_util.name2clg_type(p), clg_util.name2clg_resource(o)) for p, o in res_data['out'])
-                    self._resource_relations.update((clg_util.name2clg_resource(s), clg_util.name2clg_type(p), res_uri) for p, s in res_data['in'])
+                    for origin_data in res_data.values():
+                        self._resource_relations.update((res_uri, clg_util.name2clg_type(p), clg_util.name2clg_resource(o)) for p, o in origin_data['out'])
+                        self._resource_relations.update((clg_util.name2clg_resource(s), clg_util.name2clg_type(p), res_uri) for p, s in origin_data['in'])
         return self._resource_relations
 
     def get_disjoint_dbp_types(self, node: str, transitive=True):

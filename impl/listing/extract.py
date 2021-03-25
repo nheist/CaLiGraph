@@ -25,7 +25,8 @@ META_SECTIONS = {'See also', 'External links', 'References', 'Notes'}
 def extract_page_entities(graph) -> dict:
     utils.get_logger().info(f'LISTING/EXTRACT: Extracting types and relations for page entities..')
 
-    page_entities = defaultdict(lambda: {'labels': set(), 'origins': set(), 'types': set(), 'in': set(), 'out': set()})
+    # format: entity -> origin -> (labels, types, in, out)
+    page_entities = defaultdict(lambda: defaultdict(lambda: {'labels': set(), 'types': set(), 'in': set(), 'out': set()}))
 
     df = context.retrieve_page_entity_context(graph)
     df = df[~df['TS_text'].isin(META_SECTIONS)]  # filter out entity occurrences in meta-sections
@@ -38,9 +39,8 @@ def extract_page_entities(graph) -> dict:
         if clg_types:
             for _, row in df_lp.iterrows():
                 name = row['E_ent']
-                page_entities[name]['labels'].add(row['E_text'])
-                page_entities[name]['origins'].add(lp)
-                page_entities[name]['types'].update(clg_types)
+                page_entities[name][lp]['labels'].add(row['E_text'])
+                page_entities[name][lp]['types'].update(clg_types)
 
     df = df.loc[df['P_type'] != 'List']  # ignore list pages in subsequent steps
 
@@ -53,12 +53,13 @@ def extract_page_entities(graph) -> dict:
     utils.get_logger().info(f'LISTING/EXTRACT: Extracting types of page entities..')
     df_new_types = _compute_new_types(df, dft, df_types, valid_tags)
     for ent, df_ent in df_new_types.groupby(by='E_ent'):
-        page_entities[ent]['labels'].update(set(df_ent['E_text'].unique()))
-        page_entities[ent]['origins'].update(_get_origins_for_entity(df_ent))
-        new_types = set(df_ent['E_enttype'].unique())
-        transitive_types = {clg_util.clg_type2name(tt) for t in new_types for tt in graph.ancestors(clg_util.name2clg_type(t))}
-        new_types = new_types.difference(transitive_types)  # remove transitive types
-        page_entities[ent]['types'].update(new_types)
+        for (page_text, section_text), df_entorigin in df_ent.groupby(by=['P', 'S_text']):
+            origin = page_text if section_text == 'Main' else f'{page_text}#{section_text}'
+            page_entities[ent][origin]['labels'].update(set(df_entorigin['E_text'].unique()))
+            new_types = set(df_entorigin['E_enttype'].unique())
+            transitive_types = {clg_util.clg_type2name(tt) for t in new_types for tt in graph.ancestors(clg_util.name2clg_type(t))}
+            new_types = new_types.difference(transitive_types)  # remove transitive types
+            page_entities[ent][origin]['types'].update(new_types)
 
     # extract relations
     utils.get_logger().info(f'LISTING/EXTRACT: Extracting relations of page entities..')
@@ -69,14 +70,15 @@ def extract_page_entities(graph) -> dict:
     for ent, df_ent in df_new_relations.groupby(by='E_ent'):
         if '--' in ent and ent not in page_entities:
             continue  # discard new relations for unknown entities without type
-        page_entities[ent]['labels'].update(set(df_ent['E_text'].unique()))
-        page_entities[ent]['origins'].update(_get_origins_for_entity(df_ent))
-        rels_in = set(map(tuple, df_ent[~df_ent['inv']][['pred', 'target']].values))
-        page_entities[ent]['in'].update({(_get_predname(p), t) for p, t in rels_in})
-        rels_out = set(map(tuple, df_ent[df_ent['inv']][['pred', 'target']].values))
-        page_entities[ent]['out'].update({(_get_predname(p), t) for p, t in rels_out})
+        for (page_text, section_text), df_entorigin in df_ent.groupby(by=['P', 'S_text']):
+            origin = page_text if section_text == 'Main' else f'{page_text}#{section_text}'
+            page_entities[ent][origin]['labels'].update(set(df_entorigin['E_text'].unique()))
+            rels_in = set(map(tuple, df_entorigin[~df_entorigin['inv']][['pred', 'target']].values))
+            page_entities[ent][origin]['in'].update({(_get_predname(p), t) for p, t in rels_in})
+            rels_out = set(map(tuple, df_entorigin[df_entorigin['inv']][['pred', 'target']].values))
+            page_entities[ent][origin]['out'].update({(_get_predname(p), t) for p, t in rels_out})
 
-    return dict(page_entities)
+    return {e: dict(origin_data) for e, origin_data in page_entities.items()}  # convert defaultdicts to plain dicts
 
 
 def _get_origins_for_entity(df_ent: pd.DataFrame) -> set:
