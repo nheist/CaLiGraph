@@ -34,6 +34,9 @@ if __name__ == '__main__':
         utils.get_logger().info('Running extraction..')
         caligraph.serialize_final_graph()
 
+        utils.get_logger().info('Computing statistics..')
+        utils.get_logger().info(caligraph.get_entity_graph().statistics)
+
         success_msg = 'Finished extraction of CaLiGraph.'
         mailer.send_success(success_msg)
         utils.get_logger().info(success_msg)
