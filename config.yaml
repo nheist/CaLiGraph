@@ -85,6 +85,9 @@ files:
     nif_context:
       filename: 'nif-context_lang=en.ttl.bz2'
       url: 'https://downloads.dbpedia.org/repo/dbpedia/text/nif-context/2020.07.01/nif-context_lang=en.ttl.bz2'
+    short_abstracts:
+      filename: 'short-abstracts_lang=en.ttl.bz2'
+      url: 'https://downloads.dbpedia.org/repo/dbpedia/text/short-abstracts/2020.07.01/short-abstracts_lang=en.ttl.bz2'
     webisalod_hypernyms:
       filename: 'webisalod_hypernyms.p.bz2'
       url: 'http://data.dws.informatik.uni-mannheim.de/CaLiGraph/data/webisalod_hypernyms.p.bz2'
@@ -176,6 +179,9 @@ cache:
     version: 1
   dbpedia_resource_labels:
     filename: 'dbpedia-resource-labels'
+    version: 1
+  dbpedia_resource_abstracts:
+    filename: 'dbpedia-resource-abstracts'
     version: 1
   dbpedia_resource_lexicalisations:
     filename: 'dbpedia-resource-lexicalisations'

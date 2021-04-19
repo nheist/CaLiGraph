@@ -67,6 +67,15 @@ def _get_label_mapping() -> dict:
     return __RESOURCE_LABEL_MAPPING__
 
 
+def get_short_abstract(dbp_resource: str) -> str:
+    """Return the short abstract of a DBpedia resource."""
+    global __SHORT_ABSTRACTS__
+    if '__SHORT_ABSTRACTS__' not in globals():
+        initializer = lambda: rdf_util.create_single_val_dict_from_rdf([utils.get_data_file('files.dbpedia.short_abstracts')], rdf_util.PREDICATE_COMMENT)
+        __SHORT_ABSTRACTS__ = defaultdict(str, utils.load_or_create_cache('dbpedia_resource_abstracts', initializer))
+    return __SHORT_ABSTRACTS__[dbp_resource]
+
+
 def get_inverse_lexicalisations(text: str) -> dict:
     """Return all resources that fit to the given lexicalisation."""
     global __RESOURCE_INVERSE_LEXICALISATIONS__
