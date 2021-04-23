@@ -4,6 +4,7 @@ import impl.util.rdf as rdf_util
 
 NAMESPACE_DBP_ONTOLOGY = 'http://dbpedia.org/ontology/'
 NAMESPACE_DBP_RESOURCE = 'http://dbpedia.org/resource/'
+NAMESPACE_WIKIPEDIA = 'http://en.wikipedia.org/wiki/'
 
 
 NER_LABEL_MAPPING = {
@@ -60,4 +61,4 @@ def is_file_resource(dbp_object: str) -> bool:
 def dbp_resource2wikipedia_resource(dbp_resource: str) -> str:
     if not is_dbp_resource(dbp_resource):
         return dbp_resource
-    return f'http://en.wikipedia.org/wiki/{dbp_resource[len(NAMESPACE_DBP_RESOURCE):]}'
+    return f'{NAMESPACE_WIKIPEDIA}{dbp_resource[len(NAMESPACE_DBP_RESOURCE):]}'

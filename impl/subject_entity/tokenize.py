@@ -1,5 +1,6 @@
 """Create word tokens (and labels) from parsed wiki markup."""
 
+from typing import Tuple
 from spacy.lang.en import English
 from collections import defaultdict
 import impl.dbpedia.store as dbp_store
@@ -27,69 +28,75 @@ ADDITIONAL_SPECIAL_TOKENS = TOKENS_ENTRY + [TOKEN_ROW, TOKEN_COL]
 # EXTRACTION OF TOKENS
 
 
-def page_to_tokens(params) -> tuple:
+def page_to_tokens(params) -> Tuple[list, Tuple[list, list]]:
     """Take a page and return list of token-lists."""
     page_uri, page_data = params
     is_list_page = list_util.is_listpage(page_uri)
     page_name = list_util.listpage2name(page_uri) if is_list_page else dbp_util.resource2name(page_uri)
-    page_tokens = []
+    page_tokens, page_ws = [], []
 
     top_section_name = ''
     for section_data in page_data['sections']:
         section_name = section_data['name']
         top_section_name = section_name if section_data['level'] <= 2 else top_section_name
         for enum_data in section_data['enums']:
-            context_tokens = _context_to_tokens([page_name, top_section_name, section_name])
+            context_tokens, context_ws = _context_to_tokens([page_name, top_section_name, section_name])
             max_group_size = MAX_EXAMPLE_SIZE - len(context_tokens)
-            for group_tokens in _listing_to_token_groups(enum_data, max_group_size):
+            for group_tokens, group_ws in _listing_to_token_groups(enum_data, max_group_size):
                 page_tokens.append(context_tokens + group_tokens)
+                page_ws.append(context_ws + group_ws)
         for table in section_data['tables']:
             table_header, table_data = table['header'], table['data']
-            context_tokens = _context_to_tokens([page_name, top_section_name, section_name], table_header)
+            context_tokens, context_ws = _context_to_tokens([page_name, top_section_name, section_name], table_header)
             max_group_size = MAX_EXAMPLE_SIZE - len(context_tokens)
-            for group_tokens in _listing_to_token_groups(table_data, max_group_size):
+            for group_tokens, group_ws in _listing_to_token_groups(table_data, max_group_size):
                 page_tokens.append(context_tokens + group_tokens)
-    return page_uri, page_tokens
+                page_ws.append(context_ws + group_ws)
+    return page_uri, (page_tokens, page_ws)
 
 
 def _listing_to_token_groups(listing_data, max_group_size):
     current_group_size = 0
     current_group_tokens = []
+    current_group_ws = []
     for item in listing_data:
         # pick conversion function based on item being a list of table cells or an enum entry string
         item_to_tokens = _row_to_tokens if type(item) == list else _entry_to_tokens
 
-        item_tokens = item_to_tokens(item)
+        item_tokens, item_ws = item_to_tokens(item)
         if not item_tokens:
             continue  # skip if no tokens are found
         item_size = len(item_tokens)
         new_group_size = current_group_size + item_size
         if not current_group_tokens or new_group_size <= max_group_size:
             current_group_tokens.extend(item_tokens)
+            current_group_ws.extend(item_ws)
             current_group_size = new_group_size
         else:
-            yield current_group_tokens
+            yield current_group_tokens, current_group_ws
             current_group_tokens = []
+            current_group_ws = []
             current_group_size = 0
     if current_group_tokens:
-        yield current_group_tokens
+        yield current_group_tokens, current_group_ws
 
 
-def _entry_to_tokens(entry) -> list:
+def _entry_to_tokens(entry) -> Tuple[list, list]:
     entry_doc = _get_spacy_tokenizer()(entry['text'])
     depth = entry['depth']
-    tokens, _ = _text_to_tokens(entry_doc, None, None)
-    return [f'[E{depth}]'] + tokens
+    tokens, ws, _ = _text_to_tokens(entry_doc, None, None)
+    return [f'[E{depth}]'] + tokens, [' '] + ws
 
 
-def _row_to_tokens(row) -> list:
-    tokens = []
+def _row_to_tokens(row) -> Tuple[list, list]:
+    tokens, ws = [], []
     for cell in row:
-        cell_tokens, _ = _text_to_tokens(_get_spacy_tokenizer()(cell['text']), None, None)
+        cell_tokens, cell_ws, _ = _text_to_tokens(_get_spacy_tokenizer()(cell['text']), None, None)
         tokens += [TOKEN_COL] + cell_tokens
+        ws += [' '] + cell_ws
     if tokens:
         tokens[0] = TOKEN_ROW  # make start of table row similar to start of enum entry
-    return tokens
+    return tokens, ws
 
 
 # EXTRACTION OF TOKENS WITH LABELS
@@ -101,7 +108,7 @@ ALL_LABELS = [LABEL_NONE] + list(dbp_util.NER_LABEL_MAPPING) + [LABEL_OTHER]
 ALL_LABEL_IDS = {label: idx for idx, label in enumerate(ALL_LABELS)}
 
 
-def page_to_tokens_and_labels(params) -> tuple:
+def page_to_tokens_and_labels(params) -> Tuple[list, list]:
     """Take a page and return list of (token,label)-lists. Labels for a list of tokens may be None."""
     page_uri, page_data, graph = params
     page_name = list_util.listpage2name(page_uri)
@@ -115,7 +122,7 @@ def page_to_tokens_and_labels(params) -> tuple:
         section_name = section_data['name']
         top_section_name = section_name if section_data['level'] <= 2 else top_section_name
         for enum_data in section_data['enums']:
-            context_tokens = _context_to_tokens([page_name, top_section_name, section_name])
+            context_tokens, _ = _context_to_tokens([page_name, top_section_name, section_name])
             max_group_size = MAX_EXAMPLE_SIZE - len(context_tokens)
             for group_tokens, group_labels in _listing_to_token_label_groups(enum_data, positive_SEs, negative_SEs, max_group_size):
                 page_tokens.append(context_tokens + group_tokens)
@@ -123,7 +130,7 @@ def page_to_tokens_and_labels(params) -> tuple:
                 page_labels.append(context_labels + group_labels)
         for table in section_data['tables']:
             table_header, table_data = table['header'], table['data']
-            context_tokens = _context_to_tokens([page_name, top_section_name, section_name], table_header)
+            context_tokens, _ = _context_to_tokens([page_name, top_section_name, section_name], table_header)
             max_group_size = MAX_EXAMPLE_SIZE - len(context_tokens)
             for group_tokens, group_labels in _listing_to_token_label_groups(table_data, positive_SEs, negative_SEs, max_group_size):
                 page_tokens.append(context_tokens + group_tokens)
@@ -158,7 +165,7 @@ def _listing_to_token_label_groups(listing_data: list, positive_SEs: dict, negat
         yield current_group_tokens, current_group_labels
 
 
-def _entry_to_tokens_and_labels(entry: dict, positive_SEs: dict, negative_SEs: set) -> tuple:
+def _entry_to_tokens_and_labels(entry: dict, positive_SEs: dict, negative_SEs: set) -> Tuple[list, list]:
     entry_text = entry['text']
     entry_doc = list_nlp.parse(entry_text)
     depth = entry['depth']
@@ -171,13 +178,13 @@ def _entry_to_tokens_and_labels(entry: dict, positive_SEs: dict, negative_SEs: s
         return [], []
 
     # extract tokens and labels
-    tokens, labels = _text_to_tokens(entry_doc, entities, positive_SEs)
+    tokens, _, labels = _text_to_tokens(entry_doc, entities, positive_SEs)
     if not tokens or not labels:
         return [], []
     return [f'[E{depth}]'] + tokens, [LABEL_NONE] + labels
 
 
-def _row_to_tokens_and_labels(row: list, positive_SEs: dict, negative_SEs: set) -> tuple:
+def _row_to_tokens_and_labels(row: list, positive_SEs: dict, negative_SEs: set) -> Tuple[list, list]:
     cell_docs = [list_nlp.parse(cell['text']) for cell in row]
     # check whether row is valid training data
     row_entities = []
@@ -195,7 +202,7 @@ def _row_to_tokens_and_labels(row: list, positive_SEs: dict, negative_SEs: set) 
     for cell_idx, cell in enumerate(row):
         cell_doc = cell_docs[cell_idx]
         cell_entities = list(cell['entities'])
-        cell_tokens, cell_labels = _text_to_tokens(cell_doc, cell_entities, positive_SEs)
+        cell_tokens, _, cell_labels = _text_to_tokens(cell_doc, cell_entities, positive_SEs)
         tokens += [TOKEN_COL] + cell_tokens
         labels += [LABEL_NONE] + cell_labels
     if tokens:
@@ -287,23 +294,24 @@ def _compute_entity_label(resource_uri: str) -> str:
 # SHARED METHODS
 
 
-def _context_to_tokens(ctx: list, table_header=[]) -> list:
-    ctx_tokens = []
+def _context_to_tokens(ctx: list, table_header=[]) -> Tuple[list, list]:
+    ctx_tokens, ctx_ws = [], []
 
     # add basic context, separated by [CTX] special tokens
     spacy_tokenizer = _get_spacy_tokenizer()
     for text in ctx:
-        plain_text = wmp.wikitext_to_plaintext(text)
-        ctx_tokens.extend([w.text for w in spacy_tokenizer(plain_text)])
-        ctx_tokens.append(TOKEN_CTX)
+        doc = spacy_tokenizer(wmp.wikitext_to_plaintext(text))
+        ctx_tokens.extend([w.text for w in doc] + [TOKEN_CTX])
+        ctx_ws.extend([w.whitespace_ for w in doc] + [' '])
 
     # add table header if available
     for cell in table_header:
-        ctx_tokens.extend([w.text for w in spacy_tokenizer(cell['text'])])
-        ctx_tokens.append(TOKEN_COL)
+        doc = spacy_tokenizer(cell['text'])
+        ctx_tokens.extend([w.text for w in doc] + [TOKEN_COL])
+        ctx_ws.extend([w.whitespace_ for w in doc] + [' '])
 
     ctx_tokens[-1] = TOKEN_SEP  # replace last token with final context separator
-    return ctx_tokens
+    return ctx_tokens, ctx_ws
 
 
 def _get_spacy_tokenizer():
@@ -313,16 +321,18 @@ def _get_spacy_tokenizer():
     return __SPACY_TOKENIZER__
 
 
-def _text_to_tokens(doc, entities: list, subject_entities: dict) -> tuple:
+def _text_to_tokens(doc, entities: list, subject_entities: dict) -> Tuple[list, list, list]:
     if not entities or not subject_entities:
         tokens = [w.text for w in doc]
-        return tokens, [LABEL_NONE] * len(tokens)
+        ws = [w.whitespace_ for w in doc]
+        return tokens, ws, [LABEL_NONE] * len(tokens)
 
-    tokens, labels = [], []
+    tokens, ws, labels = [], [], []
     entity_label_map = _create_entity_label_map(entities, subject_entities)
     current_position = 0
     for w in doc:
         tokens.append(w.text)
+        ws.append(w.whitespace_)
         labels.append(entity_label_map[current_position])
         current_position += len(w.text_with_ws)
-    return tokens, labels
+    return tokens, ws, labels
