@@ -256,11 +256,14 @@ cache:
     version: 2
   subject_entity_predictions:
     filename: 'subject-entity-predictions'
-    version: 2
+    version: 3
+  subject_entity_embeddings:
+    filename: 'subject-entity-embeddings'
+    version: 3
   bert_for_SE_tagging:
     filename: 'bert-for-SE-tagging'
     version: 2
     store_as_folder: True
   listing_page_entities:
     filename: 'listing-page-entities'
-    version: 2
+    version: 3

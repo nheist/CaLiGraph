@@ -13,17 +13,20 @@ from transformers import Trainer, TrainingArguments, BertTokenizerFast, BertForT
 MAX_BATCHES = 100
 
 
-def extract_subject_entities(page_batches: list, bert_tokenizer, bert_model) -> dict:
+def extract_subject_entities(page_batches: list, bert_tokenizer, bert_model) -> tuple:
     subject_entity_dict = defaultdict(lambda: defaultdict(dict))
+    subject_entity_embeddings_dict = defaultdict(lambda: defaultdict(dict))
 
     page_token_batches, page_ws_batches = page_batches
     for i in range(0, len(page_token_batches), MAX_BATCHES):
-        _extract_subject_entity_batches(page_token_batches[i:i+MAX_BATCHES], page_ws_batches[i:i+MAX_BATCHES], bert_tokenizer, bert_model, subject_entity_dict)
+        _extract_subject_entity_batches(page_token_batches[i:i+MAX_BATCHES], page_ws_batches[i:i+MAX_BATCHES], bert_tokenizer, bert_model, subject_entity_dict, subject_entity_embeddings_dict)
 
-    return {ts: dict(subject_entity_dict[ts]) for ts in subject_entity_dict}  # convert to standard dict
+    # convert to standard dicts
+    return {ts: dict(subject_entity_dict[ts]) for ts in subject_entity_dict},\
+           {ts: dict(subject_entity_embeddings_dict[ts]) for ts in subject_entity_embeddings_dict}
 
 
-def _extract_subject_entity_batches(page_token_batches: list, page_ws_batches: list, bert_tokenizer, bert_model, subject_entity_dict):
+def _extract_subject_entity_batches(page_token_batches: list, page_ws_batches: list, bert_tokenizer, bert_model, subject_entity_dict, subject_entity_embeddings_dict):
     inputs = bert_tokenizer(page_token_batches, is_split_into_words=True, padding=True, truncation=True, return_offsets_mapping=True, return_tensors="pt")
     offset_mapping = inputs.offset_mapping
     inputs.pop('offset_mapping')
@@ -31,20 +34,32 @@ def _extract_subject_entity_batches(page_token_batches: list, page_ws_batches: l
 
     bert_model.eval()  # make sure the model is not in training mode anymore
     with torch.no_grad():
-        outputs = bert_model(**inputs).logits.cpu()
-    prediction_batches = torch.argmax(outputs, dim=2)
+        outputs = bert_model(**inputs)
+
+    prediction_batches = torch.argmax(outputs.logits.cpu(), dim=2)
+    hidden_state_batches = outputs.hidden_states[11].cpu()  # use second-to-last layer as token embedding
     del inputs, outputs
 
-    for word_tokens, word_token_ws, predictions, prediction_offsets in zip(page_token_batches, page_ws_batches, prediction_batches, offset_mapping):
-        predictions = np.array(predictions)
-        prediction_offsets = np.array(prediction_offsets)
-        word_predictions = predictions[(prediction_offsets[:, 0] == 0) & (prediction_offsets[:, 1] != 0)]
+    topsection_states = defaultdict(list)
+    section_states = defaultdict(lambda: defaultdict(list))
+    for word_tokens, word_token_ws, predictions, hidden_states, offsets in zip(page_token_batches, page_ws_batches, prediction_batches, hidden_state_batches, offset_mapping):
         topsection_name, section_name = _extract_context(word_tokens, word_token_ws)
+        # collect section states for embeddings
+        section_state = hidden_states[0].tolist()
+        topsection_states[topsection_name].append(section_state)
+        section_states[topsection_name][section_name].append(section_state)
+
+        # collect entity labels and states
+        predictions = np.array(predictions)
+        offsets = np.array(offsets)
+        word_predictions = predictions[(offsets[:, 0] == 0) & (offsets[:, 1] != 0)]
+        word_hidden_states = hidden_states[(offsets[:, 0] == 0) & (offsets[:, 1] != 0)]
 
         found_entity = False  # only predict one entity per row/entry
         current_entity_tokens = []
+        current_entity_states = torch.tensor([])
         current_entity_label = None
-        for token, token_ws, label in zip(word_tokens,  word_token_ws, word_predictions):
+        for token, token_ws, label, states in zip(word_tokens,  word_token_ws, word_predictions, word_hidden_states):
             if token in ADDITIONAL_SPECIAL_TOKENS and label != 0:
                 # ignore current line, as it is likely an error
                 label = 0
@@ -55,26 +70,35 @@ def _extract_subject_entity_batches(page_token_batches: list, page_ws_batches: l
                     entity_name = _tokens2name(current_entity_tokens)
                     if _is_valid_entity_name(entity_name):
                         subject_entity_dict[topsection_name][section_name][entity_name] = current_entity_label
+                        subject_entity_embeddings_dict[topsection_name][section_name][entity_name] = current_entity_states.mean(0)
                     found_entity = True
                 current_entity_tokens = []
+                current_entity_states = torch.tensor([])
                 current_entity_label = None
 
                 if token in (TOKENS_ENTRY + [TOKEN_ROW]):
                     found_entity = False  # reset found_entity if entering a new line
             else:
                 current_entity_label = current_entity_label or ALL_LABELS[label]
+                current_entity_states = torch.cat((current_entity_states, states.unsqueeze(0)))
                 current_entity_tokens.extend([token, token_ws])
         if current_entity_tokens and not found_entity:
             entity_name = _tokens2name(current_entity_tokens)
             if _is_valid_entity_name(entity_name):
                 subject_entity_dict[topsection_name][section_name][entity_name] = current_entity_label
-
+                subject_entity_embeddings_dict[topsection_name][section_name][entity_name] = current_entity_states.mean(0)
+    # compute embeddings for sections
+    for ts, ts_states in topsection_states.items():
+        subject_entity_embeddings_dict[ts]['_embedding'] = np.array(ts_states).mean(0)
+    for ts, ts_data in section_states.items():
+        for s, s_states in ts_data.items():
+            subject_entity_embeddings_dict[ts][s]['_embedding'] = np.array(s_states).mean(0)
 
 def _extract_context(word_tokens: list, word_token_ws: list) -> tuple:
     ctx_tokens = []
     for i in range(word_tokens.index(TOKEN_SEP)):
         ctx_tokens.extend([word_tokens[i], word_token_ws[i]])
-    ctx_separators = [i for i, x in enumerate(ctx_tokens) if x == TOKEN_CTX]
+    ctx_separators = [i for i, x in enumerate(ctx_tokens) if x == TOKEN_CTX] + [len(ctx_tokens)]
     top_section_ctx = ctx_tokens[ctx_separators[0]+1:ctx_separators[1]]
     section_ctx = ctx_tokens[ctx_separators[1]+1:ctx_separators[2]]
     return _tokens2name(top_section_ctx), _tokens2name(section_ctx)

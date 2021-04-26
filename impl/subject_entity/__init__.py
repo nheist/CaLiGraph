@@ -22,8 +22,10 @@ def _get_subject_entity_predictions(graph) -> dict:
 
 def _make_subject_entity_predictions(graph) -> dict:
     tokenizer, model = extract.get_bert_tokenizer_and_model(lambda: _get_training_data(graph))
-    predictions = {p: extract.extract_subject_entities(batches, tokenizer, model) for p, batches in tqdm(_get_page_data().items(), desc='Predicting subject entities')}
+    predictions, embeddings = {p: extract.extract_subject_entities(batches, tokenizer, model) for p, batches in tqdm(_get_page_data().items(), desc='Predicting subject entities')}
     torch.cuda.empty_cache()  # flush GPU cache to free GPU for other purposes
+
+    utils.update_cache('subject_entity_embeddings', embeddings)
     return predictions
 
 
