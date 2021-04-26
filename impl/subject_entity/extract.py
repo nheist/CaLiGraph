@@ -99,7 +99,7 @@ def get_bert_tokenizer_and_model(training_data_retrieval_func):
     if not path_to_model.is_dir():
         _train_bert(training_data_retrieval_func)
     tokenizer = BertTokenizerFast.from_pretrained(path_to_model)
-    model = BertForTokenClassification.from_pretrained(path_to_model)
+    model = BertForTokenClassification.from_pretrained(path_to_model, output_hidden_states=True)
     model.to('cuda')
     return tokenizer, model
 
@@ -111,7 +111,7 @@ def _train_bert(training_data_retrieval_func):
     tokens, labels = training_data_retrieval_func()
     train_dataset = _get_datasets(tokens, labels, tokenizer)
 
-    model = BertForTokenClassification.from_pretrained(BERT_BASE_MODEL, num_labels=len(ALL_LABEL_IDS), output_hidden_states=True)
+    model = BertForTokenClassification.from_pretrained(BERT_BASE_MODEL, num_labels=len(ALL_LABEL_IDS))
     model.resize_token_embeddings(len(tokenizer))
 
     run_id = '{}_{}'.format(datetime.datetime.now().strftime('%Y%m%d-%H%M%S'), utils.get_config('logging.filename'))
