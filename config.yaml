@@ -247,13 +247,13 @@ cache:
   spacy_listpage_ne-tagging_GS-WLE:
     filename: 'spacy_listpage_ne-tagging_GS-WLE'
     version: 1
-    store_as_folder: True
+    store_as_folder: True⁄
   subject_entity_training_data:
     filename: 'subject-entity-training-data'
     version: 2
   subject_entity_page_data:
     filename: 'subject-entity-page-data'
-    version: 2
+    version: 3
   subject_entity_predictions:
     filename: 'subject-entity-predictions'
     version: 3
