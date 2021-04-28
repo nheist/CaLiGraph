@@ -54,11 +54,15 @@ def _get_label_mapping() -> dict:
 
 def get_altlabels(dbp_resource: str) -> set:
     """Return alternative labels of a DBpedia resource."""
-    global __RESOURCE_ALTLABELS__
-    if '__RESOURCE_ALTLABELS__' not in globals():
+    return _get_altlabel_mapping()[dbp_resource]
+
+
+def _get_altlabel_mapping() -> dict:
+    global __RESOURCE_ALTLABEL_MAPPING__
+    if '__RESOURCE_ALTLABEL_MAPPING__' not in globals():
         initializer = lambda: rdf_util.create_multi_val_dict_from_rdf([utils.get_data_file('files.dbpedia.anchor_texts')], rdf_util.PREDICATE_ANCHOR_TEXT)
-        __RESOURCE_ALTLABELS__ = utils.load_or_create_cache('dbpedia_resource_altlabels', initializer)
-    return __RESOURCE_ALTLABELS__[dbp_resource]
+        __RESOURCE_ALTLABEL_MAPPING__ = utils.load_or_create_cache('dbpedia_resource_altlabels', initializer)
+    return __RESOURCE_ALTLABEL_MAPPING__
 
 
 def get_short_abstract(dbp_resource: str) -> str:

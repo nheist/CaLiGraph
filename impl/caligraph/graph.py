@@ -120,10 +120,15 @@ class CaLiGraph(HierarchyGraph):
         """Return alternative labels for a CaLiGraph resource."""
         if not clg_util.is_clg_resource(item):
             return set()
-        if not self._resource_altlabels and self.use_listing_resources:
-            for res, res_data in listing.get_page_entities(self).items():
-                altlabels = {l for origin_data in res_data.values() for l in origin_data['labels']}
-                self._resource_altlabels[clg_util.name2clg_resource(res)].update(altlabels)
+        if not self._resource_altlabels:
+            # retrieve alternative labels from anchor texts of DBpedia
+            for res, altlabels in dbp_store._get_altlabel_mapping().items():
+                self._resource_altlabels[clg_util.dbp_resource2clg_resource(res)].update(altlabels)
+            if self.use_listing_resources:
+                # retrieve alternative labels from new page entities
+                for res, res_data in listing.get_page_entities(self).items():
+                    altlabels = {l for origin_data in res_data.values() for l in origin_data['labels']}
+                    self._resource_altlabels[clg_util.name2clg_resource(res)].update(altlabels)
         return self._resource_altlabels[item]
 
     def get_resources(self, node: str) -> set:
