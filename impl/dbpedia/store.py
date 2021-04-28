@@ -44,27 +44,21 @@ def get_label(dbp_object: str) -> str:
     return __RESOURCE_LABELS__[dbp_object] if dbp_object in __RESOURCE_LABELS__ else dbp_util.object2name(dbp_object)
 
 
-def get_object_for_label(label: str) -> str:
-    """Return the object that fits the given label."""
-    global __RESOURCE_INVERSE_LABELS__
-    global __ONTOLOGY_INVERSE_LABELS__
-    if '__RESOURCE_INVERSE_LABELS__' not in globals():
-        __RESOURCE_INVERSE_LABELS__ = {v: k for k, v in _get_label_mapping().items()}
-        ontology_labels = rdf_util.create_single_val_dict_from_rdf([utils.get_data_file('files.dbpedia.taxonomy')], rdf_util.PREDICATE_LABEL)
-        __ONTOLOGY_INVERSE_LABELS__ = {v: k for k, v in ontology_labels.items()}
-    if label in __ONTOLOGY_INVERSE_LABELS__:
-        return __ONTOLOGY_INVERSE_LABELS__[label]
-    if label in __RESOURCE_INVERSE_LABELS__:
-        return __RESOURCE_INVERSE_LABELS__[label]
-    return dbp_util.name2resource(label)
-
-
 def _get_label_mapping() -> dict:
     global __RESOURCE_LABEL_MAPPING__
     if '__RESOURCE_LABEL_MAPPING__' not in globals():
         initializer = lambda: rdf_util.create_single_val_dict_from_rdf([utils.get_data_file('files.dbpedia.labels')], rdf_util.PREDICATE_LABEL)
         __RESOURCE_LABEL_MAPPING__ = utils.load_or_create_cache('dbpedia_resource_labels', initializer)
     return __RESOURCE_LABEL_MAPPING__
+
+
+def get_altlabels(dbp_resource: str) -> set:
+    """Return alternative labels of a DBpedia resource."""
+    global __RESOURCE_ALTLABELS__
+    if '__RESOURCE_ALTLABELS__' not in globals():
+        initializer = lambda: rdf_util.create_multi_val_dict_from_rdf([utils.get_data_file('files.dbpedia.anchor_texts')], rdf_util.PREDICATE_ANCHOR_TEXT)
+        __RESOURCE_ALTLABELS__ = utils.load_or_create_cache('dbpedia_resource_altlabels', initializer)
+    return __RESOURCE_ALTLABELS__[dbp_resource]
 
 
 def get_short_abstract(dbp_resource: str) -> str:

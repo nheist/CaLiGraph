@@ -180,6 +180,9 @@ cache:
   dbpedia_resource_labels:
     filename: 'dbpedia-resource-labels'
     version: 1
+  dbpedia_resource_altlabels:
+    filename: 'dbpedia-resource-altlabels'
+    version: 1
   dbpedia_resource_abstracts:
     filename: 'dbpedia-resource-abstracts'
     version: 1
