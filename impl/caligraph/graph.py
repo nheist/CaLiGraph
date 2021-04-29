@@ -118,8 +118,6 @@ class CaLiGraph(HierarchyGraph):
 
     def get_altlabels(self, item: str) -> set:
         """Return alternative labels for a CaLiGraph resource."""
-        if not clg_util.is_clg_resource(item):
-            return set()
         if not self._resource_altlabels:
             # retrieve alternative labels from anchor texts of DBpedia
             for res, altlabels in dbp_store._get_altlabel_mapping().items():
