@@ -47,6 +47,8 @@ def _parse_article_with_timeout(resource_and_markup: tuple) -> tuple:
 
 def _parse_article(resource_and_markup: tuple) -> tuple:
     resource, page_markup = resource_and_markup
+    if dbp_util.is_file_resource(resource):
+        return resource, None  # discard files and images
     if not any(indicator in page_markup for indicator in LISTING_INDICATORS):
         return resource, None  # early return of 'None' if page contains no listings at all
 
