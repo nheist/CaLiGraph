@@ -74,6 +74,16 @@ def get_short_abstract(dbp_resource: str) -> str:
     return __SHORT_ABSTRACTS__[dbp_resource]
 
 
+def get_wikilinks(dbp_resource: str) -> set:
+    """Return the outgoing wikilinks of a DBpedia resource."""
+    global __WIKILINKS__
+    if '__WIKILINKS__' not in globals():
+        initializer = lambda: rdf_util.create_multi_val_dict_from_rdf([utils.get_data_file('files.dbpedia.wikilinks')], rdf_util.PREDICATE_WIKILINK)
+        __WIKILINKS__ = utils.load_or_create_cache('dbpedia_resource_wikilinks', initializer)
+        __WIKILINKS__ = defaultdict(set, {res: {l for l in links if not cat_util.is_category(l)} for res, links in __WIKILINKS__.items()})
+    return __WIKILINKS__[dbp_resource]
+
+
 def get_inverse_lexicalisations(text: str) -> dict:
     """Return all resources that fit to the given lexicalisation."""
     global __RESOURCE_INVERSE_LEXICALISATIONS__

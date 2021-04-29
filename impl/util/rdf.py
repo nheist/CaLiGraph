@@ -27,6 +27,7 @@ PREDICATE_DOMAIN = 'http://www.w3.org/2000/01/rdf-schema#domain'
 PREDICATE_RANGE = 'http://www.w3.org/2000/01/rdf-schema#range'
 PREDICATE_SAME_AS = 'http://www.w3.org/2002/07/owl#sameAs'
 PREDICATE_EQUIVALENT_PROPERTY = 'http://www.w3.org/2002/07/owl#equivalentProperty'
+PREDICATE_WIKILINK = 'http://dbpedia.org/ontology/wikiPageWikiLink'
 PREDICATE_ANCHOR_TEXT = 'http://dbpedia.org/ontology/wikiPageWikiLinkText'
 
 # classes
