@@ -10,7 +10,7 @@ POSTFIXES = {
     datetime.datetime: 'http://www.w3.org/2001/XMLSchema#date'
 }
 RESOURCE_ENCODING_EXCEPTIONS = ['#', ':', ',', ';', '(', ')', '\'', '&', '!', '*', '=', '$']
-LITERAL_ENCODED_CHARS = ['\\', '\'', '"']
+LITERAL_ENCODED_CHARS = ['\\', '"']
 
 
 def as_literal_triple(sub: str, pred: str, obj) -> str:
