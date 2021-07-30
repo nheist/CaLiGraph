@@ -3,8 +3,8 @@ max_cpus: 16
 
 # -- CALIGRAPH CONFIGURATION --
 caligraph:
-  version: '2.0.1'
-  creation_date: '2021-03-12'
+  version: '2.0.2'
+  creation_date: '2021-08-01'
   namespace:
     base: 'http://caligraph.org/'
     ontology: 'http://caligraph.org/ontology/'
@@ -28,7 +28,7 @@ listing:
 logging:
   level: 'DEBUG'
   to_file: True
-  filename: 'caligraph_v2_0_1'
+  filename: 'caligraph_v2_0_2'
 
 # -- ERROR-MAILER CONFIGURATION --
 # -> add information about your mail accounts here and enable the `success` or `error` switches
@@ -152,10 +152,10 @@ cache:
     version: 1
   caligraph_merged_ontology:
     filename: 'caligraph-merged-ontology'
-    version: 1
+    version: 2
   caligraph_axiomatized:
     filename: 'caligraph-axiomatized'
-    version: 1
+    version: 2
   wikipedia_raw_markup:
     filename: 'wikipedia-raw-markup'
     version: 1
@@ -262,17 +262,14 @@ cache:
     version: 2
   subject_entity_page_data:
     filename: 'subject-entity-page-data'
-    version: 3
+    version: 2
   subject_entity_predictions:
     filename: 'subject-entity-predictions'
-    version: 3
-  subject_entity_embeddings:
-    filename: 'subject-entity-embeddings'
-    version: 3
+    version: 2
   bert_for_SE_tagging:
     filename: 'bert-for-SE-tagging'
     version: 2
     store_as_folder: True
   listing_page_entities:
     filename: 'listing-page-entities'
-    version: 3
+    version: 2
