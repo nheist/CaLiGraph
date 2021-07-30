@@ -75,8 +75,8 @@ def resolve_disjointnesses(graph):
                 lex_scores = _compute_type_lexicalisation_scores(graph, node)
                 types = [{t: lex_scores[t] for t in ts} for ts in coherent_type_sets]
                 types = [(ts, max(ts.values())) for ts in types]
-                direct_types, score = max(types, key=lambda x: x[1])
-                direct_types = set() if score == 0 else set(direct_types)
+                best_type, score = max(types, key=lambda x: x[1])
+                direct_types = set() if score == 0 else set(best_type)
             # make sure that types induced by parts are integrated in direct types
             part_types = {t for t in graph.get_parts(node) if dbp_util.is_dbp_type(t)}
             direct_types = (direct_types | part_types).difference({dt for t in part_types for dt in dbp_heur.get_disjoint_types(t)})
