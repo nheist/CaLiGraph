@@ -63,12 +63,13 @@ def _compute_predicate_types(resource_property_mapping: dict, threshold: float) 
 def get_disjoint_types(dbp_type) -> set:
     global __DISJOINT_TYPES__
     if '__DISJOINT_TYPES__' not in globals():
-        __DISJOINT_TYPES__ = utils.load_or_create_cache('dbpedia_heuristic_disjoint_types', _compute_disjoint_types)
+        type_threshold = utils.get_config('dbpedia.disjointness_threshold')
+        __DISJOINT_TYPES__ = utils.load_or_create_cache('dbpedia_heuristic_disjoint_types', lambda: _compute_disjoint_types(type_threshold))
 
     return __DISJOINT_TYPES__[dbp_type]
 
 
-def _compute_disjoint_types() -> dict:
+def _compute_disjoint_types(type_threshold: float) -> dict:
     disjoint_types = defaultdict(set)
 
     # compute direct disjointnesses
@@ -77,7 +78,7 @@ def _compute_disjoint_types() -> dict:
     while len(dbp_types) > 0:
         dbp_type = dbp_types.pop()
         for other_dbp_type in dbp_types:
-            if _compute_type_similarity(dbp_type, other_dbp_type, type_property_weights) <= utils.get_config('dbpedia.disjointness_threshold'):
+            if _compute_type_similarity(dbp_type, other_dbp_type, type_property_weights) <= type_threshold:
                 disjoint_types[dbp_type].add(other_dbp_type)
                 disjoint_types[other_dbp_type].add(dbp_type)
 
