@@ -89,9 +89,9 @@ def test_disjoint_types():
 
 @check_func
 def _assert_disjoint(type1: str, type2: str):
-    assert DBO + type2 in dbp_heur.get_disjoint_types(DBO + type1), f'{type1} should be disjoint with {type2}'
+    assert DBO + type2 in dbp_heur.get_all_disjoint_types(DBO + type1), f'{type1} should be disjoint with {type2}'
 
 
 @check_func
 def _assert_not_disjoint(type1: str, type2: str):
-    assert DBO + type2 not in dbp_heur.get_disjoint_types(DBO + type1), f'{type1} should not be disjoint with {type2}'
+    assert DBO + type2 not in dbp_heur.get_all_disjoint_types(DBO + type1), f'{type1} should not be disjoint with {type2}'

@@ -60,7 +60,14 @@ def _compute_predicate_types(resource_property_mapping: dict, threshold: float) 
     return matching_types
 
 
-def get_disjoint_types(dbp_type) -> set:
+def get_all_disjoint_types(dbp_type: str) -> set:
+    """Return direct and transitive (i.e. disjoint types of parents) disjoint types of `dbp_type`."""
+    transitive_dbp_types = dbp_store.get_transitive_supertype_closure(dbp_type)
+    return {dt for tt in transitive_dbp_types for dt in get_direct_disjoint_types(tt)}
+
+
+def get_direct_disjoint_types(dbp_type) -> set:
+    """Return direct disjoint types of `dbp_type`."""
     global __DISJOINT_TYPES__
     if '__DISJOINT_TYPES__' not in globals():
         type_threshold = utils.get_config('dbpedia.disjointness_threshold')

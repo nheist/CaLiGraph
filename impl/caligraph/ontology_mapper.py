@@ -18,7 +18,7 @@ def find_conflicting_edges(graph) -> set:
         for child in graph.children(node):
             if head_subject_lemmas[node] == head_subject_lemmas[child]:
                 continue
-            parent_disjoint_types = {dt for t in direct_mappings[node] for dt in dbp_heur.get_disjoint_types(t)}
+            parent_disjoint_types = {dt for t in direct_mappings[node] for dt in dbp_heur.get_all_disjoint_types(t)}
             child_types = set(direct_mappings[child])
             if child_types.intersection(parent_disjoint_types):
                 conflicting_edges.add((node, child))
@@ -79,7 +79,7 @@ def resolve_disjointnesses(graph):
                 direct_types = set() if score == 0 else set(best_type)
             # make sure that types induced by parts are integrated in direct types
             part_types = {t for t in graph.get_parts(node) if dbp_util.is_dbp_type(t)}
-            direct_types = (direct_types | part_types).difference({dt for t in part_types for dt in dbp_heur.get_disjoint_types(t)})
+            direct_types = (direct_types | part_types).difference({dt for t in part_types for dt in dbp_heur.get_all_disjoint_types(t)})
             direct_types = {tt for t in direct_types for tt in dbp_store.get_transitive_supertype_closure(t)}
 
             invalid_types = transitive_types.difference(direct_types)
@@ -108,7 +108,7 @@ def _find_dbpedia_parents(graph, node: str, direct_resources_only: bool) -> dict
         for tt in dbp_store.get_transitive_supertype_closure(t):
             result[tt] = max(result[tt], score)
 
-    result = defaultdict(float, {t: score for t, score in result.items() if not dbp_heur.get_disjoint_types(t).intersection(set(result))})
+    result = defaultdict(float, {t: score for t, score in result.items() if not dbp_heur.get_all_disjoint_types(t).intersection(set(result))})
     return result
 
 
@@ -134,7 +134,7 @@ def _compute_type_resource_scores(graph, node: str, direct_resources_only: bool)
 def _find_coherent_type_sets(dbp_types: dict) -> list:
     """Find biggest subset of types in `dbp_types` that does not violate any disjointness axioms."""
     coherent_sets = []
-    disjoint_type_mapping = {t: set(dbp_types).intersection(dbp_heur.get_disjoint_types(t)) for t in dbp_types}
+    disjoint_type_mapping = {t: set(dbp_types).intersection(dbp_heur.get_all_disjoint_types(t)) for t in dbp_types}
     for t, score in dbp_types.items():
         # add a type t to all coherent sets that do not contain disjoint types of t
         disjoint_types = disjoint_type_mapping[t]
