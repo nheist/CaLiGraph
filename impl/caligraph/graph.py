@@ -267,15 +267,18 @@ class CaLiGraph(HierarchyGraph):
                 for res, res_data in listing.get_page_entities(self).items():
                     res_uri = clg_util.name2clg_resource(res)
                     for origin_data in res_data.values():
-                        self._resource_relations.update((res_uri, clg_util.name2clg_type(p), clg_util.name2clg_resource(o)) for p, o in origin_data['out'])
-                        self._resource_relations.update((clg_util.name2clg_resource(s), clg_util.name2clg_type(p), res_uri) for p, s in origin_data['in'])
+                        self._resource_relations.update((res_uri, clg_util.name2clg_prop(p), clg_util.name2clg_resource(o)) for p, o in origin_data['out'])
+                        self._resource_relations.update((clg_util.name2clg_resource(s), clg_util.name2clg_prop(p), res_uri) for p, s in origin_data['in'])
         return self._resource_relations
 
     def get_disjoint_dbp_types(self, node: str, transitive=True):
         if node not in self._node_disjoint_dbp_types:  # fetch disjoint dbp types of node
             self._node_disjoint_dbp_types[node] = {dt for t in self.get_type_parts(node) for dt in dbp_heur.get_direct_disjoint_types(t)}
             self._node_disjoint_dbp_types_transitive[node] = {dt for t in self.get_transitive_dbpedia_types(node) for dt in dbp_heur.get_direct_disjoint_types(t)}
-        return self._node_disjoint_dbp_types_transitive[node] if transitive else self._node_disjoint_dbp_types[node]
+        disjoint_dbp_types = self._node_disjoint_dbp_types[node]
+        if transitive:
+            disjoint_dbp_types |= self._node_disjoint_dbp_types_transitive[node]
+        return disjoint_dbp_types
 
     def get_disjoint_nodes(self, node: str):
         disjoint_types = {tt for t in self.get_disjoint_dbp_types(node, transitive=False) for tt in dbp_store.get_transitive_subtype_closure(t)}

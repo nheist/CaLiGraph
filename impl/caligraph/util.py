@@ -20,6 +20,10 @@ def name2clg_type(name: str) -> str:
     return NAMESPACE_CLG_ONTOLOGY + str_util.capitalize(name.strip().replace(' ', '_'))
 
 
+def name2clg_prop(name: str) -> str:
+    return NAMESPACE_CLG_ONTOLOGY + name.strip().replace(' ', '_')
+
+
 def clg_type2name(clg_type: str) -> str:
     return clg_type[len(NAMESPACE_CLG_ONTOLOGY):].replace('_', ' ')
 
