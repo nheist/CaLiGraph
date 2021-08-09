@@ -258,7 +258,7 @@ def _get_lines_dbpedia_instance_types(graph) -> list:
     """Serialize new types for DBpedia resources in DBpedia namespace."""
     new_dbpedia_types = defaultdict(set)
     for node in graph.nodes:
-        node_types = graph.get_transitive_dbpedia_types(node, force_recompute=True)
+        node_types = graph.get_transitive_dbpedia_type_closure(node, force_recompute=True)
         transitive_node_types = {tt for t in node_types for tt in dbp_store.get_transitive_supertype_closure(t)}.difference({rdf_util.CLASS_OWL_THING})
         for res in graph.get_resources(node):
             dbp_res = clg_util.clg_resource2dbp_resource(res)

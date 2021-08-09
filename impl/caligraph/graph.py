@@ -132,7 +132,7 @@ class CaLiGraph(HierarchyGraph):
     def get_resources(self, node: str) -> set:
         """Return all resources of a node."""
         if node not in self._node_resources:
-            disjoint_dbp_types = self.get_disjoint_dbp_types(node, transitive=True)
+            disjoint_dbp_types = self.get_disjoint_dbp_types(node, transitive_closure=True)
             dbp_resources = self.get_resources_from_categories(node) | {r for t in self.get_type_parts(node) for r in dbp_store.get_direct_resources_for_type(t)}
             dbp_resources = {r for r in dbp_resources if not disjoint_dbp_types.intersection(dbp_store.get_types(r))}
             self._node_resources[node] = {clg_util.dbp_resource2clg_resource(r) for r in dbp_resources}
@@ -188,10 +188,10 @@ class CaLiGraph(HierarchyGraph):
                     self._resource_provenance[clg_util.name2clg_resource(res)].update({dbp_util.name2resource(o) for o in res_data})
         return self._resource_provenance[resource]
 
-    def get_transitive_dbpedia_types(self, node: str, force_recompute=False) -> set:
+    def get_transitive_dbpedia_type_closure(self, node: str, force_recompute=False) -> set:
         """Return all mapped DBpedia types of a node."""
         if node not in self._node_dbpedia_types or force_recompute:
-            parent_types = {t for parent in self.parents(node) for t in self.get_transitive_dbpedia_types(parent, force_recompute)}
+            parent_types = {t for parent in self.parents(node) for t in self.get_transitive_dbpedia_type_closure(parent, force_recompute)}
             self._node_dbpedia_types[node] = self.get_type_parts(node) | parent_types
         return self._node_dbpedia_types[node]
 
@@ -271,18 +271,16 @@ class CaLiGraph(HierarchyGraph):
                         self._resource_relations.update((clg_util.name2clg_resource(s), clg_util.name2clg_prop(p), res_uri) for p, s in origin_data['in'])
         return self._resource_relations
 
-    def get_disjoint_dbp_types(self, node: str, transitive=True):
+    def get_disjoint_dbp_types(self, node: str, transitive_closure=True):
         if node not in self._node_disjoint_dbp_types:  # fetch disjoint dbp types of node
             self._node_disjoint_dbp_types[node] = {dt for t in self.get_type_parts(node) for dt in dbp_heur.get_direct_disjoint_types(t)}
-            self._node_disjoint_dbp_types_transitive[node] = {dt for t in self.get_transitive_dbpedia_types(node) for dt in dbp_heur.get_direct_disjoint_types(t)}
-        disjoint_dbp_types = self._node_disjoint_dbp_types[node]
-        if transitive:
-            disjoint_dbp_types |= self._node_disjoint_dbp_types_transitive[node]
-        return disjoint_dbp_types
+            self._node_disjoint_dbp_types_transitive[node] = {dt for t in self.get_transitive_dbpedia_type_closure(node) for dt in dbp_heur.get_direct_disjoint_types(t)}
+        return self._node_disjoint_dbp_types_transitive[node] if transitive_closure else self._node_disjoint_dbp_types[node]
 
     def get_disjoint_nodes(self, node: str):
-        disjoint_types = {tt for t in self.get_disjoint_dbp_types(node, transitive=False) for tt in dbp_store.get_transitive_subtype_closure(t)}
-        direct_disjoint_nodes = {n for t in disjoint_types for n in self.get_nodes_for_part(t)}
+        disjoint_types = self.get_disjoint_dbp_types(node, transitive_closure=False)
+        direct_disjoint_types = {t for t in disjoint_types if not any(t in self.get_disjoint_dbp_types(p, transitive_closure=False) for p in self.parents(node))}
+        direct_disjoint_nodes = {n for t in direct_disjoint_types for n in self.get_nodes_for_part(t)}
         minimal_direct_disjoint_nodes = {n for n in direct_disjoint_nodes if not self.ancestors(n).intersection(direct_disjoint_nodes)}
         return minimal_direct_disjoint_nodes
 
@@ -293,7 +291,7 @@ class CaLiGraph(HierarchyGraph):
         node_depths = self.depths()
 
         class_count = len(self.nodes)
-        classes_connected_to_dbpedia_count = len({n for n in self.nodes if self.get_transitive_dbpedia_types(n)})
+        classes_connected_to_dbpedia_count = len({n for n in self.nodes if self.get_transitive_dbpedia_type_closure(n)})
         edge_count = len(self.edges)
         predicate_count = len(self.get_all_predicates())
         axiom_predicate_count = len({pred for axioms in self._node_axioms.values() for pred, _ in axioms})

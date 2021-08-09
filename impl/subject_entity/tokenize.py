@@ -251,7 +251,7 @@ def _compute_labeled_entities_for_listpage(page_uri: str, page_data: dict, graph
     # compute potential subject entities for list page
     page_potential_SEs = {dbp_util.resource2name(res) for cat in _get_category_descendants_for_list(page_uri) for res in cat_store.get_resources(cat)}
     # compute types of list page
-    page_types = {t for n in graph.get_nodes_for_part(page_uri) for t in dbp_store.get_independent_types(graph.get_transitive_dbpedia_types(n))}
+    page_types = {t for n in graph.get_nodes_for_part(page_uri) for t in dbp_store.get_independent_types(graph.get_transitive_dbpedia_type_closure(n))}
     page_disjoint_types = {dt for t in page_types for dt in dbp_heur.get_all_disjoint_types(t)}
     # collect all linked entities on the page
     page_entities = {ent['name'] for s in page_data['sections'] for enum in s['enums'] for entry in enum for ent in entry['entities']}
