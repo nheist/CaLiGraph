@@ -166,6 +166,11 @@ class CaLiGraph(HierarchyGraph):
             for res, res_data in listing.get_page_entities(self).items():
                 res_nodes = {clg_util.name2clg_type(t) for origin_data in res_data.values() for t in origin_data['types']}
                 res_nodes.update({n for origin in res_data for n in self.get_nodes_for_part(dbp_util.name2resource(origin))})
+                # get rid of conflicting nodes due to disjointnesses
+                disjoint_types = {dt for n in res_nodes for dt in self.get_disjoint_dbp_types(n, transitive_closure=True)}
+                res_node_types = {n: self.get_transitive_dbpedia_type_closure(n) for n in res_nodes}
+                res_nodes = {n for n, types in res_node_types.items() if not types.intersection(disjoint_types)}
+
                 res_uri = clg_util.name2clg_resource(res)
                 for n in res_nodes:
                     self._node_listing_resources[n].add(res_uri)
