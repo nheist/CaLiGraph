@@ -166,17 +166,10 @@ def _get_lines_instances_types(graph) -> list:
     """Serialize types of resources."""
     lines_instances_types = []
 
-    caligraph_ancestors = defaultdict(set)
-    for n in graph.traverse_nodes_topdown():
-        parents = graph.parents(n)
-        caligraph_ancestors[n] = parents | {a for p in parents for a in caligraph_ancestors[p]}
-
-    axiom_resources = {ax[1] for n in graph.nodes for ax in graph.get_axioms(n, transitive=False) if clg_util.is_clg_resource(ax[1])}
-    for res in graph.get_all_resources() | axiom_resources:
+    for res in graph.get_all_resources():
         lines_instances_types.append(serialize_util.as_object_triple(res, rdf_util.PREDICATE_TYPE, rdf_util.CLASS_OWL_NAMED_INDIVIDUAL))
         types = graph.get_nodes_for_resource(res)
-        direct_types = types.difference({a for t in types for a in caligraph_ancestors[t]})
-        lines_instances_types.extend([serialize_util.as_object_triple(res, rdf_util.PREDICATE_TYPE, t) for t in direct_types])
+        lines_instances_types.extend([serialize_util.as_object_triple(res, rdf_util.PREDICATE_TYPE, t) for t in types])
     return lines_instances_types
 
 
@@ -184,14 +177,8 @@ def _get_lines_instances_transitive_types(graph) -> list:
     """Serialize transitive types of resources."""
     lines_instances_transitive_types = []
 
-    caligraph_ancestors = defaultdict(set)
-    for n in graph.traverse_nodes_topdown():
-        parents = graph.parents(n)
-        caligraph_ancestors[n] = parents | {a for p in parents for a in caligraph_ancestors[p]}
-
     for res in graph.get_all_resources():
-        types = graph.get_nodes_for_resource(res)
-        direct_types = types.difference({a for t in types for a in caligraph_ancestors[t]})
+        direct_types = graph.get_nodes_for_resource(res)
         transitive_types = {tt for t in direct_types for tt in graph.ancestors(t)}.difference(direct_types | {rdf_util.CLASS_OWL_THING})
         lines_instances_transitive_types.extend([serialize_util.as_object_triple(res, rdf_util.PREDICATE_TYPE, tt) for tt in transitive_types])
     return lines_instances_transitive_types
@@ -200,8 +187,7 @@ def _get_lines_instances_transitive_types(graph) -> list:
 def _get_lines_instances_labels(graph) -> list:
     """Serialize resource labels."""
     lines_instances_labels = []
-    axiom_resources = {ax[1] for n in graph.nodes for ax in graph.get_axioms(n, transitive=False) if clg_util.is_clg_resource(ax[1])}
-    for res in graph.get_all_resources() | axiom_resources:
+    for res in graph.get_all_resources():
         label = graph.get_label(res)
         if label:
             lines_instances_labels.append(serialize_util.as_literal_triple(res, rdf_util.PREDICATE_LABEL, label))
@@ -225,8 +211,7 @@ def _get_lines_instances_relations(graph) -> list:
 def _get_lines_instances_dbpedia_mapping(graph) -> list:
     """Serialize DBpedia mapping for resources."""
     lines_instances_dbpedia_mapping = []
-    axiom_resources = {ax[1] for n in graph.nodes for ax in graph.get_axioms(n, transitive=False) if clg_util.is_clg_resource(ax[1])}
-    for res in graph.get_all_resources() | axiom_resources:
+    for res in graph.get_all_resources():
         equivalent_res = clg_util.clg_resource2dbp_resource(res)
         if equivalent_res in dbp_store.get_resources():
             lines_instances_dbpedia_mapping.append(serialize_util.as_object_triple(res, rdf_util.PREDICATE_SAME_AS, equivalent_res))
@@ -273,19 +258,13 @@ def _get_lines_dbpedia_instance_caligraph_types(graph) -> list:
     """Serialize CaLiGraph types for DBpedia resources."""
     instance_clg_types = []
 
-    caligraph_ancestors = defaultdict(set)
-    for n in graph.traverse_nodes_topdown():
-        parents = graph.parents(n)
-        caligraph_ancestors[n] = parents | {a for p in parents for a in caligraph_ancestors[p]}
-
     for res in graph.get_all_resources():
         dbp_res = clg_util.clg_resource2dbp_resource(res)
         if dbp_res not in dbp_store.get_resources():
             continue
 
         types = graph.get_nodes_for_resource(res)
-        direct_types = types.difference({a for t in types for a in caligraph_ancestors[t]})
-        instance_clg_types.extend([serialize_util.as_object_triple(dbp_res, rdf_util.PREDICATE_TYPE, t) for t in direct_types])
+        instance_clg_types.extend([serialize_util.as_object_triple(dbp_res, rdf_util.PREDICATE_TYPE, t) for t in types])
     return instance_clg_types
 
 
@@ -293,18 +272,12 @@ def _get_lines_dbpedia_instance_transitive_caligraph_types(graph) -> list:
     """Serialize transitive CaLiGraph types for DBpedia resources."""
     instance_transitive_clg_types = []
 
-    caligraph_ancestors = defaultdict(set)
-    for n in graph.traverse_nodes_topdown():
-        parents = graph.parents(n)
-        caligraph_ancestors[n] = parents | {a for p in parents for a in caligraph_ancestors[p]}
-
     for res in graph.get_all_resources():
         dbp_res = clg_util.clg_resource2dbp_resource(res)
         if dbp_res not in dbp_store.get_resources():
             continue
 
-        types = graph.get_nodes_for_resource(res)
-        direct_types = types.difference({a for t in types for a in caligraph_ancestors[t]})
+        direct_types = graph.get_nodes_for_resource(res)
         transitive_types = {tt for t in direct_types for tt in graph.ancestors(t)}.difference(direct_types | {rdf_util.CLASS_OWL_THING})
         instance_transitive_clg_types.extend([serialize_util.as_object_triple(dbp_res, rdf_util.PREDICATE_TYPE, tt) for tt in transitive_types])
     return instance_transitive_clg_types

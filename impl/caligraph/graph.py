@@ -131,19 +131,37 @@ class CaLiGraph(HierarchyGraph):
 
     def get_resources(self, node: str) -> set:
         """Return all resources of a node."""
-        if node not in self._node_resources:
-            disjoint_dbp_types = self.get_disjoint_dbp_types(node, transitive_closure=True)
-            dbp_resources = self.get_resources_from_categories(node) | {r for t in self.get_type_parts(node) for r in dbp_store.get_direct_resources_for_type(t)}
-            dbp_resources = {r for r in dbp_resources if not disjoint_dbp_types.intersection(dbp_store.get_types(r))}
-            self._node_resources[node] = {clg_util.dbp_resource2clg_resource(r) for r in dbp_resources}
-            if self.use_listing_resources:
-                self._node_resources[node].update(self.get_resources_from_listings(node))
+        if not self._node_resources:
+            # collect all resources for nodes
+            for n in self.nodes:
+                category_resources = self.get_resources_from_categories(n)
+                dbpedia_resources = {r for t in self.get_type_parts(n) for r in dbp_store.get_direct_resources_for_type(t)}
+                self._node_resources[n] = {clg_util.dbp_resource2clg_resource(r) for r in category_resources | dbpedia_resources}
+                if self.use_listing_resources:
+                    self._node_resources[n].update(self.get_resources_from_listings(n))
+            # discard resources from nodes, if those nodes are disjoint
+            for n in self._node_resources:
+                for dn in self.get_disjoint_nodes(n, transitive_closure=True):
+                    conflicting_resources = self._node_resources[n].intersection(self._node_resources[dn])
+                    if conflicting_resources:
+                        self._node_resources[n].difference_update(conflicting_resources)
+                        self._node_resources[dn].difference_update(conflicting_resources)
+            # make sure that we only return the most specific nodes
+            node_ancestors = defaultdict(set)
+            for n in self.traverse_nodes_topdown():
+                parents = self.parents(n)
+                node_ancestors[n] = parents | {a for p in parents for a in node_ancestors[p]}
+            for n, resources in self._node_resources.items():
+                for an in node_ancestors[n]:
+                    self._node_resources[an].difference_update(resources)
         return self._node_resources[node]
 
     def get_all_resources(self) -> set:
         """Return all resources contained in the graph."""
         if not self._all_node_resources:
-            self._all_node_resources = {r for n in self.nodes for r in self.get_resources(n)}
+            node_resources = {r for n in self.nodes for r in self.get_resources(n)}
+            axiom_resources = {ax[1] for n in self.nodes for ax in self.get_axioms(n, transitive=False) if clg_util.is_clg_resource(ax[1])}
+            self._all_node_resources = node_resources | axiom_resources
         return self._all_node_resources
 
     def get_nodes_for_resource(self, resource: str) -> set:
@@ -166,11 +184,6 @@ class CaLiGraph(HierarchyGraph):
             for res, res_data in listing.get_page_entities(self).items():
                 res_nodes = {clg_util.name2clg_type(t) for origin_data in res_data.values() for t in origin_data['types']}
                 res_nodes.update({n for origin in res_data for n in self.get_nodes_for_part(dbp_util.name2resource(origin))})
-                # get rid of conflicting nodes due to disjointnesses
-                disjoint_types = {dt for n in res_nodes for dt in self.get_disjoint_dbp_types(n, transitive_closure=True)}
-                res_node_types = {n: self.get_transitive_dbpedia_type_closure(n) for n in res_nodes}
-                res_nodes = {n for n, types in res_node_types.items() if not types.intersection(disjoint_types)}
-
                 res_uri = clg_util.name2clg_resource(res)
                 for n in res_nodes:
                     self._node_listing_resources[n].add(res_uri)
@@ -282,12 +295,14 @@ class CaLiGraph(HierarchyGraph):
             self._node_disjoint_dbp_types_transitive[node] = {dt for t in self.get_transitive_dbpedia_type_closure(node) for dt in dbp_heur.get_direct_disjoint_types(t)}
         return self._node_disjoint_dbp_types_transitive[node] if transitive_closure else self._node_disjoint_dbp_types[node]
 
-    def get_disjoint_nodes(self, node: str):
+    def get_disjoint_nodes(self, node: str, transitive_closure=False):
         disjoint_types = self.get_disjoint_dbp_types(node, transitive_closure=False)
         direct_disjoint_types = {t for t in disjoint_types if not any(t in self.get_disjoint_dbp_types(p, transitive_closure=False) for p in self.parents(node))}
         direct_disjoint_nodes = {n for t in direct_disjoint_types for n in self.get_nodes_for_part(t)}
-        minimal_direct_disjoint_nodes = {n for n in direct_disjoint_nodes if not self.ancestors(n).intersection(direct_disjoint_nodes)}
-        return minimal_direct_disjoint_nodes
+        if transitive_closure:
+            return direct_disjoint_nodes | {tn for n in direct_disjoint_nodes for tn in self.descendants(n)}
+        # otherwise return only the most generic disjoint nodes
+        return {n for n in direct_disjoint_nodes if not self.ancestors(n).intersection(direct_disjoint_nodes)}
 
     @property
     def statistics(self) -> str:
