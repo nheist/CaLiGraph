@@ -177,9 +177,14 @@ def _get_lines_instances_transitive_types(graph) -> list:
     """Serialize transitive types of resources."""
     lines_instances_transitive_types = []
 
+    caligraph_ancestors = defaultdict(set)
+    for n in graph.traverse_nodes_topdown():
+        parents = graph.parents(n)
+        caligraph_ancestors[n] = parents | {a for p in parents for a in caligraph_ancestors[p]}
+
     for res in graph.get_all_resources():
         direct_types = graph.get_nodes_for_resource(res)
-        transitive_types = {tt for t in direct_types for tt in graph.ancestors(t)}.difference(direct_types | {rdf_util.CLASS_OWL_THING})
+        transitive_types = {tt for t in direct_types for tt in caligraph_ancestors[t]}.difference(direct_types | {rdf_util.CLASS_OWL_THING})
         lines_instances_transitive_types.extend([serialize_util.as_object_triple(res, rdf_util.PREDICATE_TYPE, tt) for tt in transitive_types])
     return lines_instances_transitive_types
 
@@ -272,13 +277,18 @@ def _get_lines_dbpedia_instance_transitive_caligraph_types(graph) -> list:
     """Serialize transitive CaLiGraph types for DBpedia resources."""
     instance_transitive_clg_types = []
 
+    caligraph_ancestors = defaultdict(set)
+    for n in graph.traverse_nodes_topdown():
+        parents = graph.parents(n)
+        caligraph_ancestors[n] = parents | {a for p in parents for a in caligraph_ancestors[p]}
+
     for res in graph.get_all_resources():
         dbp_res = clg_util.clg_resource2dbp_resource(res)
         if dbp_res not in dbp_store.get_resources():
             continue
 
         direct_types = graph.get_nodes_for_resource(res)
-        transitive_types = {tt for t in direct_types for tt in graph.ancestors(t)}.difference(direct_types | {rdf_util.CLASS_OWL_THING})
+        transitive_types = {tt for t in direct_types for tt in caligraph_ancestors[t]}.difference(direct_types | {rdf_util.CLASS_OWL_THING})
         instance_transitive_clg_types.extend([serialize_util.as_object_triple(dbp_res, rdf_util.PREDICATE_TYPE, tt) for tt in transitive_types])
     return instance_transitive_clg_types
 
