@@ -97,7 +97,7 @@ def _get_lines_ontology(graph) -> list:
         lines_ontology.append(serialize_util.as_object_triple(pred, rdf_util.PREDICATE_TYPE, rdf_util.CLASS_PROPERTY))
     # disjointnesses
     for node in graph.nodes:
-        for disjoint_node in graph.get_disjoint_nodes(node):
+        for disjoint_node in graph.get_direct_disjoint_nodes(node):
             if node < disjoint_node:  # make sure that disjointnesses are only serialized once
                 lines_ontology.append(serialize_util.as_object_triple(node, rdf_util.PREDICATE_DISJOINT_WITH, disjoint_node))
     # restrictions
