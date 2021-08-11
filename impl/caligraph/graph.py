@@ -298,6 +298,12 @@ class CaLiGraph(HierarchyGraph):
         return self._node_disjoint_dbp_types_transitive[node] if transitive_closure else self._node_disjoint_dbp_types[node]
 
     def get_direct_disjoint_nodes(self, node: str) -> set:
+        disjoint_types = self.get_disjoint_dbp_types(node, transitive_closure=False)
+        direct_disjoint_types = {t for t in disjoint_types if not any(t in self.get_disjoint_dbp_types(p, transitive_closure=False) for p in self.parents(node))}
+        direct_disjoint_nodes = {n for t in direct_disjoint_types for n in self.get_nodes_for_part(t)}
+        return {n for n in direct_disjoint_nodes if not self.ancestors(n).intersection(direct_disjoint_nodes)}
+
+    def get_all_disjoint_nodes(self, node: str) -> set:
         global __DISJOINTNESS_BY_DBP_TYPE__  # todo: change to graph attribute
         if '__DISJOINTNESS_BY_DBP_TYPE__' not in globals():
             __DISJOINTNESS_BY_DBP_TYPE__ = defaultdict(set)
@@ -307,12 +313,6 @@ class CaLiGraph(HierarchyGraph):
 
         types = self.get_transitive_dbpedia_type_closure(node)
         return {n for t in types for n in __DISJOINTNESS_BY_DBP_TYPE__[t]}
-
-    def get_all_disjoint_nodes(self, node: str) -> set:
-        disjoint_types = self.get_disjoint_dbp_types(node, transitive_closure=False)
-        direct_disjoint_types = {t for t in disjoint_types if not any(t in self.get_disjoint_dbp_types(p, transitive_closure=False) for p in self.parents(node))}
-        direct_disjoint_nodes = {n for t in direct_disjoint_types for n in self.get_nodes_for_part(t)}
-        return {n for n in direct_disjoint_nodes if not self.ancestors(n).intersection(direct_disjoint_nodes)}
 
     @property
     def statistics(self) -> str:
