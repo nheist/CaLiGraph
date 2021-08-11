@@ -163,7 +163,7 @@ class CaLiGraph(HierarchyGraph):
         if not self._all_node_resources:
             node_resources = {r for n in self.nodes for r in self.get_resources(n)}
             axiom_resources = {ax[1] for n in self.nodes for ax in self.get_axioms(n, transitive=False) if clg_util.is_clg_resource(ax[1])}
-            self._all_node_resources = node_resources | axiom_resources
+            self._all_node_resources = {n for n in (node_resources | axiom_resources) if self.get_nodes_for_resource(n)}
         return self._all_node_resources
 
     def get_nodes_for_resource(self, resource: str) -> set:
