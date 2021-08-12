@@ -159,7 +159,7 @@ class CaLiGraph(HierarchyGraph):
                     self._node_resources[p].update(self._node_resources[n])
             for n in self.traverse_nodes_topdown():
                 for p in self.parents(n):
-                    self._node_resources[n] = self._node_resources[n].difference(self._node_resources[p])
+                    self._node_resources[p] = self._node_resources[p].difference(self._node_resources[n])
         return self._node_resources[node]
 
     def get_all_resources(self) -> set:
