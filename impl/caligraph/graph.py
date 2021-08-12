@@ -147,20 +147,24 @@ class CaLiGraph(HierarchyGraph):
                 for t in self.get_transitive_dbpedia_type_closure(n):
                     dbptype_resources[t].update(n_resources)
             processed_dbptypes = set()
-            for t in tqdm(set(dbptype_resources), total=len(dbptype_resources), desc='Locating resources to discard'):
+            for t in set(dbptype_resources):
                 processed_dbptypes.add(t)
                 for dt in dbp_heur.get_all_disjoint_types(t).difference(processed_dbptypes):
                     resources_to_discard.update(dbptype_resources[t].intersection(dbptype_resources[dt]))
+            print('Finished type processing')
             for n in self._node_resources:
-                self._node_resources[n].difference_update(resources_to_discard)
+                self._node_resources[n] = self._node_resources[n].difference(resources_to_discard)
+            print('Finished node cleaning')
             # make sure that we only return the most specific nodes
             node_ancestors = defaultdict(set)
             for n in self.traverse_nodes_topdown():
                 parents = self.parents(n)
                 node_ancestors[n] = parents | {a for p in parents for a in node_ancestors[p]}
+            print('Finished ancestor collection')
             for n, resources in self._node_resources.items():
                 for an in node_ancestors[n]:
                     self._node_resources[an].difference_update(resources)
+            print('Finished everything')
         return self._node_resources[node]
 
     def get_all_resources(self) -> set:
