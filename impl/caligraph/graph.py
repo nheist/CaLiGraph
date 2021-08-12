@@ -24,6 +24,7 @@ from polyleven import levenshtein
 from collections import defaultdict
 from typing import Optional
 from impl import listing
+from tqdm import tqdm
 
 
 class CaLiGraph(HierarchyGraph):
@@ -145,8 +146,10 @@ class CaLiGraph(HierarchyGraph):
             for n, n_resources in self._node_resources.items():
                 for t in self.get_transitive_dbpedia_type_closure(n):
                     dbptype_resources[t].update(n_resources)
-            for t in set(dbptype_resources):
-                for dt in dbp_heur.get_all_disjoint_types(t):
+            processed_dbptypes = set()
+            for t in tqdm(set(dbptype_resources), total=len(dbptype_resources), desc='Locating resources to discard'):
+                processed_dbptypes.add(t)
+                for dt in dbp_heur.get_all_disjoint_types(t).difference(processed_dbptypes):
                     resources_to_discard.update(dbptype_resources[t].intersection(dbptype_resources[dt]))
             for n in self._node_resources:
                 self._node_resources[n].difference_update(resources_to_discard)
