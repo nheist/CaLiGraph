@@ -24,6 +24,7 @@ from polyleven import levenshtein
 from collections import defaultdict
 from typing import Optional
 from impl import listing
+from tqdm import tqdm
 
 
 class CaLiGraph(HierarchyGraph):
@@ -140,10 +141,10 @@ class CaLiGraph(HierarchyGraph):
                 if self.use_listing_resources:
                     self._node_resources[n].update(self.get_resources_from_listings(n))
             # discard resources from nodes, if those nodes are disjoint
-            for n in self._node_resources:
+            for n, n_resources in tqdm(self._node_resources.items(), desc='Processing conflicting resources', total=len(self._node_resources)):
                 all_conflicting_resources = set()  # collect conflicting resources for n to delete them all at once
                 for dn in self.get_all_disjoint_nodes(n):
-                    conflicting_resources = self._node_resources[n].intersection(self._node_resources[dn])
+                    conflicting_resources = n_resources.intersection(self._node_resources[dn])
                     if conflicting_resources:
                         self._node_resources[dn].difference_update(conflicting_resources)
                         all_conflicting_resources.update(conflicting_resources)
