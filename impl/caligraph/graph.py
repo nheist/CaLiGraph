@@ -145,7 +145,7 @@ class CaLiGraph(HierarchyGraph):
             for n, n_resources in self._node_resources.items():
                 for t in self.get_transitive_dbpedia_type_closure(n):
                     dbptype_resources[t].update(n_resources)
-            for t in dbptype_resources:
+            for t in set(dbptype_resources):
                 for dt in dbp_heur.get_all_disjoint_types(t):
                     resources_to_discard.update(dbptype_resources[t].intersection(dbptype_resources[dt]))
             for n in self._node_resources:
