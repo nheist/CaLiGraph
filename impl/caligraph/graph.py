@@ -24,7 +24,6 @@ from polyleven import levenshtein
 from collections import defaultdict
 from typing import Optional
 from impl import listing
-from tqdm import tqdm
 
 
 class CaLiGraph(HierarchyGraph):
@@ -151,20 +150,16 @@ class CaLiGraph(HierarchyGraph):
                 processed_dbptypes.add(t)
                 for dt in dbp_heur.get_all_disjoint_types(t).difference(processed_dbptypes):
                     resources_to_discard.update(dbptype_resources[t].intersection(dbptype_resources[dt]))
-            print('Finished type processing')
             for n in self._node_resources:
                 self._node_resources[n] = self._node_resources[n].difference(resources_to_discard)
-            print('Finished node cleaning')
             # make sure that we only return the most specific nodes
             node_ancestors = defaultdict(set)
             for n in self.traverse_nodes_topdown():
                 parents = self.parents(n)
                 node_ancestors[n] = parents | {a for p in parents for a in node_ancestors[p]}
-            print('Finished ancestor collection')
             for n, resources in self._node_resources.items():
                 for an in node_ancestors[n]:
-                    self._node_resources[an].difference_update(resources)
-            print('Finished everything')
+                    self._node_resources[an] = self._node_resources[an].difference(resources)
         return self._node_resources[node]
 
     def get_all_resources(self) -> set:
