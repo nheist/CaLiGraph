@@ -140,15 +140,17 @@ class CaLiGraph(HierarchyGraph):
                 self._node_resources[n] = {clg_util.dbp_resource2clg_resource(r) for r in category_resources | dbpedia_resources}
                 if self.use_listing_resources:
                     self._node_resources[n].update(self.get_resources_from_listings(n))
-            # discard resources from nodes, if those nodes are disjoint
-            for n, n_resources in tqdm(self._node_resources.items(), desc='Processing conflicting resources', total=len(self._node_resources)):
-                all_conflicting_resources = set()  # collect conflicting resources for n to delete them all at once
-                for dn in self.get_all_disjoint_nodes(n):
-                    conflicting_resources = n_resources.intersection(self._node_resources[dn])
-                    if conflicting_resources:
-                        self._node_resources[dn].difference_update(conflicting_resources)
-                        all_conflicting_resources.update(conflicting_resources)
-                self._node_resources[n].difference_update(all_conflicting_resources)
+            # discard resources that have conflicting dbpedia types
+            resources_to_discard = set()
+            dbptype_resources = defaultdict(set)
+            for n, n_resources in self._node_resources.items():
+                for t in self.get_transitive_dbpedia_type_closure(n):
+                    dbptype_resources[t].update(n_resources)
+            for t, t_resources in dbptype_resources.items():
+                for dt in dbp_heur.get_all_disjoint_types(t):
+                    resources_to_discard.update(t_resources.intersection(dbptype_resources[dt]))
+            for n in self._node_resources:
+                self._node_resources[n].difference_update(resources_to_discard)
             # make sure that we only return the most specific nodes
             node_ancestors = defaultdict(set)
             for n in self.traverse_nodes_topdown():
