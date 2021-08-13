@@ -153,10 +153,6 @@ class CaLiGraph(HierarchyGraph):
             for n in self._node_resources:
                 self._node_resources[n] = self._node_resources[n].difference(resources_to_discard)
             # make sure that we only return the most specific nodes
-            # therefore, we first create a completely materialized graph, and then de-materialize it
-            for n in self.traverse_nodes_bottomup():
-                for p in self.parents(n):
-                    self._node_resources[p].update(self._node_resources[n])
             for n in self.traverse_nodes_topdown():
                 for p in self.parents(n):
                     self._node_resources[p] = self._node_resources[p].difference(self._node_resources[n])
