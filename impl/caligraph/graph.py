@@ -332,13 +332,17 @@ class CaLiGraph(HierarchyGraph):
         classtree_depth_avg = np.mean([node_depths[node] for node in leaf_nodes])
         branching_factor_avg = np.mean([d for _, d in self.graph.out_degree if d > 0])
         axiom_count = sum([len(axioms) for axioms in self._node_axioms.values()])
+        resource_axiom_count = len([ax for axioms in self._node_axioms.values() for ax in axioms if clg_util.is_clg_resource(ax[1])])
+        literal_axiom_count = axiom_count - resource_axiom_count
         direct_node_axiom_count = len({n for n in self.nodes if self.get_axioms(n, transitive=False)})
         node_axiom_count = len({n for n in self.nodes if self.get_axioms(n, transitive=True)})
 
         resources = self.get_all_resources()
         types_per_resource = np.mean([len(self.get_nodes_for_resource(r) | {tt for t in self.get_nodes_for_resource(r) for tt in self.ancestors(t)}) for r in resources])
         relations = self.get_all_relations()
-        in_degree = len({r for r in relations if clg_util.is_clg_resource(r[2])}) / len(resources)
+        resource_relation_count = len({r for r in relations if clg_util.is_clg_resource(r[2])})
+        literal_relation_count = len(relations) - resource_relation_count
+        in_degree = resource_relation_count / len(resources)
         out_degree = len(relations) / len(resources)
 
         return '\n'.join([
@@ -357,12 +361,16 @@ class CaLiGraph(HierarchyGraph):
             '{:<30} | {:>7.2f}'.format('classtree depth', classtree_depth_avg),
             '{:<30} | {:>7.2f}'.format('branching factor', branching_factor_avg),
             '{:<30} | {:>7}'.format('axioms', axiom_count),
+            '{:<30} | {:>7}'.format('resource axioms', resource_axiom_count),
+            '{:<30} | {:>7}'.format('literal axioms', literal_axiom_count),
             '{:<30} | {:>7}'.format('nodes with direct axiom', direct_node_axiom_count),
             '{:<30} | {:>7}'.format('nodes with axiom', node_axiom_count),
             '-' * 40,
             '{:<30} | {:>7}'.format('resources', len(resources)),
             '{:<30} | {:>7}'.format('types per resource', types_per_resource),
             '{:<30} | {:>7}'.format('relations', len(relations)),
+            '{:<30} | {:>7}'.format('resource relations', resource_relation_count),
+            '{:<30} | {:>7}'.format('literal relations', literal_relation_count),
             '{:<30} | {:>7}'.format('resource in-degree', in_degree),
             '{:<30} | {:>7}'.format('resource out-degree', out_degree),
             ])
