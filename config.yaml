@@ -109,7 +109,8 @@ results:
     instances_types: 'caligraph-instances_types.nt.bz2'  # instance types
     instances_transitive-types: 'caligraph-instances_transitive-types.nt.bz2'  # (additional) materialized instance types
     instances_labels: 'caligraph-instances_labels.nt.bz2'  # instance labels
-    instances_relations: 'caligraph-instances_relations.nt.bz2'  # materialized relations from restrictions
+    instances_relations: 'caligraph-instances_relations.nt.bz2'  # all relations
+    instances_restriction-relations: 'caligraph-instances_restriction-relations.nt.bz2'  # materialized relations (only from restrictions)
     instances_dbpedia-mapping: 'caligraph-instances_dbpedia-mapping.nt.bz2'  # sameAs links to DBpedia
     instances_provenance: 'caligraph-instances_provenance.nt.bz2'  # provenance information for instances
 

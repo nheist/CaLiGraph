@@ -279,9 +279,7 @@ class CaLiGraph(HierarchyGraph):
         """Return all relations in CaLiGraph."""
         if not self._resource_relations:
             # add relations from axioms
-            for node in self.nodes:
-                for pred, val in self.get_axioms(node):
-                    self._resource_relations.update({(res, pred, val) for res in self.get_resources(node)})
+            self._resource_relations.update(self.get_relations_from_axioms())
             # add relations from listings
             if self.use_listing_resources:
                 for res, res_data in listing.get_page_entities(self).items():
@@ -290,6 +288,13 @@ class CaLiGraph(HierarchyGraph):
                         self._resource_relations.update((res_uri, clg_util.name2clg_prop(p), clg_util.name2clg_resource(o)) for p, o in origin_data['out'])
                         self._resource_relations.update((clg_util.name2clg_resource(s), clg_util.name2clg_prop(p), res_uri) for p, s in origin_data['in'])
         return self._resource_relations
+
+    def get_relations_from_axioms(self) -> set:
+        relations_from_axioms = set()
+        for node in self.nodes:
+            for pred, val in self.get_axioms(node):
+                relations_from_axioms.update({(res, pred, val) for res in self.get_resources(node)})
+        return relations_from_axioms
 
     def get_disjoint_dbp_types(self, node: str, transitive_closure=True) -> set:
         if node not in self._node_disjoint_dbp_types:  # fetch disjoint dbp types of node

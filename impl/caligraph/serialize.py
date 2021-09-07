@@ -23,6 +23,7 @@ def serialize_graph(graph):
     _write_lines_to_file(_get_lines_instances_transitive_types(graph), 'results.caligraph.instances_transitive-types')
     _write_lines_to_file(_get_lines_instances_labels(graph), 'results.caligraph.instances_labels')
     _write_lines_to_file(_get_lines_instances_relations(graph), 'results.caligraph.instances_relations')
+    _write_lines_to_file(_get_lines_instances_restriction_relations(graph), 'results.caligraph.instances_restriction-relations')
     _write_lines_to_file(_get_lines_instances_dbpedia_mapping(graph), 'results.caligraph.instances_dbpedia-mapping')
     _write_lines_to_file(_get_lines_instances_provenance(graph), 'results.caligraph.instances_provenance')
 
@@ -207,6 +208,17 @@ def _get_lines_instances_relations(graph) -> list:
     """Serialize resource facts."""
     lines_instances_relations = []
     for s, p, o in graph.get_all_relations():
+        if clg_util.is_clg_resource(o):
+            lines_instances_relations.append(serialize_util.as_object_triple(s, p, o))
+        else:
+            lines_instances_relations.append(serialize_util.as_literal_triple(s, p, o))
+    return lines_instances_relations
+
+
+def _get_lines_instances_restriction_relations(graph) -> list:
+    """Serialize resource facts (only from restrictions)."""
+    lines_instances_relations = []
+    for s, p, o in graph.get_relations_from_axioms():
         if clg_util.is_clg_resource(o):
             lines_instances_relations.append(serialize_util.as_object_triple(s, p, o))
         else:
