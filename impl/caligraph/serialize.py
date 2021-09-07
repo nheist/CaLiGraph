@@ -93,8 +93,9 @@ def _get_lines_ontology(graph) -> list:
         parents = graph.parents(node) or {rdf_util.CLASS_OWL_THING}
         lines_ontology.extend([serialize_util.as_object_triple(node, rdf_util.PREDICATE_SUBCLASS_OF, p) for p in parents])
     # predicates
-    for pred in graph.get_all_predicates():
-        lines_ontology.append(serialize_util.as_object_triple(pred, rdf_util.PREDICATE_TYPE, rdf_util.CLASS_PROPERTY))
+    for pred, is_object_property in graph.get_all_predicates().items():
+        property_type = rdf_util.CLASS_OWL_OBJECT_PROPERTY if is_object_property else rdf_util.CLASS_OWL_DATATYPE_PROPERTY
+        lines_ontology.append(serialize_util.as_object_triple(pred, rdf_util.PREDICATE_TYPE, property_type))
     # disjointnesses
     for node in graph.nodes:
         for disjoint_node in graph.get_direct_disjoint_nodes(node):

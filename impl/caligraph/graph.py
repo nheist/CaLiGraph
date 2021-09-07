@@ -271,9 +271,9 @@ class CaLiGraph(HierarchyGraph):
             self._node_axioms_transitive[node] = self._node_axioms[node] | {ax for p in self.parents(node) for ax in self.get_axioms(p)}
         return self._node_axioms_transitive[node] if transitive else self._node_axioms[node]
 
-    def get_all_predicates(self) -> set:
-        """Return all predicates used in CaLiGraph."""
-        return {r[1] for r in self.get_all_relations()}
+    def get_all_predicates(self) -> dict:
+        """Return all predicates used in CaLiGraph. Predicate maps to True, if ObjectPredicate, and False otherwise."""
+        return {r[1]: clg_util.is_clg_resource(r[2]) for r in self.get_all_relations()}
 
     def get_all_relations(self) -> set:
         """Return all relations in CaLiGraph."""

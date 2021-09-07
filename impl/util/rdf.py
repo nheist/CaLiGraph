@@ -34,7 +34,8 @@ PREDICATE_ANCHOR_TEXT = 'http://dbpedia.org/ontology/wikiPageWikiLinkText'
 CLASS_OWL_THING = 'http://www.w3.org/2002/07/owl#Thing'
 CLASS_OWL_CLASS = 'http://www.w3.org/2002/07/owl#Class'
 CLASS_OWL_NAMED_INDIVIDUAL = 'http://www.w3.org/2002/07/owl#NamedIndividual'
-CLASS_PROPERTY = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#Property'
+CLASS_OWL_OBJECT_PROPERTY = 'http://www.w3.org/2002/07/owl#ObjectProperty'
+CLASS_OWL_DATATYPE_PROPERTY = 'http://www.w3.org/2002/07/owl#DatatypeProperty'
 
 # auxiliary structures
 Triple = namedtuple('Triple', 'sub pred obj')
