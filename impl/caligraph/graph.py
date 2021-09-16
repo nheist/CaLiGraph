@@ -16,7 +16,6 @@ import impl.util.hypernymy as hypernymy_util
 import numpy as np
 import impl.dbpedia.store as dbp_store
 import impl.dbpedia.util as dbp_util
-import impl.dbpedia.heuristics as dbp_heur
 import impl.caligraph.ontology_mapper as clg_mapping
 import impl.caligraph.cali2ax as clg_axioms
 import impl.caligraph.util as clg_util
@@ -148,7 +147,7 @@ class CaLiGraph(HierarchyGraph):
             processed_dbptypes = set()
             for t in set(dbptype_resources):
                 processed_dbptypes.add(t)
-                for dt in dbp_heur.get_all_disjoint_types(t).difference(processed_dbptypes):
+                for dt in dbp_store.get_all_disjoint_types(t).difference(processed_dbptypes):
                     resources_to_discard.update(dbptype_resources[t].intersection(dbptype_resources[dt]))
             for n in self._node_resources:
                 self._node_resources[n] = self._node_resources[n].difference(resources_to_discard)
@@ -298,8 +297,8 @@ class CaLiGraph(HierarchyGraph):
 
     def get_disjoint_dbp_types(self, node: str, transitive_closure=True) -> set:
         if node not in self._node_disjoint_dbp_types:  # fetch disjoint dbp types of node
-            self._node_disjoint_dbp_types[node] = {dt for t in self.get_type_parts(node) for dt in dbp_heur.get_direct_disjoint_types(t)}
-            self._node_disjoint_dbp_types_transitive[node] = {dt for t in self.get_transitive_dbpedia_type_closure(node) for dt in dbp_heur.get_direct_disjoint_types(t)}
+            self._node_disjoint_dbp_types[node] = {dt for t in self.get_type_parts(node) for dt in dbp_store.get_direct_disjoint_types(t)}
+            self._node_disjoint_dbp_types_transitive[node] = {dt for t in self.get_transitive_dbpedia_type_closure(node) for dt in dbp_store.get_direct_disjoint_types(t)}
         return self._node_disjoint_dbp_types_transitive[node] if transitive_closure else self._node_disjoint_dbp_types[node]
 
     def get_direct_disjoint_nodes(self, node: str) -> set:

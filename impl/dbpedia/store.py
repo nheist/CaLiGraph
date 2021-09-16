@@ -390,9 +390,15 @@ def get_main_equivalence_types() -> set:
     return __MAIN_EQUIVALENCE_TYPES__
 
 
+def get_all_disjoint_types(dbp_type: str) -> set:
+    """Return direct and transitive (i.e. disjoint types of parents) disjoint types of `dbp_type`."""
+    transitive_dbp_types = get_transitive_supertype_closure(dbp_type)
+    return {dt for tt in transitive_dbp_types for dt in get_direct_disjoint_types(tt)}
+
+
 REMOVED_DISJOINTNESS_AXIOMS = [{'http://dbpedia.org/ontology/Agent', 'http://dbpedia.org/ontology/Place'}]
 ADDED_DISJOINTNESS_AXIOMS = [{'http://dbpedia.org/ontology/Person', 'http://dbpedia.org/ontology/Place'}, {'http://dbpedia.org/ontology/Family', 'http://dbpedia.org/ontology/Place'}]
-def get_disjoint_types(dbp_type: str) -> set:
+def get_direct_disjoint_types(dbp_type: str) -> set:
     """Return all types that are disjoint with `dbp_type` (excluding the wrong disjointness Agent<->Place)."""
     global __DISJOINT_TYPE_MAPPING__
     if '__DISJOINT_TYPE_MAPPING__' not in globals():
@@ -403,8 +409,6 @@ def get_disjoint_types(dbp_type: str) -> set:
             __DISJOINT_TYPE_MAPPING__[a].add(b)
             __DISJOINT_TYPE_MAPPING__[b].add(a)
 
-        # completing the subtype of each type with the subtypes of its disjoint types
-        __DISJOINT_TYPE_MAPPING__ = defaultdict(set, {t: {st for dt in disjoint_types for st in get_transitive_subtype_closure(dt)} for t, disjoint_types in __DISJOINT_TYPE_MAPPING__.items()})
     return __DISJOINT_TYPE_MAPPING__[dbp_type]
 
 
