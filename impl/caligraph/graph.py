@@ -139,19 +139,25 @@ class CaLiGraph(HierarchyGraph):
                 self._node_resources[n] = {clg_util.dbp_resource2clg_resource(r) for r in category_resources | dbpedia_resources}
                 if self.use_listing_resources:
                     self._node_resources[n].update(self.get_resources_from_listings(n))
-            # discard resources that have conflicting dbpedia types
-            resources_to_discard = set()
-            dbptype_resources = defaultdict(set)
-            for n, n_resources in self._node_resources.items():
-                for t in self.get_transitive_dbpedia_type_closure(n):
-                    dbptype_resources[t].update(n_resources)
-            processed_dbptypes = set()
-            for t in set(dbptype_resources):
-                processed_dbptypes.add(t)
-                for dt in dbp_heur.get_all_disjoint_types(t).difference(processed_dbptypes):
-                    resources_to_discard.update(dbptype_resources[t].intersection(dbptype_resources[dt]))
-            for n in self._node_resources:
-                self._node_resources[n] = self._node_resources[n].difference(resources_to_discard)
+            if self.use_listing_resources:
+                # discard types of resources that conflict with its original dbpedia types
+                for n in self._node_resources.keys():
+                    n_types = self.get_transitive_dbpedia_type_closure(n)
+                    n_disjoint_types = {dt for t in n_types for dt in dbp_heur.get_all_disjoint_types(t)}
+                    self._node_resources[n] = {r for r in self._node_resources[n]if n_disjoint_types.intersection(dbp_store.get_types(clg_util.clg_resource2dbp_resource(r)))}
+                # discard resources that still have conflicting dbpedia types
+                resources_to_discard = set()
+                dbptype_resources = defaultdict(set)
+                for n, n_resources in self._node_resources.items():
+                    for t in self.get_transitive_dbpedia_type_closure(n):
+                        dbptype_resources[t].update(n_resources)
+                processed_dbptypes = set()
+                for t in set(dbptype_resources):
+                    processed_dbptypes.add(t)
+                    for dt in dbp_heur.get_all_disjoint_types(t).difference(processed_dbptypes):
+                        resources_to_discard.update(dbptype_resources[t].intersection(dbptype_resources[dt]))
+                for n in self._node_resources:
+                    self._node_resources[n] = self._node_resources[n].difference(resources_to_discard)
             # make sure that we only return the most specific nodes
             for n in self.traverse_nodes_topdown():
                 for p in self.parents(n):

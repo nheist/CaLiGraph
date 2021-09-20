@@ -3,8 +3,8 @@ max_cpus: 16
 
 # -- CALIGRAPH CONFIGURATION --
 caligraph:
-  version: '2.1.0'
-  creation_date: '2021-08-05'
+  version: '2.1.1'
+  creation_date: '2021-09-21'
   namespace:
     base: 'http://caligraph.org/'
     ontology: 'http://caligraph.org/ontology/'
@@ -28,7 +28,7 @@ listing:
 logging:
   level: 'DEBUG'
   to_file: True
-  filename: 'caligraph_v2_1_0'
+  filename: 'caligraph_v2_1_1'
 
 # -- ERROR-MAILER CONFIGURATION --
 # -> add information about your mail accounts here and enable the `success` or `error` switches
