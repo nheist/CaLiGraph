@@ -144,7 +144,7 @@ class CaLiGraph(HierarchyGraph):
                 for n in self._node_resources.keys():
                     n_types = self.get_transitive_dbpedia_type_closure(n)
                     n_disjoint_types = {dt for t in n_types for dt in dbp_heur.get_all_disjoint_types(t)}
-                    self._node_resources[n] = {r for r in self._node_resources[n]if n_disjoint_types.intersection(dbp_store.get_types(clg_util.clg_resource2dbp_resource(r)))}
+                    self._node_resources[n] = {r for r in self._node_resources[n] if not n_disjoint_types.intersection(dbp_store.get_types(clg_util.clg_resource2dbp_resource(r)))}
                 # discard resources that still have conflicting dbpedia types
                 resources_to_discard = set()
                 dbptype_resources = defaultdict(set)
