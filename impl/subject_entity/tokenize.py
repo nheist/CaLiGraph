@@ -25,6 +25,9 @@ TOKENS_ENTRY = [f'[E{i}]' for i in range(1, 6)]
 ADDITIONAL_SPECIAL_TOKENS = TOKENS_ENTRY + [TOKEN_ROW, TOKEN_COL]
 
 
+META_SECTIONS = {'See also', 'External links', 'References', 'Notes'}
+
+
 # EXTRACTION OF TOKENS
 
 
@@ -39,6 +42,8 @@ def page_to_tokens(params) -> Tuple[list, Tuple[list, list]]:
     for section_data in page_data['sections']:
         section_name = section_data['name']
         top_section_name = section_name if section_data['level'] <= 2 else top_section_name
+        if top_section_name in META_SECTIONS:
+            continue  # skip meta sections
         for enum_data in section_data['enums']:
             context_tokens, context_ws = _context_to_tokens([page_name, top_section_name, section_name])
             max_group_size = MAX_EXAMPLE_SIZE - len(context_tokens)
@@ -121,6 +126,8 @@ def page_to_tokens_and_labels(params) -> Tuple[list, list]:
     for section_data in page_data['sections']:
         section_name = section_data['name']
         top_section_name = section_name if section_data['level'] <= 2 else top_section_name
+        if top_section_name in META_SECTIONS:
+            continue  # skip meta sections
         for enum_data in section_data['enums']:
             context_tokens, _ = _context_to_tokens([page_name, top_section_name, section_name])
             max_group_size = MAX_EXAMPLE_SIZE - len(context_tokens)
