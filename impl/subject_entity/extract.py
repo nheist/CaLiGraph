@@ -94,6 +94,7 @@ def _extract_subject_entity_batches(page_token_batches: list, page_ws_batches: l
         for s, s_states in ts_data.items():
             subject_entity_embeddings_dict[ts][s]['_embedding'] = np.array(s_states).mean(0)
 
+
 def _extract_context(word_tokens: list, word_token_ws: list) -> tuple:
     ctx_tokens = []
     for i in range(word_tokens.index(TOKEN_SEP)):

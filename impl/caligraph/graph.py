@@ -203,15 +203,12 @@ class CaLiGraph(HierarchyGraph):
         return {r for r in resources if len(r) > len(dbp_util.NAMESPACE_DBP_RESOURCE) and dbp_store.is_possible_resource(r)}
 
     def get_resource_provenance(self, resource: str) -> set:
-        """Return provenance information of a resource (i.e. which categories and lists have been used to extract it)."""
+        """Return provenance information of a resource, i.e. which categories and lists have been used to extract it."""
         if not self._resource_provenance:
             for node in self.nodes:
-                for cat in self.get_category_parts(node):
-                    for res in cat_store.get_resources(cat):
-                        self._resource_provenance[clg_util.dbp_resource2clg_resource(res)].add(cat)
-            if self.use_listing_resources:
-                for res, res_data in listing.get_page_entities(self).items():
-                    self._resource_provenance[clg_util.name2clg_resource(res)].update({dbp_util.name2resource(o) for o in res_data})
+                node_prov = self.get_category_parts(node) | self.get_list_parts(node)
+                for res in self.get_resources(node):
+                    self._resource_provenance[res].update(node_prov)
         return self._resource_provenance[resource]
 
     def get_transitive_dbpedia_type_closure(self, node: str, force_recompute=False) -> set:
