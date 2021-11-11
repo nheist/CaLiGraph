@@ -70,7 +70,7 @@ def _extract_subject_entity_batches(page_token_batches: list, page_ws_batches: l
                     entity_name = _tokens2name(current_entity_tokens)
                     if _is_valid_entity_name(entity_name):
                         subject_entity_dict[topsection_name][section_name][entity_name] = current_entity_label
-                        subject_entity_embeddings_dict[topsection_name][section_name][entity_name] = current_entity_states.mean(0)
+                        subject_entity_embeddings_dict[topsection_name][section_name][entity_name] = current_entity_states.numpy().mean(0)
                     found_entity = True
                 current_entity_tokens = []
                 current_entity_states = torch.tensor([])
@@ -86,7 +86,7 @@ def _extract_subject_entity_batches(page_token_batches: list, page_ws_batches: l
             entity_name = _tokens2name(current_entity_tokens)
             if _is_valid_entity_name(entity_name):
                 subject_entity_dict[topsection_name][section_name][entity_name] = current_entity_label
-                subject_entity_embeddings_dict[topsection_name][section_name][entity_name] = current_entity_states.mean(0)
+                subject_entity_embeddings_dict[topsection_name][section_name][entity_name] = current_entity_states.numpy().mean(0)
     # compute embeddings for sections
     for ts, ts_states in topsection_states.items():
         subject_entity_embeddings_dict[ts]['_embedding'] = np.array(ts_states).mean(0)

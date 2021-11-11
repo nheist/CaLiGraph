@@ -84,6 +84,28 @@ def get_wikilinks(dbp_resource: str) -> set:
     return __WIKILINKS__[dbp_resource]
 
 
+def get_all_lexicalisations() -> dict:
+    """Return all resources that fit to the given lexicalisation."""
+    global __RESOURCE_LEXICALISATIONS__
+    if '__RESOURCE_LEXICALISATIONS__' not in globals():
+        __RESOURCE_LEXICALISATIONS__ = defaultdict(dict, utils.load_or_create_cache('dbpedia_resource_lexicalisations', _compute_lexicalisations))
+    return __RESOURCE_LEXICALISATIONS__
+
+
+def _compute_lexicalisations():
+    # count how often a resource points to a lexicalisation
+    lex_counts = rdf_util.create_multi_val_count_dict_from_rdf([utils.get_data_file('files.dbpedia.anchor_texts')], rdf_util.PREDICATE_ANCHOR_TEXT)
+    # make sure that redirects are taken into account
+    for res in set(lex_counts):
+        redirect_res = resolve_redirect(res)
+        if res != redirect_res:
+            for lex in lex_counts[res]:
+                lex_counts[redirect_res][lex] += lex_counts[res][lex]
+            del lex_counts[res]
+    # convert to frequencies before returning
+    return defaultdict(dict, {sub: {obj: count / sum(lex_counts[sub].values()) for obj, count in obj_counts.items()} for sub, obj_counts in lex_counts.items()})
+
+
 def get_inverse_lexicalisations(text: str) -> dict:
     """Return all resources that fit to the given lexicalisation."""
     global __RESOURCE_INVERSE_LEXICALISATIONS__
