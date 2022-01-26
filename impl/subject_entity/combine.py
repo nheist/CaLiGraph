@@ -1,6 +1,5 @@
 """Combine extracted SE labels with information in page markup to get extracted SE entities with labels."""
 
-
 from impl import wikipedia
 from collections import defaultdict
 import impl.dbpedia.util as dbp_util
@@ -8,31 +7,30 @@ import impl.wikipedia.wikimarkup_parser as wmp
 
 
 def match_entities_with_uris(subject_entities_per_page: dict) -> dict:
-    enriched_entities_per_page = {}
-
     parsed_pages = wikipedia.get_parsed_articles()
-    for page_uri, entities_per_ts in subject_entities_per_page.items():
-        page_name = dbp_util.resource2name(page_uri)
-        enriched_entities = defaultdict(lambda: defaultdict(dict))
-        page_entity_map, section_entity_map = _create_entity_maps(parsed_pages[page_uri])
-        for ts, entities_per_s in entities_per_ts.items():
-            for s, entities in entities_per_s.items():
-                for ent_text, ent_tag in entities.items():
-                    if ent_text in page_entity_map[ts][s]:
-                        ent_name = page_entity_map[ts][s][ent_text]
-                    else:
-                        section_part = f'#{s}' if s != 'Main' else ''
-                        ent_name = f'{page_name}{section_part}--{ent_text}'
-                    enriched_entities[ts][s][ent_name] = {
-                        'text': ent_text,
-                        'tag': ent_tag,
-                        'TS_ent': section_entity_map[ts],
-                        'S_ent': section_entity_map[s]
-                    }
+    return {page_uri: _match_entities_for_page(page_uri, entities_per_ts, parsed_pages[page_uri])
+                                 for page_uri, entities_per_ts in subject_entities_per_page.items()}
 
-        enriched_entities_per_page[page_uri] = {ts: dict(enriched_entities[ts]) for ts in enriched_entities}
 
-    return enriched_entities_per_page
+def _match_entities_for_page(page_uri: str, entities_per_ts: dict, page_markup: dict) -> dict:
+    page_name = dbp_util.resource2name(page_uri)
+    enriched_entities = defaultdict(lambda: defaultdict(dict))
+    page_entity_map, section_entity_map = _create_entity_maps(page_markup)
+    for ts, entities_per_s in entities_per_ts.items():
+        for s, entities in entities_per_s.items():
+            for ent_text, ent_tag in entities.items():
+                if ent_text in page_entity_map[ts][s]:
+                    ent_name = page_entity_map[ts][s][ent_text]
+                else:
+                    section_part = f'#{s}' if s != 'Main' else ''
+                    ent_name = f'{page_name}{section_part}--{ent_text}'
+                enriched_entities[ts][s][ent_name] = {
+                    'text': ent_text,
+                    'tag': ent_tag,
+                    'TS_ent': section_entity_map[ts],
+                    'S_ent': section_entity_map[s]
+                }
+    return {ts: dict(enriched_entities[ts]) for ts in enriched_entities}
 
 
 def _create_entity_maps(page_markup: dict) -> tuple:
