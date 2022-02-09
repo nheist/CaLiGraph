@@ -30,7 +30,7 @@ def run_evaluation(parts: int, loss: str, learning_rate: float, activation_funct
     X_train, Y_train, X_val, Y_val = get_train_and_val_data(parts, ent2idx)
     train_loader = get_data_loader(X_train, Y_train, ent2idx, batch_size=batch_size, hard_negative_blocks=sf_to_entity_word_mapping, ignore_singles=ignore_singles)
     val_loader = get_data_loader(X_val, Y_val, ent2idx)
-    n_features = len(X_train.shape[-1])
+    n_features = X_train.shape[-1]
 
     if with_baselines:
         print('Evaluating baselines..')
