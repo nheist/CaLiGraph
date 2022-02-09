@@ -7,13 +7,14 @@ import datetime
 from collections import defaultdict
 from .tokenize import TOKEN_ROW, TOKENS_ENTRY, TOKEN_CTX, TOKEN_SEP, ADDITIONAL_SPECIAL_TOKENS, ALL_LABELS, ALL_LABEL_IDS
 from transformers import Trainer, TrainingArguments, BertTokenizerFast, BertForTokenClassification
+from typing import Tuple
 
 
 # APPLY BERT MODEL
 MAX_BATCHES = 100
 
 
-def extract_subject_entities(page_batches: list, bert_tokenizer, bert_model) -> tuple:
+def extract_subject_entities(page_batches: Tuple[list, list], bert_tokenizer, bert_model) -> tuple:
     subject_entity_dict = defaultdict(lambda: defaultdict(dict))
     subject_entity_embeddings_dict = defaultdict(lambda: defaultdict(dict))
 

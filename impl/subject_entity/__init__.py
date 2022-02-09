@@ -10,6 +10,7 @@ import torch
 
 def get_page_subject_entities(graph) -> dict:
     """Retrieve the extracted entities per page with context."""
+    # TODO: merge retrieval and combine step => add disambiguation of *ALL* entities during retrieval
     return combine.match_entities_with_uris(_get_subject_entity_predictions(graph))
 
 

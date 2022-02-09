@@ -28,6 +28,7 @@ torchvision = "*"
 torchaudio = "*"
 transformers = "*"
 tensorboard = "*"
+unidecode = "*"
 
 [dev-packages]
 
