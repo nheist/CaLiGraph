@@ -9,7 +9,7 @@ from entity_linking.vecpred.baseline import evaluate_baselines
 
 # run evaluation
 
-def run_evaluation(parts: int, loss: str, learning_rate: float, activation_function: str, epochs: int, batch_size: int, hard_negatives: bool, ignore_singles: bool, with_baselines: bool):
+def run_evaluation(loss: str, parts: int, learning_rate: float, activation_function: str, epochs: int, batch_size: int, hard_negatives: bool, ignore_singles: bool, with_baselines: bool):
     # retrieve entity vectors
     print('Retrieving entity vectors..')
     entity_vectors, idx2ent, ent2idx = get_entity_vectors(parts)
