@@ -32,7 +32,7 @@ def extract_training_data(parts: int, extract_validation_set: bool):
     el_util.store_data(X, 'X.feather', parts=parts)
 
     # filter entity vectors to keep only relevant ones
-    relevant_entities = set(X['_ent']) | {e for ents in sf_to_entity_word_mapping.values() for e in ents}
+    relevant_entities = set(X['_ent']) | {e for ents in sf_to_entity_mapping.values() for e in ents}
     entity_vecs = entity_vecs[entity_vecs['ent'].isin(relevant_entities)].copy().reset_index(drop=True)
     el_util.store_data(entity_vecs, 'entity-vectors.feather', parts=parts)
 

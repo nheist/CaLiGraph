@@ -1,40 +1,60 @@
 import argparse
 import entity_linking.util as el_util
-from entity_linking.vecpred.loss import LOSS_TYPES
-from entity_linking.vecpred.fixed.data.load import get_entity_vectors, get_train_and_val_data, get_data_loader
+from entity_linking.vecpred.loss import LOSS_BCE, LOSS_TYPES
+from entity_linking.vecpred.fixed.data import load
 from entity_linking.vecpred.fixed.model import FCNN, FCNN3, ACTIVATION_FUNCS
-from entity_linking.vecpred.fixed.train import train
+from entity_linking.vecpred.fixed import train
 from entity_linking.vecpred.baseline import evaluate_baselines
 
 
-# run evaluation
-
-def run_evaluation(loss: str, parts: int, learning_rate: float, activation_function: str, epochs: int, batch_size: int, hard_negatives: bool, ignore_singles: bool, with_baselines: bool):
-    # retrieve entity vectors
+def run_evaluation(loss: str, parts: int, learning_rate: float, activation_function: str, epochs: int, batch_size: int, hard_negatives: bool, with_baselines: bool):
     print('Retrieving entity vectors..')
-    entity_vectors, idx2ent, ent2idx = get_entity_vectors(parts)
+    entity_vectors, idx2ent, ent2idx = load.get_entity_vectors(parts)
     embedding_size = len(entity_vectors[0])
 
-    # retrieve entity blocks if necessary
-    print('Retrieving entity blocks..')
-    sf_to_entity_word_mapping = el_util.load_data('sf-to-entity-word-mapping.p', parts=parts) if hard_negatives else None
-
-    # prepare data loaders
     print('Preparing data loaders..')
-    X_train, Y_train, X_val, Y_val = get_train_and_val_data(parts, ent2idx)
-    train_loader = get_data_loader(X_train, Y_train, ent2idx, batch_size=batch_size, hard_negative_blocks=sf_to_entity_word_mapping, ignore_singles=ignore_singles)
-    val_loader = get_data_loader(X_val, Y_val, ent2idx)
+    X_train, Y_train, X_val, Y_val = load.get_train_and_val_data(parts, ent2idx, True)
+    if hard_negatives:
+        sf_to_entity_word_mapping = el_util.load_data('sf-to-entity-word-mapping.p', parts=parts)
+        train_loader = load.get_data_loader_with_hard_negatives(X_train, Y_train, ent2idx, sf_to_entity_word_mapping, batch_size=batch_size)
+    else:
+        train_loader = load.get_data_loader(X_train, Y_train, batch_size=batch_size)
+    val_loader = load.get_data_loader(X_val, Y_val)
     n_features = X_train.shape[-1]
 
     if with_baselines:
         print('Evaluating baselines..')
         evaluate_baselines(val_loader, entity_vectors, idx2ent, epochs)
 
-    # run training
-    for model in [FCNN(n_features, embedding_size, activation_function), FCNN3(n_features, embedding_size, activation_function)]:
+    models = [
+        FCNN(n_features, embedding_size, activation_function),
+        FCNN3(n_features, embedding_size, activation_function)
+    ]
+    for model in models:
         label = _create_label(model, parts, loss, learning_rate, activation_function, epochs, batch_size, hard_negatives)
         print(f'Running training for {label}')
-        train(label, train_loader, val_loader, entity_vectors, model, learning_rate, loss, epochs)
+        train.train(label, train_loader, val_loader, entity_vectors, model, learning_rate, loss, epochs)
+
+
+def run_evaluation_binary(loss: str, parts: int, learning_rate: float, activation_function: str, epochs: int, batch_size: int):
+    print('Retrieving entity vectors..')
+    entity_vectors, idx2ent, ent2idx = load.get_entity_vectors(parts)
+    embedding_size = len(entity_vectors[0])
+
+    print('Preparing data loaders..')
+    X_train, Y_train, X_val, Y_val = load.get_train_and_val_data(parts, ent2idx, False)
+    train_loader = load.get_data_loader_for_binary_matching(X_train, Y_train, entity_vectors, batch_size=batch_size)
+    val_loader = load.get_data_loader(X_val, Y_val)
+    n_features = X_train.shape[-1] + embedding_size
+
+    models = [
+        FCNN(n_features, embedding_size, activation_function, last_activation_function='sigmoid'),
+        FCNN3(n_features, embedding_size, activation_function, last_activation_function='sigmoid')
+    ]
+    for model in models:
+        label = _create_label(model, parts, loss, learning_rate, activation_function, epochs, batch_size, False)
+        print(f'Running training for {label}')
+        train.train_binary(label, train_loader, val_loader, entity_vectors, model, learning_rate, loss, epochs)
 
 
 def _create_label(model, p: int, loss: str, lr: float, af: str, e: int, bs: int, hn: bool) -> str:
@@ -50,8 +70,10 @@ if __name__ == '__main__':
     parser.add_argument('-e', '--epochs', type=int, default=100, help='number of epochs for training')
     parser.add_argument('-bs', '--batch_size', type=int, default=32, help='size of batches for training')
     parser.add_argument('-hn', '--hard_negatives', action="store_true", help='put similar examples together in the same batch')
-    parser.add_argument('-is', '--ignore_singles', action="store_true", help='ignore examples without similar entities')
     parser.add_argument('-wb', '--with_baselines', action="store_true", help='additionally evaluate baselines')
     args = parser.parse_args()
 
-    run_evaluation(args.loss, args.parts, args.learning_rate, args.activation_function, args.epochs, args.batch_size, args.hard_negatives, args.ignore_singles, args.with_baselines)
+    if args.loss == LOSS_BCE:
+        run_evaluation_binary(args.loss, args.parts, args.learning_rate, args.activation_function, args.epochs, args.batch_size)
+    else:
+        run_evaluation(args.loss, args.parts, args.learning_rate, args.activation_function, args.epochs, args.batch_size, args.hard_negatives, args.with_baselines)

@@ -4,12 +4,12 @@ import entity_linking.util as el_util
 
 
 # loss strategies used for training
+LOSS_BCE = 'BCE'
 LOSS_MSE = 'MSE'
 LOSS_NPAIR = 'NPAIR'
 LOSS_NPAIRMSE = 'NPAIR+MSE'
 
-LOSS_TYPES = [LOSS_MSE, LOSS_NPAIR, LOSS_NPAIRMSE]
-
+LOSS_TYPES = [LOSS_BCE, LOSS_MSE, LOSS_NPAIR, LOSS_NPAIRMSE]
 
 
 class NpairLoss(nn.Module):
