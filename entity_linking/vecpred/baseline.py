@@ -31,7 +31,7 @@ def _baseline_random(val_loader: DataLoader, entity_index_to_vector_transformer:
 
     for _, y_val in tqdm(val_loader, desc=baseline_name):
         y_val = entity_index_to_vector_transformer(y_val.to(el_util.DEVICE))
-        pred_shape = (y_val.shape[0], 0, 0, y_val.shape[-1])
+        pred_shape = (y_val.shape[0], y_val.shape[-1])
         y_pred = (torch.rand(pred_shape) * 2 - 1).to(el_util.DEVICE)  # produce random predictions in [-1, 1]
         calculator_ACC.add_predictions(metric_ACC(y_pred, y_val))
 
