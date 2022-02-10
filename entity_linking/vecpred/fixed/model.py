@@ -1,8 +1,8 @@
+import torch
 from torch import nn
-import torch.nn.functional as F
 
 
-ACTIVATION_FUNCS = {'relu': F.relu, 'tanh': F.tanh}
+ACTIVATION_FUNCS = {'relu': torch.relu, 'tanh': torch.tanh}
 
 
 class FCNN(nn.Module):
