@@ -48,8 +48,8 @@ def run_evaluation_binary(loss: str, parts: int, learning_rate: float, activatio
     n_features = X_train.shape[-1] + embedding_size
 
     models = [
-        FCNN(n_features, embedding_size, activation_function, last_activation_function='sigmoid'),
-        FCNN3(n_features, embedding_size, activation_function, last_activation_function='sigmoid')
+        FCNN(n_features, 1, activation_function, last_activation_function='sigmoid'),
+        FCNN3(n_features, 1, activation_function, last_activation_function='sigmoid')
     ]
     for model in models:
         label = _create_label(model, parts, loss, learning_rate, activation_function, epochs, batch_size, False)
