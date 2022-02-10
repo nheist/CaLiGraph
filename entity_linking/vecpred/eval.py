@@ -56,8 +56,7 @@ class ACCMetric(nn.Module):
 
             # otherwise, prediction is correct if similarity to positive is greater than to any negative or threshold
             for t in self.cosine_thresholds:
-                similarity_threshold = max(max_neg_similarity, t)
-                if pos_similarity > similarity_threshold:
+                if pos_similarity > max(max_neg_similarity, t):
                     correct_predictions_by_threshold[t][(is_known_entity, has_negatives)] += 1
         return entity_counts, correct_predictions_by_threshold
 
@@ -109,5 +108,4 @@ class ACCMetricCalculator:
             tb.add_scalar(self._get_loss_name('7_unknown_negatives', t), acc_unknown_negatives, epoch)
 
     def _get_loss_name(self, loss_type: str, threshold: float):
-        threshold = 0 if threshold == ACC_THRESHOLD_NONE else threshold
-        return f'ACC-T{threshold}/{loss_type}'
+        return f'ACC/{loss_type}' if threshold == ACC_THRESHOLD_NONE else f'ACC-T{threshold:.1f}/{loss_type}'

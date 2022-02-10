@@ -1,3 +1,4 @@
+import numpy as np
 import entity_linking.util as el_util
 from entity_linking.vecpred.loss import NpairLoss, NpairMSELoss
 from entity_linking.vecpred.eval import ACCMetric, ACCMetricCalculator
@@ -10,13 +11,7 @@ import torch.optim as optim
 import torch.nn as nn
 
 
-FEATURES_FULL = 'full'
-
-
-def train(parts, train_loader, val_loader, entity_vectors, model, lr, loss_type, features=FEATURES_FULL, epochs=100, prefix=''):
-    prefix = prefix + '_' if prefix else prefix
-    log_name = f'{el_util.TORCH_LOG_DIR}/{prefix}{parts}P_{type(model).__name__}_feat-{features}_lr-{lr}_loss-{loss_type}'
-
+def train(label: str, train_loader, val_loader, entity_vectors: np.ndarray, model, lr: float, loss_type: str, epochs: int):
     # prepare transformer
     entity_index_to_vector_transformer = EntityIndexToVectorMapper(entity_vectors)
 
@@ -31,7 +26,7 @@ def train(parts, train_loader, val_loader, entity_vectors, model, lr, loss_type,
     # optimizer
     optimizer = optim.Adam(model.parameters(), lr=lr)
 
-    tb = SummaryWriter(log_dir=log_name)
+    tb = SummaryWriter(log_dir=label)
     # start training loop
     model = model.to(el_util.DEVICE)
     for t in range(epochs):
