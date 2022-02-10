@@ -32,13 +32,13 @@ def run_evaluation(loss: str, parts: int, learning_rate: float, activation_funct
 
     # run training
     for model in [FCNN(n_features, embedding_size, activation_function), FCNN3(n_features, embedding_size, activation_function)]:
-        label = _create_label(model, parts, learning_rate, activation_function, epochs, batch_size, hard_negatives)
+        label = _create_label(model, parts, loss, learning_rate, activation_function, epochs, batch_size, hard_negatives)
         print(f'Running training for {label}')
         train(label, train_loader, val_loader, entity_vectors, model, learning_rate, loss, epochs)
 
 
-def _create_label(model, p: int, lr: float, af: str, e: int, bs: int, hn: bool) -> str:
-    return f'{type(model).__name__}_p-{p}_lr-{lr}_af-{af}_e-{e}_bs-{bs}_hn-{hn}'
+def _create_label(model, p: int, loss: str, lr: float, af: str, e: int, bs: int, hn: bool) -> str:
+    return f'{type(model).__name__}_p-{p}_loss-{loss}_lr-{lr}_af-{af}_e-{e}_bs-{bs}_hn-{hn}'
 
 
 if __name__ == '__main__':
