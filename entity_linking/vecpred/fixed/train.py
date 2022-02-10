@@ -26,7 +26,7 @@ def train(label: str, train_loader, val_loader, entity_vectors: np.ndarray, mode
     # optimizer
     optimizer = optim.Adam(model.parameters(), lr=lr)
 
-    tb = SummaryWriter(log_dir=label)
+    tb = SummaryWriter(log_dir=f'{el_util.TORCH_LOG_DIR}/{label}')
     # start training loop
     model = model.to(el_util.DEVICE)
     for t in range(epochs):
