@@ -11,7 +11,7 @@ from entity_linking.vecpred.fixed.data import blocking, load
 import operator
 
 
-def extract_training_data(parts: int, extract_validation_set: bool):
+def extract_training_data(parts: int, embedding_type: str, extract_validation_set: bool):
     df_listings, dataset_pages_chunks = _get_listings_and_page_chunks()
 
     if extract_validation_set:
@@ -25,27 +25,27 @@ def extract_training_data(parts: int, extract_validation_set: bool):
     el_util.store_data(sf_to_entity_mapping, 'sf-to-entity-word-mapping.p', parts=parts)
 
     # load embedding vectors
-    entity_vecs = _load_entity_vectors()
+    entity_vecs = el_util.load_entity_vectors(embedding_type)
 
     # create X
     X = _create_X(entity_occurrence_data, entity_vecs)
-    el_util.store_data(X, 'X.feather', parts=parts)
+    el_util.store_data(X, 'X.feather', parts=parts, embedding_type=embedding_type)
 
     # filter entity vectors to keep only relevant ones
     relevant_entities = set(X['_ent']) | {e for ents in sf_to_entity_mapping.values() for e in ents}
     entity_vecs = entity_vecs[entity_vecs['ent'].isin(relevant_entities)].copy().reset_index(drop=True)
-    el_util.store_data(entity_vecs, 'entity-vectors.feather', parts=parts)
+    el_util.store_data(entity_vecs, 'entity-vectors.feather', parts=parts, embedding_type=embedding_type)
 
     # retrieve entity vector indices
     idx2ent, ent2idx = load._get_entity_vector_indices(entity_vecs)
 
     # create Y
     Y = _create_Y(X, ent2idx, sf_to_entity_mapping)
-    el_util.store_data(Y, 'Y.p', parts=parts)
+    el_util.store_data(Y, 'Y.p', parts=parts, embedding_type=embedding_type)
 
 
 def _get_listings_and_page_chunks() -> Tuple[pd.DataFrame, np.ndarray]:
-    df_listings = pd.read_csv(f'{el_util.DATASET_PATH}/clgv21_distant-supervision-listings_full.csv', sep=';')
+    df_listings = pd.read_csv(f'{el_util.DATA_PATH}/clgv21_distant-supervision-listings_full.csv', sep=';')
     all_pages = df_listings['p'].unique()
     np.random.shuffle(all_pages)
     return df_listings, np.array_split(all_pages, el_util.DATASET_PARTS)
@@ -101,15 +101,6 @@ def _extract_entity_occurrences(df_listings: pd.DataFrame, dataset_pages: np.nda
 def _get_dataset_listings(df_listings: pd.DataFrame, dataset_pages: np.ndarray) -> set:
     dataset_listings = df_listings[df_listings['p'].isin(dataset_pages)]
     return set(map(tuple, dataset_listings.to_numpy()))
-
-
-def _load_entity_vectors() -> pd.DataFrame:
-    vecs = pd.read_csv(el_util.TARGET_EMBEDDING_PATH, sep=' ',
-                                  usecols=list(range(el_util.TARGET_EMBEDDING_DIMENSIONS + 1)),
-                                  names=['ent'] + [f'v_{i}' for i in range(el_util.TARGET_EMBEDDING_DIMENSIONS)])
-    vecs = vecs[vecs['ent'].str.startswith(dbp_util.NAMESPACE_DBP_RESOURCE)]
-    vecs['ent'] = vecs['ent'].transform(dbp_util.resource2name)
-    return vecs
 
 
 def _create_X(entity_occurrence_data: pd.DataFrame, entity_vecs: pd.DataFrame) -> pd.DataFrame:

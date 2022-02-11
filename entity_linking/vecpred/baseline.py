@@ -24,7 +24,7 @@ def evaluate_baselines(val_loader: DataLoader, entity_vectors: np.ndarray, idx2e
 
 def _baseline_random(val_loader: DataLoader, entity_index_to_vector_transformer: nn.Module, epochs: int):
     baseline_name = 'BASELINE_RANDOM'
-    tb = SummaryWriter(log_dir=f'{el_util.TORCH_LOG_DIR}/{baseline_name}')
+    tb = SummaryWriter(log_dir=f'{el_util.LOG_PATH}/{baseline_name}')
 
     metric_ACC = ACCMetric()
     calculator_ACC = ACCMetricCalculator()
@@ -42,7 +42,7 @@ def _baseline_random(val_loader: DataLoader, entity_index_to_vector_transformer:
 
 def _baseline_mean(val_loader: DataLoader, entity_index_to_vector_transformer: nn.Module, epochs: int):
     baseline_name = 'BASELINE_MEAN'
-    tb = SummaryWriter(log_dir=f'{el_util.TORCH_LOG_DIR}/{baseline_name}')
+    tb = SummaryWriter(log_dir=f'{el_util.LOG_PATH}/{baseline_name}')
 
     # predict the mean of all entity vectors
     y_pred_vector = entity_index_to_vector_transformer.entity_vectors.mean(0).to(el_util.DEVICE)
@@ -62,7 +62,7 @@ def _baseline_mean(val_loader: DataLoader, entity_index_to_vector_transformer: n
 
 def _baseline_popularity(val_loader: DataLoader, idx2ent: dict, epochs: int):
     baseline_name = 'BASELINE_POPULAR'
-    tb = SummaryWriter(log_dir=f'{el_util.TORCH_LOG_DIR}/{baseline_name}')
+    tb = SummaryWriter(log_dir=f'{el_util.LOG_PATH}/{baseline_name}')
 
     entity_popularity = _get_entity_popularities(idx2ent)
     calculator_ACC = ACCMetricCalculator()

@@ -4,6 +4,7 @@ import pandas as pd
 import pickle
 import random
 from pathlib import Path
+import impl.dbpedia.util as dbp_util
 
 # defs
 EPS = 1e-8
@@ -20,17 +21,27 @@ np.random.seed(SEED)
 torch.manual_seed(SEED)
 
 # paths
-DATASET_PATH = './data_disambiguation'
+ROOT_PATH = './data_disambiguation'
+DATA_PATH = f'{ROOT_PATH}/data'
 DATASET_ID = 'clgv21-v1'
-TORCH_LOG_DIR = f'{DATASET_PATH}/logs/{DATASET_ID}'
+LOG_PATH = f'{ROOT_PATH}/logs/{DATASET_ID}'
 
 # target embeddings
-TARGET_EMBEDDING_PATH = f'{DATASET_PATH}/embeddings/dbpedia2020_vectors.txt'
-TARGET_EMBEDDING_DIMENSIONS = 200
+EMBEDDING_TYPE_SIZES = {'rdf2vec': 200}
 
 
-def store_data(data, filename: str, parts=None):
-    filepath = _get_filepath(filename, parts)
+def load_entity_vectors(embedding_type: str):
+    path = f'{ROOT_PATH}/embeddings/{embedding_type}_vectors.txt'
+    size = EMBEDDING_TYPE_SIZES[embedding_type]
+
+    vecs = pd.read_csv(path, sep=' ', usecols=list(range(size + 1)), names=['ent'] + [f'v_{i}' for i in range(size)])
+    vecs = vecs[vecs['ent'].str.startswith(dbp_util.NAMESPACE_DBP_RESOURCE)]
+    vecs['ent'] = vecs['ent'].transform(dbp_util.resource2name)
+    return vecs
+
+
+def store_data(data, filename: str, parts=None, embedding_type=None):
+    filepath = _get_filepath(filename, parts, embedding_type)
     if filename.endswith('.p'):
         with open(filepath, mode='wb') as f:
             pickle.dump(data, f)
@@ -40,8 +51,8 @@ def store_data(data, filename: str, parts=None):
         raise ValueError(f'Unknown file extension for filename: {filename}')
 
 
-def load_data(filename: str, parts=None):
-    filepath = _get_filepath(filename, parts)
+def load_data(filename: str, parts=None, embedding_type=None):
+    filepath = _get_filepath(filename, parts, embedding_type)
     if filename.endswith('.p'):
         with open(filepath, mode='rb') as f:
             return pickle.load(f)
@@ -51,13 +62,16 @@ def load_data(filename: str, parts=None):
         raise ValueError(f'Unknown file extension for filename: {filename}')
 
 
-def file_exists(filename: str, parts=None):
-    filepath = _get_filepath(filename, parts)
+def file_exists(filename: str, parts=None, embedding_type=None):
+    filepath = _get_filepath(filename, parts, embedding_type)
     return Path(filepath).exists()
 
 
-def _get_filepath(filename: str, parts) -> str:
+def _get_filepath(filename: str, parts: int, embedding_type: str) -> str:
+    filepath = f'{DATA_PATH}/{DATASET_ID}'
     if parts:
-        return f'{DATASET_PATH}/{DATASET_ID}_{parts}p_{filename}'
-    else:
-        return f'{DATASET_PATH}/{DATASET_ID}_{filename}'
+        filepath += f'_{parts}p'
+    if embedding_type:
+        filepath += f'_{embedding_type}'
+    filepath += f'_{filename}'
+    return filepath

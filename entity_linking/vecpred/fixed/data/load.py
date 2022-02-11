@@ -10,8 +10,8 @@ import entity_linking.util as el_util
 from typing import Tuple
 
 
-def get_entity_vectors(parts: int) -> Tuple[np.ndarray, dict, dict]:
-    entity_vectors = el_util.load_data('entity-vectors.feather', parts=parts)
+def get_entity_vectors(parts: int, embedding_type: str) -> Tuple[np.ndarray, dict, dict]:
+    entity_vectors = el_util.load_data('entity-vectors.feather', parts=parts, embedding_type=embedding_type)
     idx2ent, ent2idx = _get_entity_vector_indices(entity_vectors)
     return entity_vectors.drop(columns='ent').to_numpy(), idx2ent, ent2idx
 
@@ -22,9 +22,9 @@ def _get_entity_vector_indices(entity_vectors: pd.DataFrame) -> Tuple[dict, dict
     return idx2ent, ent2idx
 
 
-def get_train_and_val_data(parts: int, ent2idx: dict, remove_unknown_entities: bool) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    X = el_util.load_data('X.feather', parts=parts)
-    Y = el_util.load_data('Y.p', parts=parts)
+def get_train_and_val_data(parts: int, embedding_type: str, ent2idx: dict, remove_unknown_entities: bool) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    X = el_util.load_data('X.feather', parts=parts, embedding_type=embedding_type)
+    Y = el_util.load_data('Y.p', parts=parts, embedding_type=embedding_type)
 
     # train/validation split
     val_pages = el_util.load_data('validation-set-pages.p')
