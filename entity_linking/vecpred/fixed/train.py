@@ -1,7 +1,7 @@
 import numpy as np
 import entity_linking.util as el_util
 from entity_linking.vecpred.loss import NpairLoss, NpairMSELoss
-from entity_linking.vecpred.eval import ACCMetric, ACCMetricCalculator, ACC_THRESHOLD_NONE
+from entity_linking.vecpred.eval import ACCMetric, ACCMetricCalculator, ACC_THRESHOLDS
 from entity_linking.vecpred.preprocessing import EntityIndexToVectorMapper
 from entity_linking.vecpred.loss import LOSS_BCE, LOSS_MSE, LOSS_NPAIR, LOSS_NPAIRMSE
 from torch.utils.tensorboard import SummaryWriter
@@ -109,7 +109,7 @@ def train_binary(label: str, train_loader, val_loader, entity_vectors: np.ndarra
             model.eval()
 
             entity_counts = defaultdict(int)
-            correct_predictions_by_threshold = {ACC_THRESHOLD_NONE: defaultdict(int)}
+            correct_predictions_by_threshold = {threshold: defaultdict(int) for threshold in ACC_THRESHOLDS}
             for x_val, y_val in tqdm(val_loader, desc='Validation'):
                 x_val = x_val.to(el_util.DEVICE)
                 y_val = entity_index_to_vector_transformer(y_val.to(el_util.DEVICE))
@@ -140,7 +140,8 @@ def train_binary(label: str, train_loader, val_loader, entity_vectors: np.ndarra
                             continue
 
                     # otherwise, prediction is correct
-                    correct_predictions_by_threshold[ACC_THRESHOLD_NONE][(is_known_entity, has_negatives)] += 1
+                    for threshold in ACC_THRESHOLDS:
+                        correct_predictions_by_threshold[threshold][(is_known_entity, has_negatives)] += 1
 
             val_metric_ACC = ACCMetricCalculator()
             val_metric_ACC.add_predictions((entity_counts, correct_predictions_by_threshold))
