@@ -74,8 +74,6 @@ if __name__ == '__main__':
     parser.add_argument('-wb', '--with_baselines', action="store_true", help='additionally evaluate baselines')
     args = parser.parse_args()
 
-    el_util.EMBEDDING_TYPE = args.embedding_type
-
     if args.loss == LOSS_BCE:
         run_evaluation_binary(args.loss, args.parts, args.embedding_type, args.learning_rate, args.activation_function, args.epochs, args.batch_size)
     else:
