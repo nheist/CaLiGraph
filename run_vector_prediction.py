@@ -64,6 +64,7 @@ def _create_label(model, p: int, et: str, loss: str, lr: float, af: str, e: int,
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run the evaluation of embedding vector prediction on DBpedia.')
     parser.add_argument('loss', choices=LOSS_TYPES, help='loss function used for training')
+    parser.add_argument('-d', '--dataset_id', default='clgv21-v1', help='ID of the dataset used')
     parser.add_argument('-p', '--parts', type=int, choices=list(range(1, 11)), default=3, help='specify how many parts of the dataset (max: 10) are used')
     parser.add_argument('-et', '--embedding_type', default='rdf2vec', help='embeddings used to encode DBpedia')
     parser.add_argument('-lr', '--learning_rate', type=float, default=1e-5, help='learning rate used during training')
@@ -73,6 +74,8 @@ if __name__ == '__main__':
     parser.add_argument('-hn', '--hard_negatives', action="store_true", help='put similar examples together in the same batch')
     parser.add_argument('-wb', '--with_baselines', action="store_true", help='additionally evaluate baselines')
     args = parser.parse_args()
+
+    el_util.DATASET_ID = args.dataset_id
 
     if args.loss == LOSS_BCE:
         run_evaluation_binary(args.loss, args.parts, args.embedding_type, args.learning_rate, args.activation_function, args.epochs, args.batch_size)

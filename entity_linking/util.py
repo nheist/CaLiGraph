@@ -23,8 +23,12 @@ torch.manual_seed(SEED)
 # paths
 ROOT_PATH = './data_disambiguation'
 DATA_PATH = f'{ROOT_PATH}/data'
-DATASET_ID = 'clgv21-v1'
-LOG_PATH = f'{ROOT_PATH}/logs/{DATASET_ID}'
+DATASET_ID = ''  # set during argument parsing
+
+
+def get_log_path() -> str:
+    return f'{ROOT_PATH}/logs/{DATASET_ID}'
+
 
 # target embeddings
 EMBEDDING_DIMENSIONS = 200

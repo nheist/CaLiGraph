@@ -25,7 +25,7 @@ def train(label: str, train_loader, val_loader, entity_vectors: np.ndarray, mode
     # optimizer
     optimizer = optim.Adam(model.parameters(), lr=lr)
 
-    tb = SummaryWriter(log_dir=f'{el_util.LOG_PATH}/{label}')
+    tb = SummaryWriter(log_dir=f'{el_util.get_log_path()}/{label}')
     # start training loop
     model = model.to(el_util.DEVICE)
     for t in range(epochs):
@@ -78,7 +78,7 @@ def train_binary(label: str, train_loader, val_loader, entity_vectors: np.ndarra
     # optimizer
     optimizer = optim.Adam(model.parameters(), lr=lr)
 
-    tb = SummaryWriter(log_dir=f'{el_util.LOG_PATH}/{label}')
+    tb = SummaryWriter(log_dir=f'{el_util.get_log_path()}/{label}')
     # start training loop
     model = model.to(el_util.DEVICE)
     for t in range(epochs):
