@@ -27,14 +27,13 @@ DATASET_ID = 'clgv21-v1'
 LOG_PATH = f'{ROOT_PATH}/logs/{DATASET_ID}'
 
 # target embeddings
-EMBEDDING_TYPE_SIZES = {'rdf2vec': 200}
+EMBEDDING_DIMENSIONS = 200
 
 
 def load_entity_vectors(embedding_type: str):
     path = f'{ROOT_PATH}/embeddings/{embedding_type}_vectors.txt'
-    size = EMBEDDING_TYPE_SIZES[embedding_type]
 
-    vecs = pd.read_csv(path, sep=' ', usecols=list(range(size + 1)), names=['ent'] + [f'v_{i}' for i in range(size)])
+    vecs = pd.read_csv(path, sep=' ', usecols=list(range(EMBEDDING_DIMENSIONS + 1)), names=['ent'] + [f'v_{i}' for i in range(EMBEDDING_DIMENSIONS)])
     vecs = vecs[vecs['ent'].str.startswith(dbp_util.NAMESPACE_DBP_RESOURCE)]
     vecs['ent'] = vecs['ent'].transform(dbp_util.resource2name)
     return vecs
