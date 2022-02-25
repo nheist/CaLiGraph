@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from torch import Tensor
-import entity_linking.util as el_util
+import entity_linking.utils as el_util
 
 
 class EntityIndexToVectorMapper(nn.Module):

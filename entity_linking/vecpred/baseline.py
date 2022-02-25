@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader
 import impl.dbpedia.store as dbp_store
 import impl.dbpedia.util as dbp_util
 from torch.utils.tensorboard import SummaryWriter
-import entity_linking.util as el_util
+import entity_linking.utils as el_util
 from entity_linking.vecpred.eval import ACCMetric, ACCMetricCalculator, ACC_THRESHOLDS
 from entity_linking.vecpred.preprocessing import EntityIndexToVectorMapper
 

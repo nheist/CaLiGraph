@@ -2,7 +2,7 @@ from tqdm import tqdm
 import numpy as np
 import pandas as pd
 import multiprocessing as mp
-import entity_linking.util as el_util
+import entity_linking.utils as el_util
 from typing import Tuple
 import impl.dbpedia.util as dbp_util
 from impl import wikipedia

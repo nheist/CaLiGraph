@@ -3,7 +3,7 @@ import torch
 from torch.utils.tensorboard import SummaryWriter
 import torch.nn as nn
 from torch import Tensor
-import entity_linking.util as el_util
+import entity_linking.utils as el_util
 from collections import defaultdict
 
 

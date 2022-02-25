@@ -7,7 +7,7 @@ from collections import defaultdict
 import pandas as pd
 import impl.dbpedia.store as dbp_store
 import impl.dbpedia.util as dbp_util
-import entity_linking.util as el_util
+import entity_linking.utils as el_util
 
 
 def get_sf_to_entity_mapping(entity_occurrence_data: pd.DataFrame):

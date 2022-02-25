@@ -1,6 +1,6 @@
 import torch
 from torch import nn
-import entity_linking.util as el_util
+import entity_linking.utils as el_util
 
 
 # loss strategies used for training
