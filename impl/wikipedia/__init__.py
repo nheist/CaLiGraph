@@ -2,7 +2,7 @@ from collections import defaultdict
 import utils
 from .nif_parser import extract_wiki_corpus_resources
 from .xml_parser import _parse_raw_markup_from_xml
-from .article_parser import _parse_articles, ARTICLE_TYPE_ENUM, ARTICLE_TYPE_TABLE
+from .article_parser import _parse_articles, ArticleType
 from .category_parser import _extract_parent_categories_from_markup, TEMPLATE_PREFIX, CATEGORY_PREFIX
 
 

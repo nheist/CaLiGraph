@@ -11,11 +11,16 @@ import signal
 import utils
 from tqdm import tqdm
 import multiprocessing as mp
+from enum import Enum
 
 
 LISTING_INDICATORS = ('*', '#', '{|')
 VALID_ENUM_PATTERNS = (r'\#', r'\*')
-ARTICLE_TYPE_ENUM, ARTICLE_TYPE_TABLE = 'enum', 'table'
+
+
+class ArticleType(Enum):
+    ENUM = 'enumeration'
+    TABLE = 'table'
 
 
 def _parse_articles(articles_markup) -> dict:
@@ -78,9 +83,9 @@ def _parse_article(resource_and_markup: tuple) -> tuple:
     sections = _extract_sections(cleaned_wiki_text)
     types = set()
     if any(len(s['enums']) > 0 for s in sections):
-        types.add(ARTICLE_TYPE_ENUM)
+        types.add(ArticleType.ENUM)
     if any(len(s['tables']) > 0 for s in sections):
-        types.add(ARTICLE_TYPE_TABLE)
+        types.add(ArticleType.TABLE)
     if not types:
         return resource, None  # ignore pages without useful lists
     return resource, {'sections': sections, 'types': types}

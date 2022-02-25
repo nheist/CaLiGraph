@@ -5,7 +5,7 @@ import impl.util.rdf as rdf_util
 from impl import wikipedia
 import impl.dbpedia.store as dbp_store
 import impl.dbpedia.util as dbp_util
-import impl.listpage.store as list_store
+import impl.listpage.util as list_util
 import impl.listpage.mapping as list_mapping
 from impl.util.spacy.training import train_ner_model
 import json
@@ -62,7 +62,7 @@ def _retrieve_training_data_gs(nlp: Language):
 
 
 def _retrieve_training_data_wle(nlp: Language):
-    listpages = list_store.get_parsed_listpages(wikipedia.ARTICLE_TYPE_ENUM)
+    listpages = {p: p_data for p, p_data in wikipedia.get_parsed_articles().items() if list_util.is_listpage(p) and wikipedia.ArticleType.ENUM in p_data['types']}
     lp_to_cat_mapping = {lp: list_mapping.get_equivalent_categories(lp) | list_mapping.get_parent_categories(lp) for lp in listpages}
     lp_to_cat_mapping = {lp: cats for lp, cats in lp_to_cat_mapping.items() if cats}
 
