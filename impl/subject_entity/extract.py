@@ -5,22 +5,23 @@ import numpy as np
 import utils
 import datetime
 from collections import defaultdict
-from .tokenize import TOKEN_ROW, TOKENS_ENTRY, TOKEN_CTX, TOKEN_SEP, ADDITIONAL_SPECIAL_TOKENS, ALL_LABELS, ALL_LABEL_IDS
+from .preprocess.word_tokenize import BertSpecialToken
+from .preprocess.pos_label import POSLabel
 from transformers import Trainer, TrainingArguments, BertTokenizerFast, BertForTokenClassification
 from typing import Tuple
 
 
 # APPLY BERT MODEL
-MAX_BATCHES = 100
+MAX_CHUNKS = 100
 
 
-def extract_subject_entities(page_batches: Tuple[list, list], bert_tokenizer, bert_model) -> tuple:
+def extract_subject_entities(page_chunks: Tuple[list, list], bert_tokenizer, bert_model) -> tuple:
     subject_entity_dict = defaultdict(lambda: defaultdict(dict))
     subject_entity_embeddings_dict = defaultdict(lambda: defaultdict(dict))
 
-    page_token_batches, page_ws_batches = page_batches
-    for i in range(0, len(page_token_batches), MAX_BATCHES):
-        _extract_subject_entity_batches(page_token_batches[i:i+MAX_BATCHES], page_ws_batches[i:i+MAX_BATCHES], bert_tokenizer, bert_model, subject_entity_dict, subject_entity_embeddings_dict)
+    page_token_chunks, page_ws_chunks = page_chunks
+    for i in range(0, len(page_token_chunks), MAX_CHUNKS):
+        _extract_subject_entity_batches(page_token_chunks[i:i + MAX_CHUNKS], page_ws_chunks[i:i + MAX_CHUNKS], bert_tokenizer, bert_model, subject_entity_dict, subject_entity_embeddings_dict)
 
     # convert to standard dicts
     return {ts: dict(subject_entity_dict[ts]) for ts in subject_entity_dict},\
@@ -59,14 +60,14 @@ def _extract_subject_entity_batches(page_token_batches: list, page_ws_batches: l
         found_entity = False  # only predict one entity per row/entry
         current_entity_tokens = []
         current_entity_states = torch.tensor([])
-        current_entity_label = None
+        current_entity_label = POSLabel.NONE
         for token, token_ws, label, states in zip(word_tokens,  word_token_ws, word_predictions, word_hidden_states):
-            if token in ADDITIONAL_SPECIAL_TOKENS and label != 0:
+            if token in BertSpecialToken.all_tokens() and label != POSLabel.NONE:
                 # ignore current line, as it is likely an error
-                label = 0
+                label = POSLabel.NONE
                 found_entity = True
 
-            if label == 0:
+            if label == POSLabel.NONE:
                 if current_entity_tokens and not found_entity:
                     entity_name = _tokens2name(current_entity_tokens)
                     if _is_valid_entity_name(entity_name):
@@ -75,12 +76,12 @@ def _extract_subject_entity_batches(page_token_batches: list, page_ws_batches: l
                     found_entity = True
                 current_entity_tokens = []
                 current_entity_states = torch.tensor([])
-                current_entity_label = None
+                current_entity_label = POSLabel.NONE
 
-                if token in (TOKENS_ENTRY + [TOKEN_ROW]):
+                if token in BertSpecialToken.item_starttokens():
                     found_entity = False  # reset found_entity if entering a new line
             else:
-                current_entity_label = current_entity_label or ALL_LABELS[label]
+                current_entity_label = current_entity_label or label
                 current_entity_states = torch.cat((current_entity_states, states.unsqueeze(0)))
                 current_entity_tokens.extend([token, token_ws])
         if current_entity_tokens and not found_entity:
@@ -98,9 +99,9 @@ def _extract_subject_entity_batches(page_token_batches: list, page_ws_batches: l
 
 def _extract_context(word_tokens: list, word_token_ws: list) -> tuple:
     ctx_tokens = []
-    for i in range(word_tokens.index(TOKEN_SEP)):
+    for i in range(word_tokens.index(BertSpecialToken.CONTEXT_END)):
         ctx_tokens.extend([word_tokens[i], word_token_ws[i]])
-    ctx_separators = [i for i, x in enumerate(ctx_tokens) if x == TOKEN_CTX] + [len(ctx_tokens)]
+    ctx_separators = [i for i, x in enumerate(ctx_tokens) if x == BertSpecialToken.CONTEXT_SEP] + [len(ctx_tokens)]
     top_section_ctx = ctx_tokens[ctx_separators[0]+1:ctx_separators[1]]
     section_ctx = ctx_tokens[ctx_separators[1]+1:ctx_separators[2]]
     return _tokens2name(top_section_ctx), _tokens2name(section_ctx)
@@ -132,12 +133,12 @@ def get_bert_tokenizer_and_model(training_data_retrieval_func):
 
 def _train_bert(training_data_retrieval_func):
     tokenizer = BertTokenizerFast.from_pretrained(BERT_BASE_MODEL)
-    tokenizer.add_tokens(ADDITIONAL_SPECIAL_TOKENS)
+    tokenizer.add_tokens(BertSpecialToken.all_tokens())
 
     tokens, labels = training_data_retrieval_func()
     train_dataset = _get_datasets(tokens, labels, tokenizer)
 
-    model = BertForTokenClassification.from_pretrained(BERT_BASE_MODEL, num_labels=len(ALL_LABEL_IDS))
+    model = BertForTokenClassification.from_pretrained(BERT_BASE_MODEL, num_labels=len(POSLabel))
     model.resize_token_embeddings(len(tokenizer))
 
     run_id = '{}_{}'.format(datetime.datetime.now().strftime('%Y%m%d-%H%M%S'), utils.get_config('logging.filename'))
@@ -167,15 +168,14 @@ def _train_bert(training_data_retrieval_func):
 
 def _get_datasets(tokens, tags, tokenizer) -> tuple:
     train_encodings = tokenizer(tokens, is_split_into_words=True, return_offsets_mapping=True, padding=True, truncation=True)
-    train_labels = _encode_tags(tags, train_encodings)
+    train_labels = _encode_labels(tags, train_encodings)
 
     train_encodings.pop('offset_mapping')  # we don't want to pass this to the model
     train_dataset = ListpageDataset(train_encodings, train_labels)
     return train_dataset
 
 
-def _encode_tags(tags, encodings):
-    labels = [[ALL_LABEL_IDS[tag] for tag in doc] for doc in tags]
+def _encode_labels(labels, encodings):
     encoded_labels = []
     for doc_labels, doc_offset in zip(labels, encodings.offset_mapping):
         # create an empty array of -100

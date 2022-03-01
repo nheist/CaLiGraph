@@ -1,9 +1,9 @@
 import impl.listpage.store as list_store
-import impl.listpage.nlp as list_nlp
 import utils
 from tqdm import tqdm
-import multiprocessing as mp
-from . import combine, extract, tokenize
+from . import combine, extract
+from .preprocess.word_tokenize import WordTokenizer
+from.preprocess.pos_label import map_entities_to_pos_labels
 from impl import wikipedia
 import torch
 
@@ -29,30 +29,21 @@ def _make_subject_entity_predictions(graph) -> dict:
 
 
 def _get_training_data(graph) -> tuple:
-    global __SUBJECT_ENTITY_TRAINING_DATA__
-    if '__SUBJECT_ENTITY_TRAINING_DATA__' not in globals():
-        __SUBJECT_ENTITY_TRAINING_DATA__ = utils.load_or_create_cache('subject_entity_training_data', lambda: _retrieve_training_data(graph))
-    return __SUBJECT_ENTITY_TRAINING_DATA__
-
-
-def _retrieve_training_data(graph) -> tuple:
-    list_nlp.parse('')  # make sure that parser has been trained and initialized before going into multiprocessing
-
-    train_tokens, train_labels = [], []
-    with mp.Pool(processes=round(utils.get_config('max_cpus') / 4)) as pool:
-        ctx = [(lp_uri, lp_data, graph) for lp_uri, lp_data in list_store.get_parsed_listpages().items()]
-        for token_lists, label_lists in tqdm(pool.imap_unordered(tokenize.page_to_tokens_and_labels, ctx, chunksize=200), desc='Extracting BERT training data', total=len(ctx)):
-            train_tokens.extend(token_lists)
-            train_labels.extend(label_lists)
-    return train_tokens, train_labels
+    # retrieve or extract page-wise training data
+    initializer = lambda: WordTokenizer()(list_store.get_parsed_listpages(), graph=graph)
+    training_data = utils.load_or_create_cache('subject_entity_training_data', initializer)
+    # flatten training data into chunks and replace entities with their POS tags
+    tokens, ent_labels = [], []
+    for token_chunks, entity_chunks in training_data.values():
+        tokens.extend(token_chunks)
+        ent_labels.extend(entity_chunks)
+    pos_labels = map_entities_to_pos_labels(ent_labels)
+    return tokens, pos_labels
 
 
 def _get_page_data() -> dict:
     global __SUBJECT_ENTITY_PAGE_DATA__
     if '__SUBJECT_ENTITY_PAGE_DATA__' not in globals():
-        __SUBJECT_ENTITY_PAGE_DATA__ = utils.load_or_create_cache('subject_entity_page_data', _retrieve_page_data)
+        initializer = WordTokenizer()(wikipedia.get_parsed_articles())
+        __SUBJECT_ENTITY_PAGE_DATA__ = utils.load_or_create_cache('subject_entity_page_data', initializer)
     return __SUBJECT_ENTITY_PAGE_DATA__
-
-
-def _retrieve_page_data() -> dict:
-    return dict([tokenize.page_to_tokens(page_tuple) for page_tuple in tqdm(wikipedia.get_parsed_articles().items(), desc='Extracting BERT page data')])

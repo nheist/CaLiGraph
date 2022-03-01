@@ -6,7 +6,8 @@ import entity_linking.utils as el_util
 from typing import Tuple
 import impl.dbpedia.util as dbp_util
 from impl import wikipedia
-from impl.subject_entity import tokenize, extract, combine
+from impl.subject_entity import extract, combine
+from impl.subject_entity.preprocess.word_tokenize import WordTokenizer
 from entity_linking.vecpred.fixed.data import blocking, load
 import operator
 
@@ -76,12 +77,13 @@ def _extract_entity_occurrences(df_listings: pd.DataFrame, dataset_pages: np.nda
     result_data_columns = ['_ent', '_text', '_page', '_section', 'e_tag'] + [f'e_{i}' for i in range(768)] + [f'l_{i}' for i in range(768)]
     result_data = []
 
+    word_tokenizer = WordTokenizer()
     for page_uri, page_markup in tqdm(wikipedia_pages.items(), desc=f'Extracting {filename}'):
         page_name = dbp_util.resource2name(page_uri)
         # TODO: as soon as WS issue (old cache) is resolved, we can retrieve page_batches from subject_entity._get_page_data()
-        _, page_batches = tokenize.page_to_tokens((page_uri, page_markup))
+        page_chunks = word_tokenizer({page_uri: page_markup})[page_uri]
 
-        subject_entities = extract.extract_subject_entities(page_batches, tokenizer, model)
+        subject_entities = extract.extract_subject_entities(page_chunks, tokenizer, model)
         enriched_entities = combine._match_entities_for_page(page_uri, subject_entities[0], page_markup)
 
         for ts, ts_data in enriched_entities.items():
