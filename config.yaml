@@ -153,10 +153,10 @@ cache:
     version: 1
   caligraph_merged_ontology:
     filename: 'caligraph-merged-ontology'
-    version: 2
+    version: 1
   caligraph_axiomatized:
     filename: 'caligraph-axiomatized'
-    version: 2
+    version: 1
   wikipedia_raw_markup:
     filename: 'wikipedia-raw-markup'
     version: 1
@@ -249,24 +249,24 @@ cache:
     version: 1
   wikipedia_parsed_articles:
     filename: 'wikipedia-parsed-articles'
-    version: 2
+    version: 1
   spacy_listpage_ne-tagging_GS:
     filename: 'spacy_listpage_ne-tagging_GS'
     version: 1
     store_as_folder: True
   subject_entity_training_data:
     filename: 'subject-entity-training-data'
-    version: 2
+    version: 1
   subject_entity_page_data:
     filename: 'subject-entity-page-data'
-    version: 2
+    version: 1
   subject_entity_predictions:
     filename: 'subject-entity-predictions'
-    version: 2
+    version: 1
   bert_for_SE_tagging:
     filename: 'bert-for-SE-tagging'
-    version: 2
+    version: 1
     store_as_folder: True
   listing_page_entities:
     filename: 'listing-page-entities'
-    version: 2
+    version: 1
