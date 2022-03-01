@@ -24,7 +24,7 @@ class PageType(Enum):
 
 
 def _parse_pages(pages_markup) -> dict:
-    with mp.Pool(processes=round(utils.get_config('max_cpus') / 2)) as pool:
+    with mp.Pool(processes=utils.get_config('max_cpus')) as pool:
         parsed_pages = {r: parsed for r, parsed in tqdm(pool.imap_unordered(_parse_page_with_timeout, pages_markup.items(), chunksize=2000), total=len(pages_markup), desc='Parsing pages') if parsed}
     return parsed_pages
 

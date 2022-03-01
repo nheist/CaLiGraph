@@ -16,6 +16,7 @@ import impl.util.spacy as spacy_util
 def extract_wiki_corpus_resources():
     """Crawl the Wikipedia corpus for hearst patterns to retrieve hypernyms and type lexicalisations."""
     if utils.load_cache('wikipedia_type_lexicalisations') is not None:
+        utils.get_logger().info('WIKIPEDIA/NIF: Skipping computation of hypernyms and type lexicalisations.')
         return  # only compute hypernyms and type lexicalisations if they are not existing already
 
     utils.get_logger().info('WIKIPEDIA/NIF: Computing wikipedia hypernyms and type lexicalisations..')
