@@ -2,12 +2,12 @@ from collections import defaultdict
 import utils
 from .nif_parser import extract_wiki_corpus_resources
 from .xml_parser import _parse_raw_markup_from_xml
-from .article_parser import _parse_articles, ArticleType
+from .page_parser import _parse_pages, PageType
 from .category_parser import _extract_parent_categories_from_markup, TEMPLATE_PREFIX, CATEGORY_PREFIX
 
 
 def get_parsed_articles() -> dict:
-    initializer = lambda: _parse_articles(_get_raw_articles_from_xml())
+    initializer = lambda: _parse_pages(_get_raw_articles_from_xml())
     return defaultdict(lambda: None, utils.load_or_create_cache('wikipedia_parsed_articles', initializer))
 
 

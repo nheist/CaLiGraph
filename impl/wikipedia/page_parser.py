@@ -1,8 +1,8 @@
 """Functionality for parsing Wikipedia pages from WikiText."""
 
+from typing import Tuple, Optional
 import wikitextparser as wtp
 from wikitextparser import WikiText
-from typing import Tuple, Optional
 import impl.dbpedia.util as dbp_util
 import impl.util.nlp as nlp_util
 from . import wikimarkup_parser as wmp
@@ -18,19 +18,19 @@ LISTING_INDICATORS = ('*', '#', '{|')
 VALID_ENUM_PATTERNS = (r'\#', r'\*')
 
 
-class ArticleType(Enum):
+class PageType(Enum):
     ENUM = 'enumeration'
     TABLE = 'table'
 
 
-def _parse_articles(articles_markup) -> dict:
+def _parse_pages(pages_markup) -> dict:
     with mp.Pool(processes=round(utils.get_config('max_cpus') / 2)) as pool:
-        parsed_articles = {r: parsed for r, parsed in tqdm(pool.imap_unordered(_parse_article_with_timeout, articles_markup.items(), chunksize=2000), total=len(articles_markup), desc='Parsing articles') if parsed}
-    return parsed_articles
+        parsed_pages = {r: parsed for r, parsed in tqdm(pool.imap_unordered(_parse_page_with_timeout, pages_markup.items(), chunksize=2000), total=len(pages_markup), desc='Parsing pages') if parsed}
+    return parsed_pages
 
 
-def _parse_article_with_timeout(resource_and_markup: tuple) -> tuple:
-    """Return a single parsed article in the following hierarchical structure:
+def _parse_page_with_timeout(resource_and_markup: tuple) -> tuple:
+    """Return a single parsed page in the following hierarchical structure:
 
     Sections > Enums > Entries > Entities
     Sections > Tables > Rows > Columns > Entities
@@ -40,17 +40,17 @@ def _parse_article_with_timeout(resource_and_markup: tuple) -> tuple:
 
     resource = resource_and_markup[0]
     try:
-        result = _parse_article(resource_and_markup)
+        result = _parse_page(resource_and_markup)
         signal.alarm(0)  # reset alarm as parsing was successful
         return result
     except Exception as e:
         if type(e) == KeyboardInterrupt:
             raise e
-        utils.get_logger().error(f'WIKIPEDIA/ARTICLES: Failed to parse page {resource}: {e}')
+        utils.get_logger().error(f'WIKIPEDIA/PAGES: Failed to parse page {resource}: {e}')
         return resource, None
 
 
-def _parse_article(resource_and_markup: tuple) -> tuple:
+def _parse_page(resource_and_markup: tuple) -> tuple:
     resource, page_markup = resource_and_markup
     if dbp_util.is_file_resource(resource):
         return resource, None  # discard files and images
@@ -83,9 +83,9 @@ def _parse_article(resource_and_markup: tuple) -> tuple:
     sections = _extract_sections(cleaned_wiki_text)
     types = set()
     if any(len(s['enums']) > 0 for s in sections):
-        types.add(ArticleType.ENUM)
+        types.add(PageType.ENUM)
     if any(len(s['tables']) > 0 for s in sections):
-        types.add(ArticleType.TABLE)
+        types.add(PageType.TABLE)
     if not types:
         return resource, None  # ignore pages without useful lists
     return resource, {'sections': sections, 'types': types}
@@ -229,7 +229,7 @@ def _convert_markup(wiki_text: str) -> Tuple[str, list]:
 
     # extract wikilink-entities with correct positions in plain text
     entities = []
-    current_entity_index = 0
+    current_index = 0
     for w in parsed_text.wikilinks:
         # retrieve entity text and remove html tags
         text = (w.text or w.target).strip()
@@ -242,13 +242,13 @@ def _convert_markup(wiki_text: str) -> Tuple[str, list]:
             continue  # skip entity with empty text
 
         # retrieve entity position
-        if text not in plain_text[current_entity_index:]:
+        if text not in plain_text[current_index:]:
             continue  # skip entity with a text that can not be located
-        entity_position = current_entity_index + plain_text[current_entity_index:].index(text)
-        current_entity_index = entity_position + len(text)
+        entity_start_index = current_index + plain_text[current_index:].index(text)
+        current_index = entity_start_index + len(text)
         entity_name = wmp.get_entity_for_wikilink(w)
         if entity_name:
-            entities.append({'idx': entity_position, 'text': text, 'name': entity_name})
+            entities.append({'idx': entity_start_index, 'text': text, 'name': entity_name})
     return plain_text, entities
 
 
