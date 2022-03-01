@@ -16,10 +16,8 @@ def get_page_subject_entities(graph) -> dict:
 
 
 def _get_subject_entity_predictions(graph) -> dict:
-    global __SUBJECT_ENTITY_PREDICTIONS__
-    if '__SUBJECT_ENTITY_PREDICTIONS__' not in globals():
-        __SUBJECT_ENTITY_PREDICTIONS__ = utils.load_or_create_cache('subject_entity_predictions', lambda: _make_subject_entity_predictions(graph))
-    return __SUBJECT_ENTITY_PREDICTIONS__
+    initializer = lambda: _make_subject_entity_predictions(graph)
+    return utils.load_or_create_cache('subject_entity_predictions', initializer)
 
 
 def _make_subject_entity_predictions(graph) -> dict:
@@ -49,8 +47,5 @@ def _get_tokenized_list_pages_with_entity_labels(graph) -> dict:
 
 
 def _get_page_data() -> dict:
-    global __SUBJECT_ENTITY_PAGE_DATA__
-    if '__SUBJECT_ENTITY_PAGE_DATA__' not in globals():
-        initializer = WordTokenizer()(wikipedia.get_parsed_articles())
-        __SUBJECT_ENTITY_PAGE_DATA__ = utils.load_or_create_cache('subject_entity_page_data', initializer)
-    return __SUBJECT_ENTITY_PAGE_DATA__
+    initializer = WordTokenizer()(wikipedia.get_parsed_articles())
+    return utils.load_or_create_cache('subject_entity_page_data', initializer)
