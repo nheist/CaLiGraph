@@ -3,7 +3,8 @@ import utils
 from tqdm import tqdm
 from . import combine, extract
 from .preprocess.word_tokenize import WordTokenizer
-from.preprocess.pos_label import map_entities_to_pos_labels
+from .preprocess.pos_label import map_entities_to_pos_labels
+from impl.listpage.subject_entity import find_subject_entities_for_listpage
 from impl import wikipedia
 import torch
 
@@ -30,7 +31,7 @@ def _make_subject_entity_predictions(graph) -> dict:
 
 def _get_training_data(graph) -> tuple:
     # retrieve or extract page-wise training data
-    initializer = lambda: WordTokenizer()(list_store.get_parsed_listpages(), graph=graph)
+    initializer = lambda: _get_tokenized_list_pages_with_entity_labels(graph)
     training_data = utils.load_or_create_cache('subject_entity_training_data', initializer)
     # flatten training data into chunks and replace entities with their POS tags
     tokens, ent_labels = [], []
@@ -39,6 +40,12 @@ def _get_training_data(graph) -> tuple:
         ent_labels.extend(entity_chunks)
     pos_labels = map_entities_to_pos_labels(ent_labels)
     return tokens, pos_labels
+
+
+def _get_tokenized_list_pages_with_entity_labels(graph) -> dict:
+    listpages = list_store.get_parsed_listpages()
+    entity_labels = {lp_uri: find_subject_entities_for_listpage(lp_uri, lp_data, graph) for lp_uri, lp_data in listpages.items()}
+    return WordTokenizer()(list_store.get_parsed_listpages(), entity_labels=entity_labels)
 
 
 def _get_page_data() -> dict:
