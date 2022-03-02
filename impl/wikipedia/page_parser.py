@@ -29,14 +29,14 @@ def _parse_pages(pages_markup) -> dict:
     dbp_store.resolve_redirect('')  # make sure that redirects are initialized before going into multiprocessing
 
     with mp.Pool(processes=utils.get_config('max_cpus')) as pool:
-        prepared_pages = {r: wiki_text for r, wiki_text in tqdm(pool.imap_unordered(_prepare_page, pages_markup.items(), chunksize=2000), total=len(pages_markup), desc='Preparing pages') if wiki_text}
+        prepared_pages = {r: markup for r, markup in tqdm(pool.imap_unordered(_prepare_page, pages_markup.items(), chunksize=2000), total=len(pages_markup), desc='Preparing pages') if markup}
 
     with mp.Pool(processes=utils.get_config('max_cpus')) as pool:
         parsed_pages = {r: parsed for r, parsed in tqdm(pool.imap_unordered(_parse_page_with_timeout, prepared_pages.items(), chunksize=2000), total=len(prepared_pages), desc='Parsing pages') if parsed}
     return parsed_pages
 
 
-def _prepare_page(resource_and_markup: tuple) -> tuple:
+def _prepare_page(resource_and_markup: Tuple[str, str]) -> Tuple[str, Optional[str]]:
     """Prepare markup for parsing (e.g. by discarding HTML tags) and filter out irrelevant pages."""
     resource, page_markup = resource_and_markup
     if dbp_util.is_file_resource(resource):
@@ -60,7 +60,7 @@ def _prepare_page(resource_and_markup: tuple) -> tuple:
     cleaned_wiki_text = _remove_enums_within_tables(cleaned_wiki_text)
     if not _is_page_useful(cleaned_wiki_text):
         return resource, None
-    return resource, cleaned_wiki_text
+    return resource, str(cleaned_wiki_text)
 
 
 def _is_page_useful(wiki_text: WikiText) -> bool:
@@ -94,7 +94,7 @@ def _remove_enums_within_tables(wiki_text: WikiText) -> WikiText:
     return wtp.parse(wiki_text.string) if something_changed else wiki_text
 
 
-def _parse_page_with_timeout(resource_and_markup: tuple) -> tuple:
+def _parse_page_with_timeout(resource_and_markup: Tuple[str, str]) -> Tuple[str, Optional[dict]]:
     """Return a single parsed page in the following hierarchical structure:
 
     Sections > Enums > Entries > Entities
@@ -115,8 +115,9 @@ def _parse_page_with_timeout(resource_and_markup: tuple) -> tuple:
         return resource, None
 
 
-def _parse_page(resource_and_wikitext: tuple) -> tuple:
-    resource, wiki_text = resource_and_wikitext
+def _parse_page(resource_and_wikitext: Tuple[str, str]) -> Tuple[str, Optional[dict]]:
+    resource, markup = resource_and_wikitext
+    wiki_text = wtp.parse(markup)
     # expand wikilinks
     resource_name = dbp_util.resource2name(resource)
     wiki_text = _expand_wikilinks(wiki_text, resource_name)
