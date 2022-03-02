@@ -15,7 +15,7 @@ def wikitext_to_plaintext(text: Union[str, wtp.WikiText]) -> str:
         result = re.sub(r' +', ' ', result)
         return result
     except (AttributeError, IndexError):
-        return text
+        return str(text)
 
 
 def get_first_wikilink_entity(text: Union[str, wtp.WikiText]) -> Optional[str]:
