@@ -1,6 +1,7 @@
 """Extraction of type lexicalisations from the Wikipedia corpus via NIF files."""
 
 import utils
+from utils import log_info
 from typing import Tuple
 import pynif
 import bz2
@@ -16,10 +17,10 @@ import impl.util.spacy as spacy_util
 def extract_wiki_corpus_resources():
     """Crawl the Wikipedia corpus for hearst patterns to retrieve hypernyms and type lexicalisations."""
     if utils.load_cache('wikipedia_type_lexicalisations') is not None:
-        utils.get_logger().info('WIKIPEDIA/NIF: Skipping computation of hypernyms and type lexicalisations.')
+        log_info('Skipping computation of hypernyms and type lexicalisations.')
         return  # only compute hypernyms and type lexicalisations if they are not existing already
 
-    utils.get_logger().info('WIKIPEDIA/NIF: Computing wikipedia hypernyms and type lexicalisations..')
+    log_info('Computing wikipedia hypernyms and type lexicalisations..')
     total_hypernyms = defaultdict(lambda: defaultdict(int))
     total_type_lexicalisations = defaultdict(lambda: defaultdict(int))
 

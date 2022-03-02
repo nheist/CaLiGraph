@@ -1,6 +1,6 @@
 from typing import Optional
 import networkx as nx
-import utils
+from utils import log_debug
 import impl.util.nlp as nlp_util
 import impl.util.hypernymy as hypernymy_util
 from impl.util.base_graph import BaseGraph
@@ -142,13 +142,12 @@ class HierarchyGraph(BaseGraph):
 
     def _resolve_cycles(self):
         """Resolve cycles by removing cycle edges that point from a node with a higher depth to a node with a lower depth."""
-        utils.get_logger().debug('UTIL/HIERARCHY: Looking for cycles to resolve..')
         num_edges = len(self.edges)
         # remove all edges N1-->N2 of a cycle with depth(N1) > depth(N2)
         self._remove_cycle_edges_by_node_depth(lambda x, y: x > y)
         # remove all edges N1-->N2 of a cycle with depth(N1) >= depth(N2)
         self._remove_cycle_edges_by_node_depth(lambda x, y: x >= y)
-        utils.get_logger().debug(f'UTIL/HIERARCHY: Removed {num_edges - len(self.edges)} edges to resolve cycles.')
+        log_debug(f'Removed {num_edges - len(self.edges)} edges to resolve cycles.')
         return self
 
     def _remove_cycle_edges_by_node_depth(self, comparator):
@@ -168,6 +167,7 @@ class HierarchyGraph(BaseGraph):
         lexhead_subjects = self.get_node_LHS()
         valid_edges = {(p, c) for p, c in self.edges if self._is_hierarchical_edge(lexhead_subjects[p], lexhead_subjects[c])}
         self._remove_all_edges_except(valid_edges)
+        self.append_unconnected()
         return self
 
     @staticmethod
@@ -196,6 +196,7 @@ class HierarchyGraph(BaseGraph):
         A canonical name of a node is its name without any postfixes that Wikipedia appends for organisational purposes.
         E.g., we remove by-phrases like in "Authors by name", and we remove alphabetical splits like in "Authors: A-C".
         """
+        log_debug('Merging nodes with the same name..')
         nodes_containing_by = {node for node in self.nodes if '_by_' in node}
         nodes_canonical_names = {}
         for node in nodes_containing_by:
@@ -204,7 +205,7 @@ class HierarchyGraph(BaseGraph):
             if node_name != canonical_name:
                 nodes_canonical_names[node] = canonical_name
         remaining_nodes_to_merge = set(nodes_canonical_names)
-        utils.get_logger().debug(f'UTIL/HIERARCHY: Found {len(remaining_nodes_to_merge)} nodes to merge.')
+        log_debug(f'Found {len(remaining_nodes_to_merge)} nodes to merge.')
 
         # 1) compute direct merge and synonym merge
         direct_merges = defaultdict(set)
@@ -219,7 +220,7 @@ class HierarchyGraph(BaseGraph):
 
                 if all(any(hypernymy_util.is_synonym(niw, piw) for piw in parent_important_words) for niw in node_important_words):
                     direct_merges[node].add(parent)
-        utils.get_logger().debug(f'UTIL/HIERARCHY: Found {len(direct_merges)} nodes to merge directly.')
+        log_debug(f'Merging {len(direct_merges)} nodes directly.')
 
         # 2) compute category set merge
         catset_merges = defaultdict(set)
@@ -232,10 +233,10 @@ class HierarchyGraph(BaseGraph):
                 similar_children_count = len({child for child in self.children(parent) if child in nodes_canonical_names and nodes_canonical_names[child] == node_canonical_name})
                 if similar_children_count > 1:
                     catset_merges[node].add(parent)
-        utils.get_logger().debug(f'UTIL/HIERARCHY: Found {len(catset_merges)} nodes to merge via category sets.')
+        log_debug(f'Merging {len(catset_merges)} nodes via category sets.')
 
         remaining_nodes_to_merge = remaining_nodes_to_merge.difference(set(catset_merges))
-        utils.get_logger().debug(f'UTIL/HIERARCHY: The {len(remaining_nodes_to_merge)} remaining nodes will not be merged.')
+        log_debug(f'The {len(remaining_nodes_to_merge)} remaining nodes will not be merged.')
 
         # 3) conduct merge
         nodes_to_merge = set(direct_merges) | set(catset_merges)
@@ -244,7 +245,6 @@ class HierarchyGraph(BaseGraph):
         iteration = 0
         while all_merges:
             independent_nodes = set(all_merges).difference({merge_target for mts in all_merges.values() for merge_target in mts})
-            utils.get_logger().debug(f'UTIL/HIERARCHY: Merging {len(independent_nodes)} of remaining {len(all_merges)} nodes (iteration {iteration}).')
             for node_to_merge in independent_nodes:
                 merge_targets = all_merges[node_to_merge]
                 del all_merges[node_to_merge]

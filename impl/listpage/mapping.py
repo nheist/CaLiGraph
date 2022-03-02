@@ -14,6 +14,7 @@ import impl.category.store as cat_store
 import impl.listpage.util as list_util
 from impl import listpage
 import utils
+from utils import log_debug
 import impl.util.nlp as nlp_util
 import impl.util.hypernymy as hypernymy_util
 from collections import defaultdict
@@ -27,7 +28,7 @@ def get_equivalent_categories(lst: str) -> set:
 
 
 def _create_list_equivalents_mapping():
-    utils.get_logger().info('CACHE: Creating list-equivalents mapping')
+    log_debug('Creating list-equivalents mapping..')
 
     cat_graph = category.get_merged_graph()
     list_graph = listpage.get_merged_listgraph()
@@ -39,7 +40,7 @@ def _create_list_equivalents_mapping():
         name_to_list_mapping[list_util.list2name(lst).replace('-', ' ').lower()].add(lst)
     matching_names = set(name_to_list_mapping).intersection(set(name_to_cat_mapping))
     list_to_cat_exact_mapping = defaultdict(set, {lst: {name_to_cat_mapping[name]} for name in matching_names for lst in name_to_list_mapping[name]})
-    utils.get_logger().debug(f'Exact Mapping: Mapped {len(list_to_cat_exact_mapping)} lists to categories.')
+    log_debug(f'Mapped {len(list_to_cat_exact_mapping)} lists to categories with exact mapping.')
 
     # 2) find equivalent categories by synonym match
     list_to_cat_synonym_mapping = defaultdict(set)
@@ -53,12 +54,12 @@ def _create_list_equivalents_mapping():
             if hypernymy_util.phrases_are_synonymous(lst_important_words, cat_important_words):
                 list_to_cat_synonym_mapping[lst].add(candidate_cat)
 
-    utils.get_logger().debug(f'Synonym Mapping: Mapped {len(list_to_cat_synonym_mapping)} lists to {sum(len(cat) for cat in list_to_cat_synonym_mapping.values())} categories.')
+    log_debug(f'Mapped {len(list_to_cat_synonym_mapping)} lists to {sum(len(cat) for cat in list_to_cat_synonym_mapping.values())} categories with synonym mapping.')
 
     # merge mappings
     mapped_lsts = set(list_to_cat_exact_mapping) | set(list_to_cat_synonym_mapping)
     list_to_cat_equivalence_mapping = {lst: list_to_cat_exact_mapping[lst] | list_to_cat_synonym_mapping[lst] for lst in mapped_lsts}
-    utils.get_logger().debug(f'Equivalence Mapping: Mapped {len(list_to_cat_equivalence_mapping)} lists to {sum(len(cat) for cat in list_to_cat_equivalence_mapping.values())} categories.')
+    log_debug(f'Mapped {len(list_to_cat_equivalence_mapping)} lists to {sum(len(cat) for cat in list_to_cat_equivalence_mapping.values())} categories with equivalence mapping.')
     return list_to_cat_equivalence_mapping
 
 
@@ -70,7 +71,7 @@ def get_parent_categories(lst: str) -> set:
 
 
 def _create_list_parents_mapping():
-    utils.get_logger().info('CACHE: Creating list-parents mapping')
+    log_debug('Creating list-parents mapping..')
 
     cat_graph = category.get_merged_graph()
     cats_LHS = cat_graph.get_node_LHS()
@@ -86,19 +87,19 @@ def _create_list_parents_mapping():
             lst_subjectlemmas = lists_LHS[lst]
             if all(any(hypernymy_util.is_hypernym(chl, lhl) for chl in cat_subjectlemmas) for lhl in lst_subjectlemmas):
                 list_to_cat_hypernym_mapping[lst].add(candidate_cat)
-    utils.get_logger().debug(f'Hypernym Mapping: Mapped {len(list_to_cat_hypernym_mapping)} lists to {sum(len(cat) for cat in list_to_cat_hypernym_mapping.values())} categories.')
+    log_debug(f'Mapped {len(list_to_cat_hypernym_mapping)} lists to {sum(len(cat) for cat in list_to_cat_hypernym_mapping.values())} categories with hypernym mapping.')
 
     # 2) map listcategory to headlemma category as a mapping to the root category is the only alternative
     unmapped_lists = unmapped_lists.difference(set(list_to_cat_hypernym_mapping))
     unmapped_head_lists = {lst for lst in unmapped_lists if list_graph.root_node in list_graph.parents(lst)}
 
     list_to_cat_headlemma_mapping = defaultdict(set, cat_graph.find_parents_by_headlemma_match(unmapped_head_lists, list_graph))
-    utils.get_logger().debug(f'Headlemma Mapping: Mapped {len(list_to_cat_headlemma_mapping)} lists to {sum(len(cat) for cat in list_to_cat_headlemma_mapping.values())} categories.')
+    log_debug(f'Mapped {len(list_to_cat_headlemma_mapping)} lists to {sum(len(cat) for cat in list_to_cat_headlemma_mapping.values())} categories with headlemma mapping.')
 
     # merge mappings
     mapped_lsts = set(list_to_cat_hypernym_mapping) | set(list_to_cat_headlemma_mapping)
     list_to_cat_parents_mapping = {lst: list_to_cat_hypernym_mapping[lst] | list_to_cat_headlemma_mapping[lst] for lst in mapped_lsts}
-    utils.get_logger().debug(f'Parents Mapping: Mapped {len(list_to_cat_parents_mapping)} lists to {sum(len(cat) for cat in list_to_cat_parents_mapping.values())} categories.')
+    log_debug(f'Mapped {len(list_to_cat_parents_mapping)} lists to {sum(len(cat) for cat in list_to_cat_parents_mapping.values())} categories with parents mapping.')
     return list_to_cat_parents_mapping
 
 

@@ -130,9 +130,6 @@ cache:
   catgraph_wikitaxonomy:
     filename: 'catgraph-wikitaxonomy'
     version: 1
-  catgraph_cyclefree:
-    filename: 'catgraph-cyclefree'
-    version: 1
   catgraph_merged:
     filename: 'catgraph-merged'
     version: 1
@@ -141,9 +138,6 @@ cache:
     version: 1
   listgraph_wikitaxonomy:
     filename: 'listgraph-wikitaxonomy'
-    version: 1
-  listgraph_cyclefree:
-    filename: 'listgraph-cyclefree'
     version: 1
   listgraph_merged:
     filename: 'listgraph-merged'

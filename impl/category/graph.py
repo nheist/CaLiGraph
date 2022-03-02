@@ -4,6 +4,7 @@ import impl.category.util as cat_util
 import impl.category.store as cat_store
 from impl.util.hierarchy_graph import HierarchyGraph
 import utils
+from utils import log_info
 import impl.util.nlp as nlp_util
 import impl.category.cat2ax as cat_axioms
 
@@ -43,6 +44,7 @@ class CategoryGraph(HierarchyGraph):
 
     @classmethod
     def create_from_dbpedia(cls):
+        log_info('Building conceptual category graph..')
         edges = [(cat, subcat) for cat in cat_store.get_categories() for subcat in cat_store.get_children(cat)]
         graph = CategoryGraph(nx.DiGraph(incoming_graph_data=edges))
 
@@ -50,6 +52,9 @@ class CategoryGraph(HierarchyGraph):
             graph._set_name(node, cat_util.category2name(node))
             graph._set_parts(node, {node})
 
+        graph.make_conceptual()
+
+        log_info(f'Built conceptual category graph with {len(graph.nodes)} nodes and {len(graph.edges)} edges.')
         return graph
 
     # filter for conceptual categories
@@ -60,6 +65,7 @@ class CategoryGraph(HierarchyGraph):
         conceptual_categories = {cat for cat, has_plural_lexhead in zip(self.nodes, nlp_util.has_plural_lexhead_subjects(cat_names)) if has_plural_lexhead}
         # clearing the graph of any invalid nodes
         self._remove_all_nodes_except(conceptual_categories | {self.root_node})
+        self.append_unconnected()
         return self
 
     # CATEGORY AXIOMS

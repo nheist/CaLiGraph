@@ -1,13 +1,14 @@
 """Process the Wikipedia XML dump and return articles, categories, and templates."""
 
 import utils
+from utils import log_info, log_debug
 from lxml import etree
 import bz2
 import impl.dbpedia.util as dbp_util
 
 
 def _parse_raw_markup_from_xml() -> dict:
-    utils.get_logger().info('WIKIPEDIA/XML: Parsing raw markup from XML dump..')
+    log_info('Parsing raw markup from XML dump..')
     parser = etree.XMLParser(target=WikiPageParser())
     with bz2.open(utils.get_data_file('files.wikipedia.pages')) as dbp_pages_file:
         page_markup = etree.parse(dbp_pages_file, parser)
@@ -29,7 +30,7 @@ class WikiPageParser:
             self.namespace = None
             self.processed_pages += 1
             if self.processed_pages % 100000 == 0:
-                utils.get_logger().debug(f'WIKIPEDIA/XML: Read markup of {self.processed_pages} pages.')
+                log_debug(f'Parsed markup of {self.processed_pages} pages.')
 
     def end(self, tag):
         if tag.endswith('}title'):

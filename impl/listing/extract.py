@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from collections import defaultdict
 import utils
+from utils import log_info, log_debug
 from impl.listing import context
 import impl.caligraph.util as clg_util
 import impl.dbpedia.store as dbp_store
@@ -23,7 +24,7 @@ META_SECTIONS = {'See also', 'External links', 'References', 'Notes'}
 
 
 def extract_page_entities(graph) -> dict:
-    utils.get_logger().info(f'LISTING/EXTRACT: Extracting types and relations for page entities..')
+    log_info('Extracting types and relations for page entities..')
 
     # format: entity -> origin -> (labels, types, in, out)
     page_entities = defaultdict(lambda: defaultdict(lambda: {'labels': set(), 'types': set(), 'in': set(), 'out': set()}))
@@ -32,7 +33,7 @@ def extract_page_entities(graph) -> dict:
     df = df[~df['TS_text'].isin(META_SECTIONS)]  # filter out entity occurrences in meta-sections
 
     # extract list page entities
-    utils.get_logger().info(f'LISTING/EXTRACT: Extracting types of list page entities..')
+    log_debug('Extracting types of list page entities..')
     df_lps = df[df['P_type'] == 'List']
     for lp, df_lp in df_lps.groupby(by='P'):
         clg_types = {clg_util.clg_type2name(t) for t in graph.get_nodes_for_part(dbp_util.name2resource(lp))}
@@ -50,7 +51,7 @@ def extract_page_entities(graph) -> dict:
     valid_tags = context.get_valid_tags_for_entity_types(dft, graph, utils.get_config('listing.valid_tag_threshold'))
 
     # extract types
-    utils.get_logger().info(f'LISTING/EXTRACT: Extracting types of page entities..')
+    log_debug('Extracting types of page entities..')
     df_new_types = _compute_new_types(df, dft, df_types, valid_tags)
     for ent, df_ent in df_new_types.groupby(by='E_ent'):
         for (page_text, section_text), df_entorigin in df_ent.groupby(by=['P', 'S_text']):
@@ -62,7 +63,7 @@ def extract_page_entities(graph) -> dict:
             page_entities[ent][origin]['types'].update(new_types)
 
     # extract relations
-    utils.get_logger().info(f'LISTING/EXTRACT: Extracting relations of page entities..')
+    log_debug('Extracting relations of page entities..')
     df_rels = context.get_entity_relations()
     df_new_relations = _compute_new_relations(df, df_rels, 'P', valid_tags)
     df_new_relations = pd.concat([df_new_relations, _compute_new_relations(df, df_rels, 'TS_ent', valid_tags)])

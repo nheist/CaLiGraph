@@ -10,8 +10,7 @@ def get_base_graph() -> CaLiGraph:
     """Retrieve graph created from categories and lists."""
     global __BASE_GRAPH__
     if '__BASE_GRAPH__' not in globals():
-        initializer = lambda: CaLiGraph.build_graph().append_unconnected()
-        __BASE_GRAPH__ = utils.load_or_create_cache('caligraph_base', initializer)
+        __BASE_GRAPH__ = utils.load_or_create_cache('caligraph_base', CaLiGraph.build_graph)
     return __BASE_GRAPH__
 
 
@@ -19,7 +18,7 @@ def get_merged_ontology_graph() -> CaLiGraph:
     """Retrieve base graph joined with DBpedia ontology."""
     global __MERGED_ONTOLOGY_GRAPH__
     if '__MERGED_ONTOLOGY_GRAPH__' not in globals():
-        initializer = lambda: get_base_graph().copy().merge_ontology().append_unconnected(aggressive=False)
+        initializer = lambda: get_base_graph().copy().merge_ontology()
         __MERGED_ONTOLOGY_GRAPH__ = utils.load_or_create_cache('caligraph_merged_ontology', initializer)
     return __MERGED_ONTOLOGY_GRAPH__
 
