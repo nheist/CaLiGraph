@@ -29,11 +29,27 @@ def _parse_pages(pages_markup) -> dict:
     dbp_store.resolve_redirect('')  # make sure that redirects are initialized before going into multiprocessing
 
     with mp.Pool(processes=utils.get_config('max_cpus')) as pool:
-        prepared_pages = {r: markup for r, markup in tqdm(pool.imap_unordered(_prepare_page, pages_markup.items(), chunksize=2000), total=len(pages_markup), desc='Preparing pages') if markup}
+        prepared_pages = {r: markup for r, markup in tqdm(pool.imap_unordered(_prepare_page_with_timeout, pages_markup.items(), chunksize=2000), total=len(pages_markup), desc='Preparing pages') if markup}
 
     with mp.Pool(processes=utils.get_config('max_cpus')) as pool:
         parsed_pages = {r: parsed for r, parsed in tqdm(pool.imap_unordered(_parse_page_with_timeout, prepared_pages.items(), chunksize=2000), total=len(prepared_pages), desc='Parsing pages') if parsed}
     return parsed_pages
+
+
+def _prepare_page_with_timeout(resource_and_markup: Tuple[str, str]) -> Tuple[str, Optional[str]]:
+    signal.signal(signal.SIGALRM, _timeout_handler)
+    signal.alarm(5 * 60)  # timeout of 5 minutes per page
+
+    resource = resource_and_markup[0]
+    try:
+        result = _prepare_page(resource_and_markup)
+        signal.alarm(0)  # reset alarm as parsing was successful
+        return result
+    except Exception as e:
+        if type(e) == KeyboardInterrupt:
+            raise e
+        get_logger().error(f'Failed to prepare page {resource}: {e}')
+        return resource, None
 
 
 def _prepare_page(resource_and_markup: Tuple[str, str]) -> Tuple[str, Optional[str]]:
@@ -94,12 +110,7 @@ def _remove_enums_within_tables(wiki_text: WikiText) -> WikiText:
     return wtp.parse(wiki_text.string) if something_changed else wiki_text
 
 
-def _parse_page_with_timeout(resource_and_markup: Tuple[str, str]) -> Tuple[str, Optional[dict]]:
-    """Return a single parsed page in the following hierarchical structure:
-
-    Sections > Enums > Entries > Entities
-    Sections > Tables > Rows > Columns > Entities
-    """
+def _parse_page_with_timeout(resource_and_markup: Tuple[str, str]):
     signal.signal(signal.SIGALRM, _timeout_handler)
     signal.alarm(5 * 60)  # timeout of 5 minutes per page
 
@@ -116,6 +127,11 @@ def _parse_page_with_timeout(resource_and_markup: Tuple[str, str]) -> Tuple[str,
 
 
 def _parse_page(resource_and_wikitext: Tuple[str, str]) -> Tuple[str, Optional[dict]]:
+    """Return a single parsed page in the following hierarchical structure:
+
+    Sections > Enums > Entries > Entities
+    Sections > Tables > Rows > Columns > Entities
+    """
     resource, markup = resource_and_wikitext
     wiki_text = wtp.parse(markup)
     # expand wikilinks
