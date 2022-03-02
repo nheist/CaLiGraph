@@ -133,7 +133,7 @@ def get_bert_tokenizer_and_model(training_data_retrieval_func):
 
 def _train_bert(training_data_retrieval_func):
     tokenizer = BertTokenizerFast.from_pretrained(BERT_BASE_MODEL)
-    tokenizer.add_tokens(BertSpecialToken.all_tokens())
+    tokenizer.add_tokens(list(BertSpecialToken.all_tokens()))
 
     tokens, labels = training_data_retrieval_func()
     train_dataset = _get_datasets(tokens, labels, tokenizer)
