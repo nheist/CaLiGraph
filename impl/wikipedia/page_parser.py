@@ -26,32 +26,15 @@ class PageType(Enum):
 
 def _parse_pages(pages_markup) -> dict:
     with mp.Pool(processes=utils.get_config('max_cpus')) as pool:
-        parsed_pages = {r: parsed for r, parsed in tqdm(pool.imap_unordered(_parse_page_with_timeout, pages_markup.items(), chunksize=2000), total=len(pages_markup), desc='Parsing pages') if parsed}
+        prepared_pages = {r: wiki_text for r, wiki_text in tqdm(pool.imap_unordered(_prepare_page, pages_markup.items(), chunksize=2000), total=len(pages_markup), desc='Preparing pages') if wiki_text}
+
+    with mp.Pool(processes=utils.get_config('max_cpus')) as pool:
+        parsed_pages = {r: parsed for r, parsed in tqdm(pool.imap_unordered(_parse_page_with_timeout, prepared_pages.items(), chunksize=2000), total=len(prepared_pages), desc='Parsing pages') if parsed}
     return parsed_pages
 
 
-def _parse_page_with_timeout(resource_and_markup: tuple) -> tuple:
-    """Return a single parsed page in the following hierarchical structure:
-
-    Sections > Enums > Entries > Entities
-    Sections > Tables > Rows > Columns > Entities
-    """
-    signal.signal(signal.SIGALRM, _timeout_handler)
-    signal.alarm(5 * 60)  # timeout of 5 minutes per page
-
-    resource = resource_and_markup[0]
-    try:
-        result = _parse_page(resource_and_markup)
-        signal.alarm(0)  # reset alarm as parsing was successful
-        return result
-    except Exception as e:
-        if type(e) == KeyboardInterrupt:
-            raise e
-        get_logger().error(f'WIKIPEDIA/PAGES: Failed to parse page {resource}: {e}')
-        return resource, None
-
-
-def _parse_page(resource_and_markup: tuple) -> tuple:
+def _prepare_page(resource_and_markup: tuple) -> tuple:
+    """Prepare markup for parsing (e.g. by discarding HTML tags) and filter out irrelevant pages."""
     resource, page_markup = resource_and_markup
     if dbp_util.is_file_resource(resource):
         return resource, None  # discard files and images
@@ -64,7 +47,6 @@ def _parse_page(resource_and_markup: tuple) -> tuple:
     page_markup = page_markup.replace('<br>', '\n')  # replace html line breaks
     page_markup = re.sub(r'<ref>.*?</ref>', '', page_markup)
     page_markup = re.sub(r'<ref[^>]*?/>', '', page_markup)
-    # todo: maybe leave them in to give additional hint to BERT (also need to remove the stripping of ' further down)
     page_markup = re.sub(r"'{2,}", '', page_markup)  # remove bold and italic markers
 
     wiki_text = wtp.parse(page_markup)
@@ -75,21 +57,7 @@ def _parse_page(resource_and_markup: tuple) -> tuple:
     cleaned_wiki_text = _remove_enums_within_tables(cleaned_wiki_text)
     if not _is_page_useful(cleaned_wiki_text):
         return resource, None
-
-    # expand wikilinks
-    resource_name = dbp_util.resource2name(resource)
-    cleaned_wiki_text = _expand_wikilinks(cleaned_wiki_text, resource_name)
-
-    # extract data from sections
-    sections = _extract_sections(cleaned_wiki_text)
-    types = set()
-    if any(len(s['enums']) > 0 for s in sections):
-        types.add(PageType.ENUM)
-    if any(len(s['tables']) > 0 for s in sections):
-        types.add(PageType.TABLE)
-    if not types:
-        return resource, None  # ignore pages without useful lists
-    return resource, {'sections': sections, 'types': types}
+    return resource, cleaned_wiki_text
 
 
 def _is_page_useful(wiki_text: WikiText) -> bool:
@@ -121,6 +89,45 @@ def _remove_enums_within_tables(wiki_text: WikiText) -> WikiText:
                         lst.convert('')
                         something_changed = True
     return wtp.parse(wiki_text.string) if something_changed else wiki_text
+
+
+def _parse_page_with_timeout(resource_and_markup: tuple) -> tuple:
+    """Return a single parsed page in the following hierarchical structure:
+
+    Sections > Enums > Entries > Entities
+    Sections > Tables > Rows > Columns > Entities
+    """
+    signal.signal(signal.SIGALRM, _timeout_handler)
+    signal.alarm(5 * 60)  # timeout of 5 minutes per page
+
+    resource = resource_and_markup[0]
+    try:
+        result = _parse_page(resource_and_markup)
+        signal.alarm(0)  # reset alarm as parsing was successful
+        return result
+    except Exception as e:
+        if type(e) == KeyboardInterrupt:
+            raise e
+        get_logger().error(f'Failed to parse page {resource}: {e}')
+        return resource, None
+
+
+def _parse_page(resource_and_wikitext: tuple) -> tuple:
+    resource, wiki_text = resource_and_wikitext
+    # expand wikilinks
+    resource_name = dbp_util.resource2name(resource)
+    wiki_text = _expand_wikilinks(wiki_text, resource_name)
+
+    # extract data from sections
+    sections = _extract_sections(wiki_text)
+    types = set()
+    if any(len(s['enums']) > 0 for s in sections):
+        types.add(PageType.ENUM)
+    if any(len(s['tables']) > 0 for s in sections):
+        types.add(PageType.TABLE)
+    if not types:
+        return resource, None  # ignore pages without useful lists
+    return resource, {'sections': sections, 'types': types}
 
 
 def _expand_wikilinks(wiki_text: WikiText, resource_name: str) -> WikiText:
