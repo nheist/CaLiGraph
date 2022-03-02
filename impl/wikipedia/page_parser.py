@@ -3,6 +3,7 @@
 from typing import Tuple, Optional
 import wikitextparser as wtp
 from wikitextparser import WikiText
+import impl.dbpedia.store as dbp_store
 import impl.dbpedia.util as dbp_util
 import impl.util.nlp as nlp_util
 from . import wikimarkup_parser as wmp
@@ -25,6 +26,8 @@ class PageType(Enum):
 
 
 def _parse_pages(pages_markup) -> dict:
+    dbp_store.resolve_redirect('')  # make sure that redirects are initialized before going into multiprocessing
+
     with mp.Pool(processes=utils.get_config('max_cpus')) as pool:
         prepared_pages = {r: wiki_text for r, wiki_text in tqdm(pool.imap_unordered(_prepare_page, pages_markup.items(), chunksize=2000), total=len(pages_markup), desc='Preparing pages') if wiki_text}
 
