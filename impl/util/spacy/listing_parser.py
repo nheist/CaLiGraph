@@ -1,7 +1,7 @@
 """NLP methods for the identification of named entities in enumerations and tables of Wikipedia articles."""
 
 import utils
-from utils import log_info
+from utils import get_logger
 from impl.util.spacy.training import train_ner_model
 import json
 import spacy
@@ -30,7 +30,7 @@ def _initialise_parser():
 
 
 def _train_parser():
-    log_info('Training new spacy model for entity tagging in listings..')
+    get_logger().info('Training new spacy model for entity tagging in listings..')
     filepath_gs = utils._get_cache_path('spacy_listpage_ne-tagging_GS')
     if not filepath_gs.is_dir():
         train_ner_model(_retrieve_training_data_gs, str(filepath_gs), model='en_core_web_lg')

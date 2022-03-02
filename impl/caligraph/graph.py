@@ -1,6 +1,6 @@
 import networkx as nx
 import utils
-from utils import log_info, log_debug
+from utils import get_logger
 from impl.util.base_graph import BaseGraph
 from impl.util.hierarchy_graph import HierarchyGraph
 import impl.util.rdf as rdf_util
@@ -387,7 +387,7 @@ class CaLiGraph(HierarchyGraph):
     @classmethod
     def build_graph(cls):
         """Initialise the graph by merging the category graph and the list graph."""
-        log_info('Building base graph..')
+        get_logger().info('Building base graph..')
         graph = CaLiGraph(nx.DiGraph())
 
         # add root node
@@ -440,7 +440,7 @@ class CaLiGraph(HierarchyGraph):
                 graph._set_parts(node, graph.get_parts(node) | {cat_name})
 
         graph.append_unconnected()
-        log_info(f'Built base graph with {len(graph.nodes)} nodes and {len(graph.edges)} edges.')
+        get_logger().info(f'Built base graph with {len(graph.nodes)} nodes and {len(graph.edges)} edges.')
         return graph
 
     def _add_category_to_graph(self, category: str, category_name: str, cat_graph: CategoryGraph) -> str:
@@ -475,7 +475,7 @@ class CaLiGraph(HierarchyGraph):
         if self.has_node(node_id):
             equivalent_nodes.add(node_id)
         if len(equivalent_nodes) > 1:
-            log_debug(f'Multiple equivalent nodes found for "{lst}" during list merge: {equivalent_nodes}')
+            get_logger().debug(f'Multiple equivalent nodes found for "{lst}" during list merge: {equivalent_nodes}')
             equivalent_nodes = {node_id} if node_id in equivalent_nodes else equivalent_nodes
         if equivalent_nodes:
             main_node_id = sorted(equivalent_nodes, key=lambda x: levenshtein(x, node_id))[0]
@@ -505,7 +505,7 @@ class CaLiGraph(HierarchyGraph):
 
     def merge_ontology(self):
         """Combine the category-list-graph with the DBpedia ontology."""
-        log_info('Building graph with merged ontology..')
+        get_logger().info('Building graph with merged ontology..')
         # remove edges from graph where clear type conflicts exist
         conflicting_edges = clg_mapping.find_conflicting_edges(self)
         self._remove_edges(conflicting_edges)
@@ -544,7 +544,7 @@ class CaLiGraph(HierarchyGraph):
         clg_mapping.resolve_disjointnesses(self)
         self.append_unconnected(aggressive=False)
 
-        log_info(f'Built graph with merged ontology with {len(self.nodes)} nodes and {len(self.edges)} edges.')
+        get_logger().info(f'Built graph with merged ontology with {len(self.nodes)} nodes and {len(self.edges)} edges.')
         return self
 
     def _add_dbp_type_to_graph(self, dbp_type: str) -> str:
@@ -572,7 +572,7 @@ class CaLiGraph(HierarchyGraph):
 
     def compute_axioms(self):
         """Compute axioms for all nodes in the graph."""
-        log_info('Computing Cat2Ax axioms for axiom graph..')
+        get_logger().info('Computing Cat2Ax axioms for axiom graph..')
         for node, axioms in clg_axioms.extract_axioms(self).items():
             for ax in axioms:
                 prop = clg_util.dbp_type2clg_type(ax[1])

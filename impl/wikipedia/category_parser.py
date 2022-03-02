@@ -1,5 +1,5 @@
 import utils
-from utils import log_info
+from utils import get_logger
 import impl.util.string as str_util
 from collections import defaultdict
 import wikitextparser as wtp
@@ -18,7 +18,7 @@ DBPEDIA_TEMPLATE_PREFIX = DBPEDIA_PREFIX + TEMPLATE_PREFIX
 
 
 def _extract_parent_categories_from_markup(categories_and_templates_markup: tuple) -> dict:
-    log_info('Extracting parent categories from category markup..')
+    get_logger().info('Extracting parent categories from category markup..')
     categories_markup, templates_markup = categories_and_templates_markup
     template_definitions = _prepare_template_definitions(templates_markup)
 

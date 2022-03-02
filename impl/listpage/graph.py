@@ -6,7 +6,7 @@ import impl.category.util as cat_util
 import impl.listpage.store as list_store
 import impl.listpage.util as list_util
 import utils
-from utils import log_info
+from utils import get_logger
 
 
 class ListGraph(HierarchyGraph):
@@ -34,7 +34,7 @@ class ListGraph(HierarchyGraph):
     @classmethod
     def create_from_dbpedia(cls):
         """Initialise the graph by combining list categories with list pages."""
-        log_info('Building base list graph..')
+        get_logger().info('Building base list graph..')
         # add nodes and edges for listcategories
         nodes = list_store.get_listcategories()
         edges = set()
@@ -68,7 +68,7 @@ class ListGraph(HierarchyGraph):
 
         list_graph.append_unconnected()
 
-        log_info(f'Built base list graph with {len(graph.nodes)} nodes and {len(graph.edges)} edges.')
+        get_logger().info(f'Built base list graph with {len(graph.nodes)} nodes and {len(graph.edges)} edges.')
         return list_graph
 
     def remove_leaf_listcategories(self):

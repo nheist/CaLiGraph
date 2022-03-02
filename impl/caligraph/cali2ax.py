@@ -1,6 +1,6 @@
 """Application of the Cat2Ax approach to CaLiGraph."""
 
-from utils import log_info
+from utils import get_logger
 from collections import defaultdict
 import operator
 import impl.dbpedia.store as dbp_store
@@ -20,7 +20,7 @@ def extract_axioms(graph) -> dict:
 
     axioms = _extract_axioms(graph, patterns)
 
-    log_info(f'Extracted {sum(len(axioms) for axioms in axioms.values())} axioms for {len(axioms)} categories.')
+    get_logger().info(f'Extracted {sum(len(axioms) for axioms in axioms.values())} axioms for {len(axioms)} categories.')
     return axioms
 
 

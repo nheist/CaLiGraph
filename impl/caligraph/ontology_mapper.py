@@ -7,7 +7,7 @@ import impl.dbpedia.heuristics as dbp_heur
 import impl.category.cat2ax as cat_axioms
 from collections import defaultdict
 import utils
-from utils import log_debug
+from utils import get_logger
 
 
 def find_conflicting_edges(graph) -> set:
@@ -22,7 +22,7 @@ def find_conflicting_edges(graph) -> set:
             child_types = set(direct_mappings[child])
             if child_types.intersection(parent_disjoint_types):
                 conflicting_edges.add((node, child))
-    log_debug(f'Found {len(conflicting_edges)} conflicting edges to remove.')
+    get_logger().debug(f'Found {len(conflicting_edges)} conflicting edges to remove.')
     return conflicting_edges
 
 

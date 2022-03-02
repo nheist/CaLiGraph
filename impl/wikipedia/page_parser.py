@@ -9,7 +9,7 @@ from . import wikimarkup_parser as wmp
 import re
 import signal
 import utils
-from utils import log_error
+from utils import get_logger
 from tqdm import tqdm
 import multiprocessing as mp
 from enum import Enum
@@ -47,7 +47,7 @@ def _parse_page_with_timeout(resource_and_markup: tuple) -> tuple:
     except Exception as e:
         if type(e) == KeyboardInterrupt:
             raise e
-        log_error(f'WIKIPEDIA/PAGES: Failed to parse page {resource}: {e}')
+        get_logger().error(f'WIKIPEDIA/PAGES: Failed to parse page {resource}: {e}')
         return resource, None
 
 

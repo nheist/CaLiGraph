@@ -50,9 +50,9 @@ def get_data_file(config_path: str) -> str:
     filepath = os.path.join(_get_root_path(), 'data', config['filename'])
     if not os.path.isfile(filepath):
         url = config['url']
-        log_info(f'Download file from {url}..')
+        get_logger().info(f'Download file from {url}..')
         urllib.request.urlretrieve(url, filepath)
-        log_info(f'Finished downloading from {url}')
+        get_logger().info(f'Finished downloading from {url}')
 
     return filepath
 
@@ -143,19 +143,7 @@ def _get_root_path() -> str:
 
 
 # LOGGING
-def log_debug(msg: str):
-    _get_logger().debug(msg)
-
-
-def log_info(msg: str):
-    _get_logger().info(msg)
-
-
-def log_error(msg: str):
-    _get_logger().error(msg)
-
-
-def _get_logger():
+def get_logger():
     return logging.getLogger('impl')
 
 
@@ -166,7 +154,7 @@ if get_config('logging.to_file') and 'ipykernel' not in sys.modules:
     log_filepath = os.path.join(_get_root_path(), 'logs', log_filename)
     log_file_handler = logging.FileHandler(log_filepath, 'a', 'utf-8')
     log_file_handler.setFormatter(logging.Formatter(log_format))
-    logger = _get_logger()
+    logger = get_logger()
     logger.addHandler(log_file_handler)
     logger.setLevel(log_level)
 else:

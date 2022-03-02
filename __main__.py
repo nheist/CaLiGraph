@@ -1,6 +1,6 @@
 import traceback
 import utils
-from utils import log_info, log_error
+from utils import get_logger
 import mailer
 from impl import wikipedia
 import impl.category.cat2ax as cat_axioms
@@ -24,25 +24,25 @@ def _setup_hypernyms():
 
 if __name__ == '__main__':
     try:
-        log_info('Starting extraction of CaLiGraph..')
+        get_logger().info('Starting extraction of CaLiGraph..')
 
         # prepare resources like type lexicalisations from hearst patterns and wikitaxonomy hypernyms
-        log_info('Preparing resources..')
+        get_logger().info('Preparing resources..')
         wikipedia.extract_wiki_corpus_resources()
         _setup_hypernyms()
 
         # run the complete extraction cycle and end with serializing CaLiGraph
-        log_info('Running extraction..')
+        get_logger().info('Running extraction..')
         caligraph.serialize_final_graph()
 
-        log_info('Computing statistics..')
-        log_info(caligraph.get_entity_graph().statistics)
+        get_logger().info('Computing statistics..')
+        get_logger().info(caligraph.get_entity_graph().statistics)
 
         success_msg = 'Finished extraction of CaLiGraph.'
         mailer.send_success(success_msg)
-        log_info(success_msg)
+        get_logger().info(success_msg)
     except Exception as e:
         error_msg = traceback.format_exc()
         mailer.send_error(error_msg)
-        log_error(error_msg)
+        get_logger().error(error_msg)
         raise e

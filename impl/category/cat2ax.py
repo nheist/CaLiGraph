@@ -7,7 +7,7 @@ The extraction is performed in three steps:
 """
 
 import utils
-from utils import log_debug
+from utils import get_logger
 from collections import defaultdict
 from typing import List, Tuple
 import operator
@@ -98,7 +98,7 @@ def extract_category_axioms(category_graph):
 
 def _extract_patterns(category_graph, candidate_sets):
     """Return property/type patterns extracted from `category_graph` for each set in `candidate_sets`."""
-    log_debug('Extracting Cat2Ax patterns..')
+    get_logger().debug('Extracting Cat2Ax patterns..')
     patterns = defaultdict(lambda: {'preds': defaultdict(list), 'types': defaultdict(list)})
 
     for parent, children, (first_words, last_words) in candidate_sets:
@@ -135,7 +135,7 @@ def _extract_patterns(category_graph, candidate_sets):
                     for t in types:
                         patterns[(tuple(first_words), tuple(last_words))]['types'][t].append(max_median)
 
-    log_debug(f'Extracted {len(patterns)} Cat2Ax patterns.')
+    get_logger().debug(f'Extracted {len(patterns)} Cat2Ax patterns.')
     return patterns
 
 
@@ -184,7 +184,7 @@ def _get_type_surface_scores(words, lemmatize=True):
 
 def _extract_axioms(category_graph, patterns):
     """Return axioms extracted from `category_graph` by applying `patterns` to all categories."""
-    log_debug('Extracting Cat2Ax axioms..')
+    get_logger().debug('Extracting Cat2Ax axioms..')
     category_axioms = defaultdict(list)
 
     # process front/back/front+back patterns individually to reduce computational complexity
@@ -211,7 +211,7 @@ def _extract_axioms(category_graph, patterns):
         category_axioms = {cat: axioms for cat, axioms in tqdm(pool.imap_unordered(_extract_axioms_for_cat, cat_contexts, chunksize=1000), total=len(cat_contexts), desc='CATEGORY/CAT2AX: Extracting axioms')}
     category_axioms = {cat: axioms for cat, axioms in category_axioms.items() if axioms}  # filter out empty axioms
 
-    log_debug(f'Extracted {sum(len(axioms) for axioms in category_axioms.values())} axioms for {len(category_axioms)} categories.')
+    get_logger().debug(f'Extracted {sum(len(axioms) for axioms in category_axioms.values())} axioms for {len(category_axioms)} categories.')
     return category_axioms
 
 
