@@ -33,7 +33,7 @@ def _parse_pages(pages_markup) -> dict:
         for r, parsed in tqdm(pool.imap_unordered(_parse_page_with_timeout, pages_markup.items(), chunksize=2000), total=len(pages_markup), desc='Parsing pages'):
             if parsed:
                 parsed_pages[r] = parsed
-            del pages_markup[r]  # discard markup after parsing to free space
+            pages_markup[r] = ''  # discard markup after parsing to free space
     return parsed_pages
 
 
