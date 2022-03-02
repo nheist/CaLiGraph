@@ -99,7 +99,7 @@ def update_cache(cache_identifier: str, cache_obj, version=None):
     else:
         open_func = _get_cache_open_func(config)
         with open_func(cache_path, mode='wb') as cache_file:
-            pickle.dump(cache_obj, cache_file, protocol=4)
+            pickle.dump(cache_obj, cache_file, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 def _get_cache_path(cache_identifier: str, version=None) -> Path:
