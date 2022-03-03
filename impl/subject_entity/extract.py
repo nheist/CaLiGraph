@@ -60,14 +60,14 @@ def _extract_subject_entity_batches(page_token_batches: list, page_ws_batches: l
         found_entity = False  # only predict one entity per row/entry
         current_entity_tokens = []
         current_entity_states = torch.tensor([])
-        current_entity_label = POSLabel.NONE
+        current_entity_label = POSLabel.NONE.value
         for token, token_ws, label, states in zip(word_tokens,  word_token_ws, word_predictions, word_hidden_states):
-            if token in BertSpecialToken.all_tokens() and label != POSLabel.NONE:
+            if token in BertSpecialToken.all_tokens() and label != POSLabel.NONE.value:
                 # ignore current line, as it is likely an error
-                label = POSLabel.NONE
+                label = POSLabel.NONE.value
                 found_entity = True
 
-            if label == POSLabel.NONE:
+            if label == POSLabel.NONE.value:
                 if current_entity_tokens and not found_entity:
                     entity_name = _tokens2name(current_entity_tokens)
                     if _is_valid_entity_name(entity_name):
@@ -76,7 +76,7 @@ def _extract_subject_entity_batches(page_token_batches: list, page_ws_batches: l
                     found_entity = True
                 current_entity_tokens = []
                 current_entity_states = torch.tensor([])
-                current_entity_label = POSLabel.NONE
+                current_entity_label = POSLabel.NONE.value
 
                 if token in BertSpecialToken.item_starttokens():
                     found_entity = False  # reset found_entity if entering a new line
@@ -99,9 +99,9 @@ def _extract_subject_entity_batches(page_token_batches: list, page_ws_batches: l
 
 def _extract_context(word_tokens: list, word_token_ws: list) -> tuple:
     ctx_tokens = []
-    for i in range(word_tokens.index(BertSpecialToken.CONTEXT_END)):
+    for i in range(word_tokens.index(BertSpecialToken.CONTEXT_END.value)):
         ctx_tokens.extend([word_tokens[i], word_token_ws[i]])
-    ctx_separators = [i for i, x in enumerate(ctx_tokens) if x == BertSpecialToken.CONTEXT_SEP] + [len(ctx_tokens)]
+    ctx_separators = [i for i, x in enumerate(ctx_tokens) if x == BertSpecialToken.CONTEXT_SEP.value] + [len(ctx_tokens)]
     top_section_ctx = ctx_tokens[ctx_separators[0]+1:ctx_separators[1]]
     section_ctx = ctx_tokens[ctx_separators[1]+1:ctx_separators[2]]
     return _tokens2name(top_section_ctx), _tokens2name(section_ctx)

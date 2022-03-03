@@ -34,51 +34,51 @@ def _map_entity_chunk(entity_chunk: list) -> list:
 
 def _find_pos_label_for_ent(ent: str) -> POSLabel:
     if ent is None:
-        return POSLabel.NONE
+        return POSLabel.NONE.value
     ent_uri = dbp_util.name2resource(ent)
     ttl_mapping = _get_type_to_label_mapping()
     for t in dbp_store.get_types(ent_uri):
         if t in ttl_mapping:
             return ttl_mapping[t]
-    return POSLabel.OTHER
+    return POSLabel.OTHER.value
 
 
 def _get_type_to_label_mapping() -> dict:
     return {
         # PERSON
-        'http://dbpedia.org/ontology/Person': POSLabel.PERSON,
-        'http://dbpedia.org/ontology/Deity': POSLabel.PERSON,
+        'http://dbpedia.org/ontology/Person': POSLabel.PERSON.value,
+        'http://dbpedia.org/ontology/Deity': POSLabel.PERSON.value,
         # NORP
-        'http://dbpedia.org/ontology/PoliticalParty': POSLabel.NORP,
-        'http://dbpedia.org/ontology/Family': POSLabel.NORP,
-        'http://dbpedia.org/ontology/EthnicGroup': POSLabel.NORP,
+        'http://dbpedia.org/ontology/PoliticalParty': POSLabel.NORP.value,
+        'http://dbpedia.org/ontology/Family': POSLabel.NORP.value,
+        'http://dbpedia.org/ontology/EthnicGroup': POSLabel.NORP.value,
         # FAC
-        'http://dbpedia.org/ontology/ArchitecturalStructure': POSLabel.FAC,
-        'http://dbpedia.org/ontology/Mine': POSLabel.FAC,
-        'http://dbpedia.org/ontology/Monument': POSLabel.FAC,
+        'http://dbpedia.org/ontology/ArchitecturalStructure': POSLabel.FAC.value,
+        'http://dbpedia.org/ontology/Mine': POSLabel.FAC.value,
+        'http://dbpedia.org/ontology/Monument': POSLabel.FAC.value,
         # ORG
-        'http://dbpedia.org/ontology/Organisation': POSLabel.ORG,
+        'http://dbpedia.org/ontology/Organisation': POSLabel.ORG.value,
         # GPE
-        'http://dbpedia.org/ontology/PopulatedPlace': POSLabel.GPE,
+        'http://dbpedia.org/ontology/PopulatedPlace': POSLabel.GPE.value,
         # LOC
-        'http://dbpedia.org/ontology/Place': POSLabel.LOC,
-        'http://dbpedia.org/ontology/Location': POSLabel.LOC,
+        'http://dbpedia.org/ontology/Place': POSLabel.LOC.value,
+        'http://dbpedia.org/ontology/Location': POSLabel.LOC.value,
         # PRODUCT
-        'http://dbpedia.org/ontology/Food': POSLabel.PRODUCT,
-        'http://dbpedia.org/ontology/MeanOfTransportation': POSLabel.PRODUCT,
-        'http://dbpedia.org/ontology/Software': POSLabel.PRODUCT,
-        'http://dbpedia.org/ontology/Device': POSLabel.PRODUCT,
+        'http://dbpedia.org/ontology/Food': POSLabel.PRODUCT.value,
+        'http://dbpedia.org/ontology/MeanOfTransportation': POSLabel.PRODUCT.value,
+        'http://dbpedia.org/ontology/Software': POSLabel.PRODUCT.value,
+        'http://dbpedia.org/ontology/Device': POSLabel.PRODUCT.value,
         # EVENT
-        'http://dbpedia.org/ontology/Event': POSLabel.EVENT,
+        'http://dbpedia.org/ontology/Event': POSLabel.EVENT.value,
         # WORK_OF_ART
-        'http://dbpedia.org/ontology/Work': POSLabel.WORK_OF_ART,
-        'http://dbpedia.org/ontology/Award': POSLabel.WORK_OF_ART,
+        'http://dbpedia.org/ontology/Work': POSLabel.WORK_OF_ART.value,
+        'http://dbpedia.org/ontology/Award': POSLabel.WORK_OF_ART.value,
         # LAW
-        'http://dbpedia.org/ontology/Law': POSLabel.LAW,
-        'http://dbpedia.org/ontology/LegalCase': POSLabel.LAW,
-        'http://dbpedia.org/ontology/Treaty': POSLabel.LAW,
+        'http://dbpedia.org/ontology/Law': POSLabel.LAW.value,
+        'http://dbpedia.org/ontology/LegalCase': POSLabel.LAW.value,
+        'http://dbpedia.org/ontology/Treaty': POSLabel.LAW.value,
         # LANGUAGE
-        'http://dbpedia.org/ontology/Language': POSLabel.LANGUAGE,
+        'http://dbpedia.org/ontology/Language': POSLabel.LANGUAGE.value,
         # SPECIES
-        'http://dbpedia.org/ontology/Species': POSLabel.SPECIES
+        'http://dbpedia.org/ontology/Species': POSLabel.SPECIES.value
     }

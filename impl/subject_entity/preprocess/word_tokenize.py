@@ -26,16 +26,16 @@ class BertSpecialToken(Enum):
 
     @classmethod
     def item_starttokens(cls):
-        return {cls.TABLE_ROW, cls.ENTRY_L1, cls.ENTRY_L2, cls.ENTRY_L3}
+        return {cls.TABLE_ROW.value, cls.ENTRY_L1.value, cls.ENTRY_L2.value, cls.ENTRY_L3.value}
 
     @classmethod
     def get_entry_by_depth(cls, depth: int):
         if depth == 1:
-            return cls.ENTRY_L1
+            return cls.ENTRY_L1.value
         elif depth == 2:
-            return cls.ENTRY_L2
+            return cls.ENTRY_L2.value
         elif depth >= 3:
-            return cls.ENTRY_L3
+            return cls.ENTRY_L3.value
         raise ValueError(f'Trying to retrieve a BERT special token for an entry of depth {depth}.')
 
 
@@ -57,7 +57,7 @@ class WordTokenizer:
             page_items = tqdm(pages.items(), total=len(pages), desc='Tokenize Pages (all)')
             tokenize_fn = self._tokenize
 
-        with mp.Pool(processes=int(utils.get_config('max_cpus') / 2)) as pool:
+        with mp.Pool(processes=utils.get_config('max_cpus')) as pool:
             return {page_uri: tokens for page_uri, tokens in pool.imap_unordered(tokenize_fn, page_items, chunksize=2000)}
 
     def _tokenize_with_entities(self, params) -> Tuple[str, Tuple[list, list]]:
@@ -104,17 +104,17 @@ class WordTokenizer:
         # add listing context, separated by special context tokens
         for text in context:
             doc = self.word_tokenizer(wmp.wikitext_to_plaintext(text))
-            ctx_tokens.extend([w.text for w in doc] + [BertSpecialToken.CONTEXT_SEP])
+            ctx_tokens.extend([w.text for w in doc] + [BertSpecialToken.CONTEXT_SEP.value])
             ctx_ws.extend([w.whitespace_ for w in doc] + [' '])
 
         # add table header if available
         if table_header:
             for cell in table_header:
                 doc = self.word_tokenizer(cell['text'])
-                ctx_tokens.extend([w.text for w in doc] + [BertSpecialToken.TABLE_COL])
+                ctx_tokens.extend([w.text for w in doc] + [BertSpecialToken.TABLE_COL.value])
                 ctx_ws.extend([w.whitespace_ for w in doc] + [' '])
 
-        ctx_tokens[-1] = BertSpecialToken.CONTEXT_END  # replace last token with final context separator
+        ctx_tokens[-1] = BertSpecialToken.CONTEXT_END.value  # replace last token with final context separator
         return ctx_tokens, ctx_ws
 
     def _listing_to_token_entity_chunks(self, listing_data: list, valid_ents: set, invalid_ents: set, max_group_size: int):
@@ -184,10 +184,10 @@ class WordTokenizer:
             cell_doc = cell_docs[cell_idx]
             cell_entities = list(cell['entities'])
             cell_tokens, _, cell_ents = self._text_to_tokens(cell_doc, cell_entities, valid_ents)
-            tokens += [BertSpecialToken.TABLE_COL] + cell_tokens
+            tokens += [BertSpecialToken.TABLE_COL.value] + cell_tokens
             ents += [None] + cell_ents
         if tokens:
-            tokens[0] = BertSpecialToken.TABLE_ROW  # special indicator for start of table row
+            tokens[0] = BertSpecialToken.TABLE_ROW.value  # special indicator for start of table row
         return tokens, ents
 
     def _find_untagged_entities(self, doc, entities: list):
@@ -277,10 +277,10 @@ class WordTokenizer:
         tokens, ws = [], []
         for cell in row:
             cell_tokens, cell_ws, _ = self._text_to_tokens(self.word_tokenizer(cell['text']), None, None)
-            tokens += [BertSpecialToken.TABLE_COL] + cell_tokens
+            tokens += [BertSpecialToken.TABLE_COL.value] + cell_tokens
             ws += [' '] + cell_ws
         if tokens:
-            tokens[0] = BertSpecialToken.TABLE_ROW
+            tokens[0] = BertSpecialToken.TABLE_ROW.value
         return tokens, ws
 
     def _text_to_tokens(self, doc, entities: Optional[list], valid_ents: Optional[set]) -> Tuple[list, list, list]:
