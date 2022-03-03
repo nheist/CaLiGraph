@@ -7,6 +7,8 @@ import impl.listpage.util as list_util
 import impl.wikipedia.wikimarkup_parser as wmp
 from tqdm import tqdm
 from enum import Enum
+import multiprocessing as mp
+import utils
 
 
 class BertSpecialToken(Enum):
@@ -46,11 +48,17 @@ class WordTokenizer:
 
     def __call__(self, pages: dict, entity_labels=None) -> dict:
         if entity_labels:
-            return dict([self._tokenize_with_entities((page_uri, page_data, entity_labels[page_uri]))
-                         for page_uri, page_data in tqdm(pages.items(), desc='Tokenize Pages (train)')])
+            def page_with_labels_iterator():
+                for page_uri, page_data in pages.items():
+                    yield page_uri, page_data, entity_labels[page_uri]
+            page_items = tqdm(page_with_labels_iterator(), total=len(pages), desc='Tokenize Pages (train)')
+            tokenize_fn = self._tokenize_with_entities
         else:
-            return dict([self._tokenize(page_uri_with_data)
-                         for page_uri_with_data in tqdm(pages.items(), desc='Tokenize Pages (all)')])
+            page_items = tqdm(pages.items(), total=len(pages), desc='Tokenize Pages (all)')
+            tokenize_fn = self._tokenize
+
+        with mp.Pool(processes=int(utils.get_config('max_cpus') / 2)) as pool:
+            return {page_uri: tokens for page_uri, tokens in pool.imap_unordered(tokenize_fn, page_items, chunksize=2000)}
 
     def _tokenize_with_entities(self, params) -> Tuple[str, Tuple[list, list]]:
         """Take a page and return list of (tokens, entities) chunks. If not existing, entity for a token is None."""
