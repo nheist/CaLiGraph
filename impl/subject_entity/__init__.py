@@ -43,7 +43,7 @@ def _get_training_data(graph) -> tuple:
 def _get_tokenized_list_pages_with_entity_labels(graph) -> dict:
     listpages = list_store.get_parsed_listpages()
     entity_labels = {lp_uri: find_subject_entities_for_listpage(lp_uri, lp_data, graph) for lp_uri, lp_data in listpages.items()}
-    return WordTokenizer()(list_store.get_parsed_listpages(), entity_labels=entity_labels)
+    return WordTokenizer()(listpages, entity_labels=entity_labels)
 
 
 def _get_page_data() -> dict:

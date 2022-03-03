@@ -33,22 +33,6 @@ def get_listcategories() -> set:
     return __LISTCATEGORIES__
 
 
-def get_parsed_listpages(listpage_type: str = None) -> dict:
-    """Return all list pages of the type `listpage_type` together with their parsed content."""
-    global __PARSED_LISTPAGES__
-    if '__PARSED_LISTPAGES__' not in globals():
-        __PARSED_LISTPAGES__ = _parse_listpages()
-    return {lp: content for lp, content in __PARSED_LISTPAGES__.items() if listpage_type is None or listpage_type in content['types']}
-
-
-def _parse_listpages() -> dict:
-    parsed_listpages = {}
-    for resource, content in wikipedia.get_parsed_articles().items():
-        if not list_util.is_listpage(resource):
-            continue
-        if resource != dbp_store.resolve_redirect(resource):
-            continue
-        if not content or 'sections' not in content:
-            continue
-        parsed_listpages[resource] = content
-    return parsed_listpages
+def get_parsed_listpages() -> dict:
+    """Return all list pages together with their parsed content."""
+    return {lp: content for lp, content in wikipedia.get_parsed_articles().items() if list_util.is_listpage(lp) and lp == dbp_store.resolve_redirect(lp)}
