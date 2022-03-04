@@ -23,7 +23,7 @@ def run_evaluation(model: str, learning_rate: float, warmup_steps: int, weight_d
     # prepare tokenizer and model
     tokenizer = BertTokenizerFast.from_pretrained(model)
     tokenizer.add_tokens(list(BertSpecialToken.all_tokens()))
-    num_labels = len(POSLabel) if predict_pos_tags else 2
+    num_labels = len(POSLabel) if predict_pos_tags else 3
     model = BertForTokenClassification.from_pretrained(model, num_labels=num_labels)
     model.resize_token_embeddings(len(tokenizer))
     # load data
