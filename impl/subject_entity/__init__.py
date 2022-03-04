@@ -47,5 +47,5 @@ def _get_tokenized_list_pages_with_entity_labels(graph) -> dict:
 
 
 def _get_page_data() -> dict:
-    initializer = WordTokenizer()(wikipedia.get_parsed_articles())
+    initializer = lambda: WordTokenizer()(wikipedia.get_parsed_articles())
     return utils.load_or_create_cache('subject_entity_page_data', initializer)
