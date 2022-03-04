@@ -57,7 +57,7 @@ def run_evaluation(model: str, learning_rate: float, warmup_steps: int, weight_d
         args=training_args,
         train_dataset=train_data,
         eval_dataset=val_data,
-        compute_metrics=_compute_metrics
+        compute_metrics=lambda eval_prediction: SETagsEvaluator(eval_prediction).evaluate()
     )
     trainer.train()
 
@@ -88,24 +88,15 @@ def _map_entity_chunk_to_binary_labels(entity_chunk: list) -> list:
     return labels
 
 
-def _compute_metrics(eval_prediction: EvalPrediction) -> dict:
-    predictions = eval_prediction.predictions
-    labels = eval_prediction.label_ids
-
-    evaluator = SETagsEvaluator(predictions, labels)
-    return evaluator.evaluate()
-
-
 Entity = namedtuple("Entity", "e_type start_offset end_offset")
 
 
 class SETagsEvaluator:
-    def __init__(self, predictions, labels):
-        if len(predictions) != len(labels):
-            raise ValueError("Predictions and labels do not have the same length!")
-
-        self.predictions = predictions
-        self.labels = labels
+    def __init__(self, eval_prediction: EvalPrediction):
+        self.predictions = eval_prediction.predictions
+        self.labels = eval_prediction.label_ids
+        print(f'Predictions shape: {self.predictions.shape}')
+        print(f'labels shape: {self.labels.shape}')
 
         metrics_results = {
             'correct': 0,
@@ -132,6 +123,8 @@ class SETagsEvaluator:
             mask = true_ids != -100
             true_ids = true_ids[mask]
             pred_ids = pred_ids[mask]
+            print(f'true_ids shape: {true_ids.shape}')
+            print(f'pred_ids shape: {pred_ids.shape}')
 
             if len(true_ids) != len(pred_ids):
                 raise ValueError("Predicted and actual entities do not have the same length!")
@@ -153,6 +146,7 @@ class SETagsEvaluator:
         ent_type = None
 
         for offset, label_id in enumerate(label_ids):
+            print(f'label_id shape: {label_id.shape}')
             if label_id == 0:
                 if ent_type is not None and start_offset is not None:
                     named_entities.append(Entity(ent_type, start_offset, offset - 1))
