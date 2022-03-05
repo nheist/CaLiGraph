@@ -223,7 +223,7 @@ class SETagsEvaluator:
     def _compute_precision_recall_wrapper(self):
         final_metrics = {}
         for k, v in self.results.items():
-            for metric_key, metric_value in self._compute_precision_recall(k, v):
+            for metric_key, metric_value in self._compute_precision_recall(k, v).items():
                 final_metrics[metric_key] = metric_value
         return final_metrics
 
