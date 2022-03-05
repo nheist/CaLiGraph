@@ -8,7 +8,7 @@ from impl.subject_entity.preprocess.word_tokenize import BertSpecialToken
 from impl.subject_entity.preprocess.pos_label import POSLabel, map_entities_to_pos_labels
 from transformers import Trainer, IntervalStrategy, TrainingArguments, BertTokenizerFast, BertForTokenClassification, EvalPrediction
 from impl.subject_entity import extract
-from collections import namedtuple, defaultdict
+from collections import namedtuple
 from copy import deepcopy
 
 
@@ -118,13 +118,13 @@ class SETagsEvaluator:
         }
 
     def evaluate(self) -> dict:
-        for pred_ids, true_ids in zip(self.predictions, self.labels):
+        for pred_logits, true_ids in zip(self.predictions, self.labels):
             # remove unnecessary preds/labels
             mask = true_ids != -100
             true_ids = true_ids[mask]
-            pred_ids = pred_ids[mask]
-            print(f'true_ids shape: {true_ids.shape}')
-            print(f'pred_ids shape: {pred_ids.shape}')
+            pred_logits = pred_logits[mask]
+            # turn pred logits into predictions
+            pred_ids = torch.argmax(pred_logits, -1)
 
             if len(true_ids) != len(pred_ids):
                 raise ValueError("Predicted and actual entities do not have the same length!")
@@ -146,7 +146,6 @@ class SETagsEvaluator:
         ent_type = None
 
         for offset, label_id in enumerate(label_ids):
-            print(f'label_id shape: {label_id.shape}')
             if label_id == 0:
                 if ent_type is not None and start_offset is not None:
                     named_entities.append(Entity(ent_type, start_offset, offset - 1))
