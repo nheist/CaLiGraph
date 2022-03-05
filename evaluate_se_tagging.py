@@ -95,21 +95,8 @@ class SETagsEvaluator:
     def __init__(self, eval_prediction: EvalPrediction):
         self.predictions = eval_prediction.predictions
         self.labels = eval_prediction.label_ids
-        print(f'Predictions shape: {self.predictions.shape}')
-        print(f'labels shape: {self.labels.shape}')
 
-        metrics_results = {
-            'correct': 0,
-            'incorrect': 0,
-            'partial': 0,
-            'missed': 0,
-            'spurious': 0,
-            'possible': 0,
-            'actual': 0,
-            'precision': 0,
-            'recall': 0,
-        }
-
+        metrics_results = {'correct': 0, 'incorrect': 0, 'partial': 0, 'missed': 0, 'spurious': 0}
         self.results = {
             'strict': deepcopy(metrics_results),
             'exact': deepcopy(metrics_results),
@@ -129,15 +116,9 @@ class SETagsEvaluator:
             if len(true_ids) != len(pred_ids):
                 raise ValueError("Predicted and actual entities do not have the same length!")
 
-            # compute results for one message
-            tmp_results = self.compute_metrics(self._collect_named_entities(pred_ids), self._collect_named_entities(true_ids))
+            self.compute_metrics(self._collect_named_entities(pred_ids), self._collect_named_entities(true_ids))
 
-            # accumulate results
-            for eval_schema in self.results:
-                for metric in self.results[eval_schema]:
-                    self.results[eval_schema][metric] += tmp_results[eval_schema][metric]
-
-        return self._compute_precision_recall_wrapper(self.results)
+        return self._compute_precision_recall_wrapper()
 
     @classmethod
     def _collect_named_entities(cls, label_ids):
@@ -165,16 +146,7 @@ class SETagsEvaluator:
             named_entities.append(Entity(ent_type, start_offset, len(label_ids) - 1))
         return named_entities
 
-    @classmethod
-    def compute_metrics(cls, pred_named_entities, true_named_entities):
-        eval_metrics = {'correct': 0, 'incorrect': 0, 'partial': 0, 'missed': 0, 'spurious': 0, 'precision': 0, 'recall': 0}
-        evaluation = {
-            'strict': deepcopy(eval_metrics),
-            'ent_type': deepcopy(eval_metrics),
-            'partial': deepcopy(eval_metrics),
-            'exact': deepcopy(eval_metrics)
-        }
-
+    def compute_metrics(self, pred_named_entities, true_named_entities):
         # keep track of entities that overlapped
         true_which_overlapped_with_pred = []
 
@@ -187,10 +159,10 @@ class SETagsEvaluator:
             # Scenario I: Exact match between true and pred
             if pred in true_named_entities:
                 true_which_overlapped_with_pred.append(pred)
-                evaluation['strict']['correct'] += 1
-                evaluation['ent_type']['correct'] += 1
-                evaluation['exact']['correct'] += 1
-                evaluation['partial']['correct'] += 1
+                self.results['strict']['correct'] += 1
+                self.results['ent_type']['correct'] += 1
+                self.results['exact']['correct'] += 1
+                self.results['partial']['correct'] += 1
 
             else:
                 # check for overlaps with any of the true entities
@@ -200,10 +172,10 @@ class SETagsEvaluator:
 
                     # Scenario IV: Offsets match, but entity type is wrong
                     if true.start_offset == pred.start_offset and pred.end_offset == true.end_offset and true.e_type != pred.e_type:
-                        evaluation['strict']['incorrect'] += 1
-                        evaluation['ent_type']['incorrect'] += 1
-                        evaluation['partial']['correct'] += 1
-                        evaluation['exact']['correct'] += 1
+                        self.results['strict']['incorrect'] += 1
+                        self.results['ent_type']['incorrect'] += 1
+                        self.results['partial']['correct'] += 1
+                        self.results['exact']['correct'] += 1
                         true_which_overlapped_with_pred.append(true)
                         found_overlap = True
                         break
@@ -215,55 +187,53 @@ class SETagsEvaluator:
                         # Scenario V: There is an overlap (but offsets do not match exactly), and the entity type is the same.
                         # 2.1 overlaps with the same entity type
                         if pred.e_type == true.e_type:
-                            evaluation['strict']['incorrect'] += 1
-                            evaluation['ent_type']['correct'] += 1
-                            evaluation['partial']['partial'] += 1
-                            evaluation['exact']['incorrect'] += 1
+                            self.results['strict']['incorrect'] += 1
+                            self.results['ent_type']['correct'] += 1
+                            self.results['partial']['partial'] += 1
+                            self.results['exact']['incorrect'] += 1
                             found_overlap = True
                             break
 
                         # Scenario VI: Entities overlap, but the entity type is different.
                         else:
-                            evaluation['strict']['incorrect'] += 1
-                            evaluation['ent_type']['incorrect'] += 1
-                            evaluation['partial']['partial'] += 1
-                            evaluation['exact']['incorrect'] += 1
+                            self.results['strict']['incorrect'] += 1
+                            self.results['ent_type']['incorrect'] += 1
+                            self.results['partial']['partial'] += 1
+                            self.results['exact']['incorrect'] += 1
                             found_overlap = True
                             break
 
                 # Scenario II: Entities are spurious (i.e., over-generated).
                 if not found_overlap:
-                    evaluation['strict']['spurious'] += 1
-                    evaluation['ent_type']['spurious'] += 1
-                    evaluation['partial']['spurious'] += 1
-                    evaluation['exact']['spurious'] += 1
+                    self.results['strict']['spurious'] += 1
+                    self.results['ent_type']['spurious'] += 1
+                    self.results['partial']['spurious'] += 1
+                    self.results['exact']['spurious'] += 1
 
         # Scenario III: Entity was missed entirely.
         for true in true_named_entities:
             if true in true_which_overlapped_with_pred:
                 continue
             else:
-                evaluation['strict']['missed'] += 1
-                evaluation['ent_type']['missed'] += 1
-                evaluation['partial']['missed'] += 1
-                evaluation['exact']['missed'] += 1
-        return evaluation
+                self.results['strict']['missed'] += 1
+                self.results['ent_type']['missed'] += 1
+                self.results['partial']['missed'] += 1
+                self.results['exact']['missed'] += 1
 
-    @classmethod
-    def _compute_precision_recall_wrapper(cls, results):
+    def _compute_precision_recall_wrapper(self):
         final_metrics = {}
-        for k, v in results.items():
-            for metric_key, metric_value in cls._compute_precision_recall(k, v):
+        for k, v in self.results.items():
+            for metric_key, metric_value in self._compute_precision_recall(k, v):
                 final_metrics[metric_key] = metric_value
         return final_metrics
 
     @classmethod
-    def _compute_precision_recall(cls, eval_schema, results):
-        correct = results['correct']
-        incorrect = results['incorrect']
-        partial = results['partial']
-        missed = results['missed']
-        spurious = results['spurious']
+    def _compute_precision_recall(cls, eval_schema, eval_data):
+        correct = eval_data['correct']
+        incorrect = eval_data['incorrect']
+        partial = eval_data['partial']
+        missed = eval_data['missed']
+        spurious = eval_data['spurious']
         actual = correct + incorrect + partial + spurious  # number of annotations produced by the NER system
         possible = correct + incorrect + partial + missed  # number of annotations in the gold-standard which contribute to the final score
 
