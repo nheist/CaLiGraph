@@ -79,7 +79,7 @@ class WordTokenizer:
 
             for enum_data in section_data['enums']:
                 context_tokens, _ = self._context_to_tokens([page_name, top_section_name, section_name])
-                context_ents = [None] * len(context_tokens)
+                context_ents = [-100] * len(context_tokens)
 
                 max_chunk_size = self.max_words_per_chunk - len(context_tokens)
                 for chunk_tokens, chunk_ents in self._listing_to_token_entity_chunks(enum_data, valid_ents, invalid_ents, max_chunk_size):
@@ -89,7 +89,7 @@ class WordTokenizer:
             for table in section_data['tables']:
                 table_header, table_data = table['header'], table['data']
                 context_tokens, _ = self._context_to_tokens([page_name, top_section_name, section_name], table_header)
-                context_ents = [None] * len(context_tokens)
+                context_ents = [-100] * len(context_tokens)
 
                 max_chunk_size = self.max_words_per_chunk - len(context_tokens)
                 for chunk_tokens, chunk_ents in self._listing_to_token_entity_chunks(table_data, valid_ents, invalid_ents, max_chunk_size):
@@ -161,7 +161,7 @@ class WordTokenizer:
         tokens, _, ents = self._text_to_tokens(entry_doc, entities, valid_ents)
         if not tokens or not ents:
             return [], []
-        return [BertSpecialToken.get_entry_by_depth(depth)] + tokens, [None] + ents
+        return [BertSpecialToken.get_entry_by_depth(depth)] + tokens, [-100] + ents
 
     def _row_to_tokens_and_entities(self, row: list, valid_ents: set, invalid_ents: set) -> Tuple[list, list]:
         cell_docs = [list_nlp.parse(cell['text']) for cell in row]
@@ -185,7 +185,7 @@ class WordTokenizer:
             cell_entities = list(cell['entities'])
             cell_tokens, _, cell_ents = self._text_to_tokens(cell_doc, cell_entities, valid_ents)
             tokens += [BertSpecialToken.TABLE_COL.value] + cell_tokens
-            ents += [None] + cell_ents
+            ents += [-100] + cell_ents
         if tokens:
             tokens[0] = BertSpecialToken.TABLE_ROW.value  # special indicator for start of table row
         return tokens, ents

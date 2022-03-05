@@ -132,8 +132,7 @@ def get_bert_tokenizer_and_model(training_data_retrieval_func):
 
 
 def _train_bert(training_data_retrieval_func):
-    tokenizer = BertTokenizerFast.from_pretrained(BERT_BASE_MODEL)
-    tokenizer.add_tokens(list(BertSpecialToken.all_tokens()))
+    tokenizer = BertTokenizerFast.from_pretrained(BERT_BASE_MODEL, additional_special_tokens=list(BertSpecialToken.all_tokens()))
 
     tokens, labels = training_data_retrieval_func()
     train_dataset = _get_datasets(tokens, labels, tokenizer)
@@ -182,8 +181,9 @@ def _encode_labels(labels, encodings):
         doc_enc_labels = np.ones(len(doc_offset), dtype=int) * -100
         arr_offset = np.array(doc_offset)
         # set labels whose first offset position is 0 and the second is not 0
-        truncated_label_length = len(doc_enc_labels[(arr_offset[:, 0] == 0) & (arr_offset[:, 1] != 0)])
-        doc_enc_labels[(arr_offset[:, 0] == 0) & (arr_offset[:, 1] != 0)] = doc_labels[:truncated_label_length]
+        relevant_label_mask = (arr_offset[:, 0] == 0) & (arr_offset[:, 1] != 0)
+        truncated_label_length = len(doc_enc_labels[relevant_label_mask])
+        doc_enc_labels[relevant_label_mask] = doc_labels[:truncated_label_length]
         encoded_labels.append(doc_enc_labels.tolist())
     return encoded_labels
 

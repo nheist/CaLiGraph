@@ -21,8 +21,7 @@ torch.manual_seed(SEED)
 def run_evaluation(model: str, learning_rate: float, warmup_steps: int, weight_decay: float, predict_pos_tags: bool):
     run_id = f'{model}_lr-{learning_rate}_ws-{warmup_steps}_wd-{weight_decay}_pp-{predict_pos_tags}'
     # prepare tokenizer and model
-    tokenizer = AutoTokenizer.from_pretrained(model, add_prefix_space=True)
-    tokenizer.add_tokens(list(BertSpecialToken.all_tokens()))
+    tokenizer = AutoTokenizer.from_pretrained(model, add_prefix_space=True, additional_special_tokens=list(BertSpecialToken.all_tokens()))
     num_labels = POSLabel.label_count() if predict_pos_tags else 3
     model = AutoModelForTokenClassification.from_pretrained(model, num_labels=num_labels)
     model.resize_token_embeddings(len(tokenizer))

@@ -41,6 +41,9 @@ def _map_entity_chunk(entity_chunk: list) -> list:
     # then map the entities to pos labels
     pos_labels = []
     for idx, ent in enumerate(entity_chunk):
+        if type(ent) == int:
+            pos_labels.append(ent)
+            continue
         pos_label = entity_to_pos_label_mapping[ent]
         if idx == 0 or ent != entity_chunk[idx - 1]:
             pos_labels.append(pos_label.begin())
