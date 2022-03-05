@@ -25,6 +25,10 @@ class POSLabel(Enum):
     def inside(self):
         return self.value + 1 if self.value > 0 else self.value
 
+    @classmethod
+    def label_count(cls):
+        return len(cls) * 2 - 1
+
 
 def map_entities_to_pos_labels(entity_chunks: list) -> list:
     """Transforms the chunks of entity labels into chunks of POS tags."""

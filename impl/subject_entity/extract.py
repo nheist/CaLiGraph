@@ -138,7 +138,7 @@ def _train_bert(training_data_retrieval_func):
     tokens, labels = training_data_retrieval_func()
     train_dataset = _get_datasets(tokens, labels, tokenizer)
 
-    model = BertForTokenClassification.from_pretrained(BERT_BASE_MODEL, num_labels=len(POSLabel))
+    model = BertForTokenClassification.from_pretrained(BERT_BASE_MODEL, num_labels=POSLabel.label_count())
     model.resize_token_embeddings(len(tokenizer))
 
     run_id = '{}_{}'.format(datetime.datetime.now().strftime('%Y%m%d-%H%M%S'), utils.get_config('logging.filename'))
