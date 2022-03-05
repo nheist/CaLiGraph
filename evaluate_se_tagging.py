@@ -46,7 +46,7 @@ def run_evaluation(model: str, learning_rate: float, warmup_steps: int, weight_d
         eval_steps=3000,
         per_device_train_batch_size=8,
         per_device_eval_batch_size=8,
-        num_train_epochs=2,
+        num_train_epochs=3,
         learning_rate=learning_rate,
         warmup_steps=warmup_steps,
         weight_decay=weight_decay,
