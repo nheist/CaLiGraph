@@ -62,12 +62,7 @@ def _extract_subject_entity_batches(page_token_batches: list, page_ws_batches: l
         current_entity_states = torch.tensor([])
         current_entity_label = POSLabel.NONE.value
         for token, token_ws, label, states in zip(word_tokens,  word_token_ws, word_predictions, word_hidden_states):
-            if token in BertSpecialToken.all_tokens() and label != POSLabel.NONE.value:
-                # ignore current line, as it is likely an error
-                label = POSLabel.NONE.value
-                found_entity = True
-
-            if label == POSLabel.NONE.value:
+            if label == POSLabel.NONE.value or token in BertSpecialToken.all_tokens():
                 if current_entity_tokens and not found_entity:
                     entity_name = _tokens2name(current_entity_tokens)
                     if _is_valid_entity_name(entity_name):
