@@ -6,7 +6,7 @@ import numpy as np
 import torch
 from impl.subject_entity.preprocess.word_tokenize import BertSpecialToken
 from impl.subject_entity.preprocess.pos_label import POSLabel, map_entities_to_pos_labels
-from transformers import Trainer, IntervalStrategy, TrainingArguments, BertTokenizerFast, BertForTokenClassification, EvalPrediction
+from transformers import Trainer, IntervalStrategy, TrainingArguments, AutoTokenizer, AutoModelForTokenClassification, EvalPrediction
 from impl.subject_entity import extract
 from collections import namedtuple
 from copy import deepcopy
@@ -21,10 +21,10 @@ torch.manual_seed(SEED)
 def run_evaluation(model: str, learning_rate: float, warmup_steps: int, weight_decay: float, predict_pos_tags: bool):
     run_id = f'{model}_lr-{learning_rate}_ws-{warmup_steps}_wd-{weight_decay}_pp-{predict_pos_tags}'
     # prepare tokenizer and model
-    tokenizer = BertTokenizerFast.from_pretrained(model)
+    tokenizer = AutoTokenizer.from_pretrained(model)
     tokenizer.add_tokens(list(BertSpecialToken.all_tokens()))
     num_labels = len(POSLabel) if predict_pos_tags else 3
-    model = BertForTokenClassification.from_pretrained(model, num_labels=num_labels)
+    model = AutoModelForTokenClassification.from_pretrained(model, num_labels=num_labels)
     model.resize_token_embeddings(len(tokenizer))
     # load data
     data = utils.load_cache('subject_entity_training_data')
