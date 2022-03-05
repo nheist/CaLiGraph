@@ -124,7 +124,7 @@ class SETagsEvaluator:
             true_ids = true_ids[mask]
             pred_logits = pred_logits[mask]
             # turn pred logits into predictions
-            pred_ids = torch.argmax(pred_logits, -1)
+            pred_ids = pred_logits.argmax(-1)
 
             if len(true_ids) != len(pred_ids):
                 raise ValueError("Predicted and actual entities do not have the same length!")
