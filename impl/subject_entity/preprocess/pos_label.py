@@ -47,7 +47,7 @@ def _map_entity_chunk(entity_chunk: list) -> list:
 
 def _find_pos_label_for_ent(ent: str) -> POSLabel:
     if ent is None:
-        return POSLabel.NONE.value
+        return POSLabel.NONE
     ent_uri = dbp_util.name2resource(ent)
     ttl_mapping = _get_type_to_label_mapping()
     for t in dbp_store.get_types(ent_uri):
