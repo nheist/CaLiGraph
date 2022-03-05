@@ -178,6 +178,10 @@ def _encode_labels(labels, encodings):
         # set labels whose first offset position is 0 and the second is not 0
         relevant_label_mask = (arr_offset[:, 0] == 0) & (arr_offset[:, 1] != 0)
         truncated_label_length = len(doc_enc_labels[relevant_label_mask])
+        if len(doc_labels) < truncated_label_length:
+            # uncased tokenizers can be confused by Japanese/Chinese signs leading to an inconsistency between tokens
+            # and labels after tokenization. we handle that gracefully by simply filling it up with non-empty labels.
+            doc_labels += [POSLabel.NONE.value] * (truncated_label_length - len(doc_labels))
         doc_enc_labels[relevant_label_mask] = doc_labels[:truncated_label_length]
         encoded_labels.append(doc_enc_labels.tolist())
     return encoded_labels
