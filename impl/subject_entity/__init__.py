@@ -32,12 +32,11 @@ def _get_training_data(graph) -> tuple:
     initializer = lambda: _get_tokenized_list_pages_with_entity_labels(graph)
     training_data = utils.load_or_create_cache('subject_entity_training_data', initializer)
     # flatten training data into chunks and replace entities with their POS tags
-    tokens, ent_labels = [], []
+    tokens, labels = [], []
     for token_chunks, entity_chunks in training_data.values():
         tokens.extend(token_chunks)
-        ent_labels.extend(entity_chunks)
-    pos_labels = map_entities_to_pos_labels(ent_labels)
-    return tokens, pos_labels
+        labels.extend(map_entities_to_pos_labels(entity_chunks))
+    return tokens, labels
 
 
 def _get_tokenized_list_pages_with_entity_labels(graph) -> dict:

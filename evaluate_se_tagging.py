@@ -18,7 +18,7 @@ np.random.seed(SEED)
 torch.manual_seed(SEED)
 
 
-def run_evaluation(model: str, learning_rate: float, warmup_steps: int, weight_decay: float, predict_pos_tags: bool):
+def run_evaluation(model: str, learning_rate: float, warmup_steps: int, weight_decay: float, predict_pos_tags: bool, majority_labels: bool):
     run_id = f'{model}_lr-{learning_rate}_ws-{warmup_steps}_wd-{weight_decay}_pp-{predict_pos_tags}'
     # prepare tokenizer and model
     tokenizer = AutoTokenizer.from_pretrained(model, add_prefix_space=True, additional_special_tokens=list(BertSpecialToken.all_tokens()))
@@ -32,13 +32,13 @@ def run_evaluation(model: str, learning_rate: float, warmup_steps: int, weight_d
     train_pages = set(random.sample(all_pages, int(len(all_pages) * .9)))  # 90% of pages for train, 10% for val
     val_pages = all_pages.difference(train_pages)
     # prepare data
-    train_data = _prepare_dataset(tokenizer, [data[p] for p in train_pages], predict_pos_tags)
-    val_data = _prepare_dataset(tokenizer, [data[p] for p in val_pages], predict_pos_tags)
+    train_data = _prepare_dataset(tokenizer, [data[p] for p in train_pages], predict_pos_tags, majority_labels)
+    val_data = _prepare_dataset(tokenizer, [data[p] for p in val_pages], predict_pos_tags, majority_labels)
     # run evaluation
     training_args = TrainingArguments(
         seed=SEED,
         save_strategy=IntervalStrategy.NO,
-        output_dir=f'./se_eval/output/{run_id}',  # should not be used
+        output_dir=f'./se_eval/output/{run_id}',
         logging_strategy=IntervalStrategy.STEPS,
         logging_dir=f'./se_eval/logs/{run_id}',
         logging_steps=500,
@@ -61,13 +61,13 @@ def run_evaluation(model: str, learning_rate: float, warmup_steps: int, weight_d
     trainer.train()
 
 
-def _prepare_dataset(tokenizer, page_data: list, predict_pos_tags: bool) -> Tuple[list, list]:
+def _prepare_dataset(tokenizer, page_data: list, predict_pos_tags: bool, majority_labels: bool) -> Tuple[list, list]:
     """Flatten data into chunks, assign correct labels, and create dataset"""
-    tokens, ent_labels = [], []
+    tokens, labels = [], []
     for token_chunks, entity_chunks in page_data:
         tokens.extend(token_chunks)
-        ent_labels.extend(entity_chunks)
-    labels = map_entities_to_pos_labels(ent_labels) if predict_pos_tags else _map_entity_chunks_to_binary_labels(ent_labels)
+        label_chunks = map_entities_to_pos_labels(entity_chunks, majority_labels) if predict_pos_tags else _map_entity_chunks_to_binary_labels(entity_chunks)
+        labels.extend(label_chunks)
     return extract._get_datasets(tokens, labels, tokenizer)
 
 
@@ -253,5 +253,6 @@ if __name__ == '__main__':
     parser.add_argument('-ws', '--warmup_steps', type=int, default=0, help='warmup steps during learning')
     parser.add_argument('-wd', '--weight_decay', type=float, default=0, help='weight decay during learning')
     parser.add_argument('-pp', '--predict_pos_tags', action="store_true", help='Predict actual POS tags instead of binary SE/non-SE label')
+    parser.add_argument('-ml', '--majority_labels', action="store_true", help='Use majority of POS tags as label for all entities of a page')
     args = parser.parse_args()
-    run_evaluation(args.model, args.learning_rate, args.warmup_steps, args.weight_decay, args.predict_pos_tags)
+    run_evaluation(args.model, args.learning_rate, args.warmup_steps, args.weight_decay, args.predict_pos_tags, args.majority_labels)

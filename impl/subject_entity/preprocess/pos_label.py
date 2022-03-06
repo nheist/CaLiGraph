@@ -1,6 +1,7 @@
 from enum import Enum
 import impl.dbpedia.util as dbp_util
 import impl.dbpedia.store as dbp_store
+from collections import Counter
 
 
 class POSLabel(Enum):
@@ -30,31 +31,34 @@ class POSLabel(Enum):
         return len(cls) * 2 - 1
 
 
-def map_entities_to_pos_labels(entity_chunks: list) -> list:
+def map_entities_to_pos_labels(entity_chunks: list, use_majority_tag=False) -> list:
     """Transforms the chunks of entity labels into chunks of POS tags."""
-    return [_map_entity_chunk(chunk) for chunk in entity_chunks]
+    # first find the pos labels for all entities (to avoid duplicate resolution of pos labels)
+    all_ents = {e for chunk in entity_chunks for e in chunk}
+    entity_to_pos_tag_mapping = {ent: _find_pos_tag_for_ent(ent) for ent in all_ents}
+    majority_tag = Counter(entity_to_pos_tag_mapping.values()).most_common(1)[0][0]
 
-
-def _map_entity_chunk(entity_chunk: list) -> list:
-    # first find the pos labels for all entities in the chunk (to avoid duplicate resolution of pos labels)
-    entity_to_pos_label_mapping = {ent: _find_pos_label_for_ent(ent) for ent in set(entity_chunk)}
-    # then map the entities to pos labels
     pos_labels = []
-    for idx, ent in enumerate(entity_chunk):
-        if type(ent) == int:
-            pos_labels.append(ent)
-            continue
-        pos_label = entity_to_pos_label_mapping[ent]
-        if idx == 0 or ent != entity_chunk[idx - 1]:
-            pos_labels.append(pos_label.begin())
-        else:
-            pos_labels.append(pos_label.inside())
+    for chunk in entity_chunks:
+        chunk_labels = []
+        for idx, ent in enumerate(chunk):
+            if type(ent) == int:
+                chunk_labels.append(ent)
+                continue
+            pos_tag = majority_tag if use_majority_tag else entity_to_pos_tag_mapping[ent]
+            if idx == 0 or ent != chunk[idx - 1]:
+                chunk_labels.append(pos_tag.begin())
+            else:
+                chunk_labels.append(pos_tag.inside())
+        pos_labels.append(chunk_labels)
     return pos_labels
 
 
-def _find_pos_label_for_ent(ent: str) -> POSLabel:
+def _find_pos_tag_for_ent(ent: str) -> POSLabel:
     if ent is None:
         return POSLabel.NONE
+    if type(ent) == int:
+        return ent
     ent_uri = dbp_util.name2resource(ent)
     ttl_mapping = _get_type_to_label_mapping()
     for t in dbp_store.get_types(ent_uri):
