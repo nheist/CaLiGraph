@@ -35,8 +35,8 @@ def map_entities_to_pos_labels(entity_chunks: list, use_majority_tag=False) -> l
     """Transforms the chunks of entity labels into chunks of POS tags."""
     # first find the pos labels for all entities (to avoid duplicate resolution of pos labels)
     all_ents = {e for chunk in entity_chunks for e in chunk}
-    entity_to_pos_tag_mapping = {ent: _find_pos_tag_for_ent(ent) for ent in all_ents}
-    majority_tag = Counter(entity_to_pos_tag_mapping.values()).most_common(1)[0][0]
+    entity_to_pos_tag_mapping = {ent: _find_pos_tag_for_ent(ent) for ent in all_ents if type(ent) != int}
+    majority_tag = Counter([v for v in entity_to_pos_tag_mapping.values() if v != POSLabel.NONE]).most_common(1)[0][0]
 
     pos_labels = []
     for chunk in entity_chunks:
@@ -54,11 +54,9 @@ def map_entities_to_pos_labels(entity_chunks: list, use_majority_tag=False) -> l
     return pos_labels
 
 
-def _find_pos_tag_for_ent(ent: str) -> POSLabel:
+def _find_pos_tag_for_ent(ent) -> POSLabel:
     if ent is None:
         return POSLabel.NONE
-    if type(ent) == int:
-        return ent
     ent_uri = dbp_util.name2resource(ent)
     ttl_mapping = _get_type_to_label_mapping()
     for t in dbp_store.get_types(ent_uri):
