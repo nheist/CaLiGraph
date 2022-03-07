@@ -36,7 +36,9 @@ def map_entities_to_pos_labels(entity_chunks: list, use_majority_tag=False) -> l
     # first find the pos labels for all entities (to avoid duplicate resolution of pos labels)
     all_ents = {e for chunk in entity_chunks for e in chunk}
     entity_to_pos_tag_mapping = {ent: _find_pos_tag_for_ent(ent) for ent in all_ents if type(ent) != int}
-    majority_tag = Counter([v for v in entity_to_pos_tag_mapping.values() if v != POSLabel.NONE]).most_common(1)[0][0]
+
+    most_common_tags = Counter([v for v in entity_to_pos_tag_mapping.values() if v != POSLabel.NONE]).most_common()
+    majority_tag = most_common_tags[0][0] if len(most_common_tags) > 0 else POSLabel.NONE
 
     pos_labels = []
     for chunk in entity_chunks:
