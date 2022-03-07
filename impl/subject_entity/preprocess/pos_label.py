@@ -47,6 +47,9 @@ def map_entities_to_pos_labels(entity_chunks: list, use_majority_tag=False) -> l
             if type(ent) == int:
                 chunk_labels.append(ent)
                 continue
+            if entity_to_pos_tag_mapping[ent] == POSLabel.NONE:
+                chunk_labels.append(POSLabel.NONE.value)
+                continue
             pos_tag = majority_tag if use_majority_tag else entity_to_pos_tag_mapping[ent]
             if idx == 0 or ent != chunk[idx - 1]:
                 chunk_labels.append(pos_tag.begin())
