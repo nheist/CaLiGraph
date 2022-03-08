@@ -70,7 +70,7 @@ def _get_entity_occurrence_data(parts: int, df_listings: pd.DataFrame, dataset_p
 def _extract_entity_occurrences(df_listings: pd.DataFrame, dataset_pages: np.ndarray, filename: str):
     valid_pages = set(dataset_pages)
     valid_listings = _get_dataset_listings(df_listings, dataset_pages)
-    tokenizer, model = extract.get_bert_tokenizer_and_model(lambda: None)
+    tokenizer, model = extract.get_tagging_tokenizer_and_model(lambda: None)
 
     wikipedia_pages = {p: m for p, m in wikipedia.get_parsed_articles().items() if dbp_util.resource2name(p) in valid_pages}
 

@@ -257,8 +257,8 @@ cache:
   subject_entity_predictions:
     filename: 'subject-entity-predictions'
     version: 1
-  bert_for_SE_tagging:
-    filename: 'bert-for-SE-tagging'
+  transformer_for_SE_tagging:
+    filename: 'transformer-for-SE-tagging'
     version: 1
     store_as_folder: True
   listing_page_entities:

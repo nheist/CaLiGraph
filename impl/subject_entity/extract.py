@@ -5,9 +5,9 @@ import numpy as np
 import utils
 import datetime
 from collections import defaultdict
-from .preprocess.word_tokenize import BertSpecialToken
+from .preprocess.word_tokenize import TransformerSpecialToken
 from .preprocess.pos_label import POSLabel
-from transformers import Trainer, TrainingArguments, BertTokenizerFast, BertForTokenClassification
+from transformers import Trainer, TrainingArguments, AutoTokenizer, AutoModelForTokenClassification, IntervalStrategy
 from typing import Tuple
 
 
@@ -15,28 +15,28 @@ from typing import Tuple
 MAX_CHUNKS = 100
 
 
-def extract_subject_entities(page_chunks: Tuple[list, list], bert_tokenizer, bert_model) -> tuple:
+def extract_subject_entities(page_chunks: Tuple[list, list], tokenizer, model) -> tuple:
     subject_entity_dict = defaultdict(lambda: defaultdict(dict))
     subject_entity_embeddings_dict = defaultdict(lambda: defaultdict(dict))
 
     page_token_chunks, page_ws_chunks = page_chunks
     for i in range(0, len(page_token_chunks), MAX_CHUNKS):
-        _extract_subject_entity_batches(page_token_chunks[i:i + MAX_CHUNKS], page_ws_chunks[i:i + MAX_CHUNKS], bert_tokenizer, bert_model, subject_entity_dict, subject_entity_embeddings_dict)
+        _extract_subject_entity_batches(page_token_chunks[i:i + MAX_CHUNKS], page_ws_chunks[i:i + MAX_CHUNKS], tokenizer, model, subject_entity_dict, subject_entity_embeddings_dict)
 
     # convert to standard dicts
     return {ts: dict(subject_entity_dict[ts]) for ts in subject_entity_dict},\
            {ts: dict(subject_entity_embeddings_dict[ts]) for ts in subject_entity_embeddings_dict}
 
 
-def _extract_subject_entity_batches(page_token_batches: list, page_ws_batches: list, bert_tokenizer, bert_model, subject_entity_dict, subject_entity_embeddings_dict):
-    inputs = bert_tokenizer(page_token_batches, is_split_into_words=True, padding=True, truncation=True, return_offsets_mapping=True, return_tensors="pt")
+def _extract_subject_entity_batches(page_token_batches: list, page_ws_batches: list, tokenizer, model, subject_entity_dict, subject_entity_embeddings_dict):
+    inputs = tokenizer(page_token_batches, is_split_into_words=True, padding=True, truncation=True, return_offsets_mapping=True, return_tensors="pt")
     offset_mapping = inputs.offset_mapping
     inputs.pop('offset_mapping')
     inputs.to('cuda')
 
-    bert_model.eval()  # make sure the model is not in training mode anymore
+    model.eval()  # make sure the model is not in training mode anymore
     with torch.no_grad():
-        outputs = bert_model(**inputs)
+        outputs = model(**inputs)
 
     prediction_batches = torch.argmax(outputs.logits.cpu(), dim=2)
     hidden_state_batches = outputs.hidden_states[11].cpu()  # use second-to-last layer as token embedding
@@ -62,7 +62,7 @@ def _extract_subject_entity_batches(page_token_batches: list, page_ws_batches: l
         current_entity_states = torch.tensor([])
         current_entity_label = POSLabel.NONE.value
         for token, token_ws, label, states in zip(word_tokens,  word_token_ws, word_predictions, word_hidden_states):
-            if label == POSLabel.NONE.value or token in BertSpecialToken.all_tokens():
+            if label == POSLabel.NONE.value or token in TransformerSpecialToken.all_tokens():
                 if current_entity_tokens and not found_entity:
                     entity_name = _tokens2name(current_entity_tokens)
                     if _is_valid_entity_name(entity_name):
@@ -73,7 +73,7 @@ def _extract_subject_entity_batches(page_token_batches: list, page_ws_batches: l
                 current_entity_states = torch.tensor([])
                 current_entity_label = POSLabel.NONE.value
 
-                if token in BertSpecialToken.item_starttokens():
+                if token in TransformerSpecialToken.item_starttokens():
                     found_entity = False  # reset found_entity if entering a new line
             else:
                 current_entity_label = current_entity_label or label
@@ -94,9 +94,9 @@ def _extract_subject_entity_batches(page_token_batches: list, page_ws_batches: l
 
 def _extract_context(word_tokens: list, word_token_ws: list) -> tuple:
     ctx_tokens = []
-    for i in range(word_tokens.index(BertSpecialToken.CONTEXT_END.value)):
+    for i in range(word_tokens.index(TransformerSpecialToken.CONTEXT_END.value)):
         ctx_tokens.extend([word_tokens[i], word_token_ws[i]])
-    ctx_separators = [i for i, x in enumerate(ctx_tokens) if x == BertSpecialToken.CONTEXT_SEP.value] + [len(ctx_tokens)]
+    ctx_separators = [i for i, x in enumerate(ctx_tokens) if x == TransformerSpecialToken.CONTEXT_SEP.value] + [len(ctx_tokens)]
     top_section_ctx = ctx_tokens[ctx_separators[0]+1:ctx_separators[1]]
     section_ctx = ctx_tokens[ctx_separators[1]+1:ctx_separators[2]]
     return _tokens2name(top_section_ctx), _tokens2name(section_ctx)
@@ -110,42 +110,40 @@ def _is_valid_entity_name(entity_name: str) -> bool:
     return len(entity_name) > 2 and not entity_name.isdigit()
 
 
-# TRAIN BERT MODEL
+# TRAIN SUBJECT ENTITIY TAGGER
 
 
-BERT_BASE_MODEL = 'bert-base-cased'
+TRANSFORMER_BASE_MODEL = 'distilbert-base-cased'
 
 
-def get_bert_tokenizer_and_model(training_data_retrieval_func):
-    path_to_model = utils._get_cache_path('bert_for_SE_tagging')
+def get_tagging_tokenizer_and_model(training_data_retrieval_func):
+    path_to_model = utils._get_cache_path('transformer_for_SE_tagging')
     if not path_to_model.is_dir():
-        _train_bert(training_data_retrieval_func)
-    tokenizer = BertTokenizerFast.from_pretrained(path_to_model)
-    model = BertForTokenClassification.from_pretrained(path_to_model, output_hidden_states=True)
+        _train_tagger(training_data_retrieval_func)
+    tokenizer = AutoTokenizer.from_pretrained(path_to_model)
+    model = AutoModelForTokenClassification.from_pretrained(path_to_model, output_hidden_states=True)
     model.to('cuda')
     return tokenizer, model
 
 
-def _train_bert(training_data_retrieval_func):
-    tokenizer = BertTokenizerFast.from_pretrained(BERT_BASE_MODEL, additional_special_tokens=list(BertSpecialToken.all_tokens()))
+def _train_tagger(training_data_retrieval_func):
+    tokenizer = AutoTokenizer.from_pretrained(TRANSFORMER_BASE_MODEL, add_prefix_space=True, additional_special_tokens=list(TransformerSpecialToken.all_tokens()))
 
     tokens, labels = training_data_retrieval_func()
     train_dataset = _get_datasets(tokens, labels, tokenizer)
 
-    model = BertForTokenClassification.from_pretrained(BERT_BASE_MODEL, num_labels=len(POSLabel))
+    model = AutoModelForTokenClassification.from_pretrained(TRANSFORMER_BASE_MODEL, num_labels=len(POSLabel))
     model.resize_token_embeddings(len(tokenizer))
 
     run_id = '{}_{}'.format(datetime.datetime.now().strftime('%Y%m%d-%H%M%S'), utils.get_config('logging.filename'))
     training_args = TrainingArguments(
-        output_dir=f'./bert/results/{run_id}',
-        logging_dir=f'./bert/logs/{run_id}',
+        save_strategy=IntervalStrategy.NO,
+        output_dir=f'/tmp',
+        logging_dir=f'./logs/transformers/tagging_{run_id}',
         logging_steps=500,
-        save_steps=2000,
         per_device_train_batch_size=8,
         num_train_epochs=3,
         learning_rate=5e-5,
-        warmup_steps=0,
-        weight_decay=0,
     )
 
     trainer = Trainer(
@@ -155,7 +153,7 @@ def _train_bert(training_data_retrieval_func):
     )
 
     trainer.train()
-    path_to_model = utils._get_cache_path('bert_for_SE_tagging')
+    path_to_model = utils._get_cache_path('transformer_for_SE_tagging')
     model.save_pretrained(path_to_model)
     tokenizer.save_pretrained(path_to_model)
 

@@ -4,7 +4,7 @@ from typing import Tuple
 import random
 import numpy as np
 import torch
-from impl.subject_entity.preprocess.word_tokenize import BertSpecialToken
+from impl.subject_entity.preprocess.word_tokenize import TransformerSpecialToken
 from impl.subject_entity.preprocess.pos_label import POSLabel, map_entities_to_pos_labels
 from transformers import Trainer, IntervalStrategy, TrainingArguments, AutoTokenizer, AutoModelForTokenClassification, EvalPrediction
 from impl.subject_entity import extract
@@ -21,7 +21,7 @@ torch.manual_seed(SEED)
 def run_evaluation(model: str, epochs: int, learning_rate: float, warmup_steps: int, weight_decay: float, predict_pos_tags: bool, majority_labels: bool):
     run_id = f'{model}_e-{epochs}_lr-{learning_rate}_ws-{warmup_steps}_wd-{weight_decay}_pp-{predict_pos_tags}_ml-{majority_labels}'
     # prepare tokenizer and model
-    tokenizer = AutoTokenizer.from_pretrained(model, add_prefix_space=True, additional_special_tokens=list(BertSpecialToken.all_tokens()))
+    tokenizer = AutoTokenizer.from_pretrained(model, add_prefix_space=True, additional_special_tokens=list(TransformerSpecialToken.all_tokens()))
     num_labels = len(POSLabel) if predict_pos_tags else 2
     model = AutoModelForTokenClassification.from_pretrained(model, num_labels=num_labels)
     model.resize_token_embeddings(len(tokenizer))

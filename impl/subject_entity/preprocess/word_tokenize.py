@@ -11,7 +11,7 @@ import multiprocessing as mp
 import utils
 
 
-class BertSpecialToken(Enum):
+class TransformerSpecialToken(Enum):
     CONTEXT_SEP = '[CXS]'
     CONTEXT_END = '[CXE]'
     TABLE_ROW = '[ROW]'
@@ -104,17 +104,17 @@ class WordTokenizer:
         # add listing context, separated by special context tokens
         for text in context:
             doc = self.word_tokenizer(wmp.wikitext_to_plaintext(text))
-            ctx_tokens.extend([w.text for w in doc] + [BertSpecialToken.CONTEXT_SEP.value])
+            ctx_tokens.extend([w.text for w in doc] + [TransformerSpecialToken.CONTEXT_SEP.value])
             ctx_ws.extend([w.whitespace_ for w in doc] + [' '])
 
         # add table header if available
         if table_header:
             for cell in table_header:
                 doc = self.word_tokenizer(cell['text'])
-                ctx_tokens.extend([w.text for w in doc] + [BertSpecialToken.TABLE_COL.value])
+                ctx_tokens.extend([w.text for w in doc] + [TransformerSpecialToken.TABLE_COL.value])
                 ctx_ws.extend([w.whitespace_ for w in doc] + [' '])
 
-        ctx_tokens[-1] = BertSpecialToken.CONTEXT_END.value  # replace last token with final context separator
+        ctx_tokens[-1] = TransformerSpecialToken.CONTEXT_END.value  # replace last token with final context separator
         return ctx_tokens, ctx_ws
 
     def _listing_to_token_entity_chunks(self, listing_data: list, valid_ents: set, invalid_ents: set, max_group_size: int):
@@ -161,7 +161,7 @@ class WordTokenizer:
         tokens, _, ents = self._text_to_tokens(entry_doc, entities, valid_ents)
         if not tokens or not ents:
             return [], []
-        return [BertSpecialToken.get_entry_by_depth(depth)] + tokens, [None] + ents
+        return [TransformerSpecialToken.get_entry_by_depth(depth)] + tokens, [None] + ents
 
     def _row_to_tokens_and_entities(self, row: list, valid_ents: set, invalid_ents: set) -> Tuple[list, list]:
         cell_docs = [list_nlp.parse(cell['text']) for cell in row]
@@ -184,10 +184,10 @@ class WordTokenizer:
             cell_doc = cell_docs[cell_idx]
             cell_entities = list(cell['entities'])
             cell_tokens, _, cell_ents = self._text_to_tokens(cell_doc, cell_entities, valid_ents)
-            tokens += [BertSpecialToken.TABLE_COL.value] + cell_tokens
+            tokens += [TransformerSpecialToken.TABLE_COL.value] + cell_tokens
             ents += [None] + cell_ents
         if tokens:
-            tokens[0] = BertSpecialToken.TABLE_ROW.value  # special indicator for start of table row
+            tokens[0] = TransformerSpecialToken.TABLE_ROW.value  # special indicator for start of table row
         return tokens, ents
 
     def _find_untagged_entities(self, doc, entities: list):
@@ -271,16 +271,16 @@ class WordTokenizer:
         entry_doc = self.word_tokenizer(entry['text'])
         depth = entry['depth']
         tokens, ws, _ = self._text_to_tokens(entry_doc, None, None)
-        return [BertSpecialToken.get_entry_by_depth(depth)] + tokens, [' '] + ws
+        return [TransformerSpecialToken.get_entry_by_depth(depth)] + tokens, [' '] + ws
 
     def _row_to_tokens(self, row: list) -> Tuple[list, list]:
         tokens, ws = [], []
         for cell in row:
             cell_tokens, cell_ws, _ = self._text_to_tokens(self.word_tokenizer(cell['text']), None, None)
-            tokens += [BertSpecialToken.TABLE_COL.value] + cell_tokens
+            tokens += [TransformerSpecialToken.TABLE_COL.value] + cell_tokens
             ws += [' '] + cell_ws
         if tokens:
-            tokens[0] = BertSpecialToken.TABLE_ROW.value
+            tokens[0] = TransformerSpecialToken.TABLE_ROW.value
         return tokens, ws
 
     def _text_to_tokens(self, doc, entities: Optional[list], valid_ents: Optional[set]) -> Tuple[list, list, list]:
