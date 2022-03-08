@@ -161,7 +161,7 @@ class WordTokenizer:
         tokens, _, ents = self._text_to_tokens(entry_doc, entities, valid_ents)
         if not tokens or not ents:
             return [], []
-        return [BertSpecialToken.get_entry_by_depth(depth)] + tokens, [-100] + ents
+        return [BertSpecialToken.get_entry_by_depth(depth)] + tokens, [None] + ents
 
     def _row_to_tokens_and_entities(self, row: list, valid_ents: set, invalid_ents: set) -> Tuple[list, list]:
         cell_docs = [list_nlp.parse(cell['text']) for cell in row]
@@ -185,7 +185,7 @@ class WordTokenizer:
             cell_entities = list(cell['entities'])
             cell_tokens, _, cell_ents = self._text_to_tokens(cell_doc, cell_entities, valid_ents)
             tokens += [BertSpecialToken.TABLE_COL.value] + cell_tokens
-            ents += [-100] + cell_ents
+            ents += [None] + cell_ents
         if tokens:
             tokens[0] = BertSpecialToken.TABLE_ROW.value  # special indicator for start of table row
         return tokens, ents

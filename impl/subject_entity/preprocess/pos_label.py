@@ -7,37 +7,27 @@ from collections import Counter
 class POSLabel(Enum):
     NONE = 0
     PERSON = 1
-    NORP = 3
-    FAC = 5
-    ORG = 7
-    GPE = 9
-    LOC = 11
-    PRODUCT = 13
-    EVENT = 15
-    WORK_OF_ART = 17
-    LAW = 19
-    LANGUAGE = 21
-    SPECIES = 23
-    OTHER = 25
-
-    def begin(self):
-        return self.value
-
-    def inside(self):
-        return self.value + 1 if self.value > 0 else self.value
-
-    @classmethod
-    def label_count(cls):
-        return len(cls) * 2 - 1
+    NORP = 2
+    FAC = 3
+    ORG = 4
+    GPE = 5
+    LOC = 6
+    PRODUCT = 7
+    EVENT = 8
+    WORK_OF_ART = 9
+    LAW = 10
+    LANGUAGE = 11
+    SPECIES = 12
+    OTHER = 13
 
 
 def map_entities_to_pos_labels(entity_chunks: list, use_majority_tag=False) -> list:
     """Transforms the chunks of entity labels into chunks of POS tags."""
     # first find the pos labels for all entities (to avoid duplicate resolution of pos labels)
     all_ents = {e for chunk in entity_chunks for e in chunk}
-    entity_to_pos_tag_mapping = {ent: _find_pos_tag_for_ent(ent) for ent in all_ents if type(ent) != int}
+    entity_to_pos_tag_mapping = {ent: _find_pos_tag_for_ent(ent) for ent in all_ents if ent is not None and type(ent) != int}
 
-    most_common_tags = Counter([v for v in entity_to_pos_tag_mapping.values() if v != POSLabel.NONE]).most_common()
+    most_common_tags = Counter([v for v in entity_to_pos_tag_mapping.values()]).most_common()
     majority_tag = most_common_tags[0][0] if len(most_common_tags) > 0 else POSLabel.NONE
 
     pos_labels = []
@@ -46,25 +36,19 @@ def map_entities_to_pos_labels(entity_chunks: list, use_majority_tag=False) -> l
         for idx, ent in enumerate(chunk):
             if type(ent) == int:
                 chunk_labels.append(ent)
-                continue
-            if entity_to_pos_tag_mapping[ent] == POSLabel.NONE:
+            elif ent is None:
                 chunk_labels.append(POSLabel.NONE.value)
-                continue
-            pos_tag = majority_tag if use_majority_tag else entity_to_pos_tag_mapping[ent]
-            if idx == 0 or ent != chunk[idx - 1]:
-                chunk_labels.append(pos_tag.begin())
             else:
-                chunk_labels.append(pos_tag.inside())
+                pos_tag = majority_tag if use_majority_tag else entity_to_pos_tag_mapping[ent]
+                chunk_labels.append(pos_tag.value)
         pos_labels.append(chunk_labels)
     return pos_labels
 
 
 def _find_pos_tag_for_ent(ent) -> POSLabel:
-    if ent is None:
-        return POSLabel.NONE
     ent_uri = dbp_util.name2resource(ent)
     ttl_mapping = _get_type_to_label_mapping()
-    for t in dbp_store.get_types(ent_uri):
+    for t in dbp_store.get_transitive_types(ent_uri):
         if t in ttl_mapping:
             return ttl_mapping[t]
     return POSLabel.OTHER

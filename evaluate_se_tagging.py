@@ -22,7 +22,7 @@ def run_evaluation(model: str, epochs: int, learning_rate: float, warmup_steps: 
     run_id = f'{model}_e-{epochs}_lr-{learning_rate}_ws-{warmup_steps}_wd-{weight_decay}_pp-{predict_pos_tags}_ml-{majority_labels}'
     # prepare tokenizer and model
     tokenizer = AutoTokenizer.from_pretrained(model, add_prefix_space=True, additional_special_tokens=list(BertSpecialToken.all_tokens()))
-    num_labels = POSLabel.label_count() if predict_pos_tags else 3
+    num_labels = len(POSLabel) if predict_pos_tags else 2
     model = AutoModelForTokenClassification.from_pretrained(model, num_labels=num_labels)
     model.resize_token_embeddings(len(tokenizer))
     # load data
@@ -78,14 +78,12 @@ def _map_entity_chunks_to_binary_labels(entity_chunks: list) -> list:
 def _map_entity_chunk_to_binary_labels(entity_chunk: list) -> list:
     labels = []
     for idx, ent in enumerate(entity_chunk):
-        if ent is None:
-            labels.append(0)
         if type(ent) == int:
             labels.append(ent)
-        elif idx == 0 or ent != entity_chunk[idx-1]:
-            labels.append(1)
+        elif ent is None:
+            labels.append(0)
         else:
-            labels.append(2)
+            labels.append(1)
     return labels
 
 
@@ -130,21 +128,15 @@ class SETagsEvaluator:
         for offset, label_id in enumerate(label_ids):
             if label_id == 0:
                 if ent_type is not None and start_offset is not None:
-                    named_entities.append(Entity(ent_type, start_offset, offset - 1))
+                    named_entities.append(Entity(ent_type, start_offset, offset))
                     start_offset = None
                     ent_type = None
             elif ent_type is None:
                 ent_type = label_id
                 start_offset = offset
-            elif ent_type != label_id-1:  # begin of entity is always inside-1
-                end_offset = offset - 1
-                named_entities.append(Entity(ent_type, start_offset, end_offset))
-                # start of a new entity
-                ent_type = label_id
-                start_offset = offset
         # catches an entity that goes up until the last token
         if ent_type is not None and start_offset is not None:
-            named_entities.append(Entity(ent_type, start_offset, len(label_ids) - 1))
+            named_entities.append(Entity(ent_type, start_offset, len(label_ids)))
         return named_entities
 
     def compute_metrics(self, pred_named_entities, true_named_entities):
@@ -213,9 +205,7 @@ class SETagsEvaluator:
 
         # Scenario III: Entity was missed entirely.
         for true in true_named_entities:
-            if true in true_which_overlapped_with_pred:
-                continue
-            else:
+            if true not in true_which_overlapped_with_pred:
                 self.results['strict']['missed'] += 1
                 self.results['ent_type']['missed'] += 1
                 self.results['partial']['missed'] += 1
