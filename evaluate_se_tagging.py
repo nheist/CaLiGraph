@@ -80,6 +80,8 @@ def _map_entity_chunk_to_binary_labels(entity_chunk: list) -> list:
     for idx, ent in enumerate(entity_chunk):
         if ent is None:
             labels.append(0)
+        if type(ent) == int:
+            labels.append(ent)
         elif idx == 0 or ent != entity_chunk[idx-1]:
             labels.append(1)
         else:
