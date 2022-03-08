@@ -18,7 +18,7 @@ np.random.seed(SEED)
 torch.manual_seed(SEED)
 
 
-def run_evaluation(model: str, epochs: int, learning_rate: float, warmup_steps: int, weight_decay: float, predict_pos_tags: bool, majority_labels: bool):
+def run_evaluation(model: str, epochs: int, batch_size: int, learning_rate: float, warmup_steps: int, weight_decay: float, predict_pos_tags: bool, majority_labels: bool):
     run_id = f'{model}_e-{epochs}_lr-{learning_rate}_ws-{warmup_steps}_wd-{weight_decay}_pp-{predict_pos_tags}_ml-{majority_labels}'
     # prepare tokenizer and model
     tokenizer = AutoTokenizer.from_pretrained(model, add_prefix_space=True, additional_special_tokens=list(TransformerSpecialToken.all_tokens()))
@@ -44,8 +44,8 @@ def run_evaluation(model: str, epochs: int, learning_rate: float, warmup_steps: 
         logging_steps=500,
         evaluation_strategy=IntervalStrategy.STEPS,
         eval_steps=5000,
-        per_device_train_batch_size=8,
-        per_device_eval_batch_size=8,
+        per_device_train_batch_size=batch_size,
+        per_device_eval_batch_size=batch_size,
         num_train_epochs=epochs,
         learning_rate=learning_rate,
         warmup_steps=warmup_steps,
@@ -242,10 +242,11 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run the evaluation of subject entity tagging.')
     parser.add_argument('model', help='Huggingface Transformer model used for tagging')
     parser.add_argument('-e', '--epochs', type=int, default=3, help='epochs to train')
+    parser.add_argument('-bs', '--batch_size', type=int, default=8, help='batch size used in train/eval')
     parser.add_argument('-lr', '--learning_rate', type=float, default=5e-5, help='learning rate used during training')
     parser.add_argument('-ws', '--warmup_steps', type=int, default=0, help='warmup steps during learning')
     parser.add_argument('-wd', '--weight_decay', type=float, default=0, help='weight decay during learning')
     parser.add_argument('-pp', '--predict_pos_tags', action="store_true", help='Predict actual POS tags instead of binary SE/non-SE label')
     parser.add_argument('-ml', '--majority_labels', action="store_true", help='Use majority of POS tags as label for all entities of a page')
     args = parser.parse_args()
-    run_evaluation(args.model, args.epochs, args.learning_rate, args.warmup_steps, args.weight_decay, args.predict_pos_tags, args.majority_labels)
+    run_evaluation(args.model, args.epochs, args.batch_size, args.learning_rate, args.warmup_steps, args.weight_decay, args.predict_pos_tags, args.majority_labels)
