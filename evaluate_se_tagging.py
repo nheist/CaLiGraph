@@ -7,7 +7,6 @@ from impl.subject_entity.preprocess.word_tokenize import TransformerSpecialToken
 from impl.subject_entity.preprocess.pos_label import POSLabel, map_entities_to_pos_labels
 from transformers import Trainer, IntervalStrategy, TrainingArguments, AutoTokenizer, AutoModelForTokenClassification, EvalPrediction
 from collections import namedtuple
-from copy import deepcopy
 from entity_linking.data.datasets import prepare_mentiondetection_dataset
 from entity_linking.model.mention_detection import TransformerForMentionDetectionAndTypePrediction
 
@@ -45,7 +44,7 @@ def run_evaluation(model: str, epochs: int, batch_size: int, learning_rate: floa
         logging_dir=f'./se_eval/logs/{run_id}',
         logging_steps=500,
         evaluation_strategy=IntervalStrategy.STEPS,
-        eval_steps=5,
+        eval_steps=5000,
         per_device_train_batch_size=batch_size,
         per_device_eval_batch_size=batch_size,
         num_train_epochs=epochs,
@@ -82,18 +81,18 @@ class SETagsEvaluator:
         self.labels = eval_prediction.label_ids
         self.predict_single_tag = predict_single_tag
 
-        metrics_results = {'correct': 0, 'incorrect': 0, 'partial': 0, 'missed': 0, 'spurious': 0}
         self.results = {
-            'strict': deepcopy(metrics_results),
-            'exact': deepcopy(metrics_results),
-            'partial': deepcopy(metrics_results),
-            'ent_type': deepcopy(metrics_results),
+            'strict': {'correct': 0, 'incorrect': 0, 'partial': 0, 'missed': 0, 'spurious': 0},
+            'exact': {'correct': 0, 'incorrect': 0, 'partial': 0, 'missed': 0, 'spurious': 0},
+            'partial': {'correct': 0, 'incorrect': 0, 'partial': 0, 'missed': 0, 'spurious': 0},
+            'ent_type': {'correct': 0, 'incorrect': 0, 'partial': 0, 'missed': 0, 'spurious': 0},
         }
 
     def evaluate(self) -> dict:
-        print(self.predictions.shape)
+        print(len(self.predictions))
         for logits, true_ids in zip(self.predictions, self.labels):
             if self.predict_single_tag:
+                print(len(logits))
                 print(logits.shape)
                 mention_logits, type_logits = logits
                 type_id = type_logits.argmax()
