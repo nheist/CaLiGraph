@@ -25,8 +25,8 @@ class TransformerForMentionDetectionAndTypePrediction(nn.Module):
         self.tp_classifier = nn.Linear(config.dim, self.tp_num_labels)
         self.tp_dropout = nn.Dropout(config.seq_classif_dropout)
 
+        # final loss
         self.tp_impact_on_loss = .2
-        self.init_weights()
 
     def forward(
         self,
