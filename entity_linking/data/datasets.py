@@ -14,13 +14,12 @@ class MentionDetectionDataset(Dataset):
         mention_label = torch.tensor(self.mention_labels[idx])
         if self.type_labels:
             # with type detection per chunk
-            type_label = torch.zeros_like(mention_label, dtype=torch.long)
+            type_label = torch.zeros_like(mention_label)
             type_label[0] = self.type_labels[idx]
-            label = torch.stack((mention_label, type_label))
+            item['label_ids'] = torch.stack((mention_label, type_label))
         else:
             # with type detection per entity
-            label = mention_label
-        item['label'] = label
+            item['label'] = mention_label
         return item
 
     def __len__(self):
