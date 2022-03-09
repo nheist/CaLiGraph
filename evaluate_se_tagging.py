@@ -44,7 +44,7 @@ def run_evaluation(model: str, epochs: int, batch_size: int, learning_rate: floa
         logging_dir=f'./se_eval/logs/{run_id}',
         logging_steps=500,
         evaluation_strategy=IntervalStrategy.STEPS,
-        eval_steps=5000,
+        eval_steps=5,
         per_device_train_batch_size=batch_size,
         per_device_eval_batch_size=batch_size,
         num_train_epochs=epochs,
@@ -79,7 +79,7 @@ class SETagsEvaluator:
     def __init__(self, eval_prediction: EvalPrediction, predict_single_tag: bool):
         if predict_single_tag:
             mention_logits, type_logits = eval_prediction.predictions
-            type_ids = np.argmax(type_logits, -1, keepdims=True)
+            type_ids = np.expand_dims(type_logits.argmax(-1), -1)
             # with mention logits we only predict whether there is a subject entity in this position (1 or 0)
             # so we multiply with type_id to "convert" it back to the notion where we predict types per position
             self.mentions = mention_logits.argmax(-1) * type_ids
