@@ -79,7 +79,7 @@ class SETagsEvaluator:
     def __init__(self, eval_prediction: EvalPrediction, predict_single_tag: bool):
         if predict_single_tag:
             mention_logits, type_logits = eval_prediction.predictions
-            type_ids = type_logits.argmax(-1, keepdim=True)
+            type_ids = type_logits.argmax(-1, keepdims=True)
             # with mention logits we only predict whether there is a subject entity in this position (1 or 0)
             # so we multiply with type_id to "convert" it back to the notion where we predict types per position
             self.mentions = mention_logits.argmax(-1) * type_ids
