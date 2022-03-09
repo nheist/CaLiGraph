@@ -77,9 +77,15 @@ Entity = namedtuple("Entity", "e_type start_offset end_offset")
 
 class SETagsEvaluator:
     def __init__(self, eval_prediction: EvalPrediction, predict_single_tag: bool):
-        self.predictions = eval_prediction.predictions
+        if predict_single_tag:
+            mention_logits, type_logits = eval_prediction.predictions
+            type_ids = type_logits.argmax(-1, keepdim=True)
+            # with mention logits we only predict whether there is a subject entity in this position (1 or 0)
+            # so we multiply with type_id to "convert" it back to the notion where we predict types per position
+            self.mentions = mention_logits.argmax(-1) * type_ids
+        else:
+            self.mentions = eval_prediction.predictions.argmax(-1)
         self.labels = eval_prediction.label_ids
-        self.predict_single_tag = predict_single_tag
 
         self.results = {
             'strict': {'correct': 0, 'incorrect': 0, 'partial': 0, 'missed': 0, 'spurious': 0},
@@ -89,18 +95,7 @@ class SETagsEvaluator:
         }
 
     def evaluate(self) -> dict:
-        print(len(self.predictions))
-        for logits, true_ids in zip(self.predictions, self.labels):
-            if self.predict_single_tag:
-                print(len(logits))
-                print(logits.shape)
-                mention_logits, type_logits = logits
-                type_id = type_logits.argmax()
-                # with mention logits we only predict whether there is a subject entity in this position (1 or 0)
-                # so we multiply with type_id to "convert" it back to the notion where we predict types per position
-                mention_ids = mention_logits.argmax(-1) * type_id
-            else:
-                mention_ids = logits.argmax(-1)
+        for mention_ids, true_ids in zip(self.mentions, self.labels):
             # remove unnecessary preds/labels
             mask = true_ids != -100
             true_ids = true_ids[mask]
