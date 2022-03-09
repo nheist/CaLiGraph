@@ -64,19 +64,19 @@ class TransformerForMentionDetectionAndTypePrediction(nn.Module):
 
         loss = None
         if labels is not None:
-            md_labels = labels[:, 0, :]
             # mention detection loss
+            md_labels = labels[:, 0, :]
             if attention_mask is not None:
                 # Only keep active parts of the loss
                 active_loss = attention_mask.view(-1) == 1
                 active_logits = md_logits.view(-1, self.md_num_labels)
-                active_labels = torch.where(active_loss, md_labels.view(-1), torch.tensor(-100).type_as(md_labels))
+                active_labels = torch.where(active_loss, md_labels.reshape(-1), torch.tensor(-100).type_as(md_labels))
                 md_loss = loss_criterion(active_logits, active_labels)
             else:
-                md_loss = loss_criterion(md_logits.view(-1, self.md_num_labels), md_labels.view(-1))
+                md_loss = loss_criterion(md_logits.view(-1, self.md_num_labels), md_labels.reshape(-1))
             # type detection loss
             tp_labels = labels[:, 1, 0]  # tp_labels come in the same dimension as md_labels, but we only need the type per page once
-            tp_loss = loss_criterion(tp_logits.view(-1, self.tp_num_labels), tp_labels.view(-1))
+            tp_loss = loss_criterion(tp_logits.view(-1, self.tp_num_labels), tp_labels.reshape(-1))
             # combine losses
             loss = (1 - self.tp_impact_on_loss) * md_loss + self.tp_impact_on_loss * tp_loss
 
