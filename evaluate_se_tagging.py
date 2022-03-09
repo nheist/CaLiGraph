@@ -44,7 +44,7 @@ def run_evaluation(model: str, epochs: int, batch_size: int, learning_rate: floa
         logging_dir=f'./se_eval/logs/{run_id}',
         logging_steps=500,
         evaluation_strategy=IntervalStrategy.STEPS,
-        eval_steps=5,
+        eval_steps=5000,
         per_device_train_batch_size=batch_size,
         per_device_eval_batch_size=batch_size,
         num_train_epochs=epochs,
