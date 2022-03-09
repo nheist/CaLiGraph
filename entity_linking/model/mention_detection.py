@@ -39,7 +39,7 @@ class TransformerForMentionDetectionAndTypePrediction(nn.Module):
         output_hidden_states=None,
         return_dict=None,
     ):
-        distilbert_output = self.distilbert(
+        encoder_output = self.encoder(
             input_ids=input_ids,
             attention_mask=attention_mask,
             head_mask=head_mask,
@@ -48,7 +48,7 @@ class TransformerForMentionDetectionAndTypePrediction(nn.Module):
             output_hidden_states=output_hidden_states,
             return_dict=return_dict,
         )
-        sequence_output = distilbert_output[0]  # (bs, seq_len, dim)
+        sequence_output = encoder_output[0]  # (bs, seq_len, dim)
         loss_criterion = nn.CrossEntropyLoss()
 
         # mention detection
@@ -80,5 +80,5 @@ class TransformerForMentionDetectionAndTypePrediction(nn.Module):
             # combine losses
             loss = (1 - self.tp_impact_on_loss) * md_loss + self.tp_impact_on_loss * tp_loss
 
-        output = ((md_logits, tp_logits),) + distilbert_output[1:]
+        output = ((md_logits, tp_logits),) + encoder_output[1:]
         return ((loss,) + output) if loss is not None else output
