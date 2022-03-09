@@ -21,16 +21,17 @@ class POSLabel(Enum):
     OTHER = 13
 
 
-def map_entities_to_pos_labels(entity_chunks: list, use_majority_tag=False) -> list:
+def map_entities_to_pos_labels(entity_chunks: list, single_tag_prediction=False) -> list:
     """Transforms the chunks of entity labels into chunks of POS tags."""
     # first find the pos labels for all entities (to avoid duplicate resolution of pos labels)
     all_ents = {e for chunk in entity_chunks for e in chunk}
     entity_to_pos_tag_mapping = {ent: _find_pos_tag_for_ent(ent) for ent in all_ents if ent is not None and type(ent) != int}
-
+    # then find the majority tag of the chunk which will be the label for all entities in the chunk
     most_common_tags = Counter([v for v in entity_to_pos_tag_mapping.values()]).most_common()
     majority_tag = most_common_tags[0][0] if len(most_common_tags) > 0 else POSLabel.NONE
+    entity_value = 1 if single_tag_prediction else majority_tag.value
 
-    pos_labels = []
+    labels = []
     for chunk in entity_chunks:
         chunk_labels = []
         for idx, ent in enumerate(chunk):
@@ -39,10 +40,9 @@ def map_entities_to_pos_labels(entity_chunks: list, use_majority_tag=False) -> l
             elif ent is None:
                 chunk_labels.append(POSLabel.NONE.value)
             else:
-                pos_tag = majority_tag if use_majority_tag else entity_to_pos_tag_mapping[ent]
-                chunk_labels.append(pos_tag.value)
-        pos_labels.append(chunk_labels)
-    return pos_labels
+                chunk_labels.append(entity_value)
+        labels.append((chunk_labels, majority_tag.value) if single_tag_prediction else chunk_labels)
+    return labels
 
 
 def _find_pos_tag_for_ent(ent) -> POSLabel:

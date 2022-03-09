@@ -1,15 +1,14 @@
 import argparse
 import utils
-from typing import Tuple
 import random
 import numpy as np
 import torch
 from impl.subject_entity.preprocess.word_tokenize import TransformerSpecialToken
 from impl.subject_entity.preprocess.pos_label import POSLabel, map_entities_to_pos_labels
 from transformers import Trainer, IntervalStrategy, TrainingArguments, AutoTokenizer, AutoModelForTokenClassification, EvalPrediction
-from impl.subject_entity import extract
 from collections import namedtuple
 from copy import deepcopy
+from entity_linking.data.datasets import prepare_mentiondetection_dataset
 
 
 SEED = 42
@@ -18,12 +17,11 @@ np.random.seed(SEED)
 torch.manual_seed(SEED)
 
 
-def run_evaluation(model: str, epochs: int, batch_size: int, learning_rate: float, warmup_steps: int, weight_decay: float, predict_pos_tags: bool, majority_labels: bool):
-    run_id = f'{model}_e-{epochs}_lr-{learning_rate}_ws-{warmup_steps}_wd-{weight_decay}_pp-{predict_pos_tags}_ml-{majority_labels}'
+def run_evaluation(model: str, epochs: int, batch_size: int, learning_rate: float, warmup_steps: int, weight_decay: float, predict_single_tag: bool):
+    run_id = f'{model}_e-{epochs}_lr-{learning_rate}_ws-{warmup_steps}_wd-{weight_decay}_st-{predict_single_tag}'
     # prepare tokenizer and model
     tokenizer = AutoTokenizer.from_pretrained(model, add_prefix_space=True, additional_special_tokens=list(TransformerSpecialToken.all_tokens()))
-    num_labels = len(POSLabel) if predict_pos_tags else 2
-    model = AutoModelForTokenClassification.from_pretrained(model, num_labels=num_labels)
+    model = AutoModelForTokenClassification.from_pretrained(model, num_labels=len(POSLabel))
     model.resize_token_embeddings(len(tokenizer))
     # load data
     data = utils.load_cache('subject_entity_training_data')
@@ -32,8 +30,8 @@ def run_evaluation(model: str, epochs: int, batch_size: int, learning_rate: floa
     train_pages = set(random.sample(all_pages, int(len(all_pages) * .9)))  # 90% of pages for train, 10% for val
     val_pages = all_pages.difference(train_pages)
     # prepare data
-    train_data = _prepare_dataset(tokenizer, [data[p] for p in train_pages], predict_pos_tags, majority_labels)
-    val_data = _prepare_dataset(tokenizer, [data[p] for p in val_pages], predict_pos_tags, majority_labels)
+    train_data = _prepare_data(tokenizer, [data[p] for p in train_pages], predict_single_tag)
+    val_data = _prepare_data(tokenizer, [data[p] for p in val_pages], predict_single_tag)
     # run evaluation
     training_args = TrainingArguments(
         seed=SEED,
@@ -56,44 +54,29 @@ def run_evaluation(model: str, epochs: int, batch_size: int, learning_rate: floa
         args=training_args,
         train_dataset=train_data,
         eval_dataset=val_data,
-        compute_metrics=lambda eval_prediction: SETagsEvaluator(eval_prediction).evaluate()
+        compute_metrics=lambda eval_prediction: SETagsEvaluator(eval_prediction, predict_single_tag).evaluate()
     )
     trainer.train()
 
 
-def _prepare_dataset(tokenizer, page_data: list, predict_pos_tags: bool, majority_labels: bool) -> Tuple[list, list]:
+def _prepare_data(tokenizer, page_data: list, predict_single_tag: bool):
     """Flatten data into chunks, assign correct labels, and create dataset"""
     tokens, labels = [], []
     for token_chunks, entity_chunks in page_data:
         tokens.extend(token_chunks)
-        label_chunks = map_entities_to_pos_labels(entity_chunks, majority_labels) if predict_pos_tags else _map_entity_chunks_to_binary_labels(entity_chunks)
+        label_chunks = map_entities_to_pos_labels(entity_chunks, predict_single_tag)
         labels.extend(label_chunks)
-    return extract._get_datasets(tokens, labels, tokenizer)
-
-
-def _map_entity_chunks_to_binary_labels(entity_chunks: list) -> list:
-    return [_map_entity_chunk_to_binary_labels(chunk) for chunk in entity_chunks]
-
-
-def _map_entity_chunk_to_binary_labels(entity_chunk: list) -> list:
-    labels = []
-    for idx, ent in enumerate(entity_chunk):
-        if type(ent) == int:
-            labels.append(ent)
-        elif ent is None:
-            labels.append(0)
-        else:
-            labels.append(1)
-    return labels
+    return prepare_mentiondetection_dataset(tokens, labels, tokenizer, predict_single_tag)
 
 
 Entity = namedtuple("Entity", "e_type start_offset end_offset")
 
 
 class SETagsEvaluator:
-    def __init__(self, eval_prediction: EvalPrediction):
+    def __init__(self, eval_prediction: EvalPrediction, predict_single_tag: bool):
         self.predictions = eval_prediction.predictions
         self.labels = eval_prediction.label_ids
+        self.predict_single_tag = predict_single_tag
 
         metrics_results = {'correct': 0, 'incorrect': 0, 'partial': 0, 'missed': 0, 'spurious': 0}
         self.results = {
@@ -104,18 +87,24 @@ class SETagsEvaluator:
         }
 
     def evaluate(self) -> dict:
-        for pred_logits, true_ids in zip(self.predictions, self.labels):
+        for logits, true_ids in zip(self.predictions, self.labels):
+            if self.predict_single_tag:
+                mention_logits, type_logits = logits
+                type_id = type_logits.argmax()
+                # with mention logits we only predict whether there is a subject entity in this position (1 or 0)
+                # so we multiply with type_id to "convert" it back to the notion where we predict types per position
+                mention_ids = mention_logits.argmax(-1) * type_id
+            else:
+                mention_ids = logits.argmax(-1)
             # remove unnecessary preds/labels
             mask = true_ids != -100
             true_ids = true_ids[mask]
-            pred_logits = pred_logits[mask]
-            # turn pred logits into predictions
-            pred_ids = pred_logits.argmax(-1)
+            mention_ids = mention_ids[mask]
 
-            if len(true_ids) != len(pred_ids):
+            if len(true_ids) != len(mention_ids):
                 raise ValueError("Predicted and actual entities do not have the same length!")
 
-            self.compute_metrics(self._collect_named_entities(pred_ids), self._collect_named_entities(true_ids))
+            self.compute_metrics(self._collect_named_entities(mention_ids), self._collect_named_entities(true_ids))
 
         return self._compute_precision_recall_wrapper()
 
@@ -246,7 +235,6 @@ if __name__ == '__main__':
     parser.add_argument('-lr', '--learning_rate', type=float, default=5e-5, help='learning rate used during training')
     parser.add_argument('-ws', '--warmup_steps', type=int, default=0, help='warmup steps during learning')
     parser.add_argument('-wd', '--weight_decay', type=float, default=0, help='weight decay during learning')
-    parser.add_argument('-pp', '--predict_pos_tags', action="store_true", help='Predict actual POS tags instead of binary SE/non-SE label')
-    parser.add_argument('-ml', '--majority_labels', action="store_true", help='Use majority of POS tags as label for all entities of a page')
+    parser.add_argument('-st', '--predict_single_tag', action="store_true", help='Predict only a single POS tag per chunk')
     args = parser.parse_args()
-    run_evaluation(args.model, args.epochs, args.batch_size, args.learning_rate, args.warmup_steps, args.weight_decay, args.predict_pos_tags, args.majority_labels)
+    run_evaluation(args.model, args.epochs, args.batch_size, args.learning_rate, args.warmup_steps, args.weight_decay, args.predict_single_tag)
