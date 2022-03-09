@@ -1,17 +1,18 @@
 import torch
 from torch import nn
-from transformers import DistilBertPreTrainedModel, DistilBertModel
+from transformers import AutoModel
 
 
-class DistilBertForMentionDetectionAndTypePrediction(DistilBertPreTrainedModel):
+class TransformerForMentionDetectionAndTypePrediction(nn.Module):
     """
         DistilBert Model with a token classification head for mention detection
         and a sequence classification head for type prediction (as all subject entities share the same type)
     """
-    def __init__(self, config):
-        super().__init__(config)
-
-        self.distilbert = DistilBertModel(config)
+    def __init__(self, encoder_model: str, encoder_embedding_size: int, num_labels: int):
+        super().__init__()
+        self.encoder = AutoModel.from_pretrained(encoder_model)
+        self.encoder.resize_token_embeddings(encoder_embedding_size)
+        config = self.encoder.config
 
         # mention detection (token classification)
         self.md_num_labels = 2
@@ -19,12 +20,12 @@ class DistilBertForMentionDetectionAndTypePrediction(DistilBertPreTrainedModel):
         self.md_classifier = nn.Linear(config.hidden_size, self.md_num_labels)
 
         # type prediction (sequence classification)
-        self.tp_num_labels = config.num_labels
+        self.tp_num_labels = num_labels
         self.tp_pre_classifier = nn.Linear(config.dim, config.dim)
         self.tp_classifier = nn.Linear(config.dim, self.tp_num_labels)
         self.tp_dropout = nn.Dropout(config.seq_classif_dropout)
 
-        self.tp_impact_on_loss = config.tp_impact_on_loss
+        self.tp_impact_on_loss = .2
         self.init_weights()
 
     def forward(
