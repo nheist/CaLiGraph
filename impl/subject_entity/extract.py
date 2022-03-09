@@ -39,7 +39,7 @@ def _extract_subject_entity_batches(page_token_batches: list, page_ws_batches: l
         outputs = model(**inputs)
 
     prediction_batches = torch.argmax(outputs.logits.cpu(), dim=2)
-    hidden_state_batches = outputs.hidden_states[11].cpu()  # use second-to-last layer as token embedding
+    hidden_state_batches = outputs.last_hidden_state.cpu()  # use last layer as token embedding
     del inputs, outputs
 
     topsection_states = defaultdict(list)
