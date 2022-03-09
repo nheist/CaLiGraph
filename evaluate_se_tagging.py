@@ -78,14 +78,20 @@ Entity = namedtuple("Entity", "e_type start_offset end_offset")
 class SETagsEvaluator:
     def __init__(self, eval_prediction: EvalPrediction, predict_single_tag: bool):
         if predict_single_tag:
-            mention_logits, type_logits = eval_prediction.predictions
-            type_ids = np.expand_dims(type_logits.argmax(-1), -1)
             # with mention logits we only predict whether there is a subject entity in this position (1 or 0)
             # so we multiply with type_id to "convert" it back to the notion where we predict types per position
+            mention_logits, type_logits = eval_prediction.predictions
+            type_ids = np.expand_dims(type_logits.argmax(-1), -1)
             self.mentions = mention_logits.argmax(-1) * type_ids
+            # same for labels
+            mention_labels = eval_prediction.label_ids[:, 0, :]
+            type_labels = np.expand_dims(eval_prediction.label_ids[:, 1, 0], -1)
+            self.labels = mention_labels * type_labels
+            self.masks = mention_labels != -100
         else:
             self.mentions = eval_prediction.predictions.argmax(-1)
-        self.labels = eval_prediction.label_ids
+            self.labels = eval_prediction.label_ids
+            self.masks = self.labels != -100
 
         self.results = {
             'strict': {'correct': 0, 'incorrect': 0, 'partial': 0, 'missed': 0, 'spurious': 0},
@@ -95,19 +101,10 @@ class SETagsEvaluator:
         }
 
     def evaluate(self) -> dict:
-        print('mentions', self.mentions.shape)
-        print('labels', self.labels.shape)
-        for mention_ids, true_ids in zip(self.mentions, self.labels):
-            # remove unnecessary preds/labels
-            mask = true_ids != -100
-            print('mention_ids', mention_ids.shape)
-            print('true_ids', true_ids.shape)
-            print('mask', mask.shape)
-            true_ids = true_ids[mask]
+        for mention_ids, true_ids, mask in zip(self.mentions, self.labels, self.masks):
+            # remove invalid preds/labels
             mention_ids = mention_ids[mask]
-
-            if len(true_ids) != len(mention_ids):
-                raise ValueError("Predicted and actual entities do not have the same length!")
+            true_ids = true_ids[mask]
 
             self.compute_metrics(self._collect_named_entities(mention_ids), self._collect_named_entities(true_ids))
 
