@@ -21,15 +21,15 @@ def extract_subject_entities(page_chunks: Tuple[list, list], tokenizer, model) -
 
     page_token_chunks, page_ws_chunks = page_chunks
     for i in range(0, len(page_token_chunks), MAX_CHUNKS):
-        _extract_subject_entity_batches(page_token_chunks[i:i + MAX_CHUNKS], page_ws_chunks[i:i + MAX_CHUNKS], tokenizer, model, subject_entity_dict, subject_entity_embeddings_dict)
+        _extract_subject_entity_chunks(page_token_chunks[i:i + MAX_CHUNKS], page_ws_chunks[i:i + MAX_CHUNKS], tokenizer, model, subject_entity_dict, subject_entity_embeddings_dict)
 
     # convert to standard dicts
     return {ts: dict(subject_entity_dict[ts]) for ts in subject_entity_dict},\
            {ts: dict(subject_entity_embeddings_dict[ts]) for ts in subject_entity_embeddings_dict}
 
 
-def _extract_subject_entity_batches(page_token_batches: list, page_ws_batches: list, tokenizer, model, subject_entity_dict, subject_entity_embeddings_dict):
-    inputs = tokenizer(page_token_batches, is_split_into_words=True, padding=True, truncation=True, return_offsets_mapping=True, return_tensors="pt")
+def _extract_subject_entity_chunks(page_token_chunks: list, page_ws_chunks: list, tokenizer, model, subject_entity_dict, subject_entity_embeddings_dict):
+    inputs = tokenizer(page_token_chunks, is_split_into_words=True, padding=True, truncation=True, return_offsets_mapping=True, return_tensors="pt")
     offset_mapping = inputs.offset_mapping
     inputs.pop('offset_mapping')
     inputs.to('cuda')
@@ -44,7 +44,7 @@ def _extract_subject_entity_batches(page_token_batches: list, page_ws_batches: l
 
     topsection_states = defaultdict(list)
     section_states = defaultdict(lambda: defaultdict(list))
-    for word_tokens, word_token_ws, predictions, hidden_states, offsets in zip(page_token_batches, page_ws_batches, prediction_batches, hidden_state_batches, offset_mapping):
+    for word_tokens, word_token_ws, predictions, hidden_states, offsets in zip(page_token_chunks, page_ws_chunks, prediction_batches, hidden_state_batches, offset_mapping):
         topsection_name, section_name = _extract_context(word_tokens, word_token_ws)
         # collect section states for embeddings
         section_state = hidden_states[0].tolist()
@@ -141,7 +141,7 @@ def _train_tagger(training_data_retrieval_func):
         output_dir=f'/tmp',
         logging_dir=f'./logs/transformers/tagging_{run_id}',
         logging_steps=500,
-        per_device_train_batch_size=8,
+        per_device_train_batch_size=16,
         num_train_epochs=3,
         learning_rate=5e-5,
     )
