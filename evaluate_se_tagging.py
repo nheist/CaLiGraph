@@ -95,9 +95,14 @@ class SETagsEvaluator:
         }
 
     def evaluate(self) -> dict:
+        print('mentions', self.mentions.shape)
+        print('labels', self.labels.shape)
         for mention_ids, true_ids in zip(self.mentions, self.labels):
             # remove unnecessary preds/labels
             mask = true_ids != -100
+            print('mention_ids', mention_ids.shape)
+            print('true_ids', true_ids.shape)
+            print('mask', mask.shape)
             true_ids = true_ids[mask]
             mention_ids = mention_ids[mask]
 
