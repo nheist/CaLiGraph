@@ -11,15 +11,15 @@ class MentionDetectionDataset(Dataset):
 
     def __getitem__(self, idx):
         item = {key: torch.tensor(val[idx]) for key, val in self.encodings.items()}
-        mention_label = self.mention_labels[idx]
+        mention_label = torch.tensor(self.mention_labels[idx])
         if self.type_labels:
             # with type detection per chunk
             type_label = torch.zeros_like(mention_label, dtype=torch.long)
             type_label[0] = self.type_labels[idx]
-            label = torch.tensor((mention_label, type_label))
+            label = torch.stack((mention_label, type_label))
         else:
             # with type detection per entity
-            label = torch.tensor(mention_label)
+            label = mention_label
         item['label'] = label
         return item
 

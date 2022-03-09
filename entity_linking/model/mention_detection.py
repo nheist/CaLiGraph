@@ -5,8 +5,8 @@ from transformers import AutoModel
 
 class TransformerForMentionDetectionAndTypePrediction(nn.Module):
     """
-        DistilBert Model with a token classification head for mention detection
-        and a sequence classification head for type prediction (as all subject entities share the same type)
+        Transformer with a token classification head for mention detection
+        and a sequence classification head for type prediction
     """
     def __init__(self, encoder_model: str, encoder_embedding_size: int, num_labels: int):
         super().__init__()
