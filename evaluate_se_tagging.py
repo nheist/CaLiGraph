@@ -45,7 +45,7 @@ def run_evaluation(model: str, epochs: int, batch_size: int, learning_rate: floa
         logging_dir=f'./se_eval/logs/{run_id}',
         logging_steps=500,
         evaluation_strategy=IntervalStrategy.STEPS,
-        eval_steps=5000,
+        eval_steps=5,
         per_device_train_batch_size=batch_size,
         per_device_eval_batch_size=batch_size,
         num_train_epochs=epochs,
@@ -91,8 +91,10 @@ class SETagsEvaluator:
         }
 
     def evaluate(self) -> dict:
+        print(self.predictions.shape)
         for logits, true_ids in zip(self.predictions, self.labels):
             if self.predict_single_tag:
+                print(logits.shape)
                 mention_logits, type_logits = logits
                 type_id = type_logits.argmax()
                 # with mention logits we only predict whether there is a subject entity in this position (1 or 0)
@@ -113,23 +115,23 @@ class SETagsEvaluator:
         return self._compute_precision_recall_wrapper()
 
     @classmethod
-    def _collect_named_entities(cls, label_ids):
+    def _collect_named_entities(cls, mention_ids):
         named_entities = []
         start_offset = None
         ent_type = None
 
-        for offset, label_id in enumerate(label_ids):
-            if label_id == 0:
+        for offset, mention_id in enumerate(mention_ids):
+            if mention_id == 0:
                 if ent_type is not None and start_offset is not None:
                     named_entities.append(Entity(ent_type, start_offset, offset))
                     start_offset = None
                     ent_type = None
             elif ent_type is None:
-                ent_type = label_id
+                ent_type = mention_id
                 start_offset = offset
         # catches an entity that goes up until the last token
         if ent_type is not None and start_offset is not None:
-            named_entities.append(Entity(ent_type, start_offset, len(label_ids)))
+            named_entities.append(Entity(ent_type, start_offset, len(mention_ids)))
         return named_entities
 
     def compute_metrics(self, pred_named_entities, true_named_entities):
