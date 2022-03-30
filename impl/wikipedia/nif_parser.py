@@ -1,17 +1,17 @@
 """Extraction of type lexicalisations from the Wikipedia corpus via NIF files."""
 
+from typing import Tuple, Generator
 import utils
 from utils import get_logger
-from typing import Tuple
 import pynif
 import bz2
 import multiprocessing as mp
 from tqdm import tqdm
 from collections import defaultdict
 from spacy.lang.en.stop_words import STOP_WORDS
-import impl.dbpedia.store as dbp_store
 import impl.util.nlp as nlp_util
 import impl.util.spacy as spacy_util
+from impl.dbpedia.resource import DbpEntity, DbpResourceStore
 
 
 def extract_wiki_corpus_resources():
@@ -25,8 +25,9 @@ def extract_wiki_corpus_resources():
     total_type_lexicalisations = defaultdict(lambda: defaultdict(int))
 
     # initialize some caches to reduce the setup time of the individual processes
-    dbp_store.get_types('')
-    dbp_store.get_inverse_lexicalisations('')
+    dbr = DbpResourceStore.instance()
+    dbr.get_types(dbr.get_resource_by_idx(0))
+    dbr.get_surface_form_references(dbr.get_resource_by_idx(0))
     spacy_util.get_hearst_pairs('')
 
     with mp.Pool(processes=utils.get_config('max_cpus')) as pool:
@@ -43,8 +44,9 @@ def extract_wiki_corpus_resources():
     utils.update_cache('wikipedia_type_lexicalisations', type_lexicalisations)
 
 
-def _compute_counts_for_resource(uri_with_text: tuple) -> tuple:
-    uri, text = uri_with_text
+def _compute_counts_for_resource(entity_with_text: Tuple[DbpEntity, str]) -> Tuple[dict, dict]:
+    dbr = DbpResourceStore.instance()
+    ent, text = entity_with_text
     hypernyms = defaultdict(int)
     type_lexicalisations = defaultdict(int)
     for sub, obj in spacy_util.get_hearst_pairs(text):
@@ -52,22 +54,28 @@ def _compute_counts_for_resource(uri_with_text: tuple) -> tuple:
         hypernyms[(nlp_util.lemmatize_token(sub.root).lower(), nlp_util.lemmatize_token(obj.root).lower())] += 1
 
         # for each word, count the types that it refers to
-        if uri not in dbp_store.get_inverse_lexicalisations(sub.text):
+        if ent not in dbr.get_surface_form_references(sub.text):
             continue  # discard, if the resource text does not refer to the subject of the article
-        for t in dbp_store.get_types(uri):
+        for t in ent.get_types():
             for word in obj:
                 type_lexicalisations[(nlp_util.lemmatize_token(word).lower(), t)] += 1
     return hypernyms, type_lexicalisations
 
 
-def _retrieve_plaintexts() -> Tuple[str, str]:
+def _retrieve_plaintexts() -> Generator[Tuple[DbpEntity, str]]:
     """Return an iterator over DBpedia resources and their Wikipedia plaintexts."""
+    dbr = DbpResourceStore.instance()
     with bz2.open(utils.get_data_file('files.dbpedia.nif_context'), mode='rb') as nif_file:
         nif_collection = pynif.NIFCollection.loads(nif_file.read(), format='turtle')
         for nif_context in nif_collection.contexts:
             resource_uri = nif_context.original_uri[:nif_context.original_uri.rfind('?')]
+            if not dbr.has_resource_with_uri(resource_uri):
+                continue
+            res = dbr.get_resource_by_uri(resource_uri)
+            if not isinstance(res, DbpEntity):
+                continue
             # remove parentheses and line breaks from text for easier parsing
             resource_plaintext = nif_context.mention.replace('\n', ' ')
             resource_plaintext = nlp_util.remove_bracket_content(resource_plaintext, substitute='')
             resource_plaintext = nlp_util.remove_bracket_content(resource_plaintext, bracket_type='[', substitute='')
-            yield resource_uri, resource_plaintext
+            yield res, resource_plaintext

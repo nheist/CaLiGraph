@@ -1,6 +1,6 @@
+from typing import List
 from enum import Enum
-import impl.dbpedia.util as dbp_util
-import impl.dbpedia.store as dbp_store
+from impl.dbpedia.resource import DbpEntity, DbpResourceStore
 from collections import Counter
 
 
@@ -21,23 +21,23 @@ class POSLabel(Enum):
     OTHER = 13
 
 
-def map_entities_to_pos_labels(entity_chunks: list, single_tag_prediction=False) -> list:
+def map_entities_to_pos_labels(entity_chunks: List[List[int]], single_tag_prediction=False):
     """Transforms the chunks of entity labels into chunks of POS tags."""
     # first find the pos labels for all entities (to avoid duplicate resolution of pos labels)
-    all_ents = {e for chunk in entity_chunks for e in chunk}
-    entity_to_pos_tag_mapping = {ent: _find_pos_tag_for_ent(ent) for ent in all_ents if ent is not None and type(ent) != int}
+    all_ents = {DbpResourceStore.instance().get_resource_by_idx(idx) for chunk in entity_chunks for idx in chunk if idx >= 0}
+    pos_tags = [_find_pos_tag_for_ent(ent) for ent in all_ents if isinstance(ent, DbpEntity)]
     # then find the majority tag of the chunk which will be the label for all entities in the chunk
-    most_common_tags = Counter([v for v in entity_to_pos_tag_mapping.values()]).most_common()
+    most_common_tags = Counter(pos_tags).most_common()
     majority_tag = most_common_tags[0][0] if len(most_common_tags) > 0 else POSLabel.NONE
     entity_value = 1 if single_tag_prediction else majority_tag.value
 
     labels = []
     for chunk in entity_chunks:
         chunk_labels = []
-        for idx, ent in enumerate(chunk):
-            if type(ent) == int:
-                chunk_labels.append(ent)
-            elif ent is None:
+        for ent_idx in chunk:
+            if ent_idx == -100:
+                chunk_labels.append(ent_idx)
+            elif ent_idx == -1:
                 chunk_labels.append(POSLabel.NONE.value)
             else:
                 chunk_labels.append(entity_value)
@@ -45,10 +45,9 @@ def map_entities_to_pos_labels(entity_chunks: list, single_tag_prediction=False)
     return labels
 
 
-def _find_pos_tag_for_ent(ent) -> POSLabel:
-    ent_uri = dbp_util.name2resource(ent)
+def _find_pos_tag_for_ent(ent: DbpEntity) -> POSLabel:
     ttl_mapping = _get_type_to_label_mapping()
-    for t in dbp_store.get_transitive_types(ent_uri):
+    for t in ent.get_transitive_types():
         if t in ttl_mapping:
             return ttl_mapping[t]
     return POSLabel.OTHER

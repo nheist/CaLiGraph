@@ -1,48 +1,47 @@
-"""Utilities to work with resources, properties, and types in DBpedia."""
+"""Utilities to work with resources, properties, and classes in DBpedia."""
 
-import impl.util.rdf as rdf_util
-
-NAMESPACE_DBP_ONTOLOGY = 'http://dbpedia.org/ontology/'
-NAMESPACE_DBP_RESOURCE = 'http://dbpedia.org/resource/'
-NAMESPACE_WIKIPEDIA = 'http://en.wikipedia.org/wiki/'
+from impl.util.rdf import Namespace, uri2name
 
 
-def object2name(dbp_object: str) -> str:
-    if dbp_object.startswith(NAMESPACE_DBP_ONTOLOGY):
-        return type2name(dbp_object)
-    else:
-        return resource2name(dbp_object)
+def get_canonical_uri(uri: str) -> str:
+    if '__' in uri:
+        # some URIs can contain references to specific entities in the page using the postfix '__<some-id-or-number>'
+        # we get rid of such specific references as we are only interested in the uri itself
+        uri = uri[:uri.find('__')]
+    return uri
 
 
-def name2resource(name: str) -> str:
-    return rdf_util.name2uri(name, NAMESPACE_DBP_RESOURCE)
+def is_class(uri: str) -> bool:
+    return uri.startswith(Namespace.DBP_ONTOLOGY.value)
 
 
-def resource2name(resource: str) -> str:
-    return rdf_util.uri2name(resource, NAMESPACE_DBP_RESOURCE)
+def class2name(uri: str) -> str:
+    return uri2name(uri, Namespace.DBP_ONTOLOGY.value)
 
 
-def name2type(name: str) -> str:
-    return rdf_util.name2uri(name, NAMESPACE_DBP_ONTOLOGY)
+def is_resource(uri: str) -> bool:
+    return uri.startswith(Namespace.DBP_RESOURCE.value)
 
 
-def type2name(dbp_type: str) -> str:
-    return rdf_util.uri2name(dbp_type, NAMESPACE_DBP_ONTOLOGY)
+def resource2name(uri: str) -> str:
+    return uri2name(uri, Namespace.DBP_RESOURCE.value)
 
 
-def is_dbp_type(dbp_type: str) -> bool:
-    return dbp_type.startswith(NAMESPACE_DBP_ONTOLOGY)
+def is_listpage(uri: str) -> bool:
+    return uri.startswith(Namespace.DBP_LIST.value)
 
 
-def is_dbp_resource(dbp_resource: str) -> bool:
-    return dbp_resource.startswith(NAMESPACE_DBP_RESOURCE)
+def is_file(uri: str) -> bool:
+    return uri.startswith((Namespace.DBP_FILE.value, Namespace.DBP_IMAGE.value))
 
 
-def is_file_resource(dbp_object: str) -> bool:
-    return dbp_object.startswith(('File:', 'Image:'), len(NAMESPACE_DBP_RESOURCE))
+def is_category(uri: str) -> bool:
+    return uri.startswith(Namespace.DBP_CATEGORY.value)
 
 
-def dbp_resource2wikipedia_resource(dbp_resource: str) -> str:
-    if not is_dbp_resource(dbp_resource):
-        return dbp_resource
-    return f'{NAMESPACE_WIKIPEDIA}{dbp_resource[len(NAMESPACE_DBP_RESOURCE):]}'
+def category2name(uri: str) -> str:
+    return uri2name(uri, Namespace.DBP_CATEGORY.value)
+
+
+def resource_uri2wikipedia_uri(uri: str) -> str:
+    return f'{Namespace.WIKIPEDIA.value}{uri[len(Namespace.DBP_RESOURCE.value):]}' if is_resource(uri) else uri

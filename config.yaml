@@ -5,14 +5,11 @@ max_cpus: 16
 caligraph:
   version: '2.1.1'
   creation_date: '2021-09-21'
-  namespace:
-    base: 'http://caligraph.org/'
-    ontology: 'http://caligraph.org/ontology/'
-    resource: 'http://caligraph.org/resource/'
+  root_node: 'Thing'
 dbpedia:
   disjointness_threshold: 0.132  # in the original paper: 0.17
 category:
-  root_category: 'http://dbpedia.org/resource/Category:Main_topic_classifications'
+  root_category: 'Main_topic_classifications'
 cat2ax:
   pattern_confidence: 0.05
 cali2ax:
@@ -169,56 +166,38 @@ cache:
     filename: 'wikitaxonomy-hypernyms'
     version: 1
     compress: True
-  dbpedia_resource_type_frequency:
-    filename: 'dbpedia-resource-type-frequency'
+  dbpedia_classes:
+    filename: 'dbpedia-classes'
     version: 1
-  dbpedia_resource_type_mapping:
-    filename: 'dbpedia-resource-type-mapping'
+  dbpedia_resources:
+    filename: 'dbpedia-resources'
     version: 1
   dbpedia_resource_labels:
     filename: 'dbpedia-resource-labels'
     version: 1
-  dbpedia_resource_altlabels:
-    filename: 'dbpedia-resource-altlabels'
+  dbpedia_resource_surface_forms:
+    filename: 'dbpedia-resource-surface-forms'
     version: 1
-  dbpedia_resource_abstracts:
-    filename: 'dbpedia-resource-abstracts'
+  dbpedia_resource_surface_form_references:
+    filename: 'dbpedia-resource-surface-form-references'
     version: 1
   dbpedia_resource_wikilinks:
     filename: 'dbpedia-resource-wikilinks'
     version: 1
-  dbpedia_resource_lexicalisations:
-    filename: 'dbpedia-resource-lexicalisations'
-    version: 1
-  dbpedia_resource_inverse_lexicalisations:
-    filename: 'dbpedia-resource-inverse-lexicalisations'
-    version: 1
-  dbpedia_resource_categories:
-    filename: 'dbpedia-resource-categories'
+  dbpedia_resource_redirects:
+    filename: 'dbpedia-resource-redirects'
     version: 1
   dbpedia_resource_properties:
     filename: 'dbpedia-resource-properties'
     version: 1
-  dbpedia_inverse_resource_properties:
-    filename: 'dbpedia-inverse-resource-properties'
-    version: 1
-  dbpedia_resource_redirects:
-    filename: 'dbpedia-resource-redirects'
-    version: 1
-  dbpedia_resource_disambiguations:
-    filename: 'dbpedia-resource-disambiguations'
-    version: 1
-  dbpedia_functional_predicates:
-    filename: 'dbpedia-functional-predicates'
-    version: 1
   dbpedia_categories:
     filename: 'dbpedia-categories'
     version: 1
+  dbpedia_category_children:
+    filename: 'dbpedia-category-children'
+    version: 1
   dbpedia_category_resources:
     filename: 'dbpedia-category-resources'
-    version: 1
-  dbpedia_category_statistics:
-    filename: 'dbpedia-category-statistics'
     version: 1
   dbpedia_category_sets:
     filename: 'dbpedia-category-sets'
@@ -244,8 +223,8 @@ cache:
   wikipedia_parsed_articles:
     filename: 'wikipedia-parsed-articles'
     version: 1
-  spacy_listpage_ne-tagging_GS:
-    filename: 'spacy_listpage_ne-tagging_GS'
+  spacy_listpage_ne-tagging:
+    filename: 'spacy_listpage_ne-tagging'
     version: 1
     store_as_folder: True
   subject_entity_training_data:

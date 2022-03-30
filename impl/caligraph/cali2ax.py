@@ -1,18 +1,18 @@
 """Application of the Cat2Ax approach to CaLiGraph."""
 
+from typing import Dict, Optional
+from spacy.tokens import Doc
 from utils import get_logger
 from collections import defaultdict
 import operator
-import impl.dbpedia.store as dbp_store
 import impl.category.category_set as cat_set
 from impl import category
 import impl.util.nlp as nlp_util
 import impl.category.cat2ax as cat_axioms
-import impl.category.util as cat_util
-import impl.listpage.util as list_util
+from impl.dbpedia.ontology import DbpObjectPredicate
 
 
-def extract_axioms(graph) -> dict:
+def extract_axioms(graph) -> Dict[str, set]:
     """Run extraction for the given graph reusing the category sets and patterns from the initial approach."""
     category_graph = category.get_conceptual_category_graph()
     candidate_sets = cat_set.get_category_sets()
@@ -24,7 +24,7 @@ def extract_axioms(graph) -> dict:
     return axioms
 
 
-def _extract_axioms(graph, patterns) -> dict:
+def _extract_axioms(graph, patterns: Dict[tuple, dict]) -> Dict[str, set]:
     """Run Cat2Ax axiom extraction on CaLiGraph."""
     axioms = defaultdict(set)
 
@@ -43,13 +43,7 @@ def _extract_axioms(graph, patterns) -> dict:
     for node in graph.content_nodes:
         property_frequencies = graph.get_property_frequencies(node)
 
-        node_labels = set()
-        for part in graph.get_parts(node):
-            if cat_util.is_category(part):
-                node_labels.add(cat_util.category2name(part))
-            elif list_util.is_listcategory(part) or list_util.is_listpage(part):
-                node_labels.add(list_util.list2name(part))
-
+        node_labels = {p.get_label() for p in graph.get_parts(node)}
         labels_without_by_phrases = [nlp_util.remove_by_phrase(label, return_doc=True) for label in node_labels]
         for node_doc in labels_without_by_phrases:
             node_axioms = []
@@ -68,8 +62,8 @@ def _extract_axioms(graph, patterns) -> dict:
 
             prop_axioms_by_pred = {a[1]: {x for x in node_axioms if x[1] == a[1]} for a in node_axioms}
             for pred, similar_prop_axioms in prop_axioms_by_pred.items():
-                if dbp_store.is_object_property(pred):
-                    res_labels = {a[2]: dbp_store.get_label(a[2]) for a in similar_prop_axioms}
+                if isinstance(pred, DbpObjectPredicate):
+                    res_labels = {a[2]: a[2].get_label() for a in similar_prop_axioms}
                     similar_prop_axioms = {a for a in similar_prop_axioms if all(res_labels[a[2]] == val or res_labels[a[2]] not in val for val in res_labels.values())}
                 best_prop_axiom = max(similar_prop_axioms, key=operator.itemgetter(3))
                 axioms[node].add(best_prop_axiom)
@@ -77,7 +71,7 @@ def _extract_axioms(graph, patterns) -> dict:
     return axioms
 
 
-def _get_confidence_pattern_set(pattern_set, has_front, has_back):
+def _get_confidence_pattern_set(pattern_set: Dict[tuple, dict], has_front: bool, has_back: bool) -> Dict[tuple, dict]:
     """Return pattern confidences per pattern."""
     result = {}
     for pattern, axiom_patterns in pattern_set.items():
@@ -87,7 +81,7 @@ def _get_confidence_pattern_set(pattern_set, has_front, has_back):
     return result
 
 
-def _find_axioms(pattern_dict, node, node_doc, property_frequencies):
+def _find_axioms(pattern_dict: dict, node: str, node_doc: Doc, property_frequencies: dict) -> Optional[tuple]:
     """Iterate over possible patterns to extract and return best axioms."""
     node_words = [w.text for w in node_doc]
     axiom_patterns, pattern_lengths = cat_axioms._detect_patterns(pattern_dict, node_words)
@@ -99,15 +93,14 @@ def _find_axioms(pattern_dict, node, node_doc, property_frequencies):
     return None
 
 
-def _get_axioms_for_node(axiom_patterns, node, text_diff, property_frequencies):
+def _get_axioms_for_node(axiom_patterns: dict, node: str, text_diff: str, property_frequencies: dict):
     """Return axioms by applying the best matching pattern to a node."""
     prop_axiom = None
 
     possible_values = cat_axioms._get_resource_surface_scores(text_diff)
     props_scores = {(p, v): freq * axiom_patterns[p] * possible_values[v] for (p, v), freq in property_frequencies.items() if p in axiom_patterns and v in possible_values}
-    prop, max_prop_score = max(props_scores.items(), key=operator.itemgetter(1), default=((None, None), 0))
+    (pred, val), max_prop_score = max(props_scores.items(), key=operator.itemgetter(1), default=((None, None), 0))
     if max_prop_score >= cat_axioms.PATTERN_CONF:
-        pred, val = prop
         prop_axiom = (node, pred, val, max_prop_score)
 
     return prop_axiom

@@ -1,3 +1,4 @@
+from typing import Dict, Set
 import re
 import unidecode
 from nltk.corpus import stopwords
@@ -5,19 +6,19 @@ import multiprocessing as mp
 from tqdm import tqdm
 from collections import defaultdict
 import pandas as pd
-import impl.dbpedia.store as dbp_store
-import impl.dbpedia.util as dbp_util
 import entity_linking.utils as el_util
+from impl.dbpedia.resource import DbpResourceStore
 
 
-def get_sf_to_entity_mapping(entity_occurrence_data: pd.DataFrame):
+def get_sf_to_entity_mapping(entity_occurrence_data: pd.DataFrame) -> Dict[str, Set[int]]:
+    dbr = DbpResourceStore.instance()
+
     page_sfs = set(entity_occurrence_data['_text'].unique())  # surface forms from pages
     # entities and surface forms from graph
     graph_sf_to_entity_mapping = defaultdict(set)
-    for ent_uri, sfs in dbp_store.get_all_lexicalisations().items():
-        ent = dbp_util.resource2name(ent_uri)
-        for sf in sfs:
-            graph_sf_to_entity_mapping[sf].add(ent)
+    for ent in dbr.get_entities():
+        for sf in ent.get_surface_forms():
+            graph_sf_to_entity_mapping[sf].add(ent.idx)
     return _block_entities_by_surface_forms(page_sfs, graph_sf_to_entity_mapping, n_cores=el_util.MAX_CORES)
 
 

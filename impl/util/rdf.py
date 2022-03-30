@@ -3,45 +3,104 @@
 from collections import namedtuple
 import bz2
 import re
-from typing import Iterator
+from typing import Iterator, Optional
 from collections import defaultdict
 import functools
 import urllib.parse
 import impl.util.string as str_util
+from enum import Enum
+from dataclasses import dataclass
 
-# predicates
-PREDICATE_EQUIVALENT_CLASS = 'http://www.w3.org/2002/07/owl#equivalentClass'
-PREDICATE_WAS_DERIVED_FROM = 'http://www.w3.org/ns/prov#wasDerivedFrom'
-PREDICATE_BROADER = 'http://www.w3.org/2004/02/skos/core#broader'
-PREDICATE_PREFLABEL = 'http://www.w3.org/2004/02/skos/core#prefLabel'
-PREDICATE_ALTLABEL = 'http://www.w3.org/2004/02/skos/core#altLabel'
-PREDICATE_LABEL = 'http://www.w3.org/2000/01/rdf-schema#label'
-PREDICATE_COMMENT = 'http://www.w3.org/2000/01/rdf-schema#comment'
-PREDICATE_TYPE = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type'
-PREDICATE_SUBJECT = 'http://purl.org/dc/terms/subject'
-PREDICATE_SUBCLASS_OF = 'http://www.w3.org/2000/01/rdf-schema#subClassOf'
-PREDICATE_DISJOINT_WITH = 'http://www.w3.org/2002/07/owl#disjointWith'
-PREDICATE_REDIRECTS = 'http://dbpedia.org/ontology/wikiPageRedirects'
-PREDICATE_DISAMBIGUATES = 'http://dbpedia.org/ontology/wikiPageDisambiguates'
-PREDICATE_DOMAIN = 'http://www.w3.org/2000/01/rdf-schema#domain'
-PREDICATE_RANGE = 'http://www.w3.org/2000/01/rdf-schema#range'
-PREDICATE_SAME_AS = 'http://www.w3.org/2002/07/owl#sameAs'
-PREDICATE_EQUIVALENT_PROPERTY = 'http://www.w3.org/2002/07/owl#equivalentProperty'
-PREDICATE_WIKILINK = 'http://dbpedia.org/ontology/wikiPageWikiLink'
-PREDICATE_ANCHOR_TEXT = 'http://dbpedia.org/ontology/wikiPageWikiLinkText'
 
-# classes
-CLASS_OWL_THING = 'http://www.w3.org/2002/07/owl#Thing'
-CLASS_OWL_CLASS = 'http://www.w3.org/2002/07/owl#Class'
-CLASS_OWL_NAMED_INDIVIDUAL = 'http://www.w3.org/2002/07/owl#NamedIndividual'
-CLASS_OWL_OBJECT_PROPERTY = 'http://www.w3.org/2002/07/owl#ObjectProperty'
-CLASS_OWL_DATATYPE_PROPERTY = 'http://www.w3.org/2002/07/owl#DatatypeProperty'
+class Namespace(Enum):
+    WIKIPEDIA = 'http://en.wikipedia.org/wiki/'
+
+    PREFIX_CATEGORY = 'Category:'
+    PREFIX_FILE = 'File:'
+    PREFIX_IMAGE = 'Image:'
+    PREFIX_LIST = 'List_of_'
+    PREFIX_LISTS = 'Lists_of_'
+
+    DBP_ONTOLOGY = 'http://dbpedia.org/ontology/'
+    DBP_RESOURCE = 'http://dbpedia.org/resource/'
+    DBP_CATEGORY = DBP_RESOURCE + PREFIX_CATEGORY
+    DBP_FILE = DBP_RESOURCE + PREFIX_FILE
+    DBP_IMAGE = DBP_RESOURCE + PREFIX_IMAGE
+    DBP_LIST = DBP_RESOURCE + PREFIX_LIST
+
+    CLG_ONTOLOGY = 'http://caligraph.org/ontology/'
+    CLG_RESOURCE = 'http://caligraph.org/resource/'
+
+
+class RdfClass(Enum):
+    OWL_THING = 'http://www.w3.org/2002/07/owl#Thing'
+    OWL_CLASS = 'http://www.w3.org/2002/07/owl#Class'
+    OWL_NAMED_INDIVIDUAL = 'http://www.w3.org/2002/07/owl#NamedIndividual'
+    OWL_OBJECT_PROPERTY = 'http://www.w3.org/2002/07/owl#ObjectProperty'
+    OWL_DATATYPE_PROPERTY = 'http://www.w3.org/2002/07/owl#DatatypeProperty'
+
+
+class RdfPredicate(Enum):
+    EQUIVALENT_CLASS = 'http://www.w3.org/2002/07/owl#equivalentClass'
+    WAS_DERIVED_FROM = 'http://www.w3.org/ns/prov#wasDerivedFrom'
+    BROADER = 'http://www.w3.org/2004/02/skos/core#broader'
+    PREFLABEL = 'http://www.w3.org/2004/02/skos/core#prefLabel'
+    ALTLABEL = 'http://www.w3.org/2004/02/skos/core#altLabel'
+    LABEL = 'http://www.w3.org/2000/01/rdf-schema#label'
+    COMMENT = 'http://www.w3.org/2000/01/rdf-schema#comment'
+    TYPE = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type'
+    SUBJECT = 'http://purl.org/dc/terms/subject'
+    SUBCLASS_OF = 'http://www.w3.org/2000/01/rdf-schema#subClassOf'
+    DISJOINT_WITH = 'http://www.w3.org/2002/07/owl#disjointWith'
+    REDIRECTS = 'http://dbpedia.org/ontology/wikiPageRedirects'
+    DISAMBIGUATES = 'http://dbpedia.org/ontology/wikiPageDisambiguates'
+    DOMAIN = 'http://www.w3.org/2000/01/rdf-schema#domain'
+    RANGE = 'http://www.w3.org/2000/01/rdf-schema#range'
+    SAME_AS = 'http://www.w3.org/2002/07/owl#sameAs'
+    EQUIVALENT_PROPERTY = 'http://www.w3.org/2002/07/owl#equivalentProperty'
+    WIKILINK = 'http://dbpedia.org/ontology/wikiPageWikiLink'
+    ANCHOR_TEXT = 'http://dbpedia.org/ontology/wikiPageWikiLinkText'
+
+
+@dataclass
+class RdfResource:
+    idx: int
+    name: str
+    is_meta: bool  # a resource is a meta resource if it is a redirect or a disambiguation
+
+    def __lt__(self, other):
+        return self.idx < other.idx
+
+    def get_label(self) -> str:
+        label = self._get_store().get_label(self) or self.name
+        prefix = self._get_prefix()
+        if prefix and label.startswith(prefix):
+            label = label[len(prefix):]
+        return label
+
+    def get_iri(self) -> str:
+        return self._get_namespace() + self.name
+
+    @classmethod
+    def _get_store(cls):
+        raise NotImplementedError()
+
+    @classmethod
+    def _get_prefix(cls) -> str:
+        return ''
+
+    @classmethod
+    def _get_namespace(cls) -> str:
+        raise NotImplementedError()
+
 
 # auxiliary structures
-Triple = namedtuple('Triple', 'sub pred obj')
+Triple = namedtuple('Triple', 'sub pred obj is_literal')
 
 
 def uri2name(uri: str, prefix: str) -> str:
+    if uri == RdfClass.OWL_THING:
+        return 'Thing'
     return uri[len(prefix):].replace('_', ' ')
 
 
@@ -63,31 +122,39 @@ def parse_triples_from_file(filepath: str) -> Iterator[Triple]:
                 sub = urllib.parse.unquote(sub.decode('utf-8'))
                 pred = pred.decode('utf-8')
                 obj = urllib.parse.unquote(obj.decode('utf-8'))
-                yield Triple(sub=sub, pred=pred, obj=obj)
+                yield Triple(sub=sub, pred=pred, obj=obj, is_literal=False)
             else:
                 literal_triple = literal_pattern.match(line)
                 if literal_triple:
                     [sub, pred, obj] = literal_triple.groups()
                     sub = urllib.parse.unquote(sub.decode('utf-8'))
-                    yield Triple(sub=sub, pred=pred.decode('utf-8'), obj=obj.decode('utf-8'))
+                    yield Triple(sub=sub, pred=pred.decode('utf-8'), obj=obj.decode('utf-8'), is_literal=True)
 
 
-def create_set_from_rdf(filepaths: list, valid_pred: str, valid_obj: str) -> set:
+def create_set_from_rdf(filepaths: list, valid_pred: RdfPredicate, valid_obj: Optional[str], casting_fn=None) -> set:
     """Create a set of its subjects from a given triple file."""
     data_set = set()
     for fp in filepaths:
-        for sub, pred, obj in parse_triples_from_file(fp):
-            if pred == valid_pred and valid_obj in [None, obj]:
+        for sub, pred, obj, _ in parse_triples_from_file(fp):
+            if pred == valid_pred.value and valid_obj in [None, obj]:
+                try:
+                    sub, obj = _cast_type(casting_fn, sub, obj, True)
+                except KeyError:
+                    continue
                 data_set.add(sub)
     return data_set
 
 
-def create_multi_val_dict_from_rdf(filepaths: list, valid_pred: str, reverse_key=False, reflexive=False) -> dict:
+def create_multi_val_dict_from_rdf(filepaths: list, valid_pred: RdfPredicate, reverse_key=False, reflexive=False, casting_fn=None) -> dict:
     """Create a key-value dict from a given triple file."""
     data_dict = defaultdict(set)
     for fp in filepaths:
-        for sub, pred, obj in parse_triples_from_file(fp):
-            if pred == valid_pred:
+        for sub, pred, obj, is_literal in parse_triples_from_file(fp):
+            if pred == valid_pred.value:
+                try:
+                    sub, obj = _cast_type(casting_fn, sub, obj, is_literal)
+                except KeyError:
+                    continue
                 if reflexive or reverse_key:
                     data_dict[obj].add(sub)
                 if reflexive or not reverse_key:
@@ -95,12 +162,16 @@ def create_multi_val_dict_from_rdf(filepaths: list, valid_pred: str, reverse_key
     return data_dict
 
 
-def create_multi_val_count_dict_from_rdf(filepaths: list, valid_pred: str, reverse_key=False) -> dict:
+def create_multi_val_count_dict_from_rdf(filepaths: list, valid_pred: RdfPredicate, reverse_key=False, casting_fn=None) -> dict:
     """Create a key-value dict with frequencies from a given triple file."""
     data_dict = defaultdict(functools.partial(defaultdict, int))
     for fp in filepaths:
-        for sub, pred, obj in parse_triples_from_file(fp):
-            if pred == valid_pred:
+        for sub, pred, obj, is_literal in parse_triples_from_file(fp):
+            if pred == valid_pred.value:
+                try:
+                    sub, obj = _cast_type(casting_fn, sub, obj, is_literal)
+                except KeyError:
+                    continue
                 cleaned_obj = str_util.regularize_spaces(obj.lower())
                 if cleaned_obj:
                     if reverse_key:
@@ -110,12 +181,16 @@ def create_multi_val_count_dict_from_rdf(filepaths: list, valid_pred: str, rever
     return data_dict
 
 
-def create_single_val_dict_from_rdf(filepaths: list, valid_pred: str, reverse_key=False, reflexive=False) -> dict:
+def create_single_val_dict_from_rdf(filepaths: list, valid_pred: RdfPredicate, reverse_key=False, reflexive=False, casting_fn=None) -> dict:
     """Create a key-value mapping from a given triple file."""
     data_dict = {}
     for fp in filepaths:
-        for sub, pred, obj in parse_triples_from_file(fp):
-            if pred == valid_pred:
+        for sub, pred, obj, is_literal in parse_triples_from_file(fp):
+            if pred == valid_pred.value:
+                try:
+                    sub, obj = _cast_type(casting_fn, sub, obj, is_literal)
+                except KeyError:
+                    continue
                 if reflexive or reverse_key:
                     data_dict[obj] = sub
                 elif reflexive or not reverse_key:
@@ -123,20 +198,21 @@ def create_single_val_dict_from_rdf(filepaths: list, valid_pred: str, reverse_ke
     return data_dict
 
 
-def create_dict_from_rdf(filepaths: list, valid_predicates: set = None, reverse_key=False) -> dict:
+def create_dict_from_rdf(filepaths: list, reverse_key=False, casting_fn=None) -> dict:
     """Create a two-dimensional dict from a given triple file."""
     data_dict = defaultdict(functools.partial(defaultdict, set))
     for fp in filepaths:
-        for sub, pred, obj in parse_triples_from_file(fp):
-            if not valid_predicates or pred in valid_predicates:
-                data_dict[obj][pred].add(sub) if reverse_key else data_dict[sub][pred].add(obj)
+        for sub, pred, obj, is_literal in parse_triples_from_file(fp):
+            try:
+                sub, obj = _cast_type(casting_fn, sub, obj, is_literal)
+            except KeyError:
+                continue
+            data_dict[obj][pred].add(sub) if reverse_key else data_dict[sub][pred].add(obj)
     return data_dict
 
 
-def create_count_dict(iterables) -> dict:
-    """Create a count dict from a given triple file."""
-    count_dict = defaultdict(int)
-    for i in iterables:
-        for entry in i:
-            count_dict[entry] += 1
-    return count_dict
+def _cast_type(casting_fn, sub: str, obj: str, is_literal: bool):
+    if casting_fn is not None:
+        sub = casting_fn(sub)
+        obj = obj if is_literal else casting_fn(obj)
+    return sub, obj

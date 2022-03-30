@@ -1,22 +1,23 @@
 """Extract sets of categories that have the same parent and share a common pre- and/or postfix."""
 
+from typing import Tuple, Optional, List, Dict
 import utils
 import impl.util.nlp as nlp_util
 from collections import namedtuple, defaultdict
-import impl.category.store as cat_store
+from impl.dbpedia.category import DbpCategory, DbpCategoryStore
+from spacy.tokens import Doc
 import operator
-from typing import Tuple, Optional
 
 
 CandidateSet = namedtuple('CandidateSet', ['parent', 'children', 'pattern'])
 
 
-def get_category_sets() -> list:
+def get_category_sets() -> List[CandidateSet]:
     """Return a list of category sets found in DBpedia."""
     return [cs for category_sets in _get_parent_to_category_set_mapping().values() for cs in category_sets]
 
 
-def _get_parent_to_category_set_mapping() -> dict:
+def _get_parent_to_category_set_mapping() -> Dict[DbpCategory, List[CandidateSet]]:
     global __CATEGORY_SETS__
     if '__CATEGORY_SETS__' not in globals():
         __CATEGORY_SETS__ = utils.load_or_create_cache('dbpedia_category_sets', _compute_category_sets)
@@ -24,23 +25,25 @@ def _get_parent_to_category_set_mapping() -> dict:
     return __CATEGORY_SETS__
 
 
-def _compute_category_sets() -> dict:
+def _compute_category_sets() -> Dict[DbpCategory, List[CandidateSet]]:
     """Iterate over DBpedia categories and identify all category sets.
 
     1) Retrieve all usable categories (i.e. categories that are not used for maintenance/organisational purposes)
     2) Normalize their names by removing by-phrases (e.g. "X by genre", "Y by country")
     3) For each category, retrieve all its children and search for name patterns (see '_find_child_sets')
     """
+    dbc = DbpCategoryStore.instance()
+
     category_sets = {}
-    for cat in cat_store.get_categories():
-        children_docs = {c: nlp_util.remove_by_phrase(cat_store.get_label(c)) for c in cat_store.get_children(cat)}
+    for cat in dbc.get_categories():
+        children_docs = {c: nlp_util.remove_by_phrase(c.get_label()) for c in dbc.get_children(cat)}
         child_sets = _find_child_sets(cat, children_docs)
         if child_sets:
             category_sets[cat] = child_sets
     return category_sets
 
 
-def _find_child_sets(parent: str, category_docs: dict, current_pattern=((), ())) -> list:
+def _find_child_sets(parent: DbpCategory, category_docs: Dict[DbpCategory, Doc], current_pattern=((), ())) -> List[CandidateSet]:
     """Identify sets of child categories by recursively checking whether a pattern is shared by multiple categories."""
     if len(category_docs) < 2:
         return []
@@ -70,7 +73,7 @@ def _find_child_sets(parent: str, category_docs: dict, current_pattern=((), ()))
     return _find_child_sets(parent, grouped_docs, new_pattern) + _find_child_sets(parent, ungrouped_docs, current_pattern)
 
 
-def _find_best_group(category_docs: dict, idx: int) -> Tuple[set, Optional[str]]:
+def _find_best_group(category_docs: Dict[DbpCategory, Doc], idx: int) -> Tuple[set, Optional[str]]:
     """Locate the best group of categories by checking which words appear most frequently at the current index."""
     word_counts = defaultdict(int)
     for d in category_docs.values():

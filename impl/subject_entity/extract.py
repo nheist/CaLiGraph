@@ -1,6 +1,8 @@
 """Extract the labels of subject entities from word tokens of listings."""
 
+from typing import Tuple, Dict, List, Callable
 import torch
+from torch.utils.data import Dataset
 import numpy as np
 import utils
 import datetime
@@ -8,14 +10,13 @@ from collections import defaultdict
 from .preprocess.word_tokenize import TransformerSpecialToken
 from .preprocess.pos_label import POSLabel
 from transformers import Trainer, TrainingArguments, AutoTokenizer, AutoModelForTokenClassification, IntervalStrategy
-from typing import Tuple
 
 
 # APPLY BERT MODEL
 MAX_CHUNKS = 100
 
 
-def extract_subject_entities(page_chunks: Tuple[list, list], tokenizer, model) -> tuple:
+def extract_subject_entities(page_chunks: Tuple[list, list], tokenizer, model) -> Tuple[Dict[str, dict], Dict[str, dict]]:
     subject_entity_dict = defaultdict(lambda: defaultdict(dict))
     subject_entity_embeddings_dict = defaultdict(lambda: defaultdict(dict))
 
@@ -92,7 +93,7 @@ def _extract_subject_entity_chunks(page_token_chunks: list, page_ws_chunks: list
             subject_entity_embeddings_dict[ts][s]['_embedding'] = np.array(s_states).mean(0)
 
 
-def _extract_context(word_tokens: list, word_token_ws: list) -> tuple:
+def _extract_context(word_tokens: List[str], word_token_ws: List[str]) -> Tuple[str, str]:
     ctx_tokens = []
     for i in range(word_tokens.index(TransformerSpecialToken.CONTEXT_END.value)):
         ctx_tokens.extend([word_tokens[i], word_token_ws[i]])
@@ -102,7 +103,7 @@ def _extract_context(word_tokens: list, word_token_ws: list) -> tuple:
     return _tokens2name(top_section_ctx), _tokens2name(section_ctx)
 
 
-def _tokens2name(entity_tokens: list) -> str:
+def _tokens2name(entity_tokens: List[str]) -> str:
     return ''.join(entity_tokens).lstrip().rstrip(' ,(')
 
 
@@ -116,7 +117,7 @@ def _is_valid_entity_name(entity_name: str) -> bool:
 TRANSFORMER_BASE_MODEL = 'distilbert-base-cased'
 
 
-def get_tagging_tokenizer_and_model(training_data_retrieval_func):
+def get_tagging_tokenizer_and_model(training_data_retrieval_func: Callable):
     path_to_model = utils._get_cache_path('transformer_for_SE_tagging')
     if not path_to_model.is_dir():
         _train_tagger(training_data_retrieval_func)
@@ -126,7 +127,7 @@ def get_tagging_tokenizer_and_model(training_data_retrieval_func):
     return tokenizer, model
 
 
-def _train_tagger(training_data_retrieval_func):
+def _train_tagger(training_data_retrieval_func: Callable):
     tokenizer = AutoTokenizer.from_pretrained(TRANSFORMER_BASE_MODEL, add_prefix_space=True, additional_special_tokens=list(TransformerSpecialToken.all_tokens()))
 
     tokens, labels = training_data_retrieval_func()
@@ -158,7 +159,7 @@ def _train_tagger(training_data_retrieval_func):
     tokenizer.save_pretrained(path_to_model)
 
 
-def _get_datasets(tokens, tags, tokenizer) -> tuple:
+def _get_datasets(tokens: List[List[str]], tags: List[List[str]], tokenizer) -> Dataset:
     train_encodings = tokenizer(tokens, is_split_into_words=True, return_offsets_mapping=True, padding=True, truncation=True)
     train_labels = _encode_labels(tags, train_encodings)
 
@@ -167,7 +168,7 @@ def _get_datasets(tokens, tags, tokenizer) -> tuple:
     return train_dataset
 
 
-def _encode_labels(labels, encodings):
+def _encode_labels(labels: List[List[str]], encodings) -> List[List[str]]:
     encoded_labels = []
     for doc_labels, doc_offset in zip(labels, encodings.offset_mapping):
         # create an empty array of -100
@@ -185,7 +186,7 @@ def _encode_labels(labels, encodings):
     return encoded_labels
 
 
-class ListpageDataset(torch.utils.data.Dataset):
+class ListpageDataset(Dataset):
     def __init__(self, encodings, labels):
         self.encodings = encodings
         self.labels = labels

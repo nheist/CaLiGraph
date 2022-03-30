@@ -1,16 +1,17 @@
 """Functionality to serialize the individual parts of CaLiGraph."""
 
-import utils
-import impl.dbpedia.store as dbp_store
-import impl.dbpedia.util as dbp_util
-import impl.caligraph.util as clg_util
 import bz2
-import impl.util.serialize as serialize_util
-import impl.util.rdf as rdf_util
+import json
+import utils
+import random
 import datetime
 from collections import defaultdict
-import json
-import random
+import impl.dbpedia.util as dbp_util
+import impl.caligraph.util as clg_util
+import impl.util.serialize as serialize_util
+from impl.util.rdf import RdfClass, RdfPredicate, Namespace
+from impl.dbpedia.ontology import DbpType, DbpOntologyStore
+from impl.dbpedia.resource import DbpResource, DbpResourceStore
 
 
 def serialize_graph(graph):
@@ -50,9 +51,9 @@ def _get_lines_metadata(graph) -> list:
     class_count = len(graph.nodes)
     predicate_count = len(graph.get_all_predicates())
     return [
-        serialize_util.as_object_triple(void_resource, rdf_util.PREDICATE_TYPE, 'http://rdfs.org/ns/void#Dataset'),
+        serialize_util.as_object_triple(void_resource, RdfPredicate.TYPE.value, 'http://rdfs.org/ns/void#Dataset'),
         serialize_util.as_literal_triple(void_resource, 'http://purl.org/dc/elements/1.1/title', 'CaLiGraph'),
-        serialize_util.as_literal_triple(void_resource, rdf_util.PREDICATE_LABEL, 'CaLiGraph'),
+        serialize_util.as_literal_triple(void_resource, RdfPredicate.LABEL.value, 'CaLiGraph'),
         serialize_util.as_literal_triple(void_resource, 'http://purl.org/dc/elements/1.1/description', description),
         serialize_util.as_object_triple(void_resource, 'http://purl.org/dc/terms/license', 'http://www.gnu.org/copyleft/fdl.html'),
         serialize_util.as_object_triple(void_resource, 'http://purl.org/dc/terms/license', 'http://creativecommons.org/licenses/by-sa/4.0/'),
@@ -61,7 +62,7 @@ def _get_lines_metadata(graph) -> list:
         serialize_util.as_literal_triple(void_resource, 'http://purl.org/dc/terms/created', _get_creation_date()),
         serialize_util.as_literal_triple(void_resource, 'http://purl.org/dc/terms/publisher', 'Nicolas Heist'),
         serialize_util.as_literal_triple(void_resource, 'http://purl.org/dc/terms/publisher', 'Heiko Paulheim'),
-        serialize_util.as_literal_triple(void_resource, 'http://rdfs.org/ns/void#uriSpace', clg_util.NAMESPACE_CLG_RESOURCE),
+        serialize_util.as_literal_triple(void_resource, 'http://rdfs.org/ns/void#uriSpace', Namespace.CLG_RESOURCE.value),
         serialize_util.as_literal_triple(void_resource, 'http://rdfs.org/ns/void#entities', entity_count),
         serialize_util.as_literal_triple(void_resource, 'http://rdfs.org/ns/void#classes', class_count),
         serialize_util.as_literal_triple(void_resource, 'http://rdfs.org/ns/void#properties', predicate_count),
@@ -78,30 +79,30 @@ def _get_lines_ontology(graph) -> list:
     # metadata
     ontology_resource = 'http://caligraph.org/ontology'
     lines_ontology.extend([
-        serialize_util.as_object_triple(ontology_resource, rdf_util.PREDICATE_TYPE, 'http://www.w3.org/2002/07/owl#Ontology'),
+        serialize_util.as_object_triple(ontology_resource, RdfPredicate.TYPE.value, 'http://www.w3.org/2002/07/owl#Ontology'),
         serialize_util.as_literal_triple(ontology_resource, 'http://purl.org/dc/terms/created', _get_creation_date()),
-        serialize_util.as_literal_triple(ontology_resource, rdf_util.PREDICATE_LABEL, 'CaLiGraph Ontology'),
+        serialize_util.as_literal_triple(ontology_resource, RdfPredicate.LABEL.value, 'CaLiGraph Ontology'),
         serialize_util.as_literal_triple(ontology_resource, 'http://www.w3.org/2002/07/owl#versionInfo', utils.get_config('caligraph.version')),
     ])
     # classes
     for node in graph.traverse_nodes_topdown():
-        if node == rdf_util.CLASS_OWL_THING:
+        if node == graph.root_node:
             continue
-        lines_ontology.append(serialize_util.as_object_triple(node, rdf_util.PREDICATE_TYPE, rdf_util.CLASS_OWL_CLASS))
+        lines_ontology.append(serialize_util.as_object_triple(node, RdfPredicate.TYPE.value, RdfClass.OWL_CLASS.value))
         label = graph.get_label(node)
         if label:
-            lines_ontology.append(serialize_util.as_literal_triple(node, rdf_util.PREDICATE_LABEL, label))
-        parents = graph.parents(node) or {rdf_util.CLASS_OWL_THING}
-        lines_ontology.extend([serialize_util.as_object_triple(node, rdf_util.PREDICATE_SUBCLASS_OF, p) for p in parents])
+            lines_ontology.append(serialize_util.as_literal_triple(node, RdfPredicate.LABEL.value, label))
+        parents = graph.parents(node) or {graph.root_node}
+        lines_ontology.extend([serialize_util.as_object_triple(node, RdfPredicate.SUBCLASS_OF.value, p) for p in parents])
     # predicates
-    for pred, is_object_property in graph.get_all_predicates().items():
-        property_type = rdf_util.CLASS_OWL_OBJECT_PROPERTY if is_object_property else rdf_util.CLASS_OWL_DATATYPE_PROPERTY
-        lines_ontology.append(serialize_util.as_object_triple(pred, rdf_util.PREDICATE_TYPE, property_type))
+    for pred, is_object_predicate in graph.get_all_predicates().items():
+        pred_type = RdfClass.OWL_OBJECT_PROPERTY.value if is_object_predicate else RdfClass.OWL_DATATYPE_PROPERTY.value
+        lines_ontology.append(serialize_util.as_object_triple(pred, RdfPredicate.TYPE.value, pred_type))
     # disjointnesses
     for node in graph.nodes:
         for disjoint_node in graph.get_direct_disjoint_nodes(node):
             if node < disjoint_node:  # make sure that disjointnesses are only serialized once
-                lines_ontology.append(serialize_util.as_object_triple(node, rdf_util.PREDICATE_DISJOINT_WITH, disjoint_node))
+                lines_ontology.append(serialize_util.as_object_triple(node, RdfPredicate.DISJOINT_WITH.value, disjoint_node))
     # restrictions
     defined_restrictions = set()
     for node in graph.nodes:
@@ -116,26 +117,26 @@ def _get_creation_date() -> datetime.datetime:
     return datetime.datetime.strptime(utils.get_config('caligraph.creation_date'), '%Y-%m-%d')
 
 
-def _serialize_restriction(class_iri: str, prop_iri: str, val: str, restriction_is_defined: bool) -> list:
+def _serialize_restriction(class_iri: str, pred_iri: str, val: str, restriction_is_defined: bool) -> list:
     """Serialize the restrictions (i.e. relation axioms)."""
-    prop_id = prop_iri[len(clg_util.NAMESPACE_CLG_ONTOLOGY):]
-    val_id = val[len(clg_util.NAMESPACE_CLG_RESOURCE):] if clg_util.is_clg_resource(val) else val
-    restriction_iri = f'{clg_util.NAMESPACE_CLG_ONTOLOGY}RestrictionHasValue_{prop_id}_{val_id}'
+    pred_id = pred_iri[len(Namespace.CLG_ONTOLOGY.value):]
+    val_id = val[len(Namespace.CLG_RESOURCE.value):] if clg_util.is_clg_resource(val) else val
+    restriction_iri = f'{Namespace.CLG_ONTOLOGY.value}RestrictionHasValue_{pred_id}_{val_id}'
 
     if restriction_is_defined:
         result = []
     else:
         result = [
-            serialize_util.as_object_triple(restriction_iri, rdf_util.PREDICATE_TYPE, 'http://www.w3.org/2002/07/owl#Restriction'),
-            serialize_util.as_literal_triple(restriction_iri, rdf_util.PREDICATE_LABEL, f'Restriction onProperty={prop_id} hasValue={val_id}'),
-            serialize_util.as_object_triple(restriction_iri, 'http://www.w3.org/2002/07/owl#onProperty', prop_iri),
+            serialize_util.as_object_triple(restriction_iri, RdfPredicate.TYPE.value, 'http://www.w3.org/2002/07/owl#Restriction'),
+            serialize_util.as_literal_triple(restriction_iri, RdfPredicate.LABEL.value, f'Restriction onProperty={pred_id} hasValue={val_id}'),
+            serialize_util.as_object_triple(restriction_iri, 'http://www.w3.org/2002/07/owl#onProperty', pred_iri),
         ]
         if clg_util.is_clg_resource(val):
             result.append(serialize_util.as_object_triple(restriction_iri, 'http://www.w3.org/2002/07/owl#hasValue', val))
         else:
             result.append(serialize_util.as_literal_triple(restriction_iri, 'http://www.w3.org/2002/07/owl#hasValue', val))
 
-    result.append(serialize_util.as_object_triple(class_iri, rdf_util.PREDICATE_SUBCLASS_OF, restriction_iri))
+    result.append(serialize_util.as_object_triple(class_iri, RdfPredicate.SUBCLASS_OF.value, restriction_iri))
     return result
 
 
@@ -143,13 +144,13 @@ def _get_lines_ontology_dbpedia_mapping(graph) -> list:
     """Serialize the DBpedia mapping for types and predicates."""
     lines_ontology_dbpedia_mapping = []
     for node in graph.traverse_nodes_topdown():
-        if node == rdf_util.CLASS_OWL_THING:
+        if node == graph.root_node:
             continue
-        equivalents = {t for t in graph.get_parts(node) if dbp_util.is_dbp_type(t)}
-        lines_ontology_dbpedia_mapping.extend([serialize_util.as_object_triple(node, rdf_util.PREDICATE_SUBCLASS_OF, e) for e in equivalents])
+        equivalents = {t.get_iri() for t in graph.get_parts(node) if isinstance(t, DbpType)}
+        lines_ontology_dbpedia_mapping.extend([serialize_util.as_object_triple(node, RdfPredicate.SUBCLASS_OF.value, e) for e in equivalents])
     for pred in graph.get_all_predicates():
-        eq_pred = clg_util.clg_type2dbp_type(pred)
-        lines_ontology_dbpedia_mapping.append(serialize_util.as_object_triple(pred, rdf_util.PREDICATE_EQUIVALENT_PROPERTY, eq_pred))
+        eq_pred = clg_util.clg_class2dbp_class(pred)
+        lines_ontology_dbpedia_mapping.append(serialize_util.as_object_triple(pred, RdfPredicate.EQUIVALENT_PROPERTY.value, eq_pred.get_iri()))
     return lines_ontology_dbpedia_mapping
 
 
@@ -157,10 +158,10 @@ def _get_lines_ontology_provenance(graph) -> list:
     """Serialize provenance information of the ontology."""
     lines_ontology_provenance = []
     for node in graph.traverse_nodes_topdown():
-        if node == rdf_util.CLASS_OWL_THING:
+        if node == graph.root_node:
             continue
-        sources = {dbp_util.dbp_resource2wikipedia_resource(p) for p in graph.get_parts(node)}
-        lines_ontology_provenance.extend([serialize_util.as_object_triple(node, rdf_util.PREDICATE_WAS_DERIVED_FROM, s) for s in sources])
+        sources = {dbp_util.resource_uri2wikipedia_uri(p.get_iri()) for p in graph.get_parts(node)}
+        lines_ontology_provenance.extend([serialize_util.as_object_triple(node, RdfPredicate.WAS_DERIVED_FROM.value, s) for s in sources])
     return lines_ontology_provenance
 
 
@@ -169,9 +170,9 @@ def _get_lines_instances_types(graph) -> list:
     lines_instances_types = []
 
     for res in graph.get_all_resources():
-        lines_instances_types.append(serialize_util.as_object_triple(res, rdf_util.PREDICATE_TYPE, rdf_util.CLASS_OWL_NAMED_INDIVIDUAL))
+        lines_instances_types.append(serialize_util.as_object_triple(res, RdfPredicate.TYPE.value, RdfClass.OWL_NAMED_INDIVIDUAL.value))
         types = graph.get_nodes_for_resource(res)
-        lines_instances_types.extend([serialize_util.as_object_triple(res, rdf_util.PREDICATE_TYPE, t) for t in types])
+        lines_instances_types.extend([serialize_util.as_object_triple(res, RdfPredicate.TYPE.value, t) for t in types])
     return lines_instances_types
 
 
@@ -186,8 +187,8 @@ def _get_lines_instances_transitive_types(graph) -> list:
 
     for res in graph.get_all_resources():
         direct_types = graph.get_nodes_for_resource(res)
-        transitive_types = {tt for t in direct_types for tt in caligraph_ancestors[t]}.difference(direct_types | {rdf_util.CLASS_OWL_THING})
-        lines_instances_transitive_types.extend([serialize_util.as_object_triple(res, rdf_util.PREDICATE_TYPE, tt) for tt in transitive_types])
+        transitive_types = {tt for t in direct_types for tt in caligraph_ancestors[t]}.difference(direct_types | {graph.root_node})
+        lines_instances_transitive_types.extend([serialize_util.as_object_triple(res, RdfPredicate.TYPE.value, tt) for tt in transitive_types])
     return lines_instances_transitive_types
 
 
@@ -197,9 +198,9 @@ def _get_lines_instances_labels(graph) -> list:
     for res in graph.get_all_resources():
         label = graph.get_label(res)
         if label:
-            lines_instances_labels.append(serialize_util.as_literal_triple(res, rdf_util.PREDICATE_LABEL, label))
-            lines_instances_labels.append(serialize_util.as_literal_triple(res, rdf_util.PREDICATE_PREFLABEL, label))
-            altlabels = [serialize_util.as_literal_triple(res, rdf_util.PREDICATE_ALTLABEL, l) for l in graph.get_altlabels(res) if l != label]
+            lines_instances_labels.append(serialize_util.as_literal_triple(res, RdfPredicate.LABEL.value, label))
+            lines_instances_labels.append(serialize_util.as_literal_triple(res, RdfPredicate.PREFLABEL.value, label))
+            altlabels = [serialize_util.as_literal_triple(res, RdfPredicate.ALTLABEL.value, l) for l in graph.get_altlabels(res) if l != label]
             lines_instances_labels.extend(altlabels)
     return lines_instances_labels
 
@@ -231,8 +232,8 @@ def _get_lines_instances_dbpedia_mapping(graph) -> list:
     lines_instances_dbpedia_mapping = []
     for res in graph.get_all_resources():
         equivalent_res = clg_util.clg_resource2dbp_resource(res)
-        if equivalent_res in dbp_store.get_resources():
-            lines_instances_dbpedia_mapping.append(serialize_util.as_object_triple(res, rdf_util.PREDICATE_SAME_AS, equivalent_res))
+        if equivalent_res is not None:
+            lines_instances_dbpedia_mapping.append(serialize_util.as_object_triple(res, RdfPredicate.SAME_AS.value, equivalent_res.get_iri()))
     return lines_instances_dbpedia_mapping
 
 
@@ -240,36 +241,38 @@ def _get_lines_instances_provenance(graph) -> list:
     """Serialize provenance information for resources."""
     lines_instances_provenance = []
     for res in graph.get_all_resources():
-        provenance_data = {dbp_util.dbp_resource2wikipedia_resource(p) for p in graph.get_resource_provenance(res)}
-        lines_instances_provenance.extend([serialize_util.as_object_triple(res, rdf_util.PREDICATE_WAS_DERIVED_FROM, p) for p in provenance_data])
+        provenance_data = {dbp_util.resource_uri2wikipedia_uri(p.get_iri()) for p in graph.get_resource_provenance(res)}
+        lines_instances_provenance.extend([serialize_util.as_object_triple(res, RdfPredicate.WAS_DERIVED_FROM.value, p) for p in provenance_data])
     return lines_instances_provenance
 
 
 def _get_lines_dbpedia_instances(graph) -> list:
     """Serialize new DBpedia resources in DBpedia namespace."""
     lines_dbpedia_instances = []
-    new_instances = {clg_util.clg_resource2dbp_resource(res) for res in graph.get_all_resources()}.difference(dbp_store.get_resources())
-    for inst in new_instances:
-        lines_dbpedia_instances.append(serialize_util.as_object_triple(inst, rdf_util.PREDICATE_TYPE, rdf_util.CLASS_OWL_NAMED_INDIVIDUAL))
-        label = graph.get_label(clg_util.dbp_resource2clg_resource(inst))
-        if label:
-            lines_dbpedia_instances.append(serialize_util.as_literal_triple(inst, rdf_util.PREDICATE_LABEL, label))
+    new_instances = {clg_util.clg_resource2dbp_iri(res): res for res in graph.get_all_resources()}
+    new_instances = {dbp_iri: clg_res for dbp_iri, clg_res in new_instances.items() if DbpResourceStore.instance().has_resource_with_uri(dbp_iri)}
+    for dbp_iri, clg_res in new_instances.items():
+        lines_dbpedia_instances.append(serialize_util.as_object_triple(dbp_iri, RdfPredicate.TYPE.value, RdfClass.OWL_NAMED_INDIVIDUAL.value))
+        lines_dbpedia_instances.append(serialize_util.as_literal_triple(dbp_iri, RdfPredicate.LABEL.value, graph.get_label(clg_res)))
     return lines_dbpedia_instances
 
 
 def _get_lines_dbpedia_instance_types(graph) -> list:
     """Serialize new types for DBpedia resources in DBpedia namespace."""
+    dbo = DbpOntologyStore.instance()
+
     new_dbpedia_types = defaultdict(set)
     for node in graph.nodes:
-        node_types = graph.get_transitive_dbpedia_type_closure(node, force_recompute=True)
-        transitive_node_types = {tt for t in node_types for tt in dbp_store.get_transitive_supertype_closure(t)}.difference({rdf_util.CLASS_OWL_THING})
+        dbp_types = graph.get_transitive_dbpedia_type_closure(node, force_recompute=True)
+        transitive_dbp_types = {tt for t in dbp_types for tt in dbo.get_transitive_supertype_closure(t, include_root=False)}
         for res in graph.get_resources(node):
             dbp_res = clg_util.clg_resource2dbp_resource(res)
-            if dbp_res in dbp_store.get_resources():
-                new_dbpedia_types[dbp_res].update(transitive_node_types.difference(dbp_store.get_transitive_types(dbp_res)))
+            if dbp_res is not None:
+                new_dbpedia_types[dbp_res.get_iri()].update(transitive_dbp_types.difference(dbp_res.get_transitive_types()))
             else:
-                new_dbpedia_types[dbp_res].update(transitive_node_types)
-    return [serialize_util.as_object_triple(res, rdf_util.PREDICATE_TYPE, t) for res, types in new_dbpedia_types.items() for t in types]
+                dbp_res_iri = clg_util.clg_resource2dbp_iri(res)
+                new_dbpedia_types[dbp_res_iri].update(transitive_dbp_types)
+    return [serialize_util.as_object_triple(res, RdfPredicate.TYPE.value, t.get_iri()) for res, types in new_dbpedia_types.items() for t in types]
 
 
 def _get_lines_dbpedia_instance_caligraph_types(graph) -> list:
@@ -278,11 +281,11 @@ def _get_lines_dbpedia_instance_caligraph_types(graph) -> list:
 
     for res in graph.get_all_resources():
         dbp_res = clg_util.clg_resource2dbp_resource(res)
-        if dbp_res not in dbp_store.get_resources():
+        if dbp_res is None:
             continue
 
         types = graph.get_nodes_for_resource(res)
-        instance_clg_types.extend([serialize_util.as_object_triple(dbp_res, rdf_util.PREDICATE_TYPE, t) for t in types])
+        instance_clg_types.extend([serialize_util.as_object_triple(dbp_res.get_iri(), RdfPredicate.TYPE.value, t) for t in types])
     return instance_clg_types
 
 
@@ -297,12 +300,12 @@ def _get_lines_dbpedia_instance_transitive_caligraph_types(graph) -> list:
 
     for res in graph.get_all_resources():
         dbp_res = clg_util.clg_resource2dbp_resource(res)
-        if dbp_res not in dbp_store.get_resources():
+        if dbp_res is None:
             continue
 
         direct_types = graph.get_nodes_for_resource(res)
-        transitive_types = {tt for t in direct_types for tt in caligraph_ancestors[t]}.difference(direct_types | {rdf_util.CLASS_OWL_THING})
-        instance_transitive_clg_types.extend([serialize_util.as_object_triple(dbp_res, rdf_util.PREDICATE_TYPE, tt) for tt in transitive_types])
+        transitive_types = {tt for t in direct_types for tt in caligraph_ancestors[t]}.difference(direct_types | {graph.root_node})
+        instance_transitive_clg_types.extend([serialize_util.as_object_triple(dbp_res.get_iri(), RdfPredicate.TYPE.value, tt) for tt in transitive_types])
     return instance_transitive_clg_types
 
 
@@ -310,17 +313,18 @@ def _get_lines_dbpedia_instance_relations(graph) -> list:
     """Serialize new facts for DBpedia resources in DBpedia namespace."""
     new_instance_relations = set()
     for node in graph.nodes:
-        for prop, val in graph.get_axioms(node):
-            dbp_prop = clg_util.clg_type2dbp_type(prop)
+        for pred, val in graph.get_axioms(node):
+            dbp_pred = clg_util.clg_class2dbp_class(pred)
             dbp_val = clg_util.clg_resource2dbp_resource(val) if clg_util.is_clg_resource(val) else val
             for res in graph.get_resources(node):
                 dbp_res = clg_util.clg_resource2dbp_resource(res)
-                if dbp_res not in dbp_store.get_resources() or dbp_prop not in dbp_store.get_properties(dbp_res) or dbp_val not in dbp_store.get_properties(dbp_res)[dbp_prop]:
-                    new_instance_relations.add((dbp_res, dbp_prop, dbp_val))
+                dbp_res_iri = clg_util.clg_resource2dbp_iri(res)
+                if dbp_res is None or dbp_pred not in dbp_res.get_properties() or dbp_val not in dbp_res.get_properties()[dbp_pred]:
+                    new_instance_relations.add((dbp_res_iri, dbp_pred.get_iri(), dbp_val))
     lines_dbpedia_instance_relations = []
     for s, p, o in new_instance_relations:
-        if dbp_util.is_dbp_resource(o):
-            lines_dbpedia_instance_relations.append(serialize_util.as_object_triple(s, p, o))
+        if isinstance(o, DbpResource):
+            lines_dbpedia_instance_relations.append(serialize_util.as_object_triple(s, p, o.get_iri()))
         else:
             lines_dbpedia_instance_relations.append(serialize_util.as_literal_triple(s, p, o))
     return lines_dbpedia_instance_relations

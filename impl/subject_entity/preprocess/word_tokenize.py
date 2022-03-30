@@ -1,14 +1,13 @@
-from typing import Tuple, List, Optional
+from typing import Tuple, List, Optional, Set, Dict
 from spacy.lang.en import English
 from collections import defaultdict
-import impl.dbpedia.util as dbp_util
 import impl.util.spacy.listing_parser as list_nlp
-import impl.listpage.util as list_util
 import impl.wikipedia.wikimarkup_parser as wmp
 from tqdm import tqdm
 from enum import Enum
 import multiprocessing as mp
 import utils
+from impl.dbpedia.resource import DbpResource
 
 
 class TransformerSpecialToken(Enum):
@@ -46,29 +45,28 @@ class WordTokenizer:
         self.max_words_per_chunk = max_words_per_chunk
         self.meta_sections = {'see also', 'external links', 'references', 'notes'}
 
-    def __call__(self, pages: dict, entity_labels=None) -> dict:
+    def __call__(self, pages: Dict[DbpResource, dict], entity_labels: Dict[DbpResource, Tuple[Set[int], Set[int]]] = None) -> Dict[DbpResource, Tuple[list, list]]:
         if entity_labels:
             def page_with_labels_iterator():
-                for page_uri, page_data in pages.items():
-                    yield page_uri, page_data, entity_labels[page_uri]
+                for res, page_data in pages.items():
+                    yield res, page_data, entity_labels[res]
             page_items = tqdm(page_with_labels_iterator(), total=len(pages), desc='Tokenize Pages (train)')
-            tokenize_fn = self._tokenize_with_entities
+            tokenize_fn = self._tokenize_page_with_entities
         else:
             page_items = tqdm(pages.items(), total=len(pages), desc='Tokenize Pages (all)')
-            tokenize_fn = self._tokenize
+            tokenize_fn = self._tokenize_page
 
         with mp.Pool(processes=utils.get_config('max_cpus')) as pool:
-            return {page_uri: tokens for page_uri, tokens in pool.imap_unordered(tokenize_fn, page_items, chunksize=2000) if tokens[0]}
+            return {res: tokens for res, tokens in pool.imap_unordered(tokenize_fn, page_items, chunksize=2000) if tokens[0]}
 
-    def _tokenize_with_entities(self, params) -> Tuple[str, Tuple[list, list]]:
-        """Take a page and return list of (tokens, entities) chunks. If not existing, entity for a token is None."""
-        page_uri, page_data, (valid_ents, invalid_ents) = params
-        page_name = list_util.listpage2name(page_uri)
+    def _tokenize_page_with_entities(self, params: Tuple[DbpResource, dict, Tuple[Set[int], Set[int]]]) -> Tuple[DbpResource, Tuple[list, list]]:
+        """Take a resource and return list of (tokens, entities) chunks. If not existing, entity for a token is None."""
+        res, page_data, (valid_ents, invalid_ents) = params
 
         page_tokens, page_ents = [], []
         if not valid_ents | invalid_ents:
             # can't produce entity labels without valid/invalid entities, so we discard the page
-            return page_uri, (page_tokens, page_ents)
+            return res, (page_tokens, page_ents)
 
         top_section_name = ''
         for section_data in page_data['sections']:
@@ -78,7 +76,7 @@ class WordTokenizer:
                 continue  # skip meta sections
 
             for enum_data in section_data['enums']:
-                context_tokens, _ = self._context_to_tokens([page_name, top_section_name, section_name])
+                context_tokens, _ = self._context_to_tokens([res.get_label(), top_section_name, section_name])
                 context_ents = [-100] * len(context_tokens)
 
                 max_chunk_size = self.max_words_per_chunk - len(context_tokens)
@@ -88,14 +86,14 @@ class WordTokenizer:
 
             for table in section_data['tables']:
                 table_header, table_data = table['header'], table['data']
-                context_tokens, _ = self._context_to_tokens([page_name, top_section_name, section_name], table_header)
+                context_tokens, _ = self._context_to_tokens([res.get_label(), top_section_name, section_name], table_header)
                 context_ents = [-100] * len(context_tokens)
 
                 max_chunk_size = self.max_words_per_chunk - len(context_tokens)
                 for chunk_tokens, chunk_ents in self._listing_to_token_entity_chunks(table_data, valid_ents, invalid_ents, max_chunk_size):
                     page_tokens.append(context_tokens + chunk_tokens)
                     page_ents.append(context_ents + chunk_ents)
-        return page_uri, (page_tokens, page_ents)
+        return res, (page_tokens, page_ents)
 
     def _context_to_tokens(self, context: List[str], table_header=None) -> Tuple[list, list]:
         """Converts list of context strings (and table header) to context tokens."""
@@ -117,7 +115,7 @@ class WordTokenizer:
         ctx_tokens[-1] = TransformerSpecialToken.CONTEXT_END.value  # replace last token with final context separator
         return ctx_tokens, ctx_ws
 
-    def _listing_to_token_entity_chunks(self, listing_data: list, valid_ents: set, invalid_ents: set, max_group_size: int):
+    def _listing_to_token_entity_chunks(self, listing_data: list, valid_ents: Set[int], invalid_ents: Set[int], max_group_size: int):
         """Converts a listing to a set of (tokens, entities) chunks."""
         current_group_size = 0
         current_group_tokens = []
@@ -143,82 +141,69 @@ class WordTokenizer:
         if current_group_tokens:
             yield current_group_tokens, current_group_ents
 
-    def _entry_to_tokens_and_entities(self, entry: dict, valid_ents: set, invalid_ents: set) -> Tuple[list, list]:
+    def _entry_to_tokens_and_entities(self, entry: dict, valid_ents: Set[int], invalid_ents: Set[int]) -> Tuple[list, list]:
         entry_text = entry['text']
+        entry_entities = entry['entities']
         entry_doc = list_nlp.parse(entry_text)
         depth = entry['depth']
 
         # check whether entry is valid training data
-        entities = list(entry['entities'])
-        entities.extend(self._find_untagged_entities(entry_doc, entities))
-        entity_names = {e['name'] for e in entities}
-        if all(en not in valid_ents for en in entity_names) and any(en not in invalid_ents for en in entity_names):
+        entity_indices = {e['idx'] for e in entry_entities}
+        has_valid_entities = len(entity_indices.intersection(valid_ents)) > 0
+        has_untagged_entities = self._has_untagged_entities(entry_doc, entry_entities)
+        has_unclear_entities = has_untagged_entities or entity_indices != invalid_ents
+        if not has_valid_entities and has_unclear_entities:
             # discard entry if 1) there are no valid entities we know of and
-            # 2) we are unsure about other entities (i.e., they MAY be valid entities)
+            # 2) there are some entities about which we don't know anything (i.e., they MAY be valid entities)
             return [], []
 
         # extract tokens and entities
-        tokens, _, ents = self._text_to_tokens(entry_doc, entities, valid_ents)
+        tokens, _, ents = self._text_to_tokens(entry_doc, entry_entities, valid_ents)
         if not tokens or not ents:
             return [], []
-        return [TransformerSpecialToken.get_entry_by_depth(depth)] + tokens, [None] + ents
+        return [TransformerSpecialToken.get_entry_by_depth(depth)] + tokens, [-1] + ents
 
-    def _row_to_tokens_and_entities(self, row: list, valid_ents: set, invalid_ents: set) -> Tuple[list, list]:
+    def _row_to_tokens_and_entities(self, row: list, valid_ents: Set[int], invalid_ents: Set[int]) -> Tuple[list, list]:
         cell_docs = [list_nlp.parse(cell['text']) for cell in row]
         # check whether row is valid training data
-        row_entities = []
+        row_entity_indices = set()
+        has_untagged_entities = False
         for cell_idx, cell in enumerate(row):
-            cell_doc = cell_docs[cell_idx]
             cell_entities = list(cell['entities'])
-            row_entities.extend(cell_entities)
-            row_entities.extend(self._find_untagged_entities(cell_doc, cell_entities))
-        entity_names = {e['name'] for e in row_entities}
-        if all(en not in valid_ents for en in entity_names) and any(en not in invalid_ents for en in entity_names):
+            row_entity_indices.update({e['idx'] for e in cell_entities})
+            has_untagged_entities = has_untagged_entities or self._has_untagged_entities(cell_docs[cell_idx], cell_entities)
+        has_valid_entities = len(row_entity_indices.intersection(valid_ents)) > 0
+        has_unclear_entities = has_untagged_entities or row_entity_indices != invalid_ents
+        if not has_valid_entities and has_unclear_entities:
             # discard entry if 1) there are no valid entities we know of and
-            # 2) we are unsure about other entities (i.e., they MAY be valid entities)
+            # 2) there are some entities about which we don't know anything (i.e., they MAY be valid entities)
             return [], []
 
         # extract tokens and entities
         tokens, ents = [], []
         for cell_idx, cell in enumerate(row):
-            cell_doc = cell_docs[cell_idx]
-            cell_entities = list(cell['entities'])
-            cell_tokens, _, cell_ents = self._text_to_tokens(cell_doc, cell_entities, valid_ents)
+            cell_tokens, _, cell_ents = self._text_to_tokens(cell_docs[cell_idx], cell['entities'], valid_ents)
             tokens += [TransformerSpecialToken.TABLE_COL.value] + cell_tokens
-            ents += [None] + cell_ents
+            ents += [-1] + cell_ents
         if tokens:
             tokens[0] = TransformerSpecialToken.TABLE_ROW.value  # special indicator for start of table row
         return tokens, ents
 
-    def _find_untagged_entities(self, doc, entities: list):
-        """Adds a dummy entity to the list of entities of a document if there is at least one unidentified entity."""
-        untagged_entities = []
-
+    def _has_untagged_entities(self, doc, entities: list) -> bool:
+        """True if there is at least one entity that is not tagged with wiki markup."""
         entity_character_idxs = set()
         for entity_data in entities:
-            start = entity_data['idx']
+            start = entity_data['start']
             end = start + len(entity_data['text'])
             entity_character_idxs.update(range(start, end))
         for ent in doc.ents:
-            start = ent.start_char
-            end = ent.end_char
-            text = ent.text
-            while start in entity_character_idxs and start < end:
-                start += 1
-                text = text[1:]
-            while (end - 1) in entity_character_idxs and start < end:
-                end -= 1
-                text = text[:-1]
-            if not entity_character_idxs.intersection(set(range(start, end))) and len(text.strip()) > 1:
-                untagged_entities.append({'name': 'UNTAGGED-ENT'})
-                break  # finding one is already enough
-        return untagged_entities
+            if not entity_character_idxs.intersection(set(range(ent.start_char, ent.end_char))):
+                return True
+        return False
 
-    def _tokenize(self, params) -> Tuple[str, Tuple[list, list]]:
-        """Takes a page and returns list of token chunks."""
-        page_uri, page_data = params
-        is_list_page = list_util.is_listpage(page_uri)
-        page_name = list_util.listpage2name(page_uri) if is_list_page else dbp_util.resource2name(page_uri)
+    def _tokenize_page(self, params: Tuple[DbpResource, dict]) -> Tuple[DbpResource, Tuple[list, list]]:
+        """Takes a resource and returns list of token chunks."""
+        res, page_data = params
         page_tokens, page_ws = [], []
 
         top_section_name = ''
@@ -228,21 +213,21 @@ class WordTokenizer:
             if top_section_name in self.meta_sections:
                 continue  # skip meta sections
             for enum_data in section_data['enums']:
-                context_tokens, context_ws = self._context_to_tokens([page_name, top_section_name, section_name])
+                context_tokens, context_ws = self._context_to_tokens([res.get_label(), top_section_name, section_name])
                 max_group_size = self.max_words_per_chunk - len(context_tokens)
                 for group_tokens, group_ws in self._listing_to_token_groups(enum_data, max_group_size):
                     page_tokens.append(context_tokens + group_tokens)
                     page_ws.append(context_ws + group_ws)
             for table in section_data['tables']:
                 table_header, table_data = table['header'], table['data']
-                context_tokens, context_ws = self._context_to_tokens([page_name, top_section_name, section_name], table_header)
+                context_tokens, context_ws = self._context_to_tokens([res.get_label(), top_section_name, section_name], table_header)
                 max_group_size = self.max_words_per_chunk - len(context_tokens)
                 for group_tokens, group_ws in self._listing_to_token_groups(table_data, max_group_size):
                     page_tokens.append(context_tokens + group_tokens)
                     page_ws.append(context_ws + group_ws)
-        return page_uri, (page_tokens, page_ws)
+        return res, (page_tokens, page_ws)
 
-    def _listing_to_token_groups(self, listing_data, max_group_size: int):
+    def _listing_to_token_groups(self, listing_data: list, max_group_size: int):
         current_group_size = 0
         current_group_tokens = []
         current_group_ws = []
@@ -283,12 +268,12 @@ class WordTokenizer:
             tokens[0] = TransformerSpecialToken.TABLE_ROW.value
         return tokens, ws
 
-    def _text_to_tokens(self, doc, entities: Optional[list], valid_ents: Optional[set]) -> Tuple[list, list, list]:
+    def _text_to_tokens(self, doc, entities: Optional[list], valid_ents: Optional[Set[int]]) -> Tuple[list, list, list]:
         """Transforms a spacy doc (and entity info) to lists of tokens, whitespaces(, and entities)."""
         if not entities or not valid_ents:
             tokens = [w.text for w in doc]
             ws = [w.whitespace_ for w in doc]
-            return tokens, ws, [None] * len(tokens)
+            return tokens, ws, [-1] * len(tokens)
 
         tokens, ws, token_ents = [], [], []
         entity_pos_map = self._create_entity_position_map(entities, valid_ents)
@@ -300,13 +285,14 @@ class WordTokenizer:
             current_position += len(w.text_with_ws)
         return tokens, ws, token_ents
 
-    def _create_entity_position_map(self, entities: list, valid_ents: set):
+    def _create_entity_position_map(self, entities: list, valid_ents: Set[int]):
         """Index valid entities by their text position."""
-        entity_pos_map = defaultdict(lambda: None)
-        filtered_ents = [e for e in entities if e['name'] in valid_ents]
-        for ent in filtered_ents:
-            idx = ent['idx']
+        entity_pos_map = defaultdict(lambda: -1)
+        for ent in entities:
+            if ent['idx'] not in valid_ents:
+                continue
+            start = ent['start']
             text_length = len(ent['text'])
-            for i in range(idx, idx + text_length):
-                entity_pos_map[i] = ent['name']
+            for i in range(start, start + text_length):
+                entity_pos_map[i] = ent['idx']
         return entity_pos_map

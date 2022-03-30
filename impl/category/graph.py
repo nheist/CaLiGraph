@@ -1,84 +1,90 @@
 import networkx as nx
-from typing import Set
-import impl.category.util as cat_util
-import impl.category.store as cat_store
+from typing import Set, Tuple
 from impl.util.hierarchy_graph import HierarchyGraph
-import utils
 from utils import get_logger
 import impl.util.nlp as nlp_util
 import impl.category.cat2ax as cat_axioms
+from impl.category.cat2ax import TypeAxiom
+from impl.dbpedia.category import DbpCategory, DbpCategoryStore
+from impl.dbpedia.resource import DbpResource
 
 
 class CategoryGraph(HierarchyGraph):
     """A graph of categories retrieved from Wikipedia categories."""
     # initialisations
     def __init__(self, graph: nx.DiGraph, root_node: str = None):
-        super().__init__(graph, root_node or utils.get_config('category.root_category'))
+        super().__init__(graph, root_node or DbpCategoryStore.instance().get_category_root().name)
 
     # node categories
-    def get_all_categories(self) -> set:
+    def get_all_categories(self) -> Set[DbpCategory]:
         return {cat for node in self.nodes for cat in self.get_categories(node)}
 
-    def get_categories(self, node: str) -> set:
+    def get_categories(self, node: str) -> Set[DbpCategory]:
         return self.get_parts(node)
 
-    def _set_categories(self, node: str, categories: set):
+    def _set_categories(self, node: str, categories: Set[DbpCategory]):
         self._set_parts(node, categories)
 
-    def get_nodes_for_category(self, category: str) -> set:
+    def get_nodes_for_category(self, category: DbpCategory) -> Set[str]:
         return self.get_nodes_for_part(category)
 
     # node resources
 
-    def get_resources(self, node: str) -> set:
+    def get_resources(self, node: str) -> Set[DbpResource]:
         if not self.has_node(node):
             raise Exception(f'Node {node} not in category graph.')
-        return {res for cat in self.get_categories(node) for res in cat_store.get_resources(cat)}
-
-    def get_statistics(self, node: str) -> dict:
-        if not self.has_node(node):
-            raise Exception(f'Node {node} not in category graph.')
-        return cat_store.get_statistics(node)
+        return {res for cat in self.get_categories(node) for res in cat.get_resources()}
 
     # GRAPH CREATION
 
     @classmethod
     def create_from_dbpedia(cls):
         get_logger().info('Building conceptual category graph..')
-        edges = [(cat, subcat) for cat in cat_store.get_categories() for subcat in cat_store.get_children(cat)]
-        graph = CategoryGraph(nx.DiGraph(incoming_graph_data=edges))
+        dbc = DbpCategoryStore.instance()
 
-        for node in graph.nodes:
-            graph._set_name(node, cat_util.category2name(node))
-            graph._set_parts(node, {node})
+        categories = dbc.get_categories()
+        edges = [(cat.name, subcat.name) for cat in categories for subcat in dbc.get_children(cat)]
+        graph = nx.DiGraph(incoming_graph_data=edges)
+        graph.add_nodes_from({c.name for c in categories})  # make sure all categories are in the graph
+        cat_graph = CategoryGraph(graph)
 
-        graph.make_conceptual()
+        for cat in categories:
+            cat_graph._set_name(cat.name, cat.get_label())
+            cat_graph._set_categories(cat.name, {cat})
 
-        get_logger().info(f'Built conceptual category graph with {len(graph.nodes)} nodes and {len(graph.edges)} edges.')
-        return graph
+        cat_graph.make_conceptual()
+
+        get_logger().info(f'Built conceptual category graph with {len(cat_graph.nodes)} nodes and {len(cat_graph.edges)} edges.')
+        return cat_graph
 
     # filter for conceptual categories
 
     def make_conceptual(self):
         """Remove all nodes that are non-conceptual (i.e. that do not represent a class in a taxonomy)."""
-        cat_names = [cat_store.get_label(cat) for cat in self.nodes]
-        conceptual_categories = {cat for cat, has_plural_lexhead in zip(self.nodes, nlp_util.has_plural_lexhead_subjects(cat_names)) if has_plural_lexhead}
+        nodes = list(self.nodes)
+        conceptual_category_nodes = {n for n, plh in zip(nodes, nlp_util.has_plural_lexhead_subjects(nodes)) if plh}
+
         # clearing the graph of any invalid nodes
-        self._remove_all_nodes_except(conceptual_categories | {self.root_node})
+        self._remove_all_nodes_except(conceptual_category_nodes)
         self.append_unconnected()
         return self
 
     # CATEGORY AXIOMS
 
-    def get_axiom_edges(self) -> Set[tuple]:
+    def get_axiom_edges(self) -> Set[Tuple[str, str]]:
         """Return all edges that are loosely confirmed by axioms (i.e. most children share the same pattern)."""
         valid_axiom_edges = set()
         for parent in self.content_nodes:
-            parent_axioms = cat_axioms.get_type_axioms(parent)
+            parent_axioms = self._get_type_axioms_for_node(parent)
             children = tuple(self.children(parent))
-            child_axioms = {c: {a for a in cat_axioms.get_type_axioms(c)} for c in children}
+            child_axioms = {c: self._get_type_axioms_for_node(c) for c in children}
             consistent_child_axioms = len(children) > 2 and any(all(any(a.implies(x) for x in child_axioms[c]) for c in children) for a in child_axioms[children[0]])
             for c in children:
                 if consistent_child_axioms or any(ca.implies(pa) for ca in child_axioms[c] for pa in parent_axioms):
                     valid_axiom_edges.add((parent, c))
         return valid_axiom_edges
+
+    def _get_type_axioms_for_node(self, node: str) -> Set[TypeAxiom]:
+        categories = self.get_categories(node)
+        axioms = {a for c in categories for a in cat_axioms.get_type_axioms(c)}
+        return axioms

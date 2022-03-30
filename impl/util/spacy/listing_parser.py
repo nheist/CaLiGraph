@@ -23,7 +23,7 @@ def parse(text: str) -> Doc:
 
 
 def _initialise_parser():
-    path_to_model = utils._get_cache_path('spacy_listpage_ne-tagging_GS')
+    path_to_model = utils._get_cache_path('spacy_listpage_ne-tagging')
     if not path_to_model.is_dir():
         _train_parser()
     return spacy.load(str(path_to_model))
@@ -31,7 +31,7 @@ def _initialise_parser():
 
 def _train_parser():
     get_logger().info('Training new spacy model for entity tagging in listings..')
-    filepath_gs = utils._get_cache_path('spacy_listpage_ne-tagging_GS')
+    filepath_gs = utils._get_cache_path('spacy_listpage_ne-tagging')
     if not filepath_gs.is_dir():
         train_ner_model(_retrieve_training_data_gs, str(filepath_gs), model='en_core_web_lg')
 

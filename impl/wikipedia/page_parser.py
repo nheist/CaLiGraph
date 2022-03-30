@@ -1,10 +1,8 @@
 """Functionality for parsing Wikipedia pages from WikiText."""
 
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Dict
 import wikitextparser as wtp
 from wikitextparser import WikiText
-import impl.dbpedia.store as dbp_store
-import impl.dbpedia.util as dbp_util
 import impl.util.nlp as nlp_util
 from . import wikimarkup_parser as wmp
 import re
@@ -14,6 +12,7 @@ from utils import get_logger
 from tqdm import tqdm
 import multiprocessing as mp
 from enum import Enum
+from impl.dbpedia.resource import DbpResource, DbpResourceStore, DbpFile
 
 
 LISTING_INDICATORS = ('*', '#', '{|')
@@ -25,8 +24,9 @@ class PageType(Enum):
     TABLE = 'table'
 
 
-def _parse_pages(pages_markup) -> dict:
-    dbp_store.resolve_redirect('')  # make sure redirects are initialised before going into multiprocessing
+def _parse_pages(pages_markup: Dict[DbpResource, str]) -> Dict[DbpResource, Optional[dict]]:
+    dbr = DbpResourceStore.instance()
+    dbr.resolve_redirect(dbr.get_resource_by_idx(0))  # make sure redirects are initialised before going into multiprocessing
 
     parsed_pages = {}
     with mp.Pool(processes=utils.get_config('max_cpus')) as pool:
@@ -37,7 +37,7 @@ def _parse_pages(pages_markup) -> dict:
     return parsed_pages
 
 
-def _parse_page_with_timeout(resource_and_markup: tuple) -> tuple:
+def _parse_page_with_timeout(resource_and_markup: Tuple[DbpResource, str]) -> Tuple[DbpResource, Optional[dict]]:
     """Return a single parsed page in the following hierarchical structure:
 
     Sections > Enums > Entries > Entities
@@ -54,13 +54,13 @@ def _parse_page_with_timeout(resource_and_markup: tuple) -> tuple:
     except Exception as e:
         if type(e) == KeyboardInterrupt:
             raise e
-        get_logger().error(f'Failed to parse page {resource}: {e}')
+        get_logger().error(f'Failed to parse page {resource.name}: {e}')
         return resource, None
 
 
-def _parse_page(resource_and_markup: tuple) -> tuple:
+def _parse_page(resource_and_markup: Tuple[DbpResource, str]) -> Tuple[DbpResource, Optional[dict]]:
     resource, page_markup = resource_and_markup
-    if dbp_util.is_file_resource(resource):
+    if isinstance(resource, DbpFile):
         return resource, None  # discard files and images
     if not any(indicator in page_markup for indicator in LISTING_INDICATORS):
         return resource, None  # early return of 'None' if page contains no listings at all
@@ -83,8 +83,7 @@ def _parse_page(resource_and_markup: tuple) -> tuple:
         return resource, None
 
     # expand wikilinks
-    resource_name = dbp_util.resource2name(resource)
-    cleaned_wiki_text = _expand_wikilinks(cleaned_wiki_text, resource_name)
+    cleaned_wiki_text = _expand_wikilinks(cleaned_wiki_text, resource)
 
     # extract data from sections
     sections = _extract_sections(cleaned_wiki_text)
@@ -129,10 +128,10 @@ def _remove_enums_within_tables(wiki_text: WikiText) -> WikiText:
     return wtp.parse(wiki_text.string) if something_changed else wiki_text
 
 
-def _expand_wikilinks(wiki_text: WikiText, resource_name: str) -> WikiText:
+def _expand_wikilinks(wiki_text: WikiText, resource: DbpResource) -> WikiText:
     invalid_wikilink_prefixes = ['File:', 'Image:', 'Category:', 'List of']
     text_to_wikilink = {wl.text or wl.target: wl.string for wl in wiki_text.wikilinks if not any(wl.target.startswith(prefix) for prefix in invalid_wikilink_prefixes)}
-    text_to_wikilink[resource_name] = f'[[{resource_name}]]'  # replace mentions of the page title with a link to it
+    text_to_wikilink[resource.name] = f'[[{resource.name}]]'  # replace mentions of the page title with a link to it
     pattern_to_wikilink = {r'(?<![|\[])\b' + re.escape(text) + r'\b(?![|\]])': wl for text, wl in text_to_wikilink.items()}
     regex = re.compile("|".join(pattern_to_wikilink.keys()))
     try:
@@ -253,9 +252,9 @@ def _convert_markup(wiki_text: str) -> Tuple[str, list]:
             continue  # skip entity with a text that can not be located
         entity_start_index = current_index + plain_text[current_index:].index(text)
         current_index = entity_start_index + len(text)
-        entity_name = wmp.get_entity_for_wikilink(w)
-        if entity_name:
-            entities.append({'idx': entity_start_index, 'text': text, 'name': entity_name})
+        entity = wmp.get_resource_for_wikilink(w)
+        if entity is not None:
+            entities.append({'start': entity_start_index, 'text': text, 'idx': entity.idx})
     return plain_text, entities
 
 

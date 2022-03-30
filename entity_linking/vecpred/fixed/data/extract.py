@@ -22,7 +22,7 @@ def extract_training_data(parts: int, embedding_type: str, extract_validation_se
     entity_occurrence_data = _get_entity_occurrence_data(parts, df_listings, dataset_pages_chunks)
 
     # block surface forms
-    sf_to_entity_mapping = blocking.get_sf_to_entity_mapping(entity_occurrence_data)
+    sf_to_entity_mapping = blocking.get_sf_to_entity_mapping(entity_occurrence_data)  # TODO: here we return entity indices -> adapt remaining program to that
     el_util.store_data(sf_to_entity_mapping, 'sf-to-entity-word-mapping.p', parts=parts)
 
     # load embedding vectors

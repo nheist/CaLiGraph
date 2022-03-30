@@ -1,46 +1,47 @@
 """Heuristic retrieval of subject entities in list pages using the mapping to DBpedia categories."""
 
-import impl.dbpedia.util as dbp_util
+from typing import Tuple, Set
 import impl.dbpedia.heuristics as dbp_heur
-import impl.dbpedia.store as dbp_store
-import impl.category.store as cat_store
 from impl import category
+from impl import listpage
 import impl.listpage.mapping as list_mapping
+from impl.dbpedia.resource import DbpEntity, DbpListpage, DbpResourceStore
+from impl.dbpedia.category import DbpCategory
 
 
-def find_subject_entities_for_listpage(page_uri: str, page_data: dict, graph) -> tuple:
+def find_subject_entities_for_listpage(lp: DbpListpage, content: dict, graph) -> Tuple[Set[int], Set[int]]:
     """Retrieve all entities of a list page that are subject entities or explicit non-subject entities."""
-    positive_SEs, negative_SEs = set(), set()
     # compute potential subject entities for list page
-    page_potential_SEs = {dbp_util.resource2name(res) for cat in _get_category_descendants_for_list(page_uri) for res in cat_store.get_resources(cat)}
+    dbr = DbpResourceStore.instance()
+    page_potential_SEs = {res for cat in _get_category_descendants_for_list(lp) for res in cat.get_resources()}
     # compute types of list page
-    page_types = {t for n in graph.get_nodes_for_part(page_uri) for t in dbp_store.get_independent_types(graph.get_transitive_dbpedia_type_closure(n))}
+    page_types = {t for n in graph.get_nodes_for_part(lp) for t in dbr.get_independent_types(graph.get_transitive_dbpedia_type_closure(n))}
     page_disjoint_types = {dt for t in page_types for dt in dbp_heur.get_all_disjoint_types(t)}
     # collect all linked entities on the page
-    page_entities = {ent['name'] for s in page_data['sections'] for enum in s['enums'] for entry in enum for ent in entry['entities']}
-    page_entities.update({ent['name'] for s in page_data['sections'] for table in s['tables'] for row in table['data'] for cell in row for ent in cell['entities']})
+    page_entities = {dbr.get_resource_by_idx(ent['idx']) for s in content['sections'] for enum in s['enums'] for entry in enum for ent in entry['entities']}
+    page_entities.update({dbr.get_resource_by_idx(ent['idx']) for s in content['sections'] for table in s['tables'] for row in table['data'] for cell in row for ent in cell['entities']})
+
+    positive_SEs, negative_SEs = set(), set()
     for ent in page_entities:
-        ent_uri = dbp_util.name2resource(ent)
-        if not dbp_store.is_possible_resource(ent_uri):
-            negative_SEs.add(ent)
+        if not isinstance(ent, DbpEntity):
+            negative_SEs.add(ent.idx)
         elif ent in page_potential_SEs:
-            positive_SEs.add(ent)
-        elif page_disjoint_types.intersection(dbp_store.get_types(ent_uri)):
-            negative_SEs.add(ent)
+            positive_SEs.add(ent.idx)
+        elif page_disjoint_types.intersection(ent.get_types()):
+            negative_SEs.add(ent.idx)
     return positive_SEs, negative_SEs
 
 
-def _get_category_descendants_for_list(listpage_uri: str) -> set:
-    """Return the category that is most closely related to the given list page as well as all of its children."""
-    categories = set()
+def _get_category_descendants_for_list(lp: DbpListpage) -> Set[DbpCategory]:
+    """Return the categories that are most closely related to the given listpage as well as all of its children."""
+    list_graph = listpage.get_merged_listgraph()
     cat_graph = category.get_merged_graph()
-    mapped_categories = {x for cat in _get_categories_for_list(listpage_uri) for x in cat_graph.get_nodes_for_category(cat)}
-    descendant_categories = {descendant for cat in mapped_categories for descendant in cat_graph.descendants(cat)}
-    for cat in mapped_categories | descendant_categories:
-        categories.update(cat_graph.get_categories(cat))
+    category_nodes = {cat_node for list_node in list_graph.get_nodes_for_list(lp) for cat_node in _get_related_category_nodes(list_node)}
+    category_nodes = category_nodes | {dn for cn in category_nodes for dn in cat_graph.descendants(cn)}
+
+    categories = {cat for cn in category_nodes for cat in cat_graph.get_categories(cn)}
     return categories
 
 
-def _get_categories_for_list(listpage_uri: str) -> set:
-    """Return category that is mapped to the list page."""
-    return list_mapping.get_equivalent_categories(listpage_uri) | list_mapping.get_parent_categories(listpage_uri)
+def _get_related_category_nodes(list_node: str) -> Set[str]:
+    return list_mapping.get_equivalent_category_nodes(list_node) | list_mapping.get_parent_category_nodes(list_node)

@@ -6,37 +6,36 @@ The extraction is performed in three steps:
 3) Apply patterns to all categories to extract axioms
 """
 
+from typing import Dict, Union, List, Tuple, Optional
 import utils
+from spacy.tokens import Doc
 from utils import get_logger
 from collections import defaultdict
-from typing import List, Tuple
 import operator
 import numpy as np
 import multiprocessing as mp
 from tqdm import tqdm
-import impl.dbpedia.store as dbp_store
-import impl.dbpedia.util as dbp_util
 import impl.dbpedia.heuristics as dbp_heur
 import impl.category.category_set as cat_set
-import impl.category.store as cat_store
+from impl.category.category_set import CandidateSet
 import impl.util.nlp as nlp_util
-import impl.util.rdf as rdf_util
+from impl.util.rdf import RdfPredicate
+from impl.dbpedia.ontology import DbpType, DbpObjectPredicate, DbpOntologyStore
+from impl.dbpedia.resource import DbpResource, DbpEntity, DbpResourceStore
+from impl.dbpedia.category import DbpCategory, DbpCategoryStore
 
 
 PATTERN_CONF = utils.get_config('cat2ax.pattern_confidence')
 
 
 class Axiom:
-    def __init__(self, predicate: str, value: str, confidence: float):
+    def __init__(self, predicate, value, confidence: float):
         self.predicate = predicate
         self.value = value
         self.confidence = confidence
 
     def implies(self, other):
         return self.predicate == other.predicate and self.value == other.value
-
-    def contradicts(self, other):
-        raise NotImplementedError("Please use the subclasses.")
 
     def accepts_resource(self, dbp_resource: str) -> bool:
         raise NotImplementedError("Please use the subclasses.")
@@ -46,37 +45,39 @@ class Axiom:
 
 
 class TypeAxiom(Axiom):
-    def __init__(self, value: str, confidence: float):
-        super().__init__(rdf_util.PREDICATE_TYPE, value, confidence)
+    def __init__(self, value: DbpType, confidence: float):
+        super().__init__(RdfPredicate.TYPE, value, confidence)
 
     def implies(self, other):
-        return super().implies(other) or other.value in dbp_store.get_transitive_supertype_closure(self.value)
+        return super().implies(other) or other.value in DbpOntologyStore.instance().get_transitive_supertype_closure(self.value)
 
-    def accepts_resource(self, dbp_resource: str) -> bool:
-        return self.value in dbp_store.get_transitive_types(dbp_resource)
+    def accepts_resource(self, res: DbpResource) -> bool:
+        return self.value in res.get_transitive_types()
 
-    def rejects_resource(self, dbp_resource: str) -> bool:
-        return self.value in {dt for t in dbp_store.get_types(dbp_resource) for dt in dbp_heur.get_direct_disjoint_types(t)}
+    def rejects_resource(self, res: DbpResource) -> bool:
+        return self.value in {dt for t in res.get_types() for dt in dbp_heur.get_direct_disjoint_types(t)}
 
 
 class RelationAxiom(Axiom):
-    def accepts_resource(self, dbp_resource: str) -> bool:
-        props = dbp_store.get_properties(dbp_resource)
-        return self.predicate in props and (self.value in props[self.predicate] or dbp_store.resolve_redirect(self.value) in props[self.predicate])
+    def accepts_resource(self, res: DbpResource) -> bool:
+        dbr = DbpResourceStore.instance()
+        props = res.get_properties()
+        return self.predicate in props and (self.value in props[self.predicate] or dbr.resolve_redirect(self.value) in props[self.predicate])
 
-    def rejects_resource(self, dbp_resource: str) -> bool:
-        if not dbp_store.is_functional(self.predicate):
+    def rejects_resource(self, res: DbpResource) -> bool:
+        if not dbp_heur.is_functional_predicate(self.predicate):
             return False
-        props = dbp_store.get_properties(dbp_resource)
-        return self.predicate in props and self.value not in props[self.predicate] and dbp_store.resolve_redirect(self.value) not in props[self.predicate]
+        dbr = DbpResourceStore.instance()
+        props = res.get_properties()
+        return self.predicate in props and self.value not in props[self.predicate] and dbr.resolve_redirect(self.value) not in props[self.predicate]
 
 
-def get_type_axioms(cat: str) -> list:
+def get_type_axioms(cat: DbpCategory) -> List[TypeAxiom]:
     """Return all type axioms created by the Cat2Ax approach."""
-    return [a for a in get_axioms(cat) if type(a) == TypeAxiom]
+    return [a for a in get_axioms(cat) if isinstance(a, TypeAxiom)]
 
 
-def get_axioms(cat: str) -> list:
+def get_axioms(cat: DbpCategory) -> List[Axiom]:
     """Return all axioms created by the Cat2Ax approach."""
     global __CATEGORY_AXIOMS__
     if '__CATEGORY_AXIOMS__' not in globals():
@@ -96,9 +97,10 @@ def extract_category_axioms(category_graph):
 
 # --- PATTERN EXTRACTION ---
 
-def _extract_patterns(category_graph, candidate_sets):
+def _extract_patterns(category_graph, candidate_sets: List[CandidateSet]) -> Dict[tuple, dict]:
     """Return property/type patterns extracted from `category_graph` for each set in `candidate_sets`."""
     get_logger().debug('Extracting Cat2Ax patterns..')
+    dbc = DbpCategoryStore.instance()
     patterns = defaultdict(lambda: {'preds': defaultdict(list), 'types': defaultdict(list)})
 
     for parent, children, (first_words, last_words) in candidate_sets:
@@ -107,10 +109,10 @@ def _extract_patterns(category_graph, candidate_sets):
         type_surface_scores = _get_type_surface_scores(first_words + last_words)
 
         categories_with_matches = {cat: _get_match_for_category(cat, first_words, last_words) for cat in children}
-        categories_with_matches = {cat: match for cat, match in categories_with_matches.items() if category_graph.has_node(cat) and match}
+        categories_with_matches = {cat: match for cat, match in categories_with_matches.items() if category_graph.has_node(cat.name) and match}
         for cat, match in categories_with_matches.items():
             # compute predicate frequencies
-            statistics = cat_store.get_statistics(cat)
+            statistics = dbc.get_statistics(cat)
             possible_vals = _get_resource_surface_scores(match)
             for (pred, val), freq in statistics['property_frequencies'].items():
                 if val in possible_vals:
@@ -122,7 +124,7 @@ def _extract_patterns(category_graph, candidate_sets):
             predicate_frequencies = {pred: freqs + ([0]*(len(categories_with_matches)-len(freqs))) for pred, freqs in predicate_frequencies.items()}
             pred, freqs = max(predicate_frequencies.items(), key=lambda x: np.median(x[1]))
             med = np.median(freqs)
-            if dbp_util.is_dbp_type(pred) and med > 0:
+            if med > 0:
                 for _ in categories_with_matches:
                     patterns[(tuple(first_words), tuple(last_words))]['preds'][pred].append(med)
         if type_frequencies:
@@ -139,40 +141,42 @@ def _extract_patterns(category_graph, candidate_sets):
     return patterns
 
 
-def _get_match_for_category(category: str, first_words: tuple, last_words: tuple) -> str:
+def _get_match_for_category(cat: DbpCategory, first_words: tuple, last_words: tuple) -> str:
     """Return variable part of the category name."""
-    doc = nlp_util.remove_by_phrase(cat_store.get_label(category))
+    doc = nlp_util.remove_by_phrase(cat.get_label())
     return doc[len(first_words):len(doc)-len(last_words)].text
 
 
-def _get_resource_surface_scores(text):
+def _get_resource_surface_scores(text: str) -> Dict[Union[str, DbpEntity], float]:
     """Return resource lexicalisation scores for the given text."""
     resource_surface_scores = {}
     if not text:
         return resource_surface_scores
     resource_surface_scores[text] = 1
-    direct_match = dbp_store.resolve_redirect(dbp_util.name2resource(text))
-    if direct_match in dbp_store.get_resources():
-        resource_surface_scores[direct_match] = 1
-    for surface_match, frequency in sorted(dbp_store.get_inverse_lexicalisations(text.lower()).items(), key=operator.itemgetter(1)):
+    dbr = DbpResourceStore.instance()
+    if dbr.has_resource_with_name(text):
+        direct_match = dbr.resolve_redirect(dbr.get_resource_by_name(text))
+        if isinstance(direct_match, DbpEntity):
+            resource_surface_scores[direct_match] = 1
+    for surface_match, frequency in sorted(dbr.get_surface_form_references(text).items(), key=operator.itemgetter(1)):
         resource_surface_scores[surface_match] = frequency
     return resource_surface_scores
 
 
-def _get_type_surface_scores(words, lemmatize=True):
+def _get_type_surface_scores(words: list, lemmatize=True) -> Dict[DbpType, float]:
     """Return type lexicalisation scores for a given set of `words`."""
     lexicalisation_scores = defaultdict(int)
+    dbo = DbpOntologyStore.instance()
     word_lemmas = [nlp_util.lemmatize_token(word_doc[0]) for word_doc in nlp_util.parse_texts(words)] if lemmatize else words
     for lemma in word_lemmas:
-        for t, score in dbp_store.get_type_lexicalisations(lemma).items():
+        for t, score in dbo.get_type_lexicalisations(lemma).items():
             lexicalisation_scores[t] += score
     total_scores = sum(lexicalisation_scores.values())
     type_surface_scores = defaultdict(float, {t: score / total_scores for t, score in lexicalisation_scores.items()})
 
     # make sure that exact matches get at least appropriate probability
     for lemma in word_lemmas:
-        word_types = dbp_store.get_types_by_name(lemma)
-        for word_type in word_types:
+        for word_type in dbo.get_types_for_label(lemma):
             min_word_type_score = 1 / len(words)
             type_surface_scores[word_type] = max(type_surface_scores[word_type], min_word_type_score)
 
@@ -182,11 +186,9 @@ def _get_type_surface_scores(words, lemmatize=True):
 # --- PATTERN APPLICATION ---
 
 
-def _extract_axioms(category_graph, patterns):
+def _extract_axioms(category_graph, patterns: Dict[tuple, dict]):
     """Return axioms extracted from `category_graph` by applying `patterns` to all categories."""
     get_logger().debug('Extracting Cat2Ax axioms..')
-    category_axioms = defaultdict(list)
-
     # process front/back/front+back patterns individually to reduce computational complexity
     front_pattern_dict = {}
     for (front_pattern, back_pattern), axiom_patterns in _get_confidence_pattern_set(patterns, True, False).items():
@@ -202,8 +204,8 @@ def _extract_axioms(category_graph, patterns):
 
     cat_contexts = [(
         cat,
-        nlp_util.remove_by_phrase(cat_store.get_label(cat)),
-        cat_store.get_statistics(cat),
+        nlp_util.remove_by_phrase(cat.get_label()),
+        DbpCategoryStore.instance().get_statistics(cat),
         front_pattern_dict, back_pattern_dict, enclosing_pattern_dict
     ) for cat in category_graph.content_nodes]
 
@@ -215,7 +217,7 @@ def _extract_axioms(category_graph, patterns):
     return category_axioms
 
 
-def _get_confidence_pattern_set(pattern_set, has_front, has_back):
+def _get_confidence_pattern_set(pattern_set: Dict[tuple, dict], has_front: bool, has_back: bool) -> Dict[tuple, dict]:
     """Return pattern confidences per pattern."""
     result = {}
     for pattern, axiom_patterns in pattern_set.items():
@@ -232,7 +234,7 @@ def _get_confidence_pattern_set(pattern_set, has_front, has_back):
 
 MARKER_HIT = '_marker_hit_'
 MARKER_REVERSE = '_marker_reverse_'
-def _fill_dict(dictionary, elements, leaf):
+def _fill_dict(dictionary: dict, elements: list, leaf):
     """Recursively fill a dictionary with a given sequence of elements and finally apply/append `leaf`."""
     if not elements:
         if callable(leaf):
@@ -247,7 +249,7 @@ def _fill_dict(dictionary, elements, leaf):
         _fill_dict(dictionary[elements[0]], elements[1:], leaf)
 
 
-def _extract_axioms_for_cat(cat_context: tuple) -> Tuple[str, List[Axiom]]:
+def _extract_axioms_for_cat(cat_context: tuple) -> Tuple[DbpCategory, List[Axiom]]:
     cat, cat_doc, cat_stats, front_pattern_dict, back_pattern_dict, enclosing_pattern_dict = cat_context
 
     # find all axiom candidates for cat
@@ -276,15 +278,15 @@ def _extract_axioms_for_cat(cat_context: tuple) -> Tuple[str, List[Axiom]]:
     cat_axioms = []
     prop_axioms_by_pred = {a[1]: {x for x in cat_prop_axioms if x[1] == a[1]} for a in cat_prop_axioms}
     for pred, similar_prop_axioms in prop_axioms_by_pred.items():
-        if dbp_store.is_object_property(pred):
-            res_labels = {a[2]: dbp_store.get_label(a[2]) for a in similar_prop_axioms}
+        if isinstance(pred, DbpObjectPredicate):
+            res_labels = {a[2]: a[2].get_label() for a in similar_prop_axioms}
             similar_prop_axioms = {a for a in similar_prop_axioms if all(res_labels[a[2]] == val or res_labels[a[2]] not in val for val in res_labels.values())}
         best_prop_axiom = max(similar_prop_axioms, key=operator.itemgetter(3))
         cat_axioms.append(RelationAxiom(best_prop_axiom[1], best_prop_axiom[2], best_prop_axiom[3]))
 
     best_type_axiom = None
     for type_axiom in sorted(cat_type_axioms, key=operator.itemgetter(3), reverse=True):
-        if not best_type_axiom or type_axiom[2] in dbp_store.get_transitive_subtypes(best_type_axiom[2]):
+        if not best_type_axiom or type_axiom[2] in DbpOntologyStore.instance().get_transitive_subtypes(best_type_axiom[2]):
             best_type_axiom = type_axiom
     if best_type_axiom:
         cat_axioms.append(TypeAxiom(best_type_axiom[2], best_type_axiom[3]))
@@ -292,7 +294,7 @@ def _extract_axioms_for_cat(cat_context: tuple) -> Tuple[str, List[Axiom]]:
     return cat, cat_axioms
 
 
-def _detect_and_apply_patterns(pattern_dict, cat, cat_doc, cat_stats):
+def _detect_and_apply_patterns(pattern_dict: dict, cat: DbpCategory, cat_doc: Doc, cat_stats: dict) -> Tuple[Optional[tuple], Optional[tuple]]:
     """Iterate over possible patterns to extract and return best axioms."""
     cat_words = [w.text for w in cat_doc]
     axiom_patterns, pattern_lengths = _detect_patterns(pattern_dict, cat_words)
@@ -309,7 +311,7 @@ def _detect_and_apply_patterns(pattern_dict, cat, cat_doc, cat_stats):
     return None, None
 
 
-def _detect_patterns(pattern_dict, words):
+def _detect_patterns(pattern_dict: dict, words: List[str]) -> Tuple[Optional[dict], Optional[Union[tuple, int]]]:
     """Search for a pattern of `words` in `pattern_dict` and return if found - else return None."""
     pattern_length = 0
     ctx = pattern_dict
@@ -327,15 +329,13 @@ def _detect_patterns(pattern_dict, words):
     return None, None
 
 
-def _apply_patterns_to_cat(axiom_patterns, cat, cat_stats, text_diff, words_same):
+def _apply_patterns_to_cat(axiom_patterns: dict, cat: DbpCategory, cat_stats: dict, text_diff: str, words_same: list):
     """Return axioms by applying the best matching pattern to a category."""
-    prop_axiom = None
-    type_axiom = None
-
     pred_patterns = axiom_patterns['preds']
     possible_values = _get_resource_surface_scores(text_diff)
     props_scores = {(p, v): freq * pred_patterns[p] * possible_values[v] for (p, v), freq in cat_stats['property_frequencies'].items() if p in pred_patterns and v in possible_values}
     prop, max_prop_score = max(props_scores.items(), key=operator.itemgetter(1), default=((None, None), 0))
+    prop_axiom = None
     if max_prop_score >= PATTERN_CONF:
         pred, val = prop
         prop_axiom = (cat, pred, val, max_prop_score)
@@ -344,7 +344,8 @@ def _apply_patterns_to_cat(axiom_patterns, cat, cat_stats, text_diff, words_same
     type_surface_scores = _get_type_surface_scores(words_same)
     types_scores = {t: freq * type_patterns[t] * type_surface_scores[t] for t, freq in cat_stats['type_frequencies'].items() if t in type_patterns}
     t, max_type_score = max(types_scores.items(), key=operator.itemgetter(1), default=(None, 0))
+    type_axiom = None
     if max_type_score >= PATTERN_CONF:
-        type_axiom = (cat, rdf_util.PREDICATE_TYPE, t, max_type_score)
+        type_axiom = (cat, RdfPredicate.TYPE, t, max_type_score)
 
     return prop_axiom, type_axiom

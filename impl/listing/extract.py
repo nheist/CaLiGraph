@@ -1,3 +1,4 @@
+from typing import Dict, Set
 import pandas as pd
 import numpy as np
 from collections import defaultdict
@@ -5,11 +6,9 @@ import utils
 from utils import get_logger
 from impl.listing import context
 import impl.caligraph.util as clg_util
-import impl.dbpedia.store as dbp_store
 import impl.dbpedia.heuristics as dbp_heur
-import impl.dbpedia.util as dbp_util
-import impl.listpage.store as list_store
-import impl.util.rdf as rdf_util
+from impl.dbpedia.ontology import DbpOntologyStore
+from impl.dbpedia.resource import DbpResourceStore
 
 
 RULE_PATTERNS = {
@@ -25,6 +24,7 @@ META_SECTIONS = {'See also', 'External links', 'References', 'Notes'}
 
 def extract_page_entities(graph) -> dict:
     get_logger().info('Extracting types and relations for page entities..')
+    dbr = DbpResourceStore.instance()
 
     # format: entity -> origin -> (labels, types, in, out)
     page_entities = defaultdict(lambda: defaultdict(lambda: {'labels': set(), 'types': set(), 'in': set(), 'out': set()}))
@@ -35,13 +35,14 @@ def extract_page_entities(graph) -> dict:
     # extract list page entities
     get_logger().debug('Extracting types of list page entities..')
     df_lps = df[df['P_type'] == 'List']
-    for lp, df_lp in df_lps.groupby(by='P'):
-        clg_types = {clg_util.clg_type2name(t) for t in graph.get_nodes_for_part(dbp_util.name2resource(lp))}
+    for lp_idx, df_lp in df_lps.groupby(by='P_residx'):
+        lp = dbr.get_resource_by_idx(lp_idx)
+        clg_types = {clg_util.clg_class2name(t) for t in graph.get_nodes_for_part(lp)}
         if clg_types:
             for _, row in df_lp.iterrows():
                 name = row['E_ent']
-                page_entities[name][lp]['labels'].add(row['E_text'])
-                page_entities[name][lp]['types'].update(clg_types)
+                page_entities[name][lp.name]['labels'].add(row['E_text'])
+                page_entities[name][lp.name]['types'].update(clg_types)
 
     df = df.loc[df['P_type'] != 'List']  # ignore list pages in subsequent steps
 
@@ -54,51 +55,40 @@ def extract_page_entities(graph) -> dict:
     get_logger().debug('Extracting types of page entities..')
     df_new_types = _compute_new_types(df, dft, df_types, valid_tags)
     for ent, df_ent in df_new_types.groupby(by='E_ent'):
-        for (page_text, section_text), df_entorigin in df_ent.groupby(by=['P', 'S_text']):
-            origin = page_text if section_text == 'Main' else f'{page_text}#{section_text}'
+        for (page_idx, section_text), df_entorigin in df_ent.groupby(by=['P_residx', 'S_text']):
+            page_name = dbr.get_resource_by_idx(page_idx).name
+            origin = page_name if section_text == 'Main' else f'{page_name}#{section_text}'
             page_entities[ent][origin]['labels'].update(set(df_entorigin['E_text'].unique()))
             new_types = set(df_entorigin['E_enttype'].unique())
-            transitive_types = {clg_util.clg_type2name(tt) for t in new_types for tt in graph.ancestors(clg_util.name2clg_type(t))}
+            transitive_types = {clg_util.clg_class2name(tt) for t in new_types for tt in graph.ancestors(clg_util.name2clg_type(t))}
             new_types = new_types.difference(transitive_types)  # remove transitive types
             page_entities[ent][origin]['types'].update(new_types)
 
     # extract relations
     get_logger().debug('Extracting relations of page entities..')
     df_rels = context.get_entity_relations()
-    df_new_relations = _compute_new_relations(df, df_rels, 'P', valid_tags)
-    df_new_relations = pd.concat([df_new_relations, _compute_new_relations(df, df_rels, 'TS_ent', valid_tags)])
-    df_new_relations = pd.concat([df_new_relations, _compute_new_relations(df, df_rels, 'S_ent', valid_tags)])
+    df_new_relations = _compute_new_relations(df, df_rels, 'P_residx', valid_tags)
+    df_new_relations = pd.concat([df_new_relations, _compute_new_relations(df, df_rels, 'TS_entidx', valid_tags)])
+    df_new_relations = pd.concat([df_new_relations, _compute_new_relations(df, df_rels, 'S_entidx', valid_tags)])
     for ent, df_ent in df_new_relations.groupby(by='E_ent'):
         if '--' in ent and ent not in page_entities:
             continue  # discard new relations for unknown entities without type
-        for (page_text, section_text), df_entorigin in df_ent.groupby(by=['P', 'S_text']):
-            origin = page_text if section_text == 'Main' else f'{page_text}#{section_text}'
+        for (page_idx, section_text), df_entorigin in df_ent.groupby(by=['P_residx', 'S_text']):
+            page_name = dbr.get_resource_by_idx(page_idx).name
+            origin = page_name if section_text == 'Main' else f'{page_name}#{section_text}'
             page_entities[ent][origin]['labels'].update(set(df_entorigin['E_text'].unique()))
-            rels_in = set(map(tuple, df_entorigin[~df_entorigin['inv']][['pred', 'target']].values))
-            page_entities[ent][origin]['in'].update({(_get_predname(p), t) for p, t in rels_in})
-            rels_out = set(map(tuple, df_entorigin[df_entorigin['inv']][['pred', 'target']].values))
-            page_entities[ent][origin]['out'].update({(_get_predname(p), t) for p, t in rels_out})
+            rels_in = set(map(tuple, df_entorigin[~df_entorigin['inv']][['predidx', 'target']].values))
+            page_entities[ent][origin]['in'].update(rels_in)
+            rels_out = set(map(tuple, df_entorigin[df_entorigin['inv']][['predidx', 'target']].values))
+            page_entities[ent][origin]['out'].update(rels_out)
 
     return {e: dict(origin_data) for e, origin_data in page_entities.items()}  # convert defaultdicts to plain dicts
-
-
-def _get_origins_for_entity(df_ent: pd.DataFrame) -> set:
-    # pages where entity occurs in main section are added directly to origins
-    origins = set(df_ent[df_ent['S_text'] == 'Main']['P'].unique())
-    df_ent = df_ent[df_ent['S_text'] != 'Main']
-    # then add every other page-section combination as source
-    unique_page_section_combinations = df_ent.groupby(['P', 'S_text']).size().reset_index()
-    for _, row in unique_page_section_combinations.iterrows():
-        page_text = row['P']
-        section_text = row['S_text']
-        origins.add(f'{page_text}#{section_text}')
-    return origins
 
 
 # EXTRACT TYPES
 
 
-def _compute_new_types(df: pd.DataFrame, dft: pd.DataFrame, df_types: pd.DataFrame, valid_tags: dict):
+def _compute_new_types(df: pd.DataFrame, dft: pd.DataFrame, df_types: pd.DataFrame, valid_tags: Dict[str, Set[str]]) -> pd.DataFrame:
     """Compute all new type assertions."""
     rule_dfs = {}
     for rule_name, rule_pattern in RULE_PATTERNS.items():
@@ -112,11 +102,11 @@ def _compute_new_types(df: pd.DataFrame, dft: pd.DataFrame, df_types: pd.DataFra
 def _aggregate_types_by_page(dft: pd.DataFrame, section_grouping: list) -> pd.DataFrame:
     """Aggregate the type data by Wikipedia page."""
     dft = dft.dropna(subset=section_grouping)
-    page_grouping = section_grouping + ['P']
+    page_grouping = section_grouping + ['P_residx']
     # compute type count
     dftP = dft.groupby(page_grouping)['E_enttype'].value_counts().rename('type_count').reset_index(level='E_enttype')
     # compute entity count
-    ent_counts = dft.groupby(page_grouping)['E_id'].nunique().rename('ent_count')
+    ent_counts = dft.groupby(page_grouping)['idx'].nunique().rename('ent_count')
     dftP = pd.merge(dftP, ent_counts, left_index=True, right_index=True, copy=False)
     # compute type confidence
     dftP['type_conf'] = (dftP['type_count'] / dftP['ent_count']).fillna(0).clip(0, 1)
@@ -125,7 +115,7 @@ def _aggregate_types_by_page(dft: pd.DataFrame, section_grouping: list) -> pd.Da
 
 def _aggregate_types_by_section(dfp: pd.DataFrame, section_grouping: list) -> pd.DataFrame:
     """Aggregate the type data by (top-)section."""
-    page_grouping = section_grouping + ['P']
+    page_grouping = section_grouping + ['P_residx']
     grp = section_grouping + ['E_enttype']
     dfp = dfp.reset_index()
     # compute micro mean
@@ -136,12 +126,12 @@ def _aggregate_types_by_section(dfp: pd.DataFrame, section_grouping: list) -> pd
     result.drop(columns=['type_count', 'ent_count'], inplace=True)
     # compute macro mean
     section_type_confidences = dfp.groupby(grp)['type_conf'].sum().rename('section_type_conf').reset_index(level='E_enttype')
-    section_page_count = dfp.groupby(section_grouping)['P'].nunique().rename('section_page_count')
+    section_page_count = dfp.groupby(section_grouping)['P_residx'].nunique().rename('section_page_count')
     macro_df = pd.merge(section_type_confidences, section_page_count, left_index=True, right_index=True).reset_index().set_index(grp)
     macro_df['macro_mean'] = macro_df['section_type_conf'] / macro_df['section_page_count']
     result = pd.merge(left=result, right=macro_df['macro_mean'], left_on=grp, right_index=True)
     # add page count
-    page_count = dfp.groupby(section_grouping)['P'].nunique().rename('page_count')
+    page_count = dfp.groupby(section_grouping)['P_residx'].nunique().rename('page_count')
     result = pd.merge(left=result, right=page_count, left_on=section_grouping, right_index=True)
     # compute micro_std
     confidence_deviations = pd.merge(how='left', left=dfp, right=result, on=grp)
@@ -183,6 +173,7 @@ def _filter_new_types_by_tag(df, valid_tags) -> pd.DataFrame:
 
 def _compute_new_relations(df: pd.DataFrame, df_rels: pd.DataFrame, target: str, valid_tags: dict) -> pd.DataFrame:
     """Retrieve relation assertions from the initial dataframe."""
+    # TODO: targets are now indices
     rule_dfs = {}
     dfr = _create_relation_df(df, df_rels, target)
     dfr_types = _create_relation_type_df(dfr)
@@ -196,6 +187,7 @@ def _compute_new_relations(df: pd.DataFrame, df_rels: pd.DataFrame, target: str,
 
 def _create_relation_df(df: pd.DataFrame, df_rels: pd.DataFrame, target: str) -> pd.DataFrame:
     """Join the original dataframe with the existing relations in the knowledge graph."""
+    # TODO: This will not work as of now, as sub/obj is index-based and E_ent is not
     df = df.dropna(subset=[target])
     dfr_sub = pd.merge(how='inner', left=df, right=df_rels.rename(columns={'sub': target, 'obj': 'E_ent'}), on=[target, 'E_ent'])
     dfr_sub['inv'] = False
@@ -208,28 +200,29 @@ def _create_relation_df(df: pd.DataFrame, df_rels: pd.DataFrame, target: str) ->
 
 def _create_relation_type_df(dfr: pd.DataFrame) -> pd.DataFrame:
     """Retrieve domains and ranges for predicates."""
+    dbo = DbpOntologyStore.instance()
+
     data = []
-    for _, row in dfr[['pred', 'inv']].drop_duplicates().iterrows():
-        pred = row['pred']
-        e_type = (dbp_heur.get_domain(pred) if row['inv'] else dbp_heur.get_range(pred)) or rdf_util.CLASS_OWL_THING
-        e_type = dbp_util.type2name(e_type) if dbp_util.is_dbp_type(e_type) else e_type
-        data.append({'pred': row['pred'], 'inv': row['inv'], 'E_predtype': e_type})
+    for _, row in dfr[['predidx', 'inv']].drop_duplicates().iterrows():
+        pred = dbo.get_class_by_idx(row['predidx'])
+        e_type = (dbp_heur.get_domain(pred) if row['inv'] else dbp_heur.get_range(pred)) or dbo.get_type_root()
+        data.append({'predidx': row['predidx'], 'inv': row['inv'], 'E_predtype': e_type.name})
     return pd.DataFrame(data)
 
 
 def _aggregate_relations_by_page(df: pd.DataFrame, dfr: pd.DataFrame, df_rels: pd.DataFrame, section_grouping: list) -> pd.DataFrame:
     """Aggregate the df on a page-level."""
     dfr = dfr.dropna(subset=section_grouping)
-    page_grouping = section_grouping + ['P']
+    page_grouping = section_grouping + ['P_residx']
     # compute rel_count
-    dfrP = dfr.groupby(page_grouping + ['rel']).agg({'E_id': 'count'}).rename(columns={'E_id': 'rel_count'}).reset_index()
+    dfrP = dfr.groupby(page_grouping + ['rel']).agg({'idx': 'count'}).rename(columns={'idx': 'rel_count'}).reset_index()
     # initialize all rel_counts of a section with 0 if not existing in page
     all_relations = pd.merge(left=dfrP[section_grouping + ['rel']].drop_duplicates(), right=dfrP[page_grouping].drop_duplicates(), on=section_grouping)
     dfrP = pd.merge(how='right', left=dfrP, right=all_relations, on=page_grouping + ['rel']).fillna(0)
     # compute pred_count
     ## first create (inverse) counts for relations per entity
-    entity_preds = defaultdict(list, df_rels.groupby('sub')['pred'].unique().to_dict())
-    entity_invpreds = defaultdict(list, df_rels.groupby('obj')['pred'].unique().to_dict())
+    entity_preds = defaultdict(list, df_rels.groupby('sub')['predidx'].unique().to_dict())
+    entity_invpreds = defaultdict(list, df_rels.groupby('obj')['predidx'].unique().to_dict())
     ## then assign predicate counts
     data = []
     for grp, df_grp in df.groupby(page_grouping):
@@ -244,9 +237,9 @@ def _aggregate_relations_by_page(df: pd.DataFrame, dfr: pd.DataFrame, df_rels: p
             data.append((*grp, r, True, cnt))
         for r, cnt in invrels.items():
             data.append((*grp, r, False, cnt))
-    df_relcounts = pd.DataFrame(data=data, columns=page_grouping + ['pred', 'inv', 'pred_count'])
+    df_relcounts = pd.DataFrame(data=data, columns=page_grouping + ['predidx', 'inv', 'pred_count'])
     df_relcounts['rel'] = df_relcounts.apply(_predinv_to_rel_row, axis=1)
-    df_relcounts.drop(columns=['pred', 'inv'], inplace=True)
+    df_relcounts.drop(columns=['predidx', 'inv'], inplace=True)
     dfrP = pd.merge(how='left', left=dfrP, right=df_relcounts, on=page_grouping + ['rel']).fillna(0)
     # compute rel_conf on P-level
     dfrP['rel_conf'] = (dfrP['rel_count'] / dfrP['pred_count']).fillna(0).clip(0, 1)
@@ -256,7 +249,7 @@ def _aggregate_relations_by_page(df: pd.DataFrame, dfr: pd.DataFrame, df_rels: p
 def _aggregate_relations_by_section(dfrP: pd.DataFrame, section_grouping: list) -> pd.DataFrame:
     """Aggregate the df by (top-)section."""
     relation_grouping = section_grouping + ['rel']
-    dfrP = dfrP.drop_duplicates(subset=relation_grouping + ['P'])
+    dfrP = dfrP.drop_duplicates(subset=relation_grouping + ['P_residx'])
     # compute mean, std
     result = dfrP.groupby(relation_grouping).agg({'rel_count': 'sum', 'pred_count': 'sum', 'rel_conf': ['mean', 'std']}).set_axis(['rel_count', 'pred_count', 'macro_mean', 'macro_std'], axis=1)
     result['micro_mean'] = result['rel_count'] / result['pred_count']
@@ -266,7 +259,7 @@ def _aggregate_relations_by_section(dfrP: pd.DataFrame, section_grouping: list) 
     micro_std = micro_std.groupby(relation_grouping)['micro_std'].mean()
     result = pd.merge(left=result, right=micro_std, on=relation_grouping)
     # add page_count
-    page_count = dfrP.groupby(relation_grouping)['P'].nunique().rename('page_count')
+    page_count = dfrP.groupby(relation_grouping)['P_residx'].nunique().rename('page_count')
     result = pd.merge(left=result, right=page_count, on=relation_grouping)
     # filter low-pred rules
     result = result[result['pred_count'] > 2]
@@ -294,40 +287,38 @@ def _extract_new_relations(rule_dfs: list, target: str, source_df: pd.DataFrame,
     result_df = _remove_relations_with_invalid_targets(result_df, target)
     # filter out existing relations
     predicate_mapping = _get_predicate_mapping()
-    result_df['pred'] = result_df.apply(lambda x: predicate_mapping[x['rel']], axis=1)
+    result_df['predidx'] = result_df.apply(lambda x: predicate_mapping[x['rel']], axis=1)
     result_df['inv'] = result_df['rel'].str.startswith('<')
-    result_df = pd.merge(left=result_df, right=dfr_types, on=['pred', 'inv'])
+    result_df = pd.merge(left=result_df, right=dfr_types, on=['predidx', 'inv'])
 
     result_df['target'] = result_df[target]
     return pd.concat([
-        pd.merge(indicator=True, how='left', on=['target', 'pred', 'E_ent'], left=result_df[~result_df['inv']], right=df_rels.rename(columns={'sub': 'target', 'obj': 'E_ent'})),
-        pd.merge(indicator=True, how='left', on=['target', 'pred', 'E_ent'], left=result_df[result_df['inv']], right=df_rels.rename(columns={'sub': 'E_ent', 'obj': 'target'}))
+        # TODO: this will also not work as df_rels is only index-based and E_ent is a string
+        pd.merge(indicator=True, how='left', on=['target', 'predidx', 'E_ent'], left=result_df[~result_df['inv']], right=df_rels.rename(columns={'sub': 'target', 'obj': 'E_ent'})),
+        pd.merge(indicator=True, how='left', on=['target', 'predidx', 'E_ent'], left=result_df[result_df['inv']], right=df_rels.rename(columns={'sub': 'E_ent', 'obj': 'target'}))
     ]).query('_merge=="left_only"').drop(columns='_merge')
 
 
 def _remove_relations_with_invalid_targets(df: pd.DataFrame, target: str) -> pd.DataFrame:
-    return df[(~df[target].transform(dbp_util.name2resource).isin(list_store.get_listpages_with_redirects())) & (~df[target].transform(dbp_util.name2resource).isin(set(dbp_store.get_disambiguation_mapping())))]
+    valid_targets = {res.idx for res in DbpResourceStore.instance().get_entities() if not res.is_meta}
+    return df[df[target].isin(valid_targets)]
 
 
-def _filter_new_relations_by_tag(df: pd.DataFrame, valid_tags: dict) -> pd.DataFrame:
+def _filter_new_relations_by_tag(df: pd.DataFrame, valid_tags: Dict[str, Set[str]]) -> pd.DataFrame:
     """Filter out entities with a NE tag that is not in `valid_tags` of the domain/range."""
     return df[df.apply(lambda row: row['E_predtype'] in valid_tags and row['E_tag'] in valid_tags[row['E_predtype']], axis=1)]
 
 
-def _get_predicate_mapping() -> dict:
-    predicate_mapping = {_predinv_to_rel(p, True): p for p in dbp_store.get_all_predicates()}
-    predicate_mapping.update({_predinv_to_rel(p, False): p for p in dbp_store.get_all_predicates()})
+def _get_predicate_mapping() -> Dict[str, int]:
+    dbo = DbpOntologyStore.instance()
+    predicate_mapping = {_predinv_to_rel(p, True): p.idx for p in dbo.get_predicates()}
+    predicate_mapping.update({_predinv_to_rel(p, False): p.idx for p in dbo.get_predicates()})
     return predicate_mapping
 
 
 def _predinv_to_rel_row(row) -> str:
-    return _predinv_to_rel(row['pred'], row['inv'])
+    return _predinv_to_rel(row['predidx'], row['inv'])
 
 
-def _predinv_to_rel(pred: str, inv: bool) -> str:
-    pred_name = _get_predname(pred)
-    return f'< {pred_name} <' if inv else f'> {pred_name} >'
-
-
-def _get_predname(pred: str) -> str:
-    return pred[pred.rindex('/')+1:]
+def _predinv_to_rel(predidx: int, inv: bool) -> str:
+    return f'< {predidx} <' if inv else f'> {predidx} >'

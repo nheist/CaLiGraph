@@ -37,6 +37,7 @@ class BaseGraph:
             self._reset_node_indices()
 
     def _remove_all_nodes_except(self, valid_nodes: set):
+        valid_nodes = valid_nodes | {self.root_node}
         self._remove_nodes(self.nodes.difference(valid_nodes))
 
     def _reset_node_indices(self):

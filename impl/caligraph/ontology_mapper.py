@@ -1,16 +1,16 @@
 """Mapping of the category-list graph to DBpedia types (including resolution of disjointnesses that are created)."""
 
+from typing import Dict, Set, Tuple, List
 import impl.util.nlp as nlp_util
-import impl.dbpedia.store as dbp_store
-import impl.dbpedia.util as dbp_util
 import impl.dbpedia.heuristics as dbp_heur
 import impl.category.cat2ax as cat_axioms
 from collections import defaultdict
 import utils
 from utils import get_logger
+from impl.dbpedia.ontology import DbpType, DbpOntologyStore
 
 
-def find_conflicting_edges(graph) -> set:
+def find_conflicting_edges(graph) -> Set[Tuple[str, str]]:
     conflicting_edges = set()
     head_subject_lemmas = graph.get_node_LHS()
     direct_mappings = {node: _find_dbpedia_parents(graph, node, True) for node in graph.nodes}
@@ -26,7 +26,7 @@ def find_conflicting_edges(graph) -> set:
     return conflicting_edges
 
 
-def find_mappings(graph) -> dict:
+def find_mappings(graph) -> Dict[str, Set[DbpType]]:
     """Return mappings from nodes in `graph` to DBpedia types retrieved from axioms of the Cat2Ax approach."""
     mappings = {node: _find_dbpedia_parents(graph, node, False) for node in graph.nodes}
 
@@ -55,18 +55,19 @@ def find_mappings(graph) -> dict:
     for node in graph.traverse_nodes_bottomup():
         parent_types = {t for p in graph.parents(node) for t in mappings[p]}
         node_types = set(mappings[node]).difference(parent_types)
-        mappings[node] = dbp_store.get_independent_types(node_types)
+        mappings[node] = DbpOntologyStore.instance().get_independent_types(node_types)
 
     return mappings
 
 
 def resolve_disjointnesses(graph):
     """Resolve violations of disjointness axioms that are created through the mapping to DBpedia types."""
+    dbo = DbpOntologyStore.instance()
     for node in graph.traverse_nodes_topdown():
         parents = graph.parents(node)
         coherent_type_sets = _find_coherent_type_sets({t: 1 for t in graph.get_transitive_dbpedia_type_closure(node, force_recompute=True)})
         if len(coherent_type_sets) > 1:
-            transitive_types = {tt for ts in coherent_type_sets for t in ts for tt in dbp_store.get_transitive_supertype_closure(t)}
+            transitive_types = {tt for ts in coherent_type_sets for t in ts for tt in dbo.get_transitive_supertype_closure(t)}
             direct_types = {t for t in _find_dbpedia_parents(graph, node, False)}
             if not direct_types:
                 # compute direct types by finding the best matching type from lex score
@@ -76,26 +77,26 @@ def resolve_disjointnesses(graph):
                 best_type, score = max(types, key=lambda x: x[1])
                 direct_types = set() if score == 0 else set(best_type)
             # make sure that types induced by parts are integrated in direct types
-            part_types = {t for t in graph.get_parts(node) if dbp_util.is_dbp_type(t)}
+            part_types = {t for t in graph.get_parts(node) if isinstance(t, DbpType)}
             direct_types = (direct_types | part_types).difference({dt for t in part_types for dt in dbp_heur.get_all_disjoint_types(t)})
-            direct_types = {tt for t in direct_types for tt in dbp_store.get_transitive_supertype_closure(t)}
+            direct_types = {tt for t in direct_types for tt in dbo.get_transitive_supertype_closure(t)}
 
             invalid_types = transitive_types.difference(direct_types)
             new_parents = {p for p in parents if not invalid_types.intersection(graph.get_transitive_dbpedia_type_closure(p))}
             graph._remove_edges({(p, node) for p in parents.difference(new_parents)})
             if not new_parents and direct_types:
-                independent_types = dbp_store.get_independent_types(direct_types)
+                independent_types = dbo.get_independent_types(direct_types)
                 node_descendant_closure = {node} | graph.descendants(node)
                 new_parents = {p for t in independent_types for p in graph.get_nodes_for_part(t) if p not in node_descendant_closure}
                 graph._add_edges({(p, node) for p in new_parents})
 
 
-def _find_dbpedia_parents(graph, node: str, direct_resources_only: bool) -> dict:
+def _find_dbpedia_parents(graph, node: str, direct_resources_only: bool) -> Dict[DbpType, float]:
     """Retrieve DBpedia types that can be used as parents for `node` based on axioms discovered for it."""
     type_lexicalisation_scores = defaultdict(lambda: 0.2, _compute_type_lexicalisation_scores(graph, node))
     type_resource_scores = defaultdict(lambda: 0.0, _compute_type_resource_scores(graph, node, direct_resources_only))
 
-    overall_scores = {t: type_lexicalisation_scores[t] * type_resource_scores[t] for t in type_resource_scores if dbp_util.is_dbp_type(t)}
+    overall_scores = {t: type_lexicalisation_scores[t] * type_resource_scores[t] for t in type_resource_scores}
     max_score = max(overall_scores.values(), default=0)
     if max_score < utils.get_config('cali2ax.pattern_confidence'):
         return defaultdict(float)
@@ -103,33 +104,32 @@ def _find_dbpedia_parents(graph, node: str, direct_resources_only: bool) -> dict
     mapped_types = {t: score for t, score in overall_scores.items() if score >= max_score}
     result = defaultdict(float)
     for t, score in mapped_types.items():
-        for tt in dbp_store.get_transitive_supertype_closure(t):
+        for tt in DbpOntologyStore.instance().get_transitive_supertype_closure(t):
             result[tt] = max(result[tt], score)
 
     result = defaultdict(float, {t: score for t, score in result.items() if not dbp_heur.get_all_disjoint_types(t).intersection(set(result))})
     return result
 
 
-def _compute_type_lexicalisation_scores(graph, node: str) -> dict:
+def _compute_type_lexicalisation_scores(graph, node: str) -> Dict[DbpType, float]:
     lexhead_subject_lemmas = nlp_util.get_lexhead_subjects(graph.get_name(node))
     return cat_axioms._get_type_surface_scores(lexhead_subject_lemmas, lemmatize=False)
 
 
-def _compute_type_resource_scores(graph, node: str, direct_resources_only: bool) -> dict:
-    node_resources = graph.get_resources_from_categories(node)
-    if not direct_resources_only or len([r for r in node_resources if dbp_store.get_types(r)]) < 5:
-        node_resources.update({r for sn in graph.descendants(node) for r in graph.get_resources_from_categories(sn)})
-    node_resources = node_resources.intersection(dbp_store.get_resources())
-    if len(node_resources) < 5:
+def _compute_type_resource_scores(graph, node: str, direct_resources_only: bool) -> Dict[DbpType, float]:
+    node_entities = graph.get_dbp_entities_from_categories(node)
+    if not direct_resources_only or len([e for e in node_entities if e.get_types()]) < 5:
+        node_entities.update({e for sn in graph.descendants(node) for e in graph.get_dbp_entities_from_categories(sn)})
+    if len(node_entities) < 5:
         return {}  # better not return anything, if number of resources is too small
     type_counts = defaultdict(int)
-    for res in node_resources:
-        for t in dbp_store.get_transitive_types(res):
+    for ent in node_entities:
+        for t in ent.get_transitive_types():
             type_counts[t] += 1
-    return {t: count / len(node_resources) for t, count in type_counts.items()}
+    return {t: count / len(node_entities) for t, count in type_counts.items()}
 
 
-def _find_coherent_type_sets(dbp_types: dict) -> list:
+def _find_coherent_type_sets(dbp_types: Dict[DbpType, float]) -> List[Dict[DbpType, float]]:
     """Find biggest subset of types in `dbp_types` that does not violate any disjointness axioms."""
     coherent_sets = []
     disjoint_type_mapping = {t: set(dbp_types).intersection(dbp_heur.get_all_disjoint_types(t)) for t in dbp_types}
@@ -167,9 +167,10 @@ def _find_coherent_type_sets(dbp_types: dict) -> list:
     return coherent_sets
 
 
-def _remove_types_from_mapping(graph, mappings: dict, node: str, types_to_remove: dict):
+def _remove_types_from_mapping(graph, mappings: Dict[str, Dict[DbpType, float]], node: str, types_to_remove: Dict[DbpType, float]):
     """Remove `types_to_remove` from a mapping for a node in order to resolve disjointnesses."""
-    types_to_remove = {tt: score for t, score in types_to_remove.items() for tt in dbp_store.get_transitive_subtype_closure(t)}
+    dbo = DbpOntologyStore.instance()
+    types_to_remove = {tt: score for t, score in types_to_remove.items() for tt in dbo.get_transitive_subtype_closure(t)}
 
     node_closure = graph.ancestors(node)
     node_closure.update({d for n in node_closure for d in graph.descendants(n)})

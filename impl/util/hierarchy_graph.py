@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Set
 import networkx as nx
 from utils import get_logger
 import impl.util.nlp as nlp_util
@@ -6,6 +6,7 @@ import impl.util.hypernymy as hypernymy_util
 from impl.util.base_graph import BaseGraph
 from collections import defaultdict
 import copy
+from impl.util.rdf import RdfResource
 
 
 class HierarchyGraph(BaseGraph):
@@ -17,7 +18,6 @@ class HierarchyGraph(BaseGraph):
     # initialisations
     def __init__(self, graph: nx.DiGraph, root_node: str = None):
         super().__init__(graph, root_node)
-        self._node_by_name = None
         self._nodes_by_part = defaultdict(set)
 
     # node attribute definitions
@@ -33,10 +33,6 @@ class HierarchyGraph(BaseGraph):
         if not self.has_node(node):
             raise Exception(f'Node {node} not in graph.')
 
-    def _reset_node_indices(self):
-        super()._reset_node_indices()
-        self._node_by_name = None
-
     def get_name(self, node: str) -> str:
         self._check_node_exists(node)
         return self._get_attr(node, self.ATTRIBUTE_NAME)
@@ -44,12 +40,6 @@ class HierarchyGraph(BaseGraph):
     def _set_name(self, node: str, name: str):
         self._check_node_exists(node)
         self._set_attr(node, self.ATTRIBUTE_NAME, name)
-        self._node_by_name = None  # reset name-to-node index due to changes
-
-    def get_node_by_name(self, name: str) -> Optional[str]:
-        if self._node_by_name is None:  # initialise name-to-node index if not existing
-            self._node_by_name = {self.get_name(node): node for node in self.nodes}
-        return self._node_by_name[name] if name in self._node_by_name else None
 
     def get_node_LHS(self) -> dict:
         nodes = list(self.content_nodes)
@@ -176,15 +166,15 @@ class HierarchyGraph(BaseGraph):
 
     # compound nodes
 
-    def get_nodes_for_part(self, part: str) -> set:
+    def get_nodes_for_part(self, part: RdfResource) -> Set[str]:
         # be sure not to return outdated nodes that are not in the graph anymore
         return {n for n in self._nodes_by_part[part] if self.has_node(n)}
 
-    def get_parts(self, node: str) -> set:
+    def get_parts(self, node: str) -> Set[RdfResource]:
         self._check_node_exists(node)
         return self._get_attr(node, self.ATTRIBUTE_PARTS)
 
-    def _set_parts(self, node: str, parts: set):
+    def _set_parts(self, node: str, parts: Set[RdfResource]):
         self._check_node_exists(node)
         self._set_attr(node, self.ATTRIBUTE_PARTS, parts)
         for part in parts:

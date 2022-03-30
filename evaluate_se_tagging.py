@@ -7,7 +7,7 @@ from impl.subject_entity.preprocess.word_tokenize import TransformerSpecialToken
 from impl.subject_entity.preprocess.pos_label import POSLabel, map_entities_to_pos_labels
 from transformers import Trainer, IntervalStrategy, TrainingArguments, AutoTokenizer, AutoModelForTokenClassification, EvalPrediction
 from collections import namedtuple
-from entity_linking.data.datasets import prepare_mentiondetection_dataset
+from entity_linking.data.mention_detection import prepare_mentiondetection_dataset
 from entity_linking.model.mention_detection import TransformerForMentionDetectionAndTypePrediction
 
 
@@ -17,14 +17,14 @@ np.random.seed(SEED)
 torch.manual_seed(SEED)
 
 
-def run_evaluation(model: str, epochs: int, batch_size: int, learning_rate: float, warmup_steps: int, weight_decay: float, predict_single_tag: bool):
-    run_id = f'{model}_e-{epochs}_lr-{learning_rate}_ws-{warmup_steps}_wd-{weight_decay}_st-{predict_single_tag}'
+def run_evaluation(model_name: str, epochs: int, batch_size: int, learning_rate: float, warmup_steps: int, weight_decay: float, predict_single_tag: bool):
+    run_id = f'{model_name}_e-{epochs}_lr-{learning_rate}_ws-{warmup_steps}_wd-{weight_decay}_st-{predict_single_tag}'
     # prepare tokenizer and model
-    tokenizer = AutoTokenizer.from_pretrained(model, add_prefix_space=True, additional_special_tokens=list(TransformerSpecialToken.all_tokens()))
+    tokenizer = AutoTokenizer.from_pretrained(model_name, add_prefix_space=True, additional_special_tokens=list(TransformerSpecialToken.all_tokens()))
     if predict_single_tag:
-        model = TransformerForMentionDetectionAndTypePrediction(model, len(tokenizer), len(POSLabel))
+        model = TransformerForMentionDetectionAndTypePrediction(model_name, len(tokenizer), len(POSLabel))
     else:
-        model = AutoModelForTokenClassification.from_pretrained(model, num_labels=len(POSLabel))
+        model = AutoModelForTokenClassification.from_pretrained(model_name, num_labels=len(POSLabel))
         model.resize_token_embeddings(len(tokenizer))
     # load data
     data = utils.load_cache('subject_entity_training_data')
@@ -231,7 +231,7 @@ class SETagsEvaluator:
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run the evaluation of subject entity tagging.')
-    parser.add_argument('model', help='Huggingface Transformer model used for tagging')
+    parser.add_argument('model_name', help='Huggingface Transformer model used for tagging')
     parser.add_argument('-e', '--epochs', type=int, default=3, help='epochs to train')
     parser.add_argument('-bs', '--batch_size', type=int, default=8, help='batch size used in train/eval')
     parser.add_argument('-lr', '--learning_rate', type=float, default=5e-5, help='learning rate used during training')
@@ -239,4 +239,4 @@ if __name__ == '__main__':
     parser.add_argument('-wd', '--weight_decay', type=float, default=0, help='weight decay during learning')
     parser.add_argument('-st', '--predict_single_tag', action="store_true", help='Predict only a single POS tag per chunk')
     args = parser.parse_args()
-    run_evaluation(args.model, args.epochs, args.batch_size, args.learning_rate, args.warmup_steps, args.weight_decay, args.predict_single_tag)
+    run_evaluation(args.model_name, args.epochs, args.batch_size, args.learning_rate, args.warmup_steps, args.weight_decay, args.predict_single_tag)
