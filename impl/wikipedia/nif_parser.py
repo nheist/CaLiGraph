@@ -62,7 +62,7 @@ def _compute_counts_for_resource(entity_with_text: Tuple[DbpEntity, str]) -> Tup
     return hypernyms, type_lexicalisations
 
 
-def _retrieve_plaintexts() -> Generator[Tuple[DbpEntity, str]]:
+def _retrieve_plaintexts():
     """Return an iterator over DBpedia resources and their Wikipedia plaintexts."""
     dbr = DbpResourceStore.instance()
     with bz2.open(utils.get_data_file('files.dbpedia.nif_context'), mode='rb') as nif_file:
