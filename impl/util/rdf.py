@@ -16,6 +16,7 @@ class Namespace(Enum):
     OWL = 'http://www.w3.org/2002/07/owl#'
     WIKIPEDIA = 'http://en.wikipedia.org/wiki/'
 
+    PREFIX_TEMPLATE = 'Template:'
     PREFIX_CATEGORY = 'Category:'
     PREFIX_FILE = 'File:'
     PREFIX_IMAGE = 'Image:'
@@ -24,6 +25,7 @@ class Namespace(Enum):
 
     DBP_ONTOLOGY = 'http://dbpedia.org/ontology/'
     DBP_RESOURCE = 'http://dbpedia.org/resource/'
+    DBP_TEMPLATE = DBP_RESOURCE + PREFIX_TEMPLATE
     DBP_CATEGORY = DBP_RESOURCE + PREFIX_CATEGORY
     DBP_FILE = DBP_RESOURCE + PREFIX_FILE
     DBP_IMAGE = DBP_RESOURCE + PREFIX_IMAGE

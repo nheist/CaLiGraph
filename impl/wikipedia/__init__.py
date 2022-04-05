@@ -3,9 +3,10 @@ import utils
 from .nif_parser import extract_wiki_corpus_resources
 from .xml_parser import _parse_raw_markup_from_xml
 from .page_parser import _parse_pages, PageType
-from .category_parser import _extract_parent_categories_from_markup, TEMPLATE_PREFIX, CATEGORY_PREFIX
+from .category_parser import _extract_parent_categories_from_markup
 from impl.dbpedia.resource import DbpResourceStore, DbpResource
 from typing import Dict, Tuple, Set, Optional
+from impl.util.rdf import Namespace
 
 
 def get_parsed_articles() -> Dict[DbpResource, Optional[dict]]:
@@ -20,8 +21,8 @@ def extract_parent_categories() -> Dict[str, Set[str]]:
 
 def _get_raw_categories_and_templates_from_xml() -> Tuple[Dict[str, str], Dict[str, str]]:
     raw_markup = _get_raw_markup_from_xml()
-    categories = {name: markup for name, markup in raw_markup.items() if CATEGORY_PREFIX in name}
-    templates = {name: markup for name, markup in raw_markup.items() if TEMPLATE_PREFIX in name}
+    categories = {name: markup for name, markup in raw_markup.items() if Namespace.PREFIX_CATEGORY.value in name}
+    templates = {name: markup for name, markup in raw_markup.items() if Namespace.PREFIX_TEMPLATE.value in name}
     return categories, templates
 
 

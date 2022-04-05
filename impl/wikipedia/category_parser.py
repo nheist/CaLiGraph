@@ -1,6 +1,7 @@
 import utils
 from utils import get_logger
 import impl.util.string as str_util
+from impl.util.rdf import Namespace
 from collections import defaultdict
 import wikitextparser as wtp
 from wikitextparser import WikiText, Template
@@ -8,13 +9,6 @@ import re
 from typing import Tuple, Optional
 from tqdm import tqdm
 import multiprocessing as mp
-
-
-DBPEDIA_PREFIX = 'http://dbpedia.org/resource/'
-CATEGORY_PREFIX = 'Category:'
-DBPEDIA_CATEGORY_PREFIX = DBPEDIA_PREFIX + CATEGORY_PREFIX
-TEMPLATE_PREFIX = 'Template:'
-DBPEDIA_TEMPLATE_PREFIX = DBPEDIA_PREFIX + TEMPLATE_PREFIX
 
 
 def _extract_parent_categories_from_markup(categories_and_templates_markup: tuple) -> dict:
@@ -31,15 +25,15 @@ def _extract_parent_categories_from_markup(categories_and_templates_markup: tupl
 def _extract_parents_for_category(data: tuple) -> tuple:
     cat, markup, template_definitions = data
     content, visited_templates = _replace_templates_in_category(wtp.parse(markup), template_definitions)
-    parent_names = {link.target[len(CATEGORY_PREFIX):] for link in content.wikilinks if link.target.startswith(CATEGORY_PREFIX)}
+    parent_names = {link.target[len(Namespace.PREFIX_CATEGORY.value):] for link in content.wikilinks if link.target.startswith(Namespace.PREFIX_CATEGORY.value)}
     parent_names = map(str_util.regularize_spaces, parent_names)
     parent_names = map(str_util.capitalize, parent_names)  # make sure that first letter of category is uppercase
-    parent_uris = {DBPEDIA_CATEGORY_PREFIX + name.replace(' ', '_') for name in parent_names}
+    parent_uris = {Namespace.DBP_CATEGORY.value + name.replace(' ', '_') for name in parent_names}
     # use markers in markup or used templates to find parent categories (as we can't resolve macros in markup)
     if '__HIDDENCAT__' in content.string or 'Maintenance category' in visited_templates:
-        parent_uris.add(f'{DBPEDIA_CATEGORY_PREFIX}Hidden_categories')
+        parent_uris.add(f'{Namespace.DBP_CATEGORY.value}Hidden_categories')
     if 'Category disambiguation' in visited_templates or 'Category ambiguous' in visited_templates:
-        parent_uris.add(f'{DBPEDIA_CATEGORY_PREFIX}Disambiguation_categories')
+        parent_uris.add(f'{Namespace.DBP_CATEGORY.value}Disambiguation_categories')
     return cat, parent_uris
 
 
@@ -50,7 +44,7 @@ def _prepare_template_definitions(templates_markup: dict) -> dict:
     template_definitions = defaultdict(str)
     # extract parts of the template that will be placed on the page the template is applied to
     for name, content in templates_markup.items():
-        name = str_util.capitalize(name[len(DBPEDIA_TEMPLATE_PREFIX):].replace('_', ' '))
+        name = str_util.capitalize(name[len(Namespace.DBP_TEMPLATE.value):].replace('_', ' '))
         content = re.sub(r'</?includeonly>', '', content)  # remove includeonly-tags
         content = re.sub(r'<noinclude>(.|\n)*?</noinclude>', '', content)  # remove content in noinclude-tags
         content = _filter_for_onlyinclude(content)
@@ -60,10 +54,10 @@ def _prepare_template_definitions(templates_markup: dict) -> dict:
         content = template_definitions[name]
         if content.startswith('#REDIRECT'):
             parse = wtp.parse(content[len('#REDIRECT '):])
-            if not parse.wikilinks or not parse.wikilinks[0].target.startswith(TEMPLATE_PREFIX):
+            if not parse.wikilinks or not parse.wikilinks[0].target.startswith(Namespace.PREFIX_TEMPLATE.value):
                 template_definitions[name] = ''
             else:
-                target = parse.wikilinks[0].target[len(TEMPLATE_PREFIX):]
+                target = parse.wikilinks[0].target[len(Namespace.PREFIX_TEMPLATE.value):]
                 template_definitions[name] = template_definitions[target]
     return template_definitions
 
