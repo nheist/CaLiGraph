@@ -1,7 +1,7 @@
 """Implementing heuristics from Töpper et al. 2012 - DBpedia Ontology Enrichment for Inconsistency Detection"""
 
 from typing import Optional, Dict, Set
-from collections import defaultdict
+from collections import defaultdict, Counter
 import math
 import utils
 from functools import cache
@@ -38,7 +38,7 @@ def _compute_ranges() -> Dict[DbpPredicate, Optional[DbpType]]:
 def _compute_predicate_types(ent_prop_mapping: Dict[DbpEntity, Dict[DbpPredicate, Set[DbpResource]]], threshold: float) -> Dict[DbpPredicate, Optional[DbpType]]:
     dbo = DbpOntologyStore.instance()
 
-    predicate_type_distribution = defaultdict(lambda: defaultdict(int))
+    predicate_type_distribution = defaultdict(Counter)
     for ent in ent_prop_mapping:
         for pred, values in ent_prop_mapping[ent].items():
             triple_count = len(values)
@@ -64,7 +64,7 @@ def _compute_predicate_types(ent_prop_mapping: Dict[DbpEntity, Dict[DbpPredicate
 
 def get_all_disjoint_types(dbp_type: DbpType) -> Set[DbpType]:
     """Return direct and transitive (i.e. disjoint types of parents) disjoint types of `dbp_type`."""
-    transitive_dbp_types = DbpOntologyStore.instance().get_transitive_supertype_closure(dbp_type)
+    transitive_dbp_types = DbpOntologyStore.instance().get_transitive_supertypes(dbp_type, include_self=True)
     return {dt for tt in transitive_dbp_types for dt in get_direct_disjoint_types(tt)}
 
 
@@ -94,16 +94,16 @@ def _compute_disjoint_types(type_threshold: float) -> Dict[DbpType, Set[DbpType]
     # remove any disjointnesses that would violate the ontology hierarchy
     # i.e. if two types share a common subtype, they can't be disjoint
     for t in dbo.get_types(include_root=False):
-        transitive_types = dbo.get_transitive_supertype_closure(t)
+        transitive_types = dbo.get_transitive_supertypes(t, include_self=True)
         for tt in transitive_types:
             disjoint_types[tt] = disjoint_types[tt].difference(transitive_types)
 
     # add transitive disjointnesses
-    disjoint_types = {t: {tdt for dt in dts for tdt in dbo.get_transitive_subtype_closure(dt)} for t, dts in disjoint_types.items()}
+    disjoint_types = {t: {tdt for dt in dts for tdt in dbo.get_transitive_subtypes(dt, include_self=True)} for t, dts in disjoint_types.items()}
 
     # make sure that there are no disjointnesses between place and organisation
-    place_types = dbo.get_transitive_subtype_closure(dbo.get_class_by_name('Place')) | {dbo.get_class_by_name('Location')}
-    orga_types = dbo.get_transitive_subtype_closure(dbo.get_class_by_name('Organisation')) | {dbo.get_class_by_name('Agent')}
+    place_types = dbo.get_transitive_subtypes(dbo.get_class_by_name('Place'), include_self=True) | {dbo.get_class_by_name('Location')}
+    orga_types = dbo.get_transitive_subtypes(dbo.get_class_by_name('Organisation'), include_self=True) | {dbo.get_class_by_name('Agent')}
     for pt in place_types:
         disjoint_types[pt] = disjoint_types[pt].difference(orga_types)
     for ot in orga_types:
@@ -125,7 +125,7 @@ def _compute_type_property_weights() -> Dict[DbpType, Dict[DbpPredicate, float]]
 
 def _compute_property_frequencies() -> Dict[DbpType, Dict[DbpPredicate, float]]:
     dbr = DbpResourceStore.instance()
-    property_frequencies = defaultdict(lambda: defaultdict(int))
+    property_frequencies = defaultdict(Counter)
     for res in dbr.get_resources():
         types = res.get_transitive_types()
         for pred, values in res.get_properties().items():
@@ -168,8 +168,8 @@ def _find_functional_predicates() -> set:
     dbo = DbpOntologyStore.instance()
     dbr = DbpResourceStore.instance()
 
-    predicate_resources_count = defaultdict(int)
-    predicate_nonfunctional_count = defaultdict(int)
+    predicate_resources_count = Counter()
+    predicate_nonfunctional_count = Counter()
     for res, properties in dbr.get_entity_properties().items():
         for pred, objects in properties.items():
             predicate_resources_count[pred] += 1
@@ -177,7 +177,6 @@ def _find_functional_predicates() -> set:
                 predicate_nonfunctional_count[pred] += 1
 
     # if a predicate behaves functional in at least 95% of cases, we assume it to actually be functional
-    nonfunctional_preds = {p for p in predicate_resources_count
-                           if predicate_nonfunctional_count[p] / predicate_resources_count[p] >= .05}
+    nonfunctional_preds = {p for p in predicate_resources_count if predicate_nonfunctional_count[p] / predicate_resources_count[p] >= .05}
 
     return dbo.get_predicates().difference(nonfunctional_preds)

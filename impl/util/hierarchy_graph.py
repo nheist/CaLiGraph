@@ -21,7 +21,7 @@ class HierarchyGraph(BaseGraph):
         self._nodes_by_part = defaultdict(set)
 
     # node attribute definitions
-    ATTRIBUTE_NAME = 'attribute_name'
+    ATTRIBUTE_LABEL = 'attribute_label'
     ATTRIBUTE_PARTS = 'attribute_parts'
 
     def copy(self):
@@ -33,30 +33,30 @@ class HierarchyGraph(BaseGraph):
         if not self.has_node(node):
             raise Exception(f'Node {node} not in graph.')
 
-    def get_name(self, node: str) -> str:
+    def get_label(self, node: str) -> str:
         self._check_node_exists(node)
-        return self._get_attr(node, self.ATTRIBUTE_NAME)
+        return self._get_attr(node, self.ATTRIBUTE_LABEL)
 
-    def _set_name(self, node: str, name: str):
+    def _set_label(self, node: str, label: str):
         self._check_node_exists(node)
-        self._set_attr(node, self.ATTRIBUTE_NAME, name)
+        self._set_attr(node, self.ATTRIBUTE_LABEL, label)
 
     def get_node_LHS(self) -> dict:
         nodes = list(self.content_nodes)
-        node_names = [self.get_name(n) for n in nodes]
-        node_LHS = dict(zip(nodes, nlp_util.get_lexhead_subjects(node_names)))
+        node_labels = [self.get_label(n) for n in nodes]
+        node_LHS = dict(zip(nodes, nlp_util.get_lexhead_subjects(node_labels)))
         return defaultdict(set, node_LHS)
 
     def get_node_LH(self) -> dict:
         nodes = list(self.content_nodes)
-        node_names = [self.get_name(n) for n in nodes]
-        node_LH = dict(zip(nodes, nlp_util.get_lexhead_remainder(node_names)))
+        node_labels = [self.get_label(n) for n in nodes]
+        node_LH = dict(zip(nodes, nlp_util.get_lexhead_remainder(node_labels)))
         return defaultdict(set, node_LH)
 
     def get_node_NH(self) -> dict:
         nodes = list(self.content_nodes)
-        node_names = [self.get_name(n) for n in nodes]
-        node_NH = dict(zip(nodes, nlp_util.get_nonlexhead_part(node_names)))
+        node_labels = [self.get_label(n) for n in nodes]
+        node_NH = dict(zip(nodes, nlp_util.get_nonlexhead_part(node_labels)))
         return defaultdict(set, node_NH)
 
     # graph connectivity
@@ -181,31 +181,31 @@ class HierarchyGraph(BaseGraph):
             self._nodes_by_part[part].add(node)
 
     def merge_nodes(self):
-        """Merges any two nodes that have the same canonical name.
+        """Merges any two nodes that have the same canonical label.
 
-        A canonical name of a node is its name without any postfixes that Wikipedia appends for organisational purposes.
+        A canonical label of a node is its label without any postfixes that Wikipedia appends for organisational purposes.
         E.g., we remove by-phrases like in "Authors by name", and we remove alphabetical splits like in "Authors: A-C".
         """
-        get_logger().debug('Merging nodes with the same name..')
+        get_logger().debug('Merging nodes with the same label..')
         nodes_containing_by = {node for node in self.nodes if '_by_' in node}
-        nodes_canonical_names = {}
+        nodes_canonical_labels = {}
         for node in nodes_containing_by:
-            node_name = self.get_name(node)
-            canonical_name = nlp_util.get_canonical_name(node_name)
-            if node_name != canonical_name:
-                nodes_canonical_names[node] = canonical_name
-        remaining_nodes_to_merge = set(nodes_canonical_names)
+            node_label = self.get_label(node)
+            canonical_label = nlp_util.get_canonical_label(node_label)
+            if node_label != canonical_label:
+                nodes_canonical_labels[node] = canonical_label
+        remaining_nodes_to_merge = set(nodes_canonical_labels)
         get_logger().debug(f'Found {len(remaining_nodes_to_merge)} nodes to merge.')
 
         # 1) compute direct merge and synonym merge
         direct_merges = defaultdict(set)
 
-        nodes_important_words = {node: nlp_util.without_stopwords(canonical_name) for node, canonical_name in nodes_canonical_names.items()}
+        nodes_important_words = {node: nlp_util.without_stopwords(canonical_label) for node, canonical_label in nodes_canonical_labels.items()}
         for node in remaining_nodes_to_merge:
             node_important_words = nodes_important_words[node]
             for parent in self.parents(node):
                 if parent not in nodes_important_words:
-                    nodes_important_words[parent] = nlp_util.without_stopwords(nlp_util.get_canonical_name(self.get_name(parent)))
+                    nodes_important_words[parent] = nlp_util.without_stopwords(nlp_util.get_canonical_label(self.get_label(parent)))
                 parent_important_words = nodes_important_words[parent]
 
                 if all(any(hypernymy_util.is_synonym(niw, piw) for piw in parent_important_words) for niw in node_important_words):
@@ -216,11 +216,11 @@ class HierarchyGraph(BaseGraph):
         catset_merges = defaultdict(set)
         remaining_nodes_to_merge = remaining_nodes_to_merge.difference(set(direct_merges))
         for node in remaining_nodes_to_merge:
-            node_canonical_name = nodes_canonical_names[node]
+            node_canonical_label = nodes_canonical_labels[node]
             for parent in self.parents(node):
                 if parent == self.root_node:
                     continue
-                similar_children_count = len({child for child in self.children(parent) if child in nodes_canonical_names and nodes_canonical_names[child] == node_canonical_name})
+                similar_children_count = len({child for child in self.children(parent) if child in nodes_canonical_labels and nodes_canonical_labels[child] == node_canonical_label})
                 if similar_children_count > 1:
                     catset_merges[node].add(parent)
         get_logger().debug(f'Merging {len(catset_merges)} nodes via category sets.')

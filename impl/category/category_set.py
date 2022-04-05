@@ -3,10 +3,9 @@
 from typing import Tuple, Optional, List, Dict
 import utils
 import impl.util.nlp as nlp_util
-from collections import namedtuple, defaultdict
+from collections import namedtuple, Counter
 from impl.dbpedia.category import DbpCategory, DbpCategoryStore
 from spacy.tokens import Doc
-import operator
 
 
 CandidateSet = namedtuple('CandidateSet', ['parent', 'children', 'pattern'])
@@ -75,7 +74,7 @@ def _find_child_sets(parent: DbpCategory, category_docs: Dict[DbpCategory, Doc],
 
 def _find_best_group(category_docs: Dict[DbpCategory, Doc], idx: int) -> Tuple[set, Optional[str]]:
     """Locate the best group of categories by checking which words appear most frequently at the current index."""
-    word_counts = defaultdict(int)
+    word_counts = Counter()
     for d in category_docs.values():
         if len(d) > idx and len(d) >= -idx:  # take positive and negative indices into account
             word_counts[d[idx].text] += 1
@@ -83,5 +82,5 @@ def _find_best_group(category_docs: Dict[DbpCategory, Doc], idx: int) -> Tuple[s
     if not word_counts:
         return set(), None
 
-    most_frequent_word = max(word_counts.items(), key=operator.itemgetter(1))[0]
+    most_frequent_word = word_counts.most_common(1)[0][0]
     return {c for c, d in category_docs.items() if len(d) > idx and len(d) >= -idx and d[idx].text == most_frequent_word}, most_frequent_word

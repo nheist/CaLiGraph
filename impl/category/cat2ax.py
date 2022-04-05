@@ -10,7 +10,7 @@ from typing import Dict, Union, List, Tuple, Optional
 import utils
 from spacy.tokens import Doc
 from utils import get_logger
-from collections import defaultdict
+from collections import defaultdict, Counter
 import operator
 import numpy as np
 import multiprocessing as mp
@@ -37,10 +37,10 @@ class Axiom:
     def implies(self, other):
         return self.predicate == other.predicate and self.value == other.value
 
-    def accepts_resource(self, dbp_resource: str) -> bool:
+    def accepts_resource(self, res: DbpResource) -> bool:
         raise NotImplementedError("Please use the subclasses.")
 
-    def rejects_resource(self, dbp_resource: str) -> bool:
+    def rejects_resource(self, res: DbpResource) -> bool:
         raise NotImplementedError("Please use the subclasses.")
 
 
@@ -49,7 +49,7 @@ class TypeAxiom(Axiom):
         super().__init__(RdfPredicate.TYPE, value, confidence)
 
     def implies(self, other):
-        return super().implies(other) or other.value in DbpOntologyStore.instance().get_transitive_supertype_closure(self.value)
+        return super().implies(other) or other.value in DbpOntologyStore.instance().get_transitive_supertypes(self.value, include_self=True)
 
     def accepts_resource(self, res: DbpResource) -> bool:
         return self.value in res.get_transitive_types()
@@ -97,7 +97,7 @@ def extract_category_axioms(category_graph):
 
 # --- PATTERN EXTRACTION ---
 
-def _extract_patterns(category_graph, candidate_sets: List[CandidateSet]) -> Dict[tuple, dict]:
+def _extract_patterns(category_graph, candidate_sets: List[CandidateSet]) -> Dict[Tuple[tuple, tuple], dict]:
     """Return property/type patterns extracted from `category_graph` for each set in `candidate_sets`."""
     get_logger().debug('Extracting Cat2Ax patterns..')
     dbc = DbpCategoryStore.instance()
@@ -165,14 +165,13 @@ def _get_resource_surface_scores(text: str) -> Dict[Union[str, DbpEntity], float
 
 def _get_type_surface_scores(words: list, lemmatize=True) -> Dict[DbpType, float]:
     """Return type lexicalisation scores for a given set of `words`."""
-    lexicalisation_scores = defaultdict(int)
+    lexicalisation_scores = Counter()
     dbo = DbpOntologyStore.instance()
     word_lemmas = [nlp_util.lemmatize_token(word_doc[0]) for word_doc in nlp_util.parse_texts(words)] if lemmatize else words
     for lemma in word_lemmas:
         for t, score in dbo.get_type_lexicalisations(lemma).items():
             lexicalisation_scores[t] += score
-    total_scores = sum(lexicalisation_scores.values())
-    type_surface_scores = defaultdict(float, {t: score / total_scores for t, score in lexicalisation_scores.items()})
+    type_surface_scores = defaultdict(float, {t: score / lexicalisation_scores.total() for t, score in lexicalisation_scores.items()})
 
     # make sure that exact matches get at least appropriate probability
     for lemma in word_lemmas:

@@ -33,10 +33,7 @@ if __name__ == '__main__':
 
         # run the complete extraction cycle and end with serializing CaLiGraph
         get_logger().info('Running extraction..')
-        caligraph.serialize_final_graph()
-
-        get_logger().info('Computing statistics..')
-        get_logger().info(caligraph.get_entity_graph().statistics)
+        caligraph.extract_and_serialize()
 
         success_msg = 'Finished extraction of CaLiGraph.'
         mailer.send_success(success_msg)

@@ -1,6 +1,6 @@
 """Compute hypernyms with methods similar to Ponzetto & Strube: Deriving a large scale taxonomy from Wikipedia."""
 
-from collections import defaultdict
+from collections import defaultdict, Counter
 import utils
 import bz2
 import pickle
@@ -59,7 +59,7 @@ def compute_hypernyms(category_graph) -> dict:
 
     # collect hypernyms from axiom matches between Wikipedia categories
     cat_headlemmas = category_graph.get_node_LHS()
-    axiom_hypernyms = defaultdict(lambda: defaultdict(int))
+    axiom_hypernyms = defaultdict(Counter)
     for parent, child in category_graph.get_axiom_edges():
         for cl in cat_headlemmas[child]:
             for pl in cat_headlemmas[parent]:
@@ -75,7 +75,7 @@ def compute_hypernyms(category_graph) -> dict:
     # merge hypernyms
     candidates = set(axiom_hypernyms) | set(wiki_hypernyms) | set(webisalod_hypernyms)
     for candidate in candidates:
-        hyper_count = defaultdict(int)
+        hyper_count = Counter()
         if candidate in axiom_hypernyms:
             for word, count in axiom_hypernyms[candidate].items():
                 if count >= THRESHOLD_AXIOM:

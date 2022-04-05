@@ -1,4 +1,5 @@
 from typing import Dict, Set, Optional
+from collections import defaultdict, Counter
 from impl.util.singleton import Singleton
 import impl.dbpedia.util as dbp_util
 import impl.util.rdf as rdf_util
@@ -6,28 +7,32 @@ from impl.util.rdf import RdfPredicate, RdfResource, Namespace
 from impl.dbpedia.resource import DbpResourceStore, DbpResource, DbpEntity
 from impl import wikipedia
 import utils
-from collections import defaultdict
 
 
 class DbpCategory(RdfResource):
     def get_resources(self) -> Set[DbpResource]:
-        return DbpCategoryStore.instance().get_resources(self)
+        return self._get_store().get_resources(self)
 
     def get_entities(self) -> Set[DbpEntity]:
         return {r for r in self.get_resources() if isinstance(r, DbpEntity)}
 
     @classmethod
+    def get_namespace(cls) -> str:
+        return Namespace.DBP_RESOURCE.value
+
+    @classmethod
+    def _get_prefix(cls) -> str:
+        return Namespace.PREFIX_CATEGORY.value
+
+    @classmethod
     def _get_store(cls):
         return DbpCategoryStore.instance()
 
-    @classmethod
-    def _get_namespace(cls) -> str:
-        return Namespace.DBP_RESOURCE.value
-
 
 class DbpListCategory(DbpCategory):
-    def _get_prefix(self) -> str:
-        return Namespace.PREFIX_LISTS.value
+    @classmethod
+    def _get_prefix(cls) -> str:
+        return Namespace.PREFIX_CATEGORY.value + Namespace.PREFIX_LISTS.value
 
 
 class DbpCategoryNotExistingException(KeyError):
@@ -54,13 +59,13 @@ class DbpCategoryStore:
     def _init_category_cache(self) -> Set[DbpCategory]:
         # gather categories
         category_uris = rdf_util.create_set_from_rdf([utils.get_data_file('files.dbpedia.category_skos')], RdfPredicate.TYPE, None)
-        category_names = {dbp_util.category2name(uri) for uri in category_uris}
+        category_names = {dbp_util.resource2name(uri) for uri in category_uris}
         category_names = category_names.difference({utils.get_config('category.root_category')})  # root category will be treated separately
         # gather category hierarchy
         skos_category_parent_uris = rdf_util.create_multi_val_dict_from_rdf([utils.get_data_file('files.dbpedia.category_skos')], RdfPredicate.BROADER)
         wiki_category_parent_uris = wikipedia.extract_parent_categories()
         category_children_uris = [(p, c) for c, parents in skos_category_parent_uris.items() | wiki_category_parent_uris.items() for p in parents if p != c]
-        category_children = [(dbp_util.category2name(p), dbp_util.category2name(c)) for p, c in category_children_uris]
+        category_children = [(dbp_util.resource2name(p), dbp_util.resource2name(c)) for p, c in category_children_uris]
         # identify meta categories
         meta_parent_categories = {'Hidden categories', 'Tracking categories', 'Disambiguation categories',
                                   'Non-empty disambiguation categories', 'All redirect categories',
@@ -100,11 +105,11 @@ class DbpCategoryStore:
             raise DbpCategoryNotExistingException(f'Could not find category for name: {name}')
         return self.categories_by_name[name]
 
-    def has_category_with_uri(self, uri: str) -> bool:
-        return self.has_category_with_name(dbp_util.category2name(uri))
+    def has_category_with_iri(self, iri: str) -> bool:
+        return self.has_category_with_name(dbp_util.resource2name(iri))
 
-    def get_category_by_uri(self, uri: str) -> DbpCategory:
-        return self.categories_by_name[dbp_util.category2name(uri)]
+    def get_category_by_iri(self, iri: str) -> DbpCategory:
+        return self.categories_by_name[dbp_util.resource2name(iri)]
 
     def get_categories(self, include_meta=False, include_listcategories=False) -> Set[DbpCategory]:
         return self._filter_categories(set(self.categories_by_idx.values()), include_meta, include_listcategories)
@@ -129,7 +134,7 @@ class DbpCategoryStore:
 
         category_children = defaultdict(set)
         for p_uri, c_uri in category_children_uris:
-            p, c = self.get_category_by_uri(p_uri), self.get_category_by_uri(c_uri)
+            p, c = self.get_category_by_iri(p_uri), self.get_category_by_iri(c_uri)
             category_children[p.idx].add(c.idx)
         return category_children
 
@@ -156,7 +161,7 @@ class DbpCategoryStore:
         return self.labels[cat.idx]
 
     def _init_label_cache(self) -> Dict[int, str]:
-        labels = rdf_util.create_single_val_dict_from_rdf([utils.get_data_file('files.dbpedia.category_skos')], RdfPredicate.PREFLABEL, casting_fn=self.get_category_by_uri)
+        labels = rdf_util.create_single_val_dict_from_rdf([utils.get_data_file('files.dbpedia.category_skos')], RdfPredicate.PREFLABEL, casting_fn=self.get_category_by_iri)
         labels = {cat.idx: label for cat, label in labels.items()}
         return labels
 
@@ -168,7 +173,7 @@ class DbpCategoryStore:
 
     def _init_category_resource_cache(self) -> Dict[int, Set[int]]:
         category_resources = rdf_util.create_multi_val_dict_from_rdf([utils.get_data_file('files.dbpedia.category_articles')], RdfPredicate.SUBJECT, reverse_key=True)
-        category_resources = {cat: {self.dbr.get_resource_by_uri(r).idx for r in resources} for cat, resources in category_resources.items()}
+        category_resources = {cat: {self.dbr.get_resource_by_iri(r).idx for r in resources} for cat, resources in category_resources.items()}
         return category_resources
 
     def get_categories_for_resource(self, res: DbpResource) -> Set[DbpCategory]:
@@ -182,7 +187,7 @@ class DbpCategoryStore:
     def get_topics(self, cat: DbpCategory) -> Set[DbpResource]:
         if self.topics is None:
             topics = rdf_util.create_multi_val_dict_from_rdf([utils.get_data_file('files.dbpedia.topical_concepts')], RdfPredicate.SUBJECT)
-            topics = {self.get_category_by_uri(c_uri): {self.dbr.get_resource_by_uri(r_uri) for r_uri in r_uris} for c_uri, r_uris in topics.items()}
+            topics = {self.get_category_by_iri(c_uri): {self.dbr.get_resource_by_iri(r_uri) for r_uri in r_uris} for c_uri, r_uris in topics.items()}
             self.topics = defaultdict(set, topics)
         return self.topics[cat]
 
@@ -197,15 +202,13 @@ class DbpCategoryStore:
 
     def get_statistics(self, cat: DbpCategory) -> dict:
         if cat not in self.statistics:
-            type_counts = defaultdict(int)
-            prop_counts = defaultdict(int)
+            type_counts = Counter()
+            prop_counts = Counter()
 
             resources = self.get_resources(cat)
             for res in resources:
-                for t in res.get_transitive_types():
-                    type_counts[t] += 1
-                for prop in res.get_properties(as_tuple=True):
-                    prop_counts[prop] += 1
+                type_counts.update(res.get_transitive_types())
+                prop_counts.update(res.get_properties(as_tuple=True))
             self.statistics[cat] = {
                 'type_counts': type_counts,
                 'type_frequencies': defaultdict(float, {t: t_count / len(resources) for t, t_count in type_counts.items()}),

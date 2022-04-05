@@ -9,12 +9,16 @@ import utils
 
 
 class DbpClass(RdfResource):
+    def get_label(self) -> str:
+        label = super().get_label()
+        return label or self.name[len(self.get_namespace()):]
+
     @classmethod
     def _get_store(cls) -> str:
         return DbpOntologyStore.instance()
 
     @classmethod
-    def _get_namespace(cls) -> str:
+    def get_namespace(cls) -> str:
         return Namespace.DBP_ONTOLOGY.value
 
 
@@ -61,10 +65,6 @@ class DbpOntologyStore:
 
     def _init_class_cache(self) -> Set[Union[DbpType, DbpPredicate]]:
         all_classes = {DbpType(0, 'Thing', False)}  # initialize root type with 0
-        # types
-        all_type_uris = rdf_util.create_set_from_rdf([utils.get_data_file('files.dbpedia.taxonomy')], RdfPredicate.TYPE, RdfClass.OWL_CLASS.value)
-        all_type_uris = {t for t in all_type_uris if dbp_util.is_class(t)}
-        all_classes.update({DbpType(idx, dbp_util.class2name(uri), False) for idx, uri in enumerate(all_type_uris, start=len(all_classes))})
         # predicates
         object_predicate_uris = rdf_util.create_set_from_rdf([utils.get_data_file('files.dbpedia.taxonomy')], RdfPredicate.TYPE, RdfClass.OWL_OBJECT_PROPERTY.value)
         object_predicate_uris = {p for p in object_predicate_uris if dbp_util.is_class(p)}
@@ -72,10 +72,14 @@ class DbpOntologyStore:
         datatype_predicate_uris = rdf_util.create_set_from_rdf([utils.get_data_file('files.dbpedia.taxonomy')], RdfPredicate.TYPE, RdfClass.OWL_DATATYPE_PROPERTY.value)
         datatype_predicate_uris = {p for p in datatype_predicate_uris if dbp_util.is_class(p)}
         all_classes.update({DbpDatatypePredicate(idx, dbp_util.class2name(uri), False) for idx, uri in enumerate(datatype_predicate_uris, start=len(all_classes))})
+        # types
+        all_type_uris = rdf_util.create_set_from_rdf([utils.get_data_file('files.dbpedia.taxonomy')], RdfPredicate.TYPE, RdfClass.OWL_CLASS.value)
+        all_type_uris = {t for t in all_type_uris if dbp_util.is_class(t)}
+        all_classes.update({DbpType(idx, dbp_util.class2name(uri), False) for idx, uri in enumerate(all_type_uris, start=len(all_classes))})
         return all_classes
 
     def _init_type_graph(self) -> nx.DiGraph:
-        subtype_mapping = rdf_util.create_multi_val_dict_from_rdf([utils.get_data_file('files.dbpedia.taxonomy')], RdfPredicate.SUBCLASS_OF, reverse_key=True, casting_fn=self.get_class_by_uri)
+        subtype_mapping = rdf_util.create_multi_val_dict_from_rdf([utils.get_data_file('files.dbpedia.taxonomy')], RdfPredicate.SUBCLASS_OF, reverse_key=True, casting_fn=self.get_class_by_iri)
         # completing subtypes with subtypes of equivalent types
         subtype_mapping = {t: {est for et in self.get_equivalents(t) for st in subtype_mapping[et] for est in self.get_equivalents(st)} for t in set(subtype_mapping)}
         return nx.DiGraph(incoming_graph_data=[(t, st) for t, sts in subtype_mapping.items() for st in sts])
@@ -90,23 +94,23 @@ class DbpOntologyStore:
             raise DbpClassNotExistingException(f'Could not find class for name: {name}')
         return self.classes_by_name[name]
 
-    def get_class_by_uri(self, uri: str) -> DbpClass:
-        return self.get_class_by_name(dbp_util.class2name(uri))
+    def get_class_by_iri(self, iri: str) -> DbpClass:
+        return self.get_class_by_name(dbp_util.class2name(iri))
 
     def get_equivalents(self, cls: DbpClass) -> set:
         if not self.equivalents:
             self.equivalents = defaultdict(set)
-            equivalent_types = rdf_util.create_multi_val_dict_from_rdf([utils.get_data_file('files.dbpedia.taxonomy')], RdfPredicate.EQUIVALENT_CLASS, reflexive=True, casting_fn=self.get_class_by_uri)
+            equivalent_types = rdf_util.create_multi_val_dict_from_rdf([utils.get_data_file('files.dbpedia.taxonomy')], RdfPredicate.EQUIVALENT_CLASS, reflexive=True, casting_fn=self.get_class_by_iri)
             for t, ets in equivalent_types.items():
                 self.equivalents[t] = {t} | ets
-            equivalent_predicates = rdf_util.create_multi_val_dict_from_rdf([utils.get_data_file('files.dbpedia.taxonomy')], RdfPredicate.EQUIVALENT_PROPERTY, casting_fn=self.get_class_by_uri)
+            equivalent_predicates = rdf_util.create_multi_val_dict_from_rdf([utils.get_data_file('files.dbpedia.taxonomy')], RdfPredicate.EQUIVALENT_PROPERTY, casting_fn=self.get_class_by_iri)
             for p, eps in equivalent_predicates.items():
                 self.equivalents[p] = {p} | eps
         return self.equivalents[cls]
 
     def get_label(self, cls: DbpClass) -> Optional[str]:
         if not self.labels:
-            labels = rdf_util.create_single_val_dict_from_rdf([utils.get_data_file('files.dbpedia.taxonomy')], RdfPredicate.LABEL, casting_fn=self.get_class_by_uri)
+            labels = rdf_util.create_single_val_dict_from_rdf([utils.get_data_file('files.dbpedia.taxonomy')], RdfPredicate.LABEL, casting_fn=self.get_class_by_iri)
             self.labels = defaultdict(None, labels)
         return self.labels[cls]
 
@@ -132,27 +136,23 @@ class DbpOntologyStore:
     def get_supertypes(self, t: DbpType) -> Set[DbpType]:
         return set(self.type_graph.predecessors(t)) if t in self.type_graph else set()
 
-    def get_transitive_supertypes(self, t: DbpType, include_root=True) -> Set[DbpType]:
+    def get_transitive_supertypes(self, t: DbpType, include_root=True, include_self=False) -> Set[DbpType]:
         if t not in self.transitive_supertypes:
             self.transitive_supertypes[t] = nx.ancestors(self.type_graph, t) if t in self.type_graph else set()
         tt = self.transitive_supertypes[t]
-        return tt if include_root else tt.difference({self.get_type_root()})
-
-    def get_transitive_supertype_closure(self, t: DbpType, include_root=True) -> set:
-        """Return `dbp_type` itself and its transitive supertypes."""
-        return {t} | self.get_transitive_supertypes(t, include_root)
+        tt = tt if include_root else tt.difference({self.get_type_root()})
+        tt = tt | {t} if include_self else tt
+        return tt
 
     def get_subtypes(self, t: DbpType) -> Set[DbpType]:
         return set(self.type_graph.successors(t)) if t in self.type_graph else set()
 
-    def get_transitive_subtypes(self, t: DbpType) -> Set[DbpType]:
+    def get_transitive_subtypes(self, t: DbpType, include_self=False) -> Set[DbpType]:
         if t not in self.transitive_subtypes:
             self.transitive_subtypes[t] = nx.descendants(self.type_graph, t) if t in self.type_graph else set()
-        return self.transitive_subtypes[t]
-
-    def get_transitive_subtype_closure(self, t: DbpType) -> Set[DbpType]:
-        """Return `dbp_type` itself and its transitive subtypes."""
-        return {t} | self.get_transitive_subtypes(t)
+        tt = self.transitive_subtypes[t]
+        tt = tt | {t} if include_self else tt
+        return tt
 
     def are_equivalent_types(self, dbp_types: Set[DbpType]) -> bool:
         """Return True, if types are equivalent."""
@@ -161,7 +161,7 @@ class DbpOntologyStore:
     def get_main_equivalence_type(self, t: DbpType) -> str:
         """Return the main equivalence type (i.e. the most strongly linked type in the taxonomy) for a given type."""
         if self.main_equivalent_types is None:
-            self.main_equivalent_types = rdf_util.create_set_from_rdf([utils.get_data_file('files.dbpedia.taxonomy')], RdfPredicate.SUBCLASS_OF, None, casting_fn=self.get_class_by_uri)
+            self.main_equivalent_types = rdf_util.create_set_from_rdf([utils.get_data_file('files.dbpedia.taxonomy')], RdfPredicate.SUBCLASS_OF, None, casting_fn=self.get_class_by_iri)
             self.main_equivalent_types.add(self.get_type_root())
         return self.get_equivalents(t).intersection(self.main_equivalent_types).pop()
 
@@ -169,7 +169,7 @@ class DbpOntologyStore:
         """Return all types that are disjoint with `dbp_type` (excluding the wrong disjointness Agent<->Place)."""
         if self.disjoint_types is None:
             # find all disjoint types
-            disjoint_types = defaultdict(set, rdf_util.create_multi_val_dict_from_rdf([utils.get_data_file('files.dbpedia.taxonomy')], RdfPredicate.DISJOINT_WITH, reflexive=True, casting_fn=self.get_class_by_uri))
+            disjoint_types = defaultdict(set, rdf_util.create_multi_val_dict_from_rdf([utils.get_data_file('files.dbpedia.taxonomy')], RdfPredicate.DISJOINT_WITH, reflexive=True, casting_fn=self.get_class_by_iri))
             # correct some mistakes manually
             removed_axioms = [('Agent', 'Place')]
             for a, b in removed_axioms:
@@ -182,7 +182,7 @@ class DbpOntologyStore:
                 disjoint_types[a].add(b)
                 disjoint_types[b].add(a)
             # complete the subtype of each type with the subtypes of its disjoint types
-            disjoint_types = {t: {st for dt in dts for st in self.get_transitive_subtype_closure(dt)} for t, dts in disjoint_types.items()}
+            disjoint_types = {t: {st for dt in dts for st in self.get_transitive_subtypes(dt, include_self=True)} for t, dts in disjoint_types.items()}
             self.disjoint_types = defaultdict(set, disjoint_types)
         return self.disjoint_types[t]
 
@@ -205,12 +205,12 @@ class DbpOntologyStore:
 
     def get_domain(self, pred: DbpPredicate) -> Optional[DbpType]:
         if self.domains is None:
-            domains = rdf_util.create_single_val_dict_from_rdf([utils.get_data_file('files.dbpedia.taxonomy')], RdfPredicate.DOMAIN, casting_fn=self.get_class_by_uri)
+            domains = rdf_util.create_single_val_dict_from_rdf([utils.get_data_file('files.dbpedia.taxonomy')], RdfPredicate.DOMAIN, casting_fn=self.get_class_by_iri)
             self.domains = defaultdict(lambda: None, domains)
         return self.domains[pred]
 
     def get_range(self, pred: DbpPredicate) -> Optional[DbpType]:
         if self.ranges is None:
-            ranges = rdf_util.create_single_val_dict_from_rdf([utils.get_data_file('files.dbpedia.taxonomy')], RdfPredicate.RANGE, casting_fn=self.get_class_by_uri)
+            ranges = rdf_util.create_single_val_dict_from_rdf([utils.get_data_file('files.dbpedia.taxonomy')], RdfPredicate.RANGE, casting_fn=self.get_class_by_iri)
             self.ranges = defaultdict(lambda: None, ranges)
         return self.ranges[pred]

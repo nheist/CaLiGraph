@@ -21,6 +21,10 @@ from impl.dbpedia.resource import DbpResourceStore
 from impl.dbpedia.category import DbpCategoryStore
 
 
+def get_related_category_nodes(list_node: str) -> Set[str]:
+    return get_equivalent_category_nodes(list_node) | get_parent_category_nodes(list_node)
+
+
 def get_equivalent_category_nodes(list_node: str) -> Set[str]:
     global __EQUIVALENT_CATEGORY_MAPPING__
     if '__EQUIVALENT_CATEGORY_MAPPING__' not in globals():
@@ -35,10 +39,10 @@ def _create_list_equivalents_mapping() -> Dict[str, Set[str]]:
     list_graph = listpage.get_merged_listgraph()
 
     # 1) find equivalent categories by exact name match
-    name_to_cat_mapping = {cat_graph.get_name(node).replace('-', ' ').lower(): node for node in cat_graph.nodes}
+    name_to_cat_mapping = {cat_graph.get_label(node).replace('-', ' ').lower(): node for node in cat_graph.nodes}
     name_to_list_mapping = defaultdict(set)
     for list_node in list_graph.content_nodes:
-        name_to_list_mapping[list_graph.get_name(list_node).replace('-', ' ').lower()].add(list_node)
+        name_to_list_mapping[list_graph.get_label(list_node).replace('-', ' ').lower()].add(list_node)
     matching_names = set(name_to_list_mapping).intersection(set(name_to_cat_mapping))
     list_to_cat_exact_mapping = defaultdict(set, {list_node: {name_to_cat_mapping[name]} for name in matching_names for list_node in name_to_list_mapping[name]})
     get_logger().debug(f'Mapped {len(list_to_cat_exact_mapping)} lists to categories with exact mapping.')
@@ -46,10 +50,10 @@ def _create_list_equivalents_mapping() -> Dict[str, Set[str]]:
     # 2) find equivalent categories by synonym match
     list_to_cat_synonym_mapping = defaultdict(set)
 
-    cats_important_words = {cat: nlp_util.without_stopwords(nlp_util.get_canonical_name(cat_graph.get_name(cat))) for cat in cat_graph.nodes}
+    cats_important_words = {cat: nlp_util.without_stopwords(nlp_util.get_canonical_label(cat_graph.get_label(cat))) for cat in cat_graph.nodes}
     remaining_lists = list_graph.content_nodes.difference(set(list_to_cat_exact_mapping))
     for list_node in remaining_lists:
-        lst_important_words = nlp_util.without_stopwords(nlp_util.get_canonical_name(list_graph.get_name(list_node)))
+        lst_important_words = nlp_util.without_stopwords(nlp_util.get_canonical_label(list_graph.get_label(list_node)))
         for candidate_cat in _get_candidate_category_nodes_for_list_node(list_node, cat_graph):
             cat_important_words = cats_important_words[candidate_cat]
             if hypernymy_util.phrases_are_synonymous(lst_important_words, cat_important_words):

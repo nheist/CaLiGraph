@@ -139,14 +139,11 @@ cache:
   listgraph_merged:
     filename: 'listgraph-merged'
     version: 1
-  caligraph_base:
-    filename: 'caligraph-base'
+  caligraph_ontology:
+    filename: 'caligraph-ontology'
     version: 1
-  caligraph_merged_ontology:
-    filename: 'caligraph-merged-ontology'
-    version: 1
-  caligraph_axiomatized:
-    filename: 'caligraph-axiomatized'
+  caligraph_entities:
+    filename: 'caligraph-entities'
     version: 1
   wikipedia_raw_markup:
     filename: 'wikipedia-raw-markup'
@@ -219,6 +216,9 @@ cache:
     version: 1
   cat2ax_axioms:
     filename: 'cat2ax-axioms'
+    version: 1
+  cali2ax_axioms:
+    filename: 'cali2ax-axioms'
     version: 1
   wikipedia_parsed_articles:
     filename: 'wikipedia-parsed-articles'

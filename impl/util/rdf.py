@@ -13,6 +13,7 @@ from dataclasses import dataclass
 
 
 class Namespace(Enum):
+    OWL = 'http://www.w3.org/2002/07/owl#'
     WIKIPEDIA = 'http://en.wikipedia.org/wiki/'
 
     PREFIX_CATEGORY = 'Category:'
@@ -78,8 +79,9 @@ class RdfResource:
             label = label[len(prefix):]
         return label
 
-    def get_iri(self) -> str:
-        return self._get_namespace() + self.name
+    @classmethod
+    def get_namespace(cls) -> str:
+        raise NotImplementedError()
 
     @classmethod
     def _get_store(cls):
@@ -89,23 +91,29 @@ class RdfResource:
     def _get_prefix(cls) -> str:
         return ''
 
-    @classmethod
-    def _get_namespace(cls) -> str:
-        raise NotImplementedError()
-
 
 # auxiliary structures
 Triple = namedtuple('Triple', 'sub pred obj is_literal')
 
 
-def uri2name(uri: str, prefix: str) -> str:
-    if uri == RdfClass.OWL_THING:
+def res2iri(res: RdfResource) -> str:
+    return name2iri(res.name, res.get_namespace())
+
+
+def res2wiki_iri(res: RdfResource) -> str:
+    return name2iri(res.name, Namespace.WIKIPEDIA)
+
+
+def iri2name(iri: str, prefix) -> str:
+    if iri == RdfClass.OWL_THING:
         return 'Thing'
-    return uri[len(prefix):].replace('_', ' ')
+    return iri[len(str(prefix)):]
 
 
-def name2uri(name: str, prefix: str) -> str:
-    return prefix + str(name).replace(' ', '_')
+def name2iri(name: str, prefix) -> str:
+    if name == 'Thing':
+        return RdfClass.OWL_THING.value
+    return str(prefix) + name
 
 
 def parse_triples_from_file(filepath: str) -> Iterator[Triple]:

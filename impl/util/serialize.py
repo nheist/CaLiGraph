@@ -1,8 +1,11 @@
 """Serialization of statements into RDF triples."""
 
+from enum import Enum
 import datetime
 import urllib.parse
 import impl.util.string as str_util
+import impl.util.rdf as rdf_util
+from impl.util.rdf import RdfResource
 
 TYPE_RESOURCE = 'type_resource'
 POSTFIXES = {
@@ -13,7 +16,7 @@ RESOURCE_ENCODING_EXCEPTIONS = ['#', ':', ',', ';', '(', ')', '\'', '&', '!', '*
 LITERAL_ENCODED_CHARS = ['\\', '"']
 
 
-def as_literal_triple(sub: str, pred: str, obj) -> str:
+def as_literal_triple(sub, pred, obj) -> str:
     """Serialize a triples as literal triple."""
     obj_type = type(obj)
     if obj_type == datetime.datetime:
@@ -23,32 +26,38 @@ def as_literal_triple(sub: str, pred: str, obj) -> str:
     return _as_triple(sub, pred, obj, obj_type)
 
 
-def as_object_triple(sub: str, pred: str, obj: str) -> str:
+def as_object_triple(sub, pred, obj) -> str:
     """Serialize a triples as object triple."""
     return _as_triple(sub, pred, obj, TYPE_RESOURCE)
 
 
-def _as_triple(sub: str, pred: str, obj: str, obj_type) -> str:
+def _as_triple(sub, pred, obj, obj_type) -> str:
+    sub_str = _resource_to_string(sub)
+    pred_str = _resource_to_string(pred)
     if obj_type == TYPE_RESOURCE:
-        obj_as_string = _resource_to_string(obj)
+        obj_str = _resource_to_string(obj)
     else:
-        obj_as_string = f'"{obj}"'
+        obj_str = f'"{obj}"'
         if obj_type in POSTFIXES:
-            obj_as_string += f'^^{_resource_to_string(POSTFIXES[obj_type])}'
-    return f'{_resource_to_string(sub)} {_resource_to_string(pred)} {obj_as_string} .\n'
+            obj_str += f'^^{_resource_to_string(POSTFIXES[obj_type])}'
+    return f'{sub_str} {pred_str} {obj_str} .\n'
 
 
-def _resource_to_string(resource: str) -> str:
-    if '/ontology/' in resource:
-        prefix = resource[:resource.rfind('/ontology/') + len('/ontology/')]
-    elif '/resource/' in resource:
-        prefix = resource[:resource.rfind('/resource/') + len('/resource/')]
-    elif '/wiki/' in resource:
-        prefix = resource[:resource.rfind('/wiki/') + len('/wiki/')]
+def _resource_to_string(resource) -> str:
+    if isinstance(resource, Enum):
+        resource = resource.value
+    if isinstance(resource, str):
+        if '/wiki/' in resource:
+            prefix = resource[:resource.rfind('/wiki/') + len('/wiki/')]
+        else:
+            prefix = resource[:resource.rfind('/') + 1]
+        res_name = resource[len(prefix):]
+    elif isinstance(resource, RdfResource):
+        prefix = resource.get_namespace()
+        res_name = resource.name
     else:
-        prefix = resource[:resource.rfind('/') + 1]
-    res_name = resource[len(prefix):]
-    return f'<{prefix}{_encode_resource(res_name)}>'
+        raise ValueError(f'Can not convert a resource of type {type(resource)} to string.')
+    return f'<{rdf_util.name2iri(_encode_resource(res_name), prefix)}>'
 
 
 def _encode_resource(resource: str) -> str:

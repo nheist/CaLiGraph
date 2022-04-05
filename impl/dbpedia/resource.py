@@ -13,19 +13,23 @@ from collections import defaultdict
 
 class DbpResource(RdfResource):
     def get_surface_forms(self) -> Set[str]:
-        return DbpResourceStore.instance().get_surface_forms(self)
+        return self._get_store().get_surface_forms(self)
 
     def get_types(self) -> Set[DbpType]:
-        return DbpResourceStore.instance().get_types(self)
+        return self._get_store().get_types(self)
 
     def get_independent_types(self) -> Set[DbpType]:
-        return DbpOntologyStore.instance().get_independent_types(self.get_types())
+        return self._get_store().get_independent_types(self.get_types())
 
-    def get_transitive_types(self) -> Set[DbpType]:
-        return DbpResourceStore.instance().get_transitive_types(self)
+    def get_transitive_types(self, include_root=False) -> Set[DbpType]:
+        return self._get_store().get_transitive_types(self, include_root=include_root)
 
     def get_properties(self, as_tuple=False) -> Union[Dict[DbpPredicate, set], Set[Tuple[DbpPredicate, Any]]]:
-        return DbpResourceStore.instance().get_properties(self, as_tuple)
+        return self._get_store().get_properties(self, as_tuple)
+
+    @classmethod
+    def get_namespace(cls) -> str:
+        return Namespace.DBP_RESOURCE.value
 
     @classmethod
     def _get_store(cls):
@@ -35,16 +39,17 @@ class DbpResource(RdfResource):
     def _get_prefix(cls) -> str:
         return ''
 
-    @classmethod
-    def _get_namespace(cls) -> str:
-        return Namespace.DBP_RESOURCE.value
-
 
 class DbpEntity(DbpResource):
     pass
 
 
 class DbpListpage(DbpResource):
+    def get_label(self) -> str:
+        label = super().get_label()
+        label = label[4:] if label.startswith('the ') else label
+        return label
+
     @classmethod
     def _get_prefix(cls) -> str:
         return Namespace.PREFIX_LIST.value
@@ -74,7 +79,7 @@ class DbpResourceStore:
         self.surface_form_references = None
 
         self.types = None
-        self.resources_of_type = None
+        self.entities_of_type = None
         self.wikilinks = None
         self.properties = None
         self.inverse_properties = None
@@ -117,11 +122,11 @@ class DbpResourceStore:
             raise DbpResourceNotExistingException(f'Could not find resource for name: {name}')
         return self.resources_by_name[name]
 
-    def has_resource_with_uri(self, uri: str) -> bool:
-        return self.has_resource_with_name(dbp_util.resource2name(uri))
+    def has_resource_with_iri(self, iri: str) -> bool:
+        return self.has_resource_with_name(dbp_util.resource2name(iri))
 
-    def get_resource_by_uri(self, uri: str) -> DbpResource:
-        return self.resources_by_name[dbp_util.resource2name(uri)]
+    def get_resource_by_iri(self, iri: str) -> DbpResource:
+        return self.resources_by_name[dbp_util.resource2name(iri)]
 
     def get_resources(self) -> Set[DbpResource]:
         return set(self.resources_by_idx.values())
@@ -130,7 +135,7 @@ class DbpResourceStore:
         return {r for r in self.resources_by_idx.values() if isinstance(r, DbpEntity)}
 
     def get_listpages(self) -> Set[DbpListpage]:
-        return {r for r in self.resources_by_idx.values() if isinstance(r, DbpListpage)}
+        return {r for r in self.resources_by_idx.values() if isinstance(r, DbpListpage) and not r.is_meta}
 
     def get_label(self, res: DbpResource) -> Optional[str]:
         if self.labels is None:
@@ -138,7 +143,7 @@ class DbpResourceStore:
         return self.labels[res.idx]
 
     def _init_label_cache(self) -> Dict[int, str]:
-        labels = rdf_util.create_single_val_dict_from_rdf([utils.get_data_file('files.dbpedia.labels')], RdfPredicate.LABEL, casting_fn=self.get_resource_by_uri)
+        labels = rdf_util.create_single_val_dict_from_rdf([utils.get_data_file('files.dbpedia.labels')], RdfPredicate.LABEL, casting_fn=self.get_resource_by_iri)
         labels = {r.idx: label for r, label in labels.items()}
         return labels
 
@@ -148,7 +153,7 @@ class DbpResourceStore:
         return self.surface_forms[res.idx]
 
     def _init_surface_form_cache(self) -> Dict[int, Set[str]]:
-        surface_forms = rdf_util.create_multi_val_dict_from_rdf([utils.get_data_file('files.dbpedia.anchor_texts')], RdfPredicate.ANCHOR_TEXT, casting_fn=self.get_resource_by_uri)
+        surface_forms = rdf_util.create_multi_val_dict_from_rdf([utils.get_data_file('files.dbpedia.anchor_texts')], RdfPredicate.ANCHOR_TEXT, casting_fn=self.get_resource_by_iri)
         surface_forms = {r.idx: sfs for r, sfs in surface_forms.items()}
         return surface_forms
 
@@ -161,7 +166,7 @@ class DbpResourceStore:
 
     def _init_surface_form_reference_cache(self) -> Dict[str, Dict[int, float]]:
         # count how often a lexicalisation points to a given resource
-        sf_reference_counts = rdf_util.create_multi_val_count_dict_from_rdf([utils.get_data_file('files.dbpedia.anchor_texts')], RdfPredicate.ANCHOR_TEXT, reverse_key=True, casting_fn=self.get_resource_by_uri)
+        sf_reference_counts = rdf_util.create_multi_val_count_dict_from_rdf([utils.get_data_file('files.dbpedia.anchor_texts')], RdfPredicate.ANCHOR_TEXT, reverse_key=True, casting_fn=self.get_resource_by_iri)
         # filter out non-entity references
         sf_reference_counts = {lex: {res: cnt for res, cnt in resources.items() if isinstance(res, DbpEntity)} for lex, resources in sf_reference_counts.items()}
         # make sure that redirects are taken into account
@@ -180,7 +185,7 @@ class DbpResourceStore:
         return {self.get_resource_by_idx(idx) for idx in self.wikilinks[res.idx]}
 
     def _init_wikilinks_cache(self) -> Dict[int, Set[int]]:
-        wikilinks = rdf_util.create_multi_val_dict_from_rdf([utils.get_data_file('files.dbpedia.wikilinks')], RdfPredicate.WIKILINK, casting_fn=self.get_resource_by_uri)
+        wikilinks = rdf_util.create_multi_val_dict_from_rdf([utils.get_data_file('files.dbpedia.wikilinks')], RdfPredicate.WIKILINK, casting_fn=self.get_resource_by_iri)
         wikilinks = {r.idx: {wl.idx for wl in wls} for r, wls in wikilinks.items()}
         return wikilinks
 
@@ -191,21 +196,21 @@ class DbpResourceStore:
 
     def _init_types_cache(self) -> Dict[int, Set[int]]:
         uris = rdf_util.create_multi_val_dict_from_rdf([utils.get_data_file('files.dbpedia.instance_types')], RdfPredicate.TYPE)
-        types = {self.get_resource_by_uri(res_uri).idx: {self.dbo.get_class_by_uri(t).idx for t in type_uris} for res_uri, type_uris in uris.items()}
+        types = {self.get_resource_by_iri(res_uri).idx: {self.dbo.get_class_by_iri(t).idx for t in type_uris} for res_uri, type_uris in uris.items()}
         return types
 
-    def get_transitive_types(self, res: DbpResource) -> set:
-        return {tt for t in self.get_types(res) for tt in self.dbo.get_transitive_supertype_closure(t, include_root=False)}
+    def get_transitive_types(self, res: DbpResource, include_root=False) -> set:
+        return {tt for t in self.get_types(res) for tt in self.dbo.get_transitive_supertypes(t, include_root=include_root, include_self=True)}
 
-    def get_resources_of_type(self, t: DbpType) -> Set[DbpResource]:
-        if self.resources_of_type is None:
-            self.resources_of_type = defaultdict(set)
+    def get_entities_of_type(self, t: DbpType) -> Set[DbpEntity]:
+        if self.entities_of_type is None:
+            self.entities_of_type = defaultdict(set)
             for r in self.resources_by_idx.values():
-                if r.is_meta:
+                if r.is_meta or not isinstance(r, DbpEntity):
                     continue
                 for it in self.dbo.get_independent_types(self.get_types(r)):
-                    self.resources_of_type[it].add(r)
-        return self.resources_of_type[t]
+                    self.entities_of_type[it].add(r)
+        return self.entities_of_type[t]
 
     def get_properties(self, res: DbpResource, as_tuple=False) -> Union[Dict[DbpPredicate, set], Set[Tuple[DbpPredicate, Any]]]:
         if self.properties is None:
@@ -216,15 +221,15 @@ class DbpResourceStore:
     def _init_property_cache(self) -> Dict[int, Dict[DbpPredicate, set]]:
         # caution: we do not convert predicates and values to indices as we do not know whether we have literal or entity objects
         properties = defaultdict(dict)
-        object_property_uris = rdf_util.create_dict_from_rdf([utils.get_data_file('files.dbpedia.mappingbased_objects')], casting_fn=self.get_resource_by_uri)
+        object_property_uris = rdf_util.create_dict_from_rdf([utils.get_data_file('files.dbpedia.mappingbased_objects')], casting_fn=self.get_resource_by_iri)
         for sub, props in object_property_uris.items():
             for pred, vals in props.items():
-                pred = self.dbo.get_class_by_uri(pred)
+                pred = self.dbo.get_class_by_iri(pred)
                 properties[sub.idx][pred] = vals
-        literal_property_uris = rdf_util.create_dict_from_rdf([utils.get_data_file('files.dbpedia.mappingbased_literals')], casting_fn=self.get_resource_by_uri)
+        literal_property_uris = rdf_util.create_dict_from_rdf([utils.get_data_file('files.dbpedia.mappingbased_literals')], casting_fn=self.get_resource_by_iri)
         for sub, props in literal_property_uris.items():
             for pred, vals in props.items():
-                pred = self.dbo.get_class_by_uri(pred)
+                pred = self.dbo.get_class_by_iri(pred)
                 properties[sub.idx][pred] = vals
         return dict(properties)
 
@@ -264,5 +269,5 @@ class DbpResourceStore:
         return self._resolve_redirect_internal(self.redirects[res_idx], visited | {res_idx})
 
     def _init_redirect_cache(self) -> Dict[int, int]:
-        redirects = rdf_util.create_single_val_dict_from_rdf([utils.get_data_file('files.dbpedia.redirects')], RdfPredicate.REDIRECTS, casting_fn=self.get_resource_by_uri)
+        redirects = rdf_util.create_single_val_dict_from_rdf([utils.get_data_file('files.dbpedia.redirects')], RdfPredicate.REDIRECTS, casting_fn=self.get_resource_by_iri)
         return {source.idx: target.idx for source, target in redirects.items()}

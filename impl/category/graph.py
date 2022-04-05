@@ -49,7 +49,7 @@ class CategoryGraph(HierarchyGraph):
         cat_graph = CategoryGraph(graph)
 
         for cat in categories:
-            cat_graph._set_name(cat.name, cat.get_label())
+            cat_graph._set_label(cat.name, cat.get_label())
             cat_graph._set_categories(cat.name, {cat})
 
         cat_graph.make_conceptual()

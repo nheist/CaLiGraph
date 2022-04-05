@@ -37,8 +37,7 @@ class ListGraph(HierarchyGraph):
         dbc = DbpCategoryStore.instance()
 
         listcats = dbc.get_listcategories()
-        listpages = {lp for lp in dbr.get_listpages() if not lp.is_meta}
-        lists = listcats | listpages
+        lists = listcats | dbr.get_listpages()
         # gather listcat -> listcat edges
         edges = {(p.name, c.name) for p in listcats for c in dbc.get_children(p, include_listcategories=True) if isinstance(c, DbpListCategory)}
         # gather listcat -> listpage edges
@@ -53,12 +52,12 @@ class ListGraph(HierarchyGraph):
         list_graph = ListGraph(graph)
 
         for lst in lists:
-            list_graph._set_name(lst.name, lst.get_label())
+            list_graph._set_label(lst.name, lst.get_label())
             list_graph._set_parts(lst.name, {lst})
 
         # add root node
         graph.add_node(list_graph.root_node)
-        list_graph._set_name(list_graph.root_node, list_graph.root_node)
+        list_graph._set_label(list_graph.root_node, list_graph.root_node)
         list_graph._set_parts(list_graph.root_node, {dbc.get_category_root()})
 
         list_graph.append_unconnected()

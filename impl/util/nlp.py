@@ -27,8 +27,8 @@ def remove_bracket_content(text: str, bracket_type='(', substitute=' ') -> str:
     return re.sub(pattern, substitute, text)
 
 
-def get_canonical_name(text: str) -> str:
-    """"Remove parts from the name that Wikipedia adds for organisational reasons (e.g. by-phrases or alphabetical splits)."""
+def get_canonical_label(text: str) -> str:
+    """"Remove parts from the label that Wikipedia adds for organisational reasons (e.g. by-phrases or alphabetical splits)."""
     text = remove_by_phrase(text, return_doc=False)  # remove by-phrase
     text = re.sub(r'\s*/[A-Za-z]+:\s*[A-Za-z](\s*[-–]\s*[A-Za-z])?$', '', text)  # remove trailing alphabetical splits with slash and type, e.g. 'Fellows of the Royal Society/name: A-C'
     text = re.sub(r'\s+\([^()]+[-–][^()]+\)$', '', text)  # remove trailing parentheses with number or letter ranges, e.g. 'Interstate roads (1-10)'

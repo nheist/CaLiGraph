@@ -1,13 +1,13 @@
 """Extraction of type lexicalisations from the Wikipedia corpus via NIF files."""
 
 from typing import Tuple, Generator
+from collections import defaultdict, Counter
 import utils
 from utils import get_logger
 import pynif
 import bz2
 import multiprocessing as mp
 from tqdm import tqdm
-from collections import defaultdict
 from spacy.lang.en.stop_words import STOP_WORDS
 import impl.util.nlp as nlp_util
 import impl.util.spacy as spacy_util
@@ -21,8 +21,8 @@ def extract_wiki_corpus_resources():
         return  # only compute hypernyms and type lexicalisations if they are not existing already
 
     get_logger().info('Computing wikipedia hypernyms and type lexicalisations..')
-    total_hypernyms = defaultdict(lambda: defaultdict(int))
-    total_type_lexicalisations = defaultdict(lambda: defaultdict(int))
+    total_hypernyms = defaultdict(Counter)
+    total_type_lexicalisations = defaultdict(Counter)
 
     # initialize some caches to reduce the setup time of the individual processes
     dbr = DbpResourceStore.instance()
@@ -47,8 +47,8 @@ def extract_wiki_corpus_resources():
 def _compute_counts_for_resource(entity_with_text: Tuple[DbpEntity, str]) -> Tuple[dict, dict]:
     dbr = DbpResourceStore.instance()
     ent, text = entity_with_text
-    hypernyms = defaultdict(int)
-    type_lexicalisations = defaultdict(int)
+    hypernyms = Counter()
+    type_lexicalisations = Counter()
     for sub, obj in spacy_util.get_hearst_pairs(text):
         # collect hypernym statistics in Wikipedia
         hypernyms[(nlp_util.lemmatize_token(sub.root).lower(), nlp_util.lemmatize_token(obj.root).lower())] += 1
@@ -69,9 +69,9 @@ def _retrieve_plaintexts() -> Generator[Tuple[DbpEntity, str]]:
         nif_collection = pynif.NIFCollection.loads(nif_file.read(), format='turtle')
         for nif_context in nif_collection.contexts:
             resource_uri = nif_context.original_uri[:nif_context.original_uri.rfind('?')]
-            if not dbr.has_resource_with_uri(resource_uri):
+            if not dbr.has_resource_with_iri(resource_uri):
                 continue
-            res = dbr.get_resource_by_uri(resource_uri)
+            res = dbr.get_resource_by_iri(resource_uri)
             if not isinstance(res, DbpEntity):
                 continue
             # remove parentheses and line breaks from text for easier parsing
