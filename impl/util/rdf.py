@@ -71,9 +71,6 @@ class RdfResource:
     name: str
     is_meta: bool  # a resource is a meta resource if it is a redirect or a disambiguation
 
-    def __hash__(self):
-        return hash((self.idx, self.name, self.is_meta))
-
     def __lt__(self, other):
         return self.idx < other.idx
 
