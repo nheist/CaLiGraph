@@ -4,7 +4,7 @@ from typing import Iterator, Optional, Union
 from collections import namedtuple
 import bz2
 import re
-from collections import defaultdict
+from collections import defaultdict, Counter
 import functools
 import urllib.parse
 import impl.util.string as str_util
@@ -183,7 +183,7 @@ def create_multi_val_dict_from_rdf(filepaths: list, valid_pred: RdfPredicate, re
 
 def create_multi_val_count_dict_from_rdf(filepaths: list, valid_pred: RdfPredicate, reverse_key=False, casting_fn=None) -> dict:
     """Create a key-value dict with frequencies from a given triple file."""
-    data_dict = defaultdict(functools.partial(defaultdict, int))
+    data_dict = defaultdict(Counter)
     for fp in filepaths:
         for sub, pred, obj, is_literal in parse_triples_from_file(fp):
             if pred == valid_pred.value:

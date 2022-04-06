@@ -83,6 +83,7 @@ class DbpResourceStore:
         self.wikilinks = None
         self.properties = None
         self.inverse_properties = None
+        self.redirects = None
 
     def _init_resource_cache(self) -> Set[DbpResource]:
         # find all resources that have at least a label or a type
