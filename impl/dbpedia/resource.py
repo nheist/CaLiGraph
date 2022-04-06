@@ -1,3 +1,5 @@
+from typing import Union, Dict, Optional, Set, Any, Tuple
+from collections import defaultdict, Counter
 from functools import cache
 from impl.util.singleton import Singleton
 import impl.util.rdf as rdf_util
@@ -6,9 +8,7 @@ from impl.util.rdf import RdfPredicate, RdfResource
 import impl.dbpedia.util as dbp_util
 from impl.dbpedia.ontology import DbpType, DbpPredicate, DbpObjectPredicate, DbpOntologyStore
 from polyleven import levenshtein
-from typing import Union, Dict, Optional, Set, Any, Tuple
 import utils
-from collections import defaultdict
 
 
 class DbpResource(RdfResource):
@@ -172,7 +172,8 @@ class DbpResourceStore:
         # count how often a lexicalisation points to a given resource
         sf_reference_counts = rdf_util.create_multi_val_count_dict_from_rdf([utils.get_data_file('files.dbpedia.anchor_texts')], RdfPredicate.ANCHOR_TEXT, reverse_key=True, casting_fn=self.get_resource_by_iri)
         # filter out non-entity references
-        sf_reference_counts = {lex: {res: cnt for res, cnt in resources.items() if isinstance(res, DbpEntity)} for lex, resources in sf_reference_counts.items()}
+        sf_reference_counts = {lex: Counter({res: cnt for res, cnt in resources.items() if isinstance(res, DbpEntity)}) for lex, resources in sf_reference_counts.items()}
+        sf_reference_counts = defaultdict(Counter, sf_reference_counts)
         # make sure that redirects are taken into account
         for lex, resources in sf_reference_counts.items():
             for res in set(resources):
@@ -180,7 +181,7 @@ class DbpResourceStore:
                 if res != redirect_res:
                     sf_reference_counts[lex][redirect_res] += sf_reference_counts[lex][res]
                     del sf_reference_counts[lex][res]
-        sf_reference_frequencies = {sub: {obj.idx: count / sum(sf_reference_counts[sub].values()) for obj, count in obj_counts.items()} for sub, obj_counts in sf_reference_counts.items()}
+        sf_reference_frequencies = {sub: {obj.idx: count / obj_counts.total() for obj, count in obj_counts.items()} for sub, obj_counts in sf_reference_counts.items()}
         return sf_reference_frequencies
 
     def get_wikilinks(self, res: DbpResource) -> Set[DbpResource]:
