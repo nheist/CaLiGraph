@@ -27,7 +27,7 @@ def extract_wiki_corpus_resources():
     # initialize some caches to reduce the setup time of the individual processes
     dbr = DbpResourceStore.instance()
     dbr.get_types(dbr.get_resource_by_idx(0))
-    dbr.get_surface_form_references(dbr.get_resource_by_idx(0))
+    dbr.get_surface_form_references('')
     spacy_util.get_hearst_pairs('')
 
     with mp.Pool(processes=utils.get_config('max_cpus')) as pool:
