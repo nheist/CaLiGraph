@@ -107,7 +107,7 @@ def res2wiki_iri(res: RdfResource) -> str:
 
 
 def iri2name(iri: str, prefix) -> str:
-    if iri == RdfClass.OWL_THING:
+    if iri == RdfClass.OWL_THING.value:
         return 'Thing'
     return iri[len(str(prefix)):]
 
