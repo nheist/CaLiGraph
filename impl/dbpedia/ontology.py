@@ -120,7 +120,7 @@ class DbpOntologyStore:
         return self.get_class_by_idx(0)  # root is initialized as 0
 
     def get_types(self, include_root=True) -> Set[DbpType]:
-        types = {c for c in self.classes_by_idx.values() if isinstance(c, DbpClass)}
+        types = {c for c in self.classes_by_idx.values() if isinstance(c, DbpType)}
         return types if include_root else types.difference({self.get_type_root()})
 
     def get_types_for_label(self, label: str) -> Set[DbpType]:
