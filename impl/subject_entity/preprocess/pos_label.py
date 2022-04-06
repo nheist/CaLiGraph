@@ -2,6 +2,7 @@ from typing import List
 from enum import Enum
 from impl.dbpedia.resource import DbpEntity, DbpResourceStore
 from collections import Counter
+from .word_tokenize import WordTokenizerSpecialLabel
 
 
 class POSLabel(Enum):
@@ -33,14 +34,7 @@ def map_entities_to_pos_labels(entity_chunks: List[List[int]], single_tag_predic
 
     labels = []
     for chunk in entity_chunks:
-        chunk_labels = []
-        for ent_idx in chunk:
-            if ent_idx == -100:
-                chunk_labels.append(ent_idx)
-            elif ent_idx == -1:
-                chunk_labels.append(POSLabel.NONE.value)
-            else:
-                chunk_labels.append(entity_value)
+        chunk_labels = [_map_label_to_pos_tag(label, entity_value) for label in chunk]
         labels.append((chunk_labels, majority_tag.value) if single_tag_prediction else chunk_labels)
     return labels
 
@@ -92,3 +86,13 @@ def _get_type_to_label_mapping() -> dict:
         # SPECIES
         'http://dbpedia.org/ontology/Species': POSLabel.SPECIES
     }
+
+
+def _map_label_to_pos_tag(label: int, entity_value: int):
+    match label:
+        case WordTokenizerSpecialLabel.IGNORE.value:
+            return WordTokenizerSpecialLabel.IGNORE.value
+        case WordTokenizerSpecialLabel.NO_ENTITY.value:
+            return POSLabel.NONE.value
+        case _:
+            return entity_value

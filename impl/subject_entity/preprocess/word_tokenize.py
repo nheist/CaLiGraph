@@ -10,7 +10,7 @@ import utils
 from impl.dbpedia.resource import DbpResource
 
 
-class TransformerSpecialToken(Enum):
+class WordTokenizerSpecialToken(Enum):
     CONTEXT_SEP = '[CXS]'
     CONTEXT_END = '[CXE]'
     TABLE_ROW = '[ROW]'
@@ -36,6 +36,12 @@ class TransformerSpecialToken(Enum):
         elif depth >= 3:
             return cls.ENTRY_L3.value
         raise ValueError(f'Trying to retrieve a BERT special token for an entry of depth {depth}.')
+
+
+class WordTokenizerSpecialLabel(Enum):
+    NEW_ENTITY = -1
+    NO_ENTITY = -2
+    IGNORE = -100
 
 
 class WordTokenizer:
@@ -77,7 +83,7 @@ class WordTokenizer:
 
             for enum_data in section_data['enums']:
                 context_tokens, _ = self._context_to_tokens([res.get_label(), top_section_name, section_name])
-                context_ents = [-100] * len(context_tokens)
+                context_ents = [WordTokenizerSpecialLabel.IGNORE.value] * len(context_tokens)
 
                 max_chunk_size = self.max_words_per_chunk - len(context_tokens)
                 for chunk_tokens, chunk_ents in self._listing_to_token_entity_chunks(enum_data, valid_ents, invalid_ents, max_chunk_size):
@@ -87,7 +93,7 @@ class WordTokenizer:
             for table in section_data['tables']:
                 table_header, table_data = table['header'], table['data']
                 context_tokens, _ = self._context_to_tokens([res.get_label(), top_section_name, section_name], table_header)
-                context_ents = [-100] * len(context_tokens)
+                context_ents = [WordTokenizerSpecialLabel.IGNORE.value] * len(context_tokens)
 
                 max_chunk_size = self.max_words_per_chunk - len(context_tokens)
                 for chunk_tokens, chunk_ents in self._listing_to_token_entity_chunks(table_data, valid_ents, invalid_ents, max_chunk_size):
@@ -102,17 +108,17 @@ class WordTokenizer:
         # add listing context, separated by special context tokens
         for text in context:
             doc = self.word_tokenizer(wmp.wikitext_to_plaintext(text))
-            ctx_tokens.extend([w.text for w in doc] + [TransformerSpecialToken.CONTEXT_SEP.value])
+            ctx_tokens.extend([w.text for w in doc] + [WordTokenizerSpecialToken.CONTEXT_SEP.value])
             ctx_ws.extend([w.whitespace_ for w in doc] + [' '])
 
         # add table header if available
         if table_header:
             for cell in table_header:
                 doc = self.word_tokenizer(cell['text'])
-                ctx_tokens.extend([w.text for w in doc] + [TransformerSpecialToken.TABLE_COL.value])
+                ctx_tokens.extend([w.text for w in doc] + [WordTokenizerSpecialToken.TABLE_COL.value])
                 ctx_ws.extend([w.whitespace_ for w in doc] + [' '])
 
-        ctx_tokens[-1] = TransformerSpecialToken.CONTEXT_END.value  # replace last token with final context separator
+        ctx_tokens[WordTokenizerSpecialLabel.NO_ENTITY.value] = WordTokenizerSpecialToken.CONTEXT_END.value  # replace last token with final context separator
         return ctx_tokens, ctx_ws
 
     def _listing_to_token_entity_chunks(self, listing_data: list, valid_ents: Set[int], invalid_ents: Set[int], max_group_size: int):
@@ -161,7 +167,7 @@ class WordTokenizer:
         tokens, _, ents = self._text_to_tokens(entry_doc, entry_entities, valid_ents)
         if not tokens or not ents:
             return [], []
-        return [TransformerSpecialToken.get_entry_by_depth(depth)] + tokens, [-1] + ents
+        return [WordTokenizerSpecialToken.get_entry_by_depth(depth)] + tokens, [WordTokenizerSpecialLabel.NO_ENTITY.value] + ents
 
     def _row_to_tokens_and_entities(self, row: list, valid_ents: Set[int], invalid_ents: Set[int]) -> Tuple[list, list]:
         cell_docs = [list_nlp.parse(cell['text']) for cell in row]
@@ -183,10 +189,10 @@ class WordTokenizer:
         tokens, ents = [], []
         for cell_idx, cell in enumerate(row):
             cell_tokens, _, cell_ents = self._text_to_tokens(cell_docs[cell_idx], cell['entities'], valid_ents)
-            tokens += [TransformerSpecialToken.TABLE_COL.value] + cell_tokens
-            ents += [-1] + cell_ents
+            tokens += [WordTokenizerSpecialToken.TABLE_COL.value] + cell_tokens
+            ents += [WordTokenizerSpecialLabel.NO_ENTITY.value] + cell_ents
         if tokens:
-            tokens[0] = TransformerSpecialToken.TABLE_ROW.value  # special indicator for start of table row
+            tokens[0] = WordTokenizerSpecialToken.TABLE_ROW.value  # special indicator for start of table row
         return tokens, ents
 
     def _has_untagged_entities(self, doc, entities: list) -> bool:
@@ -256,16 +262,16 @@ class WordTokenizer:
         entry_doc = self.word_tokenizer(entry['text'])
         depth = entry['depth']
         tokens, ws, _ = self._text_to_tokens(entry_doc, None, None)
-        return [TransformerSpecialToken.get_entry_by_depth(depth)] + tokens, [' '] + ws
+        return [WordTokenizerSpecialToken.get_entry_by_depth(depth)] + tokens, [' '] + ws
 
     def _row_to_tokens(self, row: list) -> Tuple[list, list]:
         tokens, ws = [], []
         for cell in row:
             cell_tokens, cell_ws, _ = self._text_to_tokens(self.word_tokenizer(cell['text']), None, None)
-            tokens += [TransformerSpecialToken.TABLE_COL.value] + cell_tokens
+            tokens += [WordTokenizerSpecialToken.TABLE_COL.value] + cell_tokens
             ws += [' '] + cell_ws
         if tokens:
-            tokens[0] = TransformerSpecialToken.TABLE_ROW.value
+            tokens[0] = WordTokenizerSpecialToken.TABLE_ROW.value
         return tokens, ws
 
     def _text_to_tokens(self, doc, entities: Optional[list], valid_ents: Optional[Set[int]]) -> Tuple[list, list, list]:
@@ -273,7 +279,7 @@ class WordTokenizer:
         if not entities or not valid_ents:
             tokens = [w.text for w in doc]
             ws = [w.whitespace_ for w in doc]
-            return tokens, ws, [-1] * len(tokens)
+            return tokens, ws, [WordTokenizerSpecialLabel.NO_ENTITY.value] * len(tokens)
 
         tokens, ws, token_ents = [], [], []
         entity_pos_map = self._create_entity_position_map(entities, valid_ents)
@@ -287,7 +293,7 @@ class WordTokenizer:
 
     def _create_entity_position_map(self, entities: list, valid_ents: Set[int]):
         """Index valid entities by their text position."""
-        entity_pos_map = defaultdict(lambda: -1)
+        entity_pos_map = defaultdict(lambda: WordTokenizerSpecialLabel.NO_ENTITY.value)
         for ent in entities:
             if ent['idx'] not in valid_ents:
                 continue

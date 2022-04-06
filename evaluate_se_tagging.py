@@ -3,7 +3,7 @@ import utils
 import random
 import numpy as np
 import torch
-from impl.subject_entity.preprocess.word_tokenize import TransformerSpecialToken
+from impl.subject_entity.preprocess.word_tokenize import WordTokenizerSpecialToken
 from impl.subject_entity.preprocess.pos_label import POSLabel, map_entities_to_pos_labels
 from transformers import Trainer, IntervalStrategy, TrainingArguments, AutoTokenizer, AutoModelForTokenClassification, EvalPrediction
 from collections import namedtuple
@@ -20,7 +20,7 @@ torch.manual_seed(SEED)
 def run_evaluation(model_name: str, epochs: int, batch_size: int, learning_rate: float, warmup_steps: int, weight_decay: float, predict_single_tag: bool):
     run_id = f'{model_name}_e-{epochs}_lr-{learning_rate}_ws-{warmup_steps}_wd-{weight_decay}_st-{predict_single_tag}'
     # prepare tokenizer and model
-    tokenizer = AutoTokenizer.from_pretrained(model_name, add_prefix_space=True, additional_special_tokens=list(TransformerSpecialToken.all_tokens()))
+    tokenizer = AutoTokenizer.from_pretrained(model_name, add_prefix_space=True, additional_special_tokens=list(WordTokenizerSpecialToken.all_tokens()))
     if predict_single_tag:
         model = TransformerForMentionDetectionAndTypePrediction(model_name, len(tokenizer), len(POSLabel))
     else:
