@@ -11,6 +11,8 @@ import impl.util.string as str_util
 from enum import Enum
 from dataclasses import dataclass
 
+import utils
+
 
 class Namespace(Enum):
     OWL = 'http://www.w3.org/2002/07/owl#'
@@ -154,7 +156,8 @@ def create_set_from_rdf(filepaths: list, valid_pred: RdfPredicate, valid_obj: Op
             if pred == valid_pred.value and valid_obj in [None, obj]:
                 try:
                     sub, obj = _cast_type(casting_fn, sub, obj, True)
-                except KeyError:
+                except KeyError as e:
+                    utils.get_logger().debug(str(e))
                     continue
                 data_set.add(sub)
     return data_set
@@ -168,7 +171,8 @@ def create_multi_val_dict_from_rdf(filepaths: list, valid_pred: RdfPredicate, re
             if pred == valid_pred.value:
                 try:
                     sub, obj = _cast_type(casting_fn, sub, obj, is_literal)
-                except KeyError:
+                except KeyError as e:
+                    utils.get_logger().debug(str(e))
                     continue
                 if reflexive or reverse_key:
                     data_dict[obj].add(sub)
@@ -185,7 +189,8 @@ def create_multi_val_count_dict_from_rdf(filepaths: list, valid_pred: RdfPredica
             if pred == valid_pred.value:
                 try:
                     sub, obj = _cast_type(casting_fn, sub, obj, is_literal)
-                except KeyError:
+                except KeyError as e:
+                    utils.get_logger().debug(str(e))
                     continue
                 cleaned_obj = str_util.regularize_spaces(obj.lower())
                 if cleaned_obj:
@@ -204,7 +209,8 @@ def create_single_val_dict_from_rdf(filepaths: list, valid_pred: RdfPredicate, r
             if pred == valid_pred.value:
                 try:
                     sub, obj = _cast_type(casting_fn, sub, obj, is_literal)
-                except KeyError:
+                except KeyError as e:
+                    utils.get_logger().debug(str(e))
                     continue
                 if reflexive or reverse_key:
                     data_dict[obj] = sub
@@ -220,7 +226,8 @@ def create_dict_from_rdf(filepaths: list, reverse_key=False, casting_fn=None) ->
         for sub, pred, obj, is_literal in parse_triples_from_file(fp):
             try:
                 sub, obj = _cast_type(casting_fn, sub, obj, is_literal)
-            except KeyError:
+            except KeyError as e:
+                utils.get_logger().debug(str(e))
                 continue
             data_dict[obj][pred].add(sub) if reverse_key else data_dict[sub][pred].add(obj)
     return data_dict

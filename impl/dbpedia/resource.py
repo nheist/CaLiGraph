@@ -198,8 +198,8 @@ class DbpResourceStore:
         return {self.dbo.get_class_by_idx(idx) for idx in self.types[res.idx]}
 
     def _init_types_cache(self) -> Dict[int, Set[int]]:
-        uris = rdf_util.create_multi_val_dict_from_rdf([utils.get_data_file('files.dbpedia.instance_types')], RdfPredicate.TYPE)
-        types = {self.get_resource_by_iri(res_uri).idx: {self.dbo.get_class_by_iri(t).idx for t in type_uris} for res_uri, type_uris in uris.items()}
+        iris = rdf_util.create_multi_val_dict_from_rdf([utils.get_data_file('files.dbpedia.instance_types')], RdfPredicate.TYPE)
+        types = {self.get_resource_by_iri(res_iri).idx: {self.dbo.get_class_by_iri(t).idx for t in type_iris} for res_iri, type_iris in iris.items() if self.has_resource_with_iri(res_iri)}
         return types
 
     def get_transitive_types(self, res: DbpResource, include_root=False) -> set:
