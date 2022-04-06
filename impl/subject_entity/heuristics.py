@@ -21,9 +21,9 @@ def find_subject_entities_for_listpage(lp: DbpListpage, content: dict) -> Tuple[
     # find dbp types of list page based on the caligraph ontology
     page_dbp_types = {dt for ct in clgo.get_types_for_associated_resource(lp) for dt in dbo.get_independent_types(ct.get_all_dbp_types())}
     page_disjoint_types = {dt for t in page_dbp_types for dt in dbp_heur.get_all_disjoint_types(t)}
-    # collect all linked entities on the page
-    page_entities = {dbr.get_resource_by_idx(ent['idx']) for s in content['sections'] for enum in s['enums'] for entry in enum for ent in entry['entities']}
-    page_entities.update({dbr.get_resource_by_idx(ent['idx']) for s in content['sections'] for table in s['tables'] for row in table['data'] for cell in row for ent in cell['entities']})
+    # collect all linked entities on the page (and ignore unknown entities with idx -1)
+    page_entities = {dbr.get_resource_by_idx(ent['idx']) for s in content['sections'] for enum in s['enums'] for entry in enum for ent in entry['entities'] if ent['idx'] >= 0}
+    page_entities.update({dbr.get_resource_by_idx(ent['idx']) for s in content['sections'] for table in s['tables'] for row in table['data'] for cell in row for ent in cell['entities'] if ent['idx'] >= 0})
 
     positive_SEs, negative_SEs = set(), set()
     for ent in page_entities:

@@ -2,7 +2,8 @@ import wikitextparser as wtp
 from typing import Union, Optional
 import re
 import impl.util.string as str_util
-from impl.dbpedia.resource import DbpResource, DbpResourceStore
+from impl.dbpedia.resource import DbpResourceStore
+from impl.dbpedia.util import is_entity_name
 
 
 def wikitext_to_plaintext(text: Union[str, wtp.WikiText]) -> str:
@@ -17,26 +18,26 @@ def wikitext_to_plaintext(text: Union[str, wtp.WikiText]) -> str:
         return str(text)
 
 
-def get_first_wikilink_resource(text: Union[str, wtp.WikiText]) -> Optional[DbpResource]:
+def get_first_wikilink_resource(text: Union[str, wtp.WikiText]) -> Optional[int]:
     try:
         parsed_text = wtp.parse(text) if type(text) == str else text
         for wl in parsed_text.wikilinks:
-            return get_resource_for_wikilink(wl)
+            return get_resource_idx_for_wikilink(wl)
         return None
     except (AttributeError, IndexError):
         return None
 
 
-def get_resource_for_wikilink(wikilink: wtp.WikiLink) -> Optional[DbpResource]:
+def get_resource_idx_for_wikilink(wikilink: wtp.WikiLink) -> Optional[int]:
     if not wikilink.target:
         return None
     dbr = DbpResourceStore.instance()
     res_name = str_util.capitalize(_remove_language_tag(wikilink.target.strip()))
     if not dbr.has_resource_with_name(res_name):
-        return None
+        return -1 if is_entity_name(res_name) else None
     res = dbr.get_resource_by_name(res_name)
     redirected_res = dbr.resolve_spelling_redirect(res)
-    return redirected_res
+    return redirected_res.idx
 
 
 def _remove_language_tag(link_target: str) -> str:

@@ -252,9 +252,9 @@ def _convert_markup(wiki_text: str) -> Tuple[str, list]:
             continue  # skip entity with a text that can not be located
         entity_start_index = current_index + plain_text[current_index:].index(text)
         current_index = entity_start_index + len(text)
-        entity = wmp.get_resource_for_wikilink(w)
-        if entity is not None:
-            entities.append({'start': entity_start_index, 'text': text, 'idx': entity.idx})
+        entity_idx = wmp.get_resource_idx_for_wikilink(w)
+        if entity_idx is not None:
+            entities.append({'start': entity_start_index, 'text': text, 'idx': entity_idx})
     return plain_text, entities
 
 
