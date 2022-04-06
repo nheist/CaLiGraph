@@ -147,7 +147,7 @@ def get_logger():
     return logging.getLogger('impl')
 
 
-log_format = '%(asctime)s|%(levelname)s|%(pathname)s->%(funcName)s: %(message)s'
+log_format = '%(asctime)s|%(levelname)s|%(module)s->%(funcName)s: %(message)s'
 log_level = get_config('logging.level')
 if get_config('logging.to_file') and 'ipykernel' not in sys.modules:
     log_filename = '{}_{}.log'.format(datetime.datetime.now().strftime('%Y%m%d-%H%M%S'), get_config('logging.filename'))

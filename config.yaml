@@ -25,7 +25,7 @@ listing:
 logging:
   level: 'DEBUG'
   to_file: True
-  filename: 'caligraph_v2_1_1'
+  filename: 'caligraph_v2_2_0'
 
 # -- ERROR-MAILER CONFIGURATION --
 # -> add information about your mail accounts here and enable the `success` or `error` switches
@@ -121,36 +121,15 @@ results:
 
 # -- CACHE FILE CONFIGURATION --
 cache:
-  catgraph_conceptual:
-    filename: 'catgraph-conceptual'
-    version: 1
-  catgraph_wikitaxonomy:
-    filename: 'catgraph-wikitaxonomy'
-    version: 1
-  catgraph_merged:
-    filename: 'catgraph-merged'
-    version: 1
-  listgraph_base:
-    filename: 'listgraph-base'
-    version: 1
-  listgraph_wikitaxonomy:
-    filename: 'listgraph-wikitaxonomy'
-    version: 1
-  listgraph_merged:
-    filename: 'listgraph-merged'
-    version: 1
-  caligraph_ontology:
-    filename: 'caligraph-ontology'
-    version: 1
-  caligraph_entities:
-    filename: 'caligraph-entities'
-    version: 1
   wikipedia_raw_markup:
     filename: 'wikipedia-raw-markup'
     version: 1
     compress: True
   wikipedia_parent_categories:
     filename: 'wikipedia-parent-categories'
+    version: 1
+  wikipedia_parsed_articles:
+    filename: 'wikipedia-parsed-articles'
     version: 1
   wikipedia_type_lexicalisations:
     filename: 'wikipedia-type-lexicalisations'
@@ -181,11 +160,14 @@ cache:
   dbpedia_resource_wikilinks:
     filename: 'dbpedia-resource-wikilinks'
     version: 1
-  dbpedia_resource_redirects:
-    filename: 'dbpedia-resource-redirects'
+  dbpedia_resource_types:
+    filename: 'dbpedia-resource-types'
     version: 1
   dbpedia_resource_properties:
     filename: 'dbpedia-resource-properties'
+    version: 1
+  dbpedia_resource_redirects:
+    filename: 'dbpedia-resource-redirects'
     version: 1
   dbpedia_categories:
     filename: 'dbpedia-categories'
@@ -217,11 +199,23 @@ cache:
   cat2ax_axioms:
     filename: 'cat2ax-axioms'
     version: 1
-  cali2ax_axioms:
-    filename: 'cali2ax-axioms'
+  catgraph_conceptual:
+    filename: 'catgraph-conceptual'
     version: 1
-  wikipedia_parsed_articles:
-    filename: 'wikipedia-parsed-articles'
+  catgraph_wikitaxonomy:
+    filename: 'catgraph-wikitaxonomy'
+    version: 1
+  catgraph_merged:
+    filename: 'catgraph-merged'
+    version: 1
+  listgraph_base:
+    filename: 'listgraph-base'
+    version: 1
+  listgraph_wikitaxonomy:
+    filename: 'listgraph-wikitaxonomy'
+    version: 1
+  listgraph_merged:
+    filename: 'listgraph-merged'
     version: 1
   spacy_listpage_ne-tagging:
     filename: 'spacy_listpage_ne-tagging'
@@ -240,6 +234,15 @@ cache:
     filename: 'transformer-for-SE-tagging'
     version: 1
     store_as_folder: True
+  caligraph_ontology:
+    filename: 'caligraph-ontology'
+    version: 1
+  caligraph_entities:
+    filename: 'caligraph-entities'
+    version: 1
+  cali2ax_axioms:
+    filename: 'cali2ax-axioms'
+    version: 1
   listing_page_entities:
     filename: 'listing-page-entities'
     version: 1
