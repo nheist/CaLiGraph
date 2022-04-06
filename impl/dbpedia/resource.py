@@ -126,7 +126,10 @@ class DbpResourceStore:
         return self.has_resource_with_name(dbp_util.resource2name(iri))
 
     def get_resource_by_iri(self, iri: str) -> DbpResource:
-        return self.resources_by_name[dbp_util.resource2name(iri)]
+        try:
+            return self.get_resource_by_name(dbp_util.resource2name(iri))
+        except DbpResourceNotExistingException:
+            raise DbpResourceNotExistingException(f'Could not find resource for iri: {iri}')
 
     def get_resources(self) -> Set[DbpResource]:
         return set(self.resources_by_idx.values())
