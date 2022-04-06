@@ -67,15 +67,15 @@ class DbpOntologyStore:
         all_classes = {DbpType(0, 'Thing', False)}  # initialize root type with 0
         # predicates
         object_predicate_uris = rdf_util.create_set_from_rdf([utils.get_data_file('files.dbpedia.taxonomy')], RdfPredicate.TYPE, RdfClass.OWL_OBJECT_PROPERTY.value)
-        object_predicate_uris = {p for p in object_predicate_uris if dbp_util.is_class(p)}
-        all_classes.update({DbpObjectPredicate(idx, dbp_util.class2name(uri), False) for idx, uri in enumerate(object_predicate_uris, start=len(all_classes))})
+        object_predicate_uris = {p for p in object_predicate_uris if dbp_util.is_class_iri(p)}
+        all_classes.update({DbpObjectPredicate(idx, dbp_util.class_iri2name(uri), False) for idx, uri in enumerate(object_predicate_uris, start=len(all_classes))})
         datatype_predicate_uris = rdf_util.create_set_from_rdf([utils.get_data_file('files.dbpedia.taxonomy')], RdfPredicate.TYPE, RdfClass.OWL_DATATYPE_PROPERTY.value)
-        datatype_predicate_uris = {p for p in datatype_predicate_uris if dbp_util.is_class(p)}
-        all_classes.update({DbpDatatypePredicate(idx, dbp_util.class2name(uri), False) for idx, uri in enumerate(datatype_predicate_uris, start=len(all_classes))})
+        datatype_predicate_uris = {p for p in datatype_predicate_uris if dbp_util.is_class_iri(p)}
+        all_classes.update({DbpDatatypePredicate(idx, dbp_util.class_iri2name(uri), False) for idx, uri in enumerate(datatype_predicate_uris, start=len(all_classes))})
         # types
         all_type_uris = rdf_util.create_set_from_rdf([utils.get_data_file('files.dbpedia.taxonomy')], RdfPredicate.TYPE, RdfClass.OWL_CLASS.value)
-        all_type_uris = {t for t in all_type_uris if dbp_util.is_class(t)}
-        all_classes.update({DbpType(idx, dbp_util.class2name(uri), False) for idx, uri in enumerate(all_type_uris, start=len(all_classes))})
+        all_type_uris = {t for t in all_type_uris if dbp_util.is_class_iri(t)}
+        all_classes.update({DbpType(idx, dbp_util.class_iri2name(uri), False) for idx, uri in enumerate(all_type_uris, start=len(all_classes))})
         return all_classes
 
     def _init_type_graph(self) -> nx.DiGraph:
@@ -95,7 +95,7 @@ class DbpOntologyStore:
         return self.classes_by_name[name]
 
     def get_class_by_iri(self, iri: str) -> DbpClass:
-        return self.get_class_by_name(dbp_util.class2name(iri))
+        return self.get_class_by_name(dbp_util.class_iri2name(iri))
 
     def get_equivalents(self, cls: DbpClass) -> set:
         if not self.equivalents:

@@ -88,19 +88,19 @@ class DbpResourceStore:
         # find all resources that have at least a label or a type
         resources_with_label = rdf_util.create_set_from_rdf([utils.get_data_file('files.dbpedia.labels')], RdfPredicate.LABEL, None)
         resources_with_type = rdf_util.create_set_from_rdf([utils.get_data_file('files.dbpedia.instance_types')], RdfPredicate.TYPE, None)
-        all_resource_uris = {dbp_util.get_canonical_uri(uri) for uri in resources_with_label | resources_with_type}  # make all uris canonical
-        all_resource_uris = {uri for uri in all_resource_uris if dbp_util.is_resource(uri) and not dbp_util.is_category(uri)}  # filter out invalid uris
+        all_resource_uris = {dbp_util.get_canonical_iri(uri) for uri in resources_with_label | resources_with_type}  # make all uris canonical
+        all_resource_uris = {uri for uri in all_resource_uris if dbp_util.is_resource_iri(uri) and not dbp_util.is_category_iri(uri)}  # filter out invalid uris
         # find resources that are redirects or disambiguations
         meta_resources = rdf_util.create_set_from_rdf([utils.get_data_file('files.dbpedia.redirects')], RdfPredicate.REDIRECTS, None)
         meta_resources.update(rdf_util.create_set_from_rdf([utils.get_data_file('files.dbpedia.disambiguations')], RdfPredicate.DISAMBIGUATES, None))
 
         all_resources = set()
         for idx, res_uri in enumerate(all_resource_uris):
-            res_name = dbp_util.resource2name(res_uri)
+            res_name = dbp_util.resource_iri2name(res_uri)
             is_meta = res_uri in meta_resources
-            if dbp_util.is_listpage(res_uri):
+            if dbp_util.is_listpage_iri(res_uri):
                 all_resources.add(DbpListpage(idx, res_name, is_meta))
-            elif dbp_util.is_file(res_uri):
+            elif dbp_util.is_file_iri(res_uri):
                 all_resources.add(DbpFile(idx, res_name, is_meta))
             else:
                 all_resources.add(DbpEntity(idx, res_name, is_meta))
@@ -123,11 +123,11 @@ class DbpResourceStore:
         return self.resources_by_name[name]
 
     def has_resource_with_iri(self, iri: str) -> bool:
-        return self.has_resource_with_name(dbp_util.resource2name(iri))
+        return self.has_resource_with_name(dbp_util.resource_iri2name(iri))
 
     def get_resource_by_iri(self, iri: str) -> DbpResource:
         try:
-            return self.get_resource_by_name(dbp_util.resource2name(iri))
+            return self.get_resource_by_name(dbp_util.resource_iri2name(iri))
         except DbpResourceNotExistingException:
             raise DbpResourceNotExistingException(f'Could not find resource for iri: {iri}')
 

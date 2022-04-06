@@ -39,7 +39,7 @@ def load_entity_vectors(embedding_type: str):
 
     vecs = pd.read_csv(path, sep=' ', usecols=list(range(EMBEDDING_DIMENSIONS + 1)), names=['ent'] + [f'v_{i}' for i in range(EMBEDDING_DIMENSIONS)])
     vecs = vecs[vecs['ent'].str.startswith(dbp_util.NAMESPACE_DBP_RESOURCE)]
-    vecs['ent'] = vecs['ent'].transform(dbp_util.resource2name)
+    vecs['ent'] = vecs['ent'].transform(dbp_util.resource_iri2name)
     return vecs
 
 

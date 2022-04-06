@@ -1,9 +1,9 @@
 """Functionality for handling RDF (parsing, conversion, formatting)."""
 
+from typing import Iterator, Optional, Union
 from collections import namedtuple
 import bz2
 import re
-from typing import Iterator, Optional
 from collections import defaultdict
 import functools
 import urllib.parse
@@ -106,16 +106,18 @@ def res2wiki_iri(res: RdfResource) -> str:
     return name2iri(res.name, Namespace.WIKIPEDIA)
 
 
-def iri2name(iri: str, prefix) -> str:
+def iri2name(iri: str, prefix: Union[str, Enum]) -> str:
     if iri == RdfClass.OWL_THING.value:
         return 'Thing'
+    prefix = prefix.value if isinstance(prefix, Enum) else prefix
     return iri[len(str(prefix)):]
 
 
-def name2iri(name: str, prefix) -> str:
+def name2iri(name: str, prefix: Union[str, Enum]) -> str:
     if name == 'Thing':
         return RdfClass.OWL_THING.value
-    return str(prefix) + name
+    prefix = prefix.value if isinstance(prefix, Enum) else prefix
+    return prefix + name
 
 
 def parse_triples_from_file(filepath: str) -> Iterator[Triple]:

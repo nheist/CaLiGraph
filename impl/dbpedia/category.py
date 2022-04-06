@@ -59,13 +59,13 @@ class DbpCategoryStore:
     def _init_category_cache(self) -> Set[DbpCategory]:
         # gather categories
         category_uris = rdf_util.create_set_from_rdf([utils.get_data_file('files.dbpedia.category_skos')], RdfPredicate.TYPE, None)
-        category_names = {dbp_util.resource2name(uri) for uri in category_uris}
+        category_names = {dbp_util.resource_iri2name(uri) for uri in category_uris}
         category_names = category_names.difference({utils.get_config('category.root_category')})  # root category will be treated separately
         # gather category hierarchy
         skos_category_parent_uris = rdf_util.create_multi_val_dict_from_rdf([utils.get_data_file('files.dbpedia.category_skos')], RdfPredicate.BROADER)
         wiki_category_parent_uris = wikipedia.extract_parent_categories()
         category_children_uris = [(p, c) for c, parents in skos_category_parent_uris.items() | wiki_category_parent_uris.items() for p in parents if p != c]
-        category_children = [(dbp_util.resource2name(p), dbp_util.resource2name(c)) for p, c in category_children_uris]
+        category_children = [(dbp_util.resource_iri2name(p), dbp_util.resource_iri2name(c)) for p, c in category_children_uris]
         # identify meta categories
         meta_parent_categories = {'Hidden categories', 'Tracking categories', 'Disambiguation categories',
                                   'Non-empty disambiguation categories', 'All redirect categories',
@@ -106,10 +106,10 @@ class DbpCategoryStore:
         return self.categories_by_name[name]
 
     def has_category_with_iri(self, iri: str) -> bool:
-        return self.has_category_with_name(dbp_util.resource2name(iri))
+        return self.has_category_with_name(dbp_util.resource_iri2name(iri))
 
     def get_category_by_iri(self, iri: str) -> DbpCategory:
-        return self.categories_by_name[dbp_util.resource2name(iri)]
+        return self.categories_by_name[dbp_util.resource_iri2name(iri)]
 
     def get_categories(self, include_meta=False, include_listcategories=False) -> Set[DbpCategory]:
         return self._filter_categories(set(self.categories_by_idx.values()), include_meta, include_listcategories)
