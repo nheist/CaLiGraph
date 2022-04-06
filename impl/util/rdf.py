@@ -74,6 +74,9 @@ class RdfResource:
     def __lt__(self, other):
         return self.idx < other.idx
 
+    def __hash__(self):
+        return id(self)  # use object id as hash is okay here as we are centrally managing the RdfResources
+
     def get_label(self) -> str:
         label = self._get_store().get_label(self) or self.name
         prefix = self._get_prefix()
