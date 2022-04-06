@@ -89,7 +89,7 @@ class DbpResourceStore:
         resources_with_label = rdf_util.create_set_from_rdf([utils.get_data_file('files.dbpedia.labels')], RdfPredicate.LABEL, None)
         resources_with_type = rdf_util.create_set_from_rdf([utils.get_data_file('files.dbpedia.instance_types')], RdfPredicate.TYPE, None)
         all_resource_uris = {dbp_util.get_canonical_uri(uri) for uri in resources_with_label | resources_with_type}  # make all uris canonical
-        all_resource_uris = {uri for uri in all_resource_uris if not dbp_util.is_resource(uri) or dbp_util.is_category(uri)}  # filter out invalid uris
+        all_resource_uris = {uri for uri in all_resource_uris if dbp_util.is_resource(uri) and not dbp_util.is_category(uri)}  # filter out invalid uris
         # find resources that are redirects or disambiguations
         meta_resources = rdf_util.create_set_from_rdf([utils.get_data_file('files.dbpedia.redirects')], RdfPredicate.REDIRECTS, None)
         meta_resources.update(rdf_util.create_set_from_rdf([utils.get_data_file('files.dbpedia.disambiguations')], RdfPredicate.DISAMBIGUATES, None))

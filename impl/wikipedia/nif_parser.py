@@ -1,6 +1,6 @@
 """Extraction of type lexicalisations from the Wikipedia corpus via NIF files."""
 
-from typing import Tuple, Generator
+from typing import Tuple
 from collections import defaultdict, Counter
 import utils
 from utils import get_logger
