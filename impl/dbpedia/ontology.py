@@ -95,7 +95,10 @@ class DbpOntologyStore:
         return self.classes_by_name[name]
 
     def get_class_by_iri(self, iri: str) -> DbpClass:
-        return self.get_class_by_name(dbp_util.class_iri2name(iri))
+        try:
+            return self.get_class_by_name(dbp_util.class_iri2name(iri))
+        except DbpClassNotExistingException:
+            raise DbpClassNotExistingException(f'Could not find class for iri: {iri}')
 
     def get_equivalents(self, cls: DbpClass) -> set:
         if not self.equivalents:

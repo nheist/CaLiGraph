@@ -153,7 +153,7 @@ class DbpResourceStore:
 
     def get_surface_forms(self, res: DbpResource) -> Set[str]:
         if self.surface_forms is None:
-            self.surface_forms = utils.load_or_create_cache('dbpedia_resource_surface_forms', self._init_surface_form_cache)
+            self.surface_forms = defaultdict(set, utils.load_or_create_cache('dbpedia_resource_surface_forms', self._init_surface_form_cache))
         return self.surface_forms[res.idx]
 
     def _init_surface_form_cache(self) -> Dict[int, Set[str]]:
@@ -186,7 +186,7 @@ class DbpResourceStore:
 
     def get_wikilinks(self, res: DbpResource) -> Set[DbpResource]:
         if self.wikilinks is None:
-            self.wikilinks = utils.load_or_create_cache('dbpedia_resource_wikilinks', self._init_wikilinks_cache)
+            self.wikilinks = defaultdict(set, utils.load_or_create_cache('dbpedia_resource_wikilinks', self._init_wikilinks_cache))
         return {self.get_resource_by_idx(idx) for idx in self.wikilinks[res.idx]}
 
     def _init_wikilinks_cache(self) -> Dict[int, Set[int]]:
@@ -196,7 +196,7 @@ class DbpResourceStore:
 
     def get_types(self, res: DbpResource) -> Set[DbpType]:
         if self.types is None:
-            self.types = utils.load_or_create_cache('dbpedia_resource_types', self._init_types_cache)
+            self.types = defaultdict(set, utils.load_or_create_cache('dbpedia_resource_types', self._init_types_cache))
         return {self.dbo.get_class_by_idx(idx) for idx in self.types[res.idx]}
 
     def _init_types_cache(self) -> Dict[int, Set[int]]:
@@ -219,7 +219,7 @@ class DbpResourceStore:
 
     def get_properties(self, res: DbpResource, as_tuple=False) -> Union[Dict[DbpPredicate, set], Set[Tuple[DbpPredicate, Any]]]:
         if self.properties is None:
-            self.properties = utils.load_or_create_cache('dbpedia_resource_properties', self._init_property_cache)
+            self.properties = defaultdict(dict, utils.load_or_create_cache('dbpedia_resource_properties', self._init_property_cache))
         properties = self.properties[res.idx]
         return {(k, v) for k, vals in properties.items() for v in vals} if as_tuple else properties
 
