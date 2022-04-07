@@ -157,7 +157,7 @@ class WordTokenizer:
         entity_indices = {e['idx'] for e in entry_entities}
         has_valid_entities = len(entity_indices.intersection(valid_ents)) > 0
         has_untagged_entities = self._has_untagged_entities(entry_doc, entry_entities)
-        has_unclear_entities = has_untagged_entities or entity_indices != invalid_ents
+        has_unclear_entities = has_untagged_entities or not entity_indices.issubset(invalid_ents)
         if not has_valid_entities and has_unclear_entities:
             # discard entry if 1) there are no valid entities we know of and
             # 2) there are some entities about which we don't know anything (i.e., they MAY be valid entities)
@@ -179,7 +179,7 @@ class WordTokenizer:
             row_entity_indices.update({e['idx'] for e in cell_entities})
             has_untagged_entities = has_untagged_entities or self._has_untagged_entities(cell_docs[cell_idx], cell_entities)
         has_valid_entities = len(row_entity_indices.intersection(valid_ents)) > 0
-        has_unclear_entities = has_untagged_entities or row_entity_indices != invalid_ents
+        has_unclear_entities = has_untagged_entities or not row_entity_indices.issubset(invalid_ents)
         if not has_valid_entities and has_unclear_entities:
             # discard entry if 1) there are no valid entities we know of and
             # 2) there are some entities about which we don't know anything (i.e., they MAY be valid entities)
