@@ -64,7 +64,7 @@ class DbpCategoryStore:
         # gather category hierarchy
         skos_category_parent_uris = rdf_util.create_multi_val_dict_from_rdf([utils.get_data_file('files.dbpedia.category_skos')], RdfPredicate.BROADER)
         wiki_category_parent_uris = wikipedia.extract_parent_categories()
-        category_children_uris = [(p, c) for c, parents in skos_category_parent_uris.items() | wiki_category_parent_uris.items() for p in parents if p != c]
+        category_children_uris = [(p, c) for c, parents in (skos_category_parent_uris.items() | wiki_category_parent_uris.items()) for p in parents if p != c]
         category_children = [(dbp_util.resource_iri2name(p), dbp_util.resource_iri2name(c)) for p, c in category_children_uris]
         # identify meta categories
         meta_parent_categories = {'Hidden categories', 'Tracking categories', 'Disambiguation categories',
