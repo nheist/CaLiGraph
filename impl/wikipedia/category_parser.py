@@ -18,7 +18,7 @@ def _extract_parent_categories_from_markup(categories_and_templates_markup: Tupl
 
     data = [(cat, markup, template_definitions) for cat, markup in categories_markup.items()]
     with mp.Pool(processes=utils.get_config('max_cpus')) as pool:
-        parent_categories = {cat: parents for cat, parents in tqdm(pool.imap_unordered(_extract_parents_for_category, data, chunksize=1000), total=len(data))}
+        parent_categories = {cat: parents for cat, parents in tqdm(pool.imap_unordered(_extract_parents_for_category, data, chunksize=1000), total=len(data), desc='wikipedia/category_parser: Extracting parent categories')}
     return parent_categories
 
 

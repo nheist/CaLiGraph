@@ -2,6 +2,7 @@
 
 from typing import Dict, Optional, Tuple, Any, List, Union, Set
 from spacy.tokens import Doc
+from tqdm import tqdm
 import utils
 from utils import get_logger
 from collections import defaultdict
@@ -62,7 +63,7 @@ def _extract_axioms(patterns: Dict[tuple, dict]) -> Dict[ClgType, Set[Tuple[ClgP
         cat_axioms._fill_dict(enclosing_pattern_dict, list(front_pattern), lambda d: cat_axioms._fill_dict(d, list(reversed(back_pattern)), axiom_patterns))
 
     axioms = defaultdict(set)
-    for ct in clgo.get_types():
+    for ct in tqdm(clgo.get_types(), desc='caligraph/cali2ax: Extracting axioms for types'):
         property_frequencies = clge.get_property_frequencies(ct)
         labels = {r.get_label() for r in ct.get_associated_dbp_resources()}
         labels_without_by_phrases = [nlp_util.remove_by_phrase(label, return_doc=True) for label in labels]

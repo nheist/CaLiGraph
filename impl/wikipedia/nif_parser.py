@@ -2,12 +2,12 @@
 
 from typing import Tuple
 from collections import defaultdict, Counter
+from tqdm import tqdm
 import utils
 from utils import get_logger
 import pynif
 import bz2
 import multiprocessing as mp
-from tqdm import tqdm
 from spacy.lang.en.stop_words import STOP_WORDS
 import impl.util.rdf as rdf_util
 import impl.util.nlp as nlp_util
@@ -32,7 +32,7 @@ def extract_wiki_corpus_resources():
     spacy_util.get_hearst_pairs('')
 
     with mp.Pool(processes=utils.get_config('max_cpus')) as pool:
-        for hypernyms, type_lexicalisations in pool.imap_unordered(_compute_counts_for_resource, tqdm(_retrieve_plaintexts()), chunksize=1000):
+        for hypernyms, type_lexicalisations in tqdm(pool.imap_unordered(_compute_counts_for_resource, _retrieve_plaintexts(), chunksize=1000), desc='wikipedia/nif_parser: Extracting hypernyms and lexicalisations'):
             for (sub, obj), count in hypernyms.items():
                 total_hypernyms[sub][obj] += count
             for (sub, obj), count in type_lexicalisations.items():
@@ -68,7 +68,7 @@ def _retrieve_plaintexts():
     dbr = DbpResourceStore.instance()
     with bz2.open(utils.get_data_file('files.dbpedia.nif_context'), mode='rb') as nif_file:
         nif_collection = pynif.NIFCollection.loads(nif_file.read(), format='turtle')
-    for nif_context in nif_collection.contexts:
+    for nif_context in tqdm(nif_collection.contexts, desc='wikipedia/nif_parser: Parsing contexts'):
         resource_iri = rdf_util.uri2iri(nif_context.original_uri[:nif_context.original_uri.rfind('?')])
         if not dbr.has_resource_with_iri(resource_iri):
             continue

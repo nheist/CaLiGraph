@@ -8,13 +8,13 @@ The extraction is performed in three steps:
 
 from typing import Dict, Union, List, Tuple, Optional
 import utils
+from tqdm import tqdm
 from spacy.tokens import Doc
 from utils import get_logger
 from collections import defaultdict, Counter
 import operator
 import numpy as np
 import multiprocessing as mp
-from tqdm import tqdm
 import impl.dbpedia.heuristics as dbp_heur
 import impl.category.category_set as cat_set
 from impl.category.category_set import CandidateSet
@@ -103,7 +103,7 @@ def _extract_patterns(category_graph, candidate_sets: List[CandidateSet]) -> Dic
     dbc = DbpCategoryStore.instance()
     patterns = defaultdict(lambda: {'preds': defaultdict(list), 'types': defaultdict(list)})
 
-    for parent, children, (first_words, last_words) in candidate_sets:
+    for parent, children, (first_words, last_words) in tqdm(candidate_sets, desc='category/cat2ax: Extracting patterns'):
         predicate_frequencies = defaultdict(list)
         type_frequencies = defaultdict(list)
         type_surface_scores = _get_type_surface_scores(first_words + last_words)
@@ -209,7 +209,7 @@ def _extract_axioms(category_graph, patterns: Dict[tuple, dict]):
     ) for cat in category_graph.content_nodes]
 
     with mp.Pool(processes=utils.get_config('max_cpus')) as pool:
-        category_axioms = {cat: axioms for cat, axioms in tqdm(pool.imap_unordered(_extract_axioms_for_cat, cat_contexts, chunksize=1000), total=len(cat_contexts), desc='CATEGORY/CAT2AX: Extracting axioms')}
+        category_axioms = {cat: axioms for cat, axioms in tqdm(pool.imap_unordered(_extract_axioms_for_cat, cat_contexts, chunksize=1000), total=len(cat_contexts), desc='category/cat2ax: Extracting axioms')}
     category_axioms = {cat: axioms for cat, axioms in category_axioms.items() if axioms}  # filter out empty axioms
 
     get_logger().debug(f'Extracted {sum(len(axioms) for axioms in category_axioms.values())} axioms for {len(category_axioms)} categories.')
