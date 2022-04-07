@@ -130,7 +130,7 @@ class DbpCategoryStore:
     def _init_category_children_cache(self) -> Dict[int, Set[int]]:
         skos_category_parent_uris = rdf_util.create_multi_val_dict_from_rdf([utils.get_data_file('files.dbpedia.category_skos')], RdfPredicate.BROADER)
         wiki_category_parent_uris = wikipedia.extract_parent_categories()
-        category_children_uris = [(p, c) for c, parents in skos_category_parent_uris.items() | wiki_category_parent_uris.items() for p in parents if p != c]
+        category_children_uris = [(p, c) for c, parents in (skos_category_parent_uris.items() | wiki_category_parent_uris.items()) for p in parents if p != c]
 
         category_children = defaultdict(set)
         for p_uri, c_uri in category_children_uris:
