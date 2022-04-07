@@ -73,8 +73,8 @@ class ClgEntityStore:
         self.axiom_properties = None
 
     def _init_entity_cache(self):
-        # incorporate existing entities from DBpedia
-        all_entities = {ClgEntity(e.idx, e.name, False) for e in self.dbr.get_entities()}
+        # incorporate existing entities from DBpedia (but no redirects or disambiguations)
+        all_entities = {ClgEntity(e.idx, e.name, False) for e in self.dbr.get_entities() if not e.is_meta}
         max_idx = max(e.idx for e in all_entities)
         # initialize new entities from subject entities on pages
         page_occurrence_data = defaultdict(set)
