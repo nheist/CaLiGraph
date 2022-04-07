@@ -1,3 +1,4 @@
+from typing import Tuple, Optional, Dict, Set
 import utils
 from utils import get_logger
 import impl.util.string as str_util
@@ -6,18 +7,17 @@ from collections import defaultdict
 import wikitextparser as wtp
 from wikitextparser import WikiText, Template
 import re
-from typing import Tuple, Optional
 from tqdm import tqdm
 import multiprocessing as mp
 
 
-def _extract_parent_categories_from_markup(categories_and_templates_markup: tuple) -> dict:
+def _extract_parent_categories_from_markup(categories_and_templates_markup: Tuple[Dict[str, str], Dict[str, str]]) -> Dict[str, Set[str]]:
     get_logger().info('Extracting parent categories from category markup..')
     categories_markup, templates_markup = categories_and_templates_markup
     template_definitions = _prepare_template_definitions(templates_markup)
 
+    data = [(cat, markup, template_definitions) for cat, markup in categories_markup.items()]
     with mp.Pool(processes=utils.get_config('max_cpus')) as pool:
-        data = [(cat, markup, template_definitions) for cat, markup in categories_markup.items()]
         parent_categories = {cat: parents for cat, parents in tqdm(pool.imap_unordered(_extract_parents_for_category, data, chunksize=1000), total=len(data))}
     return parent_categories
 

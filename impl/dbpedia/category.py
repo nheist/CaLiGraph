@@ -1,4 +1,4 @@
-from typing import Dict, Set, Optional
+from typing import Dict, Set, Optional, List, Tuple
 from collections import defaultdict, Counter
 from impl.util.singleton import Singleton
 import impl.dbpedia.util as dbp_util
@@ -62,9 +62,7 @@ class DbpCategoryStore:
         category_names = {dbp_util.resource_iri2name(uri) for uri in category_uris}
         category_names = category_names.difference({utils.get_config('category.root_category')})  # root category will be treated separately
         # gather category hierarchy
-        skos_category_parent_uris = rdf_util.create_multi_val_dict_from_rdf([utils.get_data_file('files.dbpedia.category_skos')], RdfPredicate.BROADER)
-        wiki_category_parent_uris = wikipedia.extract_parent_categories()
-        category_children_uris = [(p, c) for c, parents in (skos_category_parent_uris.items() | wiki_category_parent_uris.items()) for p in parents if p != c]
+        category_children_uris = self._load_category_children_uris()
         category_children = [(dbp_util.resource_iri2name(p), dbp_util.resource_iri2name(c)) for p, c in category_children_uris]
         # identify meta categories
         meta_parent_categories = {'Hidden categories', 'Tracking categories', 'Disambiguation categories',
@@ -88,6 +86,15 @@ class DbpCategoryStore:
             else:
                 categories.add(DbpCategory(idx, c, c in meta_categories))
         return categories
+
+    @classmethod
+    def _load_category_children_uris(cls) -> Set[Tuple[str, str]]:
+        skos_category_parent_uris = rdf_util.create_multi_val_dict_from_rdf([utils.get_data_file('files.dbpedia.category_skos')], RdfPredicate.BROADER)
+        category_children_uris = {(p, c) for c, parents in skos_category_parent_uris.items() for p in parents}
+        wiki_category_parent_uris = wikipedia.extract_parent_categories()
+        category_children_uris.update({(p, c) for c, parents in wiki_category_parent_uris.items() for p in parents})
+        category_children_uris = {(p, c) for p, c in category_children_uris if p != c}
+        return category_children_uris
 
     def has_category_with_idx(self, idx: int) -> bool:
         return idx in self.categories_by_idx
@@ -128,12 +135,8 @@ class DbpCategoryStore:
         return self._filter_categories(children, include_meta, include_listcategories)
 
     def _init_category_children_cache(self) -> Dict[int, Set[int]]:
-        skos_category_parent_uris = rdf_util.create_multi_val_dict_from_rdf([utils.get_data_file('files.dbpedia.category_skos')], RdfPredicate.BROADER)
-        wiki_category_parent_uris = wikipedia.extract_parent_categories()
-        category_children_uris = [(p, c) for c, parents in (skos_category_parent_uris.items() | wiki_category_parent_uris.items()) for p in parents if p != c]
-
         category_children = defaultdict(set)
-        for p_uri, c_uri in category_children_uris:
+        for p_uri, c_uri in self._load_category_children_uris():
             p, c = self.get_category_by_iri(p_uri), self.get_category_by_iri(c_uri)
             category_children[p.idx].add(c.idx)
         return category_children

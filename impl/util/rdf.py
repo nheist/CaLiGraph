@@ -135,17 +135,13 @@ def parse_triples_from_file(filepath: str) -> Iterator[Triple]:
         for line in file_reader:
             object_triple = object_pattern.match(line)
             if object_triple:
-                [sub, pred, obj] = object_triple.groups()
-                sub = urllib.parse.unquote(sub.decode('utf-8'))
-                pred = pred.decode('utf-8')
-                obj = urllib.parse.unquote(obj.decode('utf-8'))
-                yield Triple(sub=sub, pred=pred, obj=obj, is_literal=False)
+                sub, pred, obj = object_triple.groups()
+                yield Triple(sub=uri2iri(sub.decode('utf-8')), pred=pred.decode('utf-8'), obj=uri2iri(obj.decode('utf-8')), is_literal=False)
             else:
                 literal_triple = literal_pattern.match(line)
                 if literal_triple:
-                    [sub, pred, obj] = literal_triple.groups()
-                    sub = urllib.parse.unquote(sub.decode('utf-8'))
-                    yield Triple(sub=sub, pred=pred.decode('utf-8'), obj=obj.decode('utf-8'), is_literal=True)
+                    sub, pred, obj = literal_triple.groups()
+                    yield Triple(sub=uri2iri(sub.decode('utf-8')), pred=pred.decode('utf-8'), obj=obj.decode('utf-8'), is_literal=True)
 
 
 def create_set_from_rdf(filepaths: list, valid_pred: RdfPredicate, valid_obj: Optional[str], casting_fn=None) -> set:
@@ -231,6 +227,10 @@ def create_dict_from_rdf(filepaths: list, reverse_key=False, casting_fn=None) ->
                 continue
             data_dict[obj][pred].add(sub) if reverse_key else data_dict[sub][pred].add(obj)
     return data_dict
+
+
+def uri2iri(res_uri: str) -> str:
+    return urllib.parse.unquote(res_uri)
 
 
 def _cast_type(casting_fn, sub: str, obj: str, is_literal: bool):
