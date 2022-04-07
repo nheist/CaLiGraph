@@ -74,7 +74,7 @@ class ClgEntityStore:
 
     def _init_entity_cache(self) -> Tuple[List[ClgEntity], Dict[int, Set[Tuple[int, str, int, str, int, str, str]]]]:
         # incorporate existing entities from DBpedia (but no redirects or disambiguations)
-        all_entities = [ClgEntity(e.idx, e.name, False) for e in self.dbr.get_entities() if not e.is_meta]
+        all_entities = [ClgEntity(e.idx, e.name, False) for e in self.dbr.get_entities(include_meta=False)]
         max_idx = max(e.idx for e in all_entities)
         # initialize new entities from subject entities on pages
         page_occurrence_data = defaultdict(set)
@@ -165,7 +165,7 @@ class ClgEntityStore:
 
     def _init_labels(self) -> Dict[ClgEntity, str]:
         labels = {}
-        for dbp_ent in self.dbr.get_entities():
+        for dbp_ent in self.dbr.get_entities(include_meta=False):
             labels[self.get_entity_for_dbp_entity(dbp_ent)] = dbp_ent.get_label()
         for ent, data_tuples in self.get_page_occurrence_data():
             if ent not in labels:
@@ -178,7 +178,7 @@ class ClgEntityStore:
 
     def _init_surface_forms(self) -> Dict[ClgEntity, Set[str]]:
         surface_forms = defaultdict(set)
-        for dbp_ent in self.dbr.get_entities():
+        for dbp_ent in self.dbr.get_entities(include_meta=False):
             surface_forms[self.get_entity_for_dbp_entity(dbp_ent)].update(dbp_ent.get_surface_forms())
         for ent, data_tuples in self.get_page_occurrence_data():
             surface_forms[ent].update({t[5] for t in data_tuples})
@@ -204,7 +204,7 @@ class ClgEntityStore:
                     lp_types = self.clgo.get_types_for_associated_dbp_resource(listpages_by_idx[res_idx])
                     types[ent].update(lp_types)
         # retrieve types based on DBpedia types
-        for dbp_ent in self.dbr.get_entities():
+        for dbp_ent in self.dbr.get_entities(include_meta=False):
             ent = self.get_entity_for_dbp_entity(dbp_ent)
             types_from_dbpedia = {ct for dt in dbp_ent.get_types() for ct in self.clgo.get_types_for_associated_dbp_type(dt)}
             types[ent].update(types_from_dbpedia)
@@ -232,7 +232,7 @@ class ClgEntityStore:
 
     def _init_properties(self) -> Dict[ClgEntity, Dict[ClgPredicate, set]]:
         properties = defaultdict(lambda: defaultdict(set))
-        for dbp_ent, props in self.dbr.get_entity_properties().items():
+        for dbp_ent, props in self.dbr.get_entity_properties(include_meta=False).items():
             ent = self.get_entity_for_dbp_entity(dbp_ent)
             for dbp_pred, vals in props.items():
                 pred = self.clgo.get_predicate_for_dbp_predicate(dbp_pred)

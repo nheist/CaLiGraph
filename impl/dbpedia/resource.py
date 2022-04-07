@@ -135,8 +135,10 @@ class DbpResourceStore:
     def get_resources(self) -> Set[DbpResource]:
         return set(self.resources_by_idx.values())
 
-    def get_entities(self) -> Set[DbpEntity]:
-        return {r for r in self.resources_by_idx.values() if isinstance(r, DbpEntity)}
+    def get_entities(self, include_meta=True) -> Set[DbpEntity]:
+        entities = {r for r in self.resources_by_idx.values() if isinstance(r, DbpEntity)}
+        entities = entities if include_meta else {e for e in entities if not e.is_meta}
+        return entities
 
     def get_listpages(self) -> Set[DbpListpage]:
         return {r for r in self.resources_by_idx.values() if isinstance(r, DbpListpage) and not r.is_meta}
@@ -238,8 +240,8 @@ class DbpResourceStore:
                 properties[sub.idx][pred] = vals
         return dict(properties)
 
-    def get_entity_properties(self, as_tuple=False) -> Union[Dict[DbpEntity, Dict[DbpPredicate, set]], Dict[DbpEntity, Set[Tuple[DbpPredicate, Any]]]]:
-        return {e: self.get_properties(e, as_tuple) for e in self.get_entities()}
+    def get_entity_properties(self, include_meta=True, as_tuple=False) -> Union[Dict[DbpEntity, Dict[DbpPredicate, set]], Dict[DbpEntity, Set[Tuple[DbpPredicate, Any]]]]:
+        return {e: self.get_properties(e, as_tuple) for e in self.get_entities(include_meta=include_meta)}
 
     def get_inverse_properties(self, res: DbpResource) -> Dict[DbpPredicate, Set[DbpResource]]:
         if self.inverse_properties is None:

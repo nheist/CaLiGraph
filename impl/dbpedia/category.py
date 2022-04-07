@@ -14,7 +14,7 @@ class DbpCategory(RdfResource):
         return self._get_store().get_resources(self)
 
     def get_entities(self) -> Set[DbpEntity]:
-        return {r for r in self.get_resources() if isinstance(r, DbpEntity)}
+        return {r for r in self.get_resources() if isinstance(r, DbpEntity) and not r.is_meta}
 
     @classmethod
     def get_namespace(cls) -> str:
