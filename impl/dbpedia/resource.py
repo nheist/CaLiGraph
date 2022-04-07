@@ -1,4 +1,4 @@
-from typing import Union, Dict, Optional, Set, Any, Tuple
+from typing import Union, Dict, Optional, Set, Any, Tuple, List
 from collections import defaultdict, Counter
 from functools import cache
 from impl.util.singleton import Singleton
@@ -85,7 +85,7 @@ class DbpResourceStore:
         self.inverse_properties = None
         self.redirects = None
 
-    def _init_resource_cache(self) -> Set[DbpResource]:
+    def _init_resource_cache(self) -> List[DbpResource]:
         # find all resources that have at least a label or a type
         resources_with_label = rdf_util.create_set_from_rdf([utils.get_data_file('files.dbpedia.labels')], RdfPredicate.LABEL, None)
         resources_with_type = rdf_util.create_set_from_rdf([utils.get_data_file('files.dbpedia.instance_types')], RdfPredicate.TYPE, None)
@@ -95,16 +95,16 @@ class DbpResourceStore:
         meta_resources = rdf_util.create_set_from_rdf([utils.get_data_file('files.dbpedia.redirects')], RdfPredicate.REDIRECTS, None)
         meta_resources.update(rdf_util.create_set_from_rdf([utils.get_data_file('files.dbpedia.disambiguations')], RdfPredicate.DISAMBIGUATES, None))
 
-        all_resources = set()
+        all_resources = []
         for idx, res_uri in enumerate(all_resource_uris):
             res_name = dbp_util.resource_iri2name(res_uri)
             is_meta = res_uri in meta_resources
             if dbp_util.is_listpage_iri(res_uri):
-                all_resources.add(DbpListpage(idx, res_name, is_meta))
+                all_resources.append(DbpListpage(idx, res_name, is_meta))
             elif dbp_util.is_file_iri(res_uri):
-                all_resources.add(DbpFile(idx, res_name, is_meta))
+                all_resources.append(DbpFile(idx, res_name, is_meta))
             else:
-                all_resources.add(DbpEntity(idx, res_name, is_meta))
+                all_resources.append(DbpEntity(idx, res_name, is_meta))
         return all_resources
 
     def has_resource_with_idx(self, idx: int) -> bool:

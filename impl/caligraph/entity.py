@@ -1,4 +1,4 @@
-from typing import Set, Dict, Optional, Union, Tuple, Any
+from typing import Set, Dict, Optional, Union, Tuple, Any, List
 from collections import defaultdict, Counter
 import utils
 from impl.util.singleton import Singleton
@@ -72,9 +72,9 @@ class ClgEntityStore:
         self.axioms = None
         self.axiom_properties = None
 
-    def _init_entity_cache(self):
+    def _init_entity_cache(self) -> Tuple[List[ClgEntity], Dict[int, Dict[Set[Tuple[int, str, int, str, int, str, str]]]]]:
         # incorporate existing entities from DBpedia (but no redirects or disambiguations)
-        all_entities = {ClgEntity(e.idx, e.name, False) for e in self.dbr.get_entities() if not e.is_meta}
+        all_entities = [ClgEntity(e.idx, e.name, False) for e in self.dbr.get_entities() if not e.is_meta]
         max_idx = max(e.idx for e in all_entities)
         # initialize new entities from subject entities on pages
         page_occurrence_data = defaultdict(set)
@@ -85,7 +85,7 @@ class ClgEntityStore:
                         page_occurrence_data[ent_name].add((res.idx, ts, ent_data['TS_entidx'], s, ent_data['S_entidx'], ent_data['text'], ent_data['tag']))
         new_entity_names = set(page_occurrence_data).difference({e.name for e in all_entities})
         for idx, ent_name in enumerate(new_entity_names, start=max_idx):
-            all_entities.add(ClgEntity(idx, ent_name, False))
+            all_entities.append(ClgEntity(idx, ent_name, False))
         # update page occurrence data with actual entity indices
         entity_name_to_index = {e.name: e.idx for e in all_entities}
         page_occurrence_data = {entity_name_to_index[ent_name]: data for ent_name, data in page_occurrence_data.items()}
