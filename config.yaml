@@ -128,8 +128,8 @@ cache:
   wikipedia_parent_categories:
     filename: 'wikipedia-parent-categories'
     version: 1
-  wikipedia_parsed_articles:
-    filename: 'wikipedia-parsed-articles'
+  wikipedia_parsed_pages:
+    filename: 'wikipedia-parsed-pages'
     version: 1
   wikipedia_type_lexicalisations:
     filename: 'wikipedia-type-lexicalisations'

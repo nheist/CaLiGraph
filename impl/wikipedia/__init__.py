@@ -9,9 +9,9 @@ from typing import Dict, Tuple, Set, Optional
 from impl.util.rdf import Namespace
 
 
-def get_parsed_articles() -> Dict[DbpResource, Optional[dict]]:
-    initializer = lambda: _parse_pages(_get_raw_articles_from_xml())
-    return defaultdict(lambda: None, utils.load_or_create_cache('wikipedia_parsed_articles', initializer))
+def get_parsed_pages() -> Dict[DbpResource, Optional[dict]]:
+    initializer = lambda: _parse_pages(_get_raw_pages_from_xml())
+    return defaultdict(lambda: None, utils.load_or_create_cache('wikipedia_parsed_pages', initializer))
 
 
 def extract_parent_categories() -> Dict[str, Set[str]]:
@@ -26,7 +26,7 @@ def _get_raw_categories_and_templates_from_xml() -> Tuple[Dict[str, str], Dict[s
     return categories, templates
 
 
-def _get_raw_articles_from_xml() -> Dict[DbpResource, str]:
+def _get_raw_pages_from_xml() -> Dict[DbpResource, str]:
     dbr = DbpResourceStore.instance()
     return {dbr.get_resource_by_name(name): markup for name, markup in _get_raw_markup_from_xml().items() if dbr.has_resource_with_name(name)}
 

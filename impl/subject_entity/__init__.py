@@ -39,11 +39,11 @@ def _get_training_data() -> Tuple[List[List[str]], List[List[str]]]:
 
 def _get_tokenized_list_pages_with_entity_labels() -> Dict[DbpResource, Tuple[list, list]]:
     listpages = DbpResourceStore.instance().get_listpages()
-    lps_with_content = {res: content for res, content in wikipedia.get_parsed_articles().items() if res in listpages}
+    lps_with_content = {res: content for res, content in wikipedia.get_parsed_pages().items() if res in listpages}
     entity_labels = {lp: heuristics.find_subject_entities_for_listpage(lp, content) for lp, content in lps_with_content.items()}
     return WordTokenizer()(lps_with_content, entity_labels=entity_labels)
 
 
 def _get_page_data() -> Dict[DbpResource, Tuple[list, list]]:
-    initializer = lambda: WordTokenizer()(wikipedia.get_parsed_articles())
+    initializer = lambda: WordTokenizer()(wikipedia.get_parsed_pages())
     return utils.load_or_create_cache('subject_entity_page_data', initializer)

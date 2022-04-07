@@ -72,7 +72,7 @@ def _extract_entity_occurrences(df_listings: pd.DataFrame, dataset_pages: np.nda
     valid_listings = _get_dataset_listings(df_listings, dataset_pages)
     tokenizer, model = extract.get_tagging_tokenizer_and_model(lambda: None)
 
-    wikipedia_pages = {p: m for p, m in wikipedia.get_parsed_articles().items() if dbp_util.resource_iri2name(p) in valid_pages}
+    wikipedia_pages = {p: m for p, m in wikipedia.get_parsed_pages().items() if dbp_util.resource_iri2name(p) in valid_pages}
 
     result_data_columns = ['_ent', '_text', '_page', '_section', 'e_tag'] + [f'e_{i}' for i in range(768)] + [f'l_{i}' for i in range(768)]
     result_data = []
