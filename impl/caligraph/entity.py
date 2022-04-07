@@ -72,7 +72,7 @@ class ClgEntityStore:
         self.axioms = None
         self.axiom_properties = None
 
-    def _init_entity_cache(self) -> Tuple[List[ClgEntity], Dict[int, Dict[Set[Tuple[int, str, int, str, int, str, str]]]]]:
+    def _init_entity_cache(self) -> Tuple[List[ClgEntity], Dict[int, Set[Tuple[int, str, int, str, int, str, str]]]]:
         # incorporate existing entities from DBpedia (but no redirects or disambiguations)
         all_entities = [ClgEntity(e.idx, e.name, False) for e in self.dbr.get_entities() if not e.is_meta]
         max_idx = max(e.idx for e in all_entities)
