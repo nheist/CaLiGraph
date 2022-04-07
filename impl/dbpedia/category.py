@@ -137,8 +137,9 @@ class DbpCategoryStore:
     def _init_category_children_cache(self) -> Dict[int, Set[int]]:
         category_children = defaultdict(set)
         for p_uri, c_uri in self._load_category_children_uris():
-            p, c = self.get_category_by_iri(p_uri), self.get_category_by_iri(c_uri)
-            category_children[p.idx].add(c.idx)
+            if not (self.has_category_with_iri(p_uri) and self.has_category_with_iri(c_uri)):
+                continue
+            category_children[self.get_category_by_iri(p_uri).idx].add(self.get_category_by_iri(c_uri).idx)
         return category_children
 
     def get_parents(self, cat: DbpCategory, include_meta=False, include_listcategories=False) -> Set[DbpCategory]:
