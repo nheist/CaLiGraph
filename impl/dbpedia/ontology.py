@@ -129,7 +129,7 @@ class DbpOntologyStore:
     def get_types_for_label(self, label: str) -> Set[DbpType]:
         if self.label_to_types is None:
             self.label_to_types = defaultdict(set)
-            for t in self.get_types():
+            for t in self.get_types(include_root=False):
                 self.label_to_types[self.get_label(t).lower().split()[-1]].add(t)
         return self.label_to_types[label.lower()]
 
