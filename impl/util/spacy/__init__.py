@@ -1,10 +1,11 @@
+from typing import Iterator, List, Tuple
+from tqdm import tqdm
+from collections import defaultdict
+import utils
 import spacy
 from spacy.tokens import Span
 from impl.util.spacy.components import LEXICAL_HEAD, LEXICAL_HEAD_SUBJECT, LEXICAL_HEAD_SUBJECT_PLURAL, BY_PHRASE
 import impl.util.spacy.hearst_matcher as hearst_matcher
-import utils
-from typing import Iterator, List, Tuple
-from collections import defaultdict
 
 
 BATCH_SIZE = 20000
@@ -33,7 +34,7 @@ def parse_sets(taxonomic_sets: list) -> Iterator:
         for s in unknown_sets:
             __SET_DOCUMENT_CACHE__[s] = __SET_PARSER__(s)
     else:
-        set_tuples = [(s, s) for s in unknown_sets]
+        set_tuples = tqdm([(s, s) for s in unknown_sets], desc='Parsing sets with spaCy')
         for doc, s in __SET_PARSER__.pipe(set_tuples, as_tuples=True, batch_size=BATCH_SIZE, n_process=N_PROCESSES):
             __SET_DOCUMENT_CACHE__[s] = doc
     return iter([__SET_DOCUMENT_CACHE__[s] for s in taxonomic_sets])
@@ -44,7 +45,7 @@ def parse_texts(texts: list) -> Iterator:
     bp = _get_base_parser()
     if len(texts) <= BATCH_SIZE:
         return iter([bp(t) for t in texts])
-    return bp.pipe(texts, batch_size=BATCH_SIZE, n_process=N_PROCESSES)
+    return bp.pipe(tqdm(texts, desc='Parsing texts with spaCy'), batch_size=BATCH_SIZE, n_process=N_PROCESSES)
 
 
 def get_hearst_pairs(text: str) -> List[Tuple[Span, Span]]:
