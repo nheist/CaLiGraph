@@ -3,6 +3,7 @@ import utils
 from utils import get_logger
 import mailer
 from impl import wikipedia
+from impl.dbpedia.category import DbpCategoryStore
 import impl.category.cat2ax as cat_axioms
 import impl.util.hypernymy as hypernymy_util
 from impl import category
@@ -13,9 +14,11 @@ def _setup_hypernyms():
     """Initialisation of hypernyms that are extracted from Wikipedia categories using Cat2Ax axioms."""
     if utils.load_cache('wikitaxonomy_hypernyms') is not None:
         return  # only compute hypernyms if they are not existing already
+    dbc = DbpCategoryStore.instance()
     ccg = category.get_conceptual_category_graph()
+    valid_categories = {dbc.get_category_by_name(node) for node in ccg.content_nodes}
     # initialise cat2ax axioms
-    cat2ax_axioms = cat_axioms.extract_category_axioms(ccg)
+    cat2ax_axioms = cat_axioms.extract_category_axioms(valid_categories)
     utils.update_cache('cat2ax_axioms', cat2ax_axioms)
     # initialise wikitaxonomy hypernyms
     wikitaxonomy_hypernyms = hypernymy_util.compute_hypernyms(ccg)
