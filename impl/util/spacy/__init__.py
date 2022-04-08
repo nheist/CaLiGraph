@@ -7,7 +7,7 @@ from typing import Iterator, List, Tuple
 from collections import defaultdict
 
 
-BATCH_SIZE = 100
+BATCH_SIZE = 20000
 N_PROCESSES = utils.get_config('max_cpus')
 __SET_DOCUMENT_CACHE__ = defaultdict(lambda: None)
 
