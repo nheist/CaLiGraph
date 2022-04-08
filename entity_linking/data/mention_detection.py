@@ -28,13 +28,12 @@ class MentionDetectionDataset(Dataset):
 
 
 def prepare_mentiondetection_dataset(tokens: list, labels: list, tokenizer, predict_single_tag: bool):
-    train_encodings = tokenizer(tokens, is_split_into_words=True, return_offsets_mapping=True, padding=True, truncation=True)
+    encodings = tokenizer(tokens, is_split_into_words=True, return_offsets_mapping=True, padding=True, truncation=True)
     type_labels = None
     if predict_single_tag:
         type_labels = [l[1] for l in labels]
         labels = [l[0] for l in labels]
-    mention_labels = extract._encode_labels(labels, train_encodings)
+    mention_labels = extract._encode_labels(labels, encodings)
 
-    train_encodings.pop('offset_mapping')  # we don't want to pass this to the model
-    train_dataset = MentionDetectionDataset(train_encodings, mention_labels, type_labels)
-    return train_dataset
+    encodings.pop('offset_mapping')  # we don't want to pass this to the model
+    return MentionDetectionDataset(encodings, mention_labels, type_labels)
