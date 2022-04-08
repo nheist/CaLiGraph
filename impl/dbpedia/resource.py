@@ -9,6 +9,9 @@ import impl.dbpedia.util as dbp_util
 from impl.dbpedia.ontology import DbpType, DbpPredicate, DbpObjectPredicate, DbpOntologyStore
 from polyleven import levenshtein
 import utils
+import bz2
+import csv
+import random
 
 
 class DbpResource(RdfResource):
@@ -84,6 +87,7 @@ class DbpResourceStore:
         self.properties = None
         self.inverse_properties = None
         self.redirects = None
+        self.embedding_vectors = None
 
     def _init_resource_cache(self) -> List[DbpResource]:
         # find all resources that have at least a label or a type
@@ -278,3 +282,20 @@ class DbpResourceStore:
     def _init_redirect_cache(self) -> Dict[int, int]:
         redirects = rdf_util.create_single_val_dict_from_rdf([utils.get_data_file('files.dbpedia.redirects')], RdfPredicate.REDIRECTS, casting_fn=self.get_resource_by_iri)
         return {source.idx: target.idx for source, target in redirects.items()}
+
+    def get_embedding_vector(self, res_idx: int) -> Optional[List[float]]:
+        if self.embedding_vectors is None:
+            self.embedding_vectors = defaultdict(lambda: None, utils.load_or_create_cache('dbpedia_resource_embeddings', self._init_embedding_cache))
+        # if -1 (= unknown entity) is given as res_idx, we simply return a random embedding vector
+        return self.embedding_vectors[res_idx] if res_idx != -1 else random.choice(self.embedding_vectors.values())
+
+    def _init_embedding_cache(self) -> Dict[int, List[float]]:
+        embedding_vectors = {}
+        with bz2.open(utils.get_data_file('files.dbpedia.embedding_vectors'), mode='r', newline='') as f:
+            for row in csv.reader(f, delimiter=' '):
+                res_iri = rdf_util.uri2iri(row[0])
+                if not self.has_resource_with_iri(res_iri):
+                    continue
+                # discarding last parsed value as it is an empty string
+                embedding_vectors[self.get_resource_by_iri(res_iri).idx] = [float(v) for v in row[1:-1]]
+        return embedding_vectors

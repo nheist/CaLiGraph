@@ -88,6 +88,9 @@ files:
     wikilinks:
       filename: 'wikilinks_lang=en.ttl.bz2'
       url: 'https://downloads.dbpedia.org/repo/dbpedia/generic/wikilinks/2020.10.01/wikilinks_lang=en.ttl.bz2'
+    embedding_vectors:
+      filename: 'embeddings_dbpedia2020_rdf2vec.txt.bz2'
+      url: 'http://data.dws.informatik.uni-mannheim.de/CaLiGraph/data/embeddings_dbpedia2020_rdf2vec.txt.bz2'
     webisalod_hypernyms:
       filename: 'webisalod_hypernyms.p.bz2'
       url: 'http://data.dws.informatik.uni-mannheim.de/CaLiGraph/data/webisalod_hypernyms.p.bz2'
@@ -169,6 +172,9 @@ cache:
   dbpedia_resource_redirects:
     filename: 'dbpedia-resource-redirects'
     version: 1
+  dbpedia_resource_embeddings:
+    filename: 'dbpedia-resource-embeddings'
+    version: RDF2vec
   dbpedia_categories:
     filename: 'dbpedia-categories'
     version: 1
