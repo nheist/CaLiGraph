@@ -65,10 +65,9 @@ def _extract_axioms(patterns: Dict[tuple, dict]) -> Dict[ClgType, Set[Tuple[ClgP
     axioms = defaultdict(set)
     for ct in tqdm(clgo.get_types(), desc='caligraph/cali2ax: Extracting axioms for types'):
         property_frequencies = clge.get_property_frequencies(ct)
-        labels = {r.get_label() for r in ct.get_associated_dbp_resources()}
-        labels_without_by_phrases = [nlp_util.remove_by_phrase(label, return_doc=True) for label in labels]
-        for label_doc in labels_without_by_phrases:
+        for r in ct.get_associated_dbp_resources():
             node_axioms = []
+            label_doc = nlp_util.remove_by_phrase(r.get_label(), return_doc=True)
 
             front_prop_axiom = _find_axioms(front_pattern_dict, ct, label_doc, property_frequencies)
             if front_prop_axiom:

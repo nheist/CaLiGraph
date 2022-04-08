@@ -86,6 +86,4 @@ class CategoryGraph(HierarchyGraph):
         return valid_axiom_edges
 
     def _get_type_axioms_for_node(self, node: str) -> Set[TypeAxiom]:
-        categories = self.get_categories(node)
-        axioms = {a for c in categories for a in cat_axioms.get_type_axioms(c)}
-        return axioms
+        return {a for c in self.get_categories(node) for a in cat_axioms.get_type_axioms(c)}

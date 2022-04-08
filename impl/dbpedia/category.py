@@ -16,6 +16,9 @@ class DbpCategory(RdfResource):
     def get_entities(self) -> Set[DbpEntity]:
         return {r for r in self.get_resources() if isinstance(r, DbpEntity) and not r.is_meta}
 
+    def get_statistics(self) -> dict:
+        return self._get_store().get_statistics(self)
+
     @classmethod
     def get_namespace(cls) -> str:
         return Namespace.DBP_RESOURCE.value

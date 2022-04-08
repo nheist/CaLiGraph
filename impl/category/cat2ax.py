@@ -6,7 +6,7 @@ The extraction is performed in three steps:
 3) Apply patterns to all categories to extract axioms
 """
 
-from typing import Dict, Union, List, Tuple, Optional
+from typing import Dict, Union, List, Tuple, Optional, Set
 import utils
 from tqdm import tqdm
 from spacy.tokens import Doc
@@ -22,7 +22,7 @@ import impl.util.nlp as nlp_util
 from impl.util.rdf import RdfPredicate
 from impl.dbpedia.ontology import DbpType, DbpObjectPredicate, DbpOntologyStore
 from impl.dbpedia.resource import DbpResource, DbpEntity, DbpResourceStore
-from impl.dbpedia.category import DbpCategory, DbpCategoryStore
+from impl.dbpedia.category import DbpCategory
 
 
 PATTERN_CONF = utils.get_config('cat2ax.pattern_confidence')
@@ -83,62 +83,74 @@ def get_axioms(cat: DbpCategory) -> List[Axiom]:
     if '__CATEGORY_AXIOMS__' not in globals():
         __CATEGORY_AXIOMS__ = defaultdict(list, utils.load_cache('cat2ax_axioms'))
         if not __CATEGORY_AXIOMS__:
-            raise ValueError('CATEGORY/CAT2AX: Axioms not initialised. Run axiom extraction before using them!')
+            raise ValueError('category/cat2ax: Axioms not initialised. Run axiom extraction before using them!')
 
     return __CATEGORY_AXIOMS__[cat]
 
 
-def extract_category_axioms(category_graph):
+def extract_category_axioms(valid_categories: Set[DbpCategory]):
     """Run extraction for the given graph with a confidence of `pattern_confidence`."""
     candidate_sets = cat_set.get_category_sets()
-    patterns = _extract_patterns(category_graph, candidate_sets)
-    return _extract_axioms(category_graph, patterns)
+    patterns = _extract_patterns(valid_categories, candidate_sets)
+    return _extract_axioms(valid_categories, patterns)
 
 
 # --- PATTERN EXTRACTION ---
 
-def _extract_patterns(category_graph, candidate_sets: List[CandidateSet]) -> Dict[Tuple[tuple, tuple], dict]:
+def _extract_patterns(valid_categories: Set[DbpCategory], candidate_sets: List[CandidateSet]) -> Dict[Tuple[tuple, tuple], dict]:
     """Return property/type patterns extracted from `category_graph` for each set in `candidate_sets`."""
     get_logger().debug('Extracting Cat2Ax patterns..')
-    dbc = DbpCategoryStore.instance()
     patterns = defaultdict(lambda: {'preds': defaultdict(list), 'types': defaultdict(list)})
 
-    for parent, children, (first_words, last_words) in tqdm(candidate_sets, desc='category/cat2ax: Extracting patterns'):
-        predicate_frequencies = defaultdict(list)
-        type_frequencies = defaultdict(list)
-        type_surface_scores = _get_type_surface_scores(first_words + last_words)
-
-        categories_with_matches = {cat: _get_match_for_category(cat, first_words, last_words) for cat in children}
-        categories_with_matches = {cat: match for cat, match in categories_with_matches.items() if category_graph.has_node(cat.name) and match}
-        for cat, match in categories_with_matches.items():
-            # compute predicate frequencies
-            statistics = dbc.get_statistics(cat)
-            possible_vals = _get_resource_surface_scores(match)
-            for (pred, val), freq in statistics['property_frequencies'].items():
-                if val in possible_vals:
-                    predicate_frequencies[pred].append(freq * possible_vals[val])
-            for t, tf in statistics['type_frequencies'].items():
-                type_frequencies[t].append(tf * type_surface_scores[t])
-        if predicate_frequencies:
-            # pad frequencies to get the correct median
-            predicate_frequencies = {pred: freqs + ([0]*(len(categories_with_matches)-len(freqs))) for pred, freqs in predicate_frequencies.items()}
-            pred, freqs = max(predicate_frequencies.items(), key=lambda x: np.median(x[1]))
-            med = np.median(freqs)
-            if med > 0:
-                for _ in categories_with_matches:
-                    patterns[(tuple(first_words), tuple(last_words))]['preds'][pred].append(med)
-        if type_frequencies:
-            # pad frequencies to get the correct median
-            type_frequencies = {t: freqs + ([0]*(len(categories_with_matches)-len(freqs))) for t, freqs in type_frequencies.items()}
-            max_median = max(np.median(freqs) for freqs in type_frequencies.values())
-            types = {t for t, freqs in type_frequencies.items() if np.median(freqs) >= max_median}
-            if max_median > 0:
-                for _ in categories_with_matches:
-                    for t in types:
-                        patterns[(tuple(first_words), tuple(last_words))]['types'][t].append(max_median)
+    pattern_context = [(valid_categories, cs) for cs in candidate_sets]
+    with mp.Pool(processes=utils.get_config('max_cpus')) as pool:
+        for word_pattern, preds, types in tqdm(pool.imap_unordered(_extract_patterns_from_candidate_set, pattern_context, chunksize=10000), total=len(candidate_sets), desc='category/cat2ax: Extracting patterns'):
+            for pred, vals in preds.items():
+                patterns[word_pattern]['preds'][pred].extend(vals)
+            for t, vals in types.items():
+                patterns[word_pattern]['types'][t].extend(vals)
 
     get_logger().debug(f'Extracted {len(patterns)} Cat2Ax patterns.')
     return patterns
+
+
+def _extract_patterns_from_candidate_set(pattern_context: Tuple[Set[DbpCategory], CandidateSet]) -> tuple:
+    preds = {}
+    types = {}
+
+    valid_categories, candidate_set = pattern_context
+    parent, children, (first_words, last_words) = candidate_set
+    predicate_frequencies = defaultdict(list)
+    type_frequencies = defaultdict(list)
+    type_surface_scores = _get_type_surface_scores(first_words + last_words)
+
+    categories_with_matches = {cat: _get_match_for_category(cat, first_words, last_words) for cat in children if cat in valid_categories}
+    categories_with_matches = {cat: match for cat, match in categories_with_matches.items() if match}
+    for cat, match in categories_with_matches.items():
+        # compute predicate frequencies
+        cat_stats = cat.get_statistics()
+        possible_vals = _get_resource_surface_scores(match)
+        for (pred, val), freq in cat_stats['property_frequencies'].items():
+            if val in possible_vals:
+                predicate_frequencies[pred].append(freq * possible_vals[val])
+        for t, tf in cat_stats['type_frequencies'].items():
+            type_frequencies[t].append(tf * type_surface_scores[t])
+    if predicate_frequencies:
+        # pad frequencies to get the correct median
+        predicate_frequencies = {pred: freqs + ([0] * (len(categories_with_matches) - len(freqs))) for pred, freqs in predicate_frequencies.items()}
+        pred, freqs = max(predicate_frequencies.items(), key=lambda x: np.median(x[1]))
+        med = np.median(freqs)
+        if med > 0:
+            preds = {pred: [med] * len(categories_with_matches)}
+    if type_frequencies:
+        # pad frequencies to get the correct median
+        type_frequencies = {t: freqs + ([0] * (len(categories_with_matches) - len(freqs))) for t, freqs in type_frequencies.items()}
+        max_median = max(np.median(freqs) for freqs in type_frequencies.values())
+        types = {t for t, freqs in type_frequencies.items() if np.median(freqs) >= max_median}
+        if max_median > 0:
+            types = {t: [max_median] * len(categories_with_matches) for t in types}
+
+    return (tuple(first_words), tuple(last_words)), preds, types
 
 
 def _get_match_for_category(cat: DbpCategory, first_words: tuple, last_words: tuple) -> str:
@@ -185,7 +197,7 @@ def _get_type_surface_scores(words: list, lemmatize=True) -> Dict[DbpType, float
 # --- PATTERN APPLICATION ---
 
 
-def _extract_axioms(category_graph, patterns: Dict[tuple, dict]):
+def _extract_axioms(valid_categories: Set[DbpCategory], patterns: Dict[tuple, dict]):
     """Return axioms extracted from `category_graph` by applying `patterns` to all categories."""
     get_logger().debug('Extracting Cat2Ax axioms..')
     # process front/back/front+back patterns individually to reduce computational complexity
@@ -201,15 +213,9 @@ def _extract_axioms(category_graph, patterns: Dict[tuple, dict]):
     for (front_pattern, back_pattern), axiom_patterns in _get_confidence_pattern_set(patterns, True, True).items():
         _fill_dict(enclosing_pattern_dict, list(front_pattern), lambda d: _fill_dict(d, list(reversed(back_pattern)), axiom_patterns))
 
-    cat_contexts = [(
-        cat,
-        nlp_util.remove_by_phrase(cat.get_label()),
-        DbpCategoryStore.instance().get_statistics(cat),
-        front_pattern_dict, back_pattern_dict, enclosing_pattern_dict
-    ) for cat in category_graph.content_nodes]
-
+    cat_contexts = [(cat, front_pattern_dict, back_pattern_dict, enclosing_pattern_dict) for cat in valid_categories]
     with mp.Pool(processes=utils.get_config('max_cpus')) as pool:
-        category_axioms = {cat: axioms for cat, axioms in tqdm(pool.imap_unordered(_extract_axioms_for_cat, cat_contexts, chunksize=1000), total=len(cat_contexts), desc='category/cat2ax: Extracting axioms')}
+        category_axioms = {cat: axioms for cat, axioms in tqdm(pool.imap_unordered(_extract_axioms_for_cat, cat_contexts, chunksize=10000), total=len(cat_contexts), desc='category/cat2ax: Extracting axioms')}
     category_axioms = {cat: axioms for cat, axioms in category_axioms.items() if axioms}  # filter out empty axioms
 
     get_logger().debug(f'Extracted {sum(len(axioms) for axioms in category_axioms.values())} axioms for {len(category_axioms)} categories.')
@@ -249,7 +255,9 @@ def _fill_dict(dictionary: dict, elements: list, leaf):
 
 
 def _extract_axioms_for_cat(cat_context: tuple) -> Tuple[DbpCategory, List[Axiom]]:
-    cat, cat_doc, cat_stats, front_pattern_dict, back_pattern_dict, enclosing_pattern_dict = cat_context
+    cat, front_pattern_dict, back_pattern_dict, enclosing_pattern_dict = cat_context
+    cat_doc = nlp_util.remove_by_phrase(cat.get_label())
+    cat_stats = cat.get_statistics()
 
     # find all axiom candidates for cat
     cat_prop_axioms = []
