@@ -175,6 +175,9 @@ cache:
   dbpedia_category_children:
     filename: 'dbpedia-category-children'
     version: 1
+  dbpedia_category_labels:
+    filename: 'dbpedia-category-labels'
+    version: 1
   dbpedia_category_resources:
     filename: 'dbpedia-category-resources'
     version: 1
@@ -246,3 +249,8 @@ cache:
   listing_page_entities:
     filename: 'listing-page-entities'
     version: 1
+
+
+  vector_prediction_training_data:
+    filename: 'vector-prediction-training_data'
+    version: 10p
