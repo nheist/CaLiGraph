@@ -34,8 +34,8 @@ def parse_sets(taxonomic_sets: list) -> Iterator:
         for s in unknown_sets:
             __SET_DOCUMENT_CACHE__[s] = __SET_PARSER__(s)
     else:
-        set_tuples = tqdm([(s, s) for s in unknown_sets], desc='Parsing sets with spaCy')
-        for doc, s in __SET_PARSER__.pipe(set_tuples, as_tuples=True, batch_size=BATCH_SIZE, n_process=N_PROCESSES):
+        set_tuples = [(s, s) for s in unknown_sets]
+        for doc, s in tqdm(__SET_PARSER__.pipe(set_tuples, as_tuples=True, batch_size=BATCH_SIZE, n_process=N_PROCESSES), total=len(unknown_sets), desc='Parsing sets with spaCy'):
             __SET_DOCUMENT_CACHE__[s] = doc
     return iter([__SET_DOCUMENT_CACHE__[s] for s in taxonomic_sets])
 
@@ -45,7 +45,7 @@ def parse_texts(texts: list) -> Iterator:
     bp = _get_base_parser()
     if len(texts) <= BATCH_SIZE:
         return iter([bp(t) for t in texts])
-    return bp.pipe(tqdm(texts, desc='Parsing texts with spaCy'), batch_size=BATCH_SIZE, n_process=N_PROCESSES)
+    return iter(tqdm(bp.pipe(texts, batch_size=BATCH_SIZE, n_process=N_PROCESSES), total=len(texts), desc='Parsing texts with spaCy'))
 
 
 def get_hearst_pairs(text: str) -> List[Tuple[Span, Span]]:
