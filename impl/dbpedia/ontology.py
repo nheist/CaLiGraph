@@ -85,20 +85,28 @@ class DbpOntologyStore:
         return nx.DiGraph(incoming_graph_data=[(t, st) for t, sts in subtype_mapping.items() for st in sts])
 
     def get_class_by_idx(self, idx: int) -> DbpClass:
-        if idx not in self.classes_by_idx:
+        if not self.has_class_with_idx(idx):
             raise DbpClassNotExistingException(f'Could not find class for index: {idx}')
         return self.classes_by_idx[idx]
 
+    def has_class_with_idx(self, idx: int) -> bool:
+        return idx in self.classes_by_idx
+
     def get_class_by_name(self, name: str) -> DbpClass:
-        if name not in self.classes_by_name:
+        if not self.has_class_with_name(name):
             raise DbpClassNotExistingException(f'Could not find class for name: {name}')
         return self.classes_by_name[name]
 
+    def has_class_with_name(self, name: str) -> bool:
+        return name in self.classes_by_name
+
     def get_class_by_iri(self, iri: str) -> DbpClass:
-        try:
-            return self.get_class_by_name(dbp_util.class_iri2name(iri))
-        except DbpClassNotExistingException:
+        if not self.has_class_with_iri(iri):
             raise DbpClassNotExistingException(f'Could not find class for iri: {iri}')
+        return self.get_class_by_name(dbp_util.class_iri2name(iri))
+
+    def has_class_with_iri(self, iri: str) -> bool:
+        return self.has_class_with_name(dbp_util.class_iri2name(iri))
 
     def get_equivalents(self, cls: DbpClass) -> set:
         if not self.equivalents:

@@ -131,10 +131,9 @@ class DbpResourceStore:
         return self.has_resource_with_name(dbp_util.resource_iri2name(iri))
 
     def get_resource_by_iri(self, iri: str) -> DbpResource:
-        try:
-            return self.get_resource_by_name(dbp_util.resource_iri2name(iri))
-        except DbpResourceNotExistingException:
+        if not self.has_resource_with_iri(iri):
             raise DbpResourceNotExistingException(f'Could not find resource for iri: {iri}')
+        return self.get_resource_by_name(dbp_util.resource_iri2name(iri))
 
     def get_resources(self) -> Set[DbpResource]:
         return set(self.resources_by_idx.values())
@@ -235,11 +234,15 @@ class DbpResourceStore:
         object_property_uris = rdf_util.create_dict_from_rdf([utils.get_data_file('files.dbpedia.mappingbased_objects')], casting_fn=self.get_resource_by_iri)
         for sub, props in object_property_uris.items():
             for pred, vals in props.items():
+                if not self.dbo.has_class_with_iri(pred):
+                    continue
                 pred = self.dbo.get_class_by_iri(pred)
                 properties[sub.idx][pred] = vals
         literal_property_uris = rdf_util.create_dict_from_rdf([utils.get_data_file('files.dbpedia.mappingbased_literals')], casting_fn=self.get_resource_by_iri)
         for sub, props in literal_property_uris.items():
             for pred, vals in props.items():
+                if not self.dbo.has_class_with_iri(pred):
+                    continue
                 pred = self.dbo.get_class_by_iri(pred)
                 properties[sub.idx][pred] = vals
         return dict(properties)
