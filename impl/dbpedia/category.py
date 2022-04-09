@@ -179,8 +179,12 @@ class DbpCategoryStore:
         return {self.dbr.get_resource_by_idx(idx) for idx in self.resources[cat.idx]}
 
     def _init_category_resource_cache(self) -> Dict[int, Set[int]]:
-        category_resources = rdf_util.create_multi_val_dict_from_rdf([utils.get_data_file('files.dbpedia.category_articles')], RdfPredicate.SUBJECT, reverse_key=True)
-        category_resources = {self.get_category_by_iri(cat).idx: {self.dbr.get_resource_by_iri(r).idx for r in resources} for cat, resources in category_resources.items()}
+        category_resource_iris = rdf_util.create_multi_val_dict_from_rdf([utils.get_data_file('files.dbpedia.category_articles')], RdfPredicate.SUBJECT, reverse_key=True)
+        category_resources = {}
+        for cat_iri, resource_iris in category_resource_iris.items():
+            if not self.has_category_with_iri(cat_iri):
+                continue
+            category_resources[self.get_category_by_iri(cat_iri).idx] = {self.dbr.get_resource_by_iri(res_iri).idx for res_iri in resource_iris}
         return category_resources
 
     def get_categories_for_resource(self, res: DbpResource) -> Set[DbpCategory]:
