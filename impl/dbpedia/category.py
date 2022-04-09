@@ -180,7 +180,7 @@ class DbpCategoryStore:
 
     def _init_category_resource_cache(self) -> Dict[int, Set[int]]:
         category_resources = rdf_util.create_multi_val_dict_from_rdf([utils.get_data_file('files.dbpedia.category_articles')], RdfPredicate.SUBJECT, reverse_key=True)
-        category_resources = {cat: {self.dbr.get_resource_by_iri(r).idx for r in resources} for cat, resources in category_resources.items()}
+        category_resources = {self.get_category_by_iri(cat).idx: {self.dbr.get_resource_by_iri(r).idx for r in resources} for cat, resources in category_resources.items()}
         return category_resources
 
     def get_categories_for_resource(self, res: DbpResource) -> Set[DbpCategory]:
