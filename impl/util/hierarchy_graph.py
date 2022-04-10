@@ -187,9 +187,8 @@ class HierarchyGraph(BaseGraph):
         E.g., we remove by-phrases like in "Authors by name", and we remove alphabetical splits like in "Authors: A-C".
         """
         get_logger().debug('Merging nodes with the same label..')
-        nodes_containing_by = {node for node in self.nodes if '_by_' in node}
         nodes_canonical_labels = {}
-        for node in nodes_containing_by:
+        for node in self.content_nodes:
             node_label = self.get_label(node)
             canonical_label = nlp_util.get_canonical_label(node_label)
             if node_label != canonical_label:
@@ -232,7 +231,6 @@ class HierarchyGraph(BaseGraph):
         nodes_to_merge = set(direct_merges) | set(catset_merges)
         all_merges = {node: direct_merges[node] | catset_merges[node] for node in nodes_to_merge}
 
-        iteration = 0
         while all_merges:
             independent_nodes = set(all_merges).difference({merge_target for mts in all_merges.values() for merge_target in mts})
             for node_to_merge in independent_nodes:
@@ -247,7 +245,6 @@ class HierarchyGraph(BaseGraph):
                 edges_to_add = {(p, c) for p in parents for c in children}
                 self._add_edges(edges_to_add)
                 self._remove_nodes({node_to_merge})
-            iteration += 1
 
         return self
 
