@@ -11,8 +11,7 @@ class ListGraph(HierarchyGraph):
 
     # initialisations
     def __init__(self, graph: nx.DiGraph, root_node: str = None):
-        self.dbc = DbpCategoryStore.instance()
-        super().__init__(graph, root_node or self.dbc.get_category_root().name)
+        super().__init__(graph, root_node or DbpCategoryStore.instance().get_category_root().name)
 
     # node lists
     def get_all_lists(self) -> Set[Union[DbpCategory, DbpListpage]]:

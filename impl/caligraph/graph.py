@@ -25,8 +25,6 @@ class CaLiGraph(HierarchyGraph):
     """A graph of categories and lists that is enriched with resources extract from list pages."""
     def __init__(self, graph: nx.DiGraph, root_node: str = None):
         super().__init__(graph, root_node or utils.get_config('caligraph.root_node'))
-        self.dbr = DbpResourceStore.instance()
-
         self._node_dbpedia_types = defaultdict(set)
         self._node_direct_cat_entities = defaultdict(set)
 
@@ -367,7 +365,7 @@ class CaLiGraph(HierarchyGraph):
         """Return all DBpedia entities directly associated with the node through Wikipedia categories."""
         if node not in self._node_direct_cat_entities:
             cat_entities = {e for cat in self.get_category_parts(node) for e in cat.get_entities()}
-            cat_entities = {self.dbr.resolve_spelling_redirect(e) for e in cat_entities}
+            cat_entities = {DbpResourceStore.instance().resolve_spelling_redirect(e) for e in cat_entities}
             self._node_direct_cat_entities[node] = cat_entities
         return set(self._node_direct_cat_entities[node])
 
