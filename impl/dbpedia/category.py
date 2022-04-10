@@ -1,4 +1,4 @@
-from typing import Dict, Set, Optional, List, Tuple
+from typing import Dict, Set, Optional, Iterable, Tuple, List
 from collections import defaultdict, Counter
 from impl.util.singleton import Singleton
 import impl.dbpedia.util as dbp_util
@@ -35,7 +35,7 @@ class DbpCategory(RdfResource):
 class DbpListCategory(DbpCategory):
     @classmethod
     def _get_prefix(cls) -> str:
-        return Namespace.PREFIX_CATEGORY.value + Namespace.PREFIX_LISTS.value
+        return Namespace.PREFIX_LISTCATEGORY.value
 
 
 class DbpCategoryNotExistingException(KeyError):
@@ -84,7 +84,7 @@ class DbpCategoryStore:
         # build actual category classes
         categories = {DbpCategory(0, utils.get_config('category.root_category'), False)}
         for idx, c in enumerate(category_names, start=1):
-            if c.startswith(Namespace.PREFIX_LISTS.value):
+            if c.startswith(Namespace.PREFIX_LISTCATEGORY.value):
                 categories.add(DbpListCategory(idx, c, c in meta_categories))
             else:
                 categories.add(DbpCategory(idx, c, c in meta_categories))
@@ -122,7 +122,7 @@ class DbpCategoryStore:
         return self.categories_by_name[dbp_util.resource_iri2name(iri)]
 
     def get_categories(self, include_meta=False, include_listcategories=False) -> Set[DbpCategory]:
-        return self._filter_categories(set(self.categories_by_idx.values()), include_meta, include_listcategories)
+        return self._filter_categories(self.categories_by_idx.values(), include_meta, include_listcategories)
 
     def get_listcategories(self) -> Set[DbpListCategory]:
         return {c for c in self.categories_by_idx.values() if isinstance(c, DbpListCategory)}
@@ -154,7 +154,7 @@ class DbpCategoryStore:
         parents = {self.get_category_by_idx(idx) for idx in self.parents[cat.idx]}
         return self._filter_categories(parents, include_meta, include_listcategories)
 
-    def _filter_categories(self, categories: Set[DbpCategory], include_meta: bool, include_listcategories: bool) -> Set[DbpCategory]:
+    def _filter_categories(self, categories: Iterable[DbpCategory], include_meta: bool, include_listcategories: bool) -> Set[DbpCategory]:
         if not include_listcategories:
             categories = {c for c in categories if not isinstance(c, DbpListCategory)}
         if not include_meta:

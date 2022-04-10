@@ -3,6 +3,7 @@ from collections import defaultdict, Counter
 from functools import cache
 from impl.util.singleton import Singleton
 import impl.util.rdf as rdf_util
+import impl.util.string as str_util
 from impl.util.rdf import Namespace
 from impl.util.rdf import RdfPredicate, RdfResource
 import impl.dbpedia.util as dbp_util
@@ -49,11 +50,12 @@ class DbpEntity(DbpResource):
 
 class DbpListpage(DbpResource):
     def get_label(self) -> str:
-        label = self._get_store().get_label(self) or self.name
+        label = self._get_store().get_label(self) or rdf_util.name2label(self.name)
         prefix = self._get_prefix()
         if prefix and label.startswith(prefix):
             label = label[len(prefix):]
-        label = label[4:] if label.startswith('the ') else label
+            label = label[4:] if label.startswith('the ') else label
+            label = str_util.capitalize(label)
         return label
 
     @classmethod

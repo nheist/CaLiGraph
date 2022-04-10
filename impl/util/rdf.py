@@ -23,7 +23,7 @@ class Namespace(Enum):
     PREFIX_FILE = 'File:'
     PREFIX_IMAGE = 'Image:'
     PREFIX_LIST = 'List_of_'
-    PREFIX_LISTS = 'Lists_of_'
+    PREFIX_LISTCATEGORY = PREFIX_CATEGORY + 'Lists_of_'
 
     DBP_ONTOLOGY = 'http://dbpedia.org/ontology/'
     DBP_RESOURCE = 'http://dbpedia.org/resource/'
@@ -80,10 +80,10 @@ class RdfResource:
         return self.idx  # use idx as hash is okay here as we are centrally managing the RdfResources
 
     def get_label(self) -> str:
-        label = self._get_store().get_label(self) or self.name
+        label = self._get_store().get_label(self) or name2label(self.name)
         prefix = self._get_prefix()
         if prefix and label.startswith(prefix):
-            label = label[len(prefix):]
+            label = str_util.capitalize(label[len(prefix):])
         return label
 
     @classmethod
@@ -123,6 +123,10 @@ def name2iri(name: str, prefix: Union[str, Enum]) -> str:
         return RdfClass.OWL_THING.value
     prefix = prefix.value if isinstance(prefix, Enum) else prefix
     return prefix + name
+
+
+def name2label(name: str) -> str:
+    return name.replace('_', ' ')
 
 
 def parse_triples_from_file(filepath: str) -> Iterator[Triple]:
