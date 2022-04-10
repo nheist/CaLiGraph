@@ -197,9 +197,12 @@ class DbpCategoryStore:
 
     def get_topics(self, cat: DbpCategory) -> Set[DbpResource]:
         if self.topics is None:
-            topics = rdf_util.create_multi_val_dict_from_rdf([utils.get_data_file('files.dbpedia.topical_concepts')], RdfPredicate.SUBJECT)
-            topics = {self.get_category_by_iri(c_uri): {self.dbr.get_resource_by_iri(r_uri) for r_uri in r_uris} for c_uri, r_uris in topics.items()}
-            self.topics = defaultdict(set, topics)
+            self.topics = defaultdict(set)
+            category_topic_iris = rdf_util.create_multi_val_dict_from_rdf([utils.get_data_file('files.dbpedia.topical_concepts')], RdfPredicate.SUBJECT)
+            for cat_iri, topic_iris in category_topic_iris.items():
+                if not self.has_category_with_iri(cat_iri):
+                    continue
+                self.topics[self.get_category_by_iri(cat_iri)] = {self.dbr.get_resource_by_iri(topic_iri) for topic_iri in topic_iris if self.dbr.has_resource_with_iri(topic_iri)}
         return self.topics[cat]
 
     def get_categories_for_topic(self, res: DbpResource, include_meta=False, include_listcategories=False) -> Set[DbpCategory]:
