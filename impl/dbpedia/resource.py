@@ -49,7 +49,10 @@ class DbpEntity(DbpResource):
 
 class DbpListpage(DbpResource):
     def get_label(self) -> str:
-        label = super().get_label()
+        label = self._get_store().get_label(self) or self.name
+        prefix = self._get_prefix()
+        if prefix and label.startswith(prefix):
+            label = label[len(prefix):]
         label = label[4:] if label.startswith('the ') else label
         return label
 
