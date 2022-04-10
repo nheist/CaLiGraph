@@ -28,7 +28,7 @@ pipenv install
 # download the most recent corpus of spaCy
 pipenv run python -m spacy download en_core_web_lg
 # download wordnet & words corpora of nltk
-pipenv run python -c 'import nltk; nltk.download("wordnet"); nltk.download("words")'
+pipenv run python -c 'import nltk; nltk.download("wordnet"); nltk.download("words"); nltk.download("omw-1.4")'
 ```
 
 ### Basic Configuration Options
