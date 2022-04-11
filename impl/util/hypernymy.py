@@ -21,12 +21,17 @@ def is_hypernym(hyper_word: str, hypo_word: str) -> bool:
     return hyper_word.lower() in __WIKITAXONOMY_HYPERNYMS__[hypo_word.lower()]
 
 
+def phrases_are_equal(phrase_a: set, phrase_b: set) -> bool:
+    if len(phrase_a) != len(phrase_b):
+        return False
+    return {w.lower() for w in phrase_a} == {w.lower() for w in phrase_b}
+
+
 def phrases_are_synonymous(phrase_a: set, phrase_b: set) -> bool:
     """Returns True, if the phrases consist of synonymous pairs of words (i.e. there is a synonym for every word)."""
-    if len(phrase_a) == len(phrase_b):
-        if phrase_a == phrase_b:
-            return True
-        return all(any(is_synonym(a, b) for a in phrase_a) for b in phrase_b) and all(any(is_synonym(b, a) for b in phrase_b) for a in phrase_a)
+    if len(phrase_a) != len(phrase_b):
+        return False
+    return all(any(is_synonym(a, b) for a in phrase_a) for b in phrase_b) and all(any(is_synonym(b, a) for b in phrase_b) for a in phrase_a)
 
 
 def is_synonym(word: str, another_word: str) -> bool:

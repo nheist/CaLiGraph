@@ -49,16 +49,19 @@ def _create_list_equivalents_mapping() -> Dict[str, Set[str]]:
 
     # 2) find equivalent categories by synonym match
     list_to_cat_synonym_mapping = defaultdict(set)
-
     cats_important_words = {cat: nlp_util.without_stopwords(nlp_util.get_canonical_label(cat_graph.get_label(cat))) for cat in cat_graph.nodes}
     remaining_lists = list_graph.content_nodes.difference(set(list_to_cat_exact_mapping))
     for list_node in remaining_lists:
         lst_important_words = nlp_util.without_stopwords(nlp_util.get_canonical_label(list_graph.get_label(list_node)))
-        for candidate_cat in _get_candidate_category_nodes_for_list_node(list_node, cat_graph):
-            cat_important_words = cats_important_words[candidate_cat]
-            if hypernymy_util.phrases_are_synonymous(lst_important_words, cat_important_words):
-                list_to_cat_synonym_mapping[list_node].add(candidate_cat)
+        candidate_cats = _get_candidate_category_nodes_for_list_node(list_node, cat_graph)
 
+        exact_matches = {c for c in candidate_cats if hypernymy_util.phrases_are_equal(lst_important_words, cats_important_words[c])}
+        if exact_matches:
+            list_to_cat_synonym_mapping[list_node].update(exact_matches)
+            continue
+        synonym_matches = {c for c in candidate_cats if hypernymy_util.phrases_are_synonymous(lst_important_words, cats_important_words[c])}
+        if len(synonym_matches) == 1:  # if we have more than one synonym match, we ignore them as they are not specific enough
+            list_to_cat_synonym_mapping[list_node].update(synonym_matches)
     get_logger().debug(f'Mapped {len(list_to_cat_synonym_mapping)} lists to {sum(len(cat) for cat in list_to_cat_synonym_mapping.values())} categories with synonym mapping.')
 
     # merge mappings
@@ -97,7 +100,6 @@ def _create_list_parents_mapping() -> Dict[str, Set[str]]:
     # 2) map listcategory to headlemma category as a mapping to the root category is the only alternative
     unmapped_lists = unmapped_lists.difference(set(list_to_cat_hypernym_mapping))
     unmapped_head_lists = {list_node for list_node in unmapped_lists if list_graph.root_node in list_graph.parents(list_node)}
-
     list_to_cat_headlemma_mapping = defaultdict(set, cat_graph.find_parents_by_headlemma_match(unmapped_head_lists, list_graph))
     get_logger().debug(f'Mapped {len(list_to_cat_headlemma_mapping)} lists to {sum(len(cat) for cat in list_to_cat_headlemma_mapping.values())} categories with headlemma mapping.')
 
