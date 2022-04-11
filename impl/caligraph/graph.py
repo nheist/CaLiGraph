@@ -1,7 +1,8 @@
-from typing import Set, Dict, Tuple, List
-import networkx as nx
-import utils
+from typing import Set, Dict, Tuple, List, Optional
 from collections import defaultdict, Counter
+import networkx as nx
+from polyleven import levenshtein
+import utils
 from utils import get_logger
 from impl.util.base_graph import BaseGraph
 from impl.util.hierarchy_graph import HierarchyGraph
@@ -16,7 +17,6 @@ import impl.util.nlp as nlp_util
 import impl.util.hypernymy as hypernymy_util
 import impl.category.cat2ax as cat_axioms
 import impl.dbpedia.heuristics as dbp_heur
-from polyleven import levenshtein
 from impl.dbpedia.resource import DbpEntity, DbpListpage, DbpResourceStore
 from impl.dbpedia.ontology import DbpType, DbpOntologyStore
 from impl.dbpedia.category import DbpCategory, DbpCategoryStore
@@ -26,8 +26,18 @@ class CaLiGraph(HierarchyGraph):
     """A graph of categories and lists that is enriched with resources extract from list pages."""
     def __init__(self, graph: nx.DiGraph, root_node: str = None):
         super().__init__(graph, root_node or utils.get_config('caligraph.root_node'))
+        self._stripped_nodes = {}
         self._node_dbpedia_types = defaultdict(set)
         self._node_direct_cat_entities = defaultdict(set)
+
+    def add_node(self, node: str, parts=None, parents=None) -> str:
+        self._add_nodes({node})
+        self._set_label(node, rdf_util.name2label(node))
+        self._set_parts(node, parts or set())
+        if parents:
+            self._add_edges({(pn, node) for pn in parents})
+        self._stripped_nodes[str_util.normalize_separators(node).lower()] = node
+        return node
 
     def _reset_node_indices(self):
         super()._reset_node_indices()
@@ -40,13 +50,17 @@ class CaLiGraph(HierarchyGraph):
     def __getstate__(self):
         state = self.__dict__.copy()
         # Remove entries that should not be pickled
+        del state['_stripped_nodes']
         del state['_node_dbpedia_types']
+        del state['_node_direct_cat_entities']
         return state
 
     def __setstate__(self, state):
         self.__dict__.update(state)
         # initialize non-pickled entries
+        self._stripped_nodes = {}
         self._node_dbpedia_types = defaultdict(set)
+        self._node_direct_cat_entities = defaultdict(set)
 
     def get_category_parts(self, node: str) -> Set[DbpCategory]:
         return {p for p in self.get_parts(node) if isinstance(p, DbpCategory)}
@@ -56,6 +70,19 @@ class CaLiGraph(HierarchyGraph):
 
     def get_type_parts(self, node: str) -> Set[DbpType]:
         return {p for p in self.get_parts(node) if isinstance(p, DbpType)}
+
+    def find_node(self, potential_node: str) -> Optional[str]:
+        stripped_potential_node = str_util.normalize_separators(potential_node).lower()
+        return self._stripped_nodes[stripped_potential_node] if stripped_potential_node in self._stripped_nodes else None
+
+    def find_node_via_synonyms(self, label: str) -> Optional[str]:
+        # try synonyms with max.edit-distance of 2
+        # e.g. to cover cases where the type is named 'Organisation' and the category 'Organization'
+        for name_variation in hypernymy_util.get_variations(label):
+            node = self.find_node(self._convert_label_to_clg_node(name_variation))
+            if node is not None:
+                return node
+        return None
 
     def get_transitive_dbpedia_types(self, node: str, force_recompute=False) -> Set[DbpType]:
         """Return all mapped DBpedia types of a node."""
@@ -75,8 +102,7 @@ class CaLiGraph(HierarchyGraph):
         graph = CaLiGraph(nx.DiGraph())
 
         # add root node
-        graph._add_nodes({graph.root_node})
-        graph._set_parts(graph.root_node, {dbo.get_type_root(), dbc.get_category_root()})
+        graph.add_node(graph.root_node, parts={dbo.get_type_root(), dbc.get_category_root()})
 
         # initialise from category graph
         cat_graph = category.get_merged_graph()
@@ -127,53 +153,41 @@ class CaLiGraph(HierarchyGraph):
 
     def _add_category_to_graph(self, cat_node: str, cat_node_label: str, cat_graph: CategoryGraph) -> str:
         """Add a category as new node to the graph."""
-        node_id = self._convert_label_to_clg_node(cat_node_label)
+        potential_node = self._convert_label_to_clg_node(cat_node_label)
         node_parts = cat_graph.get_parts(cat_node)
-        if self.has_node(node_id):
-            # extend existing node in graph
-            node_parts.update(self.get_parts(node_id))
-        else:
-            # create new node in graph
-            self._add_nodes({node_id})
-            self._set_label(node_id, rdf_util.name2label(node_id))
-        self._set_parts(node_id, node_parts)
-        return node_id
+
+        node = self.find_node(potential_node)
+        if not node:
+            node = self.add_node(potential_node)
+
+        self._set_parts(node, self.get_parts(node) | node_parts)
+        return node
 
     def _add_list_to_graph(self, list_node: str, list_node_label: str, list_graph: ListGraph, cat_graph: CategoryGraph) -> str:
         """Add a list as new node to the graph."""
-        node_id = self._convert_label_to_clg_node(list_node_label)
-        if not self.has_node(node_id):
-            # If node_id is not in the graph, then we try synonyms with max. edit-distance of 2
-            # e.g. to cover cases where the type is named 'Organisation' and the category 'Organization'
-            for name_variation in hypernymy_util.get_variations(list_node_label):
-                node_id_alternative = self._convert_label_to_clg_node(name_variation)
-                if self.has_node(node_id_alternative):
-                    node_id = node_id_alternative
-                    break
+        potential_node = self._convert_label_to_clg_node(list_node_label)
         node_parts = list_graph.get_parts(list_node)
 
-        # check for equivalent mapping and existing node_id (if they map to more than one node -> log error)
-        equivalent_categories = {cat for cat_node in list_mapping.get_equivalent_category_nodes(list_node) for cat in cat_graph.get_categories(cat_node)}
-        equivalent_nodes = {n for cat in equivalent_categories for n in self.get_nodes_for_part(cat)}
-        if self.has_node(node_id):
-            equivalent_nodes.add(node_id)
-        if len(equivalent_nodes) > 1:
-            get_logger().debug(f'Multiple equivalent nodes found for "{list_node}" during list merge: {equivalent_nodes}')
-            equivalent_nodes = {node_id} if node_id in equivalent_nodes else equivalent_nodes
-        if equivalent_nodes:
-            main_node_id = sorted(equivalent_nodes, key=lambda x: levenshtein(x, node_id))[0]
-            self._set_parts(main_node_id, self.get_parts(main_node_id) | node_parts)
-            return main_node_id
+        node = self.find_node(potential_node)
+        if node is None:
+            # find node via synonyms
+            node = self.find_node_via_synonyms(list_node_label)
+        if node is None:
+            # find node via equivalent categories
+            equivalent_categories = {cat for cat_node in list_mapping.get_equivalent_category_nodes(list_node) for cat in cat_graph.get_categories(cat_node)}
+            equivalent_nodes = {n for cat in equivalent_categories for n in self.get_nodes_for_part(cat)}
+            if equivalent_nodes:
+                if len(equivalent_nodes) > 1:
+                    get_logger().debug(f'Multiple equivalent nodes found for "{list_node}" during list merge: {equivalent_nodes}')
+                node = sorted(equivalent_nodes, key=lambda x: levenshtein(x, potential_node))[0]
+        if node is None:
+            # create new node and add edges to parents via categories (if available)
+            parent_cats = {cat for parent_cat_node in list_mapping.get_parent_category_nodes(list_node) for cat in cat_graph.get_categories(parent_cat_node)}
+            parent_nodes = {node for parent_cat in parent_cats for node in self.get_nodes_for_part(parent_cat)}
+            node = self.add_node(potential_node, parent_nodes)
 
-        # check for parents to initialise under (parent mapping)
-        self._add_nodes({node_id})
-        self._set_label(node_id, rdf_util.name2label(node_id))
-        self._set_parts(node_id, node_parts)
-        parent_cats = {cat for parent_cat_node in list_mapping.get_parent_category_nodes(list_node) for cat in cat_graph.get_categories(parent_cat_node)}
-        parent_nodes = {node for parent_cat in parent_cats for node in self.get_nodes_for_part(parent_cat)}
-        self._add_edges({(pn, node_id) for pn in parent_nodes})
-
-        return node_id
+        self._set_parts(node, self.get_parts(node) | node_parts)
+        return node
 
     def merge_ontology(self):
         """Combine the category-list-graph with the DBpedia ontology."""
@@ -222,26 +236,20 @@ class CaLiGraph(HierarchyGraph):
 
     def _add_dbp_type_to_graph(self, dbp_type: DbpType) -> str:
         """Add a DBpedia type as node to the graph."""
-        name = dbp_type.get_label()
-        node_id = self._convert_label_to_clg_node(name)
-        if not self.has_node(node_id):
-            # If node_id is not in the graph, then we try synonyms with max. edit-distance of 2
-            # e.g. to cover cases where the type is named 'Organisation' and the category 'Organization'
-            for name_variation in hypernymy_util.get_variations(name):
-                node_id_alternative = self._convert_label_to_clg_node(name_variation)
-                if self.has_node(node_id_alternative):
-                    node_id = node_id_alternative
-                    break
+        type_label = dbp_type.get_label()
+        potential_node = self._convert_label_to_clg_node(type_label)
         node_parts = DbpOntologyStore.instance().get_equivalents(dbp_type)
-        if self.has_node(node_id):
-            # extend existing node in graph
-            node_parts.update(self.get_parts(node_id))
-        else:
-            # create new node in graph
-            self._add_nodes({node_id})
-            self._set_label(node_id, rdf_util.name2label(node_id))
-        self._set_parts(node_id, node_parts)
-        return node_id
+
+        node = self.find_node(potential_node)
+        if node is None:
+            # find node via synonyms
+            node = self.find_node_via_synonyms(type_label)
+        if node is None:
+            # create new node
+            node = self.add_node(potential_node)
+
+        self._set_parts(node, self.get_parts(node) | node_parts)
+        return node
 
     @classmethod
     def _convert_label_to_clg_node(cls, label: str) -> str:
