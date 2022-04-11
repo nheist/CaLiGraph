@@ -11,8 +11,6 @@ import impl.util.string as str_util
 from enum import Enum
 from dataclasses import dataclass
 
-import utils
-
 
 class Namespace(Enum):
     OWL = 'http://www.w3.org/2002/07/owl#'
@@ -82,9 +80,7 @@ class RdfResource:
     def get_label(self) -> str:
         label = self._get_store().get_label(self) or name2label(self.name)
         prefix = self._get_label_prefix()
-        if prefix and label.startswith(prefix):
-            label = str_util.capitalize(label[len(prefix):])
-        return label
+        return label[len(prefix):] if label.startswith(prefix) else label
 
     @classmethod
     def get_namespace(cls) -> str:
@@ -131,6 +127,10 @@ def name2iri(name: str, prefix: Union[str, Enum]) -> str:
 
 def name2label(name: str) -> str:
     return name.replace('_', ' ')
+
+
+def label2name(label: str) -> str:
+    return label.replace(' ', '_')
 
 
 def parse_triples_from_file(filepath: str) -> Iterator[Triple]:

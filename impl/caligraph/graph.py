@@ -6,6 +6,7 @@ from utils import get_logger
 from impl.util.base_graph import BaseGraph
 from impl.util.hierarchy_graph import HierarchyGraph
 import impl.util.string as str_util
+import impl.util.rdf as rdf_util
 from impl import category
 from impl.category.graph import CategoryGraph
 from impl import listpage
@@ -134,7 +135,7 @@ class CaLiGraph(HierarchyGraph):
         else:
             # create new node in graph
             self._add_nodes({node_id})
-            self._set_label(node_id, node_id.replace('_', ' '))
+            self._set_label(node_id, rdf_util.name2label(node_id))
         self._set_parts(node_id, node_parts)
         return node_id
 
@@ -166,7 +167,7 @@ class CaLiGraph(HierarchyGraph):
 
         # check for parents to initialise under (parent mapping)
         self._add_nodes({node_id})
-        self._set_label(node_id, node_id.replace('_', ' '))
+        self._set_label(node_id, rdf_util.name2label(node_id))
         self._set_parts(node_id, node_parts)
         parent_cats = {cat for parent_cat_node in list_mapping.get_parent_category_nodes(list_node) for cat in cat_graph.get_categories(parent_cat_node)}
         parent_nodes = {node for parent_cat in parent_cats for node in self.get_nodes_for_part(parent_cat)}
@@ -238,7 +239,7 @@ class CaLiGraph(HierarchyGraph):
         else:
             # create new node in graph
             self._add_nodes({node_id})
-            self._set_label(node_id, node_id.replace('_', ' '))
+            self._set_label(node_id, rdf_util.name2label(node_id))
         self._set_parts(node_id, node_parts)
         return node_id
 
@@ -246,7 +247,7 @@ class CaLiGraph(HierarchyGraph):
     def _convert_label_to_clg_node(cls, label: str) -> str:
         """Convert a name into a CaLiGraph type URI."""
         label = nlp_util.singularize_phrase(label.strip())
-        return str_util.capitalize(label.replace(' ', '_'))
+        return str_util.capitalize(rdf_util.label2name(label))
 
     def _find_conflicting_edges(self) -> Set[Tuple[str, str]]:
         conflicting_edges = set()
