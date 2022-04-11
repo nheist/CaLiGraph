@@ -50,12 +50,9 @@ class DbpEntity(DbpResource):
 
 class DbpListpage(DbpResource):
     def get_label(self) -> str:
-        label = self._get_store().get_label(self) or rdf_util.name2label(self.name)
-        prefix = self._get_prefix()
-        if prefix and label.startswith(prefix):
-            label = label[len(prefix):]
-            label = label[4:] if label.startswith('the ') else label
-            label = str_util.capitalize(label)
+        label = super().get_label()
+        if label.lower().startswith('the '):
+            label = str_util.capitalize(label[4:])
         return label
 
     @classmethod

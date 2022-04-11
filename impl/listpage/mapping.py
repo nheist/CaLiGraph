@@ -39,12 +39,12 @@ def _create_list_equivalents_mapping() -> Dict[str, Set[str]]:
     list_graph = listpage.get_merged_listgraph()
 
     # 1) find equivalent categories by exact name match
-    name_to_cat_mapping = {cat_graph.get_label(node).replace('-', ' ').lower(): node for node in cat_graph.nodes}
-    name_to_list_mapping = defaultdict(set)
+    label_to_cat_mapping = {cat_graph.get_label(node).replace('-', ' ').lower(): node for node in cat_graph.nodes}
+    label_to_list_mapping = defaultdict(set)
     for list_node in list_graph.content_nodes:
-        name_to_list_mapping[list_graph.get_label(list_node).replace('-', ' ').lower()].add(list_node)
-    matching_names = set(name_to_list_mapping).intersection(set(name_to_cat_mapping))
-    list_to_cat_exact_mapping = defaultdict(set, {list_node: {name_to_cat_mapping[name]} for name in matching_names for list_node in name_to_list_mapping[name]})
+        label_to_list_mapping[list_graph.get_label(list_node).replace('-', ' ').lower()].add(list_node)
+    matching_labels = set(label_to_list_mapping).intersection(set(label_to_cat_mapping))
+    list_to_cat_exact_mapping = defaultdict(set, {list_node: {label_to_cat_mapping[label]} for label in matching_labels for list_node in label_to_list_mapping[label]})
     get_logger().debug(f'Mapped {len(list_to_cat_exact_mapping)} lists to categories with exact mapping.')
 
     # 2) find equivalent categories by synonym match

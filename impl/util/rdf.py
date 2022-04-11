@@ -81,7 +81,7 @@ class RdfResource:
 
     def get_label(self) -> str:
         label = self._get_store().get_label(self) or name2label(self.name)
-        prefix = self._get_prefix()
+        prefix = self._get_label_prefix()
         if prefix and label.startswith(prefix):
             label = str_util.capitalize(label[len(prefix):])
         return label
@@ -97,6 +97,10 @@ class RdfResource:
     @classmethod
     def _get_prefix(cls) -> str:
         return ''
+
+    @classmethod
+    def _get_label_prefix(cls) -> str:
+        return name2label(cls._get_prefix())
 
 
 # auxiliary structures
