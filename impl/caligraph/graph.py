@@ -154,20 +154,17 @@ class CaLiGraph(HierarchyGraph):
     def _add_category_to_graph(self, cat_node: str, cat_node_label: str, cat_graph: CategoryGraph) -> str:
         """Add a category as new node to the graph."""
         potential_node = self._convert_label_to_clg_node(cat_node_label)
-        node_parts = cat_graph.get_parts(cat_node)
-
         node = self.find_node(potential_node)
         if not node:
             node = self.add_node(potential_node)
 
+        node_parts = cat_graph.get_parts(cat_node)
         self._set_parts(node, self.get_parts(node) | node_parts)
         return node
 
     def _add_list_to_graph(self, list_node: str, list_node_label: str, list_graph: ListGraph, cat_graph: CategoryGraph) -> str:
         """Add a list as new node to the graph."""
         potential_node = self._convert_label_to_clg_node(list_node_label)
-        node_parts = list_graph.get_parts(list_node)
-
         node = self.find_node(potential_node)
         if node is None:
             # find node via synonyms
@@ -186,6 +183,7 @@ class CaLiGraph(HierarchyGraph):
             parent_nodes = {node for parent_cat in parent_cats for node in self.get_nodes_for_part(parent_cat)}
             node = self.add_node(potential_node, parent_nodes)
 
+        node_parts = list_graph.get_parts(list_node)
         self._set_parts(node, self.get_parts(node) | node_parts)
         return node
 
@@ -238,8 +236,6 @@ class CaLiGraph(HierarchyGraph):
         """Add a DBpedia type as node to the graph."""
         type_label = dbp_type.get_label()
         potential_node = self._convert_label_to_clg_node(type_label)
-        node_parts = DbpOntologyStore.instance().get_equivalents(dbp_type)
-
         node = self.find_node(potential_node)
         if node is None:
             # find node via synonyms
@@ -248,6 +244,7 @@ class CaLiGraph(HierarchyGraph):
             # create new node
             node = self.add_node(potential_node)
 
+        node_parts = DbpOntologyStore.instance().get_equivalents(dbp_type)
         self._set_parts(node, self.get_parts(node) | node_parts)
         return node
 
