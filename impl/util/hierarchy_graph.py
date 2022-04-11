@@ -142,8 +142,8 @@ class HierarchyGraph(BaseGraph):
 
     def _remove_cycle_edges_by_node_depth(self, comparator):
         edges_to_remove = set()
+        node_depths = self.depths()
         for cycle in nx.simple_cycles(self.graph):
-            node_depths = {node: self.depth(node) for node in cycle}
             for i in range(len(cycle)):
                 current_edge = (cycle[i], cycle[(i+1) % len(cycle)])
                 if comparator(node_depths[current_edge[0]], node_depths[current_edge[1]]):

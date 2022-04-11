@@ -82,13 +82,6 @@ class BaseGraph:
     def descendants(self, node: str) -> set:
         return set(nx.descendants(self.graph, node)) if self.graph.has_node(node) else set()
 
-    def depth(self, node: str) -> int:
-        """Returns the length of the shortest path from a given node to the root node (or -1 if none exists)."""
-        try:
-            return nx.shortest_path_length(self.graph, source=self.root_node, target=node)
-        except nx.NetworkXNoPath:
-            return -1
-
     def depths(self) -> dict:
         """Returns the lengths of the shortest path from all nodes of the graph to the root node."""
         return defaultdict(lambda: -1, nx.shortest_path_length(self.graph, source=self.root_node))
