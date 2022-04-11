@@ -1,6 +1,7 @@
 from typing import Set, Union
 import networkx as nx
 from impl.util.hierarchy_graph import HierarchyGraph
+import impl.util.rdf as rdf_util
 from utils import get_logger
 from impl.dbpedia.category import DbpCategoryStore, DbpCategory, DbpListCategory
 from impl.dbpedia.resource import DbpListpage, DbpResourceStore
@@ -42,7 +43,7 @@ class ListGraph(HierarchyGraph):
         # gather listcat -> listpage edges
         for listcat in listcats:
             lp_children = {dbr.resolve_redirect(res) for res in listcat.get_resources()}
-            lp_children = {res for res in lp_children if isinstance(res, DbpListpage)}
+            lp_children = {res for res in lp_children if isinstance(res, DbpListpage) and not res.is_meta}
             edges.update({(listcat.name, lp.name) for lp in lp_children})
 
         # initialise graph
@@ -56,7 +57,7 @@ class ListGraph(HierarchyGraph):
 
         # add root node
         graph.add_node(list_graph.root_node)
-        list_graph._set_label(list_graph.root_node, list_graph.root_node)
+        list_graph._set_label(list_graph.root_node, rdf_util.name2label(list_graph.root_node))
         list_graph._set_parts(list_graph.root_node, {dbc.get_category_root()})
 
         list_graph.append_unconnected()
