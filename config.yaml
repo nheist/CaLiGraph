@@ -12,6 +12,8 @@ category:
   root_category: 'Main_topic_classifications'
 cat2ax:
   pattern_confidence: 0.05
+subject_entity:
+  model_se_tagging: 'distilbert-base-cased'
 cali2ax:
   pattern_confidence: 0.17
 listing:

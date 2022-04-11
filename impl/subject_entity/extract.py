@@ -114,9 +114,6 @@ def _is_valid_entity_name(entity_name: str) -> bool:
 # TRAIN SUBJECT ENTITIY TAGGER
 
 
-TRANSFORMER_BASE_MODEL = 'distilbert-base-cased'
-
-
 def get_tagging_tokenizer_and_model(training_data_retrieval_func: Callable):
     path_to_model = utils._get_cache_path('transformer_for_SE_tagging')
     if not path_to_model.is_dir():
@@ -128,12 +125,13 @@ def get_tagging_tokenizer_and_model(training_data_retrieval_func: Callable):
 
 
 def _train_tagger(training_data_retrieval_func: Callable):
-    tokenizer = AutoTokenizer.from_pretrained(TRANSFORMER_BASE_MODEL, add_prefix_space=True, additional_special_tokens=list(WordTokenizerSpecialToken.all_tokens()))
+    pretrained_model = utils.get_config('subject_entity.model_se_tagging')
+    tokenizer = AutoTokenizer.from_pretrained(pretrained_model, add_prefix_space=True, additional_special_tokens=list(WordTokenizerSpecialToken.all_tokens()))
 
     tokens, labels = training_data_retrieval_func()
     train_dataset = _get_datasets(tokens, labels, tokenizer)
 
-    model = AutoModelForTokenClassification.from_pretrained(TRANSFORMER_BASE_MODEL, num_labels=len(POSLabel))
+    model = AutoModelForTokenClassification.from_pretrained(pretrained_model, num_labels=len(POSLabel))
     model.resize_token_embeddings(len(tokenizer))
 
     run_id = '{}_{}'.format(datetime.datetime.now().strftime('%Y%m%d-%H%M%S'), utils.get_config('logging.filename'))
