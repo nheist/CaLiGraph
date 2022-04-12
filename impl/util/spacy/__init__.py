@@ -30,7 +30,7 @@ SET_PARSER = _init_set_parser()
 
 CACHE_SET_DOCUMENTS = utils.load_or_create_cache('spacy_cache', dict)
 CACHE_STORED_SIZE = len(CACHE_SET_DOCUMENTS)
-CACHE_STORAGE_THRESHOLD = 10000
+CACHE_STORAGE_THRESHOLD = 50000
 
 
 def parse_sets(taxonomic_sets: list) -> Iterator:
@@ -45,6 +45,7 @@ def parse_sets(taxonomic_sets: list) -> Iterator:
         for doc, s in tqdm(SET_PARSER.pipe(set_tuples, as_tuples=True, batch_size=BATCH_SIZE, n_process=N_PROCESSES), total=len(unknown_sets), desc='Parsing sets with spaCy'):
             CACHE_SET_DOCUMENTS[s] = doc
     if len(CACHE_SET_DOCUMENTS) > (CACHE_STORED_SIZE + CACHE_STORAGE_THRESHOLD):
+        utils.get_logger().debug(f'spacy: Updating spacy cache from {CACHE_STORED_SIZE} documents to {len(CACHE_SET_DOCUMENTS)} documents.')
         utils.update_cache('spacy_cache', CACHE_SET_DOCUMENTS)
         CACHE_STORED_SIZE = len(CACHE_SET_DOCUMENTS)
     return iter([CACHE_SET_DOCUMENTS[s] for s in taxonomic_sets])
