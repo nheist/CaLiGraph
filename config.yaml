@@ -9,7 +9,7 @@ caligraph:
 dbpedia:
   disjointness_threshold: 0.132  # in the original paper: 0.17
 category:
-  root_category: 'Main_topic_classifications'
+  root_category: 'Category:Main_topic_classifications'
 cat2ax:
   pattern_confidence: 0.05
 subject_entity:

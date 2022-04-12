@@ -68,10 +68,11 @@ class DbpCategoryStore:
         category_children_uris = self._load_category_children_uris()
         category_children = [(dbp_util.resource_iri2name(p), dbp_util.resource_iri2name(c)) for p, c in category_children_uris]
         # identify meta categories
-        meta_parent_categories = {'Hidden categories', 'Tracking categories', 'Disambiguation categories',
-                                  'Non-empty disambiguation categories', 'All redirect categories',
-                                  'Wikipedia soft redirected categories', 'Category redirects with possibilities',
-                                  'Wikipedia non-empty soft redirected categories'}
+        meta_parent_categories_titles = {'Hidden_categories', 'Tracking_categories', 'Disambiguation_categories',
+                                  'Non-empty_disambiguation_categories', 'All_redirect_categories',
+                                  'Wikipedia_soft_redirected_categories', 'Category_redirects_with_possibilities',
+                                  'Wikipedia_non-empty_soft_redirected_categories'}
+        meta_parent_categories = {Namespace.PREFIX_CATEGORY.value + cat for cat in meta_parent_categories_titles}
         meta_categories = meta_parent_categories | {c for p, c in category_children if p in meta_parent_categories}
         # identify any remaining invalid categories (maintenance categories etc) using indicator tokens
         ignored_category_endings = ('files', 'images', 'lists', 'articles', 'stubs', 'pages', 'categories')
@@ -79,7 +80,7 @@ class DbpCategoryStore:
             'wikipedia', 'wikipedians', 'wikimedia', 'wikiproject', 'redirects',
             'mediawiki', 'template', 'templates', 'user', 'portal', 'navigational'
         }
-        meta_categories.update({c for c in category_names if c.lower().endswith(ignored_category_endings) or set(c.lower().split()).intersection(maintenance_category_indicators)})
+        meta_categories.update({c for c in category_names if c.lower().endswith(ignored_category_endings) or set(c.lower().split('_')).intersection(maintenance_category_indicators)})
 
         # build actual category classes
         categories = {DbpCategory(0, utils.get_config('category.root_category'), False)}
