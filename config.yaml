@@ -126,6 +126,9 @@ results:
 
 # -- CACHE FILE CONFIGURATION --
 cache:
+  spacy_cache:
+    filename: 'spacy-cache'
+    version: 1
   wikipedia_raw_markup:
     filename: 'wikipedia-raw-markup'
     version: 1
@@ -257,7 +260,6 @@ cache:
   listing_page_entities:
     filename: 'listing-page-entities'
     version: 1
-
 
   vector_prediction_training_data:
     filename: 'vector-prediction-training_data'

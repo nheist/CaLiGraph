@@ -26,21 +26,28 @@ BATCH_SIZE = 20000
 N_PROCESSES = utils.get_config('max_cpus')
 
 BASE_PARSER = spacy.load('en_core_web_lg')
-SET_DOCUMENT_CACHE = {}
 SET_PARSER = _init_set_parser()
+
+CACHE_SET_DOCUMENTS = utils.load_or_create_cache('spacy_cache', dict)
+CACHE_STORED_SIZE = len(CACHE_SET_DOCUMENTS)
+CACHE_STORAGE_THRESHOLD = 10000
 
 
 def parse_sets(taxonomic_sets: list) -> Iterator:
     """Parse potential set structures of a taxonomy, e.g. Wikipedia categories or list pages."""
-    unknown_sets = [s for s in taxonomic_sets if s and s not in SET_DOCUMENT_CACHE]
+    global CACHE_SET_DOCUMENTS, CACHE_STORED_SIZE
+    unknown_sets = [s for s in taxonomic_sets if s and s not in CACHE_SET_DOCUMENTS]
     if len(unknown_sets) <= BATCH_SIZE * N_PROCESSES:
         for s in unknown_sets:
-            SET_DOCUMENT_CACHE[s] = SET_PARSER(s)
+            CACHE_SET_DOCUMENTS[s] = SET_PARSER(s)
     else:
         set_tuples = [(s, s) for s in unknown_sets]
         for doc, s in tqdm(SET_PARSER.pipe(set_tuples, as_tuples=True, batch_size=BATCH_SIZE, n_process=N_PROCESSES), total=len(unknown_sets), desc='Parsing sets with spaCy'):
-            SET_DOCUMENT_CACHE[s] = doc
-    return iter([SET_DOCUMENT_CACHE[s] for s in taxonomic_sets])
+            CACHE_SET_DOCUMENTS[s] = doc
+    if len(CACHE_SET_DOCUMENTS) > (CACHE_STORED_SIZE + CACHE_STORAGE_THRESHOLD):
+        utils.update_cache('spacy_cache', CACHE_SET_DOCUMENTS)
+        CACHE_STORED_SIZE = len(CACHE_SET_DOCUMENTS)
+    return iter([CACHE_SET_DOCUMENTS[s] for s in taxonomic_sets])
 
 
 def parse_texts(texts: list) -> Iterator:
