@@ -94,7 +94,7 @@ def _get_template_content(template: Template, template_definitions: dict, visite
         name = template.normal_name(capitalize=True)
     except IndexError:
         return '', visited_templates
-    if name in visited_templates:
+    if name.lower() in visited_templates:
         return '', visited_templates
     visited_templates.add(name.lower())
 
