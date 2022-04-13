@@ -65,21 +65,19 @@ class DbpCategoryStore:
         category_names = {dbp_util.resource_iri2name(uri) for uri in category_uris}
         category_names = category_names.difference({utils.get_config('category.root_category')})  # root category will be treated separately
         # gather category hierarchy
-        category_children_uris = self._load_category_children_uris()
-        category_children = [(dbp_util.resource_iri2name(p), dbp_util.resource_iri2name(c)) for p, c in category_children_uris]
+        category_children_iris = self._load_category_children_iris()
+        category_children = [(dbp_util.resource_iri2name(p), dbp_util.resource_iri2name(c)) for p, c in category_children_iris]
         # identify meta categories
-        meta_parent_categories_titles = {'Hidden_categories', 'Tracking_categories', 'Disambiguation_categories',
-                                  'Non-empty_disambiguation_categories', 'All_redirect_categories',
-                                  'Wikipedia_soft_redirected_categories', 'Category_redirects_with_possibilities',
-                                  'Wikipedia_non-empty_soft_redirected_categories'}
-        meta_parent_categories = {Namespace.PREFIX_CATEGORY.value + cat for cat in meta_parent_categories_titles}
+        meta_parent_category_titles = {'Hidden_categories', 'Tracking_categories', 'Disambiguation_categories',
+                                       'Non-empty_disambiguation_categories', 'All_redirect_categories',
+                                       'Wikipedia_soft_redirected_categories', 'Category_redirects_with_possibilities',
+                                       'Wikipedia_non-empty_soft_redirected_categories'}
+        meta_parent_categories = {Namespace.PREFIX_CATEGORY.value + cat for cat in meta_parent_category_titles}
         meta_categories = meta_parent_categories | {c for p, c in category_children if p in meta_parent_categories}
         # identify any remaining invalid categories (maintenance categories etc) using indicator tokens
         ignored_category_endings = ('files', 'images', 'lists', 'articles', 'stubs', 'pages', 'categories')
-        maintenance_category_indicators = {
-            'wikipedia', 'wikipedians', 'wikimedia', 'wikiproject', 'redirects',
-            'mediawiki', 'template', 'templates', 'user', 'portal', 'navigational'
-        }
+        maintenance_category_indicators = {'wikipedia', 'wikipedians', 'wikimedia', 'wikiproject', 'redirects',
+                                           'mediawiki', 'template', 'templates', 'user', 'portal', 'navigational'}
         meta_categories.update({c for c in category_names if c.lower().endswith(ignored_category_endings) or set(c.lower().split('_')).intersection(maintenance_category_indicators)})
 
         # build actual category classes
@@ -92,13 +90,13 @@ class DbpCategoryStore:
         return categories
 
     @classmethod
-    def _load_category_children_uris(cls) -> Set[Tuple[str, str]]:
-        skos_category_parent_uris = rdf_util.create_multi_val_dict_from_rdf([utils.get_data_file('files.dbpedia.category_skos')], RdfPredicate.BROADER)
-        category_children_uris = {(p, c) for c, parents in skos_category_parent_uris.items() for p in parents}
+    def _load_category_children_iris(cls) -> Set[Tuple[str, str]]:
+        skos_category_parent_iris = rdf_util.create_multi_val_dict_from_rdf([utils.get_data_file('files.dbpedia.category_skos')], RdfPredicate.BROADER)
+        category_children_iris = {(p, c) for c, parents in skos_category_parent_iris.items() for p in parents}
         wiki_category_parent_uris = wikipedia.extract_parent_categories()
-        category_children_uris.update({(p, c) for c, parents in wiki_category_parent_uris.items() for p in parents})
-        category_children_uris = {(p, c) for p, c in category_children_uris if p != c}
-        return category_children_uris
+        category_children_iris.update({(p, c) for c, parents in wiki_category_parent_uris.items() for p in parents})
+        category_children_iris = {(p, c) for p, c in category_children_iris if p != c}
+        return category_children_iris
 
     def has_category_with_idx(self, idx: int) -> bool:
         return idx in self.categories_by_idx
@@ -140,10 +138,10 @@ class DbpCategoryStore:
 
     def _init_category_children_cache(self) -> Dict[int, Set[int]]:
         category_children = defaultdict(set)
-        for p_uri, c_uri in self._load_category_children_uris():
-            if not (self.has_category_with_iri(p_uri) and self.has_category_with_iri(c_uri)):
+        for p_iri, c_iri in self._load_category_children_iris():
+            if not (self.has_category_with_iri(p_iri) and self.has_category_with_iri(c_iri)):
                 continue
-            category_children[self.get_category_by_iri(p_uri).idx].add(self.get_category_by_iri(c_uri).idx)
+            category_children[self.get_category_by_iri(p_iri).idx].add(self.get_category_by_iri(c_iri).idx)
         return category_children
 
     def get_parents(self, cat: DbpCategory, include_meta=False, include_listcategories=False) -> Set[DbpCategory]:

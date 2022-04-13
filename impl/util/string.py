@@ -2,7 +2,7 @@ import re
 
 
 def capitalize(text: str) -> str:
-    return text[0].upper() + text[1:]
+    return text[0].upper() + text[1:] if len(text) > 1 else text.upper()
 
 
 def regularize_spaces(text: str) -> str:
