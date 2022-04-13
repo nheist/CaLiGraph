@@ -140,10 +140,9 @@ class CaLiGraph(HierarchyGraph):
 
         # add Wikipedia categories to nodes that have an exact name match
         for node in graph.content_nodes:
-            node_name = graph.get_label(node)
-            if dbc.has_category_with_name(node_name):
+            if dbc.has_category_with_name(node):
+                cat = dbc.get_category_by_name(node)
                 node_parts = graph.get_parts(node)
-                cat = dbc.get_category_by_name(node_name)
                 if cat not in node_parts:
                     graph._set_parts(node, node_parts | {cat})
 
