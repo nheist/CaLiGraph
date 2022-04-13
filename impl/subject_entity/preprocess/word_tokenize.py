@@ -63,7 +63,7 @@ class WordTokenizer:
             tokenize_fn = self._tokenize_page
 
         with mp.Pool(processes=utils.get_config('max_cpus')) as pool:
-            return {res: tokens for res, tokens in pool.imap_unordered(tokenize_fn, page_items, chunksize=2000) if tokens[0]}
+            return {res: tokens for res, tokens in pool.imap_unordered(tokenize_fn, page_items, chunksize=10000) if tokens[0]}
 
     def _tokenize_page_with_entities(self, params: Tuple[DbpResource, dict, Tuple[Set[int], Set[int]]]) -> Tuple[DbpResource, Tuple[list, list]]:
         """Take a resource and return list of (tokens, entities) chunks. If not existing, entity for a token is None."""

@@ -32,7 +32,7 @@ def extract_wiki_corpus_resources():
     spacy_util.get_hearst_pairs('')
 
     with mp.Pool(processes=utils.get_config('max_cpus')) as pool:
-        for hypernyms, type_lexicalisations in pool.imap_unordered(_compute_counts_for_resource, _retrieve_plaintexts(), chunksize=1000):
+        for hypernyms, type_lexicalisations in pool.imap_unordered(_compute_counts_for_resource, _retrieve_plaintexts(), chunksize=10000):
             for (sub, obj), count in hypernyms.items():
                 total_hypernyms[sub][obj] += count
             for (sub, obj), count in type_lexicalisations.items():
