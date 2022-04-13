@@ -72,7 +72,12 @@ def remove_by_phrase(text: str):
     doc = parse_set(text)
     doc_ent_types = [w.ent_type_ for w in doc]
     if spacy_util.BY_PHRASE in doc_ent_types:
-        doc = doc[:doc_ent_types.index(spacy_util.BY_PHRASE)].as_doc()
+        by_phrase_start = doc_ent_types.index(spacy_util.BY_PHRASE)
+        after_by_phrase = len(doc_ent_types) - doc_ent_types[::-1].index(spacy_util.BY_PHRASE)
+        if after_by_phrase < len(doc):
+            doc = parse_set(doc[:by_phrase_start].text_with_ws + doc[after_by_phrase:].text_with_ws)
+        else:
+            doc = doc[:by_phrase_start].as_doc()
     return doc
 
 

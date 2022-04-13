@@ -83,8 +83,11 @@ def tag_by_phrase(doc: Doc) -> Doc:
         return doc
     end_index = len(doc)
     if ' in ' in doc[by_indices[-1]:].text:
-        # ignore information after the by phrase (e.g. do not tag 'in Honduras' for 'People by city in Honduras')
+        # do not tag words after the by phrase (e.g. do not tag 'in Honduras' for 'People by city in Honduras')
         end_index = [w.i for w in doc[by_indices[-1]:] if w.text == 'in'][0]
+    if ' from ' in doc[by_indices[-1]:].text:
+        # do not tag words after the by phrase (e.g. do not tag 'from Georgia' for 'Sportspeople by sport from Georgia')
+        end_index = [w.i for w in doc[by_indices[-1]:] if w.text == 'from'][0]
     # find valid by-phrases
     for idx, by_index in enumerate(by_indices):
         if by_index == 0 or by_index == len(doc) - 1:
