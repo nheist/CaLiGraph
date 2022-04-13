@@ -29,7 +29,7 @@ def remove_bracket_content(text: str, bracket_type='(', substitute=' ') -> str:
 
 def get_canonical_label(text: str) -> str:
     """"Remove parts from the label that Wikipedia adds for organisational reasons (e.g. by-phrases or alphabetical splits)."""
-    text = remove_by_phrase(text, return_doc=False)  # remove by-phrase
+    text = remove_by_phrase(text).text  # remove by-phrase
     text = re.sub(r'\s*/[A-Za-z]+:\s*[A-Za-z](\s*[-–]\s*[A-Za-z])?$', '', text)  # remove trailing alphabetical splits with slash and type, e.g. 'Fellows of the Royal Society/name: A-C'
     text = re.sub(r'\s+\([^()]+[-–][^()]+\)$', '', text)  # remove trailing parentheses with number or letter ranges, e.g. 'Interstate roads (1-10)'
     text = re.sub(r'\s+\([A-Z]\)$', '', text)  # remove trailing parentheses with single letter, e.g. 'Interstate roads (Y)'
@@ -67,11 +67,13 @@ def get_nonlexhead_part(set_or_sets) -> Union[str, list]:
     return _process_one_or_many_sets(set_or_sets, func, default='')
 
 
-def remove_by_phrase(text: str, return_doc=True):
+def remove_by_phrase(text: str):
     """Remove the 'by'-phrase at the end of a category or listpage, e.g. 'People by country' -> 'People'"""
     doc = parse_set(text)
-    result = ''.join([w.text_with_ws for w in doc if w.ent_type_ != spacy_util.BY_PHRASE])
-    return parse_set(result) if return_doc else result
+    doc_ent_types = [w.ent_type_ for w in doc]
+    if spacy_util.BY_PHRASE in doc_ent_types:
+        doc = doc[:doc_ent_types.index(spacy_util.BY_PHRASE)].as_doc()
+    return doc
 
 
 def singularize_phrase(text: str) -> str:

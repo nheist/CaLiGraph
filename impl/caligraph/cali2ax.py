@@ -67,7 +67,7 @@ def _extract_axioms(patterns: Dict[tuple, dict]) -> Dict[ClgType, Set[Tuple[ClgP
         property_frequencies = clge.get_property_frequencies(ct)
         for r in ct.get_associated_dbp_resources():
             node_axioms = []
-            label_doc = nlp_util.remove_by_phrase(r.get_label(), return_doc=True)
+            label_doc = nlp_util.remove_by_phrase(r.get_label())
 
             front_prop_axiom = _find_axioms(front_pattern_dict, ct, label_doc, property_frequencies)
             if front_prop_axiom:
