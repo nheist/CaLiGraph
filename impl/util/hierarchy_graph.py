@@ -187,39 +187,43 @@ class HierarchyGraph(BaseGraph):
         E.g., we remove by-phrases like in "Authors by name", and we remove alphabetical splits like in "Authors: A-C".
         """
         get_logger().debug('Merging nodes with the same label..')
-        nodes_canonical_labels = {}
+        canonical_labels = {}
         for node in self.content_nodes:
             node_label = self.get_label(node)
             canonical_label = nlp_util.get_canonical_label(node_label)
             if node_label != canonical_label:
-                nodes_canonical_labels[node] = canonical_label
-        remaining_nodes_to_merge = set(nodes_canonical_labels)
+                canonical_labels[node] = canonical_label
+        remaining_nodes_to_merge = set(canonical_labels)
         get_logger().debug(f'Found {len(remaining_nodes_to_merge)} nodes to merge.')
 
         # 1) compute direct merge and synonym merge
         direct_merges = defaultdict(set)
 
-        nodes_important_words = {node: nlp_util.without_stopwords(canonical_label) for node, canonical_label in nodes_canonical_labels.items()}
+        important_words = {node: nlp_util.without_stopwords(canonical_label) for node, canonical_label in canonical_labels.items()}
         for node in remaining_nodes_to_merge:
-            node_important_words = nodes_important_words[node]
+            # first compute important words for all parents
             for parent in self.parents(node):
-                if parent not in nodes_important_words:
-                    nodes_important_words[parent] = nlp_util.without_stopwords(nlp_util.get_canonical_label(self.get_label(parent)))
-                parent_important_words = nodes_important_words[parent]
-
-                if all(any(hypernymy_util.is_synonym(niw, piw) for piw in parent_important_words) for niw in node_important_words):
-                    direct_merges[node].add(parent)
+                if parent not in important_words:
+                    important_words[parent] = nlp_util.without_stopwords(nlp_util.get_canonical_label(self.get_label(parent)))
+            matches = set()
+            # find exact matches
+            for parent in self.parents(node):
+                if important_words[node] == important_words[parent]:
+                    matches.add(parent)
+            # find synonym matches if no exact matches
+            if not matches:
+                for parent in self.parents(node):
+                    if all(any(hypernymy_util.is_synonym(niw, piw) for piw in important_words[parent]) for niw in important_words[node]):
+                        matches.add(parent)
+            direct_merges[node].update(matches)
         get_logger().debug(f'Merging {len(direct_merges)} nodes directly.')
 
         # 2) compute category set merge
         catset_merges = defaultdict(set)
         remaining_nodes_to_merge = remaining_nodes_to_merge.difference(set(direct_merges))
         for node in remaining_nodes_to_merge:
-            node_canonical_label = nodes_canonical_labels[node]
-            for parent in self.parents(node):
-                if parent == self.root_node:
-                    continue
-                similar_children_count = len({child for child in self.children(parent) if child in nodes_canonical_labels and nodes_canonical_labels[child] == node_canonical_label})
+            for parent in self.parents(node).difference({self.root_node}):
+                similar_children_count = len({child for child in self.children(parent) if child in canonical_labels and canonical_labels[child] == canonical_labels[node]})
                 if similar_children_count > 1:
                     catset_merges[node].add(parent)
         get_logger().debug(f'Merging {len(catset_merges)} nodes via category sets.')
