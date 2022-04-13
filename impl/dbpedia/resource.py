@@ -1,6 +1,5 @@
 from typing import Union, Dict, Optional, Set, Any, Tuple, List
 from collections import defaultdict, Counter
-from functools import cache
 from impl.util.singleton import Singleton
 import impl.util.rdf as rdf_util
 from impl.util.rdf import Namespace
@@ -265,17 +264,10 @@ class DbpResourceStore:
             return res  # return original resource if the redirect links to a completely different resource
         return redirect_res
 
-    @cache
     def resolve_redirect(self, res: DbpResource) -> DbpResource:
-        return self.get_resource_by_idx(self._resolve_redirect_internal(res.idx))
-
-    def _resolve_redirect_internal(self, res_idx: int, visited=None) -> int:
         if self.redirects is None:
             self.redirects = utils.load_or_create_cache('dbpedia_resource_redirects', self._init_redirect_cache)
-        visited = visited or set()
-        if res_idx not in self.redirects or res_idx in visited:
-            return res_idx
-        return self._resolve_redirect_internal(self.redirects[res_idx], visited | {res_idx})
+        return self.get_resource_by_idx(self.redirects[res.idx]) if res.idx in self.redirects else res
 
     def _init_redirect_cache(self) -> Dict[int, int]:
         redirects = rdf_util.create_single_val_dict_from_rdf([utils.get_data_file('files.dbpedia.redirects')], RdfPredicate.REDIRECTS, casting_fn=self.get_resource_by_iri)

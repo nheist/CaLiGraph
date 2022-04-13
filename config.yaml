@@ -77,7 +77,7 @@ files:
       url: 'https://downloads.dbpedia.org/repo/dbpedia/generic/anchor-text/2020.10.01/anchor-text_lang=en.ttl.bz2'
     redirects:
       filename: 'redirects_lang=en.ttl.bz2'
-      url: 'https://downloads.dbpedia.org/repo/dbpedia/generic/redirects/2020.10.01/redirects_lang=en.ttl.bz2'
+      url: 'https://downloads.dbpedia.org/repo/dbpedia/generic/redirects/2020.10.01/redirects_lang=en_transitive.ttl.bz2'
     disambiguations:
       filename: 'disambiguations_lang=en.ttl.bz2'
       url: 'https://downloads.dbpedia.org/repo/dbpedia/generic/disambiguations/2020.10.01/disambiguations_lang=en.ttl.bz2'
