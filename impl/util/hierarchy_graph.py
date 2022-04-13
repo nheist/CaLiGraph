@@ -205,17 +205,15 @@ class HierarchyGraph(BaseGraph):
             for parent in self.parents(node):
                 if parent not in important_words:
                     important_words[parent] = nlp_util.without_stopwords(nlp_util.get_canonical_label(self.get_label(parent)))
-            matches = set()
             # find exact matches
-            for parent in self.parents(node):
-                if important_words[node] == important_words[parent]:
-                    matches.add(parent)
-            # find synonym matches if no exact matches
-            if not matches:
+            exact_matches = {p for p in self.parents(node) if important_words[node] == important_words[p]}
+            if exact_matches:
+                direct_merges[node] = exact_matches
+            else:
+                # find synonym matches if no exact matches
                 for parent in self.parents(node):
                     if all(any(hypernymy_util.is_synonym(niw, piw) for piw in important_words[parent]) for niw in important_words[node]):
-                        matches.add(parent)
-            direct_merges[node].update(matches)
+                        direct_merges[node].add(parent)
         get_logger().debug(f'Merging {len(direct_merges)} nodes directly.')
 
         # 2) compute category set merge
