@@ -108,11 +108,11 @@ class CaLiGraph(HierarchyGraph):
         cat_graph = category.get_merged_graph()
         cat_node_labels = {n: nlp_util.get_canonical_label(cat_graph.get_label(n)) for n in cat_graph.nodes}
         for parent_cat_node, child_cat_node in cat_graph.traverse_edges_topdown():
-            parent_nodes = {n for c in cat_graph.get_categories(parent_cat_node) for n in graph.get_nodes_for_part(c)}
+            parent_nodes = graph.get_nodes_for_part(dbc.get_category_by_name(parent_cat_node))
             if not parent_nodes:
                 raise ValueError(f'"{parent_cat_node}" is not in graph despite of BFS!')
 
-            child_nodes = {n for c in cat_graph.get_categories(child_cat_node) for n in graph.get_nodes_for_part(c)}
+            child_nodes = graph.get_nodes_for_part(dbc.get_category_by_name(child_cat_node))
             if not child_nodes:
                 child_nodes.add(graph._add_category_to_graph(child_cat_node, cat_node_labels[child_cat_node], cat_graph))
 

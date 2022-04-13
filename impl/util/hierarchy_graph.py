@@ -198,7 +198,6 @@ class HierarchyGraph(BaseGraph):
 
         # 1) compute direct merge and synonym merge
         direct_merges = defaultdict(set)
-
         important_words = {node: nlp_util.without_stopwords(canonical_label) for node, canonical_label in canonical_labels.items()}
         for node in remaining_nodes_to_merge:
             # first compute important words for all parents
