@@ -18,7 +18,7 @@ def _extract_parent_categories_from_markup(categories_and_templates_markup: Tupl
 
     data = [(cat, markup, template_definitions) for cat, markup in categories_markup.items()]
     with mp.Pool(processes=utils.get_config('max_cpus')) as pool:
-        parent_categories = {cat: parents for cat, parents in tqdm(pool.imap_unordered(_extract_parents_for_category, data, chunksize=1000), total=len(data), desc='wikipedia/category_parser: Extracting parent categories')}
+        parent_categories = {cat: parents for cat, parents in tqdm(pool.imap_unordered(_extract_parents_for_category, data, chunksize=10000), total=len(data), desc='wikipedia/category_parser: Extracting parent categories')}
     return parent_categories
 
 
@@ -30,10 +30,12 @@ def _extract_parents_for_category(data: tuple) -> tuple:
     parent_names = map(str_util.capitalize, parent_names)  # make sure that first letter of category is uppercase
     parent_uris = {Namespace.DBP_CATEGORY.value + name.replace(' ', '_') for name in parent_names}
     # use markers in markup or used templates to find parent categories (as we can't resolve macros in markup)
-    if '__HIDDENCAT__' in content.string or 'Maintenance category' in visited_templates:
+    if '__HIDDENCAT__' in content.string or 'maintenance category' in visited_templates:
         parent_uris.add(f'{Namespace.DBP_CATEGORY.value}Hidden_categories')
-    if 'Category disambiguation' in visited_templates or 'Category ambiguous' in visited_templates:
+    if 'category disambiguation' in visited_templates or 'category ambiguous' in visited_templates:
         parent_uris.add(f'{Namespace.DBP_CATEGORY.value}Disambiguation_categories')
+    if 'category redirect' in visited_templates or 'cat redirect' in visited_templates:
+        parent_uris.add(f'{Namespace.DBP_CATEGORY.value}Wikipedia_soft_redirected_categories')
     return cat, parent_uris
 
 
@@ -81,7 +83,7 @@ def _replace_templates_in_category(category_content: WikiText, template_definiti
         if template_content is None:
             continue
         category_content[slice(*template.span)] = template_content
-        all_visited_templates.update(visited_templates)
+        all_visited_templates.update({t.lower() for t in visited_templates})
     return category_content, all_visited_templates
 
 
@@ -94,7 +96,7 @@ def _get_template_content(template: Template, template_definitions: dict, visite
         return '', visited_templates
     if name in visited_templates:
         return '', visited_templates
-    visited_templates.add(name)
+    visited_templates.add(name.lower())
 
     content = wtp.parse(template_definitions[name])
     content = _apply_parameters(content, _get_template_arguments(template))
