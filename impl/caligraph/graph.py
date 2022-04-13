@@ -1,4 +1,4 @@
-from typing import Set, Dict, Tuple, List, Optional
+from typing import Set, Dict, Tuple, List, Optional, Union
 from collections import defaultdict, Counter
 import networkx as nx
 from polyleven import levenshtein
@@ -19,7 +19,7 @@ import impl.category.cat2ax as cat_axioms
 import impl.dbpedia.heuristics as dbp_heur
 from impl.dbpedia.resource import DbpEntity, DbpListpage, DbpResourceStore
 from impl.dbpedia.ontology import DbpType, DbpOntologyStore
-from impl.dbpedia.category import DbpCategory, DbpCategoryStore
+from impl.dbpedia.category import DbpCategory, DbpListCategory, DbpCategoryStore
 
 
 class CaLiGraph(HierarchyGraph):
@@ -122,11 +122,11 @@ class CaLiGraph(HierarchyGraph):
         list_graph = listpage.get_merged_listgraph()
         list_node_labels = {n: nlp_util.get_canonical_label(list_graph.get_label(n)) for n in list_graph.nodes}
         for parent_list_node, child_list_node in list_graph.traverse_edges_topdown():
-            parent_nodes = {n for lst in list_graph.get_lists(parent_list_node) for n in graph.get_nodes_for_part(lst)}
+            parent_nodes = graph.get_nodes_for_part(graph._get_list_for_node(parent_list_node))
             if not parent_nodes:
                 raise ValueError(f'"{parent_list_node}" is not in graph despite of BFS!')
 
-            child_nodes = {n for lst in list_graph.get_lists(child_list_node) for n in graph.get_nodes_for_part(lst)}
+            child_nodes = graph.get_nodes_for_part(graph._get_list_for_node(child_list_node))
             if not child_nodes:
                 child_nodes.add(graph._add_list_to_graph(child_list_node, list_node_labels[child_list_node], list_graph, cat_graph))
 
@@ -160,6 +160,15 @@ class CaLiGraph(HierarchyGraph):
         node_parts = cat_graph.get_parts(cat_node)
         self._set_parts(node, self.get_parts(node) | node_parts)
         return node
+
+    def _get_list_for_node(self, list_node: str) -> Union[DbpListpage, DbpListCategory]:
+        dbc = DbpCategoryStore.instance()
+        dbr = DbpResourceStore.instance()
+        if dbc.has_category_with_name(list_node):  # listcategory
+            return dbc.get_category_by_name(list_node)
+        elif dbr.has_resource_with_name(list_node):  # listpage
+            return dbr.get_resource_by_name(list_node)
+        raise ValueError(f'Could not find listcategory or listpage for node "{list_node}".')
 
     def _add_list_to_graph(self, list_node: str, list_node_label: str, list_graph: ListGraph, cat_graph: CategoryGraph) -> str:
         """Add a list as new node to the graph."""
