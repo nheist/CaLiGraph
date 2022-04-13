@@ -116,7 +116,7 @@ class CaLiGraph(HierarchyGraph):
             if not child_nodes:
                 child_nodes.add(graph._add_category_to_graph(child_cat_node, cat_node_labels[child_cat_node], cat_graph))
 
-            graph._add_edges({(pn, cn) for pn in parent_nodes for cn in child_nodes})
+            graph._add_edges({(pn, cn) for pn in parent_nodes for cn in child_nodes if pn != cn})
 
         # merge with list graph
         list_graph = listpage.get_merged_listgraph()
