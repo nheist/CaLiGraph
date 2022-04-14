@@ -30,7 +30,7 @@ SET_PARSER = _init_set_parser()
 
 CACHE_SET_DOCUMENTS = {d.text: d for d in utils.load_or_create_cache('spacy_cache', list)}
 CACHE_STORED_SIZE = len(CACHE_SET_DOCUMENTS)
-CACHE_STORAGE_THRESHOLD = 50000
+CACHE_STORAGE_THRESHOLD = 100000
 
 
 def parse_sets(taxonomic_sets: list) -> Iterator:
