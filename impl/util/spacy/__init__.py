@@ -37,7 +37,7 @@ CACHE_STORAGE_THRESHOLD = 50000
 def parse_sets(taxonomic_sets: list) -> Iterator:
     """Parse potential set structures of a taxonomy, e.g. Wikipedia categories or list pages."""
     global CACHE_SET_DOCUMENTS, CACHE_STORED_SIZE
-    hashed_sets = [(s, int(hashlib.md5(s).hexdigest(), 16)) for s in taxonomic_sets]
+    hashed_sets = [(s, int(hashlib.md5(s.encode('utf-8')).hexdigest(), 16)) for s in taxonomic_sets]
     unknown_sets = [(s, h) for s, h in hashed_sets if h not in CACHE_SET_DOCUMENTS]
     if len(unknown_sets) <= BATCH_SIZE * N_PROCESSES:
         for s, h in unknown_sets:
