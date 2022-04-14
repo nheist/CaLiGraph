@@ -83,7 +83,7 @@ def _compute_disjoint_types(type_threshold: float) -> Dict[DbpType, Set[DbpType]
 
     # compute direct disjointnesses
     type_property_weights = _compute_type_property_weights()
-    dbp_types = dbo.get_types(include_root=False)
+    dbp_types = dbo.get_types()
     while len(dbp_types) > 0:
         dbp_type = dbp_types.pop()
         for other_dbp_type in dbp_types:
@@ -93,7 +93,7 @@ def _compute_disjoint_types(type_threshold: float) -> Dict[DbpType, Set[DbpType]
 
     # remove any disjointnesses that would violate the ontology hierarchy
     # i.e. if two types share a common subtype, they can't be disjoint
-    for t in dbo.get_types(include_root=False):
+    for t in dbo.get_types():
         transitive_types = dbo.get_transitive_supertypes(t, include_self=True)
         for tt in transitive_types:
             disjoint_types[tt] = disjoint_types[tt].difference(transitive_types)
