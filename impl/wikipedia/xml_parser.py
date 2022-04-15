@@ -5,6 +5,7 @@ from utils import get_logger
 from lxml import etree
 import bz2
 import impl.dbpedia.util as dbp_util
+import impl.util.rdf as rdf_util
 
 
 def _parse_raw_markup_from_xml() -> dict:
@@ -12,7 +13,7 @@ def _parse_raw_markup_from_xml() -> dict:
     parser = etree.XMLParser(target=WikiPageParser())
     with bz2.open(utils.get_data_file('files.wikipedia.pages')) as dbp_pages_file:
         page_markup = etree.parse(dbp_pages_file, parser)
-        return {dbp_util.name2resource(p): markup for p, markup in page_markup.items()}
+        return {dbp_util.name2resource_iri(rdf_util.label2name(page_title)): markup for page_title, markup in page_markup.items()}
 
 
 class WikiPageParser:

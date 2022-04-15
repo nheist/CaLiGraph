@@ -29,6 +29,10 @@ def resource_iri2name(iri: str) -> str:
     return iri2name(iri, Namespace.DBP_RESOURCE)
 
 
+def name2resource_iri(name: str) -> str:
+    return name2iri(name, Namespace.DBP_RESOURCE)
+
+
 def is_listpage_iri(iri: str) -> bool:
     return iri.startswith(Namespace.DBP_LIST.value)
 

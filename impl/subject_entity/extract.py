@@ -129,7 +129,7 @@ def _train_tagger(training_data_retrieval_func: Callable):
     tokenizer = AutoTokenizer.from_pretrained(pretrained_model, add_prefix_space=True, additional_special_tokens=list(WordTokenizerSpecialToken.all_tokens()))
 
     tokens, labels = training_data_retrieval_func()
-    train_dataset = _get_datasets(tokens, labels, tokenizer)
+    train_dataset = _get_dataset(tokens, labels, tokenizer)
 
     model = AutoModelForTokenClassification.from_pretrained(pretrained_model, num_labels=len(POSLabel))
     model.resize_token_embeddings(len(tokenizer))
@@ -157,7 +157,7 @@ def _train_tagger(training_data_retrieval_func: Callable):
     tokenizer.save_pretrained(path_to_model)
 
 
-def _get_datasets(tokens: List[List[str]], tags: List[List[str]], tokenizer) -> Dataset:
+def _get_dataset(tokens: List[List[str]], tags: List[List[str]], tokenizer) -> Dataset:
     train_encodings = tokenizer(tokens, is_split_into_words=True, return_offsets_mapping=True, padding=True, truncation=True)
     train_labels = _encode_labels(tags, train_encodings)
 

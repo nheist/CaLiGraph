@@ -11,7 +11,7 @@ from impl.util.rdf import Namespace
 
 def get_parsed_pages() -> Dict[DbpResource, Optional[dict]]:
     initializer = lambda: _parse_pages(_get_raw_pages_from_xml())
-    return defaultdict(lambda: None, utils.load_or_create_cache('wikipedia_parsed_pages', initializer))
+    return utils.load_or_create_cache('wikipedia_parsed_pages', initializer)
 
 
 def extract_parent_categories() -> Dict[str, Set[str]]:
