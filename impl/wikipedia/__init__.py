@@ -28,7 +28,7 @@ def _get_raw_categories_and_templates_from_xml() -> Tuple[Dict[str, str], Dict[s
 
 def _get_raw_pages_from_xml() -> Dict[DbpResource, str]:
     dbr = DbpResourceStore.instance()
-    return {dbr.get_resource_by_name(name): markup for name, markup in _get_raw_markup_from_xml().items() if dbr.has_resource_with_name(name)}
+    return {dbr.get_resource_by_iri(iri): markup for iri, markup in _get_raw_markup_from_xml().items() if dbr.has_resource_with_iri(iri)}
 
 
 def _get_raw_markup_from_xml() -> Dict[str, str]:
