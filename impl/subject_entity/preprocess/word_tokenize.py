@@ -6,7 +6,6 @@ import impl.wikipedia.wikimarkup_parser as wmp
 from tqdm import tqdm
 from enum import Enum
 import multiprocessing as mp
-import utils
 from impl.dbpedia.resource import DbpResource
 
 
@@ -62,7 +61,7 @@ class WordTokenizer:
             page_items = tqdm(pages.items(), total=len(pages), desc='Tokenize Pages (all)')
             tokenize_fn = self._tokenize_page
 
-        with mp.Pool(processes=int(utils.get_config('max_cpus') / 2)) as pool:
+        with mp.Pool(processes=2) as pool:
             return {res: tokens for res, tokens in pool.imap_unordered(tokenize_fn, page_items, chunksize=1000) if tokens[0]}
 
     def _tokenize_page_with_entities(self, params: Tuple[DbpResource, dict, Tuple[Set[int], Set[int]]]) -> Tuple[DbpResource, Tuple[list, list]]:
@@ -80,21 +79,17 @@ class WordTokenizer:
             top_section_name = section_name if section_data['level'] <= 2 else top_section_name
             if top_section_name.lower() in self.meta_sections:
                 continue  # skip meta sections
-
             for enum_data in section_data['enums']:
                 context_tokens, _ = self._context_to_tokens([res.get_label(), top_section_name, section_name])
                 context_ents = [WordTokenizerSpecialLabel.IGNORE.value] * len(context_tokens)
-
                 max_chunk_size = self.max_words_per_chunk - len(context_tokens)
                 for chunk_tokens, chunk_ents in self._listing_to_token_entity_chunks(enum_data, valid_ents, invalid_ents, max_chunk_size):
                     page_tokens.append(context_tokens + chunk_tokens)
                     page_ents.append(context_ents + chunk_ents)
-
             for table in section_data['tables']:
                 table_header, table_data = table['header'], table['data']
                 context_tokens, _ = self._context_to_tokens([res.get_label(), top_section_name, section_name], table_header)
                 context_ents = [WordTokenizerSpecialLabel.IGNORE.value] * len(context_tokens)
-
                 max_chunk_size = self.max_words_per_chunk - len(context_tokens)
                 for chunk_tokens, chunk_ents in self._listing_to_token_entity_chunks(table_data, valid_ents, invalid_ents, max_chunk_size):
                     page_tokens.append(context_tokens + chunk_tokens)
@@ -121,31 +116,31 @@ class WordTokenizer:
         ctx_tokens[WordTokenizerSpecialLabel.NO_ENTITY.value] = WordTokenizerSpecialToken.CONTEXT_END.value  # replace last token with final context separator
         return ctx_tokens, ctx_ws
 
-    def _listing_to_token_entity_chunks(self, listing_data: list, valid_ents: Set[int], invalid_ents: Set[int], max_group_size: int):
+    def _listing_to_token_entity_chunks(self, listing_data: list, valid_ents: Set[int], invalid_ents: Set[int], max_chunk_size: int):
         """Converts a listing to a set of (tokens, entities) chunks."""
-        current_group_size = 0
-        current_group_tokens = []
-        current_group_ents = []
+        current_chunk_size = 0
+        current_chunk_tokens = []
+        current_chunk_ents = []
         for item in listing_data:
             # pick conversion function based on item being a list of table cells or an enum entry string
-            item_to_tokens = self._row_to_tokens_and_entities if type(item) == list else self._entry_to_tokens_and_entities
+            item_to_tokens = self._row_to_tokens_and_entities if isinstance(item, list) else self._entry_to_tokens_and_entities
             item_tokens, item_ents = item_to_tokens(item, valid_ents, invalid_ents)
 
             if not item_tokens:
                 continue  # skip if no labeled entities are found
             item_size = len(item_tokens)
-            new_group_size = current_group_size + item_size
-            if not current_group_tokens or new_group_size <= max_group_size:
-                current_group_tokens.extend(item_tokens)
-                current_group_ents.extend(item_ents)
-                current_group_size = new_group_size
+            new_chunk_size = current_chunk_size + item_size
+            if not current_chunk_tokens or new_chunk_size <= max_chunk_size:
+                current_chunk_tokens.extend(item_tokens)
+                current_chunk_ents.extend(item_ents)
+                current_chunk_size = new_chunk_size
             else:
-                yield current_group_tokens, current_group_ents
-                current_group_tokens = item_tokens
-                current_group_ents = item_ents
-                current_group_size = item_size
-        if current_group_tokens:
-            yield current_group_tokens, current_group_ents
+                yield current_chunk_tokens, current_chunk_ents
+                current_chunk_tokens = item_tokens
+                current_chunk_ents = item_ents
+                current_chunk_size = item_size
+        if current_chunk_tokens:
+            yield current_chunk_tokens, current_chunk_ents
 
     def _entry_to_tokens_and_entities(self, entry: dict, valid_ents: Set[int], invalid_ents: Set[int]) -> Tuple[list, list]:
         entry_text = entry['text']
@@ -216,47 +211,47 @@ class WordTokenizer:
         for section_data in page_data['sections']:
             section_name = section_data['name']
             top_section_name = section_name if section_data['level'] <= 2 else top_section_name
-            if top_section_name in self.meta_sections:
+            if top_section_name.lower() in self.meta_sections:
                 continue  # skip meta sections
             for enum_data in section_data['enums']:
                 context_tokens, context_ws = self._context_to_tokens([res.get_label(), top_section_name, section_name])
-                max_group_size = self.max_words_per_chunk - len(context_tokens)
-                for group_tokens, group_ws in self._listing_to_token_groups(enum_data, max_group_size):
-                    page_tokens.append(context_tokens + group_tokens)
-                    page_ws.append(context_ws + group_ws)
+                max_chunk_size = self.max_words_per_chunk - len(context_tokens)
+                for chunk_tokens, chunk_ws in self._listing_to_token_chunks(enum_data, max_chunk_size):
+                    page_tokens.append(context_tokens + chunk_tokens)
+                    page_ws.append(context_ws + chunk_ws)
             for table in section_data['tables']:
                 table_header, table_data = table['header'], table['data']
                 context_tokens, context_ws = self._context_to_tokens([res.get_label(), top_section_name, section_name], table_header)
-                max_group_size = self.max_words_per_chunk - len(context_tokens)
-                for group_tokens, group_ws in self._listing_to_token_groups(table_data, max_group_size):
-                    page_tokens.append(context_tokens + group_tokens)
-                    page_ws.append(context_ws + group_ws)
+                max_chunk_size = self.max_words_per_chunk - len(context_tokens)
+                for chunk_tokens, chunk_ws in self._listing_to_token_chunks(table_data, max_chunk_size):
+                    page_tokens.append(context_tokens + chunk_tokens)
+                    page_ws.append(context_ws + chunk_ws)
         return res, (page_tokens, page_ws)
 
-    def _listing_to_token_groups(self, listing_data: list, max_group_size: int):
-        current_group_size = 0
-        current_group_tokens = []
-        current_group_ws = []
+    def _listing_to_token_chunks(self, listing_data: list, max_chunk_size: int):
+        current_chunk_size = 0
+        current_chunk_tokens = []
+        current_chunk_ws = []
         for item in listing_data:
             # pick conversion function based on item being a list of table cells or an enum entry dict
-            item_to_tokens = self._row_to_tokens if type(item) == list else self._entry_to_tokens
+            item_to_tokens = self._row_to_tokens if isinstance(item, list) else self._entry_to_tokens
             item_tokens, item_ws = item_to_tokens(item)
 
             if not item_tokens:
                 continue  # skip if no tokens are found
             item_size = len(item_tokens)
-            new_group_size = current_group_size + item_size
-            if not current_group_tokens or new_group_size <= max_group_size:
-                current_group_tokens.extend(item_tokens)
-                current_group_ws.extend(item_ws)
-                current_group_size = new_group_size
+            new_chunk_size = current_chunk_size + item_size
+            if not current_chunk_tokens or new_chunk_size <= max_chunk_size:
+                current_chunk_tokens.extend(item_tokens)
+                current_chunk_ws.extend(item_ws)
+                current_chunk_size = new_chunk_size
             else:
-                yield current_group_tokens, current_group_ws
-                current_group_tokens = item_tokens
-                current_group_ws = item_ws
-                current_group_size = item_size
-        if current_group_tokens:
-            yield current_group_tokens, current_group_ws
+                yield current_chunk_tokens, current_chunk_ws
+                current_chunk_tokens = item_tokens
+                current_chunk_ws = item_ws
+                current_chunk_size = item_size
+        if current_chunk_tokens:
+            yield current_chunk_tokens, current_chunk_ws
 
     def _entry_to_tokens(self, entry: dict) -> Tuple[list, list]:
         entry_doc = self.word_tokenizer(entry['text'])
