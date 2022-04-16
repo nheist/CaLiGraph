@@ -62,7 +62,7 @@ class WordTokenizer:
             page_items = tqdm(pages.items(), total=len(pages), desc='Tokenize Pages (all)')
             tokenize_fn = self._tokenize_page
 
-        with mp.Pool(processes=utils.get_config('max_cpus')) as pool:
+        with mp.Pool(processes=int(utils.get_config('max_cpus') / 2)) as pool:
             return {res: tokens for res, tokens in pool.imap_unordered(tokenize_fn, page_items, chunksize=1000) if tokens[0]}
 
     def _tokenize_page_with_entities(self, params: Tuple[DbpResource, dict, Tuple[Set[int], Set[int]]]) -> Tuple[DbpResource, Tuple[list, list]]:
