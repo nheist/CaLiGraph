@@ -113,7 +113,7 @@ class WordTokenizer:
                 ctx_tokens.extend([w.text for w in doc] + [WordTokenizerSpecialToken.TABLE_COL.value])
                 ctx_ws.extend([w.whitespace_ for w in doc] + [' '])
 
-        ctx_tokens[WordTokenizerSpecialLabel.NO_ENTITY.value] = WordTokenizerSpecialToken.CONTEXT_END.value  # replace last token with final context separator
+        ctx_tokens[-1] = WordTokenizerSpecialToken.CONTEXT_END.value  # replace last token with final context separator
         return ctx_tokens, ctx_ws
 
     def _listing_to_token_entity_chunks(self, listing_data: list, valid_ents: Set[int], invalid_ents: Set[int], max_chunk_size: int):
