@@ -8,7 +8,7 @@ import impl.wikipedia.wikimarkup_parser as wmp
 
 
 def match_entities_with_uris(subject_entities_per_page: Dict[DbpResource, dict]) -> Dict[DbpResource, dict]:
-    parsed_pages = wikipedia.get_parsed_articles()
+    parsed_pages = wikipedia.get_parsed_pages()
     return {res: _match_entities_for_page(res, entities_per_ts, parsed_pages[res]) for res, entities_per_ts in subject_entities_per_page.items()}
 
 
