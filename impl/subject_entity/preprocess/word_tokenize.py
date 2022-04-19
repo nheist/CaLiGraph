@@ -1,11 +1,12 @@
 from typing import Tuple, List, Optional, Set, Dict
+from tqdm import tqdm
 from spacy.lang.en import English
 from collections import defaultdict
-import impl.util.spacy.listing_parser as list_nlp
-import impl.wikipedia.wikimarkup_parser as wmp
-from tqdm import tqdm
 from enum import Enum
 import multiprocessing as mp
+import utils
+import impl.util.spacy.listing_parser as list_nlp
+import impl.wikipedia.wikimarkup_parser as wmp
 from impl.dbpedia.resource import DbpResource
 
 
@@ -57,11 +58,13 @@ class WordTokenizer:
                     yield res, page_data, entity_labels[res]
             page_items = tqdm(page_with_labels_iterator(), total=len(pages), desc='Tokenize Pages (train)')
             tokenize_fn = self._tokenize_page_with_entities
+            n_processes = utils.get_config('max_cpus') // 2
         else:
             page_items = tqdm(pages.items(), total=len(pages), desc='Tokenize Pages (all)')
             tokenize_fn = self._tokenize_page
+            n_processes = 2
 
-        with mp.Pool(processes=2) as pool:
+        with mp.Pool(processes=n_processes) as pool:
             return {res: tokens for res, tokens in pool.imap_unordered(tokenize_fn, page_items, chunksize=1000) if tokens[0]}
 
     def _tokenize_page_with_entities(self, params: Tuple[DbpResource, dict, Tuple[Set[int], Set[int]]]) -> Tuple[DbpResource, Tuple[list, list]]:
