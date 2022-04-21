@@ -55,7 +55,7 @@ def _compute_counts_for_resource(entity_with_text: Tuple[DbpEntity, str]) -> Tup
         hypernyms[(nlp_util.lemmatize_token(sub.root).lower(), nlp_util.lemmatize_token(obj.root).lower())] += 1
 
         # for each word, count the types that it refers to
-        if sub.text.lower() not in {'he', 'she', 'it'} and ent not in dbr.get_surface_form_references(sub.text):
+        if ent not in dbr.get_surface_form_references(sub.text):
             continue  # discard, if the resource text does not refer to the subject of the article
         for t in ent.get_types():
             for word in obj:
