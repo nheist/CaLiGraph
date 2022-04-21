@@ -142,7 +142,6 @@ cache:
   wikipedia_type_lexicalisations:
     filename: 'wikipedia-type-lexicalisations'
     version: 1
-    compress: True
   wikipedia_hypernyms:
     filename: 'wikipedia-hypernyms'
     version: 1
