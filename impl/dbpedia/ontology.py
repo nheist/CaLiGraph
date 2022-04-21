@@ -113,11 +113,11 @@ class DbpOntologyStore:
             self.equivalents = defaultdict(set)
             equivalent_types = rdf_util.create_multi_val_dict_from_rdf([utils.get_data_file('files.dbpedia.taxonomy')], RdfPredicate.EQUIVALENT_CLASS, reflexive=True, casting_fn=self.get_class_by_iri)
             for t, ets in equivalent_types.items():
-                self.equivalents[t] = {t} | ets
+                self.equivalents[t] = ets
             equivalent_predicates = rdf_util.create_multi_val_dict_from_rdf([utils.get_data_file('files.dbpedia.taxonomy')], RdfPredicate.EQUIVALENT_PROPERTY, casting_fn=self.get_class_by_iri)
             for p, eps in equivalent_predicates.items():
-                self.equivalents[p] = {p} | eps
-        return self.equivalents[cls]
+                self.equivalents[p] = eps
+        return {cls} | self.equivalents[cls]
 
     def get_label(self, cls: DbpClass) -> Optional[str]:
         if not self.labels:
