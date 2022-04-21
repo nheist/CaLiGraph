@@ -1,5 +1,6 @@
 from typing import Iterator, List, Tuple
 from tqdm import tqdm
+import os
 import utils
 import spacy
 from spacy.tokens import Span
@@ -28,7 +29,8 @@ N_PROCESSES = utils.get_config('max_cpus')
 BASE_PARSER = spacy.load('en_core_web_lg')
 SET_PARSER = _init_set_parser()
 
-CACHE_SET_DOCUMENTS = {d.text: d for d in utils.load_or_create_cache('spacy_cache', list)}
+CACHE_ENABLED = 'DISABLE_SPACY_CACHE' not in os.environ or os.environ['DISABLE_SPACY_CACHE'] != '1'
+CACHE_SET_DOCUMENTS = {d.text: d for d in utils.load_or_create_cache('spacy_cache', list)} if CACHE_ENABLED else {}
 CACHE_STORED_SIZE = len(CACHE_SET_DOCUMENTS)
 CACHE_STORAGE_THRESHOLD = 100000
 
@@ -43,7 +45,7 @@ def parse_sets(taxonomic_sets: list) -> Iterator:
         set_tuples = [(s, s) for s in unknown_sets]
         for doc, s in tqdm(SET_PARSER.pipe(set_tuples, as_tuples=True, batch_size=BATCH_SIZE, n_process=N_PROCESSES), total=len(unknown_sets), desc='Parsing sets with spaCy'):
             CACHE_SET_DOCUMENTS[s] = doc
-    if len(CACHE_SET_DOCUMENTS) > (CACHE_STORED_SIZE + CACHE_STORAGE_THRESHOLD):
+    if CACHE_ENABLED and len(CACHE_SET_DOCUMENTS) > (CACHE_STORED_SIZE + CACHE_STORAGE_THRESHOLD):
         utils.get_logger().debug(f'spacy: Updating spacy cache from {CACHE_STORED_SIZE} documents to {len(CACHE_SET_DOCUMENTS)} documents.')
         utils.update_cache('spacy_cache', list(CACHE_SET_DOCUMENTS.values()))
         CACHE_STORED_SIZE = len(CACHE_SET_DOCUMENTS)
