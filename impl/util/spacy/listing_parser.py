@@ -10,18 +10,6 @@ from spacy.tokens import Doc
 from spacy.training import Example
 
 
-def parse(text: str) -> Doc:
-    """Return `text` as spaCy document."""
-    global __PARSER__
-    if '__PARSER__' not in globals():
-        __PARSER__ = _initialise_parser()
-
-    return __PARSER__(text)
-
-
-# initialization
-
-
 def _initialise_parser():
     path_to_model = utils._get_cache_path('spacy_listpage_ne-tagging')
     if not path_to_model.is_dir():
@@ -48,3 +36,10 @@ def _retrieve_training_data_gs(nlp: Language):
                 entities.append((point['start'], point['end']+1, annotation['label'][0]))
             training_data.append(Example.from_dict(nlp.make_doc(text), {'entities': entities}))
     return training_data
+
+
+LISTING_PARSER = _initialise_parser()
+
+
+def parse(text: str) -> Doc:
+    return LISTING_PARSER(text)
