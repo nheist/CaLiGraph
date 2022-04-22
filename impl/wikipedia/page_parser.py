@@ -29,7 +29,7 @@ def _parse_pages(pages_markup: Dict[DbpResource, str]) -> Dict[DbpResource, Opti
     dbr.resolve_redirect(dbr.get_resource_by_idx(0))  # make sure redirects are initialised before going into multiprocessing
 
     parsed_pages = {}
-    with mp.Pool(processes=utils.get_config('max_cpus')) as pool:
+    with mp.Pool(processes=utils.get_config('max_cpus') // 2) as pool:
         for r, parsed in tqdm(pool.imap_unordered(_parse_page_with_timeout, pages_markup.items(), chunksize=10000), total=len(pages_markup), desc='wikipedia/page_parser: Parsing pages'):
             if parsed:
                 parsed_pages[r] = parsed
