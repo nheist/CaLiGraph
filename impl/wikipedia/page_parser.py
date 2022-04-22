@@ -26,10 +26,10 @@ class PageType(Enum):
 
 def _parse_pages(pages_markup: Dict[DbpResource, str]) -> Dict[DbpResource, Optional[dict]]:
     dbr = DbpResourceStore.instance()
-    dbr.resolve_redirect(dbr.get_resource_by_idx(0))  # make sure redirects are initialised before going into multiprocessing
+    dbr.resolve_redirect(dbr.get_resource_by_idx(0))  # warm up redirect cache before going into multiprocessing
 
     parsed_pages = {}
-    with mp.Pool(processes=utils.get_config('max_cpus') // 2) as pool:
+    with mp.Pool(processes=utils.get_config('max_cpus')) as pool:
         for r, parsed in tqdm(pool.imap_unordered(_parse_page_with_timeout, pages_markup.items(), chunksize=10000), total=len(pages_markup), desc='wikipedia/page_parser: Parsing pages'):
             if parsed:
                 parsed_pages[r] = parsed
@@ -60,8 +60,6 @@ def _parse_page_with_timeout(resource_and_markup: Tuple[DbpResource, str]) -> Tu
 
 def _parse_page(resource_and_markup: Tuple[DbpResource, str]) -> Tuple[DbpResource, Optional[dict]]:
     resource, page_markup = resource_and_markup
-    if isinstance(resource, DbpFile):
-        return resource, None  # discard files and images
     if not any(indicator in page_markup for indicator in LISTING_INDICATORS):
         return resource, None  # early return of 'None' if page contains no listings at all
 
