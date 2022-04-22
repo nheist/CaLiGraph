@@ -22,7 +22,7 @@ import impl.util.nlp as nlp_util
 from impl.util.rdf import RdfPredicate
 from impl.dbpedia.ontology import DbpType, DbpObjectPredicate, DbpOntologyStore
 from impl.dbpedia.resource import DbpResource, DbpEntity, DbpResourceStore
-from impl.dbpedia.category import DbpCategory, DbpCategoryStore
+from impl.dbpedia.category import DbpCategory
 
 
 PATTERN_CONF = utils.get_config('cat2ax.pattern_confidence')
@@ -168,6 +168,8 @@ def _get_type_surface_scores(words: list, lemmatize=True) -> Dict[DbpType, float
     word_lemmas = [nlp_util.lemmatize_token(word_doc[0]) for word_doc in nlp_util.parse_texts(words)] if lemmatize else words
     for lemma in word_lemmas:
         for t, score in dbo.get_type_lexicalisations(lemma).items():
+            if t == dbo.get_type_root():
+                continue  # ignore obvious root type axiom
             lexicalisation_scores[t] += score
     type_surface_scores = defaultdict(float, {t: score / lexicalisation_scores.total() for t, score in lexicalisation_scores.items()})
 
