@@ -4,6 +4,7 @@ import re
 import impl.util.string as str_util
 from impl.dbpedia.resource import DbpResourceStore
 from impl.dbpedia.util import is_entity_name
+from impl.util.rdf import label2name
 
 
 def wikitext_to_plaintext(text: Union[str, wtp.WikiText]) -> str:
@@ -32,7 +33,7 @@ def get_resource_idx_for_wikilink(wikilink: wtp.WikiLink) -> Optional[int]:
     if not wikilink.target:
         return None
     dbr = DbpResourceStore.instance()
-    res_name = str_util.capitalize(_remove_language_tag(wikilink.target.strip()))
+    res_name = label2name(str_util.capitalize(_remove_language_tag(wikilink.target.strip())))
     if not dbr.has_resource_with_name(res_name):
         return -1 if is_entity_name(res_name) else None
     res = dbr.get_resource_by_name(res_name)
