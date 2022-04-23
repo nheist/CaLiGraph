@@ -168,8 +168,6 @@ def _get_type_surface_scores(words: list, lemmatize=True) -> Dict[DbpType, float
     word_lemmas = [nlp_util.lemmatize_token(word_doc[0]) for word_doc in nlp_util.parse_texts(words)] if lemmatize else words
     for lemma in word_lemmas:
         for t, score in dbo.get_type_lexicalisations(lemma).items():
-            if t == dbo.get_type_root():
-                continue  # ignore obvious root type axiom
             lexicalisation_scores[t] += score
     type_surface_scores = defaultdict(float, {t: score / lexicalisation_scores.total() for t, score in lexicalisation_scores.items()})
 
@@ -179,6 +177,8 @@ def _get_type_surface_scores(words: list, lemmatize=True) -> Dict[DbpType, float
             min_word_type_score = 1 / len(words)
             type_surface_scores[word_type] = max(type_surface_scores[word_type], min_word_type_score)
 
+    if dbo.get_type_root() in type_surface_scores:
+        del type_surface_scores[dbo.get_type_root()]  # ignore obvious root type axiom
     return type_surface_scores
 
 
