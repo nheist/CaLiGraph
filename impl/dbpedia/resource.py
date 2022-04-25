@@ -48,14 +48,14 @@ class DbpListpage(DbpResource):
         return label[4:] if label.startswith('the ') else label
 
     @classmethod
-    def _get_prefix(cls) -> str:
-        return Namespace.PREFIX_LIST.value
+    def _get_prefixes(cls) -> set:
+        return {Namespace.PREFIX_LIST.value}
 
 
 class DbpFile(DbpResource):
     @classmethod
-    def _get_prefix(cls) -> str:
-        return Namespace.PREFIX_FILE.value
+    def _get_prefixes(cls) -> set:
+        return {Namespace.PREFIX_FILE.value, Namespace.PREFIX_IMAGE.value}
 
 
 class DbpResourceNotExistingException(KeyError):

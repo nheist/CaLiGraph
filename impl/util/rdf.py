@@ -21,7 +21,8 @@ class Namespace(Enum):
     PREFIX_FILE = 'File:'
     PREFIX_IMAGE = 'Image:'
     PREFIX_LIST = 'List_of_'
-    PREFIX_LISTCATEGORY = PREFIX_CATEGORY + 'Lists_of_'
+    PREFIX_LISTS = 'Lists_of_'
+    PREFIX_LISTCATEGORY = PREFIX_CATEGORY + PREFIX_LISTS
 
     DBP_ONTOLOGY = 'http://dbpedia.org/ontology/'
     DBP_RESOURCE = 'http://dbpedia.org/resource/'
@@ -79,8 +80,10 @@ class RdfResource:
 
     def get_label(self) -> str:
         label = self._get_store().get_label(self) or name2label(self.name)
-        prefix = self._get_label_prefix()
-        return label[len(prefix):] if label.startswith(prefix) else label
+        for prefix in self._get_label_prefixes():
+            if label.startswith(prefix):
+                return label[len(prefix):]
+        return label
 
     @classmethod
     def get_namespace(cls) -> str:
@@ -91,12 +94,12 @@ class RdfResource:
         raise NotImplementedError()
 
     @classmethod
-    def _get_prefix(cls) -> str:
-        return ''
+    def _get_prefixes(cls) -> set:
+        return set()
 
     @classmethod
-    def _get_label_prefix(cls) -> str:
-        return name2label(cls._get_prefix())
+    def _get_label_prefixes(cls) -> set:
+        return {name2label(p) for p in cls._get_prefixes()}
 
 
 # auxiliary structures

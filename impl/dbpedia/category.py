@@ -24,8 +24,8 @@ class DbpCategory(RdfResource):
         return Namespace.DBP_RESOURCE.value
 
     @classmethod
-    def _get_prefix(cls) -> str:
-        return Namespace.PREFIX_CATEGORY.value
+    def _get_prefixes(cls) -> set:
+        return {Namespace.PREFIX_CATEGORY.value}
 
     @classmethod
     def _get_store(cls):
@@ -34,8 +34,8 @@ class DbpCategory(RdfResource):
 
 class DbpListCategory(DbpCategory):
     @classmethod
-    def _get_prefix(cls) -> str:
-        return Namespace.PREFIX_LISTCATEGORY.value
+    def _get_prefixes(cls) -> set:
+        return {Namespace.PREFIX_LISTS.value, Namespace.PREFIX_LISTCATEGORY.value}
 
 
 class DbpCategoryNotExistingException(KeyError):
