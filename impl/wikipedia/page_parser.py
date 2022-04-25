@@ -12,7 +12,7 @@ from utils import get_logger
 from tqdm import tqdm
 import multiprocessing as mp
 from enum import Enum
-from impl.dbpedia.resource import DbpResource, DbpResourceStore, DbpFile
+from impl.dbpedia.resource import DbpResource, DbpResourceStore
 
 
 LISTING_INDICATORS = ('*', '#', '{|')
