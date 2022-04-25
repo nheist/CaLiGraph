@@ -4,6 +4,8 @@ from typing import Tuple, Optional, Dict
 import wikitextparser as wtp
 from wikitextparser import WikiText
 import impl.util.nlp as nlp_util
+from impl.util.rdf import Namespace, label2name
+from impl.dbpedia.util import is_entity_name
 from . import wikimarkup_parser as wmp
 import re
 import signal
@@ -25,12 +27,15 @@ class PageType(Enum):
 
 
 def _parse_pages(pages_markup: Dict[DbpResource, str]) -> Dict[DbpResource, Optional[dict]]:
+    # warm up caches before going into multiprocessing
     dbr = DbpResourceStore.instance()
-    dbr.resolve_redirect(dbr.get_resource_by_idx(0))  # warm up redirect cache before going into multiprocessing
+    res = dbr.get_resource_by_idx(0)
+    dbr.get_label(res)
+    dbr.resolve_redirect(res)
 
     parsed_pages = {}
     with mp.Pool(processes=utils.get_config('max_cpus')) as pool:
-        for r, parsed in tqdm(pool.imap_unordered(_parse_page_with_timeout, pages_markup.items(), chunksize=10000), total=len(pages_markup), desc='wikipedia/page_parser: Parsing pages'):
+        for r, parsed in tqdm(pool.imap_unordered(_parse_page_with_timeout, pages_markup.items(), chunksize=1000), total=len(pages_markup), desc='wikipedia/page_parser: Parsing pages'):
             if parsed:
                 parsed_pages[r] = parsed
             pages_markup[r] = ''  # discard markup after parsing to free memory
@@ -127,9 +132,8 @@ def _remove_enums_within_tables(wiki_text: WikiText) -> WikiText:
 
 
 def _expand_wikilinks(wiki_text: WikiText, resource: DbpResource) -> WikiText:
-    invalid_wikilink_prefixes = ['File:', 'Image:', 'Category:', 'List of']
-    text_to_wikilink = {wl.text or wl.target: wl.string for wl in wiki_text.wikilinks if not any(wl.target.startswith(prefix) for prefix in invalid_wikilink_prefixes)}
-    text_to_wikilink[resource.name] = f'[[{resource.name}]]'  # replace mentions of the page title with a link to it
+    text_to_wikilink = {wl.text or wl.target: wl.string for wl in wiki_text.wikilinks if is_entity_name(label2name(wl.target))}
+    text_to_wikilink[resource.get_label()] = f'[[{resource.name}]]'  # replace mentions of the page title with a link to it
     pattern_to_wikilink = {r'(?<![|\[])\b' + re.escape(text) + r'\b(?![|\]])': wl for text, wl in text_to_wikilink.items()}
     regex = re.compile("|".join(pattern_to_wikilink.keys()))
     try:
@@ -144,28 +148,16 @@ def _expand_wikilinks(wiki_text: WikiText, resource: DbpResource) -> WikiText:
 def _extract_sections(wiki_text: WikiText) -> list:
     sections = []
     for section_idx, section in enumerate(wiki_text.get_sections(include_subsections=False)):
-        #markup_without_lists = _remove_listing_markup(section)
-        #text, entities = _convert_markup(markup_without_lists)
         enums = [_extract_enum(l) for l in section.get_lists(VALID_ENUM_PATTERNS)]
         tables = [_extract_table(t) for t in section.get_tables()]
         sections.append({
             'index': section_idx,
             'name': section.title.strip() if section.title and section.title.strip() else 'Main',
             'level': section.level,
-            #'text': text,
-            #'entities': entities,
             'enums': [e for e in enums if len(e) >= 2],
             'tables': [t for t in tables if t]
         })
     return sections
-
-
-def _remove_listing_markup(wiki_text: WikiText) -> str:
-    result = wiki_text.string
-    for indicator in LISTING_INDICATORS:
-        if indicator in result:
-            result = result[:result.index(indicator)]
-    return result
 
 
 def _extract_enum(l: wtp.WikiList) -> list:
@@ -238,7 +230,7 @@ def _convert_markup(wiki_text: str) -> Tuple[str, list]:
         # retrieve entity text and remove html tags
         text = (w.text or w.target).strip()
         text = nlp_util.remove_bracket_content(text, bracket_type='<')
-        if w.target.startswith(('File:', 'Image:')):
+        if w.target.startswith((Namespace.PREFIX_FILE.value, Namespace.PREFIX_IMAGE.value)):
             continue  # ignore files and images
         if '|' in text:  # deal with invalid markup in wikilinks
             text = text[text.rindex('|')+1:].strip()

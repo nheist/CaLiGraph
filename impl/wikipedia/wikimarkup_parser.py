@@ -9,7 +9,7 @@ from impl.util.rdf import label2name
 
 def wikitext_to_plaintext(text: Union[str, wtp.WikiText]) -> str:
     try:
-        parsed_text = wtp.parse(text) if type(text) == str else text
+        parsed_text = wtp.parse(text) if isinstance(text, str) else text
         # bolds and italics are already removed during preprocessing to reduce runtime
         result = parsed_text.plain_text(replace_bolds_and_italics=False).strip(" '\t\n")
         result = re.sub(r'\n+', '\n', result)
