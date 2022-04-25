@@ -1,5 +1,6 @@
-from typing import Dict, Set, Optional, Iterable, Tuple, List
+from typing import Dict, Set, Optional, Iterable, Tuple
 from collections import defaultdict, Counter
+import re
 from impl.util.singleton import Singleton
 import impl.dbpedia.util as dbp_util
 import impl.util.rdf as rdf_util
@@ -78,7 +79,7 @@ class DbpCategoryStore:
         ignored_category_endings = ('files', 'images', 'lists', 'articles', 'stubs', 'pages', 'categories')
         maintenance_category_indicators = {'wikipedia', 'wikipedians', 'wikimedia', 'wikiproject', 'redirects',
                                            'mediawiki', 'template', 'templates', 'user', 'portal', 'navigational'}
-        meta_categories.update({c for c in category_names if c.lower().endswith(ignored_category_endings) or set(c.lower().split('_')).intersection(maintenance_category_indicators)})
+        meta_categories.update({c for c in category_names if c.lower().endswith(ignored_category_endings) or set(re.split('[_:]', c.lower())).intersection(maintenance_category_indicators)})
 
         # build actual category classes
         categories = {DbpCategory(0, utils.get_config('category.root_category'), False)}
