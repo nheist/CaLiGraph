@@ -1,4 +1,5 @@
 from typing import Set, Union, Tuple
+from collections import defaultdict
 import utils
 from impl.util.rdf import Namespace, RdfResource
 from impl.util.singleton import Singleton
@@ -137,7 +138,7 @@ class ClgOntologyStore:
 
     def get_disjoint_types(self, clg_type: ClgType) -> Set[ClgType]:
         if self.disjoint_types is None:
-            self.disjoint_types = {}
+            self.disjoint_types = defaultdict(set)
             for t in self.get_types(include_root=True):
                 disjoint_dbp_types = {dt for dbp_type in self.get_direct_dbp_types(t) for dt in dbp_heur.get_direct_disjoint_types(dbp_type)}
                 self.disjoint_types[t] = {ct for dt in disjoint_dbp_types for ct in self.get_types_for_associated_dbp_type(dt)}
