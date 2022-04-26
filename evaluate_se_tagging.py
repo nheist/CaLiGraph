@@ -29,9 +29,9 @@ def run_evaluation(model_name: str, epochs: int, batch_size: int, learning_rate:
     # load data
     data = utils.load_cache('subject_entity_training_data')
     # split into train and validation
-    all_pages = set(data)
+    all_pages = list(data)
     train_pages = set(random.sample(all_pages, int(len(all_pages) * .9)))  # 90% of pages for train, 10% for val
-    val_pages = all_pages.difference(train_pages)
+    val_pages = set(all_pages).difference(train_pages)
     # prepare data
     train_data = _prepare_data(tokenizer, [data[p] for p in train_pages], predict_single_tag)
     val_data = _prepare_data(tokenizer, [data[p] for p in val_pages], predict_single_tag)
