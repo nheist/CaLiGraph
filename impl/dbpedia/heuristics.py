@@ -21,7 +21,7 @@ def get_domain(pred: DbpPredicate) -> Optional[DbpType]:
 
 
 def _compute_domains() -> Dict[DbpPredicate, Optional[DbpType]]:
-    return _compute_predicate_types(DbpResourceStore.instance().get_entity_properties(), DOMAIN_THRESHOLD)
+    return _compute_predicate_types(DbpResourceStore.instance().get_entity_properties(include_meta=True), DOMAIN_THRESHOLD)
 
 
 def get_range(pred: DbpPredicate) -> Optional[DbpType]:
@@ -32,7 +32,7 @@ def get_range(pred: DbpPredicate) -> Optional[DbpType]:
 
 
 def _compute_ranges() -> Dict[DbpPredicate, Optional[DbpType]]:
-    return _compute_predicate_types(DbpResourceStore.instance().get_inverse_entity_properties(), RANGE_THRESHOLD)
+    return _compute_predicate_types(DbpResourceStore.instance().get_inverse_entity_properties(include_meta=True), RANGE_THRESHOLD)
 
 
 def _compute_predicate_types(ent_prop_mapping: Dict[DbpEntity, Dict[DbpPredicate, Set[DbpResource]]], threshold: float) -> Dict[DbpPredicate, Optional[DbpType]]:
