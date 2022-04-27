@@ -281,7 +281,7 @@ class DbpResourceStore:
 
     def _init_embedding_cache(self) -> Dict[int, List[float]]:
         embedding_vectors = {}
-        with bz2.open(utils.get_data_file('files.dbpedia.embedding_vectors'), mode='r', newline='') as f:
+        with bz2.open(utils.get_data_file('files.dbpedia.embedding_vectors'), mode='rt', newline='') as f:
             for row in csv.reader(f, delimiter=' '):
                 res_iri = rdf_util.uri2iri(row[0])
                 if not self.has_resource_with_iri(res_iri):
