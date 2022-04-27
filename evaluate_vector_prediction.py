@@ -10,8 +10,8 @@ import utils
 from impl import subject_entity
 from impl.subject_entity import combine
 from impl.subject_entity.preprocess.word_tokenize import WordTokenizer, WordTokenizerSpecialToken, WordTokenizerSpecialLabel
-from transformers import Trainer, IntervalStrategy, TrainingArguments, AutoTokenizer, AutoModel
-from impl.dbpedia.resource import DbpResource
+from transformers import Trainer, IntervalStrategy, TrainingArguments, AutoTokenizer, AutoModel, EvalPrediction
+from impl.dbpedia.resource import DbpResource, DbpResourceStore
 from entity_linking.preprocessing.embeddings import EntityIndexToEmbeddingMapper
 from entity_linking.model.linking import TransformerForEntityVectorPrediction
 from entity_linking.data.linking import prepare_linking_dataset
