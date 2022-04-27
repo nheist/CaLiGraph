@@ -167,7 +167,7 @@ class ClgEntityStore:
         labels = {}
         for dbp_ent in self.dbr.get_entities():
             labels[self.get_entity_for_dbp_entity(dbp_ent)] = dbp_ent.get_label()
-        for ent, data_tuples in self.get_page_occurrence_data():
+        for ent, data_tuples in self.get_page_occurrence_data().items():
             if ent not in labels:
                 label_counter = Counter([t[5] for t in data_tuples])
                 labels[ent] = label_counter.most_common(1)[0][0]
@@ -180,7 +180,7 @@ class ClgEntityStore:
         surface_forms = defaultdict(set)
         for dbp_ent in self.dbr.get_entities():
             surface_forms[self.get_entity_for_dbp_entity(dbp_ent)].update(dbp_ent.get_surface_forms())
-        for ent, data_tuples in self.get_page_occurrence_data():
+        for ent, data_tuples in self.get_page_occurrence_data().items():
             surface_forms[ent].update({t[5] for t in data_tuples})
         return surface_forms
 
@@ -197,7 +197,7 @@ class ClgEntityStore:
                     types[self.get_entity_for_dbp_entity(dbp_ent)].update(cat_types)
         # retrieve types based on Wikipedia listpage membership
         listpages_by_idx = {lp.idx: lp for lp in self.dbr.get_listpages()}
-        for ent, data_tuples in self.get_page_occurrence_data():
+        for ent, data_tuples in self.get_page_occurrence_data().items():
             for dt in data_tuples:
                 res_idx = dt[0]
                 if res_idx in listpages_by_idx:
