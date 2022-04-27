@@ -56,6 +56,7 @@ class TransformerForEntityVectorPrediction(nn.Module):
 
         loss = None
         if labels is not None:
+            loss_fct = nn.CrossEntropyLoss()
             # find valid labels (ignore new/padding entity labels)
             label_mask = labels.ne(-1).view(-1)  # (bs*num_ents)
             targets = torch.where(label_mask, torch.arange(len(label_mask)), torch.tensor(loss_fct.ignore_index))  # (bs*num_ents)
@@ -63,7 +64,6 @@ class TransformerForEntityVectorPrediction(nn.Module):
             label_entity_vectors = self.idx2emb(labels.view(-1), label_mask)  # (bs*num_ents, ent_dim)
             entity_logits = entity_vectors @ label_entity_vectors.T  # (bs, num_ents, bs*num_ents)
             # compute loss for valid labels
-            loss_fct = nn.CrossEntropyLoss()
             loss = loss_fct(entity_logits.view(-1, entity_logits.shape[-1]), targets)
 
         return (entity_vectors,) if labels is None else (loss, entity_vectors)
