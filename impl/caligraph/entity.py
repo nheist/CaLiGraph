@@ -212,10 +212,10 @@ class ClgEntityStore:
             disjoint_types = {dt for ct in types_from_dbpedia for dt in self.clgo.get_disjoint_types(ct)}
             types[ent].difference_update(disjoint_types)
         # remove potential transitive types
-        for ent, ent_types in types:
+        for ent, ent_types in types.items():
             types[ent].difference_update({tt for ct in ent_types for tt in self.clgo.get_transitive_supertypes(ct)})
         # remove remaining disjointnesses in types
-        for ent, ent_types in types:
+        for ent, ent_types in types.items():
             types[ent].difference_update({dt for ct in ent_types for dt in self.clgo.get_disjoint_types(ct)})
         return types
 
