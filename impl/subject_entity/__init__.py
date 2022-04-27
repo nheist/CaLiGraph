@@ -1,4 +1,5 @@
 from typing import Dict, Tuple, List
+from collections import defaultdict
 import utils
 from tqdm import tqdm
 from . import heuristics, extract, combine
@@ -16,7 +17,7 @@ def get_page_subject_entities() -> Dict[DbpResource, dict]:
 
 
 def _get_subject_entity_predictions() -> Dict[DbpResource, dict]:
-    return utils.load_or_create_cache('subject_entity_predictions', _make_subject_entity_predictions)
+    return defaultdict(dict, utils.load_or_create_cache('subject_entity_predictions', _make_subject_entity_predictions))
 
 
 def _make_subject_entity_predictions() -> Dict[DbpResource, dict]:
