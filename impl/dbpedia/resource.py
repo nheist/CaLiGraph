@@ -40,7 +40,7 @@ class DbpResource(RdfResource):
 
 class DbpEntity(DbpResource):
     def get_embedding_vector(self) -> Optional[List[float]]:
-        return self._get_store().get_embedding_vector(self.idx)
+        return self._get_store().get_embedding_vectors()[self.idx]
 
 
 class DbpListpage(DbpResource):
@@ -274,10 +274,10 @@ class DbpResourceStore:
         redirects = rdf_util.create_single_val_dict_from_rdf([utils.get_data_file('files.dbpedia.redirects')], RdfPredicate.REDIRECTS, casting_fn=self.get_resource_by_iri)
         return {source.idx: target.idx for source, target in redirects.items()}
 
-    def get_embedding_vector(self, res_idx: int) -> Optional[List[float]]:
+    def get_embedding_vectors(self) -> Dict[int, List[float]]:
         if self.embedding_vectors is None:
             self.embedding_vectors = defaultdict(lambda: None, utils.load_or_create_cache('dbpedia_resource_embeddings', self._init_embedding_cache))
-        return self.embedding_vectors[res_idx]
+        return self.embedding_vectors
 
     def _init_embedding_cache(self) -> Dict[int, List[float]]:
         embedding_vectors = {}
