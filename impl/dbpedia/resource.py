@@ -39,7 +39,8 @@ class DbpResource(RdfResource):
 
 
 class DbpEntity(DbpResource):
-    pass
+    def get_embedding_vector(self) -> Optional[List[float]]:
+        return self._get_store().get_embedding_vector(self.idx)
 
 
 class DbpListpage(DbpResource):
@@ -276,8 +277,7 @@ class DbpResourceStore:
     def get_embedding_vector(self, res_idx: int) -> Optional[List[float]]:
         if self.embedding_vectors is None:
             self.embedding_vectors = defaultdict(lambda: None, utils.load_or_create_cache('dbpedia_resource_embeddings', self._init_embedding_cache))
-        # if -1 (= unknown entity) is given as res_idx, we simply return a random embedding vector
-        return self.embedding_vectors[res_idx] if res_idx != -1 else random.choice(self.embedding_vectors.values())
+        return self.embedding_vectors[res_idx]
 
     def _init_embedding_cache(self) -> Dict[int, List[float]]:
         embedding_vectors = {}
