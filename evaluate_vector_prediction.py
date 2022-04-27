@@ -12,6 +12,7 @@ from impl.subject_entity import combine
 from impl.subject_entity.preprocess.word_tokenize import WordTokenizer, WordTokenizerSpecialToken, WordTokenizerSpecialLabel
 from transformers import Trainer, IntervalStrategy, TrainingArguments, AutoTokenizer, AutoModel
 from impl.dbpedia.resource import DbpResource
+from entity_linking.preprocessing.embeddings import EntityIndexToEmbeddingMapper
 from entity_linking.model.linking import TransformerForEntityVectorPrediction
 from entity_linking.data.linking import prepare_linking_dataset
 
@@ -30,7 +31,8 @@ def run_evaluation(model_name: str, epochs: int, batch_size: int, learning_rate:
     tokenizer = AutoTokenizer.from_pretrained(model_name, add_prefix_space=True, additional_special_tokens=list(WordTokenizerSpecialToken.all_tokens()))
     encoder = AutoModel.from_pretrained(model_name)
     encoder.resize_token_embeddings(len(tokenizer))
-    model = TransformerForEntityVectorPrediction(encoder, EMBEDDING_DIM)
+    ent_idx2emb = EntityIndexToEmbeddingMapper(EMBEDDING_DIM)
+    model = TransformerForEntityVectorPrediction(encoder, ent_idx2emb, EMBEDDING_DIM)
     # load data
     train_pages, val_pages = utils.load_or_create_cache('vector_prediction_training_data', _load_train_and_val_pages)
     # prepare data

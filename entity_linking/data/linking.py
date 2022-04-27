@@ -13,17 +13,24 @@ class LinkingDataset(Dataset):
         self.mention_spans = mention_spans
         self.entity_indices = entity_indices
         self.num_ents = num_ents
+        self.all_entity_indices = torch.Tensor([e.idx for e in DbpResourceStore.instance().get_entities()], dtype=int)
 
     def __getitem__(self, idx):
         item = {key: torch.tensor(val[idx]) for key, val in self.encodings.items()}
         # add empty mention spans (0,0) to pad the spans to `num_ents`
         mention_spans = torch.tensor(self.mention_spans[idx])
         spans_to_pad = self.num_ents - len(mention_spans)
-        item['mention_spans'] = torch.nn.ZeroPad2d((0, 0, 0, spans_to_pad))(mention_spans)
-        # pad entity indices with -1 (which will be converted to a random entity embedding)
-        labels = torch.tensor(self.entity_indices[idx])
-        labels_to_pad = self.num_ents - len(labels)
-        item['labels'] = torch.nn.ConstantPad1d((0, labels_to_pad), -1)(labels)
+        span_padder = torch.nn.ZeroPad2d((0, 0, 0, spans_to_pad))
+        item['mention_spans'] = span_padder(mention_spans)
+        # pad entity indices with the value for NO ENTITY to indicate that the remaining entities are only fillers
+        entity_labels = torch.tensor(self.entity_indices[idx])
+        entity_labels_to_pad = self.num_ents - len(entity_labels)
+        entity_padder = torch.nn.ConstantPad1d((0, entity_labels_to_pad), WordTokenizerSpecialLabel.NO_ENTITY.value)
+        entity_labels = entity_padder(entity_labels)
+        # get a set of random entities to use as filler embeddings for new/no entities
+        random_labels = self.all_entity_indices[torch.randperm(len(self.all_entity_indices))][:len(entity_labels)]
+        # pass both as labels of the item
+        item['label_ids'] = torch.stack((entity_labels, random_labels))
         return item
 
     def __len__(self):
