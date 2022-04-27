@@ -17,6 +17,8 @@ def _match_subject_entities_for_page(page_content: dict, entities_per_ts: dict) 
     for section_data in page_content['sections']:
         section_name = wmp.wikitext_to_plaintext(section_data['name'])
         top_section_name = section_name if section_data['level'] <= 2 else top_section_name
+        if top_section_name not in entities_per_ts or section_name not in entities_per_ts[top_section_name]:
+            continue  # skip sections that have not been tokenized
         for enum_data in section_data['enums']:
             for entry in enum_data:
                 entry['entities'] = _match_subject_entities_for_item(entry, entities_per_ts[top_section_name][section_name])
