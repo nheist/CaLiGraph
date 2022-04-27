@@ -13,6 +13,7 @@ from impl import category
 import impl.util.nlp as nlp_util
 import impl.category.cat2ax as cat_axioms
 from impl.dbpedia.resource import DbpEntity
+from impl.dbpedia.category import DbpCategoryStore
 from impl.caligraph.ontology import ClgType, ClgPredicate, ClgObjectPredicate, ClgOntologyStore
 from impl.caligraph.entity import ClgEntity, ClgEntityStore
 
@@ -34,9 +35,10 @@ def _extract_axiom_information() -> Dict[ClgType, Set[Tuple[ClgPredicate, Any, f
 
 def _extract_patterns(candidate_sets: List[CandidateSet]) -> Dict[Tuple[tuple, tuple], dict]:
     clgo = ClgOntologyStore.instance()
-
-    category_graph = category.get_conceptual_category_graph()
-    dbp_patterns = cat_axioms._extract_patterns(category_graph, candidate_sets)
+    dbc = DbpCategoryStore.instance()
+    ccg = category.get_conceptual_category_graph()
+    valid_categories = {dbc.get_category_by_name(node) for node in ccg.content_nodes}
+    dbp_patterns = cat_axioms._extract_patterns(valid_categories, candidate_sets)
 
     patterns = {}
     for p, scores in dbp_patterns.items():
