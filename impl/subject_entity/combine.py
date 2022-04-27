@@ -53,7 +53,7 @@ def _match_entities_for_page(page_res: DbpResource, entities_per_ts: dict, page_
     for ts, entities_per_s in entities_per_ts.items():
         for s, entities in entities_per_s.items():
             for ent_text, ent_tag in entities.items():
-                if ent_text in page_entity_map[ts][s]:
+                if ent_text in page_entity_map[ts][s] and page_entity_map[ts][s][ent_text] != WordTokenizerSpecialLabel.NEW_ENTITY.value:
                     ent_idx = page_entity_map[ts][s][ent_text]
                     if not isinstance(dbr.get_resource_by_idx(ent_idx), DbpEntity):
                         continue  # discard anything that is not an entity (listpage, file, ..)
