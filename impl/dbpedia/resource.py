@@ -249,7 +249,7 @@ class DbpResourceStore:
         if self.inverse_properties is None:
             self.inverse_properties = defaultdict(lambda: defaultdict(set))
             for r in self.resources_by_idx.values():
-                for pred, vals in self.get_properties(r):
+                for pred, vals in self.get_properties(r).values():
                     if not isinstance(pred, DbpObjectPredicate):
                         continue
                     for val in vals:
