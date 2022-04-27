@@ -1,10 +1,43 @@
 """Combine extracted SE labels with information in page markup to get extracted SE entities with labels."""
 
-from typing import Dict, Tuple
+from typing import Dict, Tuple, List
 from impl.dbpedia.resource import DbpResource, DbpEntity, DbpResourceStore
 from impl import wikipedia
 from collections import defaultdict
 import impl.wikipedia.wikimarkup_parser as wmp
+from .preprocess.word_tokenize import WordTokenizerSpecialLabel
+
+
+def get_subject_entity_page_content(subject_entities_per_page: Dict[DbpResource, dict]) -> Dict[DbpResource, dict]:
+    return {res: _match_subject_entities_for_page(page_content, subject_entities_per_page[res]) for res, page_content in wikipedia.get_parsed_pages().items()}
+
+
+def _match_subject_entities_for_page(page_content: dict, entities_per_ts: dict) -> dict:
+    top_section_name = ''
+    for section_data in page_content['sections']:
+        section_name = wmp.wikitext_to_plaintext(section_data['name'])
+        top_section_name = section_name if section_data['level'] <= 2 else top_section_name
+        for enum_data in section_data['enums']:
+            for entry in enum_data:
+                entry['entities'] = _match_subject_entities_for_item(entry, entities_per_ts[top_section_name][section_name])
+        for table in section_data['tables']:
+            for row in table['data']:
+                for cell in row:
+                    cell['entities'] = _match_subject_entities_for_item(cell, entities_per_ts[top_section_name][section_name])
+    return page_content
+
+
+def _match_subject_entities_for_item(list_item: dict, subject_entities: dict) -> List[dict]:
+    existing_entities = {e['text']: e for e in list_item['entities']}
+
+    entities = []
+    for ent_name, ent_tag in subject_entities.items():
+        if ent_name not in list_item['text']:
+            continue
+        ent_data = {'start': list_item['text'].index(ent_name), 'text': ent_name, 'tag': ent_tag,
+                    'idx': existing_entities[ent_name]['idx'] if ent_name in existing_entities else WordTokenizerSpecialLabel.NEW_ENTITY.value}
+        entities.append(ent_data)
+    return entities
 
 
 def match_entities_with_uris(subject_entities_per_page: Dict[DbpResource, dict]) -> Dict[DbpResource, dict]:
