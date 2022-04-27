@@ -49,7 +49,7 @@ class WordTokenizer:
     def __init__(self, max_words_per_chunk=384):
         self.word_tokenizer = English().tokenizer
         self.max_words_per_chunk = max_words_per_chunk
-        self.meta_sections = {'see also', 'external links', 'references', 'notes'}
+        self.meta_sections = {'see also', 'external links', 'references', 'notes', 'further reading'}
 
     def __call__(self, pages: Dict[DbpResource, dict], entity_labels: Dict[DbpResource, Tuple[Set[int], Set[int]]] = None) -> Dict[DbpResource, Tuple[list, list]]:
         if entity_labels:
