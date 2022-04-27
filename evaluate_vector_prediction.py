@@ -1,3 +1,6 @@
+import os
+os.environ['DISABLE_SPACY_CACHE'] = '1'
+
 from typing import Dict, List, Tuple, Set, Iterable
 import argparse
 import random

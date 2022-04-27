@@ -1,3 +1,6 @@
+import os
+os.environ['DISABLE_SPACY_CACHE'] = '1'
+
 import argparse
 import utils
 import random
