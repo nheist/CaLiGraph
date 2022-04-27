@@ -260,6 +260,8 @@ class DbpResourceStore:
         return {e: self.get_inverse_properties(e) for e in self.get_entities()}
 
     def resolve_spelling_redirect(self, res: DbpResource) -> DbpResource:
+        if not res.is_meta:
+            return res
         redirect_res = self.resolve_redirect(res)
         if levenshtein(res.name, redirect_res.name, 2) > 2:
             return res  # return original resource if the redirect links to a completely different resource

@@ -11,7 +11,10 @@ from impl.caligraph.ontology import ClgType, ClgPredicate, ClgObjectPredicate, C
 
 
 class ClgEntity(RdfResource):
-    def get_dbp_entity(self) -> Optional[DbpEntity]:
+    def has_dbp_entity(self) -> bool:
+        return self._get_store().has_dbp_entity(self)
+
+    def get_dbp_entity(self) -> DbpEntity:
         return self._get_store().get_dbp_entity(self)
 
     def get_provenance_resources(self) -> Set[Union[DbpResource, DbpCategory]]:
@@ -152,11 +155,19 @@ class ClgEntityStore:
             raise ClgEntityNotExistingException(f'Could not find resource for name: {name}')
         return self.entities_by_name[name]
 
+    def has_entity_for_dbp_entity(self, dbp_ent: DbpEntity) -> bool:
+        dbp_ent = self.dbr.resolve_spelling_redirect(dbp_ent)
+        return self.has_entity_with_idx(dbp_ent.idx)
+
     def get_entity_for_dbp_entity(self, dbp_ent: DbpEntity) -> ClgEntity:
+        dbp_ent = self.dbr.resolve_spelling_redirect(dbp_ent)
         return self.get_entity_by_idx(dbp_ent.idx)
 
-    def get_dbp_entity(self, ent: ClgEntity) -> Optional[DbpEntity]:
-        return self.dbr.get_resource_by_idx(ent.idx) if self.dbr.has_resource_with_idx(ent.idx) else None
+    def has_dbp_entity(self, ent: ClgEntity) -> bool:
+        return self.dbr.has_resource_with_idx(ent.idx)
+
+    def get_dbp_entity(self, ent: ClgEntity) -> DbpEntity:
+        return self.dbr.get_resource_by_idx(ent.idx)
 
     def get_provenance_resources(self, ent: ClgEntity) -> Set[Union[DbpResource, DbpCategory]]:
         if ent not in self.provenance_resources:
@@ -237,7 +248,7 @@ class ClgEntityStore:
             for dbp_pred, vals in props.items():
                 pred = self.clgo.get_predicate_for_dbp_predicate(dbp_pred)
                 if isinstance(pred, ClgObjectPredicate):
-                    vals = {self.get_entity_for_dbp_entity(v) for v in vals}
+                    vals = {self.get_entity_for_dbp_entity(v) for v in vals if self.has_entity_for_dbp_entity(v)}
                 properties[ent][pred].update(vals)
         return properties
 

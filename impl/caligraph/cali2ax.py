@@ -130,6 +130,12 @@ def _get_axioms_for_node(axiom_patterns: dict, clg_type: ClgType, text_diff: str
 def _get_resource_surface_scores(text: str) -> Dict[Union[str, ClgEntity], float]:
     clge = ClgEntityStore.instance()
 
-    dbp_resource_surface_scores = cat_axioms._get_resource_surface_scores(text)
-    resource_surface_scores = {(clge.get_entity_for_dbp_entity(r) if isinstance(r, DbpEntity) else r): score for r, score in dbp_resource_surface_scores.items()}
+    resource_surface_scores = {}
+    for r, score in cat_axioms._get_resource_surface_scores(text).items():
+        if isinstance(r, DbpEntity):
+            if not clge.has_entity_for_dbp_entity(r):
+                continue
+            resource_surface_scores[clge.get_entity_for_dbp_entity(r)] = score
+        else:
+            resource_surface_scores[r] = score
     return resource_surface_scores

@@ -222,9 +222,9 @@ def _get_lines_instances_dbpedia_mapping(clge) -> list:
     """Serialize DBpedia mapping for resources."""
     lines_instances_dbpedia_mapping = []
     for ent in clge.get_entities():
-        dbp_ent = ent.get_dbp_entity()
-        if dbp_ent is not None:
-            lines_instances_dbpedia_mapping.append(serialize_util.as_object_triple(ent, RdfPredicate.SAME_AS, dbp_ent))
+        if not ent.has_dbp_entity():
+            continue
+        lines_instances_dbpedia_mapping.append(serialize_util.as_object_triple(ent, RdfPredicate.SAME_AS, ent.get_dbp_entity()))
     return lines_instances_dbpedia_mapping
 
 
@@ -240,7 +240,7 @@ def _get_lines_instances_provenance(clge) -> list:
 def _get_lines_dbpedia_instances(clge) -> list:
     """Serialize new DBpedia resources in DBpedia namespace."""
     lines_dbpedia_instances = []
-    new_instances = {dbp_util.res2dbp_iri(ent): ent for ent in clge.get_entities() if ent.get_dbp_entity() is None}
+    new_instances = {dbp_util.res2dbp_iri(ent): ent for ent in clge.get_entities() if not ent.has_dbp_entity()}
     for dbp_iri, ce in new_instances.items():
         lines_dbpedia_instances.append(serialize_util.as_object_triple(dbp_iri, RdfPredicate.TYPE, RdfClass.OWL_NAMED_INDIVIDUAL))
         lines_dbpedia_instances.append(serialize_util.as_literal_triple(dbp_iri, RdfPredicate.LABEL, ce.get_label()))
@@ -252,8 +252,8 @@ def _get_lines_dbpedia_instance_types(clge) -> list:
     lines_dbpedia_types = []
     for ent in clge.get_entities():
         all_dbp_types = ent.get_all_dbp_types(add_transitive_closure=True)
-        dbp_ent = ent.get_dbp_entity()
-        if dbp_ent is not None:
+        if ent.has_dbp_entity():
+            dbp_ent = ent.get_dbp_entity()
             new_dbp_types = all_dbp_types.difference(dbp_ent.get_transitive_types(include_root=True))
             lines_dbpedia_types.extend([serialize_util.as_object_triple(dbp_ent, RdfPredicate.TYPE, t) for t in new_dbp_types])
         else:
@@ -266,9 +266,9 @@ def _get_lines_dbpedia_instance_caligraph_types(clge) -> list:
     """Serialize CaLiGraph types for DBpedia resources."""
     instance_clg_types = []
     for ent in clge.get_entities():
-        dbp_ent = ent.get_dbp_entity()
-        if dbp_ent is not None:
-            instance_clg_types.extend([serialize_util.as_object_triple(dbp_ent, RdfPredicate.TYPE, t) for t in ent.get_types()])
+        if not ent.has_dbp_entity():
+            continue
+        instance_clg_types.extend([serialize_util.as_object_triple(ent.get_dbp_entity(), RdfPredicate.TYPE, t) for t in ent.get_types()])
     return instance_clg_types
 
 
@@ -276,10 +276,10 @@ def _get_lines_dbpedia_instance_transitive_caligraph_types(clge) -> list:
     """Serialize transitive CaLiGraph types for DBpedia resources."""
     instance_transitive_clg_types = []
     for ent in clge.get_entities():
-        dbp_ent = ent.get_dbp_entity()
-        if dbp_ent is not None:
-            transitive_types = ent.get_transitive_types(include_root=False).difference(ent.get_types())
-            instance_transitive_clg_types.extend([serialize_util.as_object_triple(dbp_ent, RdfPredicate.TYPE, tt) for tt in transitive_types])
+        if not ent.has_dbp_entity():
+            continue
+        transitive_types = ent.get_transitive_types(include_root=False).difference(ent.get_types())
+        instance_transitive_clg_types.extend([serialize_util.as_object_triple(ent.get_dbp_entity(), RdfPredicate.TYPE, tt) for tt in transitive_types])
     return instance_transitive_clg_types
 
 
@@ -287,12 +287,12 @@ def _get_lines_dbpedia_instance_relations(clge) -> list:
     """Serialize new facts for DBpedia resources in DBpedia namespace."""
     lines_dbpedia_instance_relations = []
     for ent in clge.get_entities():
-        dbp_ent = ent.get_dbp_entity()
+        dbp_ent = ent.get_dbp_entity() if ent.has_dbp_entity() else None
         dbp_ent_or_iri = dbp_ent or dbp_util.res2dbp_iri(ent)
         for pred, vals in ent.get_properties().items():
             dbp_pred = pred.get_dbp_predicate()
             for val in vals:
-                dbp_val = val.get_dbp_entity() if isinstance(val, ClgEntity) else val
+                dbp_val = (val.get_dbp_entity() if val.has_dbp_entity() else None) if isinstance(val, ClgEntity) else val
                 if dbp_ent is not None and dbp_pred in dbp_ent.get_properties() and dbp_val is not None and dbp_val in dbp_ent.get_properties()[dbp_pred]:
                     continue
                 if isinstance(val, ClgEntity):
