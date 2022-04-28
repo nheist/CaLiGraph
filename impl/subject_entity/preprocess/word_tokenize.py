@@ -46,7 +46,7 @@ class WordTokenizerSpecialLabel(Enum):
 
 class WordTokenizer:
     """Takes parsed wiki markup and splits it into word tokens while preserving entity labels."""
-    def __init__(self, max_words_per_chunk=384):
+    def __init__(self, max_words_per_chunk=256):
         self.word_tokenizer = English().tokenizer
         self.max_words_per_chunk = max_words_per_chunk
         self.meta_sections = {'see also', 'external links', 'references', 'notes', 'further reading'}
