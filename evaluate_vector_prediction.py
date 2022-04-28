@@ -14,7 +14,7 @@ from impl import subject_entity
 from impl.subject_entity import combine
 from impl.subject_entity.preprocess.word_tokenize import WordTokenizer, WordTokenizerSpecialToken, WordTokenizerSpecialLabel
 from transformers import Trainer, IntervalStrategy, TrainingArguments, AutoTokenizer, AutoModel, EvalPrediction
-from impl.dbpedia.resource import DbpResource, DbpResourceStore
+from impl.dbpedia.resource import DbpResource, DbpEntity, DbpResourceStore
 from entity_linking.preprocessing.embeddings import EntityIndexToEmbeddingMapper
 from entity_linking.model.linking import TransformerForEntityVectorPrediction
 from entity_linking.data.linking import prepare_linking_dataset
@@ -93,8 +93,8 @@ def _get_subject_entity_labels(subject_entity_pages: Dict[DbpResource, dict], in
         subject_entity_indices = set()
         subject_entity_indices.update({ent['idx'] for s in page_content['sections'] for enum in s['enums'] for entry in enum for ent in entry['entities']})
         subject_entity_indices.update({ent['idx'] for s in page_content['sections'] for table in s['tables'] for row in table['data'] for cell in row for ent in cell['entities']})
-        # get rid of entities without RDF2vec embeddings (as we can't use them for evaluation)
-        subject_entity_indices = {idx for idx in subject_entity_indices if idx == -1 or dbr.get_resource_by_idx(idx).get_embedding_vector()}
+        # get rid of non-entities and entities without RDF2vec embeddings (as we can't use them for evaluation)
+        subject_entity_indices = {idx for idx in subject_entity_indices if idx == -1 or (isinstance(dbr.get_resource_by_idx(idx), DbpEntity) and dbr.get_resource_by_idx(idx).get_embedding_vector())}
         if not include_new_entities:
             subject_entity_indices.discard(WordTokenizerSpecialLabel.NEW_ENTITY.value)
         entity_labels[res] = (subject_entity_indices, set())
