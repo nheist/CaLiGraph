@@ -274,12 +274,12 @@ class ClgEntityStore:
                     self.entity_stats[t]['transitive_entity_count'] += self.entity_stats[subtype]['transitive_entity_count']
                     self.entity_stats[t]['transitive_property_counts'] += self.entity_stats[subtype]['transitive_property_counts']
 
-        entity_stats = self._get_entity_stats(clg_type)
-        entity_count = entity_stats[clg_type]['entity_count']
-        property_counts = entity_stats[clg_type]['property_counts']
+        stats = self.entity_stats[clg_type]
+        entity_count = stats['entity_count']
+        property_counts = stats['property_counts']
         if entity_count < 5:
-            entity_count = entity_stats[clg_type]['transitive_entity_count']
-            property_counts = entity_stats[clg_type]['transitive_property_counts']
+            entity_count = stats['transitive_entity_count']
+            property_counts = stats['transitive_property_counts']
         return {p: count / entity_count for p, count in property_counts.items()}
 
     def get_all_axioms(self) -> Dict[ClgType, Set[Tuple[ClgPredicate, Any]]]:
