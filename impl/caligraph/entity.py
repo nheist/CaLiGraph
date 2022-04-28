@@ -266,7 +266,7 @@ class ClgEntityStore:
                     self.entity_stats[t]['entity_count'] += 1
                     for prop in ent.get_properties(as_tuple=True):
                         self.entity_stats[t]['property_counts'][prop] += 1
-            for node in self.graph.traverse_nodes_bottomup():
+            for node in self.clgo.graph.traverse_nodes_bottomup():
                 t = self.clgo.get_class_by_name(node)
                 self.entity_stats[t]['transitive_entity_count'] = self.entity_stats[t]['entity_count']
                 self.entity_stats[t]['transitive_property_counts'] = self.entity_stats[t]['property_counts'].copy()
