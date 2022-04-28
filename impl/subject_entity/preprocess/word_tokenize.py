@@ -46,9 +46,10 @@ class WordTokenizerSpecialLabel(Enum):
 
 class WordTokenizer:
     """Takes parsed wiki markup and splits it into word tokens while preserving entity labels."""
-    def __init__(self, max_words_per_chunk=256):
+    def __init__(self):
         self.word_tokenizer = English().tokenizer
-        self.max_words_per_chunk = max_words_per_chunk
+        self.max_words_per_chunk = 386
+        self.max_items_per_chunk = 25
         self.meta_sections = {'see also', 'external links', 'references', 'notes', 'further reading'}
 
     def __call__(self, pages: Dict[DbpResource, dict], entity_labels: Dict[DbpResource, Tuple[Set[int], Set[int]]] = None) -> Dict[DbpResource, Tuple[list, list]]:
@@ -122,6 +123,7 @@ class WordTokenizer:
     def _listing_to_token_entity_chunks(self, listing_data: list, valid_ents: Set[int], invalid_ents: Set[int], max_chunk_size: int):
         """Converts a listing to a set of (tokens, entities) chunks."""
         current_chunk_size = 0
+        current_chunk_items = 0
         current_chunk_tokens = []
         current_chunk_ents = []
         for item in listing_data:
@@ -133,15 +135,17 @@ class WordTokenizer:
                 continue  # skip if no labeled entities are found
             item_size = len(item_tokens)
             new_chunk_size = current_chunk_size + item_size
-            if not current_chunk_tokens or new_chunk_size <= max_chunk_size:
+            if not current_chunk_tokens or (new_chunk_size <= max_chunk_size and current_chunk_items < self.max_items_per_chunk):
                 current_chunk_tokens.extend(item_tokens)
                 current_chunk_ents.extend(item_ents)
                 current_chunk_size = new_chunk_size
+                current_chunk_items += 1
             else:
                 yield current_chunk_tokens, current_chunk_ents
                 current_chunk_tokens = item_tokens
                 current_chunk_ents = item_ents
                 current_chunk_size = item_size
+                current_chunk_items = 1
         if current_chunk_tokens:
             yield current_chunk_tokens, current_chunk_ents
 
