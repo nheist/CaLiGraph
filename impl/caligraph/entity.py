@@ -270,9 +270,10 @@ class ClgEntityStore:
                 t = self.clgo.get_class_by_name(node)
                 self.entity_stats[t]['transitive_entity_count'] = self.entity_stats[t]['entity_count']
                 self.entity_stats[t]['transitive_property_counts'] = self.entity_stats[t]['property_counts'].copy()
-                for subtype in self.clgo.get_subtypes(t):
-                    self.entity_stats[t]['transitive_entity_count'] += self.entity_stats[subtype]['transitive_entity_count']
-                    self.entity_stats[t]['transitive_property_counts'] += self.entity_stats[subtype]['transitive_property_counts']
+                if self.entity_stats[t]['entity_count'] < 5:
+                    for subtype in self.clgo.get_subtypes(t):
+                        self.entity_stats[t]['transitive_entity_count'] += self.entity_stats[subtype]['transitive_entity_count']
+                        self.entity_stats[t]['transitive_property_counts'] += self.entity_stats[subtype]['transitive_property_counts']
 
         stats = self.entity_stats[clg_type]
         entity_count = stats['entity_count']

@@ -118,7 +118,7 @@ class ClgOntologyStore:
         return tt
 
     def get_subtypes(self, clg_type: ClgType) -> Set[ClgType]:
-        return {self.get_class_by_name(p) for p in self.graph.children(clg_type.name)}
+        return {self.get_class_by_name(c) for c in self.graph.children(clg_type.name)}
 
     def get_depth(self, clg_type: ClgType) -> int:
         if self.type_depths is None:
