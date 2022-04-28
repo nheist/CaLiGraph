@@ -59,7 +59,7 @@ def _collect_entity_info(tokens: List[List[str]], labels: List[List[int]]) -> Li
             [''] + token_chunk + [''],
             [WordTokenizerSpecialLabel.NO_ENTITY.value] + label_chunk + [WordTokenizerSpecialLabel.NO_ENTITY.value]
         )
-        for idx, token, label in enumerate(token_label_chunk):
+        for idx, (token, label) in enumerate(token_label_chunk):
             if label <= WordTokenizerSpecialLabel.NO_ENTITY.value:  # no entity or special token
                 if entity_start is not None:  # record previous entity
                     entity_info_for_chunk.append((entity_idx, (entity_start, idx), entity_words))

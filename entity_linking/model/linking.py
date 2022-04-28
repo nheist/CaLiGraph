@@ -48,14 +48,13 @@ class TransformerForEntityVectorPrediction(nn.Module):
         )
         sequence_output = encoder_output[0]  # (bs, seq_len, hidden_size)
         sequence_output = self.dropout(sequence_output)
-
         mention_vectors = self._compute_mean_mention_vectors(sequence_output, mention_spans)  # (bs, num_ents, hidden_size)
-
         # TODO: add attention?
         entity_vectors = self.linear(mention_vectors)  # (bs, num_ents, ent_dim)
 
         loss = None
         if labels is not None:
+            # TODO: directly compute loss based on acc for a threshold?
             loss_fct = nn.CrossEntropyLoss()
             entity_labels, random_labels = labels[:, 0], labels[:, 1]
             # find valid labels: ignore new/padding entity labels that have values < 0
