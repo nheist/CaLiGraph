@@ -112,9 +112,10 @@ class ClgOntologyStore:
         supertypes = supertypes if include_root else supertypes.difference({self.get_type_root()})
         return supertypes
 
-    def get_transitive_supertypes(self, clg_type: ClgType, include_self=False) -> Set[ClgType]:
+    def get_transitive_supertypes(self, clg_type: ClgType, include_root=True, include_self=False) -> Set[ClgType]:
         tt = {self.get_class_by_name(p) for p in self.graph.ancestors(clg_type.name)}
         tt = tt | {clg_type} if include_self else tt
+        tt = tt if include_root else tt.difference({self.get_type_root()})
         return tt
 
     def get_subtypes(self, clg_type: ClgType) -> Set[ClgType]:
