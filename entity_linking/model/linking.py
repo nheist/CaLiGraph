@@ -55,6 +55,7 @@ class TransformerForEntityVectorPrediction(nn.Module):
         loss = None
         if labels is not None:
             # TODO: directly compute loss based on acc for a threshold?
+            # TODO: Npair instead of simple CE?
             loss_fct = nn.CrossEntropyLoss()
             entity_labels, random_labels = labels[:, 0], labels[:, 1]
             # find valid labels: ignore new/padding entity labels that have values < 0

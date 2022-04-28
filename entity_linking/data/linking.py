@@ -83,7 +83,7 @@ def _get_mention_spans(entity_info: List[List[Tuple[int, Tuple[int, int], list]]
         word_offsets = [idx for idx, offset in enumerate(offset_mapping_chunk) if offset[0] == 0]
         word_offsets += [len(offset_mapping_chunk)]  # add end index for final word
         # collect mention spans by finding token for start and end indices of entity mentions
-        mention_spans.append([(mention_spans[e[1][0]], mention_spans[e[1][1]]) for e in entity_info_chunk])
+        mention_spans.append([(word_offsets[e[1][0]], word_offsets[e[1][1]]) for e in entity_info_chunk])
     return mention_spans
 
 
