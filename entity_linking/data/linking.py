@@ -67,6 +67,7 @@ def _collect_entity_info(tokens: List[List[str]], labels: List[List[int]]) -> Li
             else:
                 if label == entity_idx:  # inside entity -> only add token to current entity
                     entity_words.append(token)
+                    continue
                 if entity_start is not None:  # record previous entity
                     entity_info_for_chunk.append((entity_idx, (entity_start, idx), entity_words))
                 entity_idx = label
