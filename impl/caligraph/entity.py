@@ -97,7 +97,7 @@ class ClgEntityStore:
     def add_axiom_information(self, axiom_information: Dict[ClgType, Set[Tuple[ClgPredicate, Any, float]]]):
         self.entity_stats = None  # reset, as we are adding new entity information
 
-        self.axioms = defaultdict(set, {ct: {axiom[:-1] for axiom in axioms} for ct, axioms in axiom_information.items()})
+        self.axioms = defaultdict(set, {ct: {axiom[1:3] for axiom in axioms} for ct, axioms in axiom_information.items()})
         # remove redundant axioms by first applying full transitivity to the axioms and then reducing bottom-up
         for node in self.clgo.graph.traverse_nodes_topdown():
             clg_type = self.clgo.get_class_by_name(node)
