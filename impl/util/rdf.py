@@ -102,6 +102,11 @@ class RdfResource:
         return {name2label(p) for p in cls._get_prefixes()}
 
 
+class EntityIndex(Enum):
+    NEW_ENTITY = -1
+    NO_ENTITY = -2
+
+
 # auxiliary structures
 Triple = namedtuple('Triple', 'sub pred obj is_literal')
 

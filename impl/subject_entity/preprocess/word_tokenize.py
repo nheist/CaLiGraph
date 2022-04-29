@@ -8,6 +8,7 @@ import utils
 import impl.util.spacy.listing_parser as list_nlp
 import impl.wikipedia.wikimarkup_parser as wmp
 from impl.dbpedia.resource import DbpResource
+from impl.util.rdf import EntityIndex
 
 
 class WordTokenizerSpecialToken(Enum):
@@ -39,8 +40,8 @@ class WordTokenizerSpecialToken(Enum):
 
 
 class WordTokenizerSpecialLabel(Enum):
-    NEW_ENTITY = -1
-    NO_ENTITY = -2
+    NEW_ENTITY = EntityIndex.NEW_ENTITY.value
+    NO_ENTITY = EntityIndex.NO_ENTITY.value
     IGNORE = -100
 
 

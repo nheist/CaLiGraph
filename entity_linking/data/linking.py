@@ -2,9 +2,9 @@ from typing import List, Tuple
 import random
 import torch
 from torch.utils.data import Dataset
-from impl.subject_entity.preprocess.word_tokenize import WordTokenizerSpecialLabel
 from impl.dbpedia.resource import DbpResourceStore
 from entity_linking.preprocessing.blocking import WordBlocker
+from impl.util.rdf import EntityIndex
 
 
 class LinkingDataset(Dataset):
@@ -20,13 +20,11 @@ class LinkingDataset(Dataset):
         # add empty mention spans (0,0) to pad the spans to `num_ents`
         mention_spans = torch.tensor(self.mention_spans[idx])
         spans_to_pad = self.num_ents - len(mention_spans)
-        span_padder = torch.nn.ZeroPad2d((0, 0, 0, spans_to_pad))
-        item['mention_spans'] = span_padder(mention_spans)
+        item['mention_spans'] = torch.nn.ZeroPad2d((0, 0, 0, spans_to_pad))(mention_spans)
         # pad entity indices with the value for NO ENTITY to indicate that the remaining entities are only fillers
         entity_labels = torch.tensor(self.entity_indices[idx])
         entity_labels_to_pad = self.num_ents - len(entity_labels)
-        entity_padder = torch.nn.ConstantPad1d((0, entity_labels_to_pad), WordTokenizerSpecialLabel.NO_ENTITY.value)
-        entity_labels = entity_padder(entity_labels)
+        entity_labels = torch.nn.ConstantPad1d((0, entity_labels_to_pad), EntityIndex.NO_ENTITY.value)(entity_labels)
         # get a set of random entities to use as filler embeddings for new/no entities
         random_labels = self.all_entity_indices[torch.randperm(len(self.all_entity_indices))][:len(entity_labels)]
         # pass both as labels of the item
@@ -57,10 +55,10 @@ def _collect_entity_info(tokens: List[List[str]], labels: List[List[int]]) -> Li
         # > end: we add a dummy token so that a potential entity at the end is recorded correctly
         token_label_chunk = zip(
             [''] + token_chunk + [''],
-            [WordTokenizerSpecialLabel.NO_ENTITY.value] + label_chunk + [WordTokenizerSpecialLabel.NO_ENTITY.value]
+            [EntityIndex.NO_ENTITY.value] + label_chunk + [EntityIndex.NO_ENTITY.value]
         )
         for idx, (token, label) in enumerate(token_label_chunk):
-            if label <= WordTokenizerSpecialLabel.NO_ENTITY.value:  # no entity or special token
+            if label <= EntityIndex.NO_ENTITY.value:  # no entity or special token
                 if entity_start is not None:  # record previous entity
                     entity_info_for_chunk.append((entity_idx, (entity_start, idx), entity_words))
                 entity_idx, entity_start, entity_words = None, None, None

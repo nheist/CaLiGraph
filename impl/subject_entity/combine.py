@@ -5,7 +5,7 @@ from impl.dbpedia.resource import DbpResource, DbpEntity, DbpResourceStore
 from impl import wikipedia
 from collections import defaultdict
 import impl.wikipedia.wikimarkup_parser as wmp
-from .preprocess.word_tokenize import WordTokenizerSpecialLabel
+from impl.util.rdf import EntityIndex
 
 
 def get_subject_entity_page_content(subject_entities_per_page: Dict[DbpResource, dict]) -> Dict[DbpResource, dict]:
@@ -37,7 +37,7 @@ def _match_subject_entities_for_item(list_item: dict, subject_entities: dict) ->
         if ent_name not in list_item['text']:
             continue
         ent_data = {'start': list_item['text'].index(ent_name), 'text': ent_name, 'tag': ent_tag,
-                    'idx': existing_entities[ent_name]['idx'] if ent_name in existing_entities else WordTokenizerSpecialLabel.NEW_ENTITY.value}
+                    'idx': existing_entities[ent_name]['idx'] if ent_name in existing_entities else EntityIndex.NEW_ENTITY.value}
         entities.append(ent_data)
     return entities
 
@@ -55,7 +55,7 @@ def _match_entities_for_page(page_res: DbpResource, entities_per_ts: dict, page_
     for ts, entities_per_s in entities_per_ts.items():
         for s, entities in entities_per_s.items():
             for ent_text, ent_tag in entities.items():
-                if ent_text in page_entity_map[ts][s] and page_entity_map[ts][s][ent_text] != WordTokenizerSpecialLabel.NEW_ENTITY.value:
+                if ent_text in page_entity_map[ts][s] and page_entity_map[ts][s][ent_text] != EntityIndex.NEW_ENTITY.value:
                     ent_idx = page_entity_map[ts][s][ent_text]
                     if not isinstance(dbr.get_resource_by_idx(ent_idx), DbpEntity):
                         continue  # discard anything that is not an entity (listpage, file, ..)

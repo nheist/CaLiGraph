@@ -33,6 +33,8 @@ def _assign_entity_types_for_section(df: pd.DataFrame, section_id: str) -> pd.Da
     clge = ClgEntityStore.instance()
     section_types = {}
     for ent_idx in df[f'{section_id}_ent'].unique():
+        if ent_idx < 0:  # discard as it is either a new or no entity
+            continue
         types = clge.get_entity_by_idx(ent_idx).get_independent_types()
         if types:
             section_types[ent_idx] = sorted(types)[0].idx

@@ -10,9 +10,10 @@ import torch
 from torch import Tensor
 import torch.nn.functional as F
 import utils
+from impl.util.rdf import EntityIndex
 from impl import subject_entity
 from impl.subject_entity import combine
-from impl.subject_entity.preprocess.word_tokenize import WordTokenizer, WordTokenizerSpecialToken, WordTokenizerSpecialLabel
+from impl.subject_entity.preprocess.word_tokenize import WordTokenizer, WordTokenizerSpecialToken
 from transformers import Trainer, IntervalStrategy, TrainingArguments, AutoTokenizer, AutoModel, EvalPrediction
 from impl.dbpedia.resource import DbpResource, DbpEntity, DbpResourceStore
 from entity_linking.preprocessing.embeddings import EntityIndexToEmbeddingMapper
@@ -96,7 +97,7 @@ def _get_subject_entity_labels(subject_entity_pages: Dict[DbpResource, dict], in
         # get rid of non-entities and entities without RDF2vec embeddings (as we can't use them for training/eval)
         subject_entity_indices = {idx for idx in subject_entity_indices if dbr.has_resource_with_idx(idx) and isinstance(dbr.get_resource_by_idx(idx), DbpEntity) and dbr.get_resource_by_idx(idx).get_embedding_vector()}
         if include_new_entities:
-            subject_entity_indices.add(WordTokenizerSpecialLabel.NEW_ENTITY.value)
+            subject_entity_indices.add(EntityIndex.NEW_ENTITY.value)
         entity_labels[res] = (subject_entity_indices, set())
     return entity_labels
 

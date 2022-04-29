@@ -1,8 +1,8 @@
-from typing import Set, Dict, Optional, Union, Tuple, Any, List
+from typing import Set, Dict, Union, Tuple, Any, List
 from collections import defaultdict, Counter
 import utils
 from impl.util.singleton import Singleton
-from impl.util.rdf import Namespace, RdfResource
+from impl.util.rdf import Namespace, RdfResource, EntityIndex
 from impl.dbpedia.ontology import DbpType, DbpOntologyStore
 from impl.dbpedia.resource import DbpResource, DbpEntity, DbpResourceStore
 from impl.dbpedia.category import DbpCategory, DbpCategoryStore
@@ -85,7 +85,9 @@ class ClgEntityStore:
             for ts, entities_per_s in entities_per_ts.items():
                 for s, entities in entities_per_s.items():
                     for ent_name, ent_data in entities.items():
-                        page_occurrence_data[ent_name].add((res.idx, ts, ent_data['TS_entidx'], s, ent_data['S_entidx'], ent_data['text'], ent_data['tag']))
+                        ts_ent = ent_data['TS_entidx'] if ent_data['TS_entidx'] is not None else EntityIndex.NO_ENTITY.value
+                        s_ent = ent_data['S_entidx'] if ent_data['S_entidx'] is not None else EntityIndex.NO_ENTITY.value
+                        page_occurrence_data[ent_name].add((res.idx, ts, ts_ent, s, s_ent, ent_data['text'], ent_data['tag']))
         new_entity_names = set(page_occurrence_data).difference({e.name for e in all_entities})
         for idx, ent_name in enumerate(new_entity_names, start=max_idx):
             all_entities.append(ClgEntity(idx, ent_name, False))
