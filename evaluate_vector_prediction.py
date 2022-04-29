@@ -105,6 +105,12 @@ def _get_subject_entity_labels(subject_entity_pages: Dict[DbpResource, dict], in
 def _prepare_data(page_data: Iterable[Tuple[List[List[str]], List[List[int]]]], tokenizer, num_ents: int):
     tokens, labels = [], []
     for token_chunks, entity_chunks in page_data:
+        valid_token_chunks, valid_entity_chunks = [], []
+        for tc, ec in zip(token_chunks, entity_chunks):
+            if all(e_id < 0 for e_id in ec):
+                continue  # get rid of chunks without entities
+            valid_token_chunks.append(tc)
+            valid_entity_chunks.append(ec)
         tokens.extend(token_chunks)
         labels.extend(entity_chunks)
     return prepare_linking_dataset(tokens, labels, tokenizer, num_ents)
