@@ -218,7 +218,9 @@ def _is_header_row(cells, row_idx: int) -> bool:
 
 def _convert_markup(wiki_text: str) -> Tuple[str, list]:
     # preprocess markup text
-    parsed_text = _remove_inner_wikilinks(wtp.parse(wiki_text))
+    parsed_text = wtp.parse(wiki_text)
+    parsed_text = _remove_file_wikilinks(parsed_text)
+    parsed_text = _remove_inner_wikilinks(parsed_text)
     parsed_text = _convert_sortname_templates(parsed_text)
 
     plain_text = wmp.wikitext_to_plaintext(parsed_text).strip()
@@ -246,6 +248,14 @@ def _convert_markup(wiki_text: str) -> Tuple[str, list]:
         if entity_idx is not None:
             entities.append({'start': entity_start_index, 'text': text, 'idx': entity_idx})
     return plain_text, entities
+
+
+def _remove_file_wikilinks(parsed_text: wtp.WikiText) -> wtp.WikiText:
+    """Remove wikilinks to files or images."""
+    for wl in reversed(parsed_text.wikilinks):
+        if wl.string.startswith(('[[File:', '[[Image:')):
+            parsed_text[slice(*wl.span)] = ''
+    return parsed_text
 
 
 def _remove_inner_wikilinks(parsed_text: wtp.WikiText) -> wtp.WikiText:
