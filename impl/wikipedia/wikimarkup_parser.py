@@ -34,11 +34,14 @@ def get_resource_idx_for_wikilink(wikilink: wtp.WikiLink) -> Optional[int]:
         return None
     dbr = DbpResourceStore.instance()
     res_name = label2name(str_util.capitalize(_remove_language_tag(wikilink.target.strip())))
-    if not dbr.has_resource_with_name(res_name):
-        return -1 if is_entity_name(res_name) else None
-    res = dbr.get_resource_by_name(res_name)
-    redirected_res = dbr.resolve_spelling_redirect(res)
-    return redirected_res.idx
+    if dbr.has_resource_with_name(res_name):
+        res = dbr.get_resource_by_name(res_name)
+        if not res.is_meta:
+            return res.idx
+        redirected_res = dbr.resolve_spelling_redirect(res)
+        if not redirected_res.is_meta:
+            return redirected_res.idx
+    return -1 if is_entity_name(res_name) else None
 
 
 def _remove_language_tag(link_target: str) -> str:
