@@ -89,7 +89,7 @@ class ClgEntityStore:
                         s_ent = ent_data['S_entidx'] if ent_data['S_entidx'] is not None else EntityIndex.NO_ENTITY.value
                         page_occurrence_data[ent_name].add((res.idx, ts, ts_ent, s, s_ent, ent_data['text'], ent_data['tag']))
         new_entity_names = set(page_occurrence_data).difference({e.name for e in all_entities})
-        for idx, ent_name in enumerate(new_entity_names, start=max_idx):
+        for idx, ent_name in enumerate(new_entity_names, start=max_idx + 1):
             all_entities.append(ClgEntity(idx, ent_name, False))
         # update page occurrence data with actual entity indices
         entity_name_to_index = {e.name: e.idx for e in all_entities}
