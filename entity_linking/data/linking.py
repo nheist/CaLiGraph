@@ -13,7 +13,7 @@ class LinkingDataset(Dataset):
         self.mention_spans = mention_spans
         self.entity_indices = entity_indices
         self.num_ents = num_ents
-        self.all_entity_indices = torch.Tensor([e.idx for e in DbpResourceStore.instance().get_entities()], dtype=int)
+        self.all_entity_indices = torch.LongTensor([e.idx for e in DbpResourceStore.instance().get_entities()])
 
     def __getitem__(self, idx):
         item = {key: torch.tensor(val[idx]) for key, val in self.encodings.items()}
