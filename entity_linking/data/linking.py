@@ -19,7 +19,10 @@ class LinkingDataset(Dataset):
         item = {key: torch.tensor(val[idx]) for key, val in self.encodings.items()}
         # add empty mention spans (0,0) to pad the spans to `num_ents`
         mention_spans = torch.tensor(self.mention_spans[idx])
+        print(mention_spans.shape)
         spans_to_pad = self.num_ents - len(mention_spans)
+        print(spans_to_pad)
+        print(mention_spans)
         item['mention_spans'] = torch.nn.ZeroPad2d((0, 0, 0, spans_to_pad))(mention_spans)
         # pad entity indices with the value for NO ENTITY to indicate that the remaining entities are only fillers
         entity_labels = torch.tensor(self.entity_indices[idx])
