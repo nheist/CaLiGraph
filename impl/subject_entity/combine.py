@@ -79,7 +79,7 @@ def _create_entity_maps(page_content: dict) -> Tuple[dict, dict]:
     for section_data in page_content['sections']:
         section_name_markup = section_data['name']
         section_name = wmp.wikitext_to_plaintext(section_name_markup)
-        section_entity_map[section_name] = wmp.get_first_wikilink_resource(section_name_markup)
+        section_entity_map[section_name] = wmp.get_first_wikilink_entity(section_name_markup)
         top_section_name = section_name if section_data['level'] <= 2 else top_section_name
         for enum_data in section_data['enums']:
             for entry in enum_data:
