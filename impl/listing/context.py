@@ -31,15 +31,16 @@ def retrieve_page_entity_context() -> pd.DataFrame:
 def _assign_entity_types_for_section(df: pd.DataFrame, section_id: str) -> pd.DataFrame:
     """Retrieve the types of section entities."""
     clge = ClgEntityStore.instance()
+    section_ent = f'{section_id}_ent'
     section_types = {}
-    for ent_idx in df[f'{section_id}_ent'].unique():
+    for ent_idx in df[section_ent].unique():
         if ent_idx < 0:  # discard as it is either a new or no entity
             continue
         types = clge.get_entity_by_idx(ent_idx).get_independent_types()
         if types:
             section_types[ent_idx] = sorted(types)[0].idx
     section_types = pd.Series(section_types, name=f'{section_id}_enttype')
-    return pd.merge(how='left', left=df, right=section_types, left_on=section_id, right_index=True)
+    return pd.merge(how='left', left=df, right=section_types, left_on=section_ent, right_index=True)
 
 
 def _align_section_entity_types(df: pd.DataFrame) -> pd.DataFrame:
