@@ -38,10 +38,7 @@ def run_evaluation(model_name: str, epochs: int, batch_size: int, learning_rate:
     ent_idx2emb = EntityIndexToEmbeddingMapper(EMBEDDING_DIM)
     model = TransformerForEntityVectorPrediction(encoder, ent_idx2emb, EMBEDDING_DIM)
     # load data
-    train_pages, val_pages = utils.load_or_create_cache('vector_prediction_training_data', _load_train_and_val_pages)
-    # prepare data
-    train_data = _prepare_data(train_pages.values(), tokenizer, num_ents)
-    val_data = _prepare_data(val_pages.values(), tokenizer, num_ents)
+    train_data, val_data = utils.load_or_create_cache('vector_prediction_training_data', lambda: _load_train_and_val_datasets(tokenizer, num_ents))
     # run evaluation
     vp_evaluator = VectorPredictionEvaluator(ent_idx2emb)
     training_args = TrainingArguments(
@@ -70,14 +67,19 @@ def run_evaluation(model_name: str, epochs: int, batch_size: int, learning_rate:
     trainer.train()
 
 
-def _load_train_and_val_pages() -> Tuple[Dict[DbpResource, tuple], Dict[DbpResource, tuple]]:
+def _load_train_and_val_datasets(tokenizer, num_ents: int) -> Tuple[Dict[DbpResource, tuple], Dict[DbpResource, tuple]]:
     subject_entity_pages = combine.get_subject_entity_page_content(subject_entity._get_subject_entity_predictions())
     # split into train and validation
     all_pages = random.sample(list(subject_entity_pages), int(len(subject_entity_pages) * .1))  # only use 10% of overall data for now
+
     train_pages = set(random.sample(all_pages, int(len(all_pages) * .9)))  # 90% of pages for train, 10% for val
+    train_data = _create_vector_prediction_data({res: content for res, content in subject_entity_pages.items() if res in train_pages}, False)
+    train_data = _prepare_data(train_data.values(), tokenizer, num_ents)
+
     val_pages = set(all_pages).difference(train_pages)
-    return _create_vector_prediction_data({res: content for res, content in subject_entity_pages.items() if res in train_pages}, False), \
-           _create_vector_prediction_data({res: content for res, content in subject_entity_pages.items() if res in val_pages}, True)
+    val_data = _create_vector_prediction_data({res: content for res, content in subject_entity_pages.items() if res in val_pages}, True)
+    val_data = _prepare_data(val_data.values(), tokenizer, num_ents)
+    return train_data, val_data
 
 
 def _create_vector_prediction_data(subject_entity_pages: Dict[DbpResource, dict], include_new_entities: bool) -> Dict[DbpResource, Tuple[List[List[str]], List[List[int]]]]:
