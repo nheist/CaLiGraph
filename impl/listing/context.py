@@ -56,6 +56,8 @@ def _align_section_entity_types(df: pd.DataFrame) -> pd.DataFrame:
             if not clge.has_entity_with_idx(s_ent):
                 continue
             type_counter.update(clge.get_entity_by_idx(s_ent).get_transitive_types())
+        if not type_counter:
+            continue
         max_type_count = type_counter.most_common(0)[0][1]
         top_types = clgo.get_independent_types({t for t, cnt in type_counter.items() if cnt == max_type_count})
         if top_types:
