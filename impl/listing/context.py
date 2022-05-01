@@ -34,7 +34,7 @@ def _assign_entity_types_for_section(df: pd.DataFrame, section_id: str) -> pd.Da
     section_ent = f'{section_id}_ent'
     section_types = {}
     for ent_idx in df[section_ent].unique():
-        if ent_idx < 0:  # discard as it is either a new or no entity
+        if not clge.has_entity_with_idx(ent_idx):
             continue
         types = clge.get_entity_by_idx(ent_idx).get_independent_types()
         if types:
@@ -53,12 +53,14 @@ def _align_section_entity_types(df: pd.DataFrame) -> pd.DataFrame:
         type_counter = Counter()
         section_ent_indices = s_df['S_ent'].unique()
         for s_ent in section_ent_indices:
+            if not clge.has_entity_with_idx(s_ent):
+                continue
             type_counter.update(clge.get_entity_by_idx(s_ent).get_transitive_types())
         max_type_count = type_counter.most_common(0)[0][1]
         top_types = clgo.get_independent_types({t for t, cnt in type_counter.items() if cnt == max_type_count})
         if top_types:
             top_type = sorted(top_types)[0]
-            section_types.update({(ts, sei): top_type.idx for sei in section_ent_indices if top_type in clge.get_entity_by_idx(sei).get_transitive_types()})
+            section_types.update({(ts, sei): top_type.idx for sei in section_ent_indices if clge.has_entity_with_idx(sei) and top_type in clge.get_entity_by_idx(sei).get_transitive_types()})
     section_types = pd.Series(section_types, name='S_enttype_new')
     df = pd.merge(how='left', left=df, right=section_types, left_on=['TS_text', 'S_ent'], right_index=True)
     df['S_enttype_new'].fillna(df['S_enttype'], inplace=True)
