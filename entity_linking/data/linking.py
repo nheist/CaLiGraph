@@ -19,10 +19,7 @@ class LinkingDataset(Dataset):
         item = {key: torch.tensor(val[idx]) for key, val in self.encodings.items()}
         # add empty mention spans (0,0) to pad the spans to `num_ents`
         mention_spans = torch.tensor(self.mention_spans[idx])
-        print(mention_spans.shape)
         spans_to_pad = self.num_ents - len(mention_spans)
-        print(spans_to_pad)
-        print(mention_spans)
         item['mention_spans'] = torch.nn.ZeroPad2d((0, 0, 0, spans_to_pad))(mention_spans)
         # pad entity indices with the value for NO ENTITY to indicate that the remaining entities are only fillers
         entity_labels = torch.tensor(self.entity_indices[idx])
@@ -39,11 +36,12 @@ class LinkingDataset(Dataset):
 
 
 def prepare_linking_dataset(tokens: List[List[str]], labels: List[List[int]], tokenizer, num_ents: int):
-    encodings = tokenizer(tokens, is_split_into_words=True, return_offsets_mapping=True, padding=True, truncation=True)
     entity_info = _collect_entity_info(tokens, labels)
+    tokens, entity_info = _filter_truncated_entities(tokens, entity_info, tokenizer)
+
+    encodings = tokenizer(tokens, is_split_into_words=True, return_offsets_mapping=True, padding=True, truncation=True)
     mention_spans = _get_mention_spans(entity_info, encodings['offset_mapping'])
     entity_indices = _get_entity_indices(entity_info, num_ents)
-
     encodings.pop('offset_mapping')  # we don't want to pass this to the model
     return LinkingDataset(encodings, mention_spans, entity_indices, num_ents)
 
@@ -78,17 +76,26 @@ def _collect_entity_info(tokens: List[List[str]], labels: List[List[int]]) -> Li
     return entity_info
 
 
+def _filter_truncated_entities(tokens: List[List[str]], entity_info: List[List[Tuple[int, Tuple[int, int], list]]], tokenizer) -> tuple:
+    encodings = tokenizer(tokens, is_split_into_words=True, return_offsets_mapping=True, padding=True, truncation=True)
+    filtered_tokens, filtered_entity_info = [], []
+    for token_chunk, entity_info_chunk, offset_mapping_chunk in zip(tokens, entity_info, encodings['offset_mapping']):
+        # discard entity mentions that are not in the tokenized text (due to truncation)
+        tokens_after_tokenization = len([o for o in offset_mapping_chunk if o[0] == 0])
+        filtered_entity_info_chunk = [eic for eic in entity_info_chunk if eic[1][1] <= tokens_after_tokenization]
+        if not filtered_entity_info_chunk:
+            continue  # discard whole chunk as it does not contain any labeled entities
+        filtered_tokens.append(token_chunk)
+        filtered_entity_info.append(filtered_entity_info_chunk)
+    return filtered_tokens, filtered_entity_info
+
+
 def _get_mention_spans(entity_info: List[List[Tuple[int, Tuple[int, int], list]]], offset_mapping: List[List[Tuple[int, int]]]) -> List[List[Tuple[int, int]]]:
     mention_spans = []
     for entity_info_chunk, offset_mapping_chunk in zip(entity_info, offset_mapping):
         # find start token of every word
         word_offsets = [idx for idx, offset in enumerate(offset_mapping_chunk) if offset[0] == 0]
         word_offsets += [len(offset_mapping_chunk)]  # add end index for final word
-        # discard entity mentions that are not in the tokenized text (due to truncation)
-        for idx in reversed(range(len(entity_info_chunk))):
-            entity_end_idx = entity_info_chunk[idx][1][1]
-            if entity_end_idx >= len(word_offsets):
-                del entity_info_chunk[idx]
         # collect mention spans by finding token for start and end indices of entity mentions
         mention_spans.append([(word_offsets[e[1][0]], word_offsets[e[1][1]]) for e in entity_info_chunk])
     return mention_spans
