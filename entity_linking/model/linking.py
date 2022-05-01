@@ -60,7 +60,7 @@ class TransformerForEntityVectorPrediction(nn.Module):
             entity_labels, random_labels = labels[:, 0], labels[:, 1]
             # find valid labels: ignore new/padding entity labels that have values < 0
             label_mask = entity_labels.ge(0).view(-1)  # (bs*num_ents)
-            targets = torch.where(label_mask, torch.arange(len(label_mask)), torch.tensor(loss_fct.ignore_index))  # (bs*num_ents)
+            targets = torch.where(label_mask, torch.arange(len(label_mask), device=label_mask.device), torch.tensor(loss_fct.ignore_index, device=label_mask.device))  # (bs*num_ents)
             # replace invalid entity labels with random labels
             entity_labels = torch.where(label_mask, entity_labels, random_labels)
             # retrieve embedding vectors for entity indices and compute logits
