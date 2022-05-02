@@ -14,6 +14,7 @@ class LinkingDataset(Dataset):
         self.entity_indices = entity_indices
         self.num_ents = num_ents
         self.all_entity_indices = torch.LongTensor([e.idx for e in DbpResourceStore.instance().get_entities()])
+        self.all_entity_indices = self.all_entity_indices[torch.randperm(len(self.all_entity_indices))]  # randomize
 
     def __getitem__(self, idx):
         item = {key: torch.tensor(val[idx]) for key, val in self.encodings.items()}
@@ -26,7 +27,9 @@ class LinkingDataset(Dataset):
         entity_labels_to_pad = self.num_ents - len(entity_labels)
         entity_labels = torch.nn.ConstantPad1d((0, entity_labels_to_pad), EntityIndex.NO_ENTITY.value)(entity_labels)
         # get a set of random entities to use as filler embeddings for new/no entities
-        random_labels = self.all_entity_indices[torch.randperm(len(self.all_entity_indices))][:len(entity_labels)]
+        start_idx = idx * len(entity_labels) % len(self.all_entity_indices)
+        end_idx = start_idx + len(entity_labels) % len(self.all_entity_indices)
+        random_labels = self.all_entity_indices[start_idx:end_idx]
         # pass both as labels of the item
         item['label_ids'] = torch.stack((entity_labels, random_labels))
         return item
