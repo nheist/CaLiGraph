@@ -10,7 +10,6 @@ from polyleven import levenshtein
 import utils
 import bz2
 import csv
-import random
 
 
 class DbpResource(RdfResource):
@@ -204,8 +203,11 @@ class DbpResourceStore:
         types = {self.get_resource_by_iri(res_iri).idx: {self.dbo.get_class_by_iri(t).idx for t in type_iris} for res_iri, type_iris in iris.items() if self.has_resource_with_iri(res_iri)}
         return types
 
-    def get_transitive_types(self, res: DbpResource, include_root=False) -> set:
-        return {tt for t in self.get_types(res) for tt in self.dbo.get_transitive_supertypes(t, include_root=include_root, include_self=True)}
+    def get_transitive_types(self, res: DbpResource, include_root=False) -> Set[DbpType]:
+        return {tt for t in res.get_types() for tt in self.dbo.get_transitive_supertypes(t, include_root=include_root, include_self=True)}
+
+    def get_independent_types(self, res: DbpResource) -> Set[DbpType]:
+        return self.dbo.get_independent_types(res.get_types())
 
     def get_entities_of_type(self, t: DbpType) -> Set[DbpEntity]:
         if self.entities_of_type is None:
@@ -213,7 +215,7 @@ class DbpResourceStore:
             for r in self.resources_by_idx.values():
                 if r.is_meta or not isinstance(r, DbpEntity):
                     continue
-                for it in self.dbo.get_independent_types(self.get_types(r)):
+                for it in r.get_independent_types():
                     self.entities_of_type[it].add(r)
         return self.entities_of_type[t]
 
