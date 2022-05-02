@@ -89,14 +89,19 @@ class TransformerForEntityVectorPrediction(nn.Module):
         Then we divide it by the length of the mention span to get the mean value.
         (taken from https://stackoverflow.com/questions/71358928/pytorch-how-to-get-mean-of-slices-along-an-axis-where-the-slices-indices-value)
         """
-        cumsum = input.cumsum(dim=-2)
+        d = input.device
+        bs = len(input)
+
+        cumsum = input.cumsum(dim=-2)  # (bs, seq_len, hidden_size)
         print('cumsum', cumsum.shape)
-        padded_cumsum = self.pad2d(cumsum)
+        padded_cumsum = self.pad2d(cumsum)  # (bs, seq_len+1, hidden_size)
         print('padded_cumsum', padded_cumsum.shape)
-        cumsum_start_end = padded_cumsum[:, mention_spans]
+        # TODO: one-step approach to retrieve the cumsums for mention_spans
+        cumsum_start_end = padded_cumsum[:, mention_spans]  # (bs, bs, num_ents, 2, hidden_size)
+        cumsum_start_end = cumsum_start_end[torch.arange(bs, device=d), torch.arange(bs, device=d), :]  # (bs, num_ents, 2, hidden_size)
         print('cumsum_start_end', cumsum_start_end.shape)
-        vector_sums = torch.diff(cumsum_start_end, dim=-2).squeeze()
+        vector_sums = torch.diff(cumsum_start_end, dim=-2).squeeze()  # (bs, num_ents, hidden_size)
         print('vector_sums', vector_sums.shape)
-        vector_lengths = torch.diff(mention_spans, dim=-1)
+        vector_lengths = torch.diff(mention_spans, dim=-1)  # (bs, num_ents, 1)
         print('vector_lengths', vector_lengths.shape)
-        return torch.nan_to_num(vector_sums / vector_lengths)
+        return torch.nan_to_num(vector_sums / vector_lengths)  # (bs, num_ents, hidden_size)
