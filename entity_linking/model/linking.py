@@ -90,8 +90,13 @@ class TransformerForEntityVectorPrediction(nn.Module):
         (taken from https://stackoverflow.com/questions/71358928/pytorch-how-to-get-mean-of-slices-along-an-axis-where-the-slices-indices-value)
         """
         cumsum = input.cumsum(dim=-2)
+        print('cumsum', cumsum.shape)
         padded_cumsum = self.pad2d(cumsum)
+        print('padded_cumsum', padded_cumsum.shape)
         cumsum_start_end = padded_cumsum[:, mention_spans]
+        print('cumsum_start_end', cumsum_start_end.shape)
         vector_sums = torch.diff(cumsum_start_end, dim=-2).squeeze()
+        print('vector_sums', vector_sums.shape)
         vector_lengths = torch.diff(mention_spans, dim=-1)
+        print('vector_lengths', vector_lengths.shape)
         return torch.nan_to_num(vector_sums / vector_lengths)
