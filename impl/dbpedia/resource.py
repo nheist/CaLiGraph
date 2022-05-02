@@ -20,7 +20,7 @@ class DbpResource(RdfResource):
         return self._get_store().get_types(self)
 
     def get_independent_types(self) -> Set[DbpType]:
-        return self._get_store().get_independent_types(self.get_types())
+        return self._get_store().get_independent_types(self)
 
     def get_transitive_types(self, include_root=False) -> Set[DbpType]:
         return self._get_store().get_transitive_types(self, include_root=include_root)
