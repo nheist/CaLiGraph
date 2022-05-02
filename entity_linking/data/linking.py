@@ -27,9 +27,8 @@ class LinkingDataset(Dataset):
         entity_labels_to_pad = self.num_ents - len(entity_labels)
         entity_labels = torch.nn.ConstantPad1d((0, entity_labels_to_pad), EntityIndex.NO_ENTITY.value)(entity_labels)
         # get a set of random entities to use as filler embeddings for new/no entities
-        start_idx = idx * len(entity_labels) % len(self.all_entity_indices)
-        end_idx = start_idx + len(entity_labels) % len(self.all_entity_indices)
-        random_labels = self.all_entity_indices[start_idx:end_idx]
+        start_idx = random.randint(0, len(self.all_entity_indices) - len(entity_labels))
+        random_labels = self.all_entity_indices[start_idx:start_idx+len(entity_labels)]
         # pass both as labels of the item
         item['label_ids'] = torch.stack((entity_labels, random_labels))
         return item
