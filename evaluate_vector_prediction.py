@@ -26,8 +26,6 @@ random.seed(SEED)
 np.random.seed(SEED)
 torch.manual_seed(SEED)
 
-DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
 EMBEDDING_DIM = 200
 
 
@@ -37,7 +35,7 @@ def run_evaluation(model_name: str, epochs: int, batch_size: int, learning_rate:
     tokenizer = AutoTokenizer.from_pretrained(model_name, add_prefix_space=True, additional_special_tokens=list(WordTokenizerSpecialToken.all_tokens()))
     encoder = AutoModel.from_pretrained(model_name)
     encoder.resize_token_embeddings(len(tokenizer))
-    ent_idx2emb = EntityIndexToEmbeddingMapper(EMBEDDING_DIM, DEVICE)
+    ent_idx2emb = EntityIndexToEmbeddingMapper(EMBEDDING_DIM)
     model = TransformerForEntityVectorPrediction(encoder, ent_idx2emb, EMBEDDING_DIM)
     # load data
     train_data, val_data = utils.load_or_create_cache('vector_prediction_training_data', lambda: _load_train_and_val_datasets(tokenizer, num_ents))
