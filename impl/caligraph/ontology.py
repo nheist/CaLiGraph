@@ -121,6 +121,10 @@ class ClgOntologyStore:
     def get_subtypes(self, clg_type: ClgType) -> Set[ClgType]:
         return {self.get_class_by_name(c) for c in self.graph.children(clg_type.name)}
 
+    def get_independent_types(self, types: Set[ClgType]) -> Set[ClgType]:
+        transitive_types = {tt for t in types for tt in self.get_transitive_supertypes(t)}
+        return types.difference(transitive_types)
+
     def get_depth(self, clg_type: ClgType) -> int:
         if self.type_depths is None:
             node_depths = self.graph.depths()

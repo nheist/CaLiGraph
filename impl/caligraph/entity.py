@@ -239,9 +239,7 @@ class ClgEntityStore:
         return {tt for t in self.types[ent] for tt in self.clgo.get_transitive_supertypes(t, include_root=include_root, include_self=True)}
 
     def get_independent_types(self, ent: ClgEntity) -> Set[ClgType]:
-        types = self.types[ent]
-        transitive_types = {tt for t in types for tt in self.clgo.get_transitive_supertypes(t)}
-        return types.difference(transitive_types)
+        return self.clgo.get_independent_types(self.get_types(ent))
 
     def _init_properties(self) -> Dict[ClgEntity, Dict[ClgPredicate, set]]:
         properties = defaultdict(lambda: defaultdict(set))
