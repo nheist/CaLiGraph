@@ -88,8 +88,7 @@ def _create_vector_prediction_data(subject_entity_pages: Dict[DbpResource, dict]
 
 
 def _get_subject_entity_labels(subject_entity_pages: Dict[DbpResource, dict], include_new_entities: bool) -> Dict[DbpResource, Tuple[Set[int], Set[int]]]:
-    dbr = DbpResourceStore.instance()
-
+    valid_entity_indices = set(DbpResourceStore.instance().get_embedding_vectors())
     entity_labels = {}
     for res, page_content in subject_entity_pages.items():
         # collect all subject entity labels
@@ -97,7 +96,7 @@ def _get_subject_entity_labels(subject_entity_pages: Dict[DbpResource, dict], in
         subject_entity_indices.update({ent['idx'] for s in page_content['sections'] for enum in s['enums'] for entry in enum for ent in entry['entities']})
         subject_entity_indices.update({ent['idx'] for s in page_content['sections'] for table in s['tables'] for row in table['data'] for cell in row for ent in cell['entities']})
         # get rid of non-entities and entities without RDF2vec embeddings (as we can't use them for training/eval)
-        subject_entity_indices = {idx for idx in subject_entity_indices if dbr.has_resource_with_idx(idx) and isinstance(dbr.get_resource_by_idx(idx), DbpEntity) and dbr.get_resource_by_idx(idx).get_embedding_vector()}
+        subject_entity_indices = subject_entity_indices.intersection(valid_entity_indices)
         if include_new_entities:
             subject_entity_indices.add(EntityIndex.NEW_ENTITY.value)
         entity_labels[res] = (subject_entity_indices, set())
