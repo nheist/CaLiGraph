@@ -13,7 +13,7 @@ class LinkingDataset(Dataset):
         self.mention_spans = mention_spans
         self.entity_indices = entity_indices
         self.num_ents = num_ents
-        self.all_entity_indices = torch.LongTensor([e.idx for e in DbpResourceStore.instance().get_entities()])
+        self.all_entity_indices = torch.LongTensor(list(DbpResourceStore.instance().get_embedding_vectors()))
         self.all_entity_indices = self.all_entity_indices[torch.randperm(len(self.all_entity_indices))]  # shuffle
 
     def __getitem__(self, idx):
