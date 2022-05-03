@@ -144,5 +144,5 @@ def _compute_valid_tags_for_type(clg_type: ClgType, valid_tags: Dict[int, Set[st
 
 def get_entity_relations():
     clge = ClgEntityStore.instance()
-    data = [(sub.idx, pred.idx, val.idx) for sub, props in clge.get_entity_properties() for pred, vals in props.items() for val in vals if isinstance(val, ClgEntity)]
+    data = [(sub.idx, pred.idx, val.idx) for sub, props in clge.get_entity_properties().items() for pred, vals in props.items() for val in vals if isinstance(val, ClgEntity)]
     return pd.DataFrame(data, columns=['sub', 'pred', 'obj'])
