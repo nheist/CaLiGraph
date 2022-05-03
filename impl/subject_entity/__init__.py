@@ -32,13 +32,13 @@ def _get_training_data() -> Tuple[List[List[str]], List[List[str]]]:
     training_data = utils.load_or_create_cache('subject_entity_training_data', _get_tokenized_list_pages_with_entity_labels)
     # flatten training data into chunks and replace entities with their POS tags
     tokens, labels = [], []
-    for token_chunks, entity_chunks in training_data.values():
+    for token_chunks, _, entity_chunks in training_data.values():
         tokens.extend(token_chunks)
         labels.extend(map_entities_to_pos_labels(entity_chunks))
     return tokens, labels
 
 
-def _get_tokenized_list_pages_with_entity_labels() -> Dict[DbpResource, Tuple[list, list]]:
+def _get_tokenized_list_pages_with_entity_labels() -> Dict[DbpResource, Tuple[list, list, list]]:
     lps_with_content = {res: content for res, content in wikipedia.get_parsed_pages().items() if isinstance(res, DbpListpage) and content}
     entity_labels = {lp: heuristics.find_subject_entities_for_listpage(lp, content) for lp, content in lps_with_content.items()}
     return WordTokenizer()(lps_with_content, entity_labels=entity_labels)

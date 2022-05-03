@@ -16,11 +16,11 @@ from transformers import Trainer, TrainingArguments, AutoTokenizer, AutoModelFor
 MAX_CHUNKS = 100
 
 
-def extract_subject_entities(page_chunks: Tuple[list, list], tokenizer, model) -> Tuple[Dict[str, dict], Dict[str, dict]]:
+def extract_subject_entities(page_chunks: Tuple[list, list, list], tokenizer, model) -> Tuple[Dict[str, dict], Dict[str, dict]]:
     subject_entity_dict = defaultdict(lambda: defaultdict(dict))
     subject_entity_embeddings_dict = defaultdict(lambda: defaultdict(dict))
 
-    page_token_chunks, page_ws_chunks = page_chunks
+    page_token_chunks, page_ws_chunks, _ = page_chunks
     for i in range(0, len(page_token_chunks), MAX_CHUNKS):
         _extract_subject_entity_chunks(page_token_chunks[i:i + MAX_CHUNKS], page_ws_chunks[i:i + MAX_CHUNKS], tokenizer, model, subject_entity_dict, subject_entity_embeddings_dict)
 
