@@ -59,7 +59,7 @@ def extract_listing_entity_information() -> Dict[ClgEntity, Dict[Tuple[DbpResour
             origin = _get_origin(page_idx, section_text)
             page_entities[ent_idx][origin]['labels'].update(set(df_entorigin['E_text'].unique()))
             new_types = {clgo.get_class_by_idx(t_idx) for t_idx in set(df_entorigin['E_enttype'].unique())}
-            new_types = new_types.difference({tt for t in new_types for tt in clgo.get_transitive_types(t, include_root=True)})
+            new_types = new_types.difference({tt for t in new_types for tt in clgo.get_transitive_supertypes(t, include_root=True)})
             page_entities[ent_idx][origin]['types'].update({t.idx for t in new_types})
 
     # extract relations
