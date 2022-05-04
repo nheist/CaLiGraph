@@ -306,8 +306,8 @@ def _filter_new_relations_by_tag(df: pd.DataFrame, valid_tags: Dict[str, Set[str
 
 def _get_predicate_mapping() -> Dict[str, int]:
     clgo = ClgOntologyStore.instance()
-    predicate_mapping = {_predinv_to_rel(p, True): p.idx for p in clgo.get_predicates()}
-    predicate_mapping.update({_predinv_to_rel(p, False): p.idx for p in clgo.get_predicates()})
+    predicate_mapping = {_predinv_to_rel(p.idx, True): p.idx for p in clgo.get_predicates()}
+    predicate_mapping.update({_predinv_to_rel(p.idx, False): p.idx for p in clgo.get_predicates()})
     return predicate_mapping
 
 
@@ -315,5 +315,5 @@ def _predinv_to_rel_row(row) -> str:
     return _predinv_to_rel(row['pred'], row['inv'])
 
 
-def _predinv_to_rel(pred: int, inv: bool) -> str:
-    return f'< {pred} <' if inv else f'> {pred} >'
+def _predinv_to_rel(pred_idx: int, inv: bool) -> str:
+    return f'< {pred_idx} <' if inv else f'> {pred_idx} >'
