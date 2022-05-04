@@ -8,13 +8,11 @@ from impl.util.rdf import EntityIndex
 
 
 class MultiEntityPredictionDataset(Dataset):
-    def __init__(self, encodings: dict, mention_spans: List[List[Tuple[int, int]]], entity_indices: List[List[int]], num_ents: int):
+    def __init__(self, encodings: dict, mention_spans: List[List[Tuple[int, int]]], entity_indices: List[Tuple[List[int], List[int]]], num_ents: int):
         self.encodings = encodings
         self.mention_spans = mention_spans
         self.entity_indices = entity_indices
         self.num_ents = num_ents
-        self.all_entity_indices = torch.LongTensor(list(DbpResourceStore.instance().get_embedding_vectors()))
-        self.all_entity_indices = self.all_entity_indices[torch.randperm(len(self.all_entity_indices))]  # shuffle
 
     def __getitem__(self, idx):
         item = {key: torch.tensor(val[idx]) for key, val in self.encodings.items()}
@@ -22,15 +20,7 @@ class MultiEntityPredictionDataset(Dataset):
         mention_spans = torch.tensor(self.mention_spans[idx])
         spans_to_pad = self.num_ents - len(mention_spans)
         item['mention_spans'] = torch.nn.ZeroPad2d((0, 0, 0, spans_to_pad))(mention_spans)
-        # pad entity indices with the value for NO ENTITY to indicate that the remaining entities are only fillers
-        entity_labels = torch.tensor(self.entity_indices[idx])
-        entity_labels_to_pad = self.num_ents - len(entity_labels)
-        entity_labels = torch.nn.ConstantPad1d((0, entity_labels_to_pad), EntityIndex.NO_ENTITY.value)(entity_labels)
-        # get a set of random entities to use as filler embeddings for new/no entities
-        start_idx = random.randint(0, len(self.all_entity_indices) - len(entity_labels))
-        random_labels = self.all_entity_indices[start_idx:start_idx+len(entity_labels)]
-        # pass both as labels of the item
-        item['label_ids'] = torch.stack((entity_labels, random_labels))
+        item['label_ids'] = torch.tensor(self.entity_indices[idx])
         return item
 
     def __len__(self):
@@ -103,7 +93,7 @@ def _get_mention_spans(entity_info: List[List[Tuple[int, Tuple[int, int], list]]
     return mention_spans
 
 
-def _get_entity_indices(entity_info: List[List[Tuple[int, Tuple[int, int], list]]], num_ents: int) -> List[List[int]]:
+def _get_entity_indices(entity_info: List[List[Tuple[int, Tuple[int, int], list]]], num_ents: int) -> List[Tuple[List[int], List[int]]]:
     dbr = DbpResourceStore.instance()
     valid_entity_indices = set(dbr.get_embedding_vectors())
     entity_surface_forms = {e_idx: dbr.get_resource_by_idx(e_idx).get_surface_forms() for e_idx in valid_entity_indices}
@@ -111,12 +101,20 @@ def _get_entity_indices(entity_info: List[List[Tuple[int, Tuple[int, int], list]
 
     entity_indices = []
     for entity_info_chunk in entity_info:
-        # first add actual entities of chunk
+        # first add true entities of chunk
         entity_indices_for_chunk = [e[0] for e in entity_info_chunk]
-        # then fill with entities having similar surface forms
-        surface_form_matches = {re for e in entity_info_chunk for re in word_blocker.get_entities_for_words(e[2])}
-        entities_not_in_chunk = list(surface_form_matches.difference(set(entity_indices_for_chunk)))
-        num_entities_to_add = min(len(entities_not_in_chunk), num_ents - len(entity_indices_for_chunk))
-        entity_indices_for_chunk.extend(random.sample(entities_not_in_chunk, num_entities_to_add))
-        entity_indices.append(entity_indices_for_chunk)
+        # store entity status (existing=0, new=-1, no entity=-2)
+        entity_status_for_chunk = [min(idx, 0) for idx in entity_indices_for_chunk]
+        entity_status_for_chunk += [EntityIndex.NO_ENTITY.value] * (num_ents - len(entity_status_for_chunk))
+        # then fill with negative entities
+        # entities with similar surface forms as negatives
+        surface_form_matches = {re for e in entity_info_chunk for re in word_blocker.get_entity_indices_for_words(e[2])}
+        sf_entities_not_in_chunk = list(surface_form_matches.difference(set(entity_indices_for_chunk)))
+        sf_entities_to_add = min(len(sf_entities_not_in_chunk), num_ents - len(entity_indices_for_chunk))
+        entity_indices_for_chunk.extend(random.sample(sf_entities_not_in_chunk, sf_entities_to_add))
+        # random entities as negatives
+        random_entities_not_in_chunk = list(valid_entity_indices.difference(set(entity_indices_for_chunk)))
+        random_entities_to_add = min(len(random_entities_not_in_chunk), num_ents - len(entity_indices_for_chunk))
+        entity_indices_for_chunk.extend(random.sample(random_entities_not_in_chunk, random_entities_to_add))
+        entity_indices.append((entity_indices_for_chunk, entity_status_for_chunk))
     return entity_indices

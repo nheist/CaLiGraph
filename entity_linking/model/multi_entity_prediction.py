@@ -57,18 +57,14 @@ class TransformerForMultiEntityPrediction(nn.Module):
             # TODO: directly compute loss based on acc for a threshold?
             # TODO: Npair instead of simple CE?
             loss_fct = nn.CrossEntropyLoss()
-            entity_labels, random_labels = labels[:, 0], labels[:, 1]  # (bs, num_ents), (bs, num_ents)
-            # find valid labels: ignore new/padding entity labels that have values < 0
-            label_mask = entity_labels.ge(0)  # (bs, num_ents)
-            # replace invalid entity labels with random labels
-            entity_labels = torch.where(label_mask, entity_labels, random_labels)  # (bs, num_ents)
+            entity_labels, entity_status = labels[:, 0], labels[:, 1]  # (bs, num_ents), (bs, num_ents)
             # retrieve embedding vectors for entity indices and compute logits
             label_entity_vectors = self.ent_idx2emb(entity_labels.view(-1))  # (bs*num_ents, ent_dim)
             entity_logits = entity_vectors @ label_entity_vectors.T  # (bs, num_ents, bs*num_ents)
-            # compute loss for valid labels
-            label_mask = label_mask.view(-1)  # (bs*num_ents)
-            targets = torch.arange(len(label_mask), device=label_mask.device)  # (bs*num_ents)
-            targets[~label_mask] = loss_fct.ignore_index
+            # compute loss for positive/known entities only (negative entities have status < 0)
+            negative_entity_mask = entity_status.lt(0).view(-1)  # (bs*num_ents)
+            targets = torch.arange(len(negative_entity_mask), device=negative_entity_mask.device)  # (bs*num_ents)
+            targets[negative_entity_mask] = loss_fct.ignore_index
             loss = loss_fct(entity_logits.view(-1, entity_logits.shape[-1]), targets)
 
         return (entity_vectors,) if labels is None else (loss, entity_vectors)

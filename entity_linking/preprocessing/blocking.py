@@ -8,11 +8,11 @@ import re
 class WordBlocker:
     def __init__(self, entities_with_surface_forms: Dict[int, Set[str]]):
         self.entity_blocks = defaultdict(set)
-        for e, sfs in entities_with_surface_forms.items():
+        for e_idx, sfs in entities_with_surface_forms.items():
             for sf in sfs:
-                self.entity_blocks[self._block_surface_form(sf.split())].add(e)
+                self.entity_blocks[self._block_surface_form(sf.split())].add(e_idx)
 
-    def get_entities_for_words(self, words: List[str]) -> Set[int]:
+    def get_entity_indices_for_words(self, words: List[str]) -> Set[int]:
         return self.entity_blocks[self._block_surface_form(words)]
 
     def _block_surface_form(self, sf_words: List[str]) -> Tuple[str]:
