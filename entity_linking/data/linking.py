@@ -104,8 +104,10 @@ def _get_mention_spans(entity_info: List[List[Tuple[int, Tuple[int, int], list]]
 
 
 def _get_entity_indices(entity_info: List[List[Tuple[int, Tuple[int, int], list]]], num_ents: int) -> List[List[int]]:
-    all_entities = DbpResourceStore.instance().get_entities()
-    word_blocker = WordBlocker({e.idx: e.get_surface_forms() for e in all_entities})
+    dbr = DbpResourceStore.instance()
+    valid_entity_indices = set(dbr.get_embedding_vectors())
+    entity_surface_forms = {e_idx: dbr.get_resource_by_idx(e_idx).get_surface_forms() for e_idx in valid_entity_indices}
+    word_blocker = WordBlocker(entity_surface_forms)
 
     entity_indices = []
     for entity_info_chunk in entity_info:

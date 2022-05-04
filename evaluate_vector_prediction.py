@@ -15,7 +15,7 @@ from impl import subject_entity
 from impl.subject_entity import combine
 from impl.subject_entity.preprocess.word_tokenize import WordTokenizer, WordTokenizerSpecialToken
 from transformers import Trainer, IntervalStrategy, TrainingArguments, AutoTokenizer, AutoModel, EvalPrediction
-from impl.dbpedia.resource import DbpResource, DbpEntity, DbpResourceStore
+from impl.dbpedia.resource import DbpResource, DbpResourceStore
 from entity_linking.preprocessing.embeddings import EntityIndexToEmbeddingMapper
 from entity_linking.model.linking import TransformerForEntityVectorPrediction
 from entity_linking.data.linking import prepare_linking_dataset
@@ -82,7 +82,7 @@ def _load_train_and_val_datasets(tokenizer, num_ents: int) -> Tuple[Dict[DbpReso
     return train_data, val_data
 
 
-def _create_vector_prediction_data(subject_entity_pages: Dict[DbpResource, dict], include_new_entities: bool) -> Dict[DbpResource, Tuple[List[List[str]], List[List[int]]]]:
+def _create_vector_prediction_data(subject_entity_pages: Dict[DbpResource, dict], include_new_entities: bool) -> Dict[DbpResource, Tuple[List[List[str]], List[List[str]], List[List[int]]]]:
     entity_labels = _get_subject_entity_labels(subject_entity_pages, include_new_entities)
     return WordTokenizer()(subject_entity_pages, entity_labels=entity_labels)
 
