@@ -1,4 +1,4 @@
-from typing import Set, Union, Tuple
+from typing import Set, Union, Tuple, Optional
 from collections import defaultdict
 import utils
 from impl.util.rdf import Namespace, RdfResource
@@ -39,15 +39,14 @@ class ClgPredicate(ClgClass):
         return self._get_store().get_dbp_predicate(self)
 
     def get_domain(self) -> ClgType:
-        return self._get_store().get_domain(self) or self._get_store().get_type_root()
+        return self._get_store().get_domain(self)
 
     def get_range(self):
         return self._get_store().get_range(self)
 
 
 class ClgObjectPredicate(ClgPredicate):
-    def get_range(self) -> ClgType:
-        return super().get_range() or self._get_store().get_type_root()
+    pass
 
 
 class ClgDatatypePredicate(ClgPredicate):
@@ -176,14 +175,14 @@ class ClgOntologyStore:
     def get_predicate_for_dbp_predicate(self, dbp_pred: DbpPredicate) -> ClgPredicate:
         return self.get_class_by_idx(dbp_pred.idx)
 
-    def get_domain(self, pred: ClgPredicate) -> ClgType:
+    def get_domain(self, pred: ClgPredicate) -> Optional[ClgType]:
         dbp_domain = dbp_heur.get_domain(pred.get_dbp_predicate())
         clg_types = self.get_types_for_associated_dbp_type(dbp_domain)
-        return sorted(clg_types)[0]
+        return sorted(clg_types)[0] if clg_types else self.get_type_root()
 
     def get_range(self, pred: ClgPredicate):
         dbp_range = dbp_heur.get_range(pred.get_dbp_predicate())
         if not isinstance(dbp_range, DbpType):
             return dbp_range
         clg_types = self.get_types_for_associated_dbp_type(dbp_range)
-        return sorted(clg_types)[0]
+        return sorted(clg_types)[0] if clg_types else self.get_type_root()
