@@ -7,7 +7,7 @@ from entity_linking.preprocessing.blocking import WordBlocker
 from impl.util.rdf import EntityIndex
 
 
-class LinkingDataset(Dataset):
+class MultiEntityPredictionDataset(Dataset):
     def __init__(self, encodings: dict, mention_spans: List[List[Tuple[int, int]]], entity_indices: List[List[int]], num_ents: int):
         self.encodings = encodings
         self.mention_spans = mention_spans
@@ -37,7 +37,7 @@ class LinkingDataset(Dataset):
         return len(self.mention_spans)
 
 
-def prepare_linking_dataset(tokens: List[List[str]], labels: List[List[int]], tokenizer, num_ents: int):
+def prepare_dataset(tokens: List[List[str]], labels: List[List[int]], tokenizer, num_ents: int):
     entity_info = _collect_entity_info(tokens, labels)
     tokens, entity_info = _filter_truncated_entities(tokens, entity_info, tokenizer)
 
@@ -45,7 +45,7 @@ def prepare_linking_dataset(tokens: List[List[str]], labels: List[List[int]], to
     mention_spans = _get_mention_spans(entity_info, encodings['offset_mapping'])
     entity_indices = _get_entity_indices(entity_info, num_ents)
     encodings.pop('offset_mapping')  # we don't want to pass this to the model
-    return LinkingDataset(encodings, mention_spans, entity_indices, num_ents)
+    return MultiEntityPredictionDataset(encodings, mention_spans, entity_indices, num_ents)
 
 
 def _collect_entity_info(tokens: List[List[str]], labels: List[List[int]]) -> List[List[Tuple[int, Tuple[int, int], list]]]:

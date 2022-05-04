@@ -17,8 +17,8 @@ from impl.subject_entity.preprocess.word_tokenize import WordTokenizer, WordToke
 from transformers import Trainer, IntervalStrategy, TrainingArguments, AutoTokenizer, AutoModel, EvalPrediction
 from impl.dbpedia.resource import DbpResource, DbpResourceStore
 from entity_linking.preprocessing.embeddings import EntityIndexToEmbeddingMapper
-from entity_linking.model.linking import TransformerForEntityVectorPrediction
-from entity_linking.data.linking import prepare_linking_dataset
+from entity_linking.model.multi_entity_prediction import TransformerForMultiEntityPrediction
+from entity_linking.data.multi_entity_prediction import prepare_dataset
 
 
 SEED = 42
@@ -36,7 +36,7 @@ def run_evaluation(model_name: str, epochs: int, batch_size: int, learning_rate:
     encoder = AutoModel.from_pretrained(model_name)
     encoder.resize_token_embeddings(len(tokenizer))
     ent_idx2emb = EntityIndexToEmbeddingMapper(EMBEDDING_DIM)
-    model = TransformerForEntityVectorPrediction(encoder, ent_idx2emb, EMBEDDING_DIM)
+    model = TransformerForMultiEntityPrediction(encoder, ent_idx2emb, EMBEDDING_DIM)
     # load data
     train_data, val_data = utils.load_or_create_cache('vector_prediction_training_data', lambda: _load_train_and_val_datasets(tokenizer, num_ents))
     # run evaluation
@@ -108,7 +108,7 @@ def _prepare_data(page_data: Iterable[Tuple[List[List[str]], List[List[int]]]], 
     for token_chunks, _, entity_chunks in page_data:
         tokens.extend(token_chunks)
         labels.extend(entity_chunks)
-    return prepare_linking_dataset(tokens, labels, tokenizer, num_ents)
+    return prepare_dataset(tokens, labels, tokenizer, num_ents)
 
 
 class VectorPredictionEvaluator:

@@ -27,7 +27,7 @@ class MentionDetectionDataset(Dataset):
         return len(self.mention_labels)
 
 
-def prepare_mentiondetection_dataset(tokens: list, labels: list, tokenizer, predict_single_tag: bool):
+def prepare_dataset(tokens: list, labels: list, tokenizer, predict_single_tag: bool):
     encodings = tokenizer(tokens, is_split_into_words=True, return_offsets_mapping=True, padding=True, truncation=True)
     type_labels = None
     if predict_single_tag:

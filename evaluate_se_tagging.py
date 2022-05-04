@@ -10,7 +10,7 @@ from impl.subject_entity.preprocess.word_tokenize import WordTokenizerSpecialTok
 from impl.subject_entity.preprocess.pos_label import POSLabel, map_entities_to_pos_labels
 from transformers import Trainer, IntervalStrategy, TrainingArguments, AutoTokenizer, AutoModelForTokenClassification, EvalPrediction
 from collections import namedtuple
-from entity_linking.data.mention_detection import prepare_mentiondetection_dataset
+from entity_linking.data.mention_detection import prepare_dataset
 from entity_linking.model.mention_detection import TransformerForMentionDetectionAndTypePrediction
 
 
@@ -72,7 +72,7 @@ def _prepare_data(tokenizer, page_data: list, predict_single_tag: bool):
         tokens.extend(token_chunks)
         label_chunks = map_entities_to_pos_labels(entity_chunks, predict_single_tag)
         labels.extend(label_chunks)
-    return prepare_mentiondetection_dataset(tokens, labels, tokenizer, predict_single_tag)
+    return prepare_dataset(tokens, labels, tokenizer, predict_single_tag)
 
 
 Entity = namedtuple("Entity", "e_type start_offset end_offset")
