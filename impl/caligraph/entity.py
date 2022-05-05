@@ -123,7 +123,7 @@ class ClgEntityStore:
         for ent_idx, origin_data in listing_information.items():
             for (res_idx, section_name), data in origin_data.items():
                 ent = self.get_entity_by_idx(ent_idx)
-                self.provenance_resources[ent].add(self.dbo.get_resource_by_idx(res_idx))
+                self.provenance_resources[ent].add(self.dbr.get_resource_by_idx(res_idx))
                 self.surface_forms[ent].update(data['labels'])
                 self.types[ent].update({self.clgo.get_class_by_idx(tidx) for tidx in data['types']})
                 for p, v in data['out']:
