@@ -59,7 +59,7 @@ class TransformerForMultiEntityPrediction(nn.Module):
             loss_fct = nn.CrossEntropyLoss()
             entity_labels, entity_status = labels[:, 0], labels[:, 1]  # (bs, num_ents), (bs, num_ents)
             # retrieve embedding vectors for entity indices and compute logits
-            label_entity_vectors = self.ent_idx2emb(entity_labels.view(-1))  # (bs*num_ents, ent_dim)
+            label_entity_vectors = self.ent_idx2emb(entity_labels.reshape(-1))  # (bs*num_ents, ent_dim)
             entity_logits = entity_vectors @ label_entity_vectors.T  # (bs, num_ents, bs*num_ents)
             # compute loss for positive/known entities only (negative entities have status < 0)
             negative_entity_mask = entity_status.lt(0).view(-1)  # (bs*num_ents)
