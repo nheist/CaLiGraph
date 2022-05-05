@@ -95,7 +95,8 @@ def _get_mention_spans(entity_info: List[List[Tuple[int, Tuple[int, int], list]]
 
 def _get_entity_indices(entity_info: List[List[Tuple[int, Tuple[int, int], list]]], num_ents: int) -> List[Tuple[List[int], List[int]]]:
     dbr = DbpResourceStore.instance()
-    valid_entity_indices = set(dbr.get_embedding_vectors())
+    valid_entity_indices = list(dbr.get_embedding_vectors())
+    random.shuffle(valid_entity_indices)  # shuffle entities for adding random entities later
     entity_surface_forms = {e_idx: dbr.get_resource_by_idx(e_idx).get_surface_forms() for e_idx in valid_entity_indices}
     word_blocker = WordBlocker(entity_surface_forms)
 
@@ -115,6 +116,7 @@ def _get_entity_indices(entity_info: List[List[Tuple[int, Tuple[int, int], list]
         # random entities as negatives (here we don't care whether the entities are already in the chunk
         # -> this is very unlikely with > 5M entities)
         random_entities_to_add = num_ents - len(entity_indices_for_chunk)
-        entity_indices_for_chunk.extend(random.sample(valid_entity_indices, random_entities_to_add))
+        start_idx = random.randint(0, len(valid_entity_indices) - random_entities_to_add)
+        entity_indices_for_chunk.extend(valid_entity_indices[start_idx:start_idx+random_entities_to_add])
         entity_indices.append((entity_indices_for_chunk, entity_status_for_chunk))
     return entity_indices
