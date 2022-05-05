@@ -112,9 +112,9 @@ def _get_entity_indices(entity_info: List[List[Tuple[int, Tuple[int, int], list]
         sf_entities_not_in_chunk = list(surface_form_matches.difference(set(entity_indices_for_chunk)))
         sf_entities_to_add = min(len(sf_entities_not_in_chunk), num_ents - len(entity_indices_for_chunk))
         entity_indices_for_chunk.extend(random.sample(sf_entities_not_in_chunk, sf_entities_to_add))
-        # random entities as negatives
-        random_entities_not_in_chunk = list(valid_entity_indices.difference(set(entity_indices_for_chunk)))
-        random_entities_to_add = min(len(random_entities_not_in_chunk), num_ents - len(entity_indices_for_chunk))
-        entity_indices_for_chunk.extend(random.sample(random_entities_not_in_chunk, random_entities_to_add))
+        # random entities as negatives (here we don't care whether the entities are already in the chunk
+        # -> this is very unlikely with > 5M entities)
+        random_entities_to_add = num_ents - len(entity_indices_for_chunk)
+        entity_indices_for_chunk.extend(random.sample(valid_entity_indices, random_entities_to_add))
         entity_indices.append((entity_indices_for_chunk, entity_status_for_chunk))
     return entity_indices
