@@ -1,7 +1,7 @@
 from typing import Set, Union, Tuple, Optional
 from collections import defaultdict
 import utils
-from impl.util.rdf import Namespace, RdfResource
+from impl.util.rdf import Namespace, RdfResource, name2label
 from impl.util.singleton import Singleton
 import impl.dbpedia.heuristics as dbp_heur
 from impl.dbpedia.ontology import DbpType, DbpPredicate, DbpObjectPredicate, DbpOntologyStore
@@ -100,6 +100,9 @@ class ClgOntologyStore:
 
     def get_type_root(self):
         return self.get_class_by_idx(0)  # root is initialized as 0
+
+    def get_label(self, clg_type: ClgType) -> str:
+        return name2label(clg_type.name)
 
     def get_types(self, include_root=True) -> Set[ClgType]:
         types = {c for c in self.classes_by_idx.values() if isinstance(c, ClgType)}
