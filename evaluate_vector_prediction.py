@@ -118,15 +118,13 @@ class VectorPredictionEvaluator:
 
     def evaluate(self, eval_prediction: EvalPrediction):
         labels = torch.from_numpy(eval_prediction.label_ids)  # (bs, num_ents, 2)
-        entity_labels, random_labels = labels[:, 0], labels[:, 1]
-        # compute masks for existing (idx >= 0) and new (idx == -1) entities
-        known_entity_mask = entity_labels.ge(0).view(-1)  # (bs*num_ents)
+        entity_labels, entity_status = labels[:, 0].reshape(-1), labels[:, 1].reshape(-1)
+        # compute masks for existing (idx == 0) and new (idx == -1) entities
+        known_entity_mask = entity_labels.eq(0)  # (bs*num_ents)
         known_entity_targets = torch.arange(len(known_entity_mask))[known_entity_mask]  # (bs*num_ents)
-        unknown_entity_mask = entity_labels.eq(-1).view(-1)  # (bs*num_ents)
-        # for prediction, replace unknown/no entity labels with random labels
-        entity_labels = torch.where(known_entity_mask, entity_labels, random_labels)
+        unknown_entity_mask = entity_labels.eq(-1)  # (bs*num_ents)
         # retrieve embedding vectors for entity indices
-        label_entity_vectors = self.ent_idx2emb(entity_labels.view(-1))  # (bs*num_ents, ent_dim)
+        label_entity_vectors = self.ent_idx2emb(entity_labels)  # (bs*num_ents, ent_dim)
         # compute cosine similarity between predictions and labels
         entity_vectors = torch.from_numpy(eval_prediction.predictions)  # (bs, num_ents, ent_dim)
         entity_vectors = entity_vectors.view(-1, entity_vectors.shape[-1])  # (bs*num_ents, ent_dim)
