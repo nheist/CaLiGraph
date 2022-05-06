@@ -60,8 +60,8 @@ def _resource_to_string(resource) -> str:
     return f'<{rdf_util.name2iri(_encode_resource(res_name), prefix)}>'
 
 
-def _encode_resource(resource: str) -> str:
-    res_name = urllib.parse.quote(resource)
+def _encode_resource(resource) -> str:
+    res_name = urllib.parse.quote(str(resource))
     for char in RESOURCE_ENCODING_EXCEPTIONS:
         res_name = res_name.replace(urllib.parse.quote(char), char)
     return res_name
