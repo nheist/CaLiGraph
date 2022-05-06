@@ -40,7 +40,7 @@ def run_evaluation(model_name: str, epochs: int, batch_size: int, learning_rate:
     # load data
     train_data, val_data = utils.load_or_create_cache('vector_prediction_training_data', lambda: _load_train_and_val_datasets(tokenizer, num_ents))
     # run evaluation
-    vp_evaluator = VectorPredictionEvaluator(ent_idx2emb)
+    vp_evaluator = VectorPredictionEvaluator(ent_idx2emb, batch_size)
     training_args = TrainingArguments(
         seed=SEED,
         save_strategy=IntervalStrategy.NO,
@@ -112,12 +112,19 @@ def _prepare_data(page_data: Iterable[Tuple[List[List[str]], List[List[int]]]], 
 
 
 class VectorPredictionEvaluator:
-    def __init__(self, ent_idx2emb: EntityIndexToEmbeddingMapper):
+    def __init__(self, ent_idx2emb: EntityIndexToEmbeddingMapper, batch_size: int):
         self.ent_idx2emb = ent_idx2emb
+        self.batch_size = batch_size
         self.thresholds = [.1, .3, .5, .7]
 
     def evaluate(self, eval_prediction: EvalPrediction):
-        labels = torch.from_numpy(eval_prediction.label_ids)  # (bs, num_ents, 2)
+        print('label_id shape', eval_prediction.label_ids.shape)
+        print('preds shape', eval_prediction.predictions.shape)
+        labels = torch.from_numpy(eval_prediction.label_ids)  # (batches*bs, num_ents, 2)
+        batched_label_shape = (labels.shape[0] // self.batch_size, self.batch_size, *labels.shape[1:])
+        labels = labels.reshape(batched_label_shape)  # (batches, bs, num_ents, 2)
+
+
         entity_labels, entity_status = labels[:, 0].reshape(-1), labels[:, 1].reshape(-1)
         # compute masks for existing (idx == 0) and new (idx == -1) entities
         known_entity_mask = entity_labels.eq(0)  # (bs*num_ents)
