@@ -54,8 +54,6 @@ class TransformerForMultiEntityPrediction(nn.Module):
 
         loss = None
         if labels is not None:
-            # TODO: directly compute loss based on acc for a threshold?
-            # TODO: Npair instead of simple CE?
             loss_fct = nn.CrossEntropyLoss()
             entity_labels, entity_status = labels[:, 0], labels[:, 1]  # (bs, num_ents), (bs, num_ents)
             # retrieve embedding vectors for entity indices and compute logits
@@ -82,7 +80,6 @@ class TransformerForMultiEntityPrediction(nn.Module):
 
         cumsum = input.cumsum(dim=-2)  # (bs, seq_len, hidden_size)
         padded_cumsum = self.pad2d(cumsum)  # (bs, seq_len+1, hidden_size)
-        # TODO: one-step approach to retrieve the cumsums for mention_spans
         cumsum_start_end = padded_cumsum[:, mention_spans]  # (bs, bs, num_ents, 2, hidden_size)
         cumsum_start_end = cumsum_start_end[torch.arange(bs, device=d), torch.arange(bs, device=d), :]  # (bs, num_ents, 2, hidden_size)
         vector_sums = torch.diff(cumsum_start_end, dim=-2).squeeze()  # (bs, num_ents, hidden_size)

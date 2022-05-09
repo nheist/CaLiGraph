@@ -103,7 +103,7 @@ def _get_entity_indices(entity_info: List[List[Tuple[int, Tuple[int, int], list]
     entity_indices = []
     for entity_info_chunk in entity_info:
         # first add true entities of chunk
-        entity_indices_for_chunk = [e[0] for e in entity_info_chunk]
+        entity_indices_for_chunk = [e[0] for e in entity_info_chunk][:num_ents]
         # store entity status (existing=0, new=-1, no entity=-2)
         entity_status_for_chunk = [min(idx, 0) for idx in entity_indices_for_chunk]
         entity_status_for_chunk += [EntityIndex.NO_ENTITY.value] * (num_ents - len(entity_status_for_chunk))
