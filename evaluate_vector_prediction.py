@@ -123,7 +123,7 @@ class VectorPredictionEvaluator:
         # gather results batch-wise and then average over them
         labels = torch.from_numpy(eval_prediction.label_ids)  # (batches*bs, num_ents, 2)
         entity_vectors = torch.from_numpy(eval_prediction.predictions)  # (batches*bs, num_ents, ent_dim)
-        for label_batch, pred_batch in zip([torch.split(t, self.batch_size) for t in [labels, entity_vectors]]):
+        for label_batch, pred_batch in zip(*[torch.split(t, self.batch_size) for t in [labels, entity_vectors]]):
             entity_labels, entity_status = label_batch[:, 0].reshape(-1), label_batch[:, 1].reshape(-1)
             # compute masks for existing (idx == 0) and new (idx == -1) entities
             known_entity_mask = entity_labels.eq(0)  # (bs*num_ents)
