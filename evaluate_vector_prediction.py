@@ -173,6 +173,6 @@ if __name__ == '__main__':
     parser.add_argument('-lr', '--learning_rate', type=float, default=5e-5, help='learning rate used during training')
     parser.add_argument('-ws', '--warmup_steps', type=int, default=0, help='warmup steps during learning')
     parser.add_argument('-wd', '--weight_decay', type=float, default=0, help='weight decay during learning')
-    parser.add_argument('-ne', '--num_ents', type=float, default=128, help='number of candidate entities per sentence')
+    parser.add_argument('-ne', '--num_ents', type=float, default=64, help='number of candidate entities per sentence')
     args = parser.parse_args()
     run_evaluation(args.model_name, args.epochs, args.batch_size, args.learning_rate, args.warmup_steps, args.weight_decay, args.num_ents)
