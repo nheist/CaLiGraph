@@ -142,9 +142,11 @@ class VectorPredictionEvaluator:
             all_entity_count = known_entity_count + unknown_entity_count
             all_entity_correct_predictions = known_entity_correct_predictions + unknown_entity_correct_predictions
             for t in self.thresholds:
+                if known_entity_count:
+                    results[f'T-{t}_known'].append(known_entity_correct_predictions[t] / known_entity_count)
+                if unknown_entity_count:
+                    results[f'T-{t}_unknown'].append(unknown_entity_correct_predictions[t] / unknown_entity_count)
                 results[f'T-{t}_all'].append(all_entity_correct_predictions[t] / all_entity_count)
-                results[f'T-{t}_known'].append(known_entity_correct_predictions[t] / known_entity_count)
-                results[f'T-{t}_unknown'].append(unknown_entity_correct_predictions[t] / unknown_entity_count)
         return {label: statistics.fmean(vals) for label, vals in results.items()}  # average over batch results
 
     def _get_correct_predictions_for_known_entities(self, entity_similarities: Tensor, mask: Tensor, targets: Tensor) -> Counter[float, int]:
