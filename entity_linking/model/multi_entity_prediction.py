@@ -30,7 +30,7 @@ class TransformerForMultiEntityPrediction(nn.Module):
             attention_mask=None,
             head_mask=None,
             inputs_embeds=None,
-            labels=None,  # (bs, num_ents, ent_dim)
+            labels=None,  # (bs, num_ents, 2)
             output_attentions=None,
             output_hidden_states=None,
             return_dict=None,
@@ -60,12 +60,12 @@ class TransformerForMultiEntityPrediction(nn.Module):
             entity_labels, entity_status = labels[:, 0], labels[:, 1]  # (bs, num_ents), (bs, num_ents)
             # retrieve embedding vectors for entity indices and compute logits
             label_entity_vectors = self.ent_idx2emb(entity_labels.reshape(-1))  # (bs*num_ents, ent_dim)
-            entity_logits = entity_vectors @ label_entity_vectors.T  # (bs, num_ents, bs*num_ents)
+            entity_logits = entity_vectors.view(-1, entity_vectors.shape[-1]) @ label_entity_vectors.T  # (bs*num_ents, bs*num_ents)
             # compute loss for positive/known entities only (negative entities have status < 0)
             negative_entity_mask = entity_status.lt(0).view(-1)  # (bs*num_ents)
             targets = torch.arange(len(negative_entity_mask), device=negative_entity_mask.device)  # (bs*num_ents)
             targets[negative_entity_mask] = loss_fct.ignore_index
-            loss = loss_fct(entity_logits.view(-1, entity_logits.shape[-1]), targets)
+            loss = loss_fct(entity_logits, targets)
 
         return (entity_vectors,) if labels is None else (loss, entity_vectors)
 

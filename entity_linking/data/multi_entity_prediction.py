@@ -107,6 +107,8 @@ def _get_entity_indices(entity_info: List[List[Tuple[int, Tuple[int, int], list]
         # store entity status (existing=0, new=-1, no entity=-2)
         entity_status_for_chunk = [min(idx, 0) for idx in entity_indices_for_chunk]
         entity_status_for_chunk += [EntityIndex.NO_ENTITY.value] * (num_ents - len(entity_status_for_chunk))
+        # replace new entities with random ones
+        entity_indices_for_chunk = [idx if idx != EntityIndex.NEW_ENTITY.value else random.choice(valid_entity_indices) for idx in entity_indices_for_chunk]
         # then fill with negative entities
         # entities with similar surface forms as negatives
         surface_form_matches = {re for e in entity_info_chunk for re in word_blocker.get_entity_indices_for_words(e[2])}
