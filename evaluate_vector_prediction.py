@@ -152,7 +152,7 @@ class VectorPredictionEvaluator:
         result = Counter()
         for t in self.thresholds:
             known_entity_similarities = entity_similarities[mask]
-            target_most_similar = known_entity_similarities.max(dim=-1).keys.eq(targets)
+            target_most_similar = known_entity_similarities.max(dim=-1).indices.eq(targets)
             target_greater_threshold = known_entity_similarities[torch.arange(len(known_entity_similarities)), targets].ge(t)
             result[t] = target_most_similar.logical_and(target_greater_threshold).sum().item()
         return result
