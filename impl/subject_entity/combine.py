@@ -59,7 +59,7 @@ def _match_entities_for_page(page_res: DbpResource, entities_per_ts: dict, page_
                     ent_idx = page_entity_map[ts][s][ent_text]
                     if not isinstance(dbr.get_resource_by_idx(ent_idx), DbpEntity):
                         continue  # discard anything that is not an entity (listpage, file, ..)
-                    ent_name = dbr.get_resource_by_idx(ent_idx)
+                    ent_name = dbr.get_resource_by_idx(ent_idx).name
                 else:
                     section_part = f'#{s}' if s != 'Main' else ''
                     ent_name = f'{page_res.name}{section_part}--{ent_text}'
