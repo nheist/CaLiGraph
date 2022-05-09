@@ -48,9 +48,9 @@ def run_evaluation(model_name: str, epochs: int, batch_size: int, learning_rate:
         output_dir=f'./vp_eval/output/{run_id}',
         logging_strategy=IntervalStrategy.STEPS,
         logging_dir=f'./vp_eval/logs/{run_id}',
-        logging_steps=10,
+        logging_steps=1000,
         evaluation_strategy=IntervalStrategy.STEPS,
-        eval_steps=500,
+        eval_steps=5000,
         per_device_train_batch_size=batch_size,
         per_device_eval_batch_size=batch_size,
         num_train_epochs=epochs,
@@ -116,7 +116,7 @@ class VectorPredictionEvaluator:
     def __init__(self, ent_idx2emb: EntityIndexToEmbeddingMapper, batch_size: int):
         self.ent_idx2emb = ent_idx2emb
         self.batch_size = batch_size
-        self.thresholds = [.1, .3, .5, .7]
+        self.thresholds = [.1, .2, .3, .4, .5, .6, .7]
 
     def evaluate(self, eval_prediction: EvalPrediction):
         results = defaultdict(list)
