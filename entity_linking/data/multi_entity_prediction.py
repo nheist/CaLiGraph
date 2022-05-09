@@ -1,5 +1,5 @@
 from typing import List, Tuple
-import random
+import numpy as np
 import torch
 from torch.utils.data import Dataset
 from impl.dbpedia.resource import DbpResourceStore
@@ -96,29 +96,28 @@ def _get_mention_spans(entity_info: List[List[Tuple[int, Tuple[int, int], list]]
 def _get_entity_indices(entity_info: List[List[Tuple[int, Tuple[int, int], list]]], num_ents: int) -> List[Tuple[List[int], List[int]]]:
     dbr = DbpResourceStore.instance()
     valid_entity_indices = list(dbr.get_embedding_vectors())
-    random.shuffle(valid_entity_indices)  # shuffle entities for adding random entities later
     entity_surface_forms = {e_idx: dbr.get_resource_by_idx(e_idx).get_surface_forms() for e_idx in valid_entity_indices}
     word_blocker = WordBlocker(entity_surface_forms)
 
     entity_indices = []
     for entity_info_chunk in entity_info:
         # first add true entities of chunk
-        entity_indices_for_chunk = [e[0] for e in entity_info_chunk][:num_ents]
+        entity_indices_for_chunk = np.array([e[0] for e in entity_info_chunk])[:num_ents]
         # store entity status (existing=0, new=-1, no entity=-2)
         entity_status_for_chunk = [min(idx, 0) for idx in entity_indices_for_chunk]
         entity_status_for_chunk += [EntityIndex.NO_ENTITY.value] * (num_ents - len(entity_status_for_chunk))
         # replace new entities with random ones
-        entity_indices_for_chunk = [idx if idx != EntityIndex.NEW_ENTITY.value else random.choice(valid_entity_indices) for idx in entity_indices_for_chunk]
+        new_entity_mask = entity_indices_for_chunk == EntityIndex.NEW_ENTITY.value
+        entity_indices_for_chunk[new_entity_mask] = np.random.choice(valid_entity_indices, size=new_entity_mask.sum(), replace=False)
         # then fill with negative entities
         # entities with similar surface forms as negatives
         surface_form_matches = {re for e in entity_info_chunk for re in word_blocker.get_entity_indices_for_words(e[2])}
         sf_entities_not_in_chunk = list(surface_form_matches.difference(set(entity_indices_for_chunk)))
         sf_entities_to_add = min(len(sf_entities_not_in_chunk), num_ents - len(entity_indices_for_chunk))
-        entity_indices_for_chunk.extend(random.sample(sf_entities_not_in_chunk, sf_entities_to_add))
+        entity_indices_for_chunk = np.concatenate(entity_indices_for_chunk, np.random.choice(sf_entities_not_in_chunk, size=sf_entities_to_add, replace=False))
         # random entities as negatives (here we don't care whether the entities are already in the chunk
         # -> this is very unlikely with > 5M entities)
         random_entities_to_add = num_ents - len(entity_indices_for_chunk)
-        start_idx = random.randint(0, len(valid_entity_indices) - random_entities_to_add)
-        entity_indices_for_chunk.extend(valid_entity_indices[start_idx:start_idx+random_entities_to_add])
-        entity_indices.append((entity_indices_for_chunk, entity_status_for_chunk))
+        entity_indices_for_chunk = np.concatenate(entity_indices_for_chunk, np.random.choice(valid_entity_indices, size=random_entities_to_add, replace=False))
+        entity_indices.append((list(entity_indices_for_chunk), entity_status_for_chunk))
     return entity_indices
