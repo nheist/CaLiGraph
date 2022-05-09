@@ -126,9 +126,9 @@ class VectorPredictionEvaluator:
         for label_batch, pred_batch in zip(*[torch.split(t, self.batch_size) for t in [labels, entity_vectors]]):
             entity_labels, entity_status = label_batch[:, 0].reshape(-1), label_batch[:, 1].reshape(-1)
             # compute masks for existing (idx == 0) and new (idx == -1) entities
-            known_entity_mask = entity_labels.eq(0)  # (bs*num_ents)
+            known_entity_mask = entity_status.eq(0)  # (bs*num_ents)
             known_entity_targets = torch.arange(len(known_entity_mask))[known_entity_mask]  # (bs*num_ents)
-            unknown_entity_mask = entity_labels.eq(-1)  # (bs*num_ents)
+            unknown_entity_mask = entity_status.eq(-1)  # (bs*num_ents)
             # retrieve embedding vectors for entity indices
             label_entity_vectors = self.ent_idx2emb(entity_labels)  # (bs*num_ents, ent_dim)
             # compute cosine similarity between predictions and labels
