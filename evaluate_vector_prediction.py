@@ -2,7 +2,8 @@ import os
 os.environ['DISABLE_SPACY_CACHE'] = '1'
 
 from typing import Dict, List, Tuple, Set, Iterable
-from collections import Counter
+from collections import Counter, defaultdict
+import statistics
 import argparse
 import random
 import numpy as np
@@ -118,38 +119,33 @@ class VectorPredictionEvaluator:
         self.thresholds = [.1, .3, .5, .7]
 
     def evaluate(self, eval_prediction: EvalPrediction):
-        print('label_id shape', eval_prediction.label_ids.shape)
-        print('preds shape', eval_prediction.predictions.shape)
+        results = defaultdict(list)
+        # gather results batch-wise and then average over them
         labels = torch.from_numpy(eval_prediction.label_ids)  # (batches*bs, num_ents, 2)
-        batched_label_shape = (labels.shape[0] // self.batch_size, self.batch_size, *labels.shape[1:])
-        labels = labels.reshape(batched_label_shape)  # (batches, bs, num_ents, 2)
-
-
-        entity_labels, entity_status = labels[:, 0].reshape(-1), labels[:, 1].reshape(-1)
-        # compute masks for existing (idx == 0) and new (idx == -1) entities
-        known_entity_mask = entity_labels.eq(0)  # (bs*num_ents)
-        known_entity_targets = torch.arange(len(known_entity_mask))[known_entity_mask]  # (bs*num_ents)
-        unknown_entity_mask = entity_labels.eq(-1)  # (bs*num_ents)
-        # retrieve embedding vectors for entity indices
-        label_entity_vectors = self.ent_idx2emb(entity_labels)  # (bs*num_ents, ent_dim)
-        # compute cosine similarity between predictions and labels
-        entity_vectors = torch.from_numpy(eval_prediction.predictions)  # (bs, num_ents, ent_dim)
-        entity_vectors = entity_vectors.view(-1, entity_vectors.shape[-1])  # (bs*num_ents, ent_dim)
-        entity_similarities = F.normalize(entity_vectors) @ F.normalize(label_entity_vectors).T  # (bs*num_ents, bs*num_ents)
-        # compute metrics
-        known_entity_count = known_entity_mask.sum().item()
-        known_entity_correct_predictions = self._get_correct_predictions_for_known_entities(entity_similarities, known_entity_mask, known_entity_targets)
-        unknown_entity_count = unknown_entity_mask.sum().item()
-        unknown_entity_correct_predictions = self._get_correct_predictions_for_unknown_entities(entity_similarities, unknown_entity_mask)
-        all_entity_count = known_entity_count + unknown_entity_count
-        all_entity_correct_predictions = known_entity_correct_predictions + unknown_entity_correct_predictions
-        # gather results
-        results = {}
-        for t in self.thresholds:
-            results[f'T-{t}_all'] = all_entity_correct_predictions[t] / all_entity_count
-            results[f'T-{t}_known'] = known_entity_correct_predictions[t] / known_entity_count
-            results[f'T-{t}_unknown'] = unknown_entity_correct_predictions[t] / unknown_entity_count
-        return results
+        entity_vectors = torch.from_numpy(eval_prediction.predictions)  # (batches*bs, num_ents, ent_dim)
+        for label_batch, pred_batch in zip([torch.split(t, self.batch_size) for t in [labels, entity_vectors]]):
+            entity_labels, entity_status = label_batch[:, 0].reshape(-1), label_batch[:, 1].reshape(-1)
+            # compute masks for existing (idx == 0) and new (idx == -1) entities
+            known_entity_mask = entity_labels.eq(0)  # (bs*num_ents)
+            known_entity_targets = torch.arange(len(known_entity_mask))[known_entity_mask]  # (bs*num_ents)
+            unknown_entity_mask = entity_labels.eq(-1)  # (bs*num_ents)
+            # retrieve embedding vectors for entity indices
+            label_entity_vectors = self.ent_idx2emb(entity_labels)  # (bs*num_ents, ent_dim)
+            # compute cosine similarity between predictions and labels
+            entity_vectors = pred_batch.view(-1, pred_batch.shape[-1])  # (bs*num_ents, ent_dim)
+            entity_similarities = F.normalize(entity_vectors) @ F.normalize(label_entity_vectors).T  # (bs*num_ents, bs*num_ents)
+            # compute metrics
+            known_entity_count = known_entity_mask.sum().item()
+            known_entity_correct_predictions = self._get_correct_predictions_for_known_entities(entity_similarities, known_entity_mask, known_entity_targets)
+            unknown_entity_count = unknown_entity_mask.sum().item()
+            unknown_entity_correct_predictions = self._get_correct_predictions_for_unknown_entities(entity_similarities, unknown_entity_mask)
+            all_entity_count = known_entity_count + unknown_entity_count
+            all_entity_correct_predictions = known_entity_correct_predictions + unknown_entity_correct_predictions
+            for t in self.thresholds:
+                results[f'T-{t}_all'].append(all_entity_correct_predictions[t] / all_entity_count)
+                results[f'T-{t}_known'].append(known_entity_correct_predictions[t] / known_entity_count)
+                results[f'T-{t}_unknown'].append(unknown_entity_correct_predictions[t] / unknown_entity_count)
+        return {label: statistics.fmean(vals) for label, vals in results.items()}  # average over batch results
 
     def _get_correct_predictions_for_known_entities(self, entity_similarities: Tensor, mask: Tensor, targets: Tensor) -> Counter[float, int]:
         # a prediction for a known entity is correct if its own vector is the most similar and similarity >= threshold
