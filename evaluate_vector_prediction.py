@@ -39,7 +39,7 @@ def run_evaluation(model_name: str, epochs: int, batch_size: int, learning_rate:
     ent_idx2emb = EntityIndexToEmbeddingMapper(EMBEDDING_DIM)
     model = TransformerForMultiEntityPrediction(encoder, ent_idx2emb, EMBEDDING_DIM)
     # load data
-    train_data, val_data = utils.load_or_create_cache('vector_prediction_training_data', lambda: _load_train_and_val_datasets(tokenizer, num_ents))
+    train_data, val_data = utils.load_or_create_cache('vector_prediction_training_data', lambda: _load_train_and_val_datasets(tokenizer, num_ents), version=f'10p-{num_ents}')
     # run evaluation
     vp_evaluator = VectorPredictionEvaluator(ent_idx2emb, batch_size)
     training_args = TrainingArguments(

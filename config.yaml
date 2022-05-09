@@ -262,4 +262,4 @@ cache:
 
   vector_prediction_training_data:
     filename: 'vector-prediction-training_data'
-    version: 10p
+    version: 1
