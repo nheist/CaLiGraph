@@ -114,7 +114,12 @@ def _get_entity_indices(entity_info: List[List[Tuple[int, Tuple[int, int], list]
         surface_form_matches = {re for e in entity_info_chunk for re in word_blocker.get_entity_indices_for_words(e[2])}
         sf_entities_not_in_chunk = np.array(list(surface_form_matches.difference(set(entity_indices_for_chunk))))
         sf_entities_to_add = min(len(sf_entities_not_in_chunk), num_ents - len(entity_indices_for_chunk))
-        entity_indices_for_chunk = np.concatenate(entity_indices_for_chunk, np.random.choice(sf_entities_not_in_chunk, size=sf_entities_to_add, replace=False))
+        try:
+            entity_indices_for_chunk = np.concatenate(entity_indices_for_chunk, np.random.choice(sf_entities_not_in_chunk, size=sf_entities_to_add, replace=False))
+        except TypeError as e:
+            print('entity indices', entity_indices_for_chunk)
+            print('sf entities not in chunk', sf_entities_not_in_chunk)
+            print('sf entities to add', sf_entities_to_add)
         # random entities as negatives (here we don't care whether the entities are already in the chunk
         # -> this is very unlikely with > 5M entities)
         random_entities_to_add = num_ents - len(entity_indices_for_chunk)

@@ -46,8 +46,7 @@ class TransformerForMultiEntityPrediction(nn.Module):
             output_hidden_states=output_hidden_states,
             return_dict=return_dict,
         )
-        sequence_output = encoder_output[0]  # (bs, seq_len, hidden_size)
-        sequence_output = self.dropout(sequence_output)
+        sequence_output = self.dropout(encoder_output[0])  # (bs, seq_len, hidden_size)
         mention_vectors = self._compute_mean_mention_vectors(sequence_output, mention_spans)  # (bs, num_ents, hidden_size)
         # TODO: add attention?
         entity_vectors = self.linear(mention_vectors)  # (bs, num_ents, ent_dim)
