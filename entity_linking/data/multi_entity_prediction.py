@@ -120,6 +120,7 @@ def _get_entity_indices(entity_info: List[List[Tuple[int, Tuple[int, int], list]
             print('entity indices', entity_indices_for_chunk)
             print('sf entities not in chunk', sf_entities_not_in_chunk)
             print('sf entities to add', sf_entities_to_add)
+            raise e
         # random entities as negatives (here we don't care whether the entities are already in the chunk
         # -> this is very unlikely with > 5M entities)
         random_entities_to_add = num_ents - len(entity_indices_for_chunk)
