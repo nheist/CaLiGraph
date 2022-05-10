@@ -1,5 +1,5 @@
 import numpy as np
-import entity_linking.utils as el_util
+import entity_linking.vp_utils as el_util
 from entity_linking.vecpred.loss import NpairLoss, NpairMSELoss
 from entity_linking.vecpred.eval import ACCMetric, ACCMetricCalculator, ACC_THRESHOLDS
 from entity_linking.vecpred.preprocessing import EntityIndexToVectorMapper

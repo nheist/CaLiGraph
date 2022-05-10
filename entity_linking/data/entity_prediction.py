@@ -7,7 +7,7 @@ from entity_linking.preprocessing.blocking import WordBlocker
 from impl.util.rdf import EntityIndex
 
 
-class MultiEntityPredictionDataset(Dataset):
+class EntityPredictionDataset(Dataset):
     def __init__(self, encodings: dict, mention_spans: List[List[Tuple[int, int]]], entity_indices: List[Tuple[List[int], List[int]]], num_ents: int):
         self.encodings = encodings
         self.mention_spans = mention_spans
@@ -24,7 +24,7 @@ class MultiEntityPredictionDataset(Dataset):
         return item
 
     def __len__(self):
-        return len(self.mention_spans)
+        return len(self.entity_indices)
 
 
 def prepare_dataset(tokens: List[List[str]], labels: List[List[int]], tokenizer, num_ents: int):
@@ -35,7 +35,7 @@ def prepare_dataset(tokens: List[List[str]], labels: List[List[int]], tokenizer,
     mention_spans = _get_mention_spans(entity_info, encodings['offset_mapping'])
     entity_indices = _get_entity_indices(entity_info, num_ents)
     encodings.pop('offset_mapping')  # we don't want to pass this to the model
-    return MultiEntityPredictionDataset(encodings, mention_spans, entity_indices, num_ents)
+    return EntityPredictionDataset(encodings, mention_spans, entity_indices, num_ents)
 
 
 def _collect_entity_info(tokens: List[List[str]], labels: List[List[int]]) -> List[List[Tuple[int, Tuple[int, int], list]]]:
@@ -114,16 +114,10 @@ def _get_entity_indices(entity_info: List[List[Tuple[int, Tuple[int, int], list]
         surface_form_matches = {re for e in entity_info_chunk for re in word_blocker.get_entity_indices_for_words(e[2])}
         sf_entities_not_in_chunk = np.array(list(surface_form_matches.difference(set(entity_indices_for_chunk))))
         sf_entities_to_add = min(len(sf_entities_not_in_chunk), num_ents - len(entity_indices_for_chunk))
-        try:
-            entity_indices_for_chunk = np.concatenate(entity_indices_for_chunk, np.random.choice(sf_entities_not_in_chunk, size=sf_entities_to_add, replace=False))
-        except TypeError as e:
-            print('entity indices', entity_indices_for_chunk)
-            print('sf entities not in chunk', sf_entities_not_in_chunk)
-            print('sf entities to add', sf_entities_to_add)
-            raise e
+        entity_indices_for_chunk = np.concatenate([entity_indices_for_chunk, np.random.choice(sf_entities_not_in_chunk, size=sf_entities_to_add, replace=False)])
         # random entities as negatives (here we don't care whether the entities are already in the chunk
         # -> this is very unlikely with > 5M entities)
         random_entities_to_add = num_ents - len(entity_indices_for_chunk)
-        entity_indices_for_chunk = np.concatenate(entity_indices_for_chunk, np.random.choice(valid_entity_indices, size=random_entities_to_add, replace=False))
+        entity_indices_for_chunk = np.concatenate([entity_indices_for_chunk, np.random.choice(valid_entity_indices, size=random_entities_to_add, replace=False)])
         entity_indices.append((list(entity_indices_for_chunk), entity_status_for_chunk))
     return entity_indices

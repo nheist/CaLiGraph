@@ -6,7 +6,7 @@ import multiprocessing as mp
 from tqdm import tqdm
 from collections import defaultdict
 import pandas as pd
-import entity_linking.utils as el_util
+import entity_linking.vp_utils as el_util
 from impl.dbpedia.resource import DbpResourceStore
 
 
