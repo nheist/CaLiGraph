@@ -1,4 +1,5 @@
 from typing import List, Tuple
+import random
 import numpy as np
 import torch
 from torch.utils.data import Dataset
@@ -96,28 +97,31 @@ def _get_mention_spans(entity_info: List[List[Tuple[int, Tuple[int, int], list]]
 def _get_entity_indices(entity_info: List[List[Tuple[int, Tuple[int, int], list]]], num_ents: int) -> List[Tuple[List[int], List[int]]]:
     dbr = DbpResourceStore.instance()
     valid_entity_indices = np.array(list(dbr.get_embedding_vectors()))
+    np.random.shuffle(valid_entity_indices)
+
     entity_surface_forms = {e_idx: dbr.get_resource_by_idx(e_idx).get_surface_forms() for e_idx in valid_entity_indices}
     word_blocker = WordBlocker(entity_surface_forms)
 
     entity_indices = []
     for entity_info_chunk in entity_info:
-        # first add true entities of chunk
-        entity_indices_for_chunk = np.array([e[0] for e in entity_info_chunk])[:num_ents]
+        entity_indices_for_chunk = np.array([EntityIndex.NO_ENTITY.value] * num_ents)
+        # add true entities of chunk
+        true_entities = [e[0] for e in entity_info_chunk][:num_ents]
+        true_ent_cnt = len(true_entities)
+        entity_indices_for_chunk[:true_ent_cnt] = true_entities
         # store entity status (existing=0, new=-1, no entity=-2)
-        entity_status_for_chunk = [min(idx, 0) for idx in entity_indices_for_chunk]
-        entity_status_for_chunk += [EntityIndex.NO_ENTITY.value] * (num_ents - len(entity_status_for_chunk))
-        # replace new entities with random ones
-        new_entity_mask = entity_indices_for_chunk == EntityIndex.NEW_ENTITY.value
-        entity_indices_for_chunk[new_entity_mask] = np.random.choice(valid_entity_indices, size=new_entity_mask.sum(), replace=False)
-        # then fill with negative entities
-        # entities with similar surface forms as negatives
+        entity_status_for_chunk = entity_indices_for_chunk.copy()
+        entity_status_for_chunk[entity_status_for_chunk > 0] = 0
+        # fill with negative entities having similar surface forms
         surface_form_matches = {re for e in entity_info_chunk for re in word_blocker.get_entity_indices_for_words(e[2])}
         sf_entities_not_in_chunk = np.array(list(surface_form_matches.difference(set(entity_indices_for_chunk))))
-        sf_entities_to_add = min(len(sf_entities_not_in_chunk), num_ents - len(entity_indices_for_chunk))
-        entity_indices_for_chunk = np.concatenate([entity_indices_for_chunk, np.random.choice(sf_entities_not_in_chunk, size=sf_entities_to_add, replace=False)])
-        # random entities as negatives (here we don't care whether the entities are already in the chunk
-        # -> this is very unlikely with > 5M entities)
-        random_entities_to_add = num_ents - len(entity_indices_for_chunk)
-        entity_indices_for_chunk = np.concatenate([entity_indices_for_chunk, np.random.choice(valid_entity_indices, size=random_entities_to_add, replace=False)])
-        entity_indices.append((list(entity_indices_for_chunk), entity_status_for_chunk))
+        sf_entities_to_add = min(len(sf_entities_not_in_chunk), num_ents - true_ent_cnt)
+        entity_indices_for_chunk[true_ent_cnt:true_ent_cnt+sf_entities_to_add] = sf_entities_not_in_chunk[:sf_entities_to_add]
+        # fill all unknown entities (new or not assigned) with random entities as negatives
+        # (here we don't care whether the entities are already in the chunk -> this is very unlikely with > 5M entities)
+        rand_idx = random.randint(0, len(valid_entity_indices) - num_ents)
+        random_entities = valid_entity_indices[rand_idx:rand_idx+num_ents]
+        random_ent_mask = entity_indices_for_chunk < 0
+        entity_indices_for_chunk[random_ent_mask] = random_entities[random_ent_mask]
+        entity_indices.append((list(entity_indices_for_chunk), list(entity_status_for_chunk)))
     return entity_indices
