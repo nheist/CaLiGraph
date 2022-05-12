@@ -45,7 +45,7 @@ class TransformerForSingleEntityPrediction(nn.Module):
             return_dict=return_dict,
         )
         # using CLS token for prediction of entity vector
-        sequence_output = self.dropout(encoder_output[0][:, 0, :])  # (bs, seq_len, hidden_size)
+        sequence_output = self.dropout(encoder_output[0][:, 0, :])  # (bs, hidden_size)
         entity_vectors = self.linear(sequence_output)  # (bs, ent_dim)
 
         loss = None
