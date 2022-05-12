@@ -57,7 +57,8 @@ class TransformerForSingleEntityPrediction(nn.Module):
             # compute loss for positive/known entities only (negative entities have status < 0)
             negative_entity_mask = entity_status.lt(0).view(-1)  # (bs*num_ents)
             targets = torch.arange(len(negative_entity_mask), device=negative_entity_mask.device)  # (bs*num_ents)
-            targets = targets[negative_entity_mask]  # (bs)
+            targets[negative_entity_mask] = loss_fct.ignore_index
+            targets = targets.reshape(entity_logits.shape[0], -1)[:, 0].view(-1)  # (bs)
             loss = torch.nan_to_num(loss_fct(entity_logits, targets))
 
         return (entity_vectors,) if labels is None else (loss, entity_vectors)
