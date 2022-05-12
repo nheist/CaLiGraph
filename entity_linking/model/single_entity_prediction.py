@@ -33,6 +33,7 @@ class TransformerForSingleEntityPrediction(nn.Module):
             output_attentions=None,
             output_hidden_states=None,
             return_dict=None,
+            mention_spans=None,  # unused
     ):
         encoder_output = self.encoder(
             input_ids=input_ids,
