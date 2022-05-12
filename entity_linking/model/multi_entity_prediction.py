@@ -15,7 +15,7 @@ class TransformerForMultiEntityPrediction(nn.Module):
         config = self.encoder.config
         # entity prediction
         self.pad2d = nn.ZeroPad2d((0, 0, 1, 0))
-        self.dropout = nn.Dropout(config.dropout)
+        self.dropout = nn.Dropout(.1)
         self.linear = nn.Linear(config.hidden_size, ent_dim)
         self.ent_idx2emb = ent_idx2emb
         # initialize weights in the classifier similar to huggingface models

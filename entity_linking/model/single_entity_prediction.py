@@ -14,7 +14,7 @@ class TransformerForSingleEntityPrediction(nn.Module):
         self.encoder = encoder
         config = self.encoder.config
         # entity prediction
-        self.dropout = nn.Dropout(config.dropout)
+        self.dropout = nn.Dropout(.1)
         self.linear = nn.Linear(config.hidden_size, ent_dim)
         self.ent_idx2emb = ent_idx2emb
         # initialize weights in the classifier similar to huggingface models
