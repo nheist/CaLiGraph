@@ -14,18 +14,12 @@ from entity_linking.data.entity_prediction import prepare_dataset
 from entity_linking.evaluation.entity_prediction import EntityPredictionEvaluator
 
 
-def run_single_entity_prediction(model_name: str, sample: int, epochs: int, batch_size: int, learning_rate: float, warmup_steps: int, weight_decay: float, num_ents: int, ent_dim: int, pos_encoder: bool):
+def run_single_entity_prediction(model_name: str, sample: int, epochs: int, batch_size: int, learning_rate: float, warmup_steps: int, weight_decay: float, num_ents: int, ent_dim: int):
     items_per_chunk = 1
-    run_id = f'SEP_{model_name}_s-{sample}_e-{epochs}_bs-{batch_size}_lr-{learning_rate}_ws-{warmup_steps}_wd-{weight_decay}_ne-{num_ents}_ed-{ent_dim}_pe-{pos_encoder}'
+    run_id = f'SEP_{model_name}_s-{sample}_e-{epochs}_bs-{batch_size}_lr-{learning_rate}_ws-{warmup_steps}_wd-{weight_decay}_ne-{num_ents}_ed-{ent_dim}'
     # prepare tokenizer and model
-    if pos_encoder:
-        model_name = utils._get_cache_path('transformer_for_SE_tagging')
-        tokenizer = AutoTokenizer.from_pretrained(model_name, add_prefix_space=True, additional_special_tokens=list(WordTokenizerSpecialToken.all_tokens()))
-        pos_model = AutoModel.from_pretrained(model_name)
-        encoder = pos_model.distilbert
-    else:
-        tokenizer = AutoTokenizer.from_pretrained(model_name, add_prefix_space=True, additional_special_tokens=list(WordTokenizerSpecialToken.all_tokens()))
-        encoder = AutoModel.from_pretrained(model_name)
+    tokenizer = AutoTokenizer.from_pretrained(model_name, add_prefix_space=True, additional_special_tokens=list(WordTokenizerSpecialToken.all_tokens()))
+    encoder = AutoModel.from_pretrained(model_name)
     encoder.resize_token_embeddings(len(tokenizer))
     ent_idx2emb = EntityIndexToEmbeddingMapper(ent_dim)
     model = TransformerForSingleEntityPrediction(encoder, ent_idx2emb, ent_dim)
@@ -60,17 +54,11 @@ def run_single_entity_prediction(model_name: str, sample: int, epochs: int, batc
     trainer.train()
 
 
-def run_multi_entity_prediction(model_name: str, sample: int, epochs: int, batch_size: int, learning_rate: float, warmup_steps: int, weight_decay: float, num_ents: int, ent_dim: int, items_per_chunk: int, pos_encoder: bool):
+def run_multi_entity_prediction(model_name: str, sample: int, epochs: int, batch_size: int, learning_rate: float, warmup_steps: int, weight_decay: float, num_ents: int, ent_dim: int, items_per_chunk: int):
     run_id = f'MEP_{model_name}_s-{sample}_e-{epochs}_bs-{batch_size}_lr-{learning_rate}_ws-{warmup_steps}_wd-{weight_decay}_ne-{num_ents}_ed-{ent_dim}_ipc-{items_per_chunk}_pe-{pos_encoder}'
     # prepare tokenizer and model
-    if pos_encoder:
-        model_name = utils._get_cache_path('transformer_for_SE_tagging')
-        tokenizer = AutoTokenizer.from_pretrained(model_name, add_prefix_space=True, additional_special_tokens=list(WordTokenizerSpecialToken.all_tokens()))
-        pos_model = AutoModel.from_pretrained(model_name)
-        encoder = pos_model.distilbert
-    else:
-        tokenizer = AutoTokenizer.from_pretrained(model_name, add_prefix_space=True, additional_special_tokens=list(WordTokenizerSpecialToken.all_tokens()))
-        encoder = AutoModel.from_pretrained(model_name)
+    tokenizer = AutoTokenizer.from_pretrained(model_name, add_prefix_space=True, additional_special_tokens=list(WordTokenizerSpecialToken.all_tokens()))
+    encoder = AutoModel.from_pretrained(model_name)
     encoder.resize_token_embeddings(len(tokenizer))
     ent_idx2emb = EntityIndexToEmbeddingMapper(ent_dim)
     model = TransformerForMultiEntityPrediction(encoder, ent_idx2emb, ent_dim)
