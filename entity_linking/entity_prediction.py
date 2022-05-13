@@ -55,7 +55,7 @@ def run_single_entity_prediction(model_name: str, sample: int, epochs: int, batc
 
 
 def run_multi_entity_prediction(model_name: str, sample: int, epochs: int, batch_size: int, learning_rate: float, warmup_steps: int, weight_decay: float, num_ents: int, ent_dim: int, items_per_chunk: int):
-    run_id = f'MEP_{model_name}_s-{sample}_e-{epochs}_bs-{batch_size}_lr-{learning_rate}_ws-{warmup_steps}_wd-{weight_decay}_ne-{num_ents}_ed-{ent_dim}_ipc-{items_per_chunk}_pe-{pos_encoder}'
+    run_id = f'MEP_{model_name}_s-{sample}_e-{epochs}_bs-{batch_size}_lr-{learning_rate}_ws-{warmup_steps}_wd-{weight_decay}_ne-{num_ents}_ed-{ent_dim}_ipc-{items_per_chunk}'
     # prepare tokenizer and model
     tokenizer = AutoTokenizer.from_pretrained(model_name, add_prefix_space=True, additional_special_tokens=list(WordTokenizerSpecialToken.all_tokens()))
     encoder = AutoModel.from_pretrained(model_name)
