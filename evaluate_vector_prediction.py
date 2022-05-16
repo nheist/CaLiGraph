@@ -20,6 +20,7 @@ if __name__ == '__main__':
     parser.add_argument('-s', '--sample', type=int, default=10, help='Percentage of dataset used')
     parser.add_argument('-e', '--epochs', type=int, default=3, help='Epochs to train')
     parser.add_argument('-bs', '--batch_size', type=int, default=8, help='Batch size used in train/eval')
+    parser.add_argument('-l', '--loss', type=str, default='BCE', choices=['BCE', 'MSE'], help='Loss used in train/eval')
     parser.add_argument('-lr', '--learning_rate', type=float, default=5e-5, help='Learning rate used during training')
     parser.add_argument('-ws', '--warmup_steps', type=int, default=0, help='Warmup steps during learning')
     parser.add_argument('-wd', '--weight_decay', type=float, default=0, help='Weight decay during learning')
@@ -32,5 +33,6 @@ if __name__ == '__main__':
     if args.cls_predictor:
         assert args.items_per_chunk == 1, 'Can only evaluate a single item at once if using CLS token as mention vector'
 
-    run_prediction(args.model_name, args.sample, args.epochs, args.batch_size, args.learning_rate, args.warmup_steps,
-                   args.weight_decay, args.num_ents, args.ent_dim, args.items_per_chunk, args.cls_predictor)
+    run_prediction(args.model_name, args.sample, args.epochs, args.batch_size, args.loss, args.learning_rate,
+                   args.warmup_steps, args.weight_decay, args.num_ents, args.ent_dim, args.items_per_chunk,
+                   args.cls_predictor)

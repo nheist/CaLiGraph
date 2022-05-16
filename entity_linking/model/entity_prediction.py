@@ -19,6 +19,7 @@ class TransformerForEntityPrediction(nn.Module):
         self.dropout = nn.Dropout(.1)
         self.linear = nn.Linear(config.hidden_size, ent_dim)
         self.ent_idx2emb = ent_idx2emb
+        self.loss = loss
         # initialize weights in the classifier similar to huggingface models
         self.linear.weight.data.normal_(mean=0.0, std=config.initializer_range)
         if self.linear.bias is not None:
@@ -61,16 +62,23 @@ class TransformerForEntityPrediction(nn.Module):
 
         loss = None
         if labels is not None:
-            loss_fct = nn.CrossEntropyLoss()
             entity_labels, entity_status = labels[:, 0], labels[:, 1]  # (bs, num_ents), (bs, num_ents)
-            # retrieve embedding vectors for entity indices and compute logits
             label_entity_vectors = self.ent_idx2emb(entity_labels.reshape(-1))  # (bs*num_ents, ent_dim)
-            entity_logits = entity_vectors.view(-1, entity_vectors.shape[-1]) @ label_entity_vectors.T  # (bs*num_ents, bs*num_ents)
-            # compute loss for positive/known entities only (negative entities have status < 0)
-            negative_entity_mask = entity_status.lt(0).view(-1)  # (bs*num_ents)
-            targets = torch.arange(len(negative_entity_mask), device=negative_entity_mask.device)  # (bs*num_ents)
-            targets[negative_entity_mask] = loss_fct.ignore_index
-            loss = torch.nan_to_num(loss_fct(entity_logits, targets))
+            match self.loss:
+                case 'BCE':
+                    loss_fct = nn.CrossEntropyLoss(reduction='sum')
+                    entity_logits = entity_vectors.view(-1, entity_vectors.shape[-1]) @ label_entity_vectors.T  # (bs*num_ents, bs*num_ents)
+                    # compute loss for positive/known entities only (negative entities have status < 0)
+                    known_entity_mask = entity_status.ge(0).view(-1)  # (bs*num_ents)
+                    targets = torch.arange(len(known_entity_mask), device=known_entity_mask.device)  # (bs*num_ents)
+                    targets[~known_entity_mask] = loss_fct.ignore_index
+                    loss = torch.nan_to_num(loss_fct(entity_logits, targets))
+                case 'MSE':
+                    loss_fct = nn.MSELoss(reduction='sum')
+                    known_entity_mask = entity_status.ge(0)  # (bs, num_ents)
+                    loss = loss_fct(entity_vectors[known_entity_mask], label_entity_vectors[known_entity_mask.view(-1)])
+                case _:
+                    raise ValueError(f'Invalid type of loss: {self.loss}')
 
         return (entity_vectors,) if labels is None else (loss, entity_vectors)
 
