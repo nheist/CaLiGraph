@@ -258,8 +258,8 @@ class DbpResourceStore:
                         self.inverse_properties[val][pred].add(r)
         return self.inverse_properties[res]
 
-    def get_inverse_entity_properties(self) -> Dict[DbpEntity, Dict[DbpPredicate, set]]:
-        return {e: self.get_inverse_properties(e) for e in self.get_entities()}
+    def get_inverse_entity_properties(self, include_meta=False) -> Dict[DbpEntity, Dict[DbpPredicate, set]]:
+        return {e: self.get_inverse_properties(e) for e in self.get_entities(include_meta=include_meta)}
 
     def resolve_spelling_redirect(self, res: DbpResource) -> DbpResource:
         if not res.is_meta:
