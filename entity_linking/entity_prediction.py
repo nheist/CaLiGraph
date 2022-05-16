@@ -8,26 +8,23 @@ from impl.subject_entity.preprocess.word_tokenize import WordTokenizer, WordToke
 from transformers import Trainer, IntervalStrategy, TrainingArguments, AutoTokenizer, AutoModel
 from impl.dbpedia.resource import DbpResource, DbpResourceStore
 from entity_linking.preprocessing.embeddings import EntityIndexToEmbeddingMapper
-from entity_linking.model.multi_entity_prediction import TransformerForMultiEntityPrediction
-from entity_linking.model.single_entity_prediction import TransformerForSingleEntityPrediction
+from entity_linking.model.entity_prediction import TransformerForEntityPrediction
 from entity_linking.data.entity_prediction import prepare_dataset
 from entity_linking.evaluation.entity_prediction import EntityPredictionEvaluator
 
 
-def run_single_entity_prediction(model_name: str, sample: int, epochs: int, batch_size: int, learning_rate: float, warmup_steps: int, weight_decay: float, num_ents: int, ent_dim: int):
-    items_per_chunk = 1
-    run_id = f'SEP_{model_name}_s-{sample}_e-{epochs}_bs-{batch_size}_lr-{learning_rate}_ws-{warmup_steps}_wd-{weight_decay}_ne-{num_ents}_ed-{ent_dim}'
+def run_prediction(model_name: str, sample: int, epochs: int, batch_size: int, learning_rate: float, warmup_steps: int, weight_decay: float, num_ents: int, ent_dim: int, items_per_chunk: int, cls_predictor: bool):
+    run_id = f'{model_name}_s-{sample}_ipc-{items_per_chunk}_ne-{num_ents}_cp-{cls_predictor}_ed-{ent_dim}_e-{epochs}_bs-{batch_size}_lr-{learning_rate}_ws-{warmup_steps}_wd-{weight_decay}'
     # prepare tokenizer and model
     tokenizer = AutoTokenizer.from_pretrained(model_name, add_prefix_space=True, additional_special_tokens=list(WordTokenizerSpecialToken.all_tokens()))
     encoder = AutoModel.from_pretrained(model_name)
     encoder.resize_token_embeddings(len(tokenizer))
     ent_idx2emb = EntityIndexToEmbeddingMapper(ent_dim)
-    model = TransformerForSingleEntityPrediction(encoder, ent_idx2emb, ent_dim)
+    model = TransformerForEntityPrediction(encoder, ent_idx2emb, ent_dim, cls_predictor)
     # load data
     dataset_version = f'ep-s{sample}-ipc{items_per_chunk}-ne{num_ents}'
     train_data, val_data = utils.load_or_create_cache('vector_prediction_training_data', lambda: _load_train_and_val_datasets(tokenizer, sample, items_per_chunk, num_ents), version=dataset_version)
     # run evaluation
-    ep_evaluator = EntityPredictionEvaluator(ent_idx2emb, batch_size, True)
     training_args = TrainingArguments(
         seed=42,
         save_strategy=IntervalStrategy.NO,
@@ -49,46 +46,7 @@ def run_single_entity_prediction(model_name: str, sample: int, epochs: int, batc
         args=training_args,
         train_dataset=train_data,
         eval_dataset=val_data,
-        compute_metrics=ep_evaluator.evaluate
-    )
-    trainer.train()
-
-
-def run_multi_entity_prediction(model_name: str, sample: int, epochs: int, batch_size: int, learning_rate: float, warmup_steps: int, weight_decay: float, num_ents: int, ent_dim: int, items_per_chunk: int):
-    run_id = f'MEP_{model_name}_s-{sample}_e-{epochs}_bs-{batch_size}_lr-{learning_rate}_ws-{warmup_steps}_wd-{weight_decay}_ne-{num_ents}_ed-{ent_dim}_ipc-{items_per_chunk}'
-    # prepare tokenizer and model
-    tokenizer = AutoTokenizer.from_pretrained(model_name, add_prefix_space=True, additional_special_tokens=list(WordTokenizerSpecialToken.all_tokens()))
-    encoder = AutoModel.from_pretrained(model_name)
-    encoder.resize_token_embeddings(len(tokenizer))
-    ent_idx2emb = EntityIndexToEmbeddingMapper(ent_dim)
-    model = TransformerForMultiEntityPrediction(encoder, ent_idx2emb, ent_dim)
-    # load data
-    dataset_version = f'ep-s{sample}-ipc{items_per_chunk}-ne{num_ents}'
-    train_data, val_data = utils.load_or_create_cache('vector_prediction_training_data', lambda: _load_train_and_val_datasets(tokenizer, sample, items_per_chunk, num_ents), version=dataset_version)
-    # run evaluation
-    ep_evaluator = EntityPredictionEvaluator(ent_idx2emb, batch_size, False)
-    training_args = TrainingArguments(
-        seed=42,
-        save_strategy=IntervalStrategy.NO,
-        output_dir=f'./vp_eval/output/{run_id}',
-        logging_strategy=IntervalStrategy.STEPS,
-        logging_dir=f'./vp_eval/logs/{run_id}',
-        logging_steps=1000,
-        evaluation_strategy=IntervalStrategy.STEPS,
-        eval_steps=5000,
-        per_device_train_batch_size=batch_size,
-        per_device_eval_batch_size=batch_size,
-        num_train_epochs=epochs,
-        learning_rate=learning_rate,
-        warmup_steps=warmup_steps,
-        weight_decay=weight_decay,
-    )
-    trainer = Trainer(
-        model=model,
-        args=training_args,
-        train_dataset=train_data,
-        eval_dataset=val_data,
-        compute_metrics=ep_evaluator.evaluate
+        compute_metrics=EntityPredictionEvaluator(ent_idx2emb, batch_size).evaluate
     )
     trainer.train()
 

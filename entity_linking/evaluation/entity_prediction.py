@@ -8,10 +8,9 @@ from entity_linking.preprocessing.embeddings import EntityIndexToEmbeddingMapper
 
 
 class EntityPredictionEvaluator:
-    def __init__(self, ent_idx2emb: EntityIndexToEmbeddingMapper, batch_size: int, predicting_single_entity: bool):
+    def __init__(self, ent_idx2emb: EntityIndexToEmbeddingMapper, batch_size: int):
         self.ent_idx2emb = ent_idx2emb
         self.batch_size = batch_size
-        self.predicting_single_entity = predicting_single_entity
         self.thresholds = [.1, .2, .3, .4, .5, .6, .7]
 
     def evaluate(self, eval_prediction: EvalPrediction):
@@ -21,15 +20,10 @@ class EntityPredictionEvaluator:
         entity_vectors = torch.from_numpy(eval_prediction.predictions)  # (batches*bs, valid_ents, ent_dim)
         for label_batch, pred_batch in zip(*[torch.split(t, self.batch_size) for t in [labels, entity_vectors]]):
             entity_labels, entity_status = label_batch[:, 0], label_batch[:, 1]
-            if self.predicting_single_entity:  # make sure to evaluate only first entity if predicting one per batch
-                eval_mask = torch.zeros_like(entity_labels).bool()
-                eval_mask[:, 0] = True
-            else:  # otherwise set valid_ents == num_ents
-                eval_mask = torch.ones_like(entity_labels).bool()
-            # compute masks for existing (idx == 0) and new (idx == -1) entities
-            known_entity_mask = entity_status.eq(0)[eval_mask]  # (bs*valid_ents)
+            # compute masks for existing (status 0) and new (status -1) entities
+            known_entity_mask = entity_status.eq(0)  # (bs*valid_ents)
             known_entity_targets = torch.arange(len(known_entity_mask))[known_entity_mask]  # (bs*valid_ents)
-            unknown_entity_mask = entity_status.eq(-1)[eval_mask]  # (bs*valid_ents)
+            unknown_entity_mask = entity_status.eq(-1)  # (bs*valid_ents)
             # retrieve embedding vectors for entity indices
             label_entity_vectors = self.ent_idx2emb(entity_labels.reshape(-1))  # (bs*valid_ents, ent_dim)
             # compute cosine similarity between predictions and labels

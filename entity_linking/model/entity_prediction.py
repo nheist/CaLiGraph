@@ -3,17 +3,18 @@ from torch import nn
 from entity_linking.preprocessing.embeddings import EntityIndexToEmbeddingMapper
 
 
-class TransformerForMultiEntityPrediction(nn.Module):
+class TransformerForEntityPrediction(nn.Module):
     """
     num_ents: number of entities in a sequence that can be identified
     ent_dim: dimension of DBpedia/CaLiGraph entity embeddings
     """
-    def __init__(self, encoder, ent_idx2emb: EntityIndexToEmbeddingMapper, ent_dim: int):
+    def __init__(self, encoder, ent_idx2emb: EntityIndexToEmbeddingMapper, ent_dim: int, cls_predictor: bool):
         super().__init__()
         # encoder
         self.encoder = encoder
         config = self.encoder.config
         # entity prediction
+        self.cls_predictor = cls_predictor
         self.pad2d = nn.ZeroPad2d((0, 0, 1, 0))
         self.dropout = nn.Dropout(.1)
         self.linear = nn.Linear(config.hidden_size, ent_dim)
@@ -34,7 +35,7 @@ class TransformerForMultiEntityPrediction(nn.Module):
             output_attentions=None,
             output_hidden_states=None,
             return_dict=None,
-            # entity prediction input
+            # entity prediction input (mention_spans parameter is optional; otherwise use CLS token)
             mention_spans=None,  # (bs, num_ents, 2) with start and end indices for mentions or (0,0) for padding
     ):
         encoder_output = self.encoder(
@@ -46,9 +47,16 @@ class TransformerForMultiEntityPrediction(nn.Module):
             output_hidden_states=output_hidden_states,
             return_dict=return_dict,
         )
-        sequence_output = self.dropout(encoder_output[0])  # (bs, seq_len, hidden_size)
-        mention_vectors = self._compute_mean_mention_vectors(sequence_output, mention_spans)  # (bs, num_ents, hidden_size)
-        # TODO: add attention?
+
+        if self.cls_predictor:
+            # using CLS token (at pos. 0) as mention vector
+            mention_vectors = self.dropout(encoder_output[0][:, 0:1, :])  # (bs, 1, hidden_size)
+            vector_padder = torch.nn.ZeroPad2d((0, 0, 0, labels.shape[1] - 1))  # pad to `num_ents` entity vectors
+            mention_vectors = vector_padder(mention_vectors)  # (bs, num_ents, hidden_size)
+        else:
+            # using mention spans as mention vectors
+            sequence_output = self.dropout(encoder_output[0])  # (bs, seq_len, hidden_size)
+            mention_vectors = self._compute_mean_mention_vectors(sequence_output, mention_spans)  # (bs, num_ents, hidden_size)
         entity_vectors = self.linear(mention_vectors)  # (bs, num_ents, ent_dim)
 
         loss = None
