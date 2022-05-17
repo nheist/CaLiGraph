@@ -18,6 +18,7 @@ class EntityPredictionEvaluator:
         # gather results batch-wise and then average over them
         labels = torch.from_numpy(eval_prediction.label_ids)  # (batches*bs, num_ents, 2)
         entity_vectors = torch.from_numpy(eval_prediction.predictions)  # (batches*bs, valid_ents, ent_dim)
+        print(entity_vectors[:10])
         for label_batch, pred_batch in zip(*[torch.split(t, self.batch_size) for t in [labels, entity_vectors]]):
             entity_labels, entity_status = label_batch[:, 0].reshape(-1), label_batch[:, 1].reshape(-1)
             # compute masks for existing (status 0) and new (status -1) entities
