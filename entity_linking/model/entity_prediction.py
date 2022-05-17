@@ -65,7 +65,7 @@ class TransformerForEntityPrediction(nn.Module):
             entity_labels, entity_status = labels[:, 0], labels[:, 1]  # (bs, num_ents), (bs, num_ents)
             label_entity_vectors = self.ent_idx2emb(entity_labels.reshape(-1))  # (bs*num_ents, ent_dim)
             match self.loss:
-                case 'BCE':
+                case 'NPAIR':
                     loss_fct = nn.CrossEntropyLoss(reduction='sum')
                     entity_logits = entity_vectors.view(-1, entity_vectors.shape[-1]) @ label_entity_vectors.T  # (bs*num_ents, bs*num_ents)
                     # compute loss for positive/known entities only (negative entities have status < 0)

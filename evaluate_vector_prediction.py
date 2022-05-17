@@ -20,7 +20,7 @@ if __name__ == '__main__':
     parser.add_argument('-s', '--sample', type=int, default=10, help='Percentage of dataset used')
     parser.add_argument('-e', '--epochs', type=int, default=3, help='Epochs to train')
     parser.add_argument('-bs', '--batch_size', type=int, default=8, help='Batch size used in train/eval')
-    parser.add_argument('-l', '--loss', type=str, default='BCE', choices=['BCE', 'MSE'], help='Loss used in train/eval')
+    parser.add_argument('-l', '--loss', type=str, default='NPAIR', choices=['NPAIR', 'MSE'], help='Loss used in train/eval')
     parser.add_argument('-lr', '--learning_rate', type=float, default=5e-5, help='Learning rate used during training')
     parser.add_argument('-ws', '--warmup_steps', type=int, default=0, help='Warmup steps during learning')
     parser.add_argument('-wd', '--weight_decay', type=float, default=0, help='Weight decay during learning')
