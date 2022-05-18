@@ -30,24 +30,12 @@ class TransformerForEntityPrediction(nn.Module):
             # encoder input
             input_ids=None,  # (bs, seq_len)
             attention_mask=None,
-            head_mask=None,
-            inputs_embeds=None,
+            token_type_ids=None,
             labels=None,  # (bs, 2, num_ents)
-            output_attentions=None,
-            output_hidden_states=None,
-            return_dict=None,
             # entity prediction input (mention_spans parameter is optional; otherwise use CLS token)
             mention_spans=None,  # (bs, num_ents, 2) with start and end indices for mentions or (0,0) for padding
     ):
-        encoder_output = self.encoder(
-            input_ids=input_ids,
-            attention_mask=attention_mask,
-            head_mask=head_mask,
-            inputs_embeds=inputs_embeds,
-            output_attentions=output_attentions,
-            output_hidden_states=output_hidden_states,
-            return_dict=return_dict,
-        )
+        encoder_output = self.encoder(input_ids=input_ids, attention_mask=attention_mask, token_type_ids=token_type_ids)
 
         if self.cls_predictor:
             # using CLS token (at pos. 0) as mention vector
