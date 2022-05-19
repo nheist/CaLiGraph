@@ -56,3 +56,22 @@ class TransformerForMentionEntityMatching(nn.Module):
             loss = nn.BCELoss(reduction='sum')(predictions[label_mask], labels[label_mask])
 
         return (predictions,) if labels is None else (loss, predictions)
+
+    def _compute_mean_mention_vectors(self, input, mention_spans):
+        """Computes the mean of the token vectors based on the spans given in mention_spans.
+
+        The idea is to first compute the cumulative sum of the token vectors and then get the sum of a given span
+        by deducting the cumsum before the start of the mention from the cumsum of the end of the mention.
+        Then we divide it by the length of the mention span to get the mean value.
+        (taken from https://stackoverflow.com/questions/71358928/pytorch-how-to-get-mean-of-slices-along-an-axis-where-the-slices-indices-value)
+        """
+        d = input.device
+        bs = len(input)
+
+        cumsum = input.cumsum(dim=-2)  # (bs, seq_len, hidden_size)
+        padded_cumsum = self.pad2d(cumsum)  # (bs, seq_len+1, hidden_size)
+        cumsum_start_end = padded_cumsum[:, mention_spans]  # (bs, bs, num_ents, 2, hidden_size)
+        cumsum_start_end = cumsum_start_end[torch.arange(bs, device=d), torch.arange(bs, device=d), :]  # (bs, num_ents, 2, hidden_size)
+        vector_sums = torch.diff(cumsum_start_end, dim=-2).squeeze()  # (bs, num_ents, hidden_size)
+        vector_lengths = torch.diff(mention_spans, dim=-1)  # (bs, num_ents, 1)
+        return torch.nan_to_num(vector_sums / vector_lengths)  # (bs, num_ents, hidden_size)
