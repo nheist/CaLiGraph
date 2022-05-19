@@ -14,4 +14,6 @@ class EntityIndexToEmbeddingMapper(nn.Module):
 
     def forward(self, entity_indices: torch.Tensor) -> torch.Tensor:
         out_device = entity_indices.device
-        return self.entity_embeddings[entity_indices.to('cpu')].to(out_device)
+        original_shape = entity_indices.shape
+        embeds = self.entity_embeddings[entity_indices.reshape(-1).to('cpu')]
+        return embeds.to(out_device).reshape(original_shape + (-1,))
