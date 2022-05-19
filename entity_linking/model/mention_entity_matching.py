@@ -16,6 +16,7 @@ class TransformerForMentionEntityMatching(nn.Module):
         # entity prediction
         self.cls_predictor = cls_predictor
         self.ent_idx2emb = ent_idx2emb
+        self.pad2d = nn.ZeroPad2d((0, 0, 1, 0))
         self.dropout = nn.Dropout(.1)
         self.linear = nn.Linear(config.hidden_size + ent_dim, num_ents)
         self.sigmoid = nn.Sigmoid()
