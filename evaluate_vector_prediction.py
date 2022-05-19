@@ -5,7 +5,8 @@ import argparse
 import random
 import numpy as np
 import torch
-from entity_linking.entity_prediction import run_prediction
+from entity_linking import entity_prediction as ep
+from entity_linking import mention_entity_matching as mem
 
 
 SEED = 42
@@ -16,6 +17,7 @@ torch.manual_seed(SEED)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run the evaluation of vector prediction.')
+    parser.add_argument('type', choices=['EP', 'MEM'], help='Type of prediction')
     parser.add_argument('model_name', help='Huggingface Transformer model used for prediction')
     parser.add_argument('-s', '--sample', type=int, default=10, help='Percentage of dataset used')
     parser.add_argument('-e', '--epochs', type=int, default=3, help='Epochs to train')
@@ -33,6 +35,12 @@ if __name__ == '__main__':
     if args.cls_predictor:
         assert args.items_per_chunk == 1, 'Can only evaluate a single item at once if using CLS token as mention vector'
 
-    run_prediction(args.model_name, args.sample, args.epochs, args.batch_size, args.loss, args.learning_rate,
-                   args.warmup_steps, args.weight_decay, args.num_ents, args.ent_dim, args.items_per_chunk,
-                   args.cls_predictor)
+    match args.type:
+        case 'MEM':
+            mem.run_prediction(args.model_name, args.sample, args.epochs, args.batch_size, args.learning_rate,
+                               args.warmup_steps, args.weight_decay, args.num_ents, args.ent_dim, args.items_per_chunk,
+                               args.cls_predictor)
+        case 'EP':
+            ep.run_prediction(args.model_name, args.sample, args.epochs, args.batch_size, args.loss, args.learning_rate,
+                              args.warmup_steps, args.weight_decay, args.num_ents, args.ent_dim, args.items_per_chunk,
+                              args.cls_predictor)
