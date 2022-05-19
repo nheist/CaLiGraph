@@ -9,7 +9,7 @@ from transformers import Trainer, IntervalStrategy, TrainingArguments, AutoToken
 from impl.dbpedia.resource import DbpResource, DbpResourceStore
 from entity_linking.preprocessing.embeddings import EntityIndexToEmbeddingMapper
 from entity_linking.model.mention_entity_matching import TransformerForMentionEntityMatching
-from entity_linking.data.entity_prediction import prepare_dataset
+from entity_linking.data.mention_entity_matching import prepare_dataset
 from entity_linking.evaluation.mention_entity_matching import MentionEntityMatchingEvaluator
 
 
