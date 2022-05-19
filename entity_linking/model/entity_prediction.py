@@ -15,11 +15,12 @@ class TransformerForEntityPrediction(nn.Module):
         config = self.encoder.config
         # entity prediction
         self.cls_predictor = cls_predictor
+        self.ent_idx2emb = ent_idx2emb
+        self.ent_dim = ent_dim
+        self.loss = loss
         self.pad2d = nn.ZeroPad2d((0, 0, 1, 0))
         self.dropout = nn.Dropout(.1)
         self.linear = nn.Linear(config.hidden_size, ent_dim)
-        self.ent_idx2emb = ent_idx2emb
-        self.loss = loss
         # initialize weights in the classifier similar to huggingface models
         self.linear.weight.data.normal_(mean=0.0, std=config.initializer_range)
         if self.linear.bias is not None:
@@ -31,9 +32,9 @@ class TransformerForEntityPrediction(nn.Module):
             input_ids=None,  # (bs, seq_len)
             attention_mask=None,
             token_type_ids=None,
-            labels=None,  # (bs, 2, num_ents)
             # entity prediction input (mention_spans parameter is optional; otherwise use CLS token)
             mention_spans=None,  # (bs, num_ents, 2) with start and end indices for mentions or (0,0) for padding
+            labels=None,  # (bs, 2, num_ents) with dimension 1: (1) entity index, (2) entity status
     ):
         encoder_output = self.encoder(input_ids=input_ids, attention_mask=attention_mask, token_type_ids=token_type_ids)
 
@@ -51,11 +52,11 @@ class TransformerForEntityPrediction(nn.Module):
         loss = None
         if labels is not None:
             entity_labels, entity_status = labels[:, 0], labels[:, 1]  # (bs, num_ents), (bs, num_ents)
-            label_entity_vectors = self.ent_idx2emb(entity_labels.reshape(-1))  # (bs*num_ents, ent_dim)
+            label_entity_vectors = self.ent_idx2emb(entity_labels)  # (bs*num_ents, ent_dim)
             match self.loss:
                 case 'NPAIR':
                     loss_fct = nn.CrossEntropyLoss(reduction='sum')
-                    entity_logits = entity_vectors.view(-1, entity_vectors.shape[-1]) @ label_entity_vectors.T  # (bs*num_ents, bs*num_ents)
+                    entity_logits = entity_vectors.view(-1, self.ent_dim) @ label_entity_vectors.view(-1, self.ent_dim).T  # (bs*num_ents, bs*num_ents)
                     # compute loss for positive/known entities only (negative entities have status < 0)
                     known_entity_mask = entity_status.ge(0).view(-1)  # (bs*num_ents)
                     targets = torch.arange(len(known_entity_mask), device=known_entity_mask.device)  # (bs*num_ents)
@@ -64,7 +65,7 @@ class TransformerForEntityPrediction(nn.Module):
                 case 'MSE':
                     loss_fct = nn.MSELoss(reduction='sum')
                     known_entity_mask = entity_status.ge(0)  # (bs, num_ents)
-                    loss = loss_fct(entity_vectors[known_entity_mask], label_entity_vectors[known_entity_mask.view(-1)])
+                    loss = loss_fct(entity_vectors[known_entity_mask], label_entity_vectors[known_entity_mask])
                 case _:
                     raise ValueError(f'Invalid type of loss: {self.loss}')
 
