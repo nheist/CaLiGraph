@@ -178,7 +178,7 @@ class ClgOntologyStore:
     def get_predicate_for_dbp_predicate(self, dbp_pred: DbpPredicate) -> ClgPredicate:
         return self.get_class_by_idx(dbp_pred.idx)
 
-    def get_domain(self, pred: ClgPredicate) -> Optional[ClgType]:
+    def get_domain(self, pred: ClgPredicate) -> ClgType:
         dbp_domain = dbp_heur.get_domain(pred.get_dbp_predicate())
         clg_types = self.get_types_for_associated_dbp_type(dbp_domain)
         return sorted(clg_types)[0] if clg_types else self.get_type_root()
@@ -186,6 +186,6 @@ class ClgOntologyStore:
     def get_range(self, pred: ClgPredicate):
         dbp_range = dbp_heur.get_range(pred.get_dbp_predicate())
         if not isinstance(dbp_range, DbpType):
-            return dbp_range
+            return self.get_type_root() if isinstance(pred, ClgObjectPredicate) else dbp_range
         clg_types = self.get_types_for_associated_dbp_type(dbp_range)
         return sorted(clg_types)[0] if clg_types else self.get_type_root()
