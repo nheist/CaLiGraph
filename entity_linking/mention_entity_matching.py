@@ -59,11 +59,11 @@ def _load_train_and_val_datasets(tokenizer, sample: int, items_per_chunk: int, n
 
     train_pages = set(random.sample(all_pages, int(len(all_pages) * .9)))  # 90% of pages for train, 10% for val
     train_data = _create_vector_prediction_data({res: content for res, content in subject_entity_pages.items() if res in train_pages}, items_per_chunk, False)
-    train_data = _prepare_data(train_data.values(), tokenizer, num_ents)
+    train_data = _prepare_data(train_data.values(), tokenizer, num_ents, items_per_chunk)
 
     val_pages = set(all_pages).difference(train_pages)
     val_data = _create_vector_prediction_data({res: content for res, content in subject_entity_pages.items() if res in val_pages}, items_per_chunk, True)
-    val_data = _prepare_data(val_data.values(), tokenizer, num_ents)
+    val_data = _prepare_data(val_data.values(), tokenizer, num_ents, items_per_chunk)
     return train_data, val_data
 
 
@@ -88,9 +88,9 @@ def _get_subject_entity_labels(subject_entity_pages: Dict[DbpResource, dict], in
     return entity_labels
 
 
-def _prepare_data(page_data: Iterable[Tuple[List[List[str]], List[List[int]]]], tokenizer, num_ents: int):
+def _prepare_data(page_data: Iterable[Tuple[List[List[str]], List[List[int]]]], tokenizer, num_ents: int, items_per_chunk: int):
     tokens, labels = [], []
     for token_chunks, _, entity_chunks in page_data:
         tokens.extend(token_chunks)
         labels.extend(entity_chunks)
-    return prepare_dataset(tokens, labels, tokenizer, num_ents)
+    return prepare_dataset(tokens, labels, tokenizer, num_ents, items_per_chunk)
