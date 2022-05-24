@@ -22,7 +22,7 @@ def run_prediction(model_name: str, sample: int, epochs: int, batch_size: int, l
     ent_idx2emb = EntityIndexToEmbeddingMapper(ent_dim)
     model = TransformerForEntityPrediction(encoder, cls_predictor, ent_idx2emb, ent_dim, loss)
     # load data
-    dataset_version = f'ep-s{sample}-ipc{items_per_chunk}-ne{num_ents}'
+    dataset_version = f'EP-s{sample}-ipc{items_per_chunk}-ne{num_ents}'
     train_data, val_data = utils.load_or_create_cache('vector_prediction_training_data', lambda: _load_train_and_val_datasets(tokenizer, sample, items_per_chunk, num_ents), version=dataset_version)
     # run evaluation
     training_args = TrainingArguments(
@@ -69,7 +69,7 @@ def _load_train_and_val_datasets(tokenizer, sample: int, items_per_chunk: int, n
 
 def _create_vector_prediction_data(subject_entity_pages: Dict[DbpResource, dict], items_per_chunk: int, include_new_entities: bool) -> Dict[DbpResource, Tuple[List[List[str]], List[List[str]], List[List[int]]]]:
     entity_labels = _get_subject_entity_labels(subject_entity_pages, include_new_entities)
-    return WordTokenizer(max_items_per_chunk=items_per_chunk)(subject_entity_pages, entity_labels=entity_labels)
+    return WordTokenizer(max_items_per_chunk=items_per_chunk, max_ents_per_item=1)(subject_entity_pages, entity_labels=entity_labels)
 
 
 def _get_subject_entity_labels(subject_entity_pages: Dict[DbpResource, dict], include_new_entities: bool) -> Dict[DbpResource, Tuple[Set[int], Set[int]]]:
@@ -78,8 +78,8 @@ def _get_subject_entity_labels(subject_entity_pages: Dict[DbpResource, dict], in
     for res, page_content in subject_entity_pages.items():
         # collect all subject entity labels
         subject_entity_indices = set()
-        subject_entity_indices.update({ent['idx'] for s in page_content['sections'] for enum in s['enums'] for entry in enum for ent in entry['entities']})
-        subject_entity_indices.update({ent['idx'] for s in page_content['sections'] for table in s['tables'] for row in table['data'] for cell in row for ent in cell['entities']})
+        subject_entity_indices.update({entry['subject_entity']['idx'] for s in page_content['sections'] for enum in s['enums'] for entry in enum if 'subject_entity' in entry})
+        subject_entity_indices.update({cell['subject_entity']['idx'] for s in page_content['sections'] for table in s['tables'] for row in table['data'] for cell in row if 'subject_entity' in cell})
         # get rid of non-entities and entities without RDF2vec embeddings (as we can't use them for training/eval)
         subject_entity_indices = subject_entity_indices.intersection(valid_entity_indices)
         if include_new_entities:

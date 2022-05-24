@@ -1,6 +1,6 @@
 """Combine extracted SE labels with information in page markup to get extracted SE entities with labels."""
 
-from typing import Dict, Tuple, List
+from typing import Dict, Tuple, Optional
 from impl.dbpedia.resource import DbpResource, DbpEntity, DbpResourceStore
 from impl import wikipedia
 from collections import defaultdict
@@ -21,25 +21,29 @@ def _match_subject_entities_for_page(page_content: dict, entities_per_ts: dict) 
             continue  # skip sections that have not been tokenized
         for enum_data in section_data['enums']:
             for entry in enum_data:
-                entry['entities'] = _match_subject_entities_for_item(entry, entities_per_ts[top_section_name][section_name])
+                se = _find_subject_entity_for_item(entry, entities_per_ts[top_section_name][section_name])
+                if se:
+                    entry['subject_entity'] = se
         for table in section_data['tables']:
             for row in table['data']:
                 for cell in row:
-                    cell['entities'] = _match_subject_entities_for_item(cell, entities_per_ts[top_section_name][section_name])
+                    se = _find_subject_entity_for_item(cell, entities_per_ts[top_section_name][section_name])
+                    if se:
+                        cell['subject_entity'] = se
+                        break  # make sure to extract only the first subject entity in a table row
     return page_content
 
 
-def _match_subject_entities_for_item(list_item: dict, subject_entities: dict) -> List[dict]:
+def _find_subject_entity_for_item(list_item: dict, subject_entities: dict) -> Optional[dict]:
     existing_entities = {e['text']: e for e in list_item['entities']}
 
-    entities = []
     for ent_name, ent_tag in subject_entities.items():
         if ent_name not in list_item['text']:
             continue
-        ent_data = {'start': list_item['text'].index(ent_name), 'text': ent_name, 'tag': ent_tag,
-                    'idx': existing_entities[ent_name]['idx'] if ent_name in existing_entities else EntityIndex.NEW_ENTITY.value}
-        entities.append(ent_data)
-    return entities
+        ent_idx = existing_entities[ent_name]['idx'] if ent_name in existing_entities else EntityIndex.NEW_ENTITY.value
+        ent_start = list_item['text'].index(ent_name)
+        return {'idx': ent_idx, 'start': ent_start, 'text': ent_name, 'tag': ent_tag}
+    return None
 
 
 def match_entities_with_uris(subject_entities_per_page: Dict[DbpResource, dict]) -> Dict[DbpResource, dict]:

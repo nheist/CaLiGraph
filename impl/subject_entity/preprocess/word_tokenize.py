@@ -47,9 +47,10 @@ class WordTokenizerSpecialLabel(Enum):
 
 class WordTokenizer:
     """Takes parsed wiki markup and splits it into word tokens while preserving entity labels."""
-    def __init__(self, max_words_per_chunk: int = 256, max_items_per_chunk: int = 15):
+    def __init__(self, max_words_per_chunk: int = 256, max_items_per_chunk: int = 15, max_ents_per_item: int = 999):
         self.max_words_per_chunk = max_words_per_chunk
         self.max_items_per_chunk = max_items_per_chunk
+        self.max_ents_per_item = max_ents_per_item
         self.word_tokenizer = English().tokenizer
         self.meta_sections = {'see also', 'external links', 'references', 'notes', 'further reading'}
 
@@ -172,10 +173,11 @@ class WordTokenizer:
                 return [], [], []
         else:  # only extract tokens and ignore entities
             entry_doc = self.word_tokenizer(entry_text)
-            entry_entities = None
-            valid_ents = None
+            entry_entities = []
+            valid_ents = set()
 
-        tokens, ws, ents = self._text_to_tokens(entry_doc, entry_entities, valid_ents)
+        entry_entities = [e for e in entry_entities if e['idx'] in valid_ents][:self.max_ents_per_item]
+        tokens, ws, ents = self._text_to_tokens(entry_doc, entry_entities)
         tokens.insert(0, WordTokenizerSpecialToken.get_entry_by_depth(depth))
         ws.insert(0, ' ')
         ents.insert(0, WordTokenizerSpecialLabel.NO_ENTITY.value)
@@ -200,11 +202,14 @@ class WordTokenizer:
                 return [], [], []
         else:  # only extract tokens and ignore entities
             cell_docs = [self.word_tokenizer(cell['text']) for cell in row]
-            valid_ents = None
+            valid_ents = set()
 
         tokens, ws, ents = [], [], []
+        max_ents_per_row = self.max_ents_per_item
         for cell_idx, cell in enumerate(row):
-            cell_tokens, cell_ws, cell_ents = self._text_to_tokens(cell_docs[cell_idx], cell['entities'], valid_ents)
+            cell_ents = [e for e in cell['entities'] if e['idx'] in valid_ents][:max_ents_per_row]
+            max_ents_per_row -= len(cell_ents)
+            cell_tokens, cell_ws, cell_ents = self._text_to_tokens(cell_docs[cell_idx], cell_ents)
             tokens += [WordTokenizerSpecialToken.TABLE_COL.value] + cell_tokens
             ws += [' '] + cell_ws
             ents += [WordTokenizerSpecialLabel.NO_ENTITY.value] + cell_ents
@@ -224,15 +229,15 @@ class WordTokenizer:
                 return True
         return False
 
-    def _text_to_tokens(self, doc, entities: Optional[list], valid_ents: Optional[Set[int]]) -> Tuple[list, list, list]:
-        """Transforms a spacy doc (and entity info) to lists of tokens, whitespaces(, and entities)."""
-        if not entities or not valid_ents:
+    def _text_to_tokens(self, doc, entities: list) -> Tuple[list, list, list]:
+        """Transforms a spacy doc and entity info to lists of tokens, whitespaces, and (potentially) entities."""
+        if not entities:
             tokens = [w.text for w in doc]
             ws = [w.whitespace_ for w in doc]
             return tokens, ws, [WordTokenizerSpecialLabel.NO_ENTITY.value] * len(tokens)
 
         tokens, ws, token_ents = [], [], []
-        entity_pos_map = self._create_entity_position_map(entities, valid_ents)
+        entity_pos_map = self._create_entity_position_map(entities)
         current_position = 0
         for w in doc:
             tokens.append(w.text)
@@ -241,12 +246,10 @@ class WordTokenizer:
             current_position += len(w.text_with_ws)
         return tokens, ws, token_ents
 
-    def _create_entity_position_map(self, entities: list, valid_ents: Set[int]):
+    def _create_entity_position_map(self, entities: list):
         """Index valid entities by their text position."""
         entity_pos_map = defaultdict(lambda: WordTokenizerSpecialLabel.NO_ENTITY.value)
         for ent in entities:
-            if ent['idx'] not in valid_ents:
-                continue
             start = ent['start']
             text_length = len(ent['text'])
             for i in range(start, start + text_length):

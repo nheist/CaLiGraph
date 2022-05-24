@@ -86,6 +86,7 @@ def _process_entity_info(entity_info: List[List[Tuple[int, Tuple[int, int], list
     mention_spans = np.zeros((num_chunks, num_ents, 2))
     entity_indices = np.zeros((num_chunks, num_ents))
     entity_labels = np.ones((num_chunks, num_ents)) * -100  # initialize all with label: ignore
+    ents_per_item = num_ents // items_per_chunk
     # prepare word blocker to retrieve entities with similar surface forms
     dbr = DbpResourceStore.instance()
     entity_surface_forms = {e_idx: dbr.get_resource_by_idx(e_idx).get_surface_forms() for e_idx in dbr.get_embedding_vectors()}
@@ -97,7 +98,6 @@ def _process_entity_info(entity_info: List[List[Tuple[int, Tuple[int, int], list
         word_offsets += [len(chunk_offset_mapping)]  # add end index for final word
         for ent_info_idx, ent_info in enumerate(chunk_entity_info):
             ent_idx, (ent_start, ent_end), ent_words = ent_info
-            ents_per_item = num_ents // items_per_chunk
             item_start_idx = ent_info_idx * ents_per_item  # every item has ents_per_item slots
             item_end_idx = item_start_idx + ents_per_item
             # set all slots of the item to the same mention span
