@@ -16,20 +16,15 @@ from transformers import Trainer, TrainingArguments, AutoTokenizer, AutoModelFor
 MAX_CHUNKS = 100
 
 
-def extract_subject_entities(page_chunks: Tuple[list, list, list], tokenizer, model) -> Tuple[Dict[str, dict], Dict[str, dict]]:
+def extract_subject_entities(page_chunks: Tuple[list, list, list], tokenizer, model) -> Dict[str, dict]:
     subject_entity_dict = defaultdict(lambda: defaultdict(dict))
-    subject_entity_embeddings_dict = defaultdict(lambda: defaultdict(dict))
-
     page_token_chunks, page_ws_chunks, _ = page_chunks
     for i in range(0, len(page_token_chunks), MAX_CHUNKS):
-        _extract_subject_entity_chunks(page_token_chunks[i:i + MAX_CHUNKS], page_ws_chunks[i:i + MAX_CHUNKS], tokenizer, model, subject_entity_dict, subject_entity_embeddings_dict)
-
-    # convert to standard dicts
-    return {ts: dict(subject_entity_dict[ts]) for ts in subject_entity_dict},\
-           {ts: dict(subject_entity_embeddings_dict[ts]) for ts in subject_entity_embeddings_dict}
+        _extract_subject_entity_chunks(page_token_chunks[i:i + MAX_CHUNKS], page_ws_chunks[i:i + MAX_CHUNKS], tokenizer, model, subject_entity_dict)
+    return {ts: dict(subject_entity_dict[ts]) for ts in subject_entity_dict}  # convert to standard dicts
 
 
-def _extract_subject_entity_chunks(page_token_chunks: list, page_ws_chunks: list, tokenizer, model, subject_entity_dict, subject_entity_embeddings_dict):
+def _extract_subject_entity_chunks(page_token_chunks: list, page_ws_chunks: list, tokenizer, model, subject_entity_dict):
     inputs = tokenizer(page_token_chunks, is_split_into_words=True, padding=True, truncation=True, return_offsets_mapping=True, return_tensors="pt")
     offset_mapping = inputs.offset_mapping
     inputs.pop('offset_mapping')
@@ -40,57 +35,38 @@ def _extract_subject_entity_chunks(page_token_chunks: list, page_ws_chunks: list
         outputs = model(**inputs)
 
     prediction_batches = torch.argmax(outputs.logits.cpu(), dim=2)
-    hidden_state_batches = outputs.hidden_states[-1].cpu()  # use last layer as token embedding
     del inputs, outputs
 
-    topsection_states = defaultdict(list)
-    section_states = defaultdict(lambda: defaultdict(list))
-    for word_tokens, word_token_ws, predictions, hidden_states, offsets in zip(page_token_chunks, page_ws_chunks, prediction_batches, hidden_state_batches, offset_mapping):
+    for word_tokens, word_token_ws, predictions, offsets in zip(page_token_chunks, page_ws_chunks, prediction_batches, offset_mapping):
+        # TODO: CHECK: do we extract more than one SE mention?!
         topsection_name, section_name = _extract_context(word_tokens, word_token_ws)
-        # collect section states for embeddings
-        section_state = hidden_states[0].tolist()
-        topsection_states[topsection_name].append(section_state)
-        section_states[topsection_name][section_name].append(section_state)
-
-        # collect entity labels and states
+        # collect entity labels
         predictions = np.array(predictions)
         offsets = np.array(offsets)
         word_predictions = predictions[(offsets[:, 0] == 0) & (offsets[:, 1] != 0)]
-        word_hidden_states = hidden_states[(offsets[:, 0] == 0) & (offsets[:, 1] != 0)]
 
         found_entity = False  # only predict one entity per row/entry
         current_entity_tokens = []
-        current_entity_states = torch.tensor([])
         current_entity_label = POSLabel.NONE.value
-        for token, token_ws, label, states in zip(word_tokens,  word_token_ws, word_predictions, word_hidden_states):
+        for token, token_ws, label in zip(word_tokens,  word_token_ws, word_predictions):
             if label == POSLabel.NONE.value or token in WordTokenizerSpecialToken.all_tokens():
                 if current_entity_tokens and not found_entity:
                     entity_name = _tokens2name(current_entity_tokens)
                     if _is_valid_entity_name(entity_name):
                         subject_entity_dict[topsection_name][section_name][entity_name] = current_entity_label
-                        subject_entity_embeddings_dict[topsection_name][section_name][entity_name] = current_entity_states.numpy().mean(0)
                     found_entity = True
                 current_entity_tokens = []
-                current_entity_states = torch.tensor([])
                 current_entity_label = POSLabel.NONE.value
 
                 if token in WordTokenizerSpecialToken.item_starttokens():
                     found_entity = False  # reset found_entity if entering a new line
             else:
                 current_entity_label = current_entity_label or label
-                current_entity_states = torch.cat((current_entity_states, states.unsqueeze(0)))
                 current_entity_tokens.extend([token, token_ws])
         if current_entity_tokens and not found_entity:
             entity_name = _tokens2name(current_entity_tokens)
             if _is_valid_entity_name(entity_name):
                 subject_entity_dict[topsection_name][section_name][entity_name] = current_entity_label
-                subject_entity_embeddings_dict[topsection_name][section_name][entity_name] = current_entity_states.numpy().mean(0)
-    # compute embeddings for sections
-    for ts, ts_states in topsection_states.items():
-        subject_entity_embeddings_dict[ts]['_embedding'] = np.array(ts_states).mean(0)
-    for ts, ts_data in section_states.items():
-        for s, s_states in ts_data.items():
-            subject_entity_embeddings_dict[ts][s]['_embedding'] = np.array(s_states).mean(0)
 
 
 def _extract_context(word_tokens: List[str], word_token_ws: List[str]) -> Tuple[str, str]:

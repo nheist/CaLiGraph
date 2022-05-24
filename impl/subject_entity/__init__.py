@@ -22,7 +22,7 @@ def _get_subject_entity_predictions() -> Dict[DbpResource, dict]:
 
 def _make_subject_entity_predictions() -> Dict[DbpResource, dict]:
     tokenizer, model = extract.get_tagging_tokenizer_and_model(_get_training_data)
-    predictions = {r: extract.extract_subject_entities(chunks, tokenizer, model)[0] for r, chunks in tqdm(_get_page_data().items(), desc='Predicting subject entities')}
+    predictions = {r: extract.extract_subject_entities(chunks, tokenizer, model) for r, chunks in tqdm(_get_page_data().items(), desc='Predicting subject entities')}
     torch.cuda.empty_cache()  # flush GPU cache to free GPU for other purposes
     return predictions
 

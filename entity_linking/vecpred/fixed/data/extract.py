@@ -84,7 +84,7 @@ def _extract_entity_occurrences(df_listings: pd.DataFrame, dataset_pages: np.nda
         page_chunks = word_tokenizer({page_uri: page_markup})[page_uri]
 
         subject_entities = extract.extract_subject_entities(page_chunks, tokenizer, model)
-        enriched_entities = combine._match_entities_for_page(page_uri, subject_entities[0], page_markup)
+        enriched_entities = combine._match_entities_for_page(page_uri, subject_entities, page_markup)
 
         for ts, ts_data in enriched_entities.items():
             for s, s_data in ts_data.items():
