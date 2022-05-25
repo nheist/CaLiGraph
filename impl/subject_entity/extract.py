@@ -38,7 +38,6 @@ def _extract_subject_entity_chunks(page_token_chunks: list, page_ws_chunks: list
     del inputs, outputs
 
     for word_tokens, word_token_ws, predictions, offsets in zip(page_token_chunks, page_ws_chunks, prediction_batches, offset_mapping):
-        # TODO: CHECK: do we extract more than one SE mention?!
         topsection_name, section_name = _extract_context(word_tokens, word_token_ws)
         # collect entity labels
         predictions = np.array(predictions)

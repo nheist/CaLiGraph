@@ -42,49 +42,49 @@ def map_entities_to_pos_labels(entity_chunks: List[List[int]], single_tag_predic
 def _find_pos_tag_for_ent(ent: DbpEntity) -> POSLabel:
     ttl_mapping = _get_type_to_label_mapping()
     for t in ent.get_transitive_types():
-        if t in ttl_mapping:
-            return ttl_mapping[t]
+        if t.name in ttl_mapping:
+            return ttl_mapping[t.name]
     return POSLabel.OTHER
 
 
 def _get_type_to_label_mapping() -> dict:
     return {
         # PERSON
-        'http://dbpedia.org/ontology/Person': POSLabel.PERSON,
-        'http://dbpedia.org/ontology/Deity': POSLabel.PERSON,
+        'Person': POSLabel.PERSON,
+        'Deity': POSLabel.PERSON,
         # NORP
-        'http://dbpedia.org/ontology/PoliticalParty': POSLabel.NORP,
-        'http://dbpedia.org/ontology/Family': POSLabel.NORP,
-        'http://dbpedia.org/ontology/EthnicGroup': POSLabel.NORP,
+        'PoliticalParty': POSLabel.NORP,
+        'Family': POSLabel.NORP,
+        'EthnicGroup': POSLabel.NORP,
         # FAC
-        'http://dbpedia.org/ontology/ArchitecturalStructure': POSLabel.FAC,
-        'http://dbpedia.org/ontology/Mine': POSLabel.FAC,
-        'http://dbpedia.org/ontology/Monument': POSLabel.FAC,
+        'ArchitecturalStructure': POSLabel.FAC,
+        'Mine': POSLabel.FAC,
+        'Monument': POSLabel.FAC,
         # ORG
-        'http://dbpedia.org/ontology/Organisation': POSLabel.ORG,
+        'Organisation': POSLabel.ORG,
         # GPE
-        'http://dbpedia.org/ontology/PopulatedPlace': POSLabel.GPE,
+        'PopulatedPlace': POSLabel.GPE,
         # LOC
-        'http://dbpedia.org/ontology/Place': POSLabel.LOC,
-        'http://dbpedia.org/ontology/Location': POSLabel.LOC,
+        'Place': POSLabel.LOC,
+        'Location': POSLabel.LOC,
         # PRODUCT
-        'http://dbpedia.org/ontology/Food': POSLabel.PRODUCT,
-        'http://dbpedia.org/ontology/MeanOfTransportation': POSLabel.PRODUCT,
-        'http://dbpedia.org/ontology/Software': POSLabel.PRODUCT,
-        'http://dbpedia.org/ontology/Device': POSLabel.PRODUCT,
+        'Food': POSLabel.PRODUCT,
+        'MeanOfTransportation': POSLabel.PRODUCT,
+        'Software': POSLabel.PRODUCT,
+        'Device': POSLabel.PRODUCT,
         # EVENT
-        'http://dbpedia.org/ontology/Event': POSLabel.EVENT,
+        'Event': POSLabel.EVENT,
         # WORK_OF_ART
-        'http://dbpedia.org/ontology/Work': POSLabel.WORK_OF_ART,
-        'http://dbpedia.org/ontology/Award': POSLabel.WORK_OF_ART,
+        'Work': POSLabel.WORK_OF_ART,
+        'Award': POSLabel.WORK_OF_ART,
         # LAW
-        'http://dbpedia.org/ontology/Law': POSLabel.LAW,
-        'http://dbpedia.org/ontology/LegalCase': POSLabel.LAW,
-        'http://dbpedia.org/ontology/Treaty': POSLabel.LAW,
+        'Law': POSLabel.LAW,
+        'LegalCase': POSLabel.LAW,
+        'Treaty': POSLabel.LAW,
         # LANGUAGE
-        'http://dbpedia.org/ontology/Language': POSLabel.LANGUAGE,
+        'Language': POSLabel.LANGUAGE,
         # SPECIES
-        'http://dbpedia.org/ontology/Species': POSLabel.SPECIES
+        'Species': POSLabel.SPECIES
     }
 
 
