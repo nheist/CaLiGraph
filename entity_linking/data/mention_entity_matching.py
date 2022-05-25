@@ -17,9 +17,9 @@ class MentionEntityMatchingDataset(Dataset):
     def __getitem__(self, idx):
         item = {key: torch.tensor(val[idx]) for key, val in self.encodings.items()}
         item.update({
-            'mention_spans': torch.tensor(self.mention_spans[idx]),
-            'entity_indices': torch.tensor(self.entity_indices[idx]),
-            'labels': torch.tensor(self.entity_labels[idx])
+            'mention_spans': torch.tensor(self.mention_spans[idx], dtype=torch.int),
+            'entity_indices': torch.tensor(self.entity_indices[idx], dtype=torch.int),
+            'labels': torch.tensor(self.entity_labels[idx], dtype=torch.int)
         })
         return item
 
