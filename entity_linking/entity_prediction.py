@@ -28,9 +28,9 @@ def run_prediction(model_name: str, sample: int, epochs: int, batch_size: int, l
     training_args = TrainingArguments(
         seed=42,
         save_strategy=IntervalStrategy.NO,
-        output_dir=f'./vp_eval/output/{run_id}',
+        output_dir=f'./ep_eval/output/{run_id}',
         logging_strategy=IntervalStrategy.STEPS,
-        logging_dir=f'./vp_eval/logs/{run_id}',
+        logging_dir=f'./ep_eval/logs/{run_id}',
         logging_steps=1000,
         evaluation_strategy=IntervalStrategy.STEPS,
         eval_steps=5000,
