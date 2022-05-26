@@ -68,7 +68,7 @@ def run_evaluation(model_name: str, epochs: int, batch_size: int, learning_rate:
 def _prepare_data(tokenizer, page_data: list, predict_single_tag: bool):
     """Flatten data into chunks, assign correct labels, and create dataset"""
     tokens, labels = [], []
-    for token_chunks, entity_chunks in page_data:
+    for token_chunks, _, entity_chunks in page_data:
         tokens.extend(token_chunks)
         label_chunks = map_entities_to_pos_labels(entity_chunks, predict_single_tag)
         labels.extend(label_chunks)
