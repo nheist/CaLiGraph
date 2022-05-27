@@ -40,7 +40,7 @@ if __name__ == '__main__':
         case 'MEM':
             mem.run_prediction(args.model_name, args.sample, args.epochs, args.batch_size, args.learning_rate,
                                args.warmup_steps, args.weight_decay, args.num_ents, args.ent_dim, args.items_per_chunk,
-                               args.cls_predictor)
+                               args.cls_predictor, args.include_source_page)
         case 'EP':
             ep.run_prediction(args.model_name, args.sample, args.epochs, args.batch_size, args.loss, args.learning_rate,
                               args.warmup_steps, args.weight_decay, args.num_ents, args.ent_dim, args.items_per_chunk,

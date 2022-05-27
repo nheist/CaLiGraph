@@ -8,17 +8,21 @@ class TransformerForMentionEntityMatching(nn.Module):
     num_ents: number of entities in a sequence that can be identified
     ent_dim: dimension of DBpedia/CaLiGraph entity embeddings
     """
-    def __init__(self, encoder, cls_predictor: bool, ent_idx2emb: EntityIndexToEmbeddingMapper, ent_dim: int):
+    def __init__(self, encoder, include_source_page: bool, cls_predictor: bool, ent_idx2emb: EntityIndexToEmbeddingMapper, ent_dim: int):
         super().__init__()
         # encoder
         self.encoder = encoder
         config = self.encoder.config
         # entity prediction
+        self.include_source_page = include_source_page
         self.cls_predictor = cls_predictor
         self.ent_idx2emb = ent_idx2emb
         self.pad2d = nn.ZeroPad2d((0, 0, 1, 0))
         self.dropout = nn.Dropout(.1)
-        self.linear = nn.Linear(config.hidden_size + ent_dim, 1)
+        linear_input_dim = config.hidden_size + ent_dim
+        if include_source_page:
+            linear_input_dim += ent_dim
+        self.linear = nn.Linear(linear_input_dim, 1)
         self.sigmoid = nn.Sigmoid()
         # initialize weights in the classifier similar to huggingface models
         self.linear.weight.data.normal_(mean=0.0, std=config.initializer_range)
@@ -32,6 +36,7 @@ class TransformerForMentionEntityMatching(nn.Module):
             attention_mask=None,
             token_type_ids=None,
             # entity prediction input
+            source_pages=None,  # (bs) pages on which the mentions occur
             mention_spans=None,  # (bs, num_ents, 2) with start and end indices for mentions or (0,0) for padding
             entity_indices=None,  # (bs, num_ents)
             labels=None,  # (bs, num_ents)
@@ -46,9 +51,15 @@ class TransformerForMentionEntityMatching(nn.Module):
             # using mention spans as mention vectors
             sequence_output = self.dropout(encoder_output[0])  # (bs, seq_len, hidden_size)
             mention_vectors = self._compute_mean_mention_vectors(sequence_output, mention_spans)  # (bs, num_ents, hidden_size)
+
         # TODO: mention vector dropout?
         entity_vectors = self.ent_idx2emb(entity_indices)  # (bs, num_ents, ent_dim)
-        logits = self.linear(torch.cat((mention_vectors, entity_vectors), dim=-1)).squeeze()  # (bs, num_ents)
+        input_linear = torch.cat((mention_vectors, entity_vectors), dim=-1)  # (bs, num_ents, hidden_size+ent_dim)
+        if self.include_source_page:
+            page_embeds = self.ent_idx2emb(source_pages)  # (bs, ent_dim)
+            page_embeds = page_embeds.expand(input_linear.shape[:-1] + page_embeds.shape[-1])  # (bs, num_ents, ent_dim)
+            input_linear = torch.cat((input_linear, page_embeds), dim=-1)  # (bs, num_ents, hidden_size+ent_dim+ent_dim)
+        logits = self.linear(input_linear).squeeze()  # (bs, num_ents)
         predictions = self.sigmoid(logits)  # (bs, num_ents)
 
         loss = None
