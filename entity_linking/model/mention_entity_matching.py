@@ -8,7 +8,7 @@ class TransformerForMentionEntityMatching(nn.Module):
     num_ents: number of entities in a sequence that can be identified
     ent_dim: dimension of DBpedia/CaLiGraph entity embeddings
     """
-    def __init__(self, encoder, include_source_page: bool, cls_predictor: bool, ent_idx2emb: EntityIndexToEmbeddingMapper, ent_dim: int):
+    def __init__(self, encoder, include_source_page: bool, cls_predictor: bool, ent_idx2emb: EntityIndexToEmbeddingMapper, ent_dim: int, num_ents: int):
         super().__init__()
         # encoder
         self.encoder = encoder
@@ -17,6 +17,7 @@ class TransformerForMentionEntityMatching(nn.Module):
         self.include_source_page = include_source_page
         self.cls_predictor = cls_predictor
         self.ent_idx2emb = ent_idx2emb
+        self.num_ents = num_ents
         self.pad2d = nn.ZeroPad2d((0, 0, 1, 0))
         self.dropout = nn.Dropout(.1)
         linear_input_dim = config.hidden_size + ent_dim
@@ -46,7 +47,7 @@ class TransformerForMentionEntityMatching(nn.Module):
         if self.cls_predictor:
             # using CLS token (at pos. 0) as mention vector for all mention spans
             mention_vectors = self.dropout(encoder_output[0][:, 0:1, :])  # (bs, 1, hidden_size)
-            mention_vectors = mention_vectors.expand((labels.shape[-1], -1))  # (bs, num_ents, hidden_size)
+            mention_vectors = mention_vectors.expand((self.num_ents, -1))  # (bs, num_ents, hidden_size)
         else:
             # using mention spans as mention vectors
             sequence_output = self.dropout(encoder_output[0])  # (bs, seq_len, hidden_size)
@@ -57,7 +58,7 @@ class TransformerForMentionEntityMatching(nn.Module):
         input_linear = torch.cat((mention_vectors, entity_vectors), dim=-1)  # (bs, num_ents, hidden_size+ent_dim)
         if self.include_source_page:
             page_embeds = self.ent_idx2emb(source_pages)  # (bs, ent_dim)
-            page_embeds = page_embeds.expand(input_linear.shape[:-1] + (page_embeds.shape[-1],))  # (bs, num_ents, ent_dim)
+            page_embeds = page_embeds.unsqueeze(dim=1).repeat_interleave(self.num_ents, dim=1)  # (bs, num_ents, ent_dim)
             input_linear = torch.cat((input_linear, page_embeds), dim=-1)  # (bs, num_ents, hidden_size+ent_dim+ent_dim)
         logits = self.linear(input_linear).squeeze()  # (bs, num_ents)
         predictions = self.sigmoid(logits)  # (bs, num_ents)

@@ -20,7 +20,7 @@ def run_prediction(model_name: str, sample: int, epochs: int, batch_size: int, l
     encoder = AutoModel.from_pretrained(model_name)
     encoder.resize_token_embeddings(len(tokenizer))
     ent_idx2emb = EntityIndexToEmbeddingMapper(ent_dim)
-    model = TransformerForEntityPrediction(encoder, include_source_page, cls_predictor, ent_idx2emb, ent_dim, loss)
+    model = TransformerForEntityPrediction(encoder, include_source_page, cls_predictor, ent_idx2emb, ent_dim, num_ents, loss)
     # load data
     dataset_version = f'EP-s{sample}-ipc{items_per_chunk}-ne{num_ents}'
     train_data, val_data = utils.load_or_create_cache('vector_prediction_training_data', lambda: _load_train_and_val_datasets(tokenizer, sample, items_per_chunk, num_ents), version=dataset_version)
