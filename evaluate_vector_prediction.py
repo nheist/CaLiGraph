@@ -30,6 +30,7 @@ if __name__ == '__main__':
     parser.add_argument('-ed', '--ent_dim', type=int, default=200, help='Number of dimensions of the entity embedding')
     parser.add_argument('-ipc', '--items_per_chunk', type=int, default=15, help='Maximum number of items in a chunk')
     parser.add_argument('-cp', '--cls_predictor', action='store_true', help='Use CLS token as mention vector')
+    parser.add_argument('-isp', '--include_source_page', action='store_false', help='Add embedding of page as feature for prediction')
     args = parser.parse_args()
 
     if args.cls_predictor:
@@ -43,4 +44,4 @@ if __name__ == '__main__':
         case 'EP':
             ep.run_prediction(args.model_name, args.sample, args.epochs, args.batch_size, args.loss, args.learning_rate,
                               args.warmup_steps, args.weight_decay, args.num_ents, args.ent_dim, args.items_per_chunk,
-                              args.cls_predictor)
+                              args.cls_predictor, args.include_source_page)

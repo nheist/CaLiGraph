@@ -8,19 +8,21 @@ class TransformerForEntityPrediction(nn.Module):
     num_ents: number of entities in a sequence that can be identified
     ent_dim: dimension of DBpedia/CaLiGraph entity embeddings
     """
-    def __init__(self, encoder, cls_predictor: bool, ent_idx2emb: EntityIndexToEmbeddingMapper, ent_dim: int, loss: str):
+    def __init__(self, encoder, include_source_page: bool, cls_predictor: bool, ent_idx2emb: EntityIndexToEmbeddingMapper, ent_dim: int, loss: str):
         super().__init__()
         # encoder
         self.encoder = encoder
         config = self.encoder.config
         # entity prediction
+        self.include_source_page = include_source_page
         self.cls_predictor = cls_predictor
         self.ent_idx2emb = ent_idx2emb
         self.ent_dim = ent_dim
         self.loss = loss
         self.pad2d = nn.ZeroPad2d((0, 0, 1, 0))
         self.dropout = nn.Dropout(.1)
-        self.linear = nn.Linear(config.hidden_size, ent_dim)
+        linear_input_dim = config.hidden_size + ent_dim if include_source_page else config.hidden_size
+        self.linear = nn.Linear(linear_input_dim, ent_dim)
         # initialize weights in the classifier similar to huggingface models
         self.linear.weight.data.normal_(mean=0.0, std=config.initializer_range)
         if self.linear.bias is not None:
@@ -33,6 +35,7 @@ class TransformerForEntityPrediction(nn.Module):
             attention_mask=None,
             token_type_ids=None,
             # entity prediction input (mention_spans parameter is optional; otherwise use CLS token)
+            source_pages=None,  # (bs) pages on which the mentions occur
             mention_spans=None,  # (bs, num_ents, 2) with start and end indices for mentions or (0,0) for padding
             labels=None,  # (bs, 2, num_ents) with dimension 1: (1) entity index, (2) entity status
     ):
@@ -47,7 +50,13 @@ class TransformerForEntityPrediction(nn.Module):
             # using mention spans as mention vectors
             sequence_output = self.dropout(encoder_output[0])  # (bs, seq_len, hidden_size)
             mention_vectors = self._compute_mean_mention_vectors(sequence_output, mention_spans)  # (bs, num_ents, hidden_size)
-        entity_vectors = self.linear(mention_vectors)  # (bs, num_ents, ent_dim)
+
+        input_linear = mention_vectors  # (bs, num_ents, hidden_size)
+        if self.include_source_page:
+            page_embeds = self.ent_idx2emb(source_pages)  # (bs, ent_dim)
+            page_embeds = page_embeds.expand(input_linear.shape[:-1] + page_embeds.shape[-1])  # (bs, num_ents, ent_dim)
+            input_linear = torch.cat((input_linear, page_embeds), dim=-1)  # (bs, num_ents, hidden_size+ent_dim)
+        entity_vectors = self.linear(input_linear)  # (bs, num_ents, ent_dim)
 
         loss = None
         if labels is not None:
