@@ -8,7 +8,7 @@ class TransformerForMentionEntityMatching(nn.Module):
     num_ents: number of entities in a sequence that can be identified
     ent_dim: dimension of DBpedia/CaLiGraph entity embeddings
     """
-    def __init__(self, encoder, cls_predictor: bool, ent_idx2emb: EntityIndexToEmbeddingMapper, ent_dim: int, num_ents: int):
+    def __init__(self, encoder, cls_predictor: bool, ent_idx2emb: EntityIndexToEmbeddingMapper, ent_dim: int):
         super().__init__()
         # encoder
         self.encoder = encoder
@@ -18,7 +18,7 @@ class TransformerForMentionEntityMatching(nn.Module):
         self.ent_idx2emb = ent_idx2emb
         self.pad2d = nn.ZeroPad2d((0, 0, 1, 0))
         self.dropout = nn.Dropout(.1)
-        self.linear = nn.Linear(config.hidden_size + ent_dim, num_ents)
+        self.linear = nn.Linear(config.hidden_size + ent_dim, 1)
         self.sigmoid = nn.Sigmoid()
         # initialize weights in the classifier similar to huggingface models
         self.linear.weight.data.normal_(mean=0.0, std=config.initializer_range)
@@ -48,16 +48,12 @@ class TransformerForMentionEntityMatching(nn.Module):
             mention_vectors = self._compute_mean_mention_vectors(sequence_output, mention_spans)  # (bs, num_ents, hidden_size)
         # TODO: mention vector dropout?
         entity_vectors = self.ent_idx2emb(entity_indices)  # (bs, num_ents, ent_dim)
-        logits = self.linear(torch.cat((mention_vectors, entity_vectors), dim=-1))  # (bs, num_ents)
+        logits = self.linear(torch.cat((mention_vectors, entity_vectors), dim=-1)).squeeze()  # (bs, num_ents)
         predictions = self.sigmoid(logits)  # (bs, num_ents)
 
         loss = None
         if labels is not None:
             label_mask = labels.ge(0)  # all labels smaller than 0 are invalid and should be ignored
-            print('pred', predictions.shape)
-            print('pred w mask', predictions[label_mask].shape)
-            print('lab', labels.shape)
-            print('lab w mask', labels[label_mask].shape)
             loss = nn.BCELoss(reduction='sum')(predictions[label_mask], labels[label_mask])
 
         return (predictions,) if labels is None else (loss, predictions)
