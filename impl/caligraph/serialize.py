@@ -306,7 +306,10 @@ def _get_lines_dbpedia_instance_relations(clge) -> list:
 def _serialize_type_distribution(clgo, clge, filepath_config: str):
     type_counts = Counter()
     for ent in clge.get_entities():
-        random_type = random.choice(list(ent.get_types()))
+        ent_types = list(ent.get_types())
+        if not ent_types:
+            continue
+        random_type = random.choice(ent_types)
         for t in clgo.get_transitive_supertypes(random_type, include_self=True):
             type_counts[t] += 1
 
