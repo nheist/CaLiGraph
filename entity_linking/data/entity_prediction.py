@@ -89,7 +89,7 @@ def _filter_truncated_entities(tokens: List[List[str]], entity_info: List[List[T
         filtered_tokens.append(token_chunk)
         filtered_entity_info.append(filtered_entity_info_chunk)
         filtered_source_pages.append(source_page_for_chunk)
-    return filtered_tokens, filtered_entity_info
+    return filtered_tokens, filtered_entity_info, filtered_source_pages
 
 
 def _get_mention_spans(entity_info: List[List[Tuple[int, Tuple[int, int], list]]], offset_mapping: List[List[Tuple[int, int]]]) -> List[List[Tuple[int, int]]]:
