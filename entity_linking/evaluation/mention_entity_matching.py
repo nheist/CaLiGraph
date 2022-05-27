@@ -26,7 +26,7 @@ class MentionEntityMatchingEvaluator:
         # compute metrics
         known_entity_count = known_entity_mask.sum().item()
         known_entity_correct_predictions = itemwise_result[known_entity_mask].sum().item()
-        unknown_entity_count = len(known_entity_count) - known_entity_count
+        unknown_entity_count = len(known_entity_mask) - known_entity_count
         unknown_entity_correct_predictions = itemwise_result[~known_entity_mask].sum().item()
         all_entity_count = known_entity_count + unknown_entity_count
         all_entity_correct_predictions = known_entity_correct_predictions + unknown_entity_correct_predictions
