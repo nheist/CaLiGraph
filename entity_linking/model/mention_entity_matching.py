@@ -57,7 +57,7 @@ class TransformerForMentionEntityMatching(nn.Module):
         input_linear = torch.cat((mention_vectors, entity_vectors), dim=-1)  # (bs, num_ents, hidden_size+ent_dim)
         if self.include_source_page:
             page_embeds = self.ent_idx2emb(source_pages)  # (bs, ent_dim)
-            page_embeds = page_embeds.expand(input_linear.shape[:-1] + page_embeds.shape[-1])  # (bs, num_ents, ent_dim)
+            page_embeds = page_embeds.expand(input_linear.shape[:-1] + (page_embeds.shape[-1],))  # (bs, num_ents, ent_dim)
             input_linear = torch.cat((input_linear, page_embeds), dim=-1)  # (bs, num_ents, hidden_size+ent_dim+ent_dim)
         logits = self.linear(input_linear).squeeze()  # (bs, num_ents)
         predictions = self.sigmoid(logits)  # (bs, num_ents)

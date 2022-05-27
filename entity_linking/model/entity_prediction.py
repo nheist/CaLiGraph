@@ -54,7 +54,7 @@ class TransformerForEntityPrediction(nn.Module):
         input_linear = mention_vectors  # (bs, num_ents, hidden_size)
         if self.include_source_page:
             page_embeds = self.ent_idx2emb(source_pages)  # (bs, ent_dim)
-            page_embeds = page_embeds.expand(input_linear.shape[:-1] + page_embeds.shape[-1])  # (bs, num_ents, ent_dim)
+            page_embeds = page_embeds.expand(input_linear.shape[:-1] + (page_embeds.shape[-1],))  # (bs, num_ents, ent_dim)
             input_linear = torch.cat((input_linear, page_embeds), dim=-1)  # (bs, num_ents, hidden_size+ent_dim)
         entity_vectors = self.linear(input_linear)  # (bs, num_ents, ent_dim)
 
