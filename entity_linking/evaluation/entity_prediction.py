@@ -14,11 +14,10 @@ class EntityPredictionEvaluator:
         self.thresholds = [.1, .2, .3, .4, .5, .6, .7]
 
     def evaluate(self, eval_prediction: EvalPrediction):
-        results = defaultdict(list)
+        results = defaultdict(list, {'EP_CNT_known': [0], 'EP_CNT_unknown': [0], 'EP_CNT_all': [0]})
         # gather results batch-wise and then average over them
         labels = torch.from_numpy(eval_prediction.label_ids)  # (batches*bs, num_ents, 2)
         entity_vectors = torch.from_numpy(eval_prediction.predictions)  # (batches*bs, valid_ents, ent_dim)
-        print(entity_vectors[:10])
         for label_batch, pred_batch in zip(*[torch.split(t, self.batch_size) for t in [labels, entity_vectors]]):
             entity_labels, entity_status = label_batch[:, 0].reshape(-1), label_batch[:, 1].reshape(-1)
             # compute masks for existing (status 0) and new (status -1) entities
@@ -37,12 +36,16 @@ class EntityPredictionEvaluator:
             unknown_entity_correct_predictions = self._get_correct_predictions_for_unknown_entities(entity_similarities, unknown_entity_mask)
             all_entity_count = known_entity_count + unknown_entity_count
             all_entity_correct_predictions = known_entity_correct_predictions + unknown_entity_correct_predictions
+
+            results['EP_CNT_known'][0] += known_entity_count
+            results['EP_CNT_unknown'][0] += unknown_entity_count
+            results['EP_CNT_all'][0] += all_entity_count
             for t in self.thresholds:
                 if known_entity_count:
-                    results[f'T-{t}_known'].append(known_entity_correct_predictions[t] / known_entity_count)
+                    results[f'EP_ACC-{t}_known'].append(known_entity_correct_predictions[t] / known_entity_count)
                 if unknown_entity_count:
-                    results[f'T-{t}_unknown'].append(unknown_entity_correct_predictions[t] / unknown_entity_count)
-                results[f'T-{t}_all'].append(all_entity_correct_predictions[t] / all_entity_count)
+                    results[f'EP_ACC-{t}_unknown'].append(unknown_entity_correct_predictions[t] / unknown_entity_count)
+                results[f'EP_ACC-{t}_all'].append(all_entity_correct_predictions[t] / all_entity_count)
         return {label: statistics.fmean(vals) for label, vals in results.items()}  # average over batch results
 
     def _get_correct_predictions_for_known_entities(self, entity_similarities: Tensor, mask: Tensor, targets: Tensor) -> Counter[float, int]:

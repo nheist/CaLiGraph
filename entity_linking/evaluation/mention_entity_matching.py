@@ -31,7 +31,10 @@ class MentionEntityMatchingEvaluator:
         all_entity_count = known_entity_count + unknown_entity_count
         all_entity_correct_predictions = known_entity_correct_predictions + unknown_entity_correct_predictions
         return {
-            'binary_all': all_entity_correct_predictions / all_entity_count,
-            'binary_known': known_entity_correct_predictions / known_entity_count,
-            'binary_unknown': unknown_entity_correct_predictions / unknown_entity_count,
+            'MEM_CNT_all': all_entity_count,
+            'MEM_CNT_known': known_entity_count,
+            'MEM_CNT_unknown': unknown_entity_count,
+            'MEM_ACC_all': all_entity_correct_predictions / all_entity_count,
+            'MEM_ACC_known': known_entity_correct_predictions / known_entity_count,
+            'MEM_ACC_unknown': unknown_entity_correct_predictions / unknown_entity_count,
         }
