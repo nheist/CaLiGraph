@@ -8,10 +8,11 @@ from impl.dbpedia.resource import DbpResourceStore
 
 class WordBlocker:
     def __init__(self):
+        dbr = DbpResourceStore.instance()
         self.entity_blocks = defaultdict(set)
-        for res in DbpResourceStore.instance().get_embedding_vectors():
-            for sf in res.get_surface_forms():
-                self.entity_blocks[self._block_surface_form(sf.split())].add(res.idx)
+        for res_idx in dbr.get_embedding_vectors():
+            for sf in dbr.get_resource_by_idx(res_idx).get_surface_forms():
+                self.entity_blocks[self._block_surface_form(sf.split())].add(res_idx)
 
     def get_entity_indices_for_words(self, words: List[str]) -> Set[int]:
         return self.entity_blocks[self._block_surface_form(words)]
