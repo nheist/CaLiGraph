@@ -42,7 +42,10 @@ class TransformerForMentionEntityMatching(nn.Module):
             entity_indices=None,  # (bs, num_ents)
             labels=None,  # (bs, num_ents)
     ):
-        encoder_output = self.encoder(input_ids=input_ids, attention_mask=attention_mask, token_type_ids=token_type_ids)
+        encoder_input = {'input_ids': input_ids, 'attention_mask': attention_mask}
+        if token_type_ids is not None:
+            encoder_input['token_type_ids'] = token_type_ids
+        encoder_output = self.encoder(**encoder_input)
 
         if self.cls_predictor:
             # using CLS token (at pos. 0) as mention vector for all mention spans

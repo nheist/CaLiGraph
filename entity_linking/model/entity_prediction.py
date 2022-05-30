@@ -40,7 +40,10 @@ class TransformerForEntityPrediction(nn.Module):
             mention_spans=None,  # (bs, num_ents, 2) with start and end indices for mentions or (0,0) for padding
             labels=None,  # (bs, 2, num_ents) with dimension 1: (1) entity index, (2) entity status
     ):
-        encoder_output = self.encoder(input_ids=input_ids, attention_mask=attention_mask, token_type_ids=token_type_ids)
+        encoder_input = {'input_ids': input_ids, 'attention_mask': attention_mask}
+        if token_type_ids is not None:
+            encoder_input['token_type_ids'] = token_type_ids
+        encoder_output = self.encoder(**encoder_input)
 
         if self.cls_predictor:
             # using CLS token (at pos. 0) as mention vector
