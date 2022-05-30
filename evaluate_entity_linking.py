@@ -8,7 +8,7 @@ import os
 if __name__ == '__main__':
     # first parse all the arguments
     parser = argparse.ArgumentParser(description='Run the evaluation of entity linking.')
-    parser.add_argument('gpu', choices=range(8), help='Number of GPU to use')
+    parser.add_argument('gpu', choices=[str(g) for g in range(8)], help='Number of GPU to use')
     parser.add_argument('type', choices=['EP', 'MEM'], help='Type of prediction')
     parser.add_argument('model_name', help='Huggingface Transformer model used for prediction')
     parser.add_argument('-s', '--sample', type=int, default=20, help='Percentage of dataset used')
