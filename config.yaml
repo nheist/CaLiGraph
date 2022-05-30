@@ -263,3 +263,6 @@ cache:
   vector_prediction_training_data:
     filename: 'vector-prediction-training_data'
     version: 1
+  word_blocker_exact:
+    filename: 'word-blocker-exact'
+    version: RDF2vec

@@ -2,7 +2,8 @@ from typing import List, Tuple, Dict
 import numpy as np
 import torch
 from torch.utils.data import Dataset
-from impl.dbpedia.resource import DbpResource, DbpResourceStore
+import utils
+from impl.dbpedia.resource import DbpResource
 from entity_linking.preprocessing.blocking import WordBlocker
 from impl.util.rdf import EntityIndex
 
@@ -97,9 +98,7 @@ def _process_entity_info(entity_info: List[List[Tuple[int, Tuple[int, int], list
     entity_labels = np.ones((num_chunks, num_ents)) * -100  # initialize all with label: ignore
     ents_per_item = num_ents // items_per_chunk
     # prepare word blocker to retrieve entities with similar surface forms
-    dbr = DbpResourceStore.instance()
-    entity_surface_forms = {e_idx: dbr.get_resource_by_idx(e_idx).get_surface_forms() for e_idx in dbr.get_embedding_vectors()}
-    word_blocker = WordBlocker(entity_surface_forms)
+    word_blocker = utils.load_or_create_cache('word_blocker_exact', WordBlocker)
     # process entity info
     for chunk_idx, (chunk_entity_info, chunk_offset_mapping) in enumerate(zip(entity_info, offset_mapping)):
         # find start token of every word

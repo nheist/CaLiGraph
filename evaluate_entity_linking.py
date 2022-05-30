@@ -1,6 +1,10 @@
 import argparse
 import os
 
+
+# TODO: For final EL, make sure that extraction also works from list pages (they may not have an embedding vector)
+
+
 if __name__ == '__main__':
     # first parse all the arguments
     parser = argparse.ArgumentParser(description='Run the evaluation of entity linking.')
