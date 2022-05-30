@@ -22,7 +22,7 @@ def run_prediction(model_name: str, sample: int, epochs: int, batch_size: int, l
     ent_idx2emb = EntityIndexToEmbeddingMapper(ent_dim)
     model = TransformerForMentionEntityMatching(encoder, include_source_page, cls_predictor, ent_idx2emb, ent_dim, num_ents)
     # load data
-    dataset_version = f'MEM-s{sample}-ipc{items_per_chunk}-ne{num_ents}'
+    dataset_version = f'MEM-{model_name}-s{sample}-ipc{items_per_chunk}-ne{num_ents}'
     train_data, val_data = utils.load_or_create_cache('vector_prediction_training_data', lambda: _load_train_and_val_datasets(tokenizer, sample, items_per_chunk, num_ents), version=dataset_version)
     # run evaluation
     training_args = TrainingArguments(
