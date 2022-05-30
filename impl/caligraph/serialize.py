@@ -351,7 +351,7 @@ def _print_statistics(clgo, clge) -> str:
     listcat_parts_count = len({lc for t in clgo.get_types() for lc in t.get_associated_dbp_resources() if isinstance(lc, DbpListCategory)})
     leaf_types = {t for t in clgo.get_types() if not clgo.get_subtypes(t)}
     classtree_depth_avg = np.mean([t.get_depth() for t in leaf_types])
-    branching_factor_avg = np.mean([d for _, d in clgo.graph.out_degree if d > 0])
+    branching_factor_avg = np.mean([d for _, d in clgo.graph.graph.out_degree if d > 0])
     axiom_count = sum([len(node_axioms) for node_axioms in clge.get_all_axioms().values()])
     resource_axiom_count = len([ax for axioms in clge.get_all_axioms().values() for ax in axioms if isinstance(ax[1], ClgEntity)])
     literal_axiom_count = axiom_count - resource_axiom_count
