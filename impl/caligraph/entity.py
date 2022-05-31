@@ -288,7 +288,7 @@ class ClgEntityStore:
 
     def get_axioms(self, clg_type: ClgType, transitive=False) -> Set[Tuple[ClgPredicate, Any]]:
         if transitive:
-            return {a for t in self.clgo.get_transitive_supertypes(include_self=True) for a in self.axioms[t]}
+            return {a for t in self.clgo.get_transitive_supertypes(clg_type, include_self=True) for a in self.axioms[t]}
         return self.axioms[clg_type]
 
     def get_axiom_properties(self, ent: ClgEntity) -> Dict[ClgPredicate, set]:
