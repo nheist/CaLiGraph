@@ -13,7 +13,7 @@ from entity_linking.data.entity_prediction import prepare_dataset
 from entity_linking.evaluation.entity_prediction import EntityPredictionEvaluator
 
 
-APPROACH = 'EPv2'
+APPROACH = 'EPv1'
 
 
 def run_prediction(model_name: str, sample: int, epochs: int, batch_size: int, loss: str, learning_rate: float, warmup_steps: int, weight_decay: float, num_ents: int, ent_dim: int, items_per_chunk: int, cls_predictor: bool, include_source_page: bool):

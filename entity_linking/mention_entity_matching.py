@@ -13,7 +13,7 @@ from entity_linking.data.mention_entity_matching import prepare_dataset
 from entity_linking.evaluation.mention_entity_matching import MentionEntityMatchingEvaluator
 
 
-APPROACH = 'MEMv2'
+APPROACH = 'MEMv1'
 
 
 def run_prediction(model_name: str, sample: int, epochs: int, batch_size: int, learning_rate: float, warmup_steps: int, weight_decay: float, num_ents: int, ent_dim: int, items_per_chunk: int, cls_predictor: bool, include_source_page: bool):
