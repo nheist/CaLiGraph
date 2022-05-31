@@ -79,9 +79,9 @@ def _load_train_and_val_datasets(tokenizer, sample: int, items_per_chunk: int, n
 def _filter_listings_without_known_ents(page_content: dict) -> Optional[dict]:
     has_ents = False
     for s in page_content['sections']:
-        valid_enums = [enum for enum in s['enums'] if any('subject_entity' in entry and entry['subject_entity'] != EntityIndex.NEW_ENTITY for entry in enum)]
+        valid_enums = [enum for enum in s['enums'] if any('subject_entity' in entry and entry['subject_entity']['idx'] != EntityIndex.NEW_ENTITY for entry in enum)]
         s['enums'] = valid_enums
-        valid_tables = [t for t in s['tables'] if any('subject_entity' in cell and cell['subject_entity'] != EntityIndex.NEW_ENTITY for row in t['data'] for cell in row)]
+        valid_tables = [t for t in s['tables'] if any('subject_entity' in cell and cell['subject_entity']['idx'] != EntityIndex.NEW_ENTITY for row in t['data'] for cell in row)]
         s['tables'] = valid_tables
         if valid_enums or valid_tables:
             has_ents = True
