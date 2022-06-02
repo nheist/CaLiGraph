@@ -3,7 +3,7 @@ from torch import nn
 from entity_linking.preprocessing.embeddings import EntityIndexToEmbeddingMapper
 
 
-class TransformerForMentionEntityMatching(nn.Module):
+class MentionEntityCrossEncoder(nn.Module):
     """
     num_ents: number of entities in a sequence that can be identified
     ent_dim: dimension of DBpedia/CaLiGraph entity embeddings

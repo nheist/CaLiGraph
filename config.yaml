@@ -260,8 +260,8 @@ cache:
     filename: 'listing-page-entities'
     version: 1
 
-  vector_prediction_training_data:
-    filename: 'vector-prediction-training_data'
+  entity_linking_training_data:
+    filename: 'entity-linking-training-data'
     version: 1
   word_blocker_exact:
     filename: 'word-blocker-exact'

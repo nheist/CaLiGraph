@@ -3,7 +3,7 @@ from torch import nn
 from entity_linking.preprocessing.embeddings import EntityIndexToEmbeddingMapper
 
 
-class TransformerForEntityPrediction(nn.Module):
+class MentionBiEncoder(nn.Module):
     """
     num_ents: number of entities in a sequence that can be identified
     ent_dim: dimension of DBpedia/CaLiGraph entity embeddings
@@ -70,15 +70,15 @@ class TransformerForEntityPrediction(nn.Module):
                 case 'NPAIR':
                     loss_fct = nn.CrossEntropyLoss(reduction='sum')
                     entity_logits = entity_vectors.view(-1, self.ent_dim) @ label_entity_vectors.view(-1, self.ent_dim).T  # (bs*num_ents, bs*num_ents)
-                    # compute loss for positive/known entities only (negative entities have status < 0)
-                    known_entity_mask = entity_status.ge(0).view(-1)  # (bs*num_ents)
-                    targets = torch.arange(len(known_entity_mask), device=known_entity_mask.device)  # (bs*num_ents)
-                    targets[~known_entity_mask] = loss_fct.ignore_index
+                    # compute loss for positive/seen entities only (negative entities have status < 0)
+                    seen_entity_mask = entity_status.ge(0).view(-1)  # (bs*num_ents)
+                    targets = torch.arange(len(seen_entity_mask), device=seen_entity_mask.device)  # (bs*num_ents)
+                    targets[~seen_entity_mask] = loss_fct.ignore_index
                     loss = torch.nan_to_num(loss_fct(entity_logits, targets))
                 case 'MSE':
                     loss_fct = nn.MSELoss(reduction='sum')
-                    known_entity_mask = entity_status.ge(0)  # (bs, num_ents)
-                    loss = loss_fct(entity_vectors[known_entity_mask], label_entity_vectors[known_entity_mask])
+                    seen_entity_mask = entity_status.ge(0)  # (bs, num_ents)
+                    loss = loss_fct(entity_vectors[seen_entity_mask], label_entity_vectors[seen_entity_mask])
                 case _:
                     raise ValueError(f'Invalid type of loss: {self.loss}')
 
