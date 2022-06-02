@@ -1,6 +1,6 @@
 """Functionality for parsing Wikipedia pages from WikiText."""
 
-from typing import Tuple, Optional, Dict
+from typing import Tuple, Optional, Dict, Set
 import wikitextparser as wtp
 from wikitextparser import WikiText
 import impl.util.nlp as nlp_util
@@ -70,9 +70,10 @@ def _parse_page(resource_and_markup: Tuple[DbpResource, str]) -> Tuple[DbpResour
 
     # prepare markup for parsing
     page_markup = page_markup.replace('&nbsp;', ' ')  # replace html whitespaces
-    page_markup = page_markup.replace('<br/>', '\n')  # replace html line breaks
-    page_markup = page_markup.replace('<br>', '\n')  # replace html line breaks
-    page_markup = re.sub(r'<ref>.*?</ref>', '', page_markup)
+    page_markup = page_markup.replace('<br />', ' ')  # replace html line breaks
+    page_markup = page_markup.replace('<br/>', ' ')
+    page_markup = page_markup.replace('<br>', ' ')
+    page_markup = re.sub(r'<ref>.*?</ref>', '', page_markup)  # remove ref markers
     page_markup = re.sub(r'<ref[^>]*?/>', '', page_markup)
     page_markup = re.sub(r"'{2,}", '', page_markup)  # remove bold and italic markers
 
@@ -134,6 +135,12 @@ def _remove_enums_within_tables(wiki_text: WikiText) -> WikiText:
 def _expand_wikilinks(wiki_text: WikiText, resource: DbpResource) -> WikiText:
     text_to_wikilink = {wl.text or wl.target: wl.string for wl in wiki_text.wikilinks if is_entity_name(label2name(wl.target))}
     text_to_wikilink[resource.get_label()] = f'[[{resource.name}]]'  # replace mentions of the page title with a link to it
+    # discard wikilinks that have text which is fully contained in other wikilinks to avoid nested wikilinks
+    wikilinks_words = [_get_alphanum_words(wl.text) for wl in wiki_text.wikilinks if wl.text] + [_get_alphanum_words(wl.target) for wl in wiki_text.wikilinks if wl.target]
+    # if the words of a wikilink are a proper subset of the words of another wikilink, we discard it
+    # (if the sets are equal, then we are most likely looking at the words of the entity itself; this case is handled in the look-ahead of the regex)
+    text_to_wikilink = {text: wl for text, wl in text_to_wikilink.items() if not any(_get_alphanum_words(text) < wl_words for wl_words in wikilinks_words)}
+    # replace text with wikilinks
     pattern_to_wikilink = {r'(?<![|\[])\b' + re.escape(text) + r'\b(?![|\]])': wl for text, wl in text_to_wikilink.items()}
     regex = re.compile("|".join(pattern_to_wikilink.keys()))
     try:
@@ -143,6 +150,10 @@ def _expand_wikilinks(wiki_text: WikiText, resource: DbpResource) -> WikiText:
         if type(e) in [KeyboardInterrupt, ParsingTimeoutException]:
             raise e
         return wiki_text
+
+
+def _get_alphanum_words(text: str) -> Set[str]:
+    return set(re.sub(r'[^a-zA-Z0-9_ ]+', '', text).split())
 
 
 def _extract_sections(wiki_text: WikiText) -> list:
@@ -220,7 +231,6 @@ def _convert_markup(wiki_text: str) -> Tuple[str, list]:
     # preprocess markup text
     parsed_text = wtp.parse(wiki_text)
     parsed_text = _remove_file_wikilinks(parsed_text)
-    parsed_text = _remove_inner_wikilinks(parsed_text)
     parsed_text = _convert_sortname_templates(parsed_text)
 
     plain_text = wmp.wikitext_to_plaintext(parsed_text).strip()
@@ -255,16 +265,6 @@ def _remove_file_wikilinks(parsed_text: wtp.WikiText) -> wtp.WikiText:
     for wl in reversed(parsed_text.wikilinks):
         if wl.string.startswith(('[[File:', '[[Image:')):
             parsed_text[slice(*wl.span)] = ''
-    return parsed_text
-
-
-def _remove_inner_wikilinks(parsed_text: wtp.WikiText) -> wtp.WikiText:
-    """Remove inner wikilinks that might have been created by wikilink-expansion."""
-    for wikilink in parsed_text.wikilinks:
-        if not wikilink or not wikilink.string.startswith('[['):
-            continue
-        for wl in reversed(wikilink.wikilinks):
-            parsed_text[slice(*wl.span)] = wl.text or wl.target
     return parsed_text
 
 
