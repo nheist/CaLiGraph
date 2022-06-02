@@ -69,7 +69,8 @@ class MentionEntityCrossEncoder(nn.Module):
         loss = None
         if labels is not None:
             label_mask = labels.ge(0)  # all labels smaller than 0 are invalid and should be ignored
-            loss = nn.BCELoss(reduction='sum')(predictions[label_mask], labels[label_mask])
+            # TODO: Experiment with pos_weight
+            loss = nn.BCEWithLogitsLoss(reduction='sum')(logits[label_mask], labels[label_mask])
 
         return (predictions,) if labels is None else (loss, predictions)
 
