@@ -8,7 +8,7 @@ import os
 if __name__ == '__main__':
     # first parse all the arguments
     parser = argparse.ArgumentParser(description='Run the evaluation of entity linking.')
-    parser.add_argument('gpu', choices=[str(g) for g in range(8)], help='Number of GPU to use')
+    parser.add_argument('gpu', type=int, choices=range(8), help='Number of GPU to use')
     parser.add_argument('type', choices=['EP', 'MEM'], help='Type of prediction')
     parser.add_argument('model_name', help='Huggingface Transformer model used for prediction')
     parser.add_argument('-s', '--sample', type=int, default=20, help='Percentage of dataset used')
@@ -23,6 +23,7 @@ if __name__ == '__main__':
     parser.add_argument('-ipc', '--items_per_chunk', type=int, default=16, help='Maximum number of items in a chunk')
     parser.add_argument('-cp', '--cls_predictor', action='store_true', help='Use CLS token as mention embedding')
     parser.add_argument('-isp', '--include_source_page', action='store_false', help='Add embedding of page as feature for prediction')
+    parser.add_argument('-v', '--version', default='1', help='Current version of dataset')
     args = parser.parse_args()
     # then set necessary environment variables
     os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
@@ -42,10 +43,10 @@ if __name__ == '__main__':
         assert args.items_per_chunk == 1, 'Can only evaluate a single item at once if using CLS token as mention vector'
     match args.type:
         case 'MEM':
-            mem.run_prediction(args.model_name, args.sample, args.epochs, args.batch_size, args.learning_rate,
-                               args.warmup_steps, args.weight_decay, args.num_ents, args.ent_dim, args.items_per_chunk,
-                               args.cls_predictor, args.include_source_page)
+            mem.run_prediction(args.version, args.model_name, args.sample, args.epochs, args.batch_size,
+                               args.learning_rate, args.warmup_steps, args.weight_decay, args.num_ents, args.ent_dim,
+                               args.items_per_chunk, args.cls_predictor, args.include_source_page)
         case 'EP':
-            ep.run_prediction(args.model_name, args.sample, args.epochs, args.batch_size, args.loss, args.learning_rate,
-                              args.warmup_steps, args.weight_decay, args.num_ents, args.ent_dim, args.items_per_chunk,
-                              args.cls_predictor, args.include_source_page)
+            ep.run_prediction(args.version, args.model_name, args.sample, args.epochs, args.batch_size, args.loss,
+                              args.learning_rate, args.warmup_steps, args.weight_decay, args.num_ents, args.ent_dim,
+                              args.items_per_chunk, args.cls_predictor, args.include_source_page)

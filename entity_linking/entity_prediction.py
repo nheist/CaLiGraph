@@ -9,11 +9,8 @@ from entity_linking.model.mention_biencoder import MentionBiEncoder
 from entity_linking.evaluation.entity_prediction import EntityPredictionEvaluator
 
 
-APPROACH = 'EPv1'
-
-
-def run_prediction(model_name: str, sample: int, epochs: int, batch_size: int, loss: str, learning_rate: float, warmup_steps: int, weight_decay: float, num_ents: int, ent_dim: int, items_per_chunk: int, cls_predictor: bool, include_source_page: bool):
-    run_id = f'{APPROACH}_{model_name}_s-{sample}_ipc-{items_per_chunk}_ne-{num_ents}_isp-{include_source_page}_cp-{cls_predictor}_ed-{ent_dim}_e-{epochs}_bs-{batch_size}_loss-{loss}_lr-{learning_rate}_ws-{warmup_steps}_wd-{weight_decay}'
+def run_prediction(version: str, model_name: str, sample: int, epochs: int, batch_size: int, loss: str, learning_rate: float, warmup_steps: int, weight_decay: float, num_ents: int, ent_dim: int, items_per_chunk: int, cls_predictor: bool, include_source_page: bool):
+    run_id = f'EPv{version}_{model_name}_s-{sample}_ipc-{items_per_chunk}_ne-{num_ents}_isp-{include_source_page}_cp-{cls_predictor}_ed-{ent_dim}_e-{epochs}_bs-{batch_size}_loss-{loss}_lr-{learning_rate}_ws-{warmup_steps}_wd-{weight_decay}'
     # prepare tokenizer and model
     tokenizer = AutoTokenizer.from_pretrained(model_name, add_prefix_space=True, additional_special_tokens=list(WordTokenizerSpecialToken.all_tokens()))
     encoder = AutoModel.from_pretrained(model_name)
@@ -21,7 +18,7 @@ def run_prediction(model_name: str, sample: int, epochs: int, batch_size: int, l
     ent_idx2emb = EntityIndexToEmbeddingMapper(ent_dim)
     model = MentionBiEncoder(encoder, include_source_page, cls_predictor, ent_idx2emb, ent_dim, num_ents, loss)
     # load data
-    dataset_version = f'{APPROACH}-{model_name}-s{sample}-ipc{items_per_chunk}-ne{num_ents}'
+    dataset_version = f'EPv{version}-{model_name}-s{sample}-ipc{items_per_chunk}-ne{num_ents}'
     train_data, val_data = utils.load_or_create_cache('entity_linking_training_data', lambda: _load_train_and_val_datasets(tokenizer, sample, items_per_chunk, num_ents), version=dataset_version)
     # run evaluation
     training_args = TrainingArguments(
