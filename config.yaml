@@ -260,6 +260,9 @@ cache:
     filename: 'listing-page-entities'
     version: 1
 
+  entity_linking_pages:
+    filename: 'entity-linking-pages'
+    version: 1
   entity_linking_training_data:
     filename: 'entity-linking-training-data'
     version: 1
