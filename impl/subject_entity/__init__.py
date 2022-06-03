@@ -10,19 +10,19 @@ import torch
 from impl.dbpedia.resource import DbpResource, DbpListpage
 
 
-def get_page_subject_entities() -> Dict[DbpResource, dict]:
+def get_page_subject_entities() -> Dict[int, dict]:
     """Retrieve the extracted entities per page with context."""
-    # TODO: merge retrieval and combine step => add disambiguation of *ALL* entities during retrieval
+    # TODO: discard matched entities without types to filter out invalid ones
     return combine.match_entities_with_uris(_get_subject_entity_predictions())
 
 
-def _get_subject_entity_predictions() -> Dict[DbpResource, dict]:
+def _get_subject_entity_predictions() -> Dict[int, dict]:
     return defaultdict(dict, utils.load_or_create_cache('subject_entity_predictions', _make_subject_entity_predictions))
 
 
-def _make_subject_entity_predictions() -> Dict[DbpResource, dict]:
+def _make_subject_entity_predictions() -> Dict[int, dict]:
     tokenizer, model = extract.get_tagging_tokenizer_and_model(_get_training_data)
-    predictions = {r: extract.extract_subject_entities(chunks, tokenizer, model) for r, chunks in tqdm(_get_page_data().items(), desc='Predicting subject entities')}
+    predictions = {page_idx: extract.extract_subject_entities(chunks, tokenizer, model) for page_idx, chunks in tqdm(_get_page_data().items(), desc='Predicting subject entities')}
     torch.cuda.empty_cache()  # flush GPU cache to free GPU for other purposes
     return predictions
 
@@ -38,12 +38,12 @@ def _get_training_data() -> Tuple[List[List[str]], List[List[str]]]:
     return tokens, labels
 
 
-def _get_tokenized_list_pages_with_entity_labels() -> Dict[DbpResource, Tuple[list, list, list]]:
-    lps_with_content = {res: content for res, content in wikipedia.get_parsed_pages().items() if isinstance(res, DbpListpage) and content}
-    entity_labels = {lp: heuristics.find_subject_entities_for_listpage(lp, content) for lp, content in lps_with_content.items()}
-    return WordTokenizer()(lps_with_content, entity_labels=entity_labels)
+def _get_tokenized_list_pages_with_entity_labels() -> Dict[int, Tuple[list, list, list]]:
+    wikipedia_listpages = [wp for wp in wikipedia.get_wikipedia_pages() if isinstance(wp.resource, DbpListpage)]
+    entity_labels = {wp.idx: heuristics.find_subject_entities_for_listpage(wp) for wp in wikipedia_listpages}
+    return WordTokenizer()(wikipedia_listpages, entity_labels=entity_labels)
 
 
 def _get_page_data() -> Dict[DbpResource, Tuple[list, list]]:
-    initializer = lambda: WordTokenizer()(wikipedia.get_parsed_pages())
+    initializer = lambda: WordTokenizer()(wikipedia.get_wikipedia_pages())
     return utils.load_or_create_cache('subject_entity_page_data', initializer)

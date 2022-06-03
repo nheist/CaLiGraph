@@ -11,7 +11,6 @@ if __name__ == '__main__':
     parser.add_argument('gpu', type=int, choices=range(8), help='Number of GPU to use')
     parser.add_argument('type', choices=['EP', 'MEM'], help='Type of prediction')
     parser.add_argument('model_name', help='Huggingface Transformer model used for prediction')
-    parser.add_argument('-s', '--sample', type=int, default=20, help='Percentage of dataset used')
     parser.add_argument('-e', '--epochs', type=int, default=5, help='Epochs to train')
     parser.add_argument('-bs', '--batch_size', type=int, default=32, help='Batch size used in train/eval')
     parser.add_argument('-l', '--loss', type=str, default='NPAIR', choices=['NPAIR', 'MSE'], help='Loss used in train/eval')
@@ -43,10 +42,10 @@ if __name__ == '__main__':
         assert args.items_per_chunk == 1, 'Can only evaluate a single item at once if using CLS token as mention vector'
     match args.type:
         case 'MEM':
-            mem.run_prediction(args.version, args.model_name, args.sample, args.epochs, args.batch_size,
+            mem.run_prediction(args.version, args.model_name, args.epochs, args.batch_size,
                                args.learning_rate, args.warmup_steps, args.weight_decay, args.num_ents, args.ent_dim,
                                args.items_per_chunk, args.cls_predictor, args.include_source_page)
         case 'EP':
-            ep.run_prediction(args.version, args.model_name, args.sample, args.epochs, args.batch_size, args.loss,
+            ep.run_prediction(args.version, args.model_name, args.epochs, args.batch_size, args.loss,
                               args.learning_rate, args.warmup_steps, args.weight_decay, args.num_ents, args.ent_dim,
                               args.items_per_chunk, args.cls_predictor, args.include_source_page)

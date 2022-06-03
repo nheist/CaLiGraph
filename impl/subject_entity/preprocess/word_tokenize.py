@@ -1,4 +1,4 @@
-from typing import Tuple, List, Optional, Set, Dict
+from typing import Tuple, List, Set, Dict
 from tqdm import tqdm
 from spacy.lang.en import English
 from collections import defaultdict
@@ -7,6 +7,7 @@ import multiprocessing as mp
 import utils
 import impl.util.spacy.listing_parser as list_nlp
 import impl.wikipedia.wikimarkup_parser as wmp
+from impl.wikipedia import WikipediaPage
 from impl.dbpedia.resource import DbpResource
 from impl.util.rdf import EntityIndex
 
@@ -55,45 +56,44 @@ class WordTokenizer:
         self.meta_sections = {'see also', 'external links', 'references', 'notes', 'further reading', 'bibliography'}
         self.max_tokens_per_item = 30
 
-    def __call__(self, pages: Dict[DbpResource, dict], entity_labels: Dict[DbpResource, Tuple[Set[int], Set[int]]] = None) -> Dict[DbpResource, Tuple[list, list, list]]:
+    def __call__(self, wiki_pages: List[WikipediaPage], entity_labels: Dict[int, Tuple[Set[int], Set[int]]] = None) -> Dict[int, Tuple[list, list, list]]:
         if entity_labels:
             n_processes = utils.get_config('max_cpus') // 2
-            # discard pages without labels
-            pages = {res: page_data for res, page_data in pages.items() if entity_labels[res][0] | entity_labels[res][1]}
+            wiki_pages = {wp for wp in wiki_pages if entity_labels[wp.idx][0] | entity_labels[wp.idx][1]}  # discard pages without labels
         else:
             n_processes = 2
             entity_labels = defaultdict(lambda: (set(), set()))
 
         def page_with_labels_iterator():
-            for res, page_data in pages.items():
-                yield res, page_data, entity_labels[res]
-        page_items = tqdm(page_with_labels_iterator(), total=len(pages), desc='Tokenize Pages')
+            for wp in wiki_pages:
+                yield wp, entity_labels[wp.idx]
+        page_items = tqdm(page_with_labels_iterator(), total=len(wiki_pages), desc='Tokenize Pages')
         with mp.Pool(processes=n_processes) as pool:
-            return {res: tokens for res, tokens in pool.imap_unordered(self._tokenize_page, page_items, chunksize=1000) if tokens[0]}
+            return {idx: tokens for idx, tokens in pool.imap_unordered(self._tokenize_page, page_items, chunksize=1000) if tokens[0]}
 
-    def _tokenize_page(self, params: Tuple[DbpResource, dict, Tuple[Set[int], Set[int]]]) -> Tuple[DbpResource, Tuple[list, list, list]]:
+    def _tokenize_page(self, params: Tuple[WikipediaPage, Tuple[Set[int], Set[int]]]) -> Tuple[int, Tuple[list, list, list]]:
         """Take a resource and return list of (tokens, ws, entities) chunks."""
-        res, page_data, page_labels = params
+        wp, page_labels = params
         page_tokens, page_ws, page_ents = [], [], []
 
         top_section_name = ''
-        for section_data in page_data['sections']:
+        for section_data in wp.sections:
             section_name = section_data['name']
             top_section_name = section_name if section_data['level'] <= 2 else top_section_name
             if top_section_name.lower() in self.meta_sections:
                 continue  # skip meta sections
             for enum_data in section_data['enums']:
-                listing_tokens, listing_ws, listing_ents = self._tokenize_listing(res, top_section_name, section_name, enum_data, page_labels)
+                listing_tokens, listing_ws, listing_ents = self._tokenize_listing(wp.resource, top_section_name, section_name, enum_data, page_labels)
                 page_tokens.extend(listing_tokens)
                 page_ws.extend(listing_ws)
                 page_ents.extend(listing_ents)
             for table in section_data['tables']:
                 table_header, table_data = table['header'], table['data']
-                listing_tokens, listing_ws, listing_ents = self._tokenize_listing(res, top_section_name, section_name, table_data, page_labels, table_header)
+                listing_tokens, listing_ws, listing_ents = self._tokenize_listing(wp.resource, top_section_name, section_name, table_data, page_labels, table_header)
                 page_tokens.extend(listing_tokens)
                 page_ws.extend(listing_ws)
                 page_ents.extend(listing_ents)
-        return res, (page_tokens, page_ws, page_ents)
+        return wp.idx, (page_tokens, page_ws, page_ents)
 
     def _tokenize_listing(self, res: DbpResource, top_section: str, section: str, listing_data: list, page_labels: Tuple[set, set], table_header=None) -> Tuple[list, list, list]:
         ctx_tokens, ctx_ws, ctx_ents = self._context_to_tokens([res.get_label(), top_section, section], table_header)
@@ -192,9 +192,8 @@ class WordTokenizer:
             row_entity_indices = set()
             has_untagged_entities = False
             for cell_idx, cell in enumerate(row):
-                cell_entities = list(cell['entities'])
-                row_entity_indices.update({e['idx'] for e in cell_entities})
-                has_untagged_entities = has_untagged_entities or self._has_untagged_entities(cell_docs[cell_idx], cell_entities)
+                row_entity_indices.update({e['idx'] for e in cell['entities']})
+                has_untagged_entities = has_untagged_entities or self._has_untagged_entities(cell_docs[cell_idx], cell['entities'])
             has_valid_entities = len(row_entity_indices.intersection(valid_ents)) > 0
             has_unclear_entities = has_untagged_entities or not row_entity_indices.issubset(invalid_ents)
             if not has_valid_entities and has_unclear_entities:

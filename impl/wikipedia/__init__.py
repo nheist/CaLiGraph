@@ -1,15 +1,15 @@
+from typing import Dict, Tuple, Set, List
 from collections import defaultdict
 import utils
 from .nif_parser import extract_wiki_corpus_resources
 from .xml_parser import _parse_raw_markup_from_xml
-from .page_parser import _parse_pages, PageType
+from .page_parser import _parse_pages, WikipediaPage
 from .category_parser import _extract_parent_categories_from_markup
 from impl.dbpedia.resource import DbpResourceStore, DbpResource, DbpFile
-from typing import Dict, Tuple, Set, Optional
 from impl.util.rdf import Namespace
 
 
-def get_parsed_pages() -> Dict[DbpResource, Optional[dict]]:
+def get_wikipedia_pages() -> List[WikipediaPage]:
     initializer = lambda: _parse_pages(_get_raw_pages_from_xml())
     return utils.load_or_create_cache('wikipedia_parsed_pages', initializer)
 

@@ -30,12 +30,12 @@ class MentionEntityMatchingDataset(Dataset):
         return len(self.entity_indices)
 
 
-def prepare_dataset(page_data: Dict[DbpResource, Tuple[list, list, list]], tokenizer, num_ents: int, items_per_chunk: int):
+def prepare_dataset(page_data: Dict[int, Tuple[list, list, list]], tokenizer, num_ents: int, items_per_chunk: int):
     tokens, labels, source_pages = [], [], []
-    for res, (token_chunks, _, entity_chunks) in page_data.items():
+    for res_idx, (token_chunks, _, entity_chunks) in page_data.items():
         tokens.extend(token_chunks)
         labels.extend(entity_chunks)
-        source_pages.extend([res.idx] * len(token_chunks))
+        source_pages.extend([res_idx] * len(token_chunks))
 
     entity_info = _collect_entity_info(tokens, labels)
     tokens, entity_info, source_pages = _filter_truncated_entities(tokens, entity_info, source_pages, tokenizer)

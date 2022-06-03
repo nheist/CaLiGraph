@@ -81,13 +81,13 @@ class ClgEntityStore:
         max_idx = max(e.idx for e in all_entities)
         # initialize new entities from subject entities on pages
         page_occurrence_data = defaultdict(set)
-        for res, entities_per_ts in subject_entity.get_page_subject_entities().items():
+        for res_idx, entities_per_ts in subject_entity.get_page_subject_entities().items():
             for ts, entities_per_s in entities_per_ts.items():
                 for s, entities in entities_per_s.items():
                     for ent_name, ent_data in entities.items():
                         ts_ent = ent_data['TS_entidx'] if ent_data['TS_entidx'] is not None else EntityIndex.NO_ENTITY.value
                         s_ent = ent_data['S_entidx'] if ent_data['S_entidx'] is not None else EntityIndex.NO_ENTITY.value
-                        page_occurrence_data[ent_name].add((res.idx, ts, ts_ent, s, s_ent, ent_data['text'], ent_data['tag']))
+                        page_occurrence_data[ent_name].add((res_idx, ts, ts_ent, s, s_ent, ent_data['text'], ent_data['tag']))
         new_entity_names = set(page_occurrence_data).difference({e.name for e in all_entities})
         for idx, ent_name in enumerate(new_entity_names, start=max_idx + 1):
             all_entities.append(ClgEntity(idx, ent_name, False))

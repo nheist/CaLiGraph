@@ -1,10 +1,10 @@
 """Functionality for parsing Wikipedia pages from WikiText."""
 
-from typing import Tuple, Optional, Dict, Set
+from typing import Tuple, Optional, Dict, Set, List
 import wikitextparser as wtp
 from wikitextparser import WikiText
 import impl.util.nlp as nlp_util
-from impl.util.rdf import Namespace, label2name
+from impl.util.rdf import Namespace, EntityIndex, label2name
 from impl.dbpedia.util import is_entity_name
 from . import wikimarkup_parser as wmp
 import re
@@ -13,7 +13,6 @@ import utils
 from utils import get_logger
 from tqdm import tqdm
 import multiprocessing as mp
-from enum import Enum
 from impl.dbpedia.resource import DbpResource, DbpResourceStore
 
 
@@ -21,53 +20,89 @@ LISTING_INDICATORS = ('*', '#', '{|')
 VALID_ENUM_PATTERNS = (r'\#', r'\*')
 
 
-class PageType(Enum):
-    ENUM = 'enumeration'
-    TABLE = 'table'
+class WikipediaPage:
+    idx: int
+    resource: DbpResource
+    sections: List[dict]
+
+    def __init__(self, resource: DbpResource, sections: List[dict]):
+        self.idx = resource.idx
+        self.resource = resource
+        self.sections = sections
+
+    def has_listings(self) -> bool:
+        return len(self.get_enums()) > 0 or len(self.get_tables()) > 0
+
+    def get_enums(self) -> List[list]:
+        return [enum for s in self.sections for enum in s['enums']]
+
+    def get_tables(self) -> List[dict]:
+        return [table for s in self.sections for table in s['tables']]
+
+    def get_listing_entities(self) -> Set[DbpResource]:
+        dbr = DbpResourceStore.instance()
+        entity_indices = {ent['idx'] for enum in self.get_enums() for entry in enum for ent in entry['entities']} |\
+                         {ent['idx'] for table in self.get_tables() for row in table['data'] for cell in row for ent in cell['entities']}
+        return {dbr.get_resource_by_idx(idx) for idx in entity_indices if idx != EntityIndex.NEW_ENTITY.value}
+
+    def discard_listings_without_seen_entities(self):
+        # discard listings that either do not have any subject entities or only unseen subject entities
+        for s in self.sections:
+            s['enums'] = [enum for enum in s['enums'] if any('subject_entity' in entry and entry['subject_entity']['idx'] != EntityIndex.NEW_ENTITY.value for entry in enum)]
+            s['tables'] = [t for t in s['tables'] if any('subject_entity' in cell and cell['subject_entity']['idx'] != EntityIndex.NEW_ENTITY.value for row in t['data'] for cell in row)]
+
+    def get_subject_entity_indices(self) -> Set[int]:
+        return {entry['subject_entity']['idx'] for enum in self.get_enums() for entry in enum if 'subject_entity' in entry} |\
+               {cell['subject_entity']['idx'] for table in self.get_tables() for row in table['data'] for cell in row if 'subject_entity' in cell}
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        del state['resource']  # do not persist DbpResource directly, but recover it from idx
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        self.resource = DbpResourceStore.instance().get_resource_by_idx(self.idx)
 
 
-def _parse_pages(pages_markup: Dict[DbpResource, str]) -> Dict[DbpResource, Optional[dict]]:
+def _parse_pages(pages_markup: Dict[DbpResource, str]) -> List[WikipediaPage]:
     # warm up caches before going into multiprocessing
     dbr = DbpResourceStore.instance()
     res = dbr.get_resource_by_idx(0)
     dbr.get_label(res)
     dbr.resolve_redirect(res)
 
-    parsed_pages = {}
+    wikipedia_pages = []
     with mp.Pool(processes=utils.get_config('max_cpus')) as pool:
-        for r, parsed in tqdm(pool.imap_unordered(_parse_page_with_timeout, pages_markup.items(), chunksize=1000), total=len(pages_markup), desc='wikipedia/page_parser: Parsing pages'):
-            if parsed:
-                parsed_pages[r] = parsed
-            pages_markup[r] = ''  # discard markup after parsing to free memory
-    return parsed_pages
+        for wp in tqdm(pool.imap_unordered(_parse_page_with_timeout, pages_markup.items(), chunksize=1000), total=len(pages_markup), desc='wikipedia/page_parser: Parsing pages'):
+            if wp.has_listings():
+                wikipedia_pages.append(wp)
+            pages_markup[wp.resource] = ''  # discard markup after parsing to free memory
+    return wikipedia_pages
 
 
-def _parse_page_with_timeout(resource_and_markup: Tuple[DbpResource, str]) -> Tuple[DbpResource, Optional[dict]]:
-    """Return a single parsed page in the following hierarchical structure:
-
-    Sections > Enums > Entries > Entities
-    Sections > Tables > Rows > Columns > Entities
-    """
+def _parse_page_with_timeout(resource_and_markup: Tuple[DbpResource, str]) -> WikipediaPage:
+    """Return the parsed wikipedia page (with empty content, if parsing has timed out)"""
     signal.signal(signal.SIGALRM, _timeout_handler)
     signal.alarm(5 * 60)  # timeout of 5 minutes per page
 
     resource = resource_and_markup[0]
     try:
-        result = _parse_page(resource_and_markup)
+        wp = _parse_page(resource_and_markup)
         signal.alarm(0)  # reset alarm as parsing was successful
-        return result
+        return wp
     except Exception as e:
         if type(e) == KeyboardInterrupt:
             raise e
         get_logger().error(f'Failed to parse page {resource.name}: {e}')
-        return resource, None
+        return WikipediaPage(resource, [])
 
 
-def _parse_page(resource_and_markup: Tuple[DbpResource, str]) -> Tuple[DbpResource, Optional[dict]]:
+def _parse_page(resource_and_markup: Tuple[DbpResource, str]) -> WikipediaPage:
     resource, page_markup = resource_and_markup
+    wp = WikipediaPage(resource, [])
     if not any(indicator in page_markup for indicator in LISTING_INDICATORS):
-        return resource, None  # early return of 'None' if page contains no listings at all
-
+        return wp  # early return if page contains no listings at all
     # prepare markup for parsing
     page_markup = page_markup.replace('&nbsp;', ' ')  # replace html whitespaces
     page_markup = page_markup.replace('<br />', ' ')  # replace html line breaks
@@ -76,29 +111,19 @@ def _parse_page(resource_and_markup: Tuple[DbpResource, str]) -> Tuple[DbpResour
     page_markup = re.sub(r'<ref>.*?</ref>', '', page_markup)  # remove ref markers
     page_markup = re.sub(r'<ref[^>]*?/>', '', page_markup)
     page_markup = re.sub(r"'{2,}", '', page_markup)  # remove bold and italic markers
-
+    # early return if page is not useful
     wiki_text = wtp.parse(page_markup)
     if not _is_page_useful(wiki_text):
-        return resource, None
-
+        return wp
+    # clean and expand markup
     cleaned_wiki_text = _convert_special_enums(wiki_text)
     cleaned_wiki_text = _remove_enums_within_tables(cleaned_wiki_text)
     if not _is_page_useful(cleaned_wiki_text):
-        return resource, None
-
-    # expand wikilinks
+        return wp
     cleaned_wiki_text = _expand_wikilinks(cleaned_wiki_text, resource)
-
     # extract data from sections
-    sections = _extract_sections(cleaned_wiki_text)
-    types = set()
-    if any(len(s['enums']) > 0 for s in sections):
-        types.add(PageType.ENUM)
-    if any(len(s['tables']) > 0 for s in sections):
-        types.add(PageType.TABLE)
-    if not types:
-        return resource, None  # ignore pages without useful lists
-    return resource, {'sections': sections, 'types': types}
+    wp.sections = _extract_sections(cleaned_wiki_text)
+    return wp
 
 
 def _is_page_useful(wiki_text: WikiText) -> bool:
@@ -205,10 +230,7 @@ def _extract_table(table: wtp.Table) -> Optional[dict]:
         parsed_cells = []
         for cell in row:
             plaintext, entities = _convert_markup(str(cell))
-            parsed_cells.append({
-                'text': plaintext,
-                'entities': entities
-            })
+            parsed_cells.append({'text': plaintext, 'entities': entities})
         if _is_header_row(cells, row_idx):
             row_header = parsed_cells
         else:
