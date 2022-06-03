@@ -47,12 +47,13 @@ class WordTokenizerSpecialLabel(Enum):
 
 class WordTokenizer:
     """Takes parsed wiki markup and splits it into word tokens while preserving entity labels."""
-    def __init__(self, max_words_per_chunk: int = 256, max_items_per_chunk: int = 15, max_ents_per_item: int = 999):
+    def __init__(self, max_words_per_chunk: int = 300, max_items_per_chunk: int = 16, max_ents_per_item: int = 999):
         self.max_words_per_chunk = max_words_per_chunk
         self.max_items_per_chunk = max_items_per_chunk
         self.max_ents_per_item = max_ents_per_item
         self.word_tokenizer = English().tokenizer
         self.meta_sections = {'see also', 'external links', 'references', 'notes', 'further reading'}
+        self.max_tokens_per_item = 30
 
     def __call__(self, pages: Dict[DbpResource, dict], entity_labels: Dict[DbpResource, Tuple[Set[int], Set[int]]] = None) -> Dict[DbpResource, Tuple[list, list, list]]:
         if entity_labels:
@@ -231,6 +232,7 @@ class WordTokenizer:
 
     def _text_to_tokens(self, doc, entities: list) -> Tuple[list, list, list]:
         """Transforms a spacy doc and entity info to lists of tokens, whitespaces, and (potentially) entities."""
+        doc = doc[:self.max_tokens_per_item]
         if not entities:
             tokens = [w.text for w in doc]
             ws = [w.whitespace_ for w in doc]
