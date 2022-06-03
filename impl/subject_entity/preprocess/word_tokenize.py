@@ -52,7 +52,7 @@ class WordTokenizer:
         self.max_items_per_chunk = max_items_per_chunk
         self.max_ents_per_item = max_ents_per_item
         self.word_tokenizer = English().tokenizer
-        self.meta_sections = {'see also', 'external links', 'references', 'notes', 'further reading'}
+        self.meta_sections = {'see also', 'external links', 'references', 'notes', 'further reading', 'bibliography'}
         self.max_tokens_per_item = 30
 
     def __call__(self, pages: Dict[DbpResource, dict], entity_labels: Dict[DbpResource, Tuple[Set[int], Set[int]]] = None) -> Dict[DbpResource, Tuple[list, list, list]]:
