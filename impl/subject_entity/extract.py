@@ -38,16 +38,16 @@ def _extract_subject_entity_chunks(page_token_chunks: list, page_ws_chunks: list
     del inputs, outputs
 
     for word_tokens, word_token_ws, predictions, offsets in zip(page_token_chunks, page_ws_chunks, prediction_batches, offset_mapping):
-        topsection_name, section_name = _extract_context(word_tokens, word_token_ws)
+        topsection_name, section_name, context_end_idx = _extract_context(word_tokens, word_token_ws)
         # collect entity labels
         predictions = np.array(predictions)
         offsets = np.array(offsets)
         word_predictions = predictions[(offsets[:, 0] == 0) & (offsets[:, 1] != 0)]
-
+        # map predictions
         found_entity = False  # only predict one entity per row/entry
         current_entity_tokens = []
         current_entity_label = POSLabel.NONE.value
-        for token, token_ws, label in zip(word_tokens,  word_token_ws, word_predictions):
+        for token, token_ws, label in list(zip(word_tokens,  word_token_ws, word_predictions))[context_end_idx+1:]:
             if label == POSLabel.NONE.value or token in WordTokenizerSpecialToken.all_tokens():
                 if current_entity_tokens and not found_entity:
                     entity_name = _tokens2name(current_entity_tokens)
@@ -68,14 +68,15 @@ def _extract_subject_entity_chunks(page_token_chunks: list, page_ws_chunks: list
                 subject_entity_dict[topsection_name][section_name][entity_name] = current_entity_label
 
 
-def _extract_context(word_tokens: List[str], word_token_ws: List[str]) -> Tuple[str, str]:
+def _extract_context(word_tokens: List[str], word_token_ws: List[str]) -> Tuple[str, str, int]:
     ctx_tokens = []
     for i in range(word_tokens.index(WordTokenizerSpecialToken.CONTEXT_END.value)):
         ctx_tokens.extend([word_tokens[i], word_token_ws[i]])
     ctx_separators = [i for i, x in enumerate(ctx_tokens) if x == WordTokenizerSpecialToken.CONTEXT_SEP.value] + [len(ctx_tokens)]
     top_section_ctx = ctx_tokens[ctx_separators[0]+1:ctx_separators[1]]
     section_ctx = ctx_tokens[ctx_separators[1]+1:ctx_separators[2]]
-    return _tokens2name(top_section_ctx), _tokens2name(section_ctx)
+    context_end_idx = word_tokens.index(WordTokenizerSpecialToken.CONTEXT_END.value)
+    return _tokens2name(top_section_ctx), _tokens2name(section_ctx), context_end_idx
 
 
 def _tokens2name(entity_tokens: List[str]) -> str:
