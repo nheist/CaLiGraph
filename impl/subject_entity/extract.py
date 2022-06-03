@@ -67,6 +67,10 @@ def _extract_subject_entity_chunks(page_token_chunks: list, page_ws_chunks: list
             if _is_valid_entity_name(entity_name):
                 subject_entity_dict[topsection_name][section_name][entity_name] = current_entity_label
 
+    # discard single subject entities for sections
+    subject_entity_dict = {ts: {s: ents for s, ents in ents_per_section.items() if len(ents) > 1} for ts, ents_per_section in subject_entity_dict.items()}
+    subject_entity_dict = {ts: ents_per_section for ts, ents_per_section in subject_entity_dict.items() if ents_per_section}
+
 
 def _extract_context(word_tokens: List[str], word_token_ws: List[str]) -> Tuple[str, str, int]:
     ctx_tokens = []
