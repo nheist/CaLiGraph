@@ -1,6 +1,6 @@
 from typing import Tuple
 import utils
-from impl.subject_entity.preprocess.word_tokenize import WordTokenizerSpecialToken
+from impl.subject_entity.preprocess.word_tokenize import WordTokenizedSpecialToken
 from transformers import Trainer, IntervalStrategy, TrainingArguments, AutoTokenizer, AutoModel
 from entity_linking.data import prepare
 from entity_linking.data.mention_entity_matching import prepare_dataset, MentionEntityMatchingDataset
@@ -12,7 +12,7 @@ from entity_linking.evaluation.mention_entity_matching import MentionEntityMatch
 def run_prediction(version: str, model_name: str, epochs: int, batch_size: int, learning_rate: float, warmup_steps: int, weight_decay: float, num_ents: int, ent_dim: int, items_per_chunk: int, cls_predictor: bool, include_source_page: bool):
     run_id = f'MEMv{version}_{model_name}_ipc-{items_per_chunk}_ne-{num_ents}_isp-{include_source_page}_cp-{cls_predictor}_ed-{ent_dim}_e-{epochs}_bs-{batch_size}-{learning_rate}_ws-{warmup_steps}_wd-{weight_decay}'
     # prepare tokenizer and model
-    tokenizer = AutoTokenizer.from_pretrained(model_name, add_prefix_space=True, additional_special_tokens=list(WordTokenizerSpecialToken.all_tokens()))
+    tokenizer = AutoTokenizer.from_pretrained(model_name, add_prefix_space=True, additional_special_tokens=list(WordTokenizedSpecialToken.all_tokens()))
     encoder = AutoModel.from_pretrained(model_name)
     encoder.resize_token_embeddings(len(tokenizer))
     ent_idx2emb = EntityIndexToEmbeddingMapper(ent_dim)

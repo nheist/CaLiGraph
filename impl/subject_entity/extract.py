@@ -7,7 +7,7 @@ import numpy as np
 import utils
 import datetime
 from collections import defaultdict
-from .preprocess.word_tokenize import WordTokenizerSpecialToken
+from .preprocess.word_tokenize import WordTokenizedSpecialToken
 from .preprocess.pos_label import POSLabel
 from transformers import Trainer, TrainingArguments, AutoTokenizer, AutoModelForTokenClassification, IntervalStrategy
 
@@ -48,7 +48,7 @@ def _extract_subject_entity_chunks(page_token_chunks: list, page_ws_chunks: list
         current_entity_tokens = []
         current_entity_label = POSLabel.NONE.value
         for token, token_ws, label in list(zip(word_tokens,  word_token_ws, word_predictions))[context_end_idx+1:]:
-            if label == POSLabel.NONE.value or token in WordTokenizerSpecialToken.all_tokens():
+            if label == POSLabel.NONE.value or token in WordTokenizedSpecialToken.all_tokens():
                 if current_entity_tokens and not found_entity:
                     entity_name = _tokens2name(current_entity_tokens)
                     if _is_valid_entity_name(entity_name):
@@ -57,7 +57,7 @@ def _extract_subject_entity_chunks(page_token_chunks: list, page_ws_chunks: list
                 current_entity_tokens = []
                 current_entity_label = POSLabel.NONE.value
 
-                if token in WordTokenizerSpecialToken.item_starttokens():
+                if token in WordTokenizedSpecialToken.item_starttokens():
                     found_entity = False  # reset found_entity if entering a new line
             else:
                 current_entity_label = current_entity_label or label
@@ -74,12 +74,12 @@ def _extract_subject_entity_chunks(page_token_chunks: list, page_ws_chunks: list
 
 def _extract_context(word_tokens: List[str], word_token_ws: List[str]) -> Tuple[str, str, int]:
     ctx_tokens = []
-    for i in range(word_tokens.index(WordTokenizerSpecialToken.CONTEXT_END.value)):
+    for i in range(word_tokens.index(WordTokenizedSpecialToken.CONTEXT_END.value)):
         ctx_tokens.extend([word_tokens[i], word_token_ws[i]])
-    ctx_separators = [i for i, x in enumerate(ctx_tokens) if x == WordTokenizerSpecialToken.CONTEXT_SEP.value] + [len(ctx_tokens)]
+    ctx_separators = [i for i, x in enumerate(ctx_tokens) if x == WordTokenizedSpecialToken.CONTEXT_SEP.value] + [len(ctx_tokens)]
     top_section_ctx = ctx_tokens[ctx_separators[0]+1:ctx_separators[1]]
     section_ctx = ctx_tokens[ctx_separators[1]+1:ctx_separators[2]]
-    context_end_idx = word_tokens.index(WordTokenizerSpecialToken.CONTEXT_END.value)
+    context_end_idx = word_tokens.index(WordTokenizedSpecialToken.CONTEXT_END.value)
     return _tokens2name(top_section_ctx), _tokens2name(section_ctx), context_end_idx
 
 
@@ -106,7 +106,7 @@ def get_tagging_tokenizer_and_model(training_data_retrieval_func: Callable):
 
 def _train_tagger(training_data_retrieval_func: Callable):
     pretrained_model = utils.get_config('subject_entity.model_se_tagging')
-    tokenizer = AutoTokenizer.from_pretrained(pretrained_model, add_prefix_space=True, additional_special_tokens=list(WordTokenizerSpecialToken.all_tokens()))
+    tokenizer = AutoTokenizer.from_pretrained(pretrained_model, add_prefix_space=True, additional_special_tokens=list(WordTokenizedSpecialToken.all_tokens()))
 
     tokens, labels = training_data_retrieval_func()
     train_dataset = _get_dataset(tokens, labels, tokenizer)

@@ -7,7 +7,7 @@ from .preprocess.word_tokenize import WordTokenizer
 from .preprocess.pos_label import map_entities_to_pos_labels
 from impl import wikipedia
 import torch
-from impl.dbpedia.resource import DbpResource, DbpListpage
+from impl.dbpedia.resource import DbpListpage
 
 
 def get_page_subject_entities() -> Dict[int, dict]:
@@ -44,6 +44,6 @@ def _get_tokenized_list_pages_with_entity_labels() -> Dict[int, Tuple[list, list
     return WordTokenizer()(wikipedia_listpages, entity_labels=entity_labels)
 
 
-def _get_page_data() -> Dict[DbpResource, Tuple[list, list]]:
+def _get_page_data() -> Dict[int, Tuple[list, list, list]]:
     initializer = lambda: WordTokenizer()(wikipedia.get_wikipedia_pages())
     return utils.load_or_create_cache('subject_entity_page_data', initializer)

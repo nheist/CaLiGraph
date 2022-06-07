@@ -1,11 +1,11 @@
-from typing import Tuple, Dict, Optional, Set, List
+from typing import Tuple, Dict, Set, List
 import random
 import utils
 from impl.util.rdf import EntityIndex
 from impl.wikipedia import WikipediaPage
 from impl import subject_entity
 from impl.subject_entity import combine
-from impl.dbpedia.resource import DbpResource, DbpResourceStore
+from impl.dbpedia.resource import DbpResourceStore
 from impl.subject_entity.preprocess.word_tokenize import WordTokenizer
 
 
