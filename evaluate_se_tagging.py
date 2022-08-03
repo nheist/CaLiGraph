@@ -5,7 +5,7 @@ import os
 if __name__ == '__main__':
     # first parse all the arguments
     parser = argparse.ArgumentParser(description='Run the evaluation of subject entity tagging.')
-    parser.add_argument('gpu', type=int, choices=range(8), help='Number of GPU to use')
+    parser.add_argument('gpu', choices=map(str, range(8)), help='Number of GPU to use')
     parser.add_argument('model_name', help='Huggingface Transformer model used for tagging')
     parser.add_argument('-e', '--epochs', type=int, default=3, help='epochs to train')
     parser.add_argument('-bs', '--batch_size', type=int, default=8, help='batch size used in train/eval')
