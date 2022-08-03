@@ -267,6 +267,9 @@ cache:
   word_blocker_exact:
     filename: 'word-blocker-exact'
     version: RDF2vec
+  MD_data:
+    filename: 'MD-data'
+    version: 1
   MEM_data:
     filename: 'MEM-data'
     version: 1

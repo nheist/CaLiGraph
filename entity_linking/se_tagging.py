@@ -1,6 +1,7 @@
 from typing import Tuple
-import numpy as np
 from collections import namedtuple
+import numpy as np
+import utils
 from transformers import Trainer, IntervalStrategy, TrainingArguments, AutoTokenizer, AutoModelForTokenClassification, EvalPrediction
 from impl.util.transformer import SpecialToken
 from impl.subject_entity.preprocess.pos_label import POSLabel
@@ -48,7 +49,7 @@ def run_evaluation(model_name: str, epochs: int, batch_size: int, learning_rate:
 
 
 def _load_train_and_val_datasets(tokenizer, predict_single_tag: bool, negative_sample_size: float) -> Tuple[MentionDetectionDataset, MentionDetectionDataset]:
-    train_data, val_data = prepare.get_md_train_and_val_data()
+    train_data, val_data = utils.load_or_create_cache('MD_data', prepare.get_md_train_and_val_data)
     # prepare data
     train_dataset = prepare_dataset(train_data, tokenizer, predict_single_tag, negative_sample_size)
     val_dataset = prepare_dataset(val_data, tokenizer, predict_single_tag)
