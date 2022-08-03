@@ -53,12 +53,12 @@ class WordTokenizedListing:
         current_chunk_size = 0
         items_per_chunk = []
         for i in self.items:
-            if current_chunk_size + len(i) <= max_chunk_size and len(items_per_chunk[-1]) <= max_items_per_chunk:
-                items_per_chunk[-1].append(i)
-                current_chunk_size += len(i)
-            else:
+            if not items_per_chunk or current_chunk_size + len(i) > max_chunk_size or len(items_per_chunk[-1]) >= max_items_per_chunk:
                 items_per_chunk.append([self.context, i])
                 current_chunk_size = len(i)
+            else:
+                items_per_chunk[-1].append(i)
+                current_chunk_size += len(i)
         # convert to lists of tokens
         for items in items_per_chunk:
             listing_token_chunks.append([t for i in items for t in i.tokens])
