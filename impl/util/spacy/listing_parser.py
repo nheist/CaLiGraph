@@ -13,18 +13,12 @@ from spacy.training import Example
 def _initialise_parser():
     path_to_model = utils._get_cache_path('spacy_listpage_ne-tagging')
     if not path_to_model.is_dir():
-        _train_parser()
+        get_logger().info('Training new spacy model for entity tagging in listings..')
+        train_ner_model(_retrieve_gs_training_data, str(path_to_model), model='en_core_web_lg')
     return spacy.load(str(path_to_model))
 
 
-def _train_parser():
-    get_logger().info('Training new spacy model for entity tagging in listings..')
-    filepath_gs = utils._get_cache_path('spacy_listpage_ne-tagging')
-    if not filepath_gs.is_dir():
-        train_ner_model(_retrieve_training_data_gs, str(filepath_gs), model='en_core_web_lg')
-
-
-def _retrieve_training_data_gs(nlp: Language):
+def _retrieve_gs_training_data(nlp: Language):
     training_data = []
     with open(utils.get_data_file('files.listpages.goldstandard_named-entity-tagging'), mode='r') as f:
         for line in f:
