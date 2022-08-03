@@ -1,33 +1,27 @@
-import utils
-from impl.subject_entity.preprocess.word_tokenize import WordTokenizedSpecialToken
-from impl.subject_entity.preprocess.pos_label import POSLabel, map_entities_to_pos_labels
-from transformers import Trainer, IntervalStrategy, TrainingArguments, AutoTokenizer, AutoModelForTokenClassification, EvalPrediction
+from typing import Tuple
 from collections import namedtuple
-from entity_linking.data.mention_detection import prepare_dataset
+from transformers import Trainer, IntervalStrategy, TrainingArguments, AutoTokenizer, AutoModelForTokenClassification, EvalPrediction
+from impl.util.transformer import SpecialToken
+from impl.subject_entity.preprocess.pos_label import POSLabel
+from entity_linking.data import prepare
+from entity_linking.data.mention_detection import prepare_dataset, MentionDetectionDataset
 from entity_linking.model.mention_detection import TransformerForMentionDetectionAndTypePrediction
 
 
-def run_evaluation(model_name: str, epochs: int, batch_size: int, learning_rate: float, warmup_steps: int, weight_decay: float, predict_single_tag: bool):
-    run_id = f'{model_name}_e-{epochs}_lr-{learning_rate}_ws-{warmup_steps}_wd-{weight_decay}_st-{predict_single_tag}'
+def run_evaluation(model_name: str, epochs: int, batch_size: int, learning_rate: float, warmup_steps: int, weight_decay: float, predict_single_tag: bool, negative_sample_size: float):
+    run_id = f'{model_name}_st-{predict_single_tag}_nss-{negative_sample_size}_e-{epochs}_lr-{learning_rate}_ws-{warmup_steps}_wd-{weight_decay}'
     # prepare tokenizer and model
-    tokenizer = AutoTokenizer.from_pretrained(model_name, add_prefix_space=True, additional_special_tokens=list(WordTokenizedSpecialToken.all_tokens()))
+    tokenizer = AutoTokenizer.from_pretrained(model_name, add_prefix_space=True, additional_special_tokens=list(SpecialToken.all_tokens()))
     if predict_single_tag:
         model = TransformerForMentionDetectionAndTypePrediction(model_name, len(tokenizer), len(POSLabel))
     else:
         model = AutoModelForTokenClassification.from_pretrained(model_name, num_labels=len(POSLabel))
         model.resize_token_embeddings(len(tokenizer))
     # load data
-    data = utils.load_cache('subject_entity_training_data')
-    # split into train and validation
-    all_pages = list(data)
-    train_pages = set(random.sample(all_pages, int(len(all_pages) * .9)))  # 90% of pages for train, 10% for val
-    val_pages = set(all_pages).difference(train_pages)
-    # prepare data
-    train_data = _prepare_data(tokenizer, [data[p] for p in train_pages], predict_single_tag)
-    val_data = _prepare_data(tokenizer, [data[p] for p in val_pages], predict_single_tag)
+    train_dataset, val_dataset = _load_train_and_val_datasets(tokenizer, predict_single_tag, negative_sample_size)
     # run evaluation
     training_args = TrainingArguments(
-        seed=SEED,
+        seed=42,
         save_strategy=IntervalStrategy.NO,
         output_dir=f'./se_eval/output/{run_id}',
         logging_strategy=IntervalStrategy.STEPS,
@@ -45,21 +39,19 @@ def run_evaluation(model_name: str, epochs: int, batch_size: int, learning_rate:
     trainer = Trainer(
         model=model,
         args=training_args,
-        train_dataset=train_data,
-        eval_dataset=val_data,
+        train_dataset=train_dataset,
+        eval_dataset=val_dataset,
         compute_metrics=lambda eval_prediction: SETagsEvaluator(eval_prediction, predict_single_tag).evaluate()
     )
     trainer.train()
 
 
-def _prepare_data(tokenizer, page_data: list, predict_single_tag: bool):
-    """Flatten data into chunks, assign correct labels, and create dataset"""
-    tokens, labels = [], []
-    for token_chunks, _, entity_chunks in page_data:
-        tokens.extend(token_chunks)
-        label_chunks = map_entities_to_pos_labels(entity_chunks, predict_single_tag)
-        labels.extend(label_chunks)
-    return prepare_dataset(tokens, labels, tokenizer, predict_single_tag)
+def _load_train_and_val_datasets(tokenizer, predict_single_tag: bool, negative_sample_size: float) -> Tuple[MentionDetectionDataset, MentionDetectionDataset]:
+    train_data, val_data = prepare.get_md_train_and_val_data()
+    # prepare data
+    train_dataset = prepare_dataset(train_data, tokenizer, predict_single_tag, negative_sample_size)
+    val_dataset = prepare_dataset(val_data, tokenizer, predict_single_tag)
+    return train_dataset, val_dataset
 
 
 Entity = namedtuple("Entity", "e_type start_offset end_offset")

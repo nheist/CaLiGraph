@@ -2,7 +2,7 @@ from typing import List
 from enum import Enum
 from impl.dbpedia.resource import DbpEntity, DbpResourceStore
 from collections import Counter
-from .word_tokenize import WordTokenizedSpecialLabel
+from impl.util.transformer import EntityIndex
 
 
 class POSLabel(Enum):
@@ -92,9 +92,9 @@ def _get_type_to_label_mapping() -> dict:
 
 def _map_label_to_pos_tag(label: int, entity_value: int):
     match label:
-        case WordTokenizedSpecialLabel.IGNORE.value:
-            return WordTokenizedSpecialLabel.IGNORE.value
-        case WordTokenizedSpecialLabel.NO_ENTITY.value:
+        case EntityIndex.IGNORE.value:
+            return EntityIndex.IGNORE.value
+        case EntityIndex.NO_ENTITY.value:
             return POSLabel.NONE.value
         case _:
             return entity_value

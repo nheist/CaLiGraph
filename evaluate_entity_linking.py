@@ -22,7 +22,6 @@ if __name__ == '__main__':
     parser.add_argument('-ipc', '--items_per_chunk', type=int, default=16, help='Maximum number of items in a chunk')
     parser.add_argument('-cp', '--cls_predictor', action='store_true', help='Use CLS token as mention embedding')
     parser.add_argument('-isp', '--include_source_page', action='store_false', help='Add embedding of page as feature for prediction')
-    parser.add_argument('-v', '--version', default='1', help='Current version of dataset')
     args = parser.parse_args()
     # then set necessary environment variables
     os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu

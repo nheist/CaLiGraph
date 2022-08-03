@@ -102,11 +102,6 @@ class RdfResource:
         return {name2label(p) for p in cls._get_prefixes()}
 
 
-class EntityIndex(Enum):
-    NEW_ENTITY = -1
-    NO_ENTITY = -2
-
-
 # auxiliary structures
 Triple = namedtuple('Triple', 'sub pred obj is_literal')
 
@@ -139,6 +134,10 @@ def name2label(name: str) -> str:
 
 def label2name(label: str) -> str:
     return label.replace(' ', '_')
+
+
+def uri2iri(res_uri: str) -> str:
+    return urllib.parse.unquote(res_uri)
 
 
 def parse_triples_from_file(filepath: str) -> Iterator[Triple]:
@@ -243,10 +242,6 @@ def create_dict_from_rdf(filepaths: list, reverse_key=False, casting_fn=None) ->
                 continue
             data_dict[obj][pred].add(sub) if reverse_key else data_dict[sub][pred].add(obj)
     return data_dict
-
-
-def uri2iri(res_uri: str) -> str:
-    return urllib.parse.unquote(res_uri)
 
 
 def _cast_type(casting_fn, sub: str, obj: str, is_literal: bool):

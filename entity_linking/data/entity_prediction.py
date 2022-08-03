@@ -4,9 +4,9 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset
 import utils
-from impl.dbpedia.resource import DbpResource, DbpResourceStore
+from impl.dbpedia.resource import DbpResourceStore
 from entity_linking.preprocessing.blocking import WordBlocker
-from impl.util.rdf import EntityIndex
+from impl.util.transformer import EntityIndex
 
 
 class EntityPredictionDataset(Dataset):

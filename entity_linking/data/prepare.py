@@ -1,20 +1,31 @@
 from typing import Tuple, Dict, Set, List
 import random
 import utils
-from impl.util.rdf import EntityIndex
+from impl.util.transformer import EntityIndex
 from impl.wikipedia import WikipediaPage
 from impl import subject_entity
 from impl.subject_entity import combine
+from impl.subject_entity.preprocess import sample
 from impl.dbpedia.resource import DbpResourceStore
-from impl.subject_entity.preprocess.word_tokenize import WordTokenizer
+from impl.subject_entity.preprocess.word_tokenize import WordTokenizer, WordTokenizedPage
 
 
+def get_md_train_and_val_data() -> Tuple[List[WordTokenizedPage], List[WordTokenizedPage]]:
+    # TODO: add option to use actual page data for specialization => use only "high-quality" page data for evaluation
+    tokenized_list_pages = sample._get_tokenized_list_pages_with_entity_labels()
+    # split into train and validation (we use a fixed 20% for validation)
+    sample_size = int(len(tokenized_list_pages) * .2)
+    val_sample_indices = set(random.sample([wp.idx for wp in tokenized_list_pages], sample_size))
+    train_pages = [tlp for tlp in tokenized_list_pages if tlp.idx not in val_sample_indices]
+    val_pages = [tlp for tlp in tokenized_list_pages if tlp.idx in val_sample_indices]
+    return train_pages, val_pages
 
-def get_mem_train_and_val_data(items_per_chunk: int) -> Tuple[Dict[int, tuple], Dict[int, tuple]]:
+
+def get_mem_train_and_val_data() -> Tuple[List[WordTokenizedPage], List[WordTokenizedPage]]:
     train_pages, val_pages = utils.load_or_create_cache('entity_linking_pages', _load_page_data)
     # extract data for matching
-    train_data = _create_vector_prediction_data(train_pages, items_per_chunk, False)
-    val_data = _create_vector_prediction_data(val_pages, items_per_chunk, True)
+    train_data = _create_mention_entity_matching_data(train_pages, False)
+    val_data = _create_mention_entity_matching_data(val_pages, True)
     return train_data, val_data
 
 
@@ -35,9 +46,9 @@ def _load_page_data() -> Tuple[List[WikipediaPage], List[WikipediaPage]]:
     return train_pages, val_pages
 
 
-def _create_vector_prediction_data(wiki_pages: List[WikipediaPage], items_per_chunk: int, include_new_entities: bool) -> Dict[int, Tuple[List[List[str]], List[List[str]], List[List[int]]]]:
+def _create_mention_entity_matching_data(wiki_pages: List[WikipediaPage], include_new_entities: bool) -> List[WordTokenizedPage]:
     entity_labels = _get_subject_entity_labels(wiki_pages, include_new_entities)
-    return WordTokenizer(max_items_per_chunk=items_per_chunk, max_ents_per_item=1)(wiki_pages, entity_labels=entity_labels)
+    return WordTokenizer(max_ents_per_item=1)(wiki_pages, entity_labels=entity_labels)
 
 
 def _get_subject_entity_labels(wiki_pages: List[WikipediaPage], include_new_entities: bool) -> Dict[int, Tuple[Set[int], Set[int]]]:

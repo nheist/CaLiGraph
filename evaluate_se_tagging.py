@@ -13,6 +13,7 @@ if __name__ == '__main__':
     parser.add_argument('-ws', '--warmup_steps', type=int, default=0, help='warmup steps during learning')
     parser.add_argument('-wd', '--weight_decay', type=float, default=0, help='weight decay during learning')
     parser.add_argument('-st', '--predict_single_tag', action="store_true", help='Predict only a single POS tag per chunk')
+    parser.add_argument('-nss', '--negative_sample_size', type=float, default=0.0, help='Fraction of data that should be used to create negative samples')
     args = parser.parse_args()
     # then set necessary environment variables
     os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
@@ -27,4 +28,4 @@ if __name__ == '__main__':
     torch.manual_seed(SEED)
     # then import application-specific code and run it
     from entity_linking.se_tagging import run_evaluation
-    run_evaluation(args.model_name, args.epochs, args.batch_size, args.learning_rate, args.warmup_steps, args.weight_decay, args.predict_single_tag)
+    run_evaluation(args.model_name, args.epochs, args.batch_size, args.learning_rate, args.warmup_steps, args.weight_decay, args.predict_single_tag, args.negative_sample_size)

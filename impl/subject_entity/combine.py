@@ -6,7 +6,7 @@ from impl import wikipedia
 from collections import defaultdict
 import impl.wikipedia.wikimarkup_parser as wmp
 from impl.wikipedia import WikipediaPage
-from impl.util.rdf import EntityIndex
+from impl.util.transformer import EntityIndex
 
 
 def get_subject_entity_page_content(subject_entities_per_page: Dict[int, dict]) -> List[WikipediaPage]:

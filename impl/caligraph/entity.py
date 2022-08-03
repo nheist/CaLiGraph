@@ -2,7 +2,8 @@ from typing import Set, Dict, Union, Tuple, Any, List
 from collections import defaultdict, Counter
 import utils
 from impl.util.singleton import Singleton
-from impl.util.rdf import Namespace, RdfResource, EntityIndex
+from impl.util.rdf import Namespace, RdfResource
+from impl.util.transformer import EntityIndex
 from impl.dbpedia.ontology import DbpType, DbpOntologyStore
 from impl.dbpedia.resource import DbpResource, DbpEntity, DbpResourceStore
 from impl.dbpedia.category import DbpCategory, DbpCategoryStore

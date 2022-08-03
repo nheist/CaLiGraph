@@ -14,6 +14,7 @@ cat2ax:
   pattern_confidence: 0.05
 subject_entity:
   model_se_tagging: 'distilbert-base-cased'
+  negative_sample_size: 0.0
 cali2ax:
   pattern_confidence: 0.17
 listing:
@@ -263,9 +264,9 @@ cache:
   entity_linking_pages:
     filename: 'entity-linking-pages'
     version: 1
-  entity_linking_training_data:
-    filename: 'entity-linking-training-data'
-    version: 1
   word_blocker_exact:
     filename: 'word-blocker-exact'
     version: RDF2vec
+  MEM_data:
+    filename: 'MEM-data'
+    version: 1

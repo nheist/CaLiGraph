@@ -7,25 +7,31 @@ import numpy as np
 import utils
 import datetime
 from collections import defaultdict
-from .preprocess.word_tokenize import WordTokenizedSpecialToken
-from .preprocess.pos_label import POSLabel
+from tqdm import tqdm
 from transformers import Trainer, TrainingArguments, AutoTokenizer, AutoModelForTokenClassification, IntervalStrategy
+from ..util.transformer import SpecialToken
+from .preprocess.pos_label import POSLabel
+from .preprocess import sample
 
 
 # APPLY BERT MODEL
 MAX_CHUNKS = 100
 
 
-def extract_subject_entities(page_chunks: Tuple[list, list, list], tokenizer, model) -> Dict[str, dict]:
-    subject_entity_dict = defaultdict(lambda: defaultdict(dict))
-    page_token_chunks, page_ws_chunks, _ = page_chunks
-    for i in range(0, len(page_token_chunks), MAX_CHUNKS):
-        _extract_subject_entity_chunks(page_token_chunks[i:i + MAX_CHUNKS], page_ws_chunks[i:i + MAX_CHUNKS], tokenizer, model, subject_entity_dict)
-    return {ts: dict(subject_entity_dict[ts]) for ts in subject_entity_dict}  # convert to standard dicts
+def extract_subject_entities(tokenizer, model, chunks: Tuple[list, list, list, list]) -> Dict[int, dict]:
+    context_chunks, token_chunks, ws_chunks, _ = chunks
+    subject_entity_dict = defaultdict(lambda: defaultdict(lambda: defaultdict(dict)))
+    for chunk_idx in tqdm(range(0, len(token_chunks), MAX_CHUNKS), desc='Predicting subject entities'):
+        chunk_end_idx = chunk_idx + MAX_CHUNKS
+        contexts = context_chunks[chunk_idx:chunk_end_idx]
+        tokens = token_chunks[chunk_idx:chunk_end_idx]
+        ws = ws_chunks[chunk_idx:chunk_end_idx]
+        _extract_subject_entity_chunks(contexts, tokens, ws, tokenizer, model, subject_entity_dict)
+    return subject_entity_dict
 
 
-def _extract_subject_entity_chunks(page_token_chunks: list, page_ws_chunks: list, tokenizer, model, subject_entity_dict):
-    inputs = tokenizer(page_token_chunks, is_split_into_words=True, padding=True, truncation=True, return_offsets_mapping=True, return_tensors="pt")
+def _extract_subject_entity_chunks(context_chunks: list, token_chunks: list, ws_chunks: list, tokenizer, model, subject_entity_dict: dict):
+    inputs = tokenizer(token_chunks, is_split_into_words=True, padding=True, truncation=True, return_offsets_mapping=True, return_tensors="pt")
     offset_mapping = inputs.offset_mapping
     inputs.pop('offset_mapping')
     inputs.to('cuda')
@@ -37,27 +43,29 @@ def _extract_subject_entity_chunks(page_token_chunks: list, page_ws_chunks: list
     prediction_batches = torch.argmax(outputs.logits.cpu(), dim=2)
     del inputs, outputs
 
-    for word_tokens, word_token_ws, predictions, offsets in zip(page_token_chunks, page_ws_chunks, prediction_batches, offset_mapping):
-        topsection_name, section_name, context_end_idx = _extract_context(word_tokens, word_token_ws)
+    for context, word_tokens, word_token_ws, predictions, offsets in zip(context_chunks, token_chunks, ws_chunks, prediction_batches, offset_mapping):
+        page_idx = context['page_idx']
+        topsection = context['topsection']
+        section = context['section']
         # collect entity labels
         predictions = np.array(predictions)
         offsets = np.array(offsets)
         word_predictions = predictions[(offsets[:, 0] == 0) & (offsets[:, 1] != 0)]
         # map predictions
+        context_end_idx = word_tokens.index(SpecialToken.CONTEXT_END.value)
         found_entity = False  # only predict one entity per row/entry
         current_entity_tokens = []
         current_entity_label = POSLabel.NONE.value
         for token, token_ws, label in list(zip(word_tokens,  word_token_ws, word_predictions))[context_end_idx+1:]:
-            if label == POSLabel.NONE.value or token in WordTokenizedSpecialToken.all_tokens():
+            if label == POSLabel.NONE.value or token in SpecialToken.all_tokens():
                 if current_entity_tokens and not found_entity:
                     entity_name = _tokens2name(current_entity_tokens)
                     if _is_valid_entity_name(entity_name):
-                        subject_entity_dict[topsection_name][section_name][entity_name] = current_entity_label
+                        subject_entity_dict[page_idx][topsection][section][entity_name] = current_entity_label
                     found_entity = True
                 current_entity_tokens = []
                 current_entity_label = POSLabel.NONE.value
-
-                if token in WordTokenizedSpecialToken.item_starttokens():
+                if token in SpecialToken.item_starttokens():
                     found_entity = False  # reset found_entity if entering a new line
             else:
                 current_entity_label = current_entity_label or label
@@ -65,22 +73,7 @@ def _extract_subject_entity_chunks(page_token_chunks: list, page_ws_chunks: list
         if current_entity_tokens and not found_entity:
             entity_name = _tokens2name(current_entity_tokens)
             if _is_valid_entity_name(entity_name):
-                subject_entity_dict[topsection_name][section_name][entity_name] = current_entity_label
-
-    # discard single subject entities for sections
-    subject_entity_dict = {ts: {s: ents for s, ents in ents_per_section.items() if len(ents) > 1} for ts, ents_per_section in subject_entity_dict.items()}
-    subject_entity_dict = {ts: ents_per_section for ts, ents_per_section in subject_entity_dict.items() if ents_per_section}
-
-
-def _extract_context(word_tokens: List[str], word_token_ws: List[str]) -> Tuple[str, str, int]:
-    ctx_tokens = []
-    for i in range(word_tokens.index(WordTokenizedSpecialToken.CONTEXT_END.value)):
-        ctx_tokens.extend([word_tokens[i], word_token_ws[i]])
-    ctx_separators = [i for i, x in enumerate(ctx_tokens) if x == WordTokenizedSpecialToken.CONTEXT_SEP.value] + [len(ctx_tokens)]
-    top_section_ctx = ctx_tokens[ctx_separators[0]+1:ctx_separators[1]]
-    section_ctx = ctx_tokens[ctx_separators[1]+1:ctx_separators[2]]
-    context_end_idx = word_tokens.index(WordTokenizedSpecialToken.CONTEXT_END.value)
-    return _tokens2name(top_section_ctx), _tokens2name(section_ctx), context_end_idx
+                subject_entity_dict[page_idx][topsection][section][entity_name] = current_entity_label
 
 
 def _tokens2name(entity_tokens: List[str]) -> str:
@@ -94,22 +87,20 @@ def _is_valid_entity_name(entity_name: str) -> bool:
 # TRAIN SUBJECT ENTITIY TAGGER
 
 
-def get_tagging_tokenizer_and_model(training_data_retrieval_func: Callable):
+def get_tagging_tokenizer_and_model():
     path_to_model = utils._get_cache_path('transformer_for_SE_tagging')
     if not path_to_model.is_dir():
-        _train_tagger(training_data_retrieval_func)
+        _train_tagger()
     tokenizer = AutoTokenizer.from_pretrained(path_to_model)
     model = AutoModelForTokenClassification.from_pretrained(path_to_model, output_hidden_states=True)
     model.to('cuda')
     return tokenizer, model
 
 
-def _train_tagger(training_data_retrieval_func: Callable):
+def _train_tagger():
     pretrained_model = utils.get_config('subject_entity.model_se_tagging')
-    tokenizer = AutoTokenizer.from_pretrained(pretrained_model, add_prefix_space=True, additional_special_tokens=list(WordTokenizedSpecialToken.all_tokens()))
-
-    tokens, labels = training_data_retrieval_func()
-    train_dataset = _get_dataset(tokens, labels, tokenizer)
+    tokenizer = AutoTokenizer.from_pretrained(pretrained_model, add_prefix_space=True, additional_special_tokens=list(SpecialToken.all_tokens()))
+    train_dataset = sample.get_mention_detection_listpage_training_dataset(tokenizer)
 
     model = AutoModelForTokenClassification.from_pretrained(pretrained_model, num_labels=len(POSLabel))
     model.resize_token_embeddings(len(tokenizer))
@@ -136,43 +127,3 @@ def _train_tagger(training_data_retrieval_func: Callable):
     model.save_pretrained(path_to_model)
     tokenizer.save_pretrained(path_to_model)
 
-
-def _get_dataset(tokens: List[List[str]], tags: List[List[str]], tokenizer) -> Dataset:
-    train_encodings = tokenizer(tokens, is_split_into_words=True, return_offsets_mapping=True, padding=True, truncation=True)
-    train_labels = _encode_labels(tags, train_encodings)
-
-    train_encodings.pop('offset_mapping')  # we don't want to pass this to the model
-    train_dataset = ListpageDataset(train_encodings, train_labels)
-    return train_dataset
-
-
-def _encode_labels(labels: List[List[str]], encodings) -> List[List[str]]:
-    encoded_labels = []
-    for doc_labels, doc_offset in zip(labels, encodings.offset_mapping):
-        # create an empty array of -100
-        doc_enc_labels = np.ones(len(doc_offset), dtype=int) * -100
-        arr_offset = np.array(doc_offset)
-        # set labels whose first offset position is 0 and the second is not 0
-        relevant_label_mask = (arr_offset[:, 0] == 0) & (arr_offset[:, 1] != 0)
-        truncated_label_length = len(doc_enc_labels[relevant_label_mask])
-        if len(doc_labels) < truncated_label_length:
-            # uncased tokenizers can be confused by Japanese/Chinese signs leading to an inconsistency between tokens
-            # and labels after tokenization. we handle that gracefully by simply filling it up with non-empty labels.
-            doc_labels += [POSLabel.NONE.value] * (truncated_label_length - len(doc_labels))
-        doc_enc_labels[relevant_label_mask] = doc_labels[:truncated_label_length]
-        encoded_labels.append(doc_enc_labels.tolist())
-    return encoded_labels
-
-
-class ListpageDataset(Dataset):
-    def __init__(self, encodings, labels):
-        self.encodings = encodings
-        self.labels = labels
-
-    def __getitem__(self, idx):
-        item = {key: torch.tensor(val[idx]) for key, val in self.encodings.items()}
-        item['labels'] = torch.tensor(self.labels[idx])
-        return item
-
-    def __len__(self):
-        return len(self.labels)

@@ -1,11 +1,12 @@
-from typing import List, Tuple, Dict
+from typing import List, Tuple
 import numpy as np
 import torch
 from torch.utils.data import Dataset
 import utils
-from impl.dbpedia.resource import DbpResource
 from entity_linking.preprocessing.blocking import WordBlocker
-from impl.util.rdf import EntityIndex
+from impl.subject_entity.preprocess import sample
+from impl.subject_entity.preprocess.word_tokenize import WordTokenizedPage
+from impl.util.transformer import EntityIndex
 
 
 class MentionEntityMatchingDataset(Dataset):
@@ -30,12 +31,9 @@ class MentionEntityMatchingDataset(Dataset):
         return len(self.entity_indices)
 
 
-def prepare_dataset(page_data: Dict[int, Tuple[list, list, list]], tokenizer, num_ents: int, items_per_chunk: int):
-    tokens, labels, source_pages = [], [], []
-    for res_idx, (token_chunks, _, entity_chunks) in page_data.items():
-        tokens.extend(token_chunks)
-        labels.extend(entity_chunks)
-        source_pages.extend([res_idx] * len(token_chunks))
+def prepare_dataset(page_data: List[WordTokenizedPage], tokenizer, num_ents: int, items_per_chunk: int) -> MentionEntityMatchingDataset:
+    contexts, tokens, _, labels = sample._chunk_word_tokenized_pages(page_data, max_items_per_chunk=items_per_chunk)
+    source_pages = [c['page_idx'] for c in contexts]
 
     entity_info = _collect_entity_info(tokens, labels)
     tokens, entity_info, source_pages = _filter_truncated_entities(tokens, entity_info, source_pages, tokenizer)
