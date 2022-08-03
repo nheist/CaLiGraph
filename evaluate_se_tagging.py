@@ -5,7 +5,7 @@ import os
 if __name__ == '__main__':
     # first parse all the arguments
     parser = argparse.ArgumentParser(description='Run the evaluation of subject entity tagging.')
-    parser.add_argument('gpu', choices=map(str, range(8)), help='Number of GPU to use')
+    parser.add_argument('gpu', type=int, choices=range(8), help='Number of GPU to use')
     parser.add_argument('model_name', help='Huggingface Transformer model used for tagging')
     parser.add_argument('-e', '--epochs', type=int, default=3, help='epochs to train')
     parser.add_argument('-bs', '--batch_size', type=int, default=8, help='batch size used in train/eval')
@@ -16,7 +16,7 @@ if __name__ == '__main__':
     parser.add_argument('-nss', '--negative_sample_size', type=float, default=0.0, help='Fraction of data that should be used to create negative samples')
     args = parser.parse_args()
     # then set necessary environment variables
-    os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
+    os.environ['CUDA_VISIBLE_DEVICES'] = str(args.gpu)
     os.environ['DISABLE_SPACY_CACHE'] = '1'
     # then fix all seeds
     import random
