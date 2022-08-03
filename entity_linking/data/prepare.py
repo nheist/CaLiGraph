@@ -12,12 +12,12 @@ from impl.subject_entity.preprocess.word_tokenize import WordTokenizer, WordToke
 
 def get_md_train_and_val_data() -> Tuple[List[WordTokenizedPage], List[WordTokenizedPage]]:
     # TODO: add option to use actual page data for specialization => use only "high-quality" page data for evaluation
-    tokenized_list_pages = sample._get_tokenized_list_pages_with_entity_labels()
+    tokenized_listpages = sample._get_tokenized_listpages_with_entity_labels()
     # split into train and validation (we use a fixed 20% for validation)
-    sample_size = int(len(tokenized_list_pages) * .2)
-    val_sample_indices = set(random.sample([wp.idx for wp in tokenized_list_pages], sample_size))
-    train_pages = [tlp for tlp in tokenized_list_pages if tlp.idx not in val_sample_indices]
-    val_pages = [tlp for tlp in tokenized_list_pages if tlp.idx in val_sample_indices]
+    sample_size = int(len(tokenized_listpages) * .2)
+    val_sample_indices = set(random.sample([wp.idx for wp in tokenized_listpages], sample_size))
+    train_pages = [tlp for tlp in tokenized_listpages if tlp.idx not in val_sample_indices]
+    val_pages = [tlp for tlp in tokenized_listpages if tlp.idx in val_sample_indices]
     return train_pages, val_pages
 
 

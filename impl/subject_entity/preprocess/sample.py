@@ -30,11 +30,11 @@ def get_mention_detection_page_data() -> Tuple[list, list, list, list]:
 
 
 def get_mention_detection_listpage_training_dataset(tokenizer) -> MentionDetectionDataset:
-    page_data = utils.load_or_create_cache('subject_entity_training_data', _get_tokenized_list_pages_with_entity_labels)
+    page_data = utils.load_or_create_cache('subject_entity_training_data', _get_tokenized_listpages_with_entity_labels)
     return _get_mention_detection_dataset(page_data, tokenizer)
 
 
-def _get_tokenized_list_pages_with_entity_labels() -> List[WordTokenizedPage]:
+def _get_tokenized_listpages_with_entity_labels() -> List[WordTokenizedPage]:
     wikipedia_listpages = [wp for wp in wikipedia.get_wikipedia_pages() if isinstance(wp.resource, DbpListpage)]
     entity_labels = {wp.idx: find_subject_entities_for_listpage(wp) for wp in wikipedia_listpages}
     return WordTokenizer()(wikipedia_listpages, entity_labels=entity_labels)
