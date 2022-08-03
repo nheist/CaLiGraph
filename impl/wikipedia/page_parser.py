@@ -5,7 +5,7 @@ import wikitextparser as wtp
 from wikitextparser import WikiText
 import impl.util.nlp as nlp_util
 from impl.util.rdf import Namespace, label2name
-from ..util.transformer import EntityIndex
+from impl.util.transformer import EntityIndex
 from impl.dbpedia.util import is_entity_name
 from . import wikimarkup_parser as wmp
 import re

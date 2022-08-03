@@ -1,4 +1,5 @@
 from typing import Tuple
+import numpy as np
 from collections import namedtuple
 from transformers import Trainer, IntervalStrategy, TrainingArguments, AutoTokenizer, AutoModelForTokenClassification, EvalPrediction
 from impl.util.transformer import SpecialToken
