@@ -20,14 +20,18 @@ pynif = "*"
 tqdm = "*"
 polyleven = "*"
 unidecode = "*"
-torch = "*"
-torchvision = "*"
-torchaudio = "*"
 transformers = "*"
+torch = "*"
+poethepoet = "*"
 
 [tool.poetry.dev-dependencies]
 pytest = "*"
 tensorboard = "*"
+
+[tool.poe.tasks]
+install-ltt = "python3 -m pip install light-the-torch"
+run-ltt = "python3 -m light_the_torch install --upgrade torch torchaudio torchvision"
+autoinstall-torch-cuda = ["install-ltt", "run-ltt"]
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
