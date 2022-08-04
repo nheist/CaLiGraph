@@ -1,0 +1,7 @@
+# Configuration file for the conda environment
+name: caligraph
+channels:
+  - default
+  - conda-forge
+dependencies:
+  - python=3.10
