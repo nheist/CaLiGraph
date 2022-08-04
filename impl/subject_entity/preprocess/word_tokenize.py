@@ -32,11 +32,11 @@ class WordTokenizedItem:
 
 class WordTokenizedListing:
     listing_type: ListingType
-    context: WordTokenizedItem
-    items: List[WordTokenizedItem]
     topsection: str
     section: str
     column_count: Optional[int]  # only used for listing type `table`
+    context: WordTokenizedItem
+    items: List[WordTokenizedItem]
 
     def __init__(self, listing_type: ListingType, context: WordTokenizedItem, items: List[WordTokenizedItem], topsection: str, section: str, column_count=None):
         self.listing_type = listing_type
@@ -78,7 +78,7 @@ class WordTokenizedPage:
     def to_chunks(self, max_items_per_chunk: int, max_words_per_chunk: int) -> Tuple[list, list, list, list]:
         page_context_chunks, page_token_chunks, page_ws_chunks, page_label_chunks = [], [], [], []
         for l in self.listings:
-            ctx = {'page_idx': self.idx, 'topsection': l.topsection, 'section': l.section}
+            ctx = {'page_idx': self.idx, 'topsection': l.topsection, 'section': l.section, 'listing_type': l.listing_type}
             listing_token_chunks, listing_ws_chunks, listing_label_chunks = l.to_chunks(max_items_per_chunk, max_words_per_chunk)
             listing_context_chunks = [ctx] * len(listing_token_chunks)  # replicate context for all chunks of listing
             page_context_chunks.extend(listing_context_chunks)

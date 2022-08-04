@@ -1,10 +1,12 @@
-from typing import Tuple
-from collections import namedtuple
+from typing import Tuple, List
+from copy import deepcopy
+from collections import namedtuple, Counter
 import numpy as np
 import utils
 from transformers import Trainer, IntervalStrategy, TrainingArguments, AutoTokenizer, AutoModelForTokenClassification, EvalPrediction
 from impl.util.transformer import SpecialToken
 from impl.subject_entity.preprocess.pos_label import POSLabel
+from impl.subject_entity.preprocess.word_tokenize import ListingType
 from entity_linking.data import prepare
 from entity_linking.data.mention_detection import prepare_dataset, MentionDetectionDataset
 from entity_linking.model.mention_detection import TransformerForMentionDetectionAndTypePrediction
@@ -43,7 +45,7 @@ def run_evaluation(model_name: str, epochs: int, batch_size: int, learning_rate:
         args=training_args,
         train_dataset=train_dataset,
         eval_dataset=val_dataset,
-        compute_metrics=lambda eval_prediction: SETagsEvaluator(eval_prediction, predict_single_tag).evaluate()
+        compute_metrics=lambda eval_prediction: SETagsEvaluator(eval_prediction, val_dataset.listing_types, predict_single_tag).evaluate()
     )
     trainer.train()
 
@@ -60,7 +62,7 @@ Entity = namedtuple("Entity", "e_type start_offset end_offset")
 
 
 class SETagsEvaluator:
-    def __init__(self, eval_prediction: EvalPrediction, predict_single_tag: bool):
+    def __init__(self, eval_prediction: EvalPrediction, listing_types: List[str], predict_single_tag: bool):
         if predict_single_tag:
             # with mention logits we only predict whether there is a subject entity in this position (1 or 0)
             # so we multiply with type_id to "convert" it back to the notion where we predict types per position
@@ -77,20 +79,27 @@ class SETagsEvaluator:
             self.labels = eval_prediction.label_ids
             self.masks = self.labels != -100
 
+        self.listing_types = listing_types
+
+        result_schema = {
+            'strict': Counter({'correct': 0, 'incorrect': 0, 'partial': 0, 'missed': 0, 'spurious': 0}),
+            'exact': Counter({'correct': 0, 'incorrect': 0, 'partial': 0, 'missed': 0, 'spurious': 0}),
+            'partial': Counter({'correct': 0, 'incorrect': 0, 'partial': 0, 'missed': 0, 'spurious': 0}),
+            'ent_type': Counter({'correct': 0, 'incorrect': 0, 'partial': 0, 'missed': 0, 'spurious': 0}),
+        }
         self.results = {
-            'strict': {'correct': 0, 'incorrect': 0, 'partial': 0, 'missed': 0, 'spurious': 0},
-            'exact': {'correct': 0, 'incorrect': 0, 'partial': 0, 'missed': 0, 'spurious': 0},
-            'partial': {'correct': 0, 'incorrect': 0, 'partial': 0, 'missed': 0, 'spurious': 0},
-            'ent_type': {'correct': 0, 'incorrect': 0, 'partial': 0, 'missed': 0, 'spurious': 0},
+            'overall': deepcopy(result_schema),
+            ListingType.ENUMERATION.value: deepcopy(result_schema),
+            ListingType.TABLE.value: deepcopy(result_schema)
         }
 
     def evaluate(self) -> dict:
-        for mention_ids, true_ids, mask in zip(self.mentions, self.labels, self.masks):
+        for mention_ids, true_ids, mask, listing_type in zip(self.mentions, self.labels, self.masks, self.listing_types):
             # remove invalid preds/labels
             mention_ids = mention_ids[mask]
             true_ids = true_ids[mask]
 
-            self.compute_metrics(self._collect_named_entities(mention_ids), self._collect_named_entities(true_ids))
+            self.compute_metrics(self._collect_named_entities(mention_ids), self._collect_named_entities(true_ids), listing_type)
 
         return self._compute_precision_recall_wrapper()
 
@@ -114,7 +123,7 @@ class SETagsEvaluator:
             named_entities.append(Entity(ent_type, start_offset, len(mention_ids)))
         return named_entities
 
-    def compute_metrics(self, pred_named_entities, true_named_entities):
+    def compute_metrics(self, pred_named_entities, true_named_entities, listing_type):
         # keep track of entities that overlapped
         true_which_overlapped_with_pred = []
 
@@ -127,10 +136,10 @@ class SETagsEvaluator:
             # Scenario I: Exact match between true and pred
             if pred in true_named_entities:
                 true_which_overlapped_with_pred.append(pred)
-                self.results['strict']['correct'] += 1
-                self.results['ent_type']['correct'] += 1
-                self.results['exact']['correct'] += 1
-                self.results['partial']['correct'] += 1
+                self.results[listing_type]['strict']['correct'] += 1
+                self.results[listing_type]['ent_type']['correct'] += 1
+                self.results[listing_type]['exact']['correct'] += 1
+                self.results[listing_type]['partial']['correct'] += 1
 
             else:
                 # check for overlaps with any of the true entities
@@ -140,10 +149,10 @@ class SETagsEvaluator:
 
                     # Scenario IV: Offsets match, but entity type is wrong
                     if true.start_offset == pred.start_offset and pred.end_offset == true.end_offset and true.e_type != pred.e_type:
-                        self.results['strict']['incorrect'] += 1
-                        self.results['ent_type']['incorrect'] += 1
-                        self.results['partial']['correct'] += 1
-                        self.results['exact']['correct'] += 1
+                        self.results[listing_type]['strict']['incorrect'] += 1
+                        self.results[listing_type]['ent_type']['incorrect'] += 1
+                        self.results[listing_type]['partial']['correct'] += 1
+                        self.results[listing_type]['exact']['correct'] += 1
                         true_which_overlapped_with_pred.append(true)
                         found_overlap = True
                         break
@@ -155,46 +164,54 @@ class SETagsEvaluator:
                         # Scenario V: There is an overlap (but offsets do not match exactly), and the entity type is the same.
                         # 2.1 overlaps with the same entity type
                         if pred.e_type == true.e_type:
-                            self.results['strict']['incorrect'] += 1
-                            self.results['ent_type']['correct'] += 1
-                            self.results['partial']['partial'] += 1
-                            self.results['exact']['incorrect'] += 1
+                            self.results[listing_type]['strict']['incorrect'] += 1
+                            self.results[listing_type]['ent_type']['correct'] += 1
+                            self.results[listing_type]['partial']['partial'] += 1
+                            self.results[listing_type]['exact']['incorrect'] += 1
                             found_overlap = True
                             break
 
                         # Scenario VI: Entities overlap, but the entity type is different.
                         else:
-                            self.results['strict']['incorrect'] += 1
-                            self.results['ent_type']['incorrect'] += 1
-                            self.results['partial']['partial'] += 1
-                            self.results['exact']['incorrect'] += 1
+                            self.results[listing_type]['strict']['incorrect'] += 1
+                            self.results[listing_type]['ent_type']['incorrect'] += 1
+                            self.results[listing_type]['partial']['partial'] += 1
+                            self.results[listing_type]['exact']['incorrect'] += 1
                             found_overlap = True
                             break
 
                 # Scenario II: Entities are spurious (i.e., over-generated).
                 if not found_overlap:
-                    self.results['strict']['spurious'] += 1
-                    self.results['ent_type']['spurious'] += 1
-                    self.results['partial']['spurious'] += 1
-                    self.results['exact']['spurious'] += 1
+                    self.results[listing_type]['strict']['spurious'] += 1
+                    self.results[listing_type]['ent_type']['spurious'] += 1
+                    self.results[listing_type]['partial']['spurious'] += 1
+                    self.results[listing_type]['exact']['spurious'] += 1
 
         # Scenario III: Entity was missed entirely.
         for true in true_named_entities:
             if true not in true_which_overlapped_with_pred:
-                self.results['strict']['missed'] += 1
-                self.results['ent_type']['missed'] += 1
-                self.results['partial']['missed'] += 1
-                self.results['exact']['missed'] += 1
+                self.results[listing_type]['strict']['missed'] += 1
+                self.results[listing_type]['ent_type']['missed'] += 1
+                self.results[listing_type]['partial']['missed'] += 1
+                self.results[listing_type]['exact']['missed'] += 1
+
+        # compute overall stats for listing types
+        for lt, stats in self.results.items():
+            if lt == 'overall':
+                continue
+            for metric, values in stats.items():
+                self.results['overall'][metric] += values
 
     def _compute_precision_recall_wrapper(self):
         final_metrics = {}
-        for k, v in self.results.items():
-            for metric_key, metric_value in self._compute_precision_recall(k, v).items():
-                final_metrics[metric_key] = metric_value
+        for lt, stats in self.results.items():
+            for k, v in stats.items():
+                for metric_key, metric_value in self._compute_precision_recall(lt, k, v).items():
+                    final_metrics[metric_key] = metric_value
         return final_metrics
 
     @classmethod
-    def _compute_precision_recall(cls, eval_schema, eval_data):
+    def _compute_precision_recall(cls, listing_type, eval_schema, eval_data):
         correct = eval_data['correct']
         incorrect = eval_data['incorrect']
         partial = eval_data['partial']
@@ -210,4 +227,4 @@ class SETagsEvaluator:
             precision = correct / actual if actual > 0 else 0
             recall = correct / possible if possible > 0 else 0
 
-        return {f'P-{eval_schema}': precision, f'R-{eval_schema}': recall}
+        return {f'{listing_type}-COUNT': possible, f'{listing_type}-P-{eval_schema}': precision, f'{listing_type}-R-{eval_schema}': recall}

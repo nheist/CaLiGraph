@@ -7,7 +7,8 @@ from impl.subject_entity.preprocess.word_tokenize import WordTokenizedPage
 
 
 class MentionDetectionDataset(Dataset):
-    def __init__(self, encodings, mention_labels, type_labels=None):
+    def __init__(self, contexts, encodings, mention_labels, type_labels=None):
+        self.listing_types = [c['listing_type'].value for c in contexts]
         self.encodings = encodings
         self.mention_labels = mention_labels
         self.type_labels = type_labels
@@ -31,7 +32,7 @@ class MentionDetectionDataset(Dataset):
 
 
 def prepare_dataset(page_data: List[WordTokenizedPage], tokenizer, predict_single_tag: bool, negative_sample_size: float = 0.0):
-    _, tokens, _, entity_indices = sample._chunk_word_tokenized_pages(page_data, negative_sample_size)
+    contexts, tokens, _, entity_indices = sample._chunk_word_tokenized_pages(page_data, negative_sample_size)
     labels = map_entities_to_pos_labels(entity_indices, predict_single_tag)
 
     encodings = tokenizer(tokens, is_split_into_words=True, return_offsets_mapping=True, padding=True, truncation=True)
@@ -42,4 +43,4 @@ def prepare_dataset(page_data: List[WordTokenizedPage], tokenizer, predict_singl
     mention_labels = sample._encode_labels(labels, encodings)
 
     encodings.pop('offset_mapping')  # we don't want to pass this to the model
-    return MentionDetectionDataset(encodings, mention_labels, type_labels)
+    return MentionDetectionDataset(contexts, encodings, mention_labels, type_labels)
