@@ -17,14 +17,14 @@ class TransformerForMentionDetectionAndTypePrediction(nn.Module):
 
         # mention detection (token classification)
         self.md_num_labels = 2
-        self.md_dropout = nn.Dropout(config.dropout)
+        self.md_dropout = nn.Dropout(.1)
         self.md_classifier = nn.Linear(config.hidden_size, self.md_num_labels)
 
         # type prediction (sequence classification)
         self.tp_num_labels = num_labels
         self.tp_pre_classifier = nn.Linear(config.dim, config.dim)
         self.tp_classifier = nn.Linear(config.dim, self.tp_num_labels)
-        self.tp_dropout = nn.Dropout(config.seq_classif_dropout)
+        self.tp_dropout = nn.Dropout(.1)
 
         # final loss
         self.tp_impact_on_loss = .2
