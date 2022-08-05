@@ -68,6 +68,13 @@ class SETagsEvaluator:
             # with mention logits we only predict whether there is a subject entity in this position (1 or 0)
             # so we multiply with type_id to "convert" it back to the notion where we predict types per position
             mention_logits, type_logits = eval_prediction.predictions
+            # TODO: DEBUG START
+            print(type(eval_prediction.predictions))
+            print(type(mention_logits))
+            print(mention_logits)
+            print(type(type_logits))
+            print(type_logits)
+            # TODO: DEBUG END
             type_ids = np.expand_dims(type_logits.argmax(-1), -1)
             self.mentions = mention_logits.argmax(-1) * type_ids
             # same for labels
@@ -152,7 +159,7 @@ class SETagsEvaluator:
                     true_range = set(range(true.start_offset, true.end_offset))
 
                     # Scenario IV: Offsets match, but entity type is wrong
-                    if true.start_offset == pred.start_offset and pred.end_offset == true.end_offset and true.e_type != pred.e_type:
+                    if true.start_offset == pred.start_offset and true.end_offset == pred.end_offset and true.e_type != pred.e_type:
                         self.results[listing_type]['strict']['incorrect'] += 1
                         self.results[listing_type]['ent_type']['incorrect'] += 1
                         self.results[listing_type]['partial']['correct'] += 1
