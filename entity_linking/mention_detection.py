@@ -68,13 +68,7 @@ class SETagsEvaluator:
             # with mention logits we only predict whether there is a subject entity in this position (1 or 0)
             # so we multiply with type_id to "convert" it back to the notion where we predict types per position
             mention_logits, type_logits = eval_prediction.predictions
-            # TODO: DEBUG START
-            print(type(eval_prediction.predictions))
-            print(type(mention_logits))
-            print(mention_logits)
-            print(type(type_logits))
-            print(type_logits)
-            # TODO: DEBUG END
+            mention_logits = mention_logits[0]  # TODO: unclear, why we need to unwrap another tuple here
             type_ids = np.expand_dims(type_logits.argmax(-1), -1)
             self.mentions = mention_logits.argmax(-1) * type_ids
             # same for labels
