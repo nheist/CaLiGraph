@@ -22,8 +22,8 @@ class TransformerForMentionDetectionAndTypePrediction(nn.Module):
 
         # type prediction (sequence classification)
         self.tp_num_labels = num_labels
-        self.tp_pre_classifier = nn.Linear(config.dim, config.dim)
-        self.tp_classifier = nn.Linear(config.dim, self.tp_num_labels)
+        self.tp_pre_classifier = nn.Linear(config.hidden_size, config.hidden_size)
+        self.tp_classifier = nn.Linear(config.hidden_size, self.tp_num_labels)
         self.tp_dropout = nn.Dropout(.1)
 
         # final loss
@@ -49,18 +49,18 @@ class TransformerForMentionDetectionAndTypePrediction(nn.Module):
             output_hidden_states=output_hidden_states,
             return_dict=return_dict,
         )
-        sequence_output = encoder_output[0]  # (bs, seq_len, dim)
+        sequence_output = encoder_output[0]  # (bs, seq_len, hidden_size)
         loss_criterion = nn.CrossEntropyLoss()
 
         # mention detection
-        md_sequence_output = self.md_dropout(sequence_output)  # (bs, seq_len, dim)
+        md_sequence_output = self.md_dropout(sequence_output)  # (bs, seq_len, hidden_size)
         md_logits = self.md_classifier(md_sequence_output)  # (bs, seq_len, 2)
 
         # type prediction
-        tp_pooled_output = sequence_output[:, 0]  # (bs, dim)
-        tp_pooled_output = self.tp_pre_classifier(tp_pooled_output)  # (bs, dim)
-        tp_pooled_output = nn.ReLU()(tp_pooled_output)  # (bs, dim)
-        tp_pooled_output = self.tp_dropout(tp_pooled_output)  # (bs, dim)
+        tp_pooled_output = sequence_output[:, 0]  # (bs, hidden_size)
+        tp_pooled_output = self.tp_pre_classifier(tp_pooled_output)  # (bs, hidden_size)
+        tp_pooled_output = nn.ReLU()(tp_pooled_output)  # (bs, hidden_size)
+        tp_pooled_output = self.tp_dropout(tp_pooled_output)  # (bs, hidden_size)
         tp_logits = self.tp_classifier(tp_pooled_output)  # (bs, tp_num_labels)
 
         loss = None
