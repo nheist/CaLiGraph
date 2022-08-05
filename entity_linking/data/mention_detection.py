@@ -35,6 +35,8 @@ def prepare_dataset(page_data: List[WordTokenizedPage], tokenizer, ignore_tags: 
     contexts, tokens, _, entity_indices = sample._chunk_word_tokenized_pages(page_data, negative_sample_size)
     labels = map_entities_to_pos_labels(entity_indices, ignore_tags or predict_single_tag)
 
+    print(labels[2])  # DEBUG
+
     encodings = tokenizer(tokens, is_split_into_words=True, return_offsets_mapping=True, padding=True, truncation=True)
     type_labels = None
     if predict_single_tag:
