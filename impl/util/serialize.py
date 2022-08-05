@@ -64,8 +64,6 @@ def _encode_resource(resource) -> str:
     try:
         res_name = urllib.parse.quote(str(resource))
     except TypeError as e:
-        print('failing resource', resource)
-        print('failing res type', type(resource))
         raise e
     for char in RESOURCE_ENCODING_EXCEPTIONS:
         res_name = res_name.replace(urllib.parse.quote(char), char)

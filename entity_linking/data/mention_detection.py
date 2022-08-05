@@ -34,12 +34,6 @@ class MentionDetectionDataset(Dataset):
 def prepare_dataset(page_data: List[WordTokenizedPage], tokenizer, ignore_tags: bool, predict_single_tag: bool, negative_sample_size: float = 0.0):
     contexts, tokens, _, entity_indices = sample._chunk_word_tokenized_pages(page_data, negative_sample_size)
     labels = map_entities_to_pos_labels(entity_indices, ignore_tags or predict_single_tag)
-    # TODO: DEBUG START
-    print('DEBUGGGGG')
-    print(entity_indices[2])
-    print(labels[2])
-    print(ignore_tags or predict_single_tag)
-    # TODO: DEBUG END
     encodings = tokenizer(tokens, is_split_into_words=True, return_offsets_mapping=True, padding=True, truncation=True)
     type_labels = None
     if predict_single_tag:
