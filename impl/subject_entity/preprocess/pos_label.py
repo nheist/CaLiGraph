@@ -22,6 +22,46 @@ class POSLabel(Enum):
     OTHER = 13
 
 
+TYPE_TO_LABEL_MAPPING = {
+    # PERSON
+    'Person': POSLabel.PERSON,
+    'Deity': POSLabel.PERSON,
+    # NORP
+    'PoliticalParty': POSLabel.NORP,
+    'Family': POSLabel.NORP,
+    'EthnicGroup': POSLabel.NORP,
+    # FAC
+    'ArchitecturalStructure': POSLabel.FAC,
+    'Mine': POSLabel.FAC,
+    'Monument': POSLabel.FAC,
+    # ORG
+    'Organisation': POSLabel.ORG,
+    # GPE
+    'PopulatedPlace': POSLabel.GPE,
+    # LOC
+    'Place': POSLabel.LOC,
+    'Location': POSLabel.LOC,
+    # PRODUCT
+    'Food': POSLabel.PRODUCT,
+    'MeanOfTransportation': POSLabel.PRODUCT,
+    'Software': POSLabel.PRODUCT,
+    'Device': POSLabel.PRODUCT,
+    # EVENT
+    'Event': POSLabel.EVENT,
+    # WORK_OF_ART
+    'Work': POSLabel.WORK_OF_ART,
+    'Award': POSLabel.WORK_OF_ART,
+    # LAW
+    'Law': POSLabel.LAW,
+    'LegalCase': POSLabel.LAW,
+    'Treaty': POSLabel.LAW,
+    # LANGUAGE
+    'Language': POSLabel.LANGUAGE,
+    # SPECIES
+    'Species': POSLabel.SPECIES
+}
+
+
 def map_entities_to_pos_labels(entity_chunks: List[List[int]], binary_labels: bool):
     """Transforms the chunks of entity labels into chunks of POS tags."""
     # first find the pos labels for all entities (to avoid duplicate resolution of pos labels)
@@ -42,52 +82,10 @@ def map_entities_to_pos_labels(entity_chunks: List[List[int]], binary_labels: bo
 
 
 def _find_pos_tag_for_ent(ent: DbpEntity) -> POSLabel:
-    ttl_mapping = _get_type_to_label_mapping()
     for t in ent.get_transitive_types():
-        if t.name in ttl_mapping:
-            return ttl_mapping[t.name]
+        if t.name in TYPE_TO_LABEL_MAPPING:
+            return TYPE_TO_LABEL_MAPPING[t.name]
     return POSLabel.OTHER
-
-
-def _get_type_to_label_mapping() -> dict:
-    return {
-        # PERSON
-        'Person': POSLabel.PERSON,
-        'Deity': POSLabel.PERSON,
-        # NORP
-        'PoliticalParty': POSLabel.NORP,
-        'Family': POSLabel.NORP,
-        'EthnicGroup': POSLabel.NORP,
-        # FAC
-        'ArchitecturalStructure': POSLabel.FAC,
-        'Mine': POSLabel.FAC,
-        'Monument': POSLabel.FAC,
-        # ORG
-        'Organisation': POSLabel.ORG,
-        # GPE
-        'PopulatedPlace': POSLabel.GPE,
-        # LOC
-        'Place': POSLabel.LOC,
-        'Location': POSLabel.LOC,
-        # PRODUCT
-        'Food': POSLabel.PRODUCT,
-        'MeanOfTransportation': POSLabel.PRODUCT,
-        'Software': POSLabel.PRODUCT,
-        'Device': POSLabel.PRODUCT,
-        # EVENT
-        'Event': POSLabel.EVENT,
-        # WORK_OF_ART
-        'Work': POSLabel.WORK_OF_ART,
-        'Award': POSLabel.WORK_OF_ART,
-        # LAW
-        'Law': POSLabel.LAW,
-        'LegalCase': POSLabel.LAW,
-        'Treaty': POSLabel.LAW,
-        # LANGUAGE
-        'Language': POSLabel.LANGUAGE,
-        # SPECIES
-        'Species': POSLabel.SPECIES
-    }
 
 
 def _map_label_to_pos_tag(label: int, entity_value: int):

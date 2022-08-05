@@ -84,4 +84,7 @@ class TransformerForMentionDetectionAndTypePrediction(nn.Module):
             loss = (1 - self.tp_impact_on_loss) * md_loss + self.tp_impact_on_loss * tp_loss
 
         output = ((md_logits, tp_logits),) + encoder_output[1:]
+        print(type(output[0]))
+        print(type(output[0][0]))
+        print(type(output[0][1]))
         return ((loss,) + output) if loss is not None else output
