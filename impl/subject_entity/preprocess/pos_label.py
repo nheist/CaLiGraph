@@ -1,6 +1,6 @@
 from typing import List
 from enum import Enum
-from impl.dbpedia.resource import DbpEntity, DbpResourceStore
+from impl.dbpedia.resource import DbpResourceStore
 from collections import Counter
 from impl.util.transformer import EntityIndex
 
@@ -65,31 +65,32 @@ TYPE_TO_LABEL_MAPPING = {
 def map_entities_to_pos_labels(entity_chunks: List[List[int]], binary_labels: bool):
     """Transforms the chunks of entity labels into chunks of POS tags."""
     # first find the pos labels for all entities (to avoid duplicate resolution of pos labels)
-    dbr = DbpResourceStore.instance()
-    all_resources = [dbr.get_resource_by_idx(idx) for chunk in entity_chunks for idx in chunk if idx >= 0]
-    pos_tags_by_ent = {res: _find_pos_tag_for_ent(res) for res in set(all_resources) if isinstance(res, DbpEntity)}
-    pos_tags = [pos_tags_by_ent[res] for res in all_resources if res in pos_tags_by_ent]
-    # then find the majority tag of the chunk which will be the label for all entities in the chunk
-    most_common_tags = Counter(pos_tags).most_common()
-    majority_tag = most_common_tags[0][0] if len(most_common_tags) > 0 else POSLabel.NONE
-    entity_value = 1 if binary_labels else majority_tag.value
+    all_resource_indices = {idx for chunk in entity_chunks for idx in chunk if idx >= 0}
+    pos_tag_by_ent_idx = {idx: _find_pos_tag_for_ent(idx) for idx in all_resource_indices}
 
     labels = []
     for chunk in entity_chunks:
-        chunk_labels = [_map_label_to_pos_tag(label, entity_value) for label in chunk]
+        # find the majority tag of the chunk which will be the label for all entities in the chunk
+        pos_tags = [pos_tag_by_ent_idx[idx] for idx in chunk if idx >= 0]
+        most_common_tags = Counter(pos_tags).most_common()
+        majority_tag = most_common_tags[0][0] if len(most_common_tags) > 0 else POSLabel.NONE
+        entity_value = 1 if binary_labels else majority_tag.value
+
+        chunk_labels = [_map_ent_to_pos_tag(idx, entity_value) for idx in chunk]
         labels.append((chunk_labels, majority_tag.value) if binary_labels else chunk_labels)
     return labels
 
 
-def _find_pos_tag_for_ent(ent: DbpEntity) -> POSLabel:
+def _find_pos_tag_for_ent(ent_idx: int) -> POSLabel:
+    ent = DbpResourceStore.instance().get_resource_by_idx(ent_idx)
     for t in ent.get_transitive_types():
         if t.name in TYPE_TO_LABEL_MAPPING:
             return TYPE_TO_LABEL_MAPPING[t.name]
     return POSLabel.OTHER
 
 
-def _map_label_to_pos_tag(label: int, entity_value: int):
-    match label:
+def _map_ent_to_pos_tag(ent_idx: int, entity_value: int):
+    match ent_idx:
         case EntityIndex.IGNORE.value:
             return EntityIndex.IGNORE.value
         case EntityIndex.NO_ENTITY.value:
