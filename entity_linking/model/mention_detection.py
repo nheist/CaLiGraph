@@ -55,6 +55,7 @@ class TransformerForMentionDetectionAndTypePrediction(nn.Module):
         # mention detection
         md_sequence_output = self.md_dropout(sequence_output)  # (bs, seq_len, hidden_size)
         md_logits = self.md_classifier(md_sequence_output)  # (bs, seq_len, 2)
+        print('md_logits', type(md_logits))
 
         # type prediction
         tp_pooled_output = sequence_output[:, 0]  # (bs, hidden_size)
@@ -62,6 +63,7 @@ class TransformerForMentionDetectionAndTypePrediction(nn.Module):
         tp_pooled_output = nn.ReLU()(tp_pooled_output)  # (bs, hidden_size)
         tp_pooled_output = self.tp_dropout(tp_pooled_output)  # (bs, hidden_size)
         tp_logits = self.tp_classifier(tp_pooled_output)  # (bs, tp_num_labels)
+        print('tp_logits', type(md_logits))
 
         loss = None
         if labels is not None:
