@@ -45,7 +45,7 @@ def _get_mention_detection_dataset(page_data: List[WordTokenizedPage], tokenizer
     negative_sample_size = float(utils.get_config('subject_entity.negative_sample_size'))
     # flatten training data into chunks and replace entities with their POS tags
     _, tokens, _, entity_indices = _chunk_word_tokenized_pages(page_data, negative_sample_size)
-    labels = map_entities_to_pos_labels(entity_indices)
+    labels = map_entities_to_pos_labels(entity_indices, False)
 
     train_encodings = tokenizer(tokens, is_split_into_words=True, return_offsets_mapping=True, padding=True, truncation=True)
     train_labels = _encode_labels(labels, train_encodings)

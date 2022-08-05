@@ -12,17 +12,18 @@ from entity_linking.data.mention_detection import prepare_dataset, MentionDetect
 from entity_linking.model.mention_detection import TransformerForMentionDetectionAndTypePrediction
 
 
-def run_evaluation(model_name: str, epochs: int, batch_size: int, learning_rate: float, warmup_steps: int, weight_decay: float, predict_single_tag: bool, negative_sample_size: float):
-    run_id = f'{model_name}_st-{predict_single_tag}_nss-{negative_sample_size}_e-{epochs}_lr-{learning_rate}_ws-{warmup_steps}_wd-{weight_decay}'
+def run_evaluation(model_name: str, epochs: int, batch_size: int, learning_rate: float, warmup_steps: int, weight_decay: float, ignore_tags: bool, predict_single_tag: bool, negative_sample_size: float):
+    run_id = f'{model_name}_it-{ignore_tags}_st-{predict_single_tag}_nss-{negative_sample_size}_e-{epochs}_lr-{learning_rate}_ws-{warmup_steps}_wd-{weight_decay}'
     # prepare tokenizer and model
     tokenizer = AutoTokenizer.from_pretrained(model_name, add_prefix_space=True, additional_special_tokens=list(SpecialToken.all_tokens()))
+    number_of_labels = 2 if ignore_tags else len(POSLabel)
     if predict_single_tag:
-        model = TransformerForMentionDetectionAndTypePrediction(model_name, len(tokenizer), len(POSLabel))
+        model = TransformerForMentionDetectionAndTypePrediction(model_name, len(tokenizer), number_of_labels)
     else:
-        model = AutoModelForTokenClassification.from_pretrained(model_name, num_labels=len(POSLabel))
+        model = AutoModelForTokenClassification.from_pretrained(model_name, num_labels=number_of_labels)
         model.resize_token_embeddings(len(tokenizer))
     # load data
-    train_dataset, val_dataset = _load_train_and_val_datasets(tokenizer, predict_single_tag, negative_sample_size)
+    train_dataset, val_dataset = _load_train_and_val_datasets(tokenizer, ignore_tags, predict_single_tag, negative_sample_size)
     # run evaluation
     training_args = TrainingArguments(
         seed=42,
@@ -50,11 +51,11 @@ def run_evaluation(model_name: str, epochs: int, batch_size: int, learning_rate:
     trainer.train()
 
 
-def _load_train_and_val_datasets(tokenizer, predict_single_tag: bool, negative_sample_size: float) -> Tuple[MentionDetectionDataset, MentionDetectionDataset]:
+def _load_train_and_val_datasets(tokenizer, ignore_tags: bool, predict_single_tag: bool, negative_sample_size: float) -> Tuple[MentionDetectionDataset, MentionDetectionDataset]:
     train_data, val_data = utils.load_or_create_cache('MD_data', prepare.get_md_train_and_val_data)
     # prepare data
-    train_dataset = prepare_dataset(train_data, tokenizer, predict_single_tag, negative_sample_size)
-    val_dataset = prepare_dataset(val_data, tokenizer, predict_single_tag)
+    train_dataset = prepare_dataset(train_data, tokenizer, ignore_tags, predict_single_tag, negative_sample_size)
+    val_dataset = prepare_dataset(val_data, tokenizer, ignore_tags, predict_single_tag)
     return train_dataset, val_dataset
 
 

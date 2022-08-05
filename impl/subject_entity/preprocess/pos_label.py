@@ -22,7 +22,7 @@ class POSLabel(Enum):
     OTHER = 13
 
 
-def map_entities_to_pos_labels(entity_chunks: List[List[int]], single_tag_prediction=False):
+def map_entities_to_pos_labels(entity_chunks: List[List[int]], binary_labels: bool):
     """Transforms the chunks of entity labels into chunks of POS tags."""
     # first find the pos labels for all entities (to avoid duplicate resolution of pos labels)
     dbr = DbpResourceStore.instance()
@@ -32,12 +32,12 @@ def map_entities_to_pos_labels(entity_chunks: List[List[int]], single_tag_predic
     # then find the majority tag of the chunk which will be the label for all entities in the chunk
     most_common_tags = Counter(pos_tags).most_common()
     majority_tag = most_common_tags[0][0] if len(most_common_tags) > 0 else POSLabel.NONE
-    entity_value = 1 if single_tag_prediction else majority_tag.value
+    entity_value = 1 if binary_labels else majority_tag.value
 
     labels = []
     for chunk in entity_chunks:
         chunk_labels = [_map_label_to_pos_tag(label, entity_value) for label in chunk]
-        labels.append((chunk_labels, majority_tag.value) if single_tag_prediction else chunk_labels)
+        labels.append((chunk_labels, majority_tag.value) if binary_labels else chunk_labels)
     return labels
 
 
