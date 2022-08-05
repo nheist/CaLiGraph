@@ -27,6 +27,7 @@ poethepoet = "*"
 [tool.poetry.dev-dependencies]
 pytest = "*"
 tensorboard = "*"
+jupyter = "*"
 
 [tool.poe.tasks]
 install-ltt = "python3 -m pip install light-the-torch"
