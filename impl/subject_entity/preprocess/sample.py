@@ -5,6 +5,7 @@ from torch.utils.data import Dataset
 import utils
 from impl import wikipedia
 from impl.dbpedia.resource import DbpListpage
+from impl.util.transformer import EntityIndex
 from .word_tokenize import WordTokenizer, WordTokenizedPage
 from .pos_label import POSLabel, map_entities_to_pos_labels
 from .heuristics import find_subject_entities_for_listpage
@@ -68,8 +69,8 @@ def _chunk_word_tokenized_pages(page_data: List[WordTokenizedPage], negative_sam
 def _encode_labels(labels: List[List[str]], encodings) -> List[List[str]]:
     encoded_labels = []
     for doc_labels, doc_offset in zip(labels, encodings.offset_mapping):
-        # create an empty array of -100
-        doc_enc_labels = np.ones(len(doc_offset), dtype=int) * -100
+        # create an empty array of ignored labels
+        doc_enc_labels = np.ones(len(doc_offset), dtype=int) * EntityIndex.IGNORE.value
         arr_offset = np.array(doc_offset)
         # set labels whose first offset position is 0 and the second is not 0
         relevant_label_mask = (arr_offset[:, 0] == 0) & (arr_offset[:, 1] != 0)

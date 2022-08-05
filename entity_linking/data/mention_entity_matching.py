@@ -93,7 +93,7 @@ def _process_entity_info(entity_info: List[List[Tuple[int, Tuple[int, int], list
     num_chunks = len(entity_info)
     mention_spans = np.zeros((num_chunks, num_ents, 2), dtype=int)
     entity_indices = np.zeros((num_chunks, num_ents), dtype=int)
-    entity_labels = np.ones((num_chunks, num_ents)) * -100  # initialize all with label: ignore
+    entity_labels = np.ones((num_chunks, num_ents)) * EntityIndex.IGNORE.value  # initialize all with label: ignore
     ents_per_item = num_ents // items_per_chunk
     # prepare word blocker to retrieve entities with similar surface forms
     word_blocker = utils.load_or_create_cache('word_blocker_exact', WordBlocker)

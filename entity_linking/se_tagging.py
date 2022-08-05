@@ -4,7 +4,7 @@ from collections import namedtuple, Counter
 import numpy as np
 import utils
 from transformers import Trainer, IntervalStrategy, TrainingArguments, AutoTokenizer, AutoModelForTokenClassification, EvalPrediction
-from impl.util.transformer import SpecialToken
+from impl.util.transformer import SpecialToken, EntityIndex
 from impl.subject_entity.preprocess.pos_label import POSLabel
 from impl.subject_entity.preprocess.word_tokenize import ListingType
 from entity_linking.data import prepare
@@ -73,11 +73,11 @@ class SETagsEvaluator:
             mention_labels = eval_prediction.label_ids[:, 0, :]
             type_labels = np.expand_dims(eval_prediction.label_ids[:, 1, 0], -1)
             self.labels = mention_labels * type_labels
-            self.masks = mention_labels != -100
+            self.masks = mention_labels != EntityIndex.IGNORE.value
         else:
             self.mentions = eval_prediction.predictions.argmax(-1)
             self.labels = eval_prediction.label_ids
-            self.masks = self.labels != -100
+            self.masks = self.labels != EntityIndex.IGNORE.value
 
         self.listing_types = listing_types
 
@@ -98,21 +98,25 @@ class SETagsEvaluator:
             # remove invalid preds/labels
             mention_ids = mention_ids[mask]
             true_ids = true_ids[mask]
-
+            # run computation
             self.compute_metrics(self._collect_named_entities(mention_ids), self._collect_named_entities(true_ids), listing_type)
+
+        # compute overall stats for listing types
+        for metric in self.results['overall']:
+            self.results['overall'][metric] = self.results[ListingType.ENUMERATION.value][metric] + self.results[ListingType.TABLE.value][metric]
 
         return self._compute_precision_recall_wrapper()
 
     @classmethod
-    def _collect_named_entities(cls, mention_ids):
-        named_entities = []
+    def _collect_named_entities(cls, mention_ids) -> set:
+        named_entities = set()
         start_offset = None
         ent_type = None
 
         for offset, mention_id in enumerate(mention_ids):
             if mention_id == 0:
                 if ent_type is not None and start_offset is not None:
-                    named_entities.append(Entity(ent_type, start_offset, offset))
+                    named_entities.add(Entity(ent_type, start_offset, offset))
                     start_offset = None
                     ent_type = None
             elif ent_type is None:
@@ -120,22 +124,20 @@ class SETagsEvaluator:
                 start_offset = offset
         # catches an entity that goes up until the last token
         if ent_type is not None and start_offset is not None:
-            named_entities.append(Entity(ent_type, start_offset, len(mention_ids)))
+            named_entities.add(Entity(ent_type, start_offset, len(mention_ids)))
         return named_entities
 
-    def compute_metrics(self, pred_named_entities, true_named_entities, listing_type):
+    def compute_metrics(self, pred_named_entities: set, true_named_entities: set, listing_type: str):
         # keep track of entities that overlapped
-        true_which_overlapped_with_pred = []
+        true_which_overlapped_with_pred = set()
 
         for pred in pred_named_entities:
-            found_overlap = False
-
             # Check each of the potential scenarios in turn. For scenario explanation see
             # http://www.davidsbatista.net/blog/2018/05/09/Named_Entity_Evaluation/
 
             # Scenario I: Exact match between true and pred
             if pred in true_named_entities:
-                true_which_overlapped_with_pred.append(pred)
+                true_which_overlapped_with_pred.add(pred)
                 self.results[listing_type]['strict']['correct'] += 1
                 self.results[listing_type]['ent_type']['correct'] += 1
                 self.results[listing_type]['exact']['correct'] += 1
@@ -143,9 +145,10 @@ class SETagsEvaluator:
 
             else:
                 # check for overlaps with any of the true entities
+                found_overlap = False
                 for true in true_named_entities:
-                    pred_range = range(pred.start_offset, pred.end_offset)
-                    true_range = range(true.start_offset, true.end_offset)
+                    pred_range = set(range(pred.start_offset, pred.end_offset))
+                    true_range = set(range(true.start_offset, true.end_offset))
 
                     # Scenario IV: Offsets match, but entity type is wrong
                     if true.start_offset == pred.start_offset and pred.end_offset == true.end_offset and true.e_type != pred.e_type:
@@ -153,16 +156,15 @@ class SETagsEvaluator:
                         self.results[listing_type]['ent_type']['incorrect'] += 1
                         self.results[listing_type]['partial']['correct'] += 1
                         self.results[listing_type]['exact']['correct'] += 1
-                        true_which_overlapped_with_pred.append(true)
+                        true_which_overlapped_with_pred.add(true)
                         found_overlap = True
                         break
 
                     # check for an overlap i.e. not exact boundary match, with true entities
-                    elif set(true_range).intersection(set(pred_range)):
-                        true_which_overlapped_with_pred.append(true)
+                    elif true_range.intersection(pred_range):
+                        true_which_overlapped_with_pred.add(true)
 
                         # Scenario V: There is an overlap (but offsets do not match exactly), and the entity type is the same.
-                        # 2.1 overlaps with the same entity type
                         if pred.e_type == true.e_type:
                             self.results[listing_type]['strict']['incorrect'] += 1
                             self.results[listing_type]['ent_type']['correct'] += 1
@@ -188,19 +190,11 @@ class SETagsEvaluator:
                     self.results[listing_type]['exact']['spurious'] += 1
 
         # Scenario III: Entity was missed entirely.
-        for true in true_named_entities:
-            if true not in true_which_overlapped_with_pred:
-                self.results[listing_type]['strict']['missed'] += 1
-                self.results[listing_type]['ent_type']['missed'] += 1
-                self.results[listing_type]['partial']['missed'] += 1
-                self.results[listing_type]['exact']['missed'] += 1
-
-        # compute overall stats for listing types
-        for lt, stats in self.results.items():
-            if lt == 'overall':
-                continue
-            for metric, values in stats.items():
-                self.results['overall'][metric] += values
+        missed_entities = len(true_named_entities.difference(true_which_overlapped_with_pred))
+        self.results[listing_type]['strict']['missed'] += missed_entities
+        self.results[listing_type]['ent_type']['missed'] += missed_entities
+        self.results[listing_type]['partial']['missed'] += missed_entities
+        self.results[listing_type]['exact']['missed'] += missed_entities
 
     def _compute_precision_recall_wrapper(self):
         final_metrics = {}

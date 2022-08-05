@@ -1,6 +1,7 @@
 import torch
 from torch import nn
 from transformers import AutoModel
+from impl.util.transformer import EntityIndex
 
 
 class TransformerForMentionDetectionAndTypePrediction(nn.Module):
@@ -70,7 +71,7 @@ class TransformerForMentionDetectionAndTypePrediction(nn.Module):
                 # Only keep active parts of the loss
                 active_loss = attention_mask.view(-1) == 1
                 active_logits = md_logits.view(-1, self.md_num_labels)
-                active_labels = torch.where(active_loss, md_labels.reshape(-1), torch.tensor(-100).type_as(md_labels))
+                active_labels = torch.where(active_loss, md_labels.reshape(-1), torch.tensor(EntityIndex.IGNORE.value).type_as(md_labels))
                 md_loss = loss_criterion(active_logits, active_labels)
             else:
                 md_loss = loss_criterion(md_logits.view(-1, self.md_num_labels), md_labels.reshape(-1))
