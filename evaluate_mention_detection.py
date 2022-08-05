@@ -4,7 +4,7 @@ import os
 
 if __name__ == '__main__':
     # first parse all the arguments
-    parser = argparse.ArgumentParser(description='Run the evaluation of subject entity tagging.')
+    parser = argparse.ArgumentParser(description='Run the evaluation of subject entity mention detection.')
     parser.add_argument('gpu', type=int, choices=range(8), help='Number of GPU to use')
     parser.add_argument('model_name', help='Huggingface Transformer model used for tagging')
     parser.add_argument('-e', '--epochs', type=int, default=3, help='epochs to train')
@@ -28,6 +28,6 @@ if __name__ == '__main__':
     np.random.seed(SEED)
     torch.manual_seed(SEED)
     # then import application-specific code and run it
-    from entity_linking.se_tagging import run_evaluation
+    from entity_linking.mention_detection import run_evaluation
     assert not (args.ignore_tags and args.predict_single_tag), 'Can\'t ignore tags AND predict a single tag.'
     run_evaluation(args.model_name, args.epochs, args.batch_size, args.learning_rate, args.warmup_steps, args.weight_decay, args.ignore_tags, args.predict_single_tag, args.negative_sample_size)

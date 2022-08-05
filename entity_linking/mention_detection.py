@@ -28,9 +28,9 @@ def run_evaluation(model_name: str, epochs: int, batch_size: int, learning_rate:
     training_args = TrainingArguments(
         seed=42,
         save_strategy=IntervalStrategy.NO,
-        output_dir=f'./se_eval/output/{run_id}',
+        output_dir=f'./entity_linking/MD/output/{run_id}',
         logging_strategy=IntervalStrategy.STEPS,
-        logging_dir=f'./se_eval/logs/{run_id}',
+        logging_dir=f'./entity_linking/MD/logs/{run_id}',
         logging_steps=500,
         evaluation_strategy=IntervalStrategy.STEPS,
         eval_steps=5000,

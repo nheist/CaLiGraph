@@ -88,7 +88,7 @@ def _is_valid_entity_name(entity_name: str) -> bool:
 
 
 def get_tagging_tokenizer_and_model():
-    path_to_model = utils._get_cache_path('transformer_for_SE_tagging')
+    path_to_model = utils._get_cache_path('transformer_for_mention_detection')
     if not path_to_model.is_dir():
         _train_tagger()
     tokenizer = AutoTokenizer.from_pretrained(path_to_model)
@@ -98,7 +98,7 @@ def get_tagging_tokenizer_and_model():
 
 
 def _train_tagger():
-    pretrained_model = utils.get_config('subject_entity.model_se_tagging')
+    pretrained_model = utils.get_config('subject_entity.model_mention_detection')
     tokenizer = AutoTokenizer.from_pretrained(pretrained_model, add_prefix_space=True, additional_special_tokens=list(SpecialToken.all_tokens()))
     train_dataset = sample.get_mention_detection_listpage_training_dataset(tokenizer)
 
@@ -109,7 +109,7 @@ def _train_tagger():
     training_args = TrainingArguments(
         save_strategy=IntervalStrategy.NO,
         output_dir=f'/tmp',
-        logging_dir=f'./logs/transformers/tagging_{run_id}',
+        logging_dir=f'./logs/transformers/MD_{run_id}',
         logging_steps=500,
         per_device_train_batch_size=16,
         num_train_epochs=3,
@@ -123,7 +123,7 @@ def _train_tagger():
     )
 
     trainer.train()
-    path_to_model = utils._get_cache_path('transformer_for_SE_tagging')
+    path_to_model = utils._get_cache_path('transformer_for_mention_detection')
     model.save_pretrained(path_to_model)
     tokenizer.save_pretrained(path_to_model)
 

@@ -13,7 +13,7 @@ category:
 cat2ax:
   pattern_confidence: 0.05
 subject_entity:
-  model_se_tagging: 'distilbert-base-cased'
+  model_mention_detection: 'distilbert-base-cased'
   negative_sample_size: 0.0
 cali2ax:
   pattern_confidence: 0.17
@@ -244,8 +244,8 @@ cache:
   subject_entity_predictions:
     filename: 'subject-entity-predictions'
     version: 1
-  transformer_for_SE_tagging:
-    filename: 'transformer-for-SE-tagging'
+  transformer_for_mention_detection:
+    filename: 'transformer-for-mention-detection'
     version: 1
     store_as_folder: True
   caligraph_ontology:
