@@ -105,7 +105,7 @@ def _generate_negative_tokenized_page_chunk(contexts: dict, items: dict, max_ite
     listing_type, listing_topsection, listing_section, listing_context = random.choice(contexts[quantifier])
     listing_items = [deepcopy(i) for i in random.choices(items[quantifier], k=num_items)]
     for i in listing_items:  # set all labels to NO_ENTITY as we are generating negatives
-        i.entity_indices = [EntityIndex.NO_ENTITY] * len(i.entity_indices)
+        i.entity_indices = [EntityIndex.NO_ENTITY.value] * len(i.entity_indices)
     # manufacture page and convert to chunks
     listing = WordTokenizedListing(listing_type, listing_context, listing_items, listing_topsection, listing_section)
     page = WordTokenizedPage(-1, [listing])
