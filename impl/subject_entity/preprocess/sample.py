@@ -102,7 +102,7 @@ def _generate_negative_tokenized_page_chunk(contexts: dict, items: dict, max_ite
     # pick number of items to put in the chunk
     num_items = random.choice(range(3, max_items_per_chunk + 1))
     # draw context and items
-    listing_type, listing_topsection, listing_section, listing_context = contexts[quantifier]
+    listing_type, listing_topsection, listing_section, listing_context = random.choice(contexts[quantifier])
     listing_items = [deepcopy(i) for i in random.choices(items[quantifier], k=num_items)]
     for i in listing_items:  # set all labels to NO_ENTITY as we are generating negatives
         i.entity_indices = [EntityIndex.NO_ENTITY] * len(i.entity_indices)
