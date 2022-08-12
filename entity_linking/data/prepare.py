@@ -61,7 +61,8 @@ def _find_subject_entities_for_listing_labels(wp: WikipediaPage, listing_labels:
     dbo = DbpOntologyStore.instance()
     label_to_type_mapping = defaultdict(set)
     for t, label in TYPE_TO_LABEL_MAPPING.items():
-        label_to_type_mapping[label.name].add(dbo.get_class_by_name(t))
+        if dbo.has_class_with_name(t):
+            label_to_type_mapping[label.name].add(dbo.get_class_by_name(t))
     # find valid entities based on POS labels
     dbr = DbpResourceStore.instance()
     valid_ents, invalid_ents = set(), set()
