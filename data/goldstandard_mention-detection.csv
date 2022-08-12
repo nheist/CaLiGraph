@@ -99,7 +99,7 @@ NONE	4629844	http://en.wikipedia.org/wiki/Big_12/Pac-10_Hardwood_Series	Results	
 NONE	4629844	http://en.wikipedia.org/wiki/Big_12/Pac-10_Hardwood_Series	Results	2007	1	table	[ROW] Kansas [COL] Arizona [COL] November 25 [COL] KU 76–72 ( OT ) [COL] Lawrence , KS [COL] X [COL]
 NONE	4629844	http://en.wikipedia.org/wiki/Big_12/Pac-10_Hardwood_Series	Results	2008	2	enumeration	[E1] On November 23 , 2008 , Missouri defeated Southern California 83–72 in San Juan , Puerto Rico as part of the O'Reilly Auto Parts Puerto Rico Tip Off .
 NONE	4629844	http://en.wikipedia.org/wiki/Big_12/Pac-10_Hardwood_Series	Results	2008	3	table	[ROW] Colorado [COL] Stanford [COL] November 29 [COL] SU 76–62 [COL] Palo Alto , CA [COL] [COL] X
-NONE	4629844	http://en.wikipedia.org/wiki/Big_12/Pac-10_Hardwood_Series	Results	2009	4	enumeration	[E1] On November 15 , 2009 , Texas Tech defeated Oregon State 64–60 in Lubbock ; the game was not organized as part of the Series .
+NONE	4629844	http://en.wikipedia.org/wiki/Big_12/Pac-10_Hardwood_Series	Results	2009	4	enumeration	"[E1] On November 15 , 2009 , Texas Tech defeated Oregon State 64–60 in Lubbock ; the game was not organized as part of the Series ."
 NONE	4629844	http://en.wikipedia.org/wiki/Big_12/Pac-10_Hardwood_Series	Results	2009	5	table	[ROW] Nebraska [COL] Southern California [COL] November 29 [COL] NU 51–48 [COL] Los Angeles [COL] X [COL]
 NONE	4629844	http://en.wikipedia.org/wiki/Big_12/Pac-10_Hardwood_Series	Results	2010	6	enumeration	[E1] On November 27 , 2010 , Kansas defeated Arizona 87–79 in Las Vegas as part of the Las Vegas Invitional .
 NONE	4629844	http://en.wikipedia.org/wiki/Big_12/Pac-10_Hardwood_Series	Results	2010	7	table	[ROW] Nebraska [COL] Southern California [COL] November 27 [COL] NU 60–58 [COL] Lincoln , NE [COL] X [COL]
@@ -113,8 +113,8 @@ PERSON	14333489	http://en.wikipedia.org/wiki/2017–18_NorthPort_Batang_Pier_sea
 GPE	3313009	http://en.wikipedia.org/wiki/Psychedelic_States	States	States	0	enumeration	[E1] Georgia
 GPE	10325266	http://en.wikipedia.org/wiki/Heqing,_Lengshuijiang	Administrative division	Administrative division	0	enumeration	[E1] Baoxing Community ( )
 WORK_OF_ART	14963393	http://en.wikipedia.org/wiki/2011_Academy_Awards	Main	Main	0	enumeration	[E1] 83rd Academy Awards , the Academy Awards ceremony which took place in 2011 honouring the best in film for 2010
-PERSON	3528278	http://en.wikipedia.org/wiki/Polaris_(convention)	History	Polaris 26	0	enumeration	[E1] Wil Wheaton - Actor : Star Trek The Next Generation ; Big Bang Theory
-PERSON	3528278	http://en.wikipedia.org/wiki/Polaris_(convention)	History	Polaris 25	1	enumeration	[E1] Ben Browder - Actor : Farscape ; Stargate SG-1
+PERSON	3528278	http://en.wikipedia.org/wiki/Polaris_(convention)	History	Polaris 26	0	enumeration	"[E1] Wil Wheaton - Actor : Star Trek The Next Generation ; Big Bang Theory"
+PERSON	3528278	http://en.wikipedia.org/wiki/Polaris_(convention)	History	Polaris 25	1	enumeration	"[E1] Ben Browder - Actor : Farscape ; Stargate SG-1"
 PERSON	3528278	http://en.wikipedia.org/wiki/Polaris_(convention)	History	Polaris 24	2	enumeration	[E1] Robin Dunne - Actor : Sanctuary
 LOC	5056175	http://en.wikipedia.org/wiki/West_Coast_Wilderness_Railway	Stopping places and named features	Stopping places and named features	0	enumeration	[E1] Queenstown ( terminus )
 LOC	5056175	http://en.wikipedia.org/wiki/West_Coast_Wilderness_Railway	Stopping places and named features	Stopping places and named features	1	enumeration	"[E1] "" Quarter Mile Bridge "" ( original destroyed by floods in 1974 , reconstruction much shorter )"
@@ -189,8 +189,8 @@ WORK_OF_ART	9579829	http://en.wikipedia.org/wiki/Tag_Me_(album)	Music videos	Mus
 WORK_OF_ART	6725298	http://en.wikipedia.org/wiki/Lyall_Smith	Selected articles by Smith	Selected articles by Smith	0	enumeration	[E1] My Greatest Diamond Thrill , By Lou Boudreau , As Told To Lyall_Smith : Long Homers Off Rigney Gave Shortstop Top Kick ( Lou Boudreau ) , The Sporting News
 PERSON	1470424	http://en.wikipedia.org/wiki/Hi-Rock	Members	Members	0	enumeration	[E1] An – Pornprom Pumsawas ( อั๋น : พรพรหม พุ่มสวัสดิ์ ): Lead vocals
 PERSON	1470424	http://en.wikipedia.org/wiki/Hi-Rock	Members	Members	1	enumeration	[E1] Pe – Surat Tabwang ( เป้ : สุรัช ทับวัง ): Lead vocals
-WORK_OF_ART	1470424	http://en.wikipedia.org/wiki/Hi-Rock	Discography	Discography	2	enumeration	[E1] คนพันธุ์ร็อก ( Khon Pan Rock ; 1990 )
-PERSON	12327010	http://en.wikipedia.org/wiki/William_Palmer,_2nd_Earl_of_Selborne	Family	Family	0	enumeration	[E1] Lady Mabel Laura Georgiana Palmer ( 6 October 188415 July 1958 ) ; married Charles Grey , 5th Earl Grey , and had two daughters .
+WORK_OF_ART	1470424	http://en.wikipedia.org/wiki/Hi-Rock	Discography	Discography	2	enumeration	"[E1] คนพันธุ์ร็อก ( Khon Pan Rock ; 1990 )"
+PERSON	12327010	http://en.wikipedia.org/wiki/William_Palmer,_2nd_Earl_of_Selborne	Family	Family	0	enumeration	"[E1] Lady Mabel Laura Georgiana Palmer ( 6 October 188415 July 1958 ) ; married Charles Grey , 5th Earl Grey , and had two daughters ."
 PERSON	14317885	http://en.wikipedia.org/wiki/Wilson_Staff	Sponsorship deals	European Tour	0	enumeration	[E1] Andreas Hartø
 PERSON	14317885	http://en.wikipedia.org/wiki/Wilson_Staff	Sponsorship deals	PGA Tour	1	enumeration	[E1] Pádraig Harrington
 PERSON	14317885	http://en.wikipedia.org/wiki/Wilson_Staff	Sponsorship deals	Former players	2	enumeration	[E1] Brad McIntosh
@@ -235,9 +235,9 @@ WORK_OF_ART	4824564	http://en.wikipedia.org/wiki/Joanna_Szczepkowska	Selected fi
 NONE	12679533	http://en.wikipedia.org/wiki/Klein_(crater)	Satellite craters	Satellite craters	0	table	[ROW] A [COL] 11.4 ° S [COL] 3.0 ° E [COL] 9 km
 FAC	14225013	http://en.wikipedia.org/wiki/Tusenfryd	Rides	Roller Coasters	0	table	"[ROW] Loopen [COL] Steel roller coaster [COL] Vekoma [COL] 1988 [COL] This attraction was built in 1988 , and was the first roller coaster in TusenFryd . The name literally means "" the loop "" . The ride is a custom [COL] 150px ] ]"
 FAC	14225013	http://en.wikipedia.org/wiki/Tusenfryd	Rides	Water Rides	1	enumeration	[E1] Tømmerstupet - A 330 meters long log flume ride that ends in a 7 meter high drop . Opened in 1988 , made by Arrow Dynamics with an on -
-FAC	14225013	http://en.wikipedia.org/wiki/Tusenfryd	Rides	Other Rides	2	enumeration	[E1] Kanofarten - swinging pirate ship ; height limit 1,1 m / 1,2 m alone . Opened in 2008 .
-FAC	14225013	http://en.wikipedia.org/wiki/Tusenfryd	Rides	Kiddie Rides	3	enumeration	[E1] Ballongferden - mini Ferris wheel ; opened in 2005 . Zamperla .
-FAC	14225013	http://en.wikipedia.org/wiki/Tusenfryd	Rides	Water Park	4	enumeration	[E1] Badefrydelven is a tube ride ( 2000 ) ; height limit 1,2 m.
+FAC	14225013	http://en.wikipedia.org/wiki/Tusenfryd	Rides	Other Rides	2	enumeration	"[E1] Kanofarten - swinging pirate ship ; height limit 1,1 m / 1,2 m alone . Opened in 2008 ."
+FAC	14225013	http://en.wikipedia.org/wiki/Tusenfryd	Rides	Kiddie Rides	3	enumeration	"[E1] Ballongferden - mini Ferris wheel ; opened in 2005 . Zamperla ."
+FAC	14225013	http://en.wikipedia.org/wiki/Tusenfryd	Rides	Water Park	4	enumeration	"[E1] Badefrydelven is a tube ride ( 2000 ) ; height limit 1,2 m."
 NONE	14225013	http://en.wikipedia.org/wiki/Tusenfryd	Timeline	Timeline	5	enumeration	[E1] 1988 - Official opening of TusenFryd by Åse Kleveland
 NONE	4720045	http://en.wikipedia.org/wiki/Jagan_Institute_of_Management_Studies	Rankings	Rankings	0	enumeration	[E1] Jagan_Institute_of_Management_Studies , Sector 5 , Rohini is accredited with ' A ' grade by NAAC ( National Assessment and Accreditation Council )
 PERSON	10424454	http://en.wikipedia.org/wiki/The_Institute_of_World_Politics	Notable alumni	Notable alumni	0	enumeration	[E1] Brigadier General Brian J. Mennes , Former commander of the 4th Brigade , 82nd Airborne Division , and the 1st Ranger Battalion
@@ -274,7 +274,7 @@ WORK_OF_ART	5546418	http://en.wikipedia.org/wiki/Great_Pianists_of_the_20th_Cent
 WORK_OF_ART	5546418	http://en.wikipedia.org/wiki/Great_Pianists_of_the_20th_Century_–_Géza_Anda	Disc 2	Disc 2	1	enumeration	"[E1] "" Waltz in E flat , Op . 18 ' Grande Valse brillante "" – 5:58"
 NONE	739861	http://en.wikipedia.org/wiki/Joseph_Gabriel_de_Poulpiquet_de_Coatlès	Sources and references	Sources and references	0	enumeration	[E1]
 PERSON	8339631	http://en.wikipedia.org/wiki/Wanna-Be's	Voice actors	Voice actors	0	enumeration	[E1] Eriko Hara as Miki Morita
-LOC	3162952	http://en.wikipedia.org/wiki/Sispara	Main	Main	0	enumeration	[E1] Sispara peak , a large hill in Kerala ;
+LOC	3162952	http://en.wikipedia.org/wiki/Sispara	Main	Main	0	enumeration	"[E1] Sispara peak , a large hill in Kerala ;"
 FAC	2141917	http://en.wikipedia.org/wiki/Theatre_in_the_round	Theatres in the round	Australia	0	enumeration	[E1] La Boite Theatre Building , Brisbane ( no longer used as a theatre )
 FAC	2141917	http://en.wikipedia.org/wiki/Theatre_in_the_round	Theatres in the round	Canada	1	enumeration	[E1] Globe Theatre , Regina , Saskatchewan
 FAC	2141917	http://en.wikipedia.org/wiki/Theatre_in_the_round	Theatres in the round	France	2	enumeration	[E1] L'Européen , Paris
@@ -302,226 +302,226 @@ ORG	989700	http://en.wikipedia.org/wiki/Theatre_Faculty_of_the_Academy_of_Perfor
 ORG	989700	http://en.wikipedia.org/wiki/Theatre_Faculty_of_the_Academy_of_Performing_Arts_in_Prague	Departments	Departments	2	enumeration	[E1] Stage Creation and the Theory of Stage Creation
 PERSON	989700	http://en.wikipedia.org/wiki/Theatre_Faculty_of_the_Academy_of_Performing_Arts_in_Prague	Notable alumni	Notable alumni	3	enumeration	[E1] Anda - Louise Bogza , Romanian singer
 PERSON	989700	http://en.wikipedia.org/wiki/Theatre_Faculty_of_the_Academy_of_Performing_Arts_in_Prague	Deans of DAMU	Deans of DAMU	4	enumeration	[E1] 1946–1948 Jiří Frejka
-	12418642	http://en.wikipedia.org/wiki/1994_Champion_Hurdle	Race details	Race details	0	enumeration	[E1] Sponsor : Smurfit
-	12418642	http://en.wikipedia.org/wiki/1994_Champion_Hurdle	Full result	Full result	1	table	[ROW] 1 [COL] [COL] Flakey Dove ( GB ) [COL] 8 [COL] Mark Dwyer [COL] Richard Price ( GB ) [COL] 9/1
-	12418642	http://en.wikipedia.org/wiki/1994_Champion_Hurdle	Winner's details	Winner's details	2	enumeration	[E1] Sex : Mare
-	7134425	http://en.wikipedia.org/wiki/Be_Strong,_Geum-soon!	Cast	Cast	0	enumeration	[E1] Han Hye - jin - Na Geum - soon
-	14649610	http://en.wikipedia.org/wiki/UE_Rubí	Season to season	Season to season	0	enumeration	[E1] 1 season in Segunda División B
-	14649610	http://en.wikipedia.org/wiki/UE_Rubí	History	History	1	enumeration	[E1] Regional Preferente de Cataluña ( 3 ): 1999 - 00 , 2002–03 , 2008 - 09 .
-	3468574	http://en.wikipedia.org/wiki/Bibliotheca_Alexandrina	[[Internet Archive]] partnership	[[Internet Archive]] partnership	0	enumeration	[E1] 10 billion web pages spanning the years 1996–2001 from over 16 million sites
-	3468574	http://en.wikipedia.org/wiki/Bibliotheca_Alexandrina	Library services	Six specialized libraries	1	enumeration	[E1] The Arts and Multimedia Library
-	3468574	http://en.wikipedia.org/wiki/Bibliotheca_Alexandrina	Library services	Manuscript Museum	2	enumeration	[E1] Rare Collections : This section includes the BA 's unique items , such as original manuscripts , early printed books , maps , and antique coins .
-	3468574	http://en.wikipedia.org/wiki/Bibliotheca_Alexandrina	Library services	Personal collections	3	enumeration	"[E1] The World of Shadi Abdel Salam : "" The World of Shadi Abdel Salam "" exhibition contains many of the works and effects of the Egyptian film director , screenwriter"
-	3468574	http://en.wikipedia.org/wiki/Bibliotheca_Alexandrina	Library services	CULTURAMA	4	enumeration	[E1] Ancient Egyptian Period
-	3468574	http://en.wikipedia.org/wiki/Bibliotheca_Alexandrina	Library services	VISTA	5	enumeration	[E1] BA Model : A complete virtual recreation of the BA including the Library 's main building , planetarium , study rooms , and even the Library 's furniture will be
-	3713838	http://en.wikipedia.org/wiki/Nagpur_SEC_railway_division	List of railway stations and towns	List of railway stations and towns	0	table	[ROW] A-1 [COL] 1 [COL] Gondia Junction
-	10964651	http://en.wikipedia.org/wiki/Michael_Connell_(golfer)	Professional wins (3)	Professional wins (3)	0	enumeration	[E1] 2002 Eagle Bluff , Club @ North Creek ( both NGA Hooters Tour )
-	10147689	http://en.wikipedia.org/wiki/Mass_Effect:_Andromeda	Reception	Accolades	0	table	[ROW] 2016 [COL] Golden Joystick Awards 2016 [COL] Most Wanted Game [COL] [COL]
-	2492315	http://en.wikipedia.org/wiki/Rio_Grande_Raiders	Cast	Cast	0	enumeration	[E1] Sunset Carson as Sunset Carson
-	6295607	http://en.wikipedia.org/wiki/Clarke-Travers_baronets	Clarke, later Clarke-Travers, later [[Clarke baronets]], of Crosses Green (1804)	Clarke, later Clarke-Travers, later [[Clarke baronets]], of Crosses Green (1804)	0	enumeration	[E1] Sir William Clarke , 1st Baronet ( 1762–1808 )
-	2498482	http://en.wikipedia.org/wiki/Anton_Gustafsson_tolkar_Iron_Maiden	Track listing	Track listing	0	enumeration	"[E1] "" Run to the Hills """
-	2390866	http://en.wikipedia.org/wiki/Oko-Juwoi_language	Grammar	Grammar	0	enumeration	"[E1] A cushion or sponge is ot - yop "" round - soft "" , from the prefix attached to words relating to the head or heart ."
-	2390866	http://en.wikipedia.org/wiki/Oko-Juwoi_language	Grammar	Grammar	1	enumeration	"[E1] un - bēri - ŋa "" clever "" ( hand - good ) ."
-	2390866	http://en.wikipedia.org/wiki/Oko-Juwoi_language	Grammar	Grammar	2	table	[ROW] thou , thy [COL] ŋ- [COL] you , your [COL] ŋ-
-	9476208	http://en.wikipedia.org/wiki/Greatest_Hits_Live_(Tina_Arena_album)	Track listing	Track listing	0	enumeration	"[E1] "" Soul Mate # 9 "" ( Peter Amato , Tina Arena , Desmond Child ) – 4:47"
-	9476208	http://en.wikipedia.org/wiki/Greatest_Hits_Live_(Tina_Arena_album)	Personnel	Personnel	1	enumeration	[E1] Tina Arena – vocals
-	4129186	http://en.wikipedia.org/wiki/East_Francia	List of kings	List of kings	0	enumeration	[E1] Louis the German ( 843–876 )
-	7722385	http://en.wikipedia.org/wiki/Marie_Anne_de_Bourbon	Biography	Princesse Douairière	0	enumeration	[E1] Marie Anne de Bourbon ( 1666–1739 ) , the illegitimate daughter of Louis XIV and Louise de La Vallière ; the wife of Louis Armand I de Bourbon , prince
-	7722385	http://en.wikipedia.org/wiki/Marie_Anne_de_Bourbon	Titles and styles	Titles and styles	1	enumeration	[E1] 2 October 1666 – 14 May 1667 : Marie Anne de Bourbon
-	12970384	http://en.wikipedia.org/wiki/15th_Canadian_Film_Awards	Winners	Films	0	enumeration	[E1] Film of the Year : Lonely Boy — Wolf Koenig , Roman Kroitor
-	12970384	http://en.wikipedia.org/wiki/15th_Canadian_Film_Awards	Winners	Films	1	enumeration	[E1] General Information : Lonely Boy — Wolf Koenig , Roman Kroitor
-	12970384	http://en.wikipedia.org/wiki/15th_Canadian_Film_Awards	Winners	Films	2	enumeration	[E1] Training and Instruction : Mathematics at Your Fingertips — John Howe
-	12970384	http://en.wikipedia.org/wiki/15th_Canadian_Film_Awards	Winners	Craft	3	enumeration	[E1] Colour Cinematography : Donald Wilder , Nahanni
-	12970384	http://en.wikipedia.org/wiki/15th_Canadian_Film_Awards	Winners	Special awards	4	enumeration	"[E1] Trevor Fletcher , Four Line Conics — "" in recognition of its imaginative and experimental illustration of a specialized mathematical concept """
-	13476528	http://en.wikipedia.org/wiki/Portland,_Wisconsin	Main	Main	0	enumeration	[E1] Portland , Dodge County , Wisconsin , a town
-	7234309	http://en.wikipedia.org/wiki/Ken_Stabler	After football	In media	0	enumeration	"[E1] Stabler was featured on a Saturday Night Live skit as the spokesman for a fictional product called the "" Lung Brush "" ."
-	12783044	http://en.wikipedia.org/wiki/The_Boat_Race_1905	Crews	Crews	0	table	[ROW] Bow [COL] R. W. Somers - Smith [COL] Merton [COL] 10 st 9 lb [COL] H. Sanger ( P ) [COL] Lady Margaret Boat Club [COL] 10 st 9 lb
-	1532418	http://en.wikipedia.org/wiki/Lord_of_Mann	List of lords	16th century	0	enumeration	[E1] Thomas , Earl of Derby , 1504–1521
-	1532418	http://en.wikipedia.org/wiki/Lord_of_Mann	List of lords	Interim lords (1607–1609)	1	enumeration	[E1] Henry , Earl of Northampton , 1607–1608
-	1532418	http://en.wikipedia.org/wiki/Lord_of_Mann	List of lords	17th and 18th centuries	2	enumeration	[E1] William , Earl of Derby , 1609–1612
-	1532418	http://en.wikipedia.org/wiki/Lord_of_Mann	List of lords	Revestment	3	enumeration	"[E1] "" An Act empowering the Lords of the Treasury to Purchase all the Manorial Rights of the Duke of Atholl in the Isle of Man "" [ c. 34 ]"
-	8063170	http://en.wikipedia.org/wiki/Road_to_Rouen	Personnel	Personnel	0	enumeration	[E1] Gaz Coombes – vocals , guitar
-	8063170	http://en.wikipedia.org/wiki/Road_to_Rouen	Release history	Release history	1	table	[ROW] United Kingdom [COL] 15 August 2005 [COL] Parlophone [COL] CD [COL] 00946 333334 2 0
-	443521	http://en.wikipedia.org/wiki/Vladivostok_Time	Areas on [[Vladivostok]] Time	Areas on [[Vladivostok]] Time	0	enumeration	[E1] Khabarovsk Krai
-	443521	http://en.wikipedia.org/wiki/Vladivostok_Time	Cities on [[Vladivostok]] Time	Cities on [[Vladivostok]] Time	1	enumeration	[E1] Artyom
-	9065212	http://en.wikipedia.org/wiki/South_Armidale_United_FC	Achievements	Achievements	0	enumeration	[E1] Northern Inland Premier League Grand Final : Runners - up – 2005 , 2014
-	9422996	http://en.wikipedia.org/wiki/Fucking_Consumer	Track listing	Track listing	0	enumeration	"[E1] "" Space Invaders Are Smoking Grass "" ( Ferenc Van Der Sluijs ) – 6:08"
-	4109481	http://en.wikipedia.org/wiki/European_Journal_of_Human_Genetics	Abstracting and indexing	Abstracting and indexing	0	enumeration	[E1] BIOSIS Previews
-	2192787	http://en.wikipedia.org/wiki/Jim_Johnston_(English_musician)	Discography	Discography	0	enumeration	[E1] Voyage of Oblivion ( 2012 ) Rattlewatch Records
-	7793021	http://en.wikipedia.org/wiki/Maple_Shade_School_District	Schools	Schools	0	enumeration	[E1] Howard R. Yocum Elementary School with 556 students in grades K to 2
-	7793021	http://en.wikipedia.org/wiki/Maple_Shade_School_District	Schools	Schools	1	enumeration	[E1] Maple Shade High School with 861 students in grades 7 - 12
-	7793021	http://en.wikipedia.org/wiki/Maple_Shade_School_District	Administration	Administration	2	enumeration	[E1] Beth Norcia , Superintendent
-	45475	http://en.wikipedia.org/wiki/Runaway_(1995_film)	Cast	Cast	0	enumeration	[E1] Lee Byung - hun ... Lee Dong - ho
-	2720112	http://en.wikipedia.org/wiki/Cycling_at_the_2006_Commonwealth_Games_–_Men's_sprint	Qualification	Qualification	0	table	[ROW] 1 [COL] [COL] 10.294 [COL] 69.943
-	2720112	http://en.wikipedia.org/wiki/Cycling_at_the_2006_Commonwealth_Games_–_Men's_sprint	Results	1/8 Finals	1	table	[ROW] 1 [COL] 1 [COL] [COL] 11.279 [COL] 63.835 [COL] Q
-	2720112	http://en.wikipedia.org/wiki/Cycling_at_the_2006_Commonwealth_Games_–_Men's_sprint	Results	1/8 Finals Repechage	2	table	[ROW] 1 [COL] 1 [COL] [COL] 11.457 [COL] 62.843 [COL] Q
-	2720112	http://en.wikipedia.org/wiki/Cycling_at_the_2006_Commonwealth_Games_–_Men's_sprint	Results	Quarter-finals	3	table	[ROW] 1 [COL] 1 [COL] [COL] 11.096 [COL] 11.100 [COL] [COL] Q
-	2720112	http://en.wikipedia.org/wiki/Cycling_at_the_2006_Commonwealth_Games_–_Men's_sprint	Results	Race for 5th-8th Places	4	table	[ROW] 5 [COL] [COL] 11.439 [COL] 62.942
-	2720112	http://en.wikipedia.org/wiki/Cycling_at_the_2006_Commonwealth_Games_–_Men's_sprint	Results	Semi-finals	5	table	[ROW] 1 [COL] 1 [COL] [COL] 11.369 [COL] [COL] 10.906 [COL] Q
-	2720112	http://en.wikipedia.org/wiki/Cycling_at_the_2006_Commonwealth_Games_–_Men's_sprint	Results	Finals	6	table	[ROW] [COL] [COL] 11.346 [COL] 10.932 [COL]
-	8154158	http://en.wikipedia.org/wiki/N._K._Damodaran	Main	Main	0	enumeration	[E1] Kerala sahithyam
-	7651145	http://en.wikipedia.org/wiki/Gimme_Your_Love	Personnel	Personnel	0	enumeration	[E1] Walter Afanasieff – keyboards , synth bass
-	6062323	http://en.wikipedia.org/wiki/Dumitru_Prunariu	Awards and honors	Awards and honors	0	enumeration	[E1] In 1981 , after completing the Soyuz 40 mission , Prunariu received the awards of Hero of Romania and Hero of the Soviet Union .
-	11261939	http://en.wikipedia.org/wiki/Karol_Mannion	Honours	Honours	0	enumeration	[E1] 1 Connacht Senior Football Championship ( 2010 )
-	11261939	http://en.wikipedia.org/wiki/Karol_Mannion	Honours	Honours	1	enumeration	[E1] 1 All - Ireland Senior Club Football Championship ( 2013 )
-	7311191	http://en.wikipedia.org/wiki/Bouley_Bay_Hill_Climb	[[Bouley_Bay_Hill_Climb]] past winners	[[Bouley_Bay_Hill_Climb]] past winners	0	table	[ROW] 1946 [COL] G. Bainbridge [COL] E.R.A. [COL] 55.9 sec [COL]
-	13982770	http://en.wikipedia.org/wiki/Irnik_Point	Map	Map	0	enumeration	[E1] L.L. Ivanov . Antarctica : Livingston Island and Greenwich , Robert , Snow and Smith Islands . Scale 1:120000 topographic map . Troyan : Manfred Wörner Foundation , 2009 .
-	2076433	http://en.wikipedia.org/wiki/Abu_Ishaque	Works	Novels	0	enumeration	[E1] Surja - Dighal Bari ( 1955 )
-	2076433	http://en.wikipedia.org/wiki/Abu_Ishaque	Works	Short stories	1	enumeration	"[E1] "" Jook """
-	2076433	http://en.wikipedia.org/wiki/Abu_Ishaque	Awards	Awards	2	enumeration	[E1] Bangla Academy Literary Award ( 1963 )
-	7648803	http://en.wikipedia.org/wiki/Riyu_Kosaka	Discography	Singles	0	enumeration	[E1] True ... ( 2001 )
-	7648803	http://en.wikipedia.org/wiki/Riyu_Kosaka	Discography	Albums	1	enumeration	[E1] Begin ( 2004 )
-	7648803	http://en.wikipedia.org/wiki/Riyu_Kosaka	Discography	Other CDs	2	enumeration	[E1] Baby 's Tears ( 2006 ) ( as part of the Sky Girls Original Soundtrack )
-	7648803	http://en.wikipedia.org/wiki/Riyu_Kosaka	Discography	DVDs	3	enumeration	[E1] Riyu Kosaka First Live at O - EAST 2005 ( 2005 )
-	1162769	http://en.wikipedia.org/wiki/Babylon_by_Bus	Musicians	Musicians	0	enumeration	[E1] Bob Marley – lead vocals , rhythm guitar
-	1162769	http://en.wikipedia.org/wiki/Babylon_by_Bus	Personnel	Personnel	1	enumeration	[E1] Bob Marley and the Wailers – Producer
-	14641828	http://en.wikipedia.org/wiki/Federation_of_Swedish_Farmers	Main	Main	0	enumeration	[E1] LRF Konsult , providing consultancy services for small- and medium - sized enterprises , including in accounting , tax and legal matters . LRF Konuslt has 1 300 employees in
-	8997153	http://en.wikipedia.org/wiki/Gargi_Raina	Exhibitions	Group Exhibitions	0	enumeration	[E1] Snow , The Palette Art Gallery , New Delhi , in collaboration with Tao Art Gallery , Mumbai , 2010
-	3093504	http://en.wikipedia.org/wiki/Jeanne_d'Arc_au_bûcher	Roles	Roles	0	enumeration	[E1] Jeanne d'Arc , spoken ( dancer ) – Ida Rubinstein
-	1680048	http://en.wikipedia.org/wiki/Pioneer_News_Group	Publications	Publications	0	enumeration	[E1] Anacortes American in Anacortes , Washington
-	14279248	http://en.wikipedia.org/wiki/Arizona_Federal_Theatre	Noted concerts	Noted concerts	0	table	"[ROW] November 3 , 2009 [COL] Ian Anderson [COL] rowspan=""3 "" [COL] An Acoustic Evening with Ian Anderson [COL] 1,574 / 4,059 ( 39 % ) [COL] $ 66,233"
-	3507797	http://en.wikipedia.org/wiki/Diving_at_the_2006_Asian_Games_–_Women's_synchronized_3_metre_springboard	Results	Results	0	table	[ROW] [COL] Guo Jingjing Li Ting [COL] 52.80 [COL] 54.60 [COL] 76.50 [COL] 74.70 [COL] 79.20 [COL] 337.80
-	8374895	http://en.wikipedia.org/wiki/Else_of_Erlenhof	Cast	Cast	0	enumeration	[E1] Poldi Müller
-	4895817	http://en.wikipedia.org/wiki/Frank_B._Wilderson_III	Awards	Awards	0	enumeration	[E1] The Eisner Prize for Creative Achievement of the Highest Order
-	4895817	http://en.wikipedia.org/wiki/Frank_B._Wilderson_III	Works	Works	1	enumeration	[E1] Red , White & Black : Cinema and the Structure of US Antagonisms ( Duke University Press , 2010 ) .
-	4895817	http://en.wikipedia.org/wiki/Frank_B._Wilderson_III	Works	Anthologies	2	enumeration	[E1]
-	885711	http://en.wikipedia.org/wiki/Moving_(Supergrass_song)	Track listings	Track listings	0	enumeration	"[E1] "" Moving "" ( 4:29 )"
-	885711	http://en.wikipedia.org/wiki/Moving_(Supergrass_song)	Track listings	Track listings	1	enumeration	"[E1] "" Moving "" ( 4:29 )"
-	885711	http://en.wikipedia.org/wiki/Moving_(Supergrass_song)	Track listings	Track listings	2	enumeration	"[E1] "" Moving "" ( 4:29 )"
-	6832391	http://en.wikipedia.org/wiki/D'Kings_Men	Personnel	Personnel	0	enumeration	[E1] Dapo Daniel Oyebanjo – primary artist
-	7982100	http://en.wikipedia.org/wiki/Maxim_Fadeev	Managed projects	Current	0	enumeration	[E1] Yulia Savicheva
-	7982100	http://en.wikipedia.org/wiki/Maxim_Fadeev	Managed projects	Former	1	enumeration	[E1] Linda
-	7982100	http://en.wikipedia.org/wiki/Maxim_Fadeev	Discography	Discography	2	enumeration	[E1] Tansuy Na Bitom Stekle ( Танцуй На Битом Стекле ; Dance on the Broken Glass )
-	2925914	http://en.wikipedia.org/wiki/NA-122_(Lahore-V)	Election 2013	Election 2013	0	table	[ROW] 1 [COL] Sardar Ayaz Sadiq [COL] Pakistan Muslim League ( N ) [COL] 93,362 [COL] Winner
-	9025573	http://en.wikipedia.org/wiki/International_Programme_for_the_Development_of_Communication	Mandate	[[Sustainable Development Goal 16]]	0	enumeration	[E1] SDG 16.10.1 : “ Number of verified cases of killing , kidnapping , enforced disappearance , arbitrary detention and torture of journalists , associated media personnel , trade unionists and
-	9025573	http://en.wikipedia.org/wiki/International_Programme_for_the_Development_of_Communication	Composition	The Intergovernmental Council of the IPDC	1	enumeration	[E1] Policy - making , guiding the planning and the implementation of the Programme ;
-	9025573	http://en.wikipedia.org/wiki/International_Programme_for_the_Development_of_Communication	Media Development	Media Development	2	enumeration	[E1] Legal and regulatory framework governing media ;
-	9025573	http://en.wikipedia.org/wiki/International_Programme_for_the_Development_of_Communication	Media Development	The Media Development projects	3	enumeration	[E1] Training Judicial Authorities in Africa :
-	9025573	http://en.wikipedia.org/wiki/International_Programme_for_the_Development_of_Communication	Media and Internet Indicators	The Media Development indicators (MDI)	4	enumeration	[E1] In Bhutan , the MDI completed in 2010 contributed to amending a media law to create an Independent Press Council ; and an IPDC Project , run by the World
-	9025573	http://en.wikipedia.org/wiki/International_Programme_for_the_Development_of_Communication	Media and Internet Indicators	The Gender Sensitive indicators for Media	5	enumeration	[E1] In 2014 , Gender and Media in Southern Africa ( GEMSAT ) applied it ( after refinement for use locally ) in Tanzania to seven community radio stations enhancing understanding
-	8978361	http://en.wikipedia.org/wiki/Political_parties_and_political_designations_in_Massachusetts	List of current parties and designations	List of current parties and designations	0	table	[ROW] Democratic Party [COL] D [COL] political party [COL]
-	12356668	http://en.wikipedia.org/wiki/HMS_Swiftsure	Main	Main	0	enumeration	[E1] , a galleon , renamed Speedwell and rebuilt in 1607 , and lost in 1624 .
-	12356668	http://en.wikipedia.org/wiki/HMS_Swiftsure	Battle honours	Battle honours	1	enumeration	[E1] Armada 1588
-	10830460	http://en.wikipedia.org/wiki/Graham_Hill	Racing career	Racing career	0	enumeration	[E1] the Indianapolis 500 ( won by Hill in 1966 ) , the 24 Hours of Le Mans ( 1972 ) and the Monaco Grand Prix ( 1963–65 , 1968 ,
-	10830460	http://en.wikipedia.org/wiki/Graham_Hill	Career results	Indianapolis 500 results	1	enumeration	[E1] Hill failed to qualify the innovative John Crosthwaite ( who had worked with Hill at Team Lotus ) designed ' roller skate ' car for the 1963 Indianapolis 500 race
-	11068203	http://en.wikipedia.org/wiki/WYCD	On-Air Programming	On-Air Programming	0	enumeration	[E1] Morning Show ( 5 a.m.-10 a.m. ): Rachael & Grunwald - Rachael Hunter & Steve Grunwald
-	13925079	http://en.wikipedia.org/wiki/My_Gym_Partner's_a_Monkey	Characters	Main	0	enumeration	[E1] Adam Lyon ( voiced by Nika Futterman )
-	13925079	http://en.wikipedia.org/wiki/My_Gym_Partner's_a_Monkey	Characters	Recurring	1	enumeration	[E1] Mrs. Geraldine Sharon Warthog ( voiced by Grey DeLisle )
-	13925079	http://en.wikipedia.org/wiki/My_Gym_Partner's_a_Monkey	Characters	Minor	2	enumeration	[E1] Phineas Porpoise ( resembles a vulture Pteranodonor bald eagle , voiced by Phil LaMarr )
-	13925079	http://en.wikipedia.org/wiki/My_Gym_Partner's_a_Monkey	Reception	Awards and nominations	3	table	"[ROW] 2006 [COL] Annie Awards [COL] Writing in an Animated Television Production [COL] Tom Sheppard for "" Nice Moustache "" [COL]"
-	5993222	http://en.wikipedia.org/wiki/Brown_Township,_Montgomery_County,_Indiana	Geography	Cities, towns, villages	0	enumeration	[E1] New Market ( southwest corner )
-	5993222	http://en.wikipedia.org/wiki/Brown_Township,_Montgomery_County,_Indiana	Geography	Unincorporated towns	1	enumeration	[E1] Browns Valley at
-	5993222	http://en.wikipedia.org/wiki/Brown_Township,_Montgomery_County,_Indiana	Geography	Landmarks	2	enumeration	[E1] Lake Waveland Park
-	5993222	http://en.wikipedia.org/wiki/Brown_Township,_Montgomery_County,_Indiana	Political districts	Political districts	3	enumeration	[E1] Indiana 's 4th congressional district
-	5589064	http://en.wikipedia.org/wiki/Las_Vegas_Shakedown	Cast list	Cast list	0	enumeration	[E1] Dennis O'Keefe as Joe Barnes
-	6566409	http://en.wikipedia.org/wiki/Olympe_(singer)	Discography	Albums	0	table	[ROW] 2010 [COL] Rien qu'un homme ( credited as Joffrey B ) [COL] [COL] [COL] [COL] [COL] [COL]
-	5478645	http://en.wikipedia.org/wiki/Callinicus_(fly)	Species	Species	0	enumeration	[E1] Callinicus calcaneus Loew , 1872 i c g b
-	5834142	http://en.wikipedia.org/wiki/Dudu_(Rajasthan_Assembly_constituency)	List of MLA's	List of MLA's	0	table	[ROW] 1 . 1957 [COL] Ajeet Singh Bajya [COL] Akhil Bharatiya Ram Rajya Parishad
-	10613053	http://en.wikipedia.org/wiki/William_Rowan	Awards	Awards	0	enumeration	[E1] Knight Grand Cross of the Order of the Bath 1838 ,
-	11198694	http://en.wikipedia.org/wiki/Members_of_the_New_South_Wales_Legislative_Assembly,_1956–1959	Main	Main	0	table	[ROW] Tom Armstrong [COL] [COL] [COL] Kahibah [COL] 1953–1957
-	7815667	http://en.wikipedia.org/wiki/The_Possessed_(short_story)	Publication history	Publication history	0	enumeration	[E1] Reach for Tomorrow
-	11961416	http://en.wikipedia.org/wiki/Anastasios_Kissas	Honours	Honours	0	enumeration	[E1] Cypriot First Division ( 7 ) : 2006–07 , 2008–09 , 2010–11 , 2012–13 , 2013–14 , 2014–15 , 2015–16
-	1384634	http://en.wikipedia.org/wiki/Minitonas	Education	Education	0	enumeration	[E1] Minitonas Early Years School ( Kindergarten to Grade 4 , ~85 Students )
-	12757161	http://en.wikipedia.org/wiki/Irish_Charter_Schools	Schools	Schools	0	enumeration	[E1] Clontarf : This charter - school was opened by Lord Harrington in 1748 . It was helped by donations and bequests , for example in 1759 A Mr. P. Ramsey
-	5468057	http://en.wikipedia.org/wiki/Each_One_Teach_One_(Oneida_album)	Track listing	Disc one	0	enumeration	"[E1] "" Sheets of Easter "" ( 14:13 )"
-	5468057	http://en.wikipedia.org/wiki/Each_One_Teach_One_(Oneida_album)	Track listing	Disc two	1	enumeration	"[E1] "" Each One Teach One "" ( 3:25 )"
-	15026747	http://en.wikipedia.org/wiki/Praise_of_the_Two_Lands_(ship)	Sources	Sources	0	enumeration	[E1] Anzovin , Steven et al . , Famous First Facts ( International Edition ) , H. W. Wilson Company , 2000 ,
-	10654565	http://en.wikipedia.org/wiki/Eric_Sykes	Awards	Awards	0	enumeration	[E1] 1961 Guild of TV Producers and Directors ' Lifetime Achievement Award
-	10654565	http://en.wikipedia.org/wiki/Eric_Sykes	Film and television	Films he created and appeared in	1	enumeration	[E1] Pantomania , or Dick Whittington ( 1956 TV film )
-	10654565	http://en.wikipedia.org/wiki/Eric_Sykes	Film and television	Television series he created and appeared in	2	enumeration	[E1] Sykes and a ... ( 1960–1965 ) as Himself
-	10654565	http://en.wikipedia.org/wiki/Eric_Sykes	Film and television	Other acting roles	3	enumeration	[E1] Orders Are Orders ( 1954 ) as Pvt . Waterhouse
-	10654565	http://en.wikipedia.org/wiki/Eric_Sykes	Records	Records	4	enumeration	"[E1] "" Dr Kildare""/""Bedtime Story "" ( Y7092 , 7 - inch single , Decca Records 1962 ) with Hattie Jacques"
-	5524808	http://en.wikipedia.org/wiki/Syd_Cain	Selected filmography	Selected filmography	0	enumeration	[E1] The Inn of the Sixth Happiness ( 1958 )
-	10630419	http://en.wikipedia.org/wiki/Terpene_synthase_N_terminal_domain	Conservation	Conservation	0	enumeration	[E1] Tpsa includes vetispiridiene synthase .
-	15054679	http://en.wikipedia.org/wiki/Chandauli	Notable people	Notable people	0	enumeration	[E1] Rajnath Singh , current Defense Minister of India and former Home Minister of India , born in Bhabhaura , a small village in Chandauli District
-	15054679	http://en.wikipedia.org/wiki/Chandauli	Distance of Chandauli from important cities	Distance of Chandauli from important cities	1	enumeration	[E1] Varanasi – 30 km
-	13559967	http://en.wikipedia.org/wiki/Gus_Risman	Honoured in Workington	Honoured in Workington	0	enumeration	[E1] Risman Place in Workington is named after Gus Risman .
-	4266364	http://en.wikipedia.org/wiki/Chris_Leslie_(musician)	Discography	Solo	0	enumeration	[E1] 1994 - The Gift
-	4266364	http://en.wikipedia.org/wiki/Chris_Leslie_(musician)	Discography	In Groups	1	enumeration	[E1] 1985 - Whippersnapper : Promises
-	4266364	http://en.wikipedia.org/wiki/Chris_Leslie_(musician)	Discography	Appearances with Steve Ashley	2	enumeration	[E1] 1999 - The Test of Time
-	3164523	http://en.wikipedia.org/wiki/A._formosa	Main	Main	0	enumeration	[E1] Aliciella formosa , a phlox endemic to New Mexico
-	14096493	http://en.wikipedia.org/wiki/2002_Continental_Championships	Asian Championships	Asian Championships	0	enumeration	[E1] Football ( soccer ): 2001–02 Asian Club Championship
-	14096493	http://en.wikipedia.org/wiki/2002_Continental_Championships	European Championships	European Championships	1	enumeration	[E1] Artistic gymnastics : 2002 European Rhythmic Gymnastics Championships
-	14096493	http://en.wikipedia.org/wiki/2002_Continental_Championships	Pan American Championships / North American Championships	Pan American Championships / North American Championships	2	enumeration	[E1] Cycling : 2002 Pan American Cycling Championships
-	8853942	http://en.wikipedia.org/wiki/BTO's_Greatest	Track listing	Track listing	0	enumeration	"[E1] "" Looking Out for No.1 "" ( Randy Bachman ) - 5:20"
-	6760179	http://en.wikipedia.org/wiki/Athletics_at_the_1977_Summer_Universiade_–_Women's_long_jump	Results	Qualification	0	table	[ROW] ? [COL] ? [COL] Jacqueline Curtet [COL] [COL] 6.27 [COL] French results
-	6760179	http://en.wikipedia.org/wiki/Athletics_at_the_1977_Summer_Universiade_–_Women's_long_jump	Results	Final	1	table	[ROW] [COL] Jacqueline Curtet [COL] [COL] 6.38 [COL]
-	2467101	http://en.wikipedia.org/wiki/Amberley,_Gloucestershire	Places of interest	Places of interest	0	enumeration	[E1] War memorial to the soldiers who died in World War II
-	12989828	http://en.wikipedia.org/wiki/2000_Trafford_Metropolitan_Borough_Council_election	Main	Main	0	table	[ROW] [COL] Labour [COL] 33 [COL] 0
-	1885175	http://en.wikipedia.org/wiki/American_Cruise_Lines	Fleet	Coastal cruise ships	0	enumeration	[E1] American Spirit ( 2005 )
-	1885175	http://en.wikipedia.org/wiki/American_Cruise_Lines	Fleet	Columbia Riverboats	1	enumeration	[E1] Queen of the West ( 1995 )
-	1885175	http://en.wikipedia.org/wiki/American_Cruise_Lines	Fleet	Mississippi Riverboats	2	enumeration	[E1] Queen of the Mississippi ( 2015 )
-	1885175	http://en.wikipedia.org/wiki/American_Cruise_Lines	Fleet	Modern Riverboats	3	enumeration	[E1] American Song ( 2018 )
-	1885175	http://en.wikipedia.org/wiki/American_Cruise_Lines	Fleet	Retired	4	enumeration	[E1] American Eagle ( 2000 ) - permanently moored at Chesapeake Shipbuilding as housing for contractors .
-	7028629	http://en.wikipedia.org/wiki/Bulgar–Serb_War_(853)	Sources	Sources	0	enumeration	[E1]
-	2024974	http://en.wikipedia.org/wiki/Pascal_Laugier	Filmography	Filmography	0	enumeration	[E1] Saint Ange ( 2004 )
-	10626403	http://en.wikipedia.org/wiki/Williamson_v._Mazda_Motor_of_America,_Inc.	Related cases	Related cases	0	enumeration	[E1] Geier v. American Honda Motor Co. , 529 U.S. 861 ( 2000 ) — ' No airbag ' lawsuit conflicts with the objectives of FMVSS 208 and is therefore pre
-	810037	http://en.wikipedia.org/wiki/Cyprus_in_the_Eurovision_Song_Contest_2013	At Eurovision	Points awarded to Cyprus	0	table	[ROW] [COL] [COL] [COL] [COL]
-	810037	http://en.wikipedia.org/wiki/Cyprus_in_the_Eurovision_Song_Contest_2013	At Eurovision	Semi-final 1	1	table	[ROW] 10 points [COL]
-	810037	http://en.wikipedia.org/wiki/Cyprus_in_the_Eurovision_Song_Contest_2013	At Eurovision	Final	2	table	[ROW] 10 points [COL]
-	15252802	http://en.wikipedia.org/wiki/Daisy_Burrell	Filmography	Filmography	0	enumeration	[E1] The Valley of Fear ( 1916 ) – Ettie Shafter
-	15252802	http://en.wikipedia.org/wiki/Daisy_Burrell	Musical theatre appearances	Musical theatre appearances	1	enumeration	[E1] The Redskins , by Alicia Ramsey ( 1903 ) , as Kitty
-	5884599	http://en.wikipedia.org/wiki/Devarim_(parsha)	Readings	Readings according to the [[triennial cycle]]	0	table	[ROW] 1 [COL] [COL] [COL]
-	5884599	http://en.wikipedia.org/wiki/Devarim_(parsha)	Commandments	According to Maimonides	1	enumeration	[E1] That the judge not be afraid of a bad person when judging
-	5884599	http://en.wikipedia.org/wiki/Devarim_(parsha)	Commandments	According to [[Sefer ha-Chinuch]]	2	enumeration	[E1] Not to appoint any judge who is unlearned in the Torah , even if the person is generally learned
-	10110613	http://en.wikipedia.org/wiki/Overload_(Chinese_band)	Albums	Albums	0	enumeration	[E1] Overload 1996
-	11865838	http://en.wikipedia.org/wiki/You_Can_Win_If_You_Want	Single	Single	0	enumeration	"[E1] "" You_Can_Win_If_You_Want "" ( Special Single Remix ) - 3:44"
-	11865838	http://en.wikipedia.org/wiki/You_Can_Win_If_You_Want	Single	Single	1	enumeration	"[E1] "" You_Can_Win_If_You_Want "" ( Special Dance Version ) - 5:19"
-	11865838	http://en.wikipedia.org/wiki/You_Can_Win_If_You_Want	Chart position	Chart position	2	table	[ROW] Belgium ( VRT Top 30 Flanders ) [COL] 2
-	11570842	http://en.wikipedia.org/wiki/Endangered_Languages_Project	History	History	0	enumeration	[E1] First Peoples ' Cultural Council
-	11570842	http://en.wikipedia.org/wiki/Endangered_Languages_Project	Project aim	Project aim	1	enumeration	[E1] Language Research and Linguistics
-	8262526	http://en.wikipedia.org/wiki/Music_Schools_Group_in_Bydgoszcz	History	[[Second Polish Republic|Interwar period]]	0	enumeration	[E1] Music theory ,
-	8262526	http://en.wikipedia.org/wiki/Music_Schools_Group_in_Bydgoszcz	Locations	Locations	1	enumeration	[E1] Szwalbego Street 1 , in the immediate vicinity of the Pomeranian Philharmonic building , the Main building of Bydgoszcz Music Academy and the Polish Radio of Kuyavy Pomerania . It
-	8262526	http://en.wikipedia.org/wiki/Music_Schools_Group_in_Bydgoszcz	Organization	Organization	2	enumeration	[E1] School of Music - first degree ( six - year course ) ;
-	8262526	http://en.wikipedia.org/wiki/Music_Schools_Group_in_Bydgoszcz	Organization	Organization	3	enumeration	[E1] Keyboard - piano , pipe organ , accordion , harpsichord ;
-	8262526	http://en.wikipedia.org/wiki/Music_Schools_Group_in_Bydgoszcz	Competitions	Competitions	4	enumeration	[E1] The International Competition for Young Pianists Arthur Rubinstein in memoriam ( every 2 years , in April ) ;
-	10087356	http://en.wikipedia.org/wiki/1977_Summer_Universiade	Sports	Sports	0	enumeration	[E1]
-	8827996	http://en.wikipedia.org/wiki/Scott_Cutlip	Works	Works	0	enumeration	[E1] 1952 : ( with Allen H. Center ) Effective Public Relations , Prentice Hall ( 8th edition in 2000 ) .
-	1698908	http://en.wikipedia.org/wiki/Alexander_Beaufort_Meek	Works	Works	0	enumeration	[E1] An Oration Delivered before the Society of the Alumni of the University of Alabama at its First Anniversary , December 17 , 1836
-	359685	http://en.wikipedia.org/wiki/Is_It_Just_Me?_(film)	Cast	Cast	0	enumeration	[E1] Nicholas Downs as Blaine
-	12659182	http://en.wikipedia.org/wiki/2012_County_Championship	Teams	Division One	0	table	[ROW] Durham [COL] Riverside Ground , Chester - le - Street [COL] — [COL] Geoff Cook [COL] Phil Mustard ( Apr - Jul ) Paul Collingwood ( Jul - Sep ) [COL] —
-	12659182	http://en.wikipedia.org/wiki/2012_County_Championship	Teams	Division Two	1	table	[ROW] Derbyshire [COL] County Ground , Derby [COL] Queen 's Park , Chesterfield [COL] Karl Krikken [COL] Wayne Madsen [COL] Martin Guptill ( Apr - Jun ) Usman Khawaja ( Jun - Sep )
-	12659182	http://en.wikipedia.org/wiki/2012_County_Championship	Standings	Division One	2	table	[ROW] Warwickshire ( C ) [COL] 16 [COL] 6 [COL] 1 [COL] 0 [COL] 9 [COL] 0 [COL] 43 [COL] 45 [COL] 0.0 [COL] 211
-	12659182	http://en.wikipedia.org/wiki/2012_County_Championship	Standings	Division Two	3	table	[ROW] Derbyshire ( C ) [COL] 16 [COL] 6 [COL] 2 [COL] 0 [COL] 8 [COL] 0 [COL] 31 [COL] 43 [COL] 0.0 [COL] 194
-	12659182	http://en.wikipedia.org/wiki/2012_County_Championship	Statistics	Most runs	4	table	[ROW] Nick Compton [COL] Somerset [COL] 11 [COL] 18 [COL] 1191 [COL] 99.25 [COL] 204 * [COL] 4 [COL] 7
-	3367850	http://en.wikipedia.org/wiki/2005–06_A1_Grand_Prix_of_Nations,_Malaysia	Results	Total Points	0	enumeration	[E1] Fastest Lap : A1 Team France ( 1'55.373 / 172.9 km / h , lap 5 of Sprint Race )
-	3367850	http://en.wikipedia.org/wiki/2005–06_A1_Grand_Prix_of_Nations,_Malaysia	Results	Total Points	1	table	[ROW] France [COL] 21 [COL] 10 [COL] 10 [COL] 1
-	6754519	http://en.wikipedia.org/wiki/Rowing_at_the_1996_Summer_Olympics_–_Men's_quadruple_sculls	Results	Heat 1	0	table	[ROW] 1 [COL] Janusz Hooker , Duncan Free , Ronald Snook , Bo Hanson [COL] [COL] 6:05.60 [COL] Q
-	6754519	http://en.wikipedia.org/wiki/Rowing_at_the_1996_Summer_Olympics_–_Men's_quadruple_sculls	Results	Heat 2	1	table	[ROW] 1 [COL] Massimo Paradiso , Alessandro Corona , Rossano Galtarossa , Alessio Sartori [COL] [COL] 6:05.75 [COL] Q
-	6754519	http://en.wikipedia.org/wiki/Rowing_at_the_1996_Summer_Olympics_–_Men's_quadruple_sculls	Results	Heat 3	2	table	[ROW] 1 [COL] André Steiner , Stephan Volkert , Andreas Hajek , André Willms [COL] [COL] 6:06.33 [COL] Q
-	6754519	http://en.wikipedia.org/wiki/Rowing_at_the_1996_Summer_Olympics_–_Men's_quadruple_sculls	Results	Repechage 1	3	table	[ROW] 1 [COL] Jaroslaw Nowicki , Przemyslaw Lewandowski , Marek Kolbowicz , Piotr Bujnarowski [COL] [COL] 5:51.15 [COL] Q
-	6754519	http://en.wikipedia.org/wiki/Rowing_at_the_1996_Summer_Olympics_–_Men's_quadruple_sculls	Results	Semifinal 1	4	table	[ROW] 1 [COL] Massimo Paradiso , Alessandro Corona , Rossano Galtarossa , Alessio Sartori [COL] [COL] 5:57.10 [COL] A
-	6754519	http://en.wikipedia.org/wiki/Rowing_at_the_1996_Summer_Olympics_–_Men's_quadruple_sculls	Results	Semifinal 2	5	table	[ROW] 1 [COL] André Steiner , Stephan Volkert , Andreas Hajek , André Willms [COL] [COL] 5:55.10 [COL] A
-	6754519	http://en.wikipedia.org/wiki/Rowing_at_the_1996_Summer_Olympics_–_Men's_quadruple_sculls	Results	Final B	6	table	[ROW] 1 [COL] Oleksandr Marchenko , Oleksandr Zaskalko , Mykola Chupryna , Leonid Shaposhnykov [COL] [COL] 5:53.46 [COL]
-	6754519	http://en.wikipedia.org/wiki/Rowing_at_the_1996_Summer_Olympics_–_Men's_quadruple_sculls	Results	Final A	7	table	[ROW] [COL] André Steiner , Stephan Volkert , Andreas Hajek , André Willms [COL] [COL] 5:56.93 [COL]
-	9721890	http://en.wikipedia.org/wiki/Ann_Tyrrell	Filmography	Filmography	0	table	[ROW] 1949 [COL] Bride for Sale [COL] Miss Swanson [COL]
-	9721890	http://en.wikipedia.org/wiki/Ann_Tyrrell	Filmography	Filmography	1	table	"[ROW] 1952 [COL] The Unexpected [COL] Fortune Teller [COL] Episode : "" Lifeline """
-	9182775	http://en.wikipedia.org/wiki/Ibiza_(Vino_de_la_Tierra)	Grape varieties	Grape varieties	0	enumeration	[E1] Red : Monastrell , Tempranillo , Cabernet sauvignon , Merlot and Syrah
-	6206889	http://en.wikipedia.org/wiki/Lava_Kusa_(2015_film)	Cast	Cast	0	enumeration	[E1] Varun Sandesh ... Prem Kumar/ Kushal Kumar
-	13900230	http://en.wikipedia.org/wiki/1970_Boston_Patriots_season	Regular season	Schedule	0	table	[ROW] 1 [COL] September 20 [COL] Miami Dolphins [COL] W 27–14 [COL] 1–0 [COL] 32,607
-	7747317	http://en.wikipedia.org/wiki/Southampton_F.C._Player_of_the_Season	Table key	Table key	0	table	[ROW] * [COL] Denotes player who is currently playing for the club
-	7747317	http://en.wikipedia.org/wiki/Southampton_F.C._Player_of_the_Season	Winners	[[Southern Daily Echo]] award	1	table	[ROW] 1973–74 [COL] Div 1 [COL] [COL] [COL] [COL] 607 [COL] 228 [COL] [COL]
-	7747317	http://en.wikipedia.org/wiki/Southampton_F.C._Player_of_the_Season	Winners	Southampton F.C. award	2	table	[ROW] 2012–13 [COL] Div 1¤ [COL] [COL] [COL] [COL] 261 [COL] 15 [COL] [COL] —
-	4114431	http://en.wikipedia.org/wiki/Edward_Stratemeyer	Accomplishments	Accomplishments	0	enumeration	[E1] ( 1899 ) The Rover Boys
-	5604712	http://en.wikipedia.org/wiki/Ann_Harding	Personal life	Personal life	0	enumeration	[E1] Harry Bannister , an actor . They married in 1926 and divorced in 1932 in Reno , Nevada . A New York Times article ( 8 May 1932 ) about
-	5604712	http://en.wikipedia.org/wiki/Ann_Harding	Broadway stage credits	Broadway stage credits	1	table	[ROW] October 3 , 1921 – Oct 1921 [COL] Like a King [COL] Phyllis Weston
-	5604712	http://en.wikipedia.org/wiki/Ann_Harding	Filmography	Films	2	table	[ROW] 1929 [COL] Paris Bound [COL] Mary Hutton [COL]
-	5604712	http://en.wikipedia.org/wiki/Ann_Harding	Filmography	Television	3	table	[ROW] 1955 [COL] Crossroads [COL] Hulda Lund [COL] 1 episode
-	10795951	http://en.wikipedia.org/wiki/Zehnder_(surname)	Main	Main	0	enumeration	[E1] Eduard Zehnder , Swiss mathematician
-	6314543	http://en.wikipedia.org/wiki/Disney_Infinity_3.0	Characters	Characters	0	table	[ROW] Star Wars : The Clone Wars [COL] Anakin Skywalker [COL] Starter Pack / Twilight of the Republic Playset / Twilight of the Republic playset and software bundle Star Wars Saga Bundle ( PS3 and PS4 exclusives ) [COL] August 30 , 2015 [COL] Wave 1
-	6314543	http://en.wikipedia.org/wiki/Disney_Infinity_3.0	Reception	Awards	1	table	[ROW] The Game Awards 2015 [COL] Best Family Game [COL] [COL]
-	14184693	http://en.wikipedia.org/wiki/Charles_Lalo	Works	Works	0	enumeration	[E1] Esquisse d'une esthétique musicale scientifique , 1908 .
-	10335395	http://en.wikipedia.org/wiki/Max_Drischner	Works (selected)	Works (selected)	0	enumeration	[E1] Die Weihnachtsgeschichte nach Lukas 2 - Brieger Christnacht 1944 mit Liedern aus der Grafschaft Glatz Für Chor / ein- oder vierstimmig / Einzelstimme und Orgel / statt Orgel Harmonium ,
-	10335395	http://en.wikipedia.org/wiki/Max_Drischner	Works (selected)	Works (selected)	1	enumeration	[E1] Spielmannslieder , Lute accompaniment of Texts by Paul Steinmüller [ Greiner & Pfeiffer , Stuttgart 1923 ]
-	10335395	http://en.wikipedia.org/wiki/Max_Drischner	Works (selected)	Works (selected)	2	enumeration	[E1] Lobe den Herrn , meine Seele ( Psalm 104 ) for soloists , choir and organ ( 1946 )
-	10335395	http://en.wikipedia.org/wiki/Max_Drischner	Works (selected)	Works (selected)	3	enumeration	[E1] Lass dich nicht ängstigen ( Text of the Holy Theresa of Avila ) for a two to four - part choir with organ ( 1946 )
-	10335395	http://en.wikipedia.org/wiki/Max_Drischner	Works (selected)	Works (selected)	4	enumeration	[E1] Heilig Vaterland Organ hymn ( 1940 ? ) and
-	10335395	http://en.wikipedia.org/wiki/Max_Drischner	Literature	Literature	5	enumeration	[E1] Bryan Hesford : The Life and Work of Max_Drischner , 2 volumes , England 1974
+NONE	12418642	http://en.wikipedia.org/wiki/1994_Champion_Hurdle	Race details	Race details	0	enumeration	[E1] Sponsor : Smurfit
+NONE	12418642	http://en.wikipedia.org/wiki/1994_Champion_Hurdle	Full result	Full result	1	table	[ROW] 1 [COL] [COL] Flakey Dove ( GB ) [COL] 8 [COL] Mark Dwyer [COL] Richard Price ( GB ) [COL] 9/1
+NONE	12418642	http://en.wikipedia.org/wiki/1994_Champion_Hurdle	Winner's details	Winner's details	2	enumeration	[E1] Sex : Mare
+PERSON	7134425	http://en.wikipedia.org/wiki/Be_Strong,_Geum-soon!	Cast	Cast	0	enumeration	[E1] Han Hye - jin - Na Geum - soon
+NONE	14649610	http://en.wikipedia.org/wiki/UE_Rubí	Season to season	Season to season	0	enumeration	[E1] 1 season in Segunda División B
+NONE	14649610	http://en.wikipedia.org/wiki/UE_Rubí	History	History	1	enumeration	[E1] Regional Preferente de Cataluña ( 3 ): 1999 - 00 , 2002–03 , 2008 - 09 .
+NONE	3468574	http://en.wikipedia.org/wiki/Bibliotheca_Alexandrina	[[Internet Archive]] partnership	[[Internet Archive]] partnership	0	enumeration	[E1] 10 billion web pages spanning the years 1996–2001 from over 16 million sites
+ORG	3468574	http://en.wikipedia.org/wiki/Bibliotheca_Alexandrina	Library services	Six specialized libraries	1	enumeration	[E1] The Arts and Multimedia Library
+NONE	3468574	http://en.wikipedia.org/wiki/Bibliotheca_Alexandrina	Library services	Manuscript Museum	2	enumeration	[E1] Rare Collections : This section includes the BA 's unique items , such as original manuscripts , early printed books , maps , and antique coins .
+NONE	3468574	http://en.wikipedia.org/wiki/Bibliotheca_Alexandrina	Library services	Personal collections	3	enumeration	"[E1] The World of Shadi Abdel Salam : "" The World of Shadi Abdel Salam "" exhibition contains many of the works and effects of the Egyptian film director , screenwriter"
+NONE	3468574	http://en.wikipedia.org/wiki/Bibliotheca_Alexandrina	Library services	CULTURAMA	4	enumeration	[E1] Ancient Egyptian Period
+NONE	3468574	http://en.wikipedia.org/wiki/Bibliotheca_Alexandrina	Library services	VISTA	5	enumeration	[E1] BA Model : A complete virtual recreation of the BA including the Library 's main building , planetarium , study rooms , and even the Library 's furniture will be
+NONE	3713838	http://en.wikipedia.org/wiki/Nagpur_SEC_railway_division	List of railway stations and towns	List of railway stations and towns	0	table	[ROW] A-1 [COL] 1 [COL] Gondia Junction
+NONE	10964651	http://en.wikipedia.org/wiki/Michael_Connell_(golfer)	Professional wins (3)	Professional wins (3)	0	enumeration	[E1] 2002 Eagle Bluff , Club @ North Creek ( both NGA Hooters Tour )
+WORK_OF_ART	10147689	http://en.wikipedia.org/wiki/Mass_Effect:_Andromeda	Reception	Accolades	0	table	[ROW] 2016 [COL] Golden Joystick Awards 2016 [COL] Most Wanted Game [COL] [COL]
+PERSON	2492315	http://en.wikipedia.org/wiki/Rio_Grande_Raiders	Cast	Cast	0	enumeration	[E1] Sunset Carson as Sunset Carson
+PERSON	6295607	http://en.wikipedia.org/wiki/Clarke-Travers_baronets	Clarke, later Clarke-Travers, later [[Clarke baronets]], of Crosses Green (1804)	Clarke, later Clarke-Travers, later [[Clarke baronets]], of Crosses Green (1804)	0	enumeration	[E1] Sir William Clarke , 1st Baronet ( 1762–1808 )
+WORK_OF_ART	2498482	http://en.wikipedia.org/wiki/Anton_Gustafsson_tolkar_Iron_Maiden	Track listing	Track listing	0	enumeration	"[E1] "" Run to the Hills """
+NONE	2390866	http://en.wikipedia.org/wiki/Oko-Juwoi_language	Grammar	Grammar	0	enumeration	"[E1] A cushion or sponge is ot - yop "" round - soft "" , from the prefix attached to words relating to the head or heart ."
+NONE	2390866	http://en.wikipedia.org/wiki/Oko-Juwoi_language	Grammar	Grammar	1	enumeration	"[E1] un - bēri - ŋa "" clever "" ( hand - good ) ."
+NONE	2390866	http://en.wikipedia.org/wiki/Oko-Juwoi_language	Grammar	Grammar	2	table	[ROW] thou , thy [COL] ŋ- [COL] you , your [COL] ŋ-
+WORK_OF_ART	9476208	http://en.wikipedia.org/wiki/Greatest_Hits_Live_(Tina_Arena_album)	Track listing	Track listing	0	enumeration	"[E1] "" Soul Mate # 9 "" ( Peter Amato , Tina Arena , Desmond Child ) – 4:47"
+PERSON	9476208	http://en.wikipedia.org/wiki/Greatest_Hits_Live_(Tina_Arena_album)	Personnel	Personnel	1	enumeration	[E1] Tina Arena – vocals
+PERSON	4129186	http://en.wikipedia.org/wiki/East_Francia	List of kings	List of kings	0	enumeration	[E1] Louis the German ( 843–876 )
+NONE	7722385	http://en.wikipedia.org/wiki/Marie_Anne_de_Bourbon	Biography	Princesse Douairière	0	enumeration	"[E1] Marie Anne de Bourbon ( 1666–1739 ) , the illegitimate daughter of Louis XIV and Louise de La Vallière ; the wife of Louis Armand I de Bourbon , prince"
+NONE	7722385	http://en.wikipedia.org/wiki/Marie_Anne_de_Bourbon	Titles and styles	Titles and styles	1	enumeration	[E1] 2 October 1666 – 14 May 1667 : Marie Anne de Bourbon
+WORK_OF_ART	12970384	http://en.wikipedia.org/wiki/15th_Canadian_Film_Awards	Winners	Films	0	enumeration	[E1] Film of the Year : Lonely Boy — Wolf Koenig , Roman Kroitor
+WORK_OF_ART	12970384	http://en.wikipedia.org/wiki/15th_Canadian_Film_Awards	Winners	Films	1	enumeration	[E1] General Information : Lonely Boy — Wolf Koenig , Roman Kroitor
+WORK_OF_ART	12970384	http://en.wikipedia.org/wiki/15th_Canadian_Film_Awards	Winners	Films	2	enumeration	[E1] Training and Instruction : Mathematics at Your Fingertips — John Howe
+PERSON	12970384	http://en.wikipedia.org/wiki/15th_Canadian_Film_Awards	Winners	Craft	3	enumeration	[E1] Colour Cinematography : Donald Wilder , Nahanni
+PERSON	12970384	http://en.wikipedia.org/wiki/15th_Canadian_Film_Awards	Winners	Special awards	4	enumeration	"[E1] Trevor Fletcher , Four Line Conics — "" in recognition of its imaginative and experimental illustration of a specialized mathematical concept """
+GPE	13476528	http://en.wikipedia.org/wiki/Portland,_Wisconsin	Main	Main	0	enumeration	[E1] Portland , Dodge County , Wisconsin , a town
+NONE	7234309	http://en.wikipedia.org/wiki/Ken_Stabler	After football	In media	0	enumeration	"[E1] Stabler was featured on a Saturday Night Live skit as the spokesman for a fictional product called the "" Lung Brush "" ."
+NONE	12783044	http://en.wikipedia.org/wiki/The_Boat_Race_1905	Crews	Crews	0	table	[ROW] Bow [COL] R. W. Somers - Smith [COL] Merton [COL] 10 st 9 lb [COL] H. Sanger ( P ) [COL] Lady Margaret Boat Club [COL] 10 st 9 lb
+PERSON	1532418	http://en.wikipedia.org/wiki/Lord_of_Mann	List of lords	16th century	0	enumeration	[E1] Thomas , Earl of Derby , 1504–1521
+PERSON	1532418	http://en.wikipedia.org/wiki/Lord_of_Mann	List of lords	Interim lords (1607–1609)	1	enumeration	[E1] Henry , Earl of Northampton , 1607–1608
+PERSON	1532418	http://en.wikipedia.org/wiki/Lord_of_Mann	List of lords	17th and 18th centuries	2	enumeration	[E1] William , Earl of Derby , 1609–1612
+NONE	1532418	http://en.wikipedia.org/wiki/Lord_of_Mann	List of lords	Revestment	3	enumeration	"[E1] "" An Act empowering the Lords of the Treasury to Purchase all the Manorial Rights of the Duke of Atholl in the Isle of Man "" [ c. 34 ]"
+PERSON	8063170	http://en.wikipedia.org/wiki/Road_to_Rouen	Personnel	Personnel	0	enumeration	[E1] Gaz Coombes – vocals , guitar
+NONE	8063170	http://en.wikipedia.org/wiki/Road_to_Rouen	Release history	Release history	1	table	[ROW] United Kingdom [COL] 15 August 2005 [COL] Parlophone [COL] CD [COL] 00946 333334 2 0
+GPE	443521	http://en.wikipedia.org/wiki/Vladivostok_Time	Areas on [[Vladivostok]] Time	Areas on [[Vladivostok]] Time	0	enumeration	[E1] Khabarovsk Krai
+GPE	443521	http://en.wikipedia.org/wiki/Vladivostok_Time	Cities on [[Vladivostok]] Time	Cities on [[Vladivostok]] Time	1	enumeration	[E1] Artyom
+NONE	9065212	http://en.wikipedia.org/wiki/South_Armidale_United_FC	Achievements	Achievements	0	enumeration	[E1] Northern Inland Premier League Grand Final : Runners - up – 2005 , 2014
+WORK_OF_ART	9422996	http://en.wikipedia.org/wiki/Fucking_Consumer	Track listing	Track listing	0	enumeration	"[E1] "" Space Invaders Are Smoking Grass "" ( Ferenc Van Der Sluijs ) – 6:08"
+WORK_OF_ART	4109481	http://en.wikipedia.org/wiki/European_Journal_of_Human_Genetics	Abstracting and indexing	Abstracting and indexing	0	enumeration	[E1] BIOSIS Previews
+WORK_OF_ART	2192787	http://en.wikipedia.org/wiki/Jim_Johnston_(English_musician)	Discography	Discography	0	enumeration	[E1] Voyage of Oblivion ( 2012 ) Rattlewatch Records
+ORG	7793021	http://en.wikipedia.org/wiki/Maple_Shade_School_District	Schools	Schools	0	enumeration	[E1] Howard R. Yocum Elementary School with 556 students in grades K to 2
+ORG	7793021	http://en.wikipedia.org/wiki/Maple_Shade_School_District	Schools	Schools	1	enumeration	[E1] Maple Shade High School with 861 students in grades 7 - 12
+PERSON	7793021	http://en.wikipedia.org/wiki/Maple_Shade_School_District	Administration	Administration	2	enumeration	[E1] Beth Norcia , Superintendent
+PERSON	45475	http://en.wikipedia.org/wiki/Runaway_(1995_film)	Cast	Cast	0	enumeration	[E1] Lee Byung - hun ... Lee Dong - ho
+PERSON	2720112	http://en.wikipedia.org/wiki/Cycling_at_the_2006_Commonwealth_Games_–_Men's_sprint	Qualification	Qualification	0	table	[ROW] 1 [COL] [COL] 10.294 [COL] 69.943
+PERSON	2720112	http://en.wikipedia.org/wiki/Cycling_at_the_2006_Commonwealth_Games_–_Men's_sprint	Results	1/8 Finals	1	table	[ROW] 1 [COL] 1 [COL] [COL] 11.279 [COL] 63.835 [COL] Q
+PERSON	2720112	http://en.wikipedia.org/wiki/Cycling_at_the_2006_Commonwealth_Games_–_Men's_sprint	Results	1/8 Finals Repechage	2	table	[ROW] 1 [COL] 1 [COL] [COL] 11.457 [COL] 62.843 [COL] Q
+PERSON	2720112	http://en.wikipedia.org/wiki/Cycling_at_the_2006_Commonwealth_Games_–_Men's_sprint	Results	Quarter-finals	3	table	[ROW] 1 [COL] 1 [COL] [COL] 11.096 [COL] 11.100 [COL] [COL] Q
+PERSON	2720112	http://en.wikipedia.org/wiki/Cycling_at_the_2006_Commonwealth_Games_–_Men's_sprint	Results	Race for 5th-8th Places	4	table	[ROW] 5 [COL] [COL] 11.439 [COL] 62.942
+PERSON	2720112	http://en.wikipedia.org/wiki/Cycling_at_the_2006_Commonwealth_Games_–_Men's_sprint	Results	Semi-finals	5	table	[ROW] 1 [COL] 1 [COL] [COL] 11.369 [COL] [COL] 10.906 [COL] Q
+PERSON	2720112	http://en.wikipedia.org/wiki/Cycling_at_the_2006_Commonwealth_Games_–_Men's_sprint	Results	Finals	6	table	[ROW] [COL] [COL] 11.346 [COL] 10.932 [COL]
+WORK_OF_ART	8154158	http://en.wikipedia.org/wiki/N._K._Damodaran	Main	Main	0	enumeration	[E1] Kerala sahithyam
+PERSON	7651145	http://en.wikipedia.org/wiki/Gimme_Your_Love	Personnel	Personnel	0	enumeration	[E1] Walter Afanasieff – keyboards , synth bass
+NONE	6062323	http://en.wikipedia.org/wiki/Dumitru_Prunariu	Awards and honors	Awards and honors	0	enumeration	[E1] In 1981 , after completing the Soyuz 40 mission , Prunariu received the awards of Hero of Romania and Hero of the Soviet Union .
+NONE	11261939	http://en.wikipedia.org/wiki/Karol_Mannion	Honours	Honours	0	enumeration	[E1] 1 Connacht Senior Football Championship ( 2010 )
+NONE	11261939	http://en.wikipedia.org/wiki/Karol_Mannion	Honours	Honours	1	enumeration	[E1] 1 All - Ireland Senior Club Football Championship ( 2013 )
+NONE	7311191	http://en.wikipedia.org/wiki/Bouley_Bay_Hill_Climb	[[Bouley_Bay_Hill_Climb]] past winners	[[Bouley_Bay_Hill_Climb]] past winners	0	table	[ROW] 1946 [COL] G. Bainbridge [COL] E.R.A. [COL] 55.9 sec [COL]
+NONE	13982770	http://en.wikipedia.org/wiki/Irnik_Point	Map	Map	0	enumeration	[E1] L.L. Ivanov . Antarctica : Livingston Island and Greenwich , Robert , Snow and Smith Islands . Scale 1:120000 topographic map . Troyan : Manfred Wörner Foundation , 2009 .
+WORK_OF_ART	2076433	http://en.wikipedia.org/wiki/Abu_Ishaque	Works	Novels	0	enumeration	[E1] Surja - Dighal Bari ( 1955 )
+WORK_OF_ART	2076433	http://en.wikipedia.org/wiki/Abu_Ishaque	Works	Short stories	1	enumeration	"[E1] "" Jook """
+WORK_OF_ART	2076433	http://en.wikipedia.org/wiki/Abu_Ishaque	Awards	Awards	2	enumeration	[E1] Bangla Academy Literary Award ( 1963 )
+WORK_OF_ART	7648803	http://en.wikipedia.org/wiki/Riyu_Kosaka	Discography	Singles	0	enumeration	[E1] True ... ( 2001 )
+WORK_OF_ART	7648803	http://en.wikipedia.org/wiki/Riyu_Kosaka	Discography	Albums	1	enumeration	[E1] Begin ( 2004 )
+WORK_OF_ART	7648803	http://en.wikipedia.org/wiki/Riyu_Kosaka	Discography	Other CDs	2	enumeration	[E1] Baby 's Tears ( 2006 ) ( as part of the Sky Girls Original Soundtrack )
+WORK_OF_ART	7648803	http://en.wikipedia.org/wiki/Riyu_Kosaka	Discography	DVDs	3	enumeration	[E1] Riyu Kosaka First Live at O - EAST 2005 ( 2005 )
+PERSON	1162769	http://en.wikipedia.org/wiki/Babylon_by_Bus	Musicians	Musicians	0	enumeration	[E1] Bob Marley – lead vocals , rhythm guitar
+PERSON	1162769	http://en.wikipedia.org/wiki/Babylon_by_Bus	Personnel	Personnel	1	enumeration	[E1] Bob Marley and the Wailers – Producer
+NONE	14641828	http://en.wikipedia.org/wiki/Federation_of_Swedish_Farmers	Main	Main	0	enumeration	[E1] LRF Konsult , providing consultancy services for small- and medium - sized enterprises , including in accounting , tax and legal matters . LRF Konuslt has 1 300 employees in
+WORK_OF_ART	8997153	http://en.wikipedia.org/wiki/Gargi_Raina	Exhibitions	Group Exhibitions	0	enumeration	[E1] Snow , The Palette Art Gallery , New Delhi , in collaboration with Tao Art Gallery , Mumbai , 2010
+PERSON	3093504	http://en.wikipedia.org/wiki/Jeanne_d'Arc_au_bûcher	Roles	Roles	0	enumeration	[E1] Jeanne d'Arc , spoken ( dancer ) – Ida Rubinstein
+WORK_OF_ART	1680048	http://en.wikipedia.org/wiki/Pioneer_News_Group	Publications	Publications	0	enumeration	[E1] Anacortes American in Anacortes , Washington
+NONE	14279248	http://en.wikipedia.org/wiki/Arizona_Federal_Theatre	Noted concerts	Noted concerts	0	table	"[ROW] November 3 , 2009 [COL] Ian Anderson [COL] rowspan=""3 "" [COL] An Acoustic Evening with Ian Anderson [COL] 1,574 / 4,059 ( 39 % ) [COL] $ 66,233"
+NONE	3507797	http://en.wikipedia.org/wiki/Diving_at_the_2006_Asian_Games_–_Women's_synchronized_3_metre_springboard	Results	Results	0	table	[ROW] [COL] Guo Jingjing Li Ting [COL] 52.80 [COL] 54.60 [COL] 76.50 [COL] 74.70 [COL] 79.20 [COL] 337.80
+PERSON	8374895	http://en.wikipedia.org/wiki/Else_of_Erlenhof	Cast	Cast	0	enumeration	[E1] Poldi Müller
+WORK_OF_ART	4895817	http://en.wikipedia.org/wiki/Frank_B._Wilderson_III	Awards	Awards	0	enumeration	[E1] The Eisner Prize for Creative Achievement of the Highest Order
+WORK_OF_ART	4895817	http://en.wikipedia.org/wiki/Frank_B._Wilderson_III	Works	Works	1	enumeration	[E1] Red , White & Black : Cinema and the Structure of US Antagonisms ( Duke University Press , 2010 ) .
+WORK_OF_ART	4895817	http://en.wikipedia.org/wiki/Frank_B._Wilderson_III	Works	Anthologies	2	enumeration	[E1]
+WORK_OF_ART	885711	http://en.wikipedia.org/wiki/Moving_(Supergrass_song)	Track listings	Track listings	0	enumeration	"[E1] "" Moving "" ( 4:29 )"
+WORK_OF_ART	885711	http://en.wikipedia.org/wiki/Moving_(Supergrass_song)	Track listings	Track listings	1	enumeration	"[E1] "" Moving "" ( 4:29 )"
+WORK_OF_ART	885711	http://en.wikipedia.org/wiki/Moving_(Supergrass_song)	Track listings	Track listings	2	enumeration	"[E1] "" Moving "" ( 4:29 )"
+PERSON	6832391	http://en.wikipedia.org/wiki/D'Kings_Men	Personnel	Personnel	0	enumeration	[E1] Dapo Daniel Oyebanjo – primary artist
+PERSON	7982100	http://en.wikipedia.org/wiki/Maxim_Fadeev	Managed projects	Current	0	enumeration	[E1] Yulia Savicheva
+PERSON	7982100	http://en.wikipedia.org/wiki/Maxim_Fadeev	Managed projects	Former	1	enumeration	[E1] Linda
+WORK_OF_ART	7982100	http://en.wikipedia.org/wiki/Maxim_Fadeev	Discography	Discography	2	enumeration	"[E1] Tansuy Na Bitom Stekle ( Танцуй На Битом Стекле ; Dance on the Broken Glass )"
+PERSON	2925914	http://en.wikipedia.org/wiki/NA-122_(Lahore-V)	Election 2013	Election 2013	0	table	[ROW] 1 [COL] Sardar Ayaz Sadiq [COL] Pakistan Muslim League ( N ) [COL] 93,362 [COL] Winner
+NONE	9025573	http://en.wikipedia.org/wiki/International_Programme_for_the_Development_of_Communication	Mandate	[[Sustainable Development Goal 16]]	0	enumeration	[E1] SDG 16.10.1 : “ Number of verified cases of killing , kidnapping , enforced disappearance , arbitrary detention and torture of journalists , associated media personnel , trade unionists and
+NONE	9025573	http://en.wikipedia.org/wiki/International_Programme_for_the_Development_of_Communication	Composition	The Intergovernmental Council of the IPDC	1	enumeration	"[E1] Policy - making , guiding the planning and the implementation of the Programme ;"
+NONE	9025573	http://en.wikipedia.org/wiki/International_Programme_for_the_Development_of_Communication	Media Development	Media Development	2	enumeration	"[E1] Legal and regulatory framework governing media ;"
+NONE	9025573	http://en.wikipedia.org/wiki/International_Programme_for_the_Development_of_Communication	Media Development	The Media Development projects	3	enumeration	[E1] Training Judicial Authorities in Africa :
+NONE	9025573	http://en.wikipedia.org/wiki/International_Programme_for_the_Development_of_Communication	Media and Internet Indicators	The Media Development indicators (MDI)	4	enumeration	"[E1] In Bhutan , the MDI completed in 2010 contributed to amending a media law to create an Independent Press Council ; and an IPDC Project , run by the World"
+NONE	9025573	http://en.wikipedia.org/wiki/International_Programme_for_the_Development_of_Communication	Media and Internet Indicators	The Gender Sensitive indicators for Media	5	enumeration	[E1] In 2014 , Gender and Media in Southern Africa ( GEMSAT ) applied it ( after refinement for use locally ) in Tanzania to seven community radio stations enhancing understanding
+NORP	8978361	http://en.wikipedia.org/wiki/Political_parties_and_political_designations_in_Massachusetts	List of current parties and designations	List of current parties and designations	0	table	[ROW] Democratic Party [COL] D [COL] political party [COL]
+PRODUCT	12356668	http://en.wikipedia.org/wiki/HMS_Swiftsure	Main	Main	0	enumeration	[E1] , a galleon , renamed Speedwell and rebuilt in 1607 , and lost in 1624 .
+EVENT	12356668	http://en.wikipedia.org/wiki/HMS_Swiftsure	Battle honours	Battle honours	1	enumeration	[E1] Armada 1588
+NONE	10830460	http://en.wikipedia.org/wiki/Graham_Hill	Racing career	Racing career	0	enumeration	[E1] the Indianapolis 500 ( won by Hill in 1966 ) , the 24 Hours of Le Mans ( 1972 ) and the Monaco Grand Prix ( 1963–65 , 1968 ,
+NONE	10830460	http://en.wikipedia.org/wiki/Graham_Hill	Career results	Indianapolis 500 results	1	enumeration	[E1] Hill failed to qualify the innovative John Crosthwaite ( who had worked with Hill at Team Lotus ) designed ' roller skate ' car for the 1963 Indianapolis 500 race
+NONE	11068203	http://en.wikipedia.org/wiki/WYCD	On-Air Programming	On-Air Programming	0	enumeration	[E1] Morning Show ( 5 a.m.-10 a.m. ): Rachael & Grunwald - Rachael Hunter & Steve Grunwald
+PERSON	13925079	http://en.wikipedia.org/wiki/My_Gym_Partner's_a_Monkey	Characters	Main	0	enumeration	[E1] Adam Lyon ( voiced by Nika Futterman )
+PERSON	13925079	http://en.wikipedia.org/wiki/My_Gym_Partner's_a_Monkey	Characters	Recurring	1	enumeration	[E1] Mrs. Geraldine Sharon Warthog ( voiced by Grey DeLisle )
+PERSON	13925079	http://en.wikipedia.org/wiki/My_Gym_Partner's_a_Monkey	Characters	Minor	2	enumeration	[E1] Phineas Porpoise ( resembles a vulture Pteranodonor bald eagle , voiced by Phil LaMarr )
+WORK_OF_ART	13925079	http://en.wikipedia.org/wiki/My_Gym_Partner's_a_Monkey	Reception	Awards and nominations	3	table	"[ROW] 2006 [COL] Annie Awards [COL] Writing in an Animated Television Production [COL] Tom Sheppard for "" Nice Moustache "" [COL]"
+GPE	5993222	http://en.wikipedia.org/wiki/Brown_Township,_Montgomery_County,_Indiana	Geography	Cities, towns, villages	0	enumeration	[E1] New Market ( southwest corner )
+GPE	5993222	http://en.wikipedia.org/wiki/Brown_Township,_Montgomery_County,_Indiana	Geography	Unincorporated towns	1	enumeration	[E1] Browns Valley at
+LOC	5993222	http://en.wikipedia.org/wiki/Brown_Township,_Montgomery_County,_Indiana	Geography	Landmarks	2	enumeration	[E1] Lake Waveland Park
+GPE	5993222	http://en.wikipedia.org/wiki/Brown_Township,_Montgomery_County,_Indiana	Political districts	Political districts	3	enumeration	[E1] Indiana 's 4th congressional district
+PERSON	5589064	http://en.wikipedia.org/wiki/Las_Vegas_Shakedown	Cast list	Cast list	0	enumeration	[E1] Dennis O'Keefe as Joe Barnes
+WORK_OF_ART	6566409	http://en.wikipedia.org/wiki/Olympe_(singer)	Discography	Albums	0	table	[ROW] 2010 [COL] Rien qu'un homme ( credited as Joffrey B ) [COL] [COL] [COL] [COL] [COL] [COL]
+SPECIES	5478645	http://en.wikipedia.org/wiki/Callinicus_(fly)	Species	Species	0	enumeration	[E1] Callinicus calcaneus Loew , 1872 i c g b
+PERSON	5834142	http://en.wikipedia.org/wiki/Dudu_(Rajasthan_Assembly_constituency)	List of MLA's	List of MLA's	0	table	[ROW] 1 . 1957 [COL] Ajeet Singh Bajya [COL] Akhil Bharatiya Ram Rajya Parishad
+WORK_OF_ART	10613053	http://en.wikipedia.org/wiki/William_Rowan	Awards	Awards	0	enumeration	[E1] Knight Grand Cross of the Order of the Bath 1838 ,
+PERSON	11198694	http://en.wikipedia.org/wiki/Members_of_the_New_South_Wales_Legislative_Assembly,_1956–1959	Main	Main	0	table	[ROW] Tom Armstrong [COL] [COL] [COL] Kahibah [COL] 1953–1957
+NONE	7815667	http://en.wikipedia.org/wiki/The_Possessed_(short_story)	Publication history	Publication history	0	enumeration	[E1] Reach for Tomorrow
+ORG	11961416	http://en.wikipedia.org/wiki/Anastasios_Kissas	Honours	Honours	0	enumeration	[E1] Cypriot First Division ( 7 ) : 2006–07 , 2008–09 , 2010–11 , 2012–13 , 2013–14 , 2014–15 , 2015–16
+ORG	1384634	http://en.wikipedia.org/wiki/Minitonas	Education	Education	0	enumeration	[E1] Minitonas Early Years School ( Kindergarten to Grade 4 , ~85 Students )
+ORG	12757161	http://en.wikipedia.org/wiki/Irish_Charter_Schools	Schools	Schools	0	enumeration	[E1] Clontarf : This charter - school was opened by Lord Harrington in 1748 . It was helped by donations and bequests , for example in 1759 A Mr. P. Ramsey
+WORK_OF_ART	5468057	http://en.wikipedia.org/wiki/Each_One_Teach_One_(Oneida_album)	Track listing	Disc one	0	enumeration	"[E1] "" Sheets of Easter "" ( 14:13 )"
+WORK_OF_ART	5468057	http://en.wikipedia.org/wiki/Each_One_Teach_One_(Oneida_album)	Track listing	Disc two	1	enumeration	"[E1] "" Each One Teach One "" ( 3:25 )"
+NONE	15026747	http://en.wikipedia.org/wiki/Praise_of_the_Two_Lands_(ship)	Sources	Sources	0	enumeration	[E1] Anzovin , Steven et al . , Famous First Facts ( International Edition ) , H. W. Wilson Company , 2000 ,
+WORK_OF_ART	10654565	http://en.wikipedia.org/wiki/Eric_Sykes	Awards	Awards	0	enumeration	[E1] 1961 Guild of TV Producers and Directors ' Lifetime Achievement Award
+WORK_OF_ART	10654565	http://en.wikipedia.org/wiki/Eric_Sykes	Film and television	Films he created and appeared in	1	enumeration	[E1] Pantomania , or Dick Whittington ( 1956 TV film )
+WORK_OF_ART	10654565	http://en.wikipedia.org/wiki/Eric_Sykes	Film and television	Television series he created and appeared in	2	enumeration	[E1] Sykes and a ... ( 1960–1965 ) as Himself
+WORK_OF_ART	10654565	http://en.wikipedia.org/wiki/Eric_Sykes	Film and television	Other acting roles	3	enumeration	[E1] Orders Are Orders ( 1954 ) as Pvt . Waterhouse
+WORK_OF_ART	10654565	http://en.wikipedia.org/wiki/Eric_Sykes	Records	Records	4	enumeration	"[E1] "" Dr Kildare""/""Bedtime Story "" ( Y7092 , 7 - inch single , Decca Records 1962 ) with Hattie Jacques"
+WORK_OF_ART	5524808	http://en.wikipedia.org/wiki/Syd_Cain	Selected filmography	Selected filmography	0	enumeration	[E1] The Inn of the Sixth Happiness ( 1958 )
+NONE	10630419	http://en.wikipedia.org/wiki/Terpene_synthase_N_terminal_domain	Conservation	Conservation	0	enumeration	[E1] Tpsa includes vetispiridiene synthase .
+PERSON	15054679	http://en.wikipedia.org/wiki/Chandauli	Notable people	Notable people	0	enumeration	[E1] Rajnath Singh , current Defense Minister of India and former Home Minister of India , born in Bhabhaura , a small village in Chandauli District
+GPE	15054679	http://en.wikipedia.org/wiki/Chandauli	Distance of Chandauli from important cities	Distance of Chandauli from important cities	1	enumeration	[E1] Varanasi – 30 km
+NONE	13559967	http://en.wikipedia.org/wiki/Gus_Risman	Honoured in Workington	Honoured in Workington	0	enumeration	[E1] Risman Place in Workington is named after Gus Risman .
+WORK_OF_ART	4266364	http://en.wikipedia.org/wiki/Chris_Leslie_(musician)	Discography	Solo	0	enumeration	[E1] 1994 - The Gift
+WORK_OF_ART	4266364	http://en.wikipedia.org/wiki/Chris_Leslie_(musician)	Discography	In Groups	1	enumeration	[E1] 1985 - Whippersnapper : Promises
+WORK_OF_ART	4266364	http://en.wikipedia.org/wiki/Chris_Leslie_(musician)	Discography	Appearances with Steve Ashley	2	enumeration	[E1] 1999 - The Test of Time
+SPECIES	3164523	http://en.wikipedia.org/wiki/A._formosa	Main	Main	0	enumeration	[E1] Aliciella formosa , a phlox endemic to New Mexico
+EVENT	14096493	http://en.wikipedia.org/wiki/2002_Continental_Championships	Asian Championships	Asian Championships	0	enumeration	[E1] Football ( soccer ): 2001–02 Asian Club Championship
+EVENT	14096493	http://en.wikipedia.org/wiki/2002_Continental_Championships	European Championships	European Championships	1	enumeration	[E1] Artistic gymnastics : 2002 European Rhythmic Gymnastics Championships
+EVENT	14096493	http://en.wikipedia.org/wiki/2002_Continental_Championships	Pan American Championships / North American Championships	Pan American Championships / North American Championships	2	enumeration	[E1] Cycling : 2002 Pan American Cycling Championships
+WORK_OF_ART	8853942	http://en.wikipedia.org/wiki/BTO's_Greatest	Track listing	Track listing	0	enumeration	"[E1] "" Looking Out for No.1 "" ( Randy Bachman ) - 5:20"
+NONE	6760179	http://en.wikipedia.org/wiki/Athletics_at_the_1977_Summer_Universiade_–_Women's_long_jump	Results	Qualification	0	table	[ROW] ? [COL] ? [COL] Jacqueline Curtet [COL] [COL] 6.27 [COL] French results
+NONE	6760179	http://en.wikipedia.org/wiki/Athletics_at_the_1977_Summer_Universiade_–_Women's_long_jump	Results	Final	1	table	[ROW] [COL] Jacqueline Curtet [COL] [COL] 6.38 [COL]
+LOC	2467101	http://en.wikipedia.org/wiki/Amberley,_Gloucestershire	Places of interest	Places of interest	0	enumeration	[E1] War memorial to the soldiers who died in World War II
+NORP	12989828	http://en.wikipedia.org/wiki/2000_Trafford_Metropolitan_Borough_Council_election	Main	Main	0	table	[ROW] [COL] Labour [COL] 33 [COL] 0
+PRODUCT	1885175	http://en.wikipedia.org/wiki/American_Cruise_Lines	Fleet	Coastal cruise ships	0	enumeration	[E1] American Spirit ( 2005 )
+PRODUCT	1885175	http://en.wikipedia.org/wiki/American_Cruise_Lines	Fleet	Columbia Riverboats	1	enumeration	[E1] Queen of the West ( 1995 )
+PRODUCT	1885175	http://en.wikipedia.org/wiki/American_Cruise_Lines	Fleet	Mississippi Riverboats	2	enumeration	[E1] Queen of the Mississippi ( 2015 )
+PRODUCT	1885175	http://en.wikipedia.org/wiki/American_Cruise_Lines	Fleet	Modern Riverboats	3	enumeration	[E1] American Song ( 2018 )
+PRODUCT	1885175	http://en.wikipedia.org/wiki/American_Cruise_Lines	Fleet	Retired	4	enumeration	[E1] American Eagle ( 2000 ) - permanently moored at Chesapeake Shipbuilding as housing for contractors .
+NONE	7028629	http://en.wikipedia.org/wiki/Bulgar–Serb_War_(853)	Sources	Sources	0	enumeration	[E1]
+WORK_OF_ART	2024974	http://en.wikipedia.org/wiki/Pascal_Laugier	Filmography	Filmography	0	enumeration	[E1] Saint Ange ( 2004 )
+LAW	10626403	http://en.wikipedia.org/wiki/Williamson_v._Mazda_Motor_of_America,_Inc.	Related cases	Related cases	0	enumeration	[E1] Geier v. American Honda Motor Co. , 529 U.S. 861 ( 2000 ) — ' No airbag ' lawsuit conflicts with the objectives of FMVSS 208 and is therefore pre
+NONE	810037	http://en.wikipedia.org/wiki/Cyprus_in_the_Eurovision_Song_Contest_2013	At Eurovision	Points awarded to Cyprus	0	table	[ROW] [COL] [COL] [COL] [COL]
+GPE	810037	http://en.wikipedia.org/wiki/Cyprus_in_the_Eurovision_Song_Contest_2013	At Eurovision	Semi-final 1	1	table	[ROW] 10 points [COL]
+GPE	810037	http://en.wikipedia.org/wiki/Cyprus_in_the_Eurovision_Song_Contest_2013	At Eurovision	Final	2	table	[ROW] 10 points [COL]
+WORK_OF_ART	15252802	http://en.wikipedia.org/wiki/Daisy_Burrell	Filmography	Filmography	0	enumeration	[E1] The Valley of Fear ( 1916 ) – Ettie Shafter
+WORK_OF_ART	15252802	http://en.wikipedia.org/wiki/Daisy_Burrell	Musical theatre appearances	Musical theatre appearances	1	enumeration	[E1] The Redskins , by Alicia Ramsey ( 1903 ) , as Kitty
+NONE	5884599	http://en.wikipedia.org/wiki/Devarim_(parsha)	Readings	Readings according to the [[triennial cycle]]	0	table	[ROW] 1 [COL] [COL] [COL]
+NONE	5884599	http://en.wikipedia.org/wiki/Devarim_(parsha)	Commandments	According to Maimonides	1	enumeration	[E1] That the judge not be afraid of a bad person when judging
+NONE	5884599	http://en.wikipedia.org/wiki/Devarim_(parsha)	Commandments	According to [[Sefer ha-Chinuch]]	2	enumeration	[E1] Not to appoint any judge who is unlearned in the Torah , even if the person is generally learned
+WORK_OF_ART	10110613	http://en.wikipedia.org/wiki/Overload_(Chinese_band)	Albums	Albums	0	enumeration	[E1] Overload 1996
+WORK_OF_ART	11865838	http://en.wikipedia.org/wiki/You_Can_Win_If_You_Want	Single	Single	0	enumeration	"[E1] "" You_Can_Win_If_You_Want "" ( Special Single Remix ) - 3:44"
+WORK_OF_ART	11865838	http://en.wikipedia.org/wiki/You_Can_Win_If_You_Want	Single	Single	1	enumeration	"[E1] "" You_Can_Win_If_You_Want "" ( Special Dance Version ) - 5:19"
+OTHER	11865838	http://en.wikipedia.org/wiki/You_Can_Win_If_You_Want	Chart position	Chart position	2	table	[ROW] Belgium ( VRT Top 30 Flanders ) [COL] 2
+ORG	11570842	http://en.wikipedia.org/wiki/Endangered_Languages_Project	History	History	0	enumeration	[E1] First Peoples ' Cultural Council
+OTHER	11570842	http://en.wikipedia.org/wiki/Endangered_Languages_Project	Project aim	Project aim	1	enumeration	[E1] Language Research and Linguistics
+ORG	8262526	http://en.wikipedia.org/wiki/Music_Schools_Group_in_Bydgoszcz	History	[[Second Polish Republic|Interwar period]]	0	enumeration	[E1] Music theory ,
+LOC	8262526	http://en.wikipedia.org/wiki/Music_Schools_Group_in_Bydgoszcz	Locations	Locations	1	enumeration	[E1] Szwalbego Street 1 , in the immediate vicinity of the Pomeranian Philharmonic building , the Main building of Bydgoszcz Music Academy and the Polish Radio of Kuyavy Pomerania . It
+NONE	8262526	http://en.wikipedia.org/wiki/Music_Schools_Group_in_Bydgoszcz	Organization	Organization	2	enumeration	"[E1] School of Music - first degree ( six - year course ) ;"
+NONE	8262526	http://en.wikipedia.org/wiki/Music_Schools_Group_in_Bydgoszcz	Organization	Organization	3	enumeration	"[E1] Keyboard - piano , pipe organ , accordion , harpsichord ;"
+EVENT	8262526	http://en.wikipedia.org/wiki/Music_Schools_Group_in_Bydgoszcz	Competitions	Competitions	4	enumeration	"[E1] The International Competition for Young Pianists Arthur Rubinstein in memoriam ( every 2 years , in April ) ;"
+OTHER	10087356	http://en.wikipedia.org/wiki/1977_Summer_Universiade	Sports	Sports	0	enumeration	[E1]
+WORK_OF_ART	8827996	http://en.wikipedia.org/wiki/Scott_Cutlip	Works	Works	0	enumeration	[E1] 1952 : ( with Allen H. Center ) Effective Public Relations , Prentice Hall ( 8th edition in 2000 ) .
+WORK_OF_ART	1698908	http://en.wikipedia.org/wiki/Alexander_Beaufort_Meek	Works	Works	0	enumeration	[E1] An Oration Delivered before the Society of the Alumni of the University of Alabama at its First Anniversary , December 17 , 1836
+PERSON	359685	http://en.wikipedia.org/wiki/Is_It_Just_Me?_(film)	Cast	Cast	0	enumeration	[E1] Nicholas Downs as Blaine
+ORG	12659182	http://en.wikipedia.org/wiki/2012_County_Championship	Teams	Division One	0	table	[ROW] Durham [COL] Riverside Ground , Chester - le - Street [COL] — [COL] Geoff Cook [COL] Phil Mustard ( Apr - Jul ) Paul Collingwood ( Jul - Sep ) [COL] —
+ORG	12659182	http://en.wikipedia.org/wiki/2012_County_Championship	Teams	Division Two	1	table	[ROW] Derbyshire [COL] County Ground , Derby [COL] Queen 's Park , Chesterfield [COL] Karl Krikken [COL] Wayne Madsen [COL] Martin Guptill ( Apr - Jun ) Usman Khawaja ( Jun - Sep )
+ORG	12659182	http://en.wikipedia.org/wiki/2012_County_Championship	Standings	Division One	2	table	[ROW] Warwickshire ( C ) [COL] 16 [COL] 6 [COL] 1 [COL] 0 [COL] 9 [COL] 0 [COL] 43 [COL] 45 [COL] 0.0 [COL] 211
+ORG	12659182	http://en.wikipedia.org/wiki/2012_County_Championship	Standings	Division Two	3	table	[ROW] Derbyshire ( C ) [COL] 16 [COL] 6 [COL] 2 [COL] 0 [COL] 8 [COL] 0 [COL] 31 [COL] 43 [COL] 0.0 [COL] 194
+PERSON	12659182	http://en.wikipedia.org/wiki/2012_County_Championship	Statistics	Most runs	4	table	[ROW] Nick Compton [COL] Somerset [COL] 11 [COL] 18 [COL] 1191 [COL] 99.25 [COL] 204 * [COL] 4 [COL] 7
+ORG	3367850	http://en.wikipedia.org/wiki/2005–06_A1_Grand_Prix_of_Nations,_Malaysia	Results	Total Points	0	enumeration	[E1] Fastest Lap : A1 Team France ( 1'55.373 / 172.9 km / h , lap 5 of Sprint Race )
+ORG	3367850	http://en.wikipedia.org/wiki/2005–06_A1_Grand_Prix_of_Nations,_Malaysia	Results	Total Points	1	table	[ROW] France [COL] 21 [COL] 10 [COL] 10 [COL] 1
+NONE	6754519	http://en.wikipedia.org/wiki/Rowing_at_the_1996_Summer_Olympics_–_Men's_quadruple_sculls	Results	Heat 1	0	table	[ROW] 1 [COL] Janusz Hooker , Duncan Free , Ronald Snook , Bo Hanson [COL] [COL] 6:05.60 [COL] Q
+NONE	6754519	http://en.wikipedia.org/wiki/Rowing_at_the_1996_Summer_Olympics_–_Men's_quadruple_sculls	Results	Heat 2	1	table	[ROW] 1 [COL] Massimo Paradiso , Alessandro Corona , Rossano Galtarossa , Alessio Sartori [COL] [COL] 6:05.75 [COL] Q
+NONE	6754519	http://en.wikipedia.org/wiki/Rowing_at_the_1996_Summer_Olympics_–_Men's_quadruple_sculls	Results	Heat 3	2	table	[ROW] 1 [COL] André Steiner , Stephan Volkert , Andreas Hajek , André Willms [COL] [COL] 6:06.33 [COL] Q
+NONE	6754519	http://en.wikipedia.org/wiki/Rowing_at_the_1996_Summer_Olympics_–_Men's_quadruple_sculls	Results	Repechage 1	3	table	[ROW] 1 [COL] Jaroslaw Nowicki , Przemyslaw Lewandowski , Marek Kolbowicz , Piotr Bujnarowski [COL] [COL] 5:51.15 [COL] Q
+NONE	6754519	http://en.wikipedia.org/wiki/Rowing_at_the_1996_Summer_Olympics_–_Men's_quadruple_sculls	Results	Semifinal 1	4	table	[ROW] 1 [COL] Massimo Paradiso , Alessandro Corona , Rossano Galtarossa , Alessio Sartori [COL] [COL] 5:57.10 [COL] A
+NONE	6754519	http://en.wikipedia.org/wiki/Rowing_at_the_1996_Summer_Olympics_–_Men's_quadruple_sculls	Results	Semifinal 2	5	table	[ROW] 1 [COL] André Steiner , Stephan Volkert , Andreas Hajek , André Willms [COL] [COL] 5:55.10 [COL] A
+NONE	6754519	http://en.wikipedia.org/wiki/Rowing_at_the_1996_Summer_Olympics_–_Men's_quadruple_sculls	Results	Final B	6	table	[ROW] 1 [COL] Oleksandr Marchenko , Oleksandr Zaskalko , Mykola Chupryna , Leonid Shaposhnykov [COL] [COL] 5:53.46 [COL]
+NONE	6754519	http://en.wikipedia.org/wiki/Rowing_at_the_1996_Summer_Olympics_–_Men's_quadruple_sculls	Results	Final A	7	table	[ROW] [COL] André Steiner , Stephan Volkert , Andreas Hajek , André Willms [COL] [COL] 5:56.93 [COL]
+WORK_OF_ART	9721890	http://en.wikipedia.org/wiki/Ann_Tyrrell	Filmography	Filmography	0	table	[ROW] 1949 [COL] Bride for Sale [COL] Miss Swanson [COL]
+WORK_OF_ART	9721890	http://en.wikipedia.org/wiki/Ann_Tyrrell	Filmography	Filmography	1	table	"[ROW] 1952 [COL] The Unexpected [COL] Fortune Teller [COL] Episode : "" Lifeline """
+NONE	9182775	http://en.wikipedia.org/wiki/Ibiza_(Vino_de_la_Tierra)	Grape varieties	Grape varieties	0	enumeration	[E1] Red : Monastrell , Tempranillo , Cabernet sauvignon , Merlot and Syrah
+PERSON	6206889	http://en.wikipedia.org/wiki/Lava_Kusa_(2015_film)	Cast	Cast	0	enumeration	[E1] Varun Sandesh ... Prem Kumar/ Kushal Kumar
+NONE	13900230	http://en.wikipedia.org/wiki/1970_Boston_Patriots_season	Regular season	Schedule	0	table	[ROW] 1 [COL] September 20 [COL] Miami Dolphins [COL] W 27–14 [COL] 1–0 [COL] 32,607
+NONE	7747317	http://en.wikipedia.org/wiki/Southampton_F.C._Player_of_the_Season	Table key	Table key	0	table	[ROW] * [COL] Denotes player who is currently playing for the club
+NONE	7747317	http://en.wikipedia.org/wiki/Southampton_F.C._Player_of_the_Season	Winners	[[Southern Daily Echo]] award	1	table	[ROW] 1973–74 [COL] Div 1 [COL] [COL] [COL] [COL] 607 [COL] 228 [COL] [COL]
+NONE	7747317	http://en.wikipedia.org/wiki/Southampton_F.C._Player_of_the_Season	Winners	Southampton F.C. award	2	table	[ROW] 2012–13 [COL] Div 1¤ [COL] [COL] [COL] [COL] 261 [COL] 15 [COL] [COL] —
+WORK_OF_ART	4114431	http://en.wikipedia.org/wiki/Edward_Stratemeyer	Accomplishments	Accomplishments	0	enumeration	[E1] ( 1899 ) The Rover Boys
+PERSON	5604712	http://en.wikipedia.org/wiki/Ann_Harding	Personal life	Personal life	0	enumeration	[E1] Harry Bannister , an actor . They married in 1926 and divorced in 1932 in Reno , Nevada . A New York Times article ( 8 May 1932 ) about
+NONE	5604712	http://en.wikipedia.org/wiki/Ann_Harding	Broadway stage credits	Broadway stage credits	1	table	[ROW] October 3 , 1921 – Oct 1921 [COL] Like a King [COL] Phyllis Weston
+WORK_OF_ART	5604712	http://en.wikipedia.org/wiki/Ann_Harding	Filmography	Films	2	table	[ROW] 1929 [COL] Paris Bound [COL] Mary Hutton [COL]
+WORK_OF_ART	5604712	http://en.wikipedia.org/wiki/Ann_Harding	Filmography	Television	3	table	[ROW] 1955 [COL] Crossroads [COL] Hulda Lund [COL] 1 episode
+PERSON	10795951	http://en.wikipedia.org/wiki/Zehnder_(surname)	Main	Main	0	enumeration	[E1] Eduard Zehnder , Swiss mathematician
+PERSON	6314543	http://en.wikipedia.org/wiki/Disney_Infinity_3.0	Characters	Characters	0	table	[ROW] Star Wars : The Clone Wars [COL] Anakin Skywalker [COL] Starter Pack / Twilight of the Republic Playset / Twilight of the Republic playset and software bundle Star Wars Saga Bundle ( PS3 and PS4 exclusives ) [COL] August 30 , 2015 [COL] Wave 1
+WORK_OF_ART	6314543	http://en.wikipedia.org/wiki/Disney_Infinity_3.0	Reception	Awards	1	table	[ROW] The Game Awards 2015 [COL] Best Family Game [COL] [COL]
+WORK_OF_ART	14184693	http://en.wikipedia.org/wiki/Charles_Lalo	Works	Works	0	enumeration	[E1] Esquisse d'une esthétique musicale scientifique , 1908 .
+WORK_OF_ART	10335395	http://en.wikipedia.org/wiki/Max_Drischner	Works (selected)	Works (selected)	0	enumeration	[E1] Die Weihnachtsgeschichte nach Lukas 2 - Brieger Christnacht 1944 mit Liedern aus der Grafschaft Glatz Für Chor / ein- oder vierstimmig / Einzelstimme und Orgel / statt Orgel Harmonium ,
+WORK_OF_ART	10335395	http://en.wikipedia.org/wiki/Max_Drischner	Works (selected)	Works (selected)	1	enumeration	[E1] Spielmannslieder , Lute accompaniment of Texts by Paul Steinmüller [ Greiner & Pfeiffer , Stuttgart 1923 ]
+WORK_OF_ART	10335395	http://en.wikipedia.org/wiki/Max_Drischner	Works (selected)	Works (selected)	2	enumeration	[E1] Lobe den Herrn , meine Seele ( Psalm 104 ) for soloists , choir and organ ( 1946 )
+WORK_OF_ART	10335395	http://en.wikipedia.org/wiki/Max_Drischner	Works (selected)	Works (selected)	3	enumeration	[E1] Lass dich nicht ängstigen ( Text of the Holy Theresa of Avila ) for a two to four - part choir with organ ( 1946 )
+WORK_OF_ART	10335395	http://en.wikipedia.org/wiki/Max_Drischner	Works (selected)	Works (selected)	4	enumeration	[E1] Heilig Vaterland Organ hymn ( 1940 ? ) and
+WORK_OF_ART	10335395	http://en.wikipedia.org/wiki/Max_Drischner	Literature	Literature	5	enumeration	[E1] Bryan Hesford : The Life and Work of Max_Drischner , 2 volumes , England 1974
 	197140	http://en.wikipedia.org/wiki/Transport_for_London_Group_Archives	Material held	Material held	0	enumeration	[E1] The London General Omnibus Company
 	197140	http://en.wikipedia.org/wiki/Transport_for_London_Group_Archives	Material held	Material held	1	enumeration	[E1] London Transport ( in its various incarnations running 1933 - 2000 )
 	7082472	http://en.wikipedia.org/wiki/Susanna_Hunt	Film	Film	0	enumeration	"[E1] Casino Royale ( 1967 ) - Hunt played one of the "" Bond Girls "" in a short sequence where she tries to seduce agent Terence Cooper who is training"
 	6891738	http://en.wikipedia.org/wiki/2013_CAF_Champions_League_knockout_stage	Schedule	Schedule	0	table	[ROW] Semi - finals [COL] 4–6 October 2013 [COL] 18–20 October 2013
-	12400024	http://en.wikipedia.org/wiki/Trabecular_bone_score	Clinical use	Clinical use	0	enumeration	[E1] assessment the risk of fracture ;
+	12400024	http://en.wikipedia.org/wiki/Trabecular_bone_score	Clinical use	Clinical use	0	enumeration	"[E1] assessment the risk of fracture ;"
 	7028663	http://en.wikipedia.org/wiki/1875_Kentucky_gubernatorial_election	General election	Candidates	0	enumeration	[E1] James B. McCreary , Democratic
 	9372612	http://en.wikipedia.org/wiki/463L_master_pallet	Aircraft capabilities	Aircraft capabilities	0	enumeration	[E1] AgustaWestland AW101 : 2
 	9157576	http://en.wikipedia.org/wiki/Robert_Z._Lawrence	Other notable assignments	Other notable assignments	0	enumeration	[E1] Senior fellow in the Economic Studies Program at the Brookings Institution ( 1983–91 )
@@ -897,7 +897,7 @@ PERSON	989700	http://en.wikipedia.org/wiki/Theatre_Faculty_of_the_Academy_of_Per
 	9434532	http://en.wikipedia.org/wiki/2012_in_Ukraine	Events	Events	1	enumeration	[E1] September 26 - Karavan Shooting
 	12269133	http://en.wikipedia.org/wiki/Harpoon_(video_game)	Reviews	Reviews	0	enumeration	[E1] Computer Gaming World - Jun , 1991
 	5705537	http://en.wikipedia.org/wiki/Glen_Little	Career statistics	Club	0	table	[ROW] Reading ( loan ) [COL] 2002–03 [COL] First Division [COL] 6 [COL] 1 [COL] 0 [COL] 0 [COL] 0 [COL] 0 [COL] 1 [COL] 0 [COL] 7 [COL] 1
-	15020337	http://en.wikipedia.org/wiki/Tarkington_Independent_School_District	Schools	Schools	0	enumeration	[E1] Tarkington High School ( Class 3A ; Grades 9 - 12 )
+	15020337	http://en.wikipedia.org/wiki/Tarkington_Independent_School_District	Schools	Schools	0	enumeration	"[E1] Tarkington High School ( Class 3A ; Grades 9 - 12 )"
 	3763718	http://en.wikipedia.org/wiki/Island_Bay,_New_Zealand	Notable features	Streets and Roads	0	enumeration	[E1] Great Britain : Avon , Cam , Clyde , Dee , Derwent , Dover ( River Dour ) , Eden , Foyle , Leith , Liddel , Medway , Mersey
 	616769	http://en.wikipedia.org/wiki/Tomorrow_Could_Be...	Track listing	Track listing	0	enumeration	"[E1] "" Damn Right "" – 3:19"
 	11251387	http://en.wikipedia.org/wiki/Ash_Shamaliyah	Places	Places	0	enumeration	[E1] Northern state , Sudan , or Ash_Shamaliyah
@@ -948,7 +948,7 @@ PERSON	989700	http://en.wikipedia.org/wiki/Theatre_Faculty_of_the_Academy_of_Per
 	12221459	http://en.wikipedia.org/wiki/C14H18N2O	Main	Main	0	enumeration	[E1] AL-37350A , a tryptamine derivative
 	14674798	http://en.wikipedia.org/wiki/Petra,_Lesbos	Historical population	Historical population	0	table	[ROW] 1981 [COL] 994 [COL] -
 	7261313	http://en.wikipedia.org/wiki/Advent_of...	Credits	Credits	0	enumeration	[E1] Shyaithan – Vocals , bass , music and lyrics , producer
-	14579767	http://en.wikipedia.org/wiki/Keith_Smith_(writer)	Writing	Writing	0	enumeration	[E1] The Bear with Bad Eyes ; illustrated by Jiri Tibor Novak ; Little Lilyfield , 1987
+	14579767	http://en.wikipedia.org/wiki/Keith_Smith_(writer)	Writing	Writing	0	enumeration	"[E1] The Bear with Bad Eyes ; illustrated by Jiri Tibor Novak ; Little Lilyfield , 1987"
 	7047554	http://en.wikipedia.org/wiki/2000_US_Open_–_Men's_Doubles_Qualifying	Seeds	Seeds	0	enumeration	[E1] Daniel Melo / Alexandre Simoni ( First Round )
 	7047554	http://en.wikipedia.org/wiki/2000_US_Open_–_Men's_Doubles_Qualifying	Qualifiers	Qualifiers	1	enumeration	[E1] Lorenzo Manta / Laurence Tieleman
 	1427740	http://en.wikipedia.org/wiki/David_Cunningham_(sociologist)	Awards and honors	Awards and honors	0	enumeration	[E1] 2019 Robin M. Williams Award for Distinguished Contributions to Scholarship , Teaching , and Service - Peace , War , and Social Conflict Section of the American Sociological Association
@@ -969,10 +969,10 @@ PERSON	989700	http://en.wikipedia.org/wiki/Theatre_Faculty_of_the_Academy_of_Per
 	4223763	http://en.wikipedia.org/wiki/Dendrortyx	Main	Main	0	enumeration	[E1] Bearded wood partridge ( Dendrortyx barbatus )
 	5887650	http://en.wikipedia.org/wiki/Dean_Heffernan	Career statistics	Career statistics	0	table	[ROW] Central Coast Mariners [COL] 2005–06 [COL] 19 [COL] 7 [COL] 4 [COL] 1 [COL] - [COL] - [COL] 5 [COL] 0 [COL] 28 [COL] 8
 	5887650	http://en.wikipedia.org/wiki/Dean_Heffernan	International career	International career	1	table	[ROW] 1 [COL] 29 January 2009 [COL] [COL] 0–0 [COL] Draw [COL] 2011 AFC Asian Cup qualification [COL] [COL] Report
-	14525740	http://en.wikipedia.org/wiki/Photographic_printing	Printing on [[black-and-white]] paper	Printing on [[black-and-white]] paper	0	enumeration	[E1] Exposure of the image onto the sensitized paper using a contact printer or enlarger ;
+	14525740	http://en.wikipedia.org/wiki/Photographic_printing	Printing on [[black-and-white]] paper	Printing on [[black-and-white]] paper	0	enumeration	"[E1] Exposure of the image onto the sensitized paper using a contact printer or enlarger ;"
 	14525740	http://en.wikipedia.org/wiki/Photographic_printing	Printing on coloured paper	Printing from colour [[Negative (photography)|negatives]]	1	enumeration	[E1] Colour negatives are printed on RA-4 papers and produce a Type C print . These are essentially the same as colour negative films in that they consist of three emulsion
 	6987342	http://en.wikipedia.org/wiki/Appias_epaphia	Subspecies	Subspecies	0	enumeration	[E1] A. e. aequatorialis Mendes & Bivar de Sousa , 2006 ( São Tomé Island )
-	2581321	http://en.wikipedia.org/wiki/Acura_TSX	{{anchor|CU2|2008|second}} Second generation (CU2; 2008)	Safety	0	table	[ROW] Small overlap frontal offset [COL] Marginal
+	2581321	http://en.wikipedia.org/wiki/Acura_TSX	"{{anchor|CU2|2008|second}} Second generation (CU2; 2008)"	Safety	0	table	[ROW] Small overlap frontal offset [COL] Marginal
 	2581321	http://en.wikipedia.org/wiki/Acura_TSX	Awards and recognition	Awards and recognition	1	enumeration	[E1] 2008 Wheels Car of the Year award winner .
 	2581321	http://en.wikipedia.org/wiki/Acura_TSX	Sales	Sales	2	table	[ROW] 2003 [COL] 18,932
 	2581321	http://en.wikipedia.org/wiki/Acura_TSX	References and footnotes	References and footnotes	3	enumeration	[E1]
@@ -1016,7 +1016,7 @@ PERSON	989700	http://en.wikipedia.org/wiki/Theatre_Faculty_of_the_Academy_of_Per
 	8946300	http://en.wikipedia.org/wiki/Elaine_of_Corbenic	External sources	External sources	0	enumeration	[E1] “ Arthurian Women . ” Jimmy Joe , 1999 . Web . 24 June 2006 . An encyclopedia article covering her name , beauty , and genealogy .
 	404937	http://en.wikipedia.org/wiki/Fine_Living_(Italian_TV_channel)	Programming	Original programs	0	enumeration	[E1] Buono a sapersi
 	404937	http://en.wikipedia.org/wiki/Fine_Living_(Italian_TV_channel)	Programming	Imported programs	1	enumeration	[E1] A caccia di occasioni ( Flea Market Flip )
-	13513309	http://en.wikipedia.org/wiki/Alexander_Ferrier_Mitchell	Works	Works	0	enumeration	[E1] ‘ The Westminster Confession of Faith , ’ 1866 ; 3rd ed . 1867 .
+	13513309	http://en.wikipedia.org/wiki/Alexander_Ferrier_Mitchell	Works	Works	0	enumeration	"[E1] ‘ The Westminster Confession of Faith , ’ 1866 ; 3rd ed . 1867 ."
 	2635669	http://en.wikipedia.org/wiki/Handel_solo_sonatas_(Walsh)	Summary	Summary	0	table	[ROW] Sonata I [COL] Flute [COL] E minor [COL] Flute sonata in E minor ( HWV 359b ) . This is the same sonata as Chrysander 's Sonata Ib .
 	2635669	http://en.wikipedia.org/wiki/Handel_solo_sonatas_(Walsh)	Summary	Summary	1	table	[ROW] Sonata X [COL] Violin [COL] A major [COL] Violin sonata in A major ( HWV 372 ) . Probably spurious . Designated Opus 1 , No . 14 by the later Chrysander edition .
 	14098587	http://en.wikipedia.org/wiki/Isoceras	Species	Species	0	enumeration	[E1] Isoceras bipunctatum ( Staudinger , 1887 )
@@ -1024,7 +1024,7 @@ PERSON	989700	http://en.wikipedia.org/wiki/Theatre_Faculty_of_the_Academy_of_Per
 	13770744	http://en.wikipedia.org/wiki/Charles_Booth	Politics	Politics	0	enumeration	[E1] Charles Booth ( diplomat ) ( 1925–1997 ) , British ambassador to Burma , 1978–1982
 	13770744	http://en.wikipedia.org/wiki/Charles_Booth	Sports	Sports	1	enumeration	[E1] Charles Booth ( footballer ) ( 1869–1898 ) , English footballer
 	13770744	http://en.wikipedia.org/wiki/Charles_Booth	Other	Other	2	enumeration	[E1] Charles Booth ( bishop ) ( died 1535 ) , Tudor bishop of Hereford
-	9606663	http://en.wikipedia.org/wiki/Miguel_de_Cervantes	Other works	Other works	0	enumeration	[E1] Trato de Argel ; based on his own experiences , deals with the life of Christian slaves in Algiers ;
+	9606663	http://en.wikipedia.org/wiki/Miguel_de_Cervantes	Other works	Other works	0	enumeration	"[E1] Trato de Argel ; based on his own experiences , deals with the life of Christian slaves in Algiers ;"
 	9606663	http://en.wikipedia.org/wiki/Miguel_de_Cervantes	Other works	Other works	1	enumeration	[E1] El juez de los divorcios ,
 	9606663	http://en.wikipedia.org/wiki/Miguel_de_Cervantes	Influences	Places	2	enumeration	[E1] Cervantes . A municipality in the province of Lugo , Galicia , Spain , but the name of the town is not based on Miguel de Cervantes ( nor is
 	878142	http://en.wikipedia.org/wiki/Lionel_Dorling	War Service	War Service	0	enumeration	[E1] Accountant 01/05/1905
@@ -1061,14 +1061,14 @@ PERSON	989700	http://en.wikipedia.org/wiki/Theatre_Faculty_of_the_Academy_of_Per
 	537819	http://en.wikipedia.org/wiki/1958_New_York_Yankees_season	Awards and honors	Awards and honors	7	enumeration	[E1] Elston Howard , Babe Ruth Award
 	10728707	http://en.wikipedia.org/wiki/Sara_Holt_(artist)	Notable exhibitions	Solo	0	enumeration	[E1] Sara Holt , Sculptures , ARC , Musée d'Art Moderne de la Ville de Paris , 1971
 	10728707	http://en.wikipedia.org/wiki/Sara_Holt_(artist)	Public works	Public works	1	enumeration	[E1] Douze Cônes , Quartier de la Noue , Bagnolet , France , 1972 .
-	10728707	http://en.wikipedia.org/wiki/Sara_Holt_(artist)	Public collections	Public collections	2	enumeration	[E1] Städtische Kunstsammlungen , Ludwigshafen , Germany , 1972.Sara Holt : Musée d'Art Moderne de la ville de Paris , Paris , Novembre -Decembre 1971 ; Städtische Kunstsammlungen - Ludwigshafen ,
+	10728707	http://en.wikipedia.org/wiki/Sara_Holt_(artist)	Public collections	Public collections	2	enumeration	"[E1] Städtische Kunstsammlungen , Ludwigshafen , Germany , 1972.Sara Holt : Musée d'Art Moderne de la ville de Paris , Paris , Novembre -Decembre 1971 ; Städtische Kunstsammlungen - Ludwigshafen ,"
 	10728707	http://en.wikipedia.org/wiki/Sara_Holt_(artist)	Publications	Publications	3	enumeration	[E1] Sara Holt/ Carole Naggar , Night Light , Editions Pierre Bordas & Fils , Paris , November 1979 . ( br . )
 	1716196	http://en.wikipedia.org/wiki/Prospect_Hill_Cemetery_(Brattleboro,_Vermont)	Notable burials	Notable burials	0	enumeration	[E1] James Fisk
 	1678609	http://en.wikipedia.org/wiki/Morriston_RFC	Notable former players	Notable former players	0	enumeration	[E1] William Richard Arnold
 	343738	http://en.wikipedia.org/wiki/World_Trade_(band)	Discography	Discography	0	enumeration	[E1] World Trade ( PolyGram Records , 1989 )
 	343738	http://en.wikipedia.org/wiki/World_Trade_(band)	Discography	Discography	1	enumeration	[E1] Tales from Yesterday ( Magna Carta , 1995 ) , Yes tribute album
 	7992295	http://en.wikipedia.org/wiki/Torremolinos_73	Cast	Cast	0	enumeration	[E1] Javier Cámara as Alfredo
-	9559809	http://en.wikipedia.org/wiki/1939_PGA_Championship	Format	Format	0	enumeration	[E1] Sunday and Monday – 36 - hole stroke play qualifier , 18 holes per day ;
+	9559809	http://en.wikipedia.org/wiki/1939_PGA_Championship	Format	Format	0	enumeration	"[E1] Sunday and Monday – 36 - hole stroke play qualifier , 18 holes per day ;"
 	9559809	http://en.wikipedia.org/wiki/1939_PGA_Championship	Past champions in the field	Past champions in the field	1	table	[ROW] Paul Runyan [COL] [COL] 1934 , 1938 [COL] 3–1 [COL] Quarterfinals [COL] T5
 	9559809	http://en.wikipedia.org/wiki/1939_PGA_Championship	Final results	Final results	2	table	[ROW] 1 [COL] Henry Picard [COL] [COL] 1,100
 	9559809	http://en.wikipedia.org/wiki/1939_PGA_Championship	Final match scorecards	Final match scorecards	3	table	[ROW] Par [COL] 4 [COL] 4 [COL] 3 [COL] 5 [COL] 4 [COL] 3 [COL] 4 [COL] 4 [COL] 4 [COL] 3 [COL] 5 [COL] 5 [COL] 4 [COL] 4 [COL] 5 [COL] 4 [COL] 3 [COL] 4
@@ -1137,7 +1137,7 @@ PERSON	989700	http://en.wikipedia.org/wiki/Theatre_Faculty_of_the_Academy_of_Per
 	2934706	http://en.wikipedia.org/wiki/No_Way_(Rottyful_Sky_song)	Media appearances	Media appearances	2	enumeration	[E1] 6 August 2010 : Now TV interview
 	2934706	http://en.wikipedia.org/wiki/No_Way_(Rottyful_Sky_song)	Media appearances	Media appearances	3	enumeration	[E1] 22 July 2010 : M!Countdown
 	11069931	http://en.wikipedia.org/wiki/Cephaloscymnus	Species	Species	0	enumeration	[E1] Cephaloscymnus insulatus Gordon , 1970
-	5226725	http://en.wikipedia.org/wiki/Charles_Gleyre	Sources	Sources	0	enumeration	[E1] Fritz Berthoud in Bibliothèque universelle de Geneve ( 1874 ) ;
+	5226725	http://en.wikipedia.org/wiki/Charles_Gleyre	Sources	Sources	0	enumeration	"[E1] Fritz Berthoud in Bibliothèque universelle de Geneve ( 1874 ) ;"
 	4269521	http://en.wikipedia.org/wiki/Acalolepta_strandiella	Subspecies	Subspecies	0	enumeration	[E1] Acalolepta_strandiella strandiella ( Breuning , 1935 )
 	4685623	http://en.wikipedia.org/wiki/Christopher_La_Farge	Publications	Books	0	enumeration	[E1] Beauty for Ashes , Coward - McCann , 1953 ( verse novel )
 	4685623	http://en.wikipedia.org/wiki/Christopher_La_Farge	Publications	Articles	1	enumeration	"[E1] "" Soldier into Civilian , "" Harper 's , March 1945 ."
@@ -1147,7 +1147,7 @@ PERSON	989700	http://en.wikipedia.org/wiki/Theatre_Faculty_of_the_Academy_of_Per
 	6938221	http://en.wikipedia.org/wiki/Amaia_(singer)	Filmatography	Television	3	table	[ROW] 2010 [COL] El Número Uno [COL] Contestant
 	6938221	http://en.wikipedia.org/wiki/Amaia_(singer)	Tour	Tour	4	enumeration	[E1] OT 2017 en concierto ( 2018 ) ( with Operación Triunfo 2017 )
 	720707	http://en.wikipedia.org/wiki/Naruki_Doi	Championships and accomplishments	Championships and accomplishments	0	enumeration	[E1] Dragon Gate
-	654757	http://en.wikipedia.org/wiki/Viline_Vode	Sources	Sources	0	enumeration	[E1] Beograd - plan grada ; M@gic M@p , 2006 ;
+	654757	http://en.wikipedia.org/wiki/Viline_Vode	Sources	Sources	0	enumeration	"[E1] Beograd - plan grada ; M@gic M@p , 2006 ;"
 	14412713	http://en.wikipedia.org/wiki/KakaoPay	Sites That Accept [[KakaoPay]]	Sites That Accept [[KakaoPay]]	0	enumeration	[E1] Coupang ( 쿠팡 )
 	1844222	http://en.wikipedia.org/wiki/1995_Russian_First_League	Overview	Overview	0	table	[ROW] FC Baltika Kaliningrad [COL] Leonid Tkachenko
 	1844222	http://en.wikipedia.org/wiki/1995_Russian_First_League	Top goalscorers	Top goalscorers	1	enumeration	[E1] Eduard Bogdanov ( FC Uralan Elista )
@@ -1214,9 +1214,9 @@ PERSON	989700	http://en.wikipedia.org/wiki/Theatre_Faculty_of_the_Academy_of_Per
 	3014899	http://en.wikipedia.org/wiki/Army_(Ellie_Goulding_song)	Credits and personnel	Credits and personnel	0	enumeration	[E1] Recorded at MXM Studios ( Los Angeles , California ) and Wolf Cousins Studios ( Stockholm , Sweden )
 	3014899	http://en.wikipedia.org/wiki/Army_(Ellie_Goulding_song)	Credits and personnel	Credits and personnel	1	enumeration	[E1] Ellie Goulding – vocals
 	5484640	http://en.wikipedia.org/wiki/Yuichi_Nakagaichi	Honours	Honours	0	enumeration	[E1] 1992 Olympic Games — 6th place
-	5436554	http://en.wikipedia.org/wiki/2008_Georgian_parliamentary_election	Contending parties	Contending parties	0	enumeration	[E1] United National Movement , current ruling party led by President Saakashvili ;
+	5436554	http://en.wikipedia.org/wiki/2008_Georgian_parliamentary_election	Contending parties	Contending parties	0	enumeration	"[E1] United National Movement , current ruling party led by President Saakashvili ;"
 	5436554	http://en.wikipedia.org/wiki/2008_Georgian_parliamentary_election	Results	Results	1	table	[ROW] United National Movement [COL] 1,050,237 [COL] 59.18 [COL] 119
-	918489	http://en.wikipedia.org/wiki/Ain't_Got_No,_I_Got_Life	Differences between masters; alternate mixes	Differences between masters; alternate mixes	0	enumeration	[E1] Version 1 starts with a repeated piano hook , and is a smoothly played jazz number .
+	918489	http://en.wikipedia.org/wiki/Ain't_Got_No,_I_Got_Life	"Differences between masters; alternate mixes"	"Differences between masters; alternate mixes"	0	enumeration	[E1] Version 1 starts with a repeated piano hook , and is a smoothly played jazz number .
 	918489	http://en.wikipedia.org/wiki/Ain't_Got_No,_I_Got_Life	Charts	Charts	1	table	[ROW] Netherlands ( Dutch Top 40 ) [COL] 1
 	1546771	http://en.wikipedia.org/wiki/King_Kong_Escapes	Cast	Cast	0	enumeration	[E1] Rhodes Reason - Commander Carl Nelson ( Japanese voice actor : Kei Taguchi )
 	1546771	http://en.wikipedia.org/wiki/King_Kong_Escapes	Production	Effects	1	enumeration	[E1] Eiji Tsuburaya - Special effects director
@@ -1240,7 +1240,7 @@ PERSON	989700	http://en.wikipedia.org/wiki/Theatre_Faculty_of_the_Academy_of_Per
 	4308460	http://en.wikipedia.org/wiki/Miloš_Karišik	Honours	Honours	0	enumeration	[E1] Czech First League : 2011–12
 	11830631	http://en.wikipedia.org/wiki/Rimutaka_Incline_Railway_Heritage_Trust	Foundation and objectives	Foundation and objectives	0	enumeration	[E1] To plan , fund , reinstate and operate a tourist heritage railway on former railway route between Upper Hutt and Featherston , and any other directly or indirectly connected railway
 	11830631	http://en.wikipedia.org/wiki/Rimutaka_Incline_Railway_Heritage_Trust	Timeline	Timeline	1	table	[ROW] [COL] Official recognition of Historic Places Trust registration of the railway formation between Kaitoke and Cross Creek and Rail Heritage Trust of New Zealand awards for restoration of two bridges on
-	11830631	http://en.wikipedia.org/wiki/Rimutaka_Incline_Railway_Heritage_Trust	Project	Project	2	enumeration	[E1] Stage 1 , Upper Hutt to Summit : Reinstatement of railway line between new station at Maymorn and a station at Summit ; operation using conventional motive power between Maymorn
+	11830631	http://en.wikipedia.org/wiki/Rimutaka_Incline_Railway_Heritage_Trust	Project	Project	2	enumeration	"[E1] Stage 1 , Upper Hutt to Summit : Reinstatement of railway line between new station at Maymorn and a station at Summit ; operation using conventional motive power between Maymorn"
 	14303916	http://en.wikipedia.org/wiki/Maronite_Catholic_Eparchy_of_Saint_Charbel_in_Buenos_Aires	Episcopal ordinaries	Episcopal ordinaries	0	enumeration	[E1] Charbel Georges Merhi , Congregation of the Lebanese Maronite Missionaries ( M.L.M. ) ( 5 October 1990 – 17 April 2013 )
 	14303916	http://en.wikipedia.org/wiki/Maronite_Catholic_Eparchy_of_Saint_Charbel_in_Buenos_Aires	Sources and external links	Sources and external links	1	enumeration	[E1] diocese / zcha0.htm GigaCatholic
 	85773	http://en.wikipedia.org/wiki/Aroue-Ithorots-Olhaïby	Geography	"Places and Hamlets<ref name=""Géo"">[http://www.geoportail.gouv.fr/accueil?c=-0.9164,43.3192&z=7.92265E-5&l=GEOGRAPHICALGRIDSYSTEMS.MAPS.3D$GEOPORTAIL:OGC:WMTS@aggregate(1)&l=ADMINISTRATIVEUNITS.BOUNDARIES$GEOPORTAIL:OGC:WMTS(1)&permalink=yes Géoportail], [[Institut géographique national|IGN]] {{in lang|fr}}</ref>"	0	enumeration	[E1] Abbadie ( château )
@@ -1248,7 +1248,7 @@ PERSON	989700	http://en.wikipedia.org/wiki/Theatre_Faculty_of_the_Academy_of_Per
 	85773	http://en.wikipedia.org/wiki/Aroue-Ithorots-Olhaïby	Toponymy	Toponymy	2	enumeration	[E1] Duchesne : Duchesne collection volume CXIVDuchesne Collection , volumes 99 to 114 , containing the papers of Oihenart , former Imperial Librarian - Bibliothèque nationale de France
 	85773	http://en.wikipedia.org/wiki/Aroue-Ithorots-Olhaïby	Toponymy	Toponymy	3	table	[ROW] Aroue [COL] Aroe [COL] 1337 [COL] Orpustan [COL] 228 [COL] [COL] Village
 	85773	http://en.wikipedia.org/wiki/Aroue-Ithorots-Olhaïby	Administration	Administration	4	table	[ROW] 1953 [COL] 2001 [COL] Franz Duboscq [COL] [COL]
-	85773	http://en.wikipedia.org/wiki/Aroue-Ithorots-Olhaïby	Administration	Inter-communality	5	enumeration	[E1] the Community of communes of Amikuze ;
+	85773	http://en.wikipedia.org/wiki/Aroue-Ithorots-Olhaïby	Administration	Inter-communality	5	enumeration	"[E1] the Community of communes of Amikuze ;"
 	85773	http://en.wikipedia.org/wiki/Aroue-Ithorots-Olhaïby	Culture and Heritage	Religious heritage	6	enumeration	[E1] The Church of Saint - Étienne at Aroue ( 12th century ) is a Romanesque church rebuilt in the 19th century . There is a sculpture from the 12th century
 	3921570	http://en.wikipedia.org/wiki/Aviation_in_the_Philadelphia_metropolitan_area	Commercial airports	Commercial airports	0	enumeration	[E1] Philadelphia International Airport
 	13265045	http://en.wikipedia.org/wiki/Engineer_Services_Regiment	Units	Regular Army	0	enumeration	[E1] 1st Engineer Service Regiment
@@ -1257,7 +1257,7 @@ PERSON	989700	http://en.wikipedia.org/wiki/Theatre_Faculty_of_the_Academy_of_Per
 	14646923	http://en.wikipedia.org/wiki/William_Trevor	Sources	Sources	1	enumeration	[E1]
 	7112366	http://en.wikipedia.org/wiki/Siebel_Systems	Key dates	Key dates	0	enumeration	[E1] 1993 : Siebel_Systems , Inc. is founded .
 	14881532	http://en.wikipedia.org/wiki/Château_de_Jean	Main	Main	0	enumeration	[E1] a central rectangular residence confined by four corbelled towers equipped at the base with defensive murder - holes
-	9449441	http://en.wikipedia.org/wiki/Kit_Martin	Projects	Projects	0	enumeration	[E1] Gunton Hall , Gunton Park , Norfolk , 1980 , estate into 20 dwellings , one becoming Martin 's own home ; new boathouse in 2004
+	9449441	http://en.wikipedia.org/wiki/Kit_Martin	Projects	Projects	0	enumeration	"[E1] Gunton Hall , Gunton Park , Norfolk , 1980 , estate into 20 dwellings , one becoming Martin 's own home ; new boathouse in 2004"
 	9449441	http://en.wikipedia.org/wiki/Kit_Martin	Projects	Projects	1	enumeration	[E1] Cullen House , Aberdeenshire , 1983 , into 6 houses , estate into 14 dwellings
 	9449441	http://en.wikipedia.org/wiki/Kit_Martin	Books	Books	2	enumeration	[E1] The Country House : To Be or Not to Be ( 1982 ) with Marcus Binney , Save Britain 's Heritage , , .
 	13243963	http://en.wikipedia.org/wiki/Paladin_Poetry_Series	Paladin Poetry titles	Paladin Poetry titles	0	enumeration	[E1] John Ashbery , Selected Poems ( expanded edition ) ( 1987 )
@@ -1268,7 +1268,7 @@ PERSON	989700	http://en.wikipedia.org/wiki/Theatre_Faculty_of_the_Academy_of_Per
 	1083264	http://en.wikipedia.org/wiki/1912_in_India	Publications	Publications	2	enumeration	"[E1] In March , Lala Har Dayal wrote an article for Modern Review entitled "" Marx : A Modern Rishi "" , which is believed to be the first Indian article"
 	1083264	http://en.wikipedia.org/wiki/1912_in_India	Births	Births	3	enumeration	[E1] 27 February – Lawrence Durrell , novelist , poet , dramatist and travel writer – ( died 1990 in France ) .
 	1083264	http://en.wikipedia.org/wiki/1912_in_India	Deaths	Deaths	4	enumeration	[E1] Hafeez Jaunpuri , real name is Haafiz Muhammad Ali , poet , born in 1865 in Jaunpur .
-	2143473	http://en.wikipedia.org/wiki/Hayashi_rice	Main	Main	0	enumeration	[E1] One belief is that the name was given by Yuteki Hayashi ( 早矢仕 有的 ; Hayashi Yūteki ) , the first president of publishing company Maruzen ( 丸善 ) (:
+	2143473	http://en.wikipedia.org/wiki/Hayashi_rice	Main	Main	0	enumeration	"[E1] One belief is that the name was given by Yuteki Hayashi ( 早矢仕 有的 ; Hayashi Yūteki ) , the first president of publishing company Maruzen ( 丸善 ) (:"
 	4014576	http://en.wikipedia.org/wiki/Allegheny_Mountain_Collegiate_Conference	Member schools	Current members	0	table	[ROW] Alfred State College [COL] Alfred , New York [COL] Pioneers [COL] 1908 [COL] Public [COL] 3,500 [COL] 2019
 	4014576	http://en.wikipedia.org/wiki/Allegheny_Mountain_Collegiate_Conference	Member schools	Associate members	1	table	[ROW] Geneva College [COL] Beaver Falls , Pennsylvania [COL] Golden Tornadoes [COL] 1848 [COL] Reformed Presbyterian [COL] 1,791 [COL] 2018–19 [COL] Presidents [COL] men 's volleyball
 	4014576	http://en.wikipedia.org/wiki/Allegheny_Mountain_Collegiate_Conference	Member schools	Former members	2	table	[ROW] D'Youville College [COL] Buffalo , New York [COL] Saints [COL] 1946 [COL] Private / Catholic [COL] 2,900 [COL] 2009 [COL] 2020 [COL] East Coast ( NCAA Division II )
@@ -1306,7 +1306,7 @@ PERSON	989700	http://en.wikipedia.org/wiki/Theatre_Faculty_of_the_Academy_of_Per
 	10702627	http://en.wikipedia.org/wiki/Joslin_Kamatuka	International	International goals	0	table	[ROW] 1 . [COL] 26 May 2019 [COL] King Zwelithini Stadium , Umlazi , South Africa [COL] [COL] 1–0 [COL] 2–1 [COL] 2019 COSAFA Cup
 	13316221	http://en.wikipedia.org/wiki/Gelson_Silva	Honours	Honours	0	enumeration	[E1] Campeonato Catarinense : 1989 , 1990 and 1991
 	13316221	http://en.wikipedia.org/wiki/Gelson_Silva	Honours	Honours	1	enumeration	[E1] Campeonato Gaúcho : 1995
-	7554973	http://en.wikipedia.org/wiki/Outline_of_Palermo	General reference	General reference	0	enumeration	[E1] Pronunciation : , ; ; , from
+	7554973	http://en.wikipedia.org/wiki/Outline_of_Palermo	General reference	General reference	0	enumeration	"[E1] Pronunciation : , ; ; , from"
 	7554973	http://en.wikipedia.org/wiki/Outline_of_Palermo	[[Geography of Palermo]]	[[Geography of Palermo]]	1	enumeration	[E1] Palermo is :
 	7554973	http://en.wikipedia.org/wiki/Outline_of_Palermo	[[Geography of Palermo]]	Location of Palermo	2	enumeration	[E1] Palermo is situated within the following regions :
 	7554973	http://en.wikipedia.org/wiki/Outline_of_Palermo	[[Geography of Palermo]]	Natural geographic features of Palermo	3	enumeration	[E1] Hills in Palermo
@@ -1366,7 +1366,7 @@ PERSON	989700	http://en.wikipedia.org/wiki/Theatre_Faculty_of_the_Academy_of_Per
 	6976435	http://en.wikipedia.org/wiki/Saraswatichandra_(film)	Awards and recognition	Awards and recognition	2	enumeration	[E1] 1969 , National Film Awards
 	408713	http://en.wikipedia.org/wiki/Michael_Semanick	Selected filmography	Selected filmography	0	enumeration	[E1] The Lord of the Rings : The Return of the King ( 2003 )
 	408713	http://en.wikipedia.org/wiki/Michael_Semanick	Selected filmography	Selected filmography	1	enumeration	[E1] The Lord of the Rings : The Fellowship of the Ring ( 2001 )
-	10181218	http://en.wikipedia.org/wiki/Zhaozhou_Congshen	Sources	Sources	0	enumeration	[E1] Aitken , Robert ; ed . and tr . The Gateless Barrier : The Wu - men Kuan ( Mumonkan ) . New York : North Point Press , 1991
+	10181218	http://en.wikipedia.org/wiki/Zhaozhou_Congshen	Sources	Sources	0	enumeration	"[E1] Aitken , Robert ; ed . and tr . The Gateless Barrier : The Wu - men Kuan ( Mumonkan ) . New York : North Point Press , 1991"
 	1963280	http://en.wikipedia.org/wiki/Listed_buildings_in_Hunsonby	Key	Key	0	table	[ROW] II * [COL] Particularly important buildings of more than special interest
 	1963280	http://en.wikipedia.org/wiki/Listed_buildings_in_Hunsonby	Buildings	Buildings	1	table	[ROW] Salkeld Hall [COL] 100px|centre ] ] [COL] [COL] A country house , incorporating earlier material , it was extended in the 17th century , a Georgian front was added in about 1790 , and there were further additions [COL]
 	14679541	http://en.wikipedia.org/wiki/Inubaka:_Crazy_for_Dogs	Manga	North American releases	0	table	[ROW] Volume 1 [COL] Feb 20 , 2007
@@ -1489,7 +1489,7 @@ PERSON	989700	http://en.wikipedia.org/wiki/Theatre_Faculty_of_the_Academy_of_Per
 	4803720	http://en.wikipedia.org/wiki/Brut_Productions	Select films	Select films	0	enumeration	[E1] Night Watch ( 1973 )
 	4803720	http://en.wikipedia.org/wiki/Brut_Productions	Select films	Unmade projects	1	enumeration	[E1] Getting Rid of Mr Straker with Roger Moore , Lee Remick and Orson Welles
 	11824232	http://en.wikipedia.org/wiki/Collegiate_School_Celbridge	Principals	Principals	0	enumeration	[E1] 1783 Mary Taylor
-	8206721	http://en.wikipedia.org/wiki/Museum_Walserhaus	The Walserhaus Gurin Association	The Walserhaus Gurin Association	0	enumeration	[E1] protect the historical , cultural and linguistic heritage of the Gurin Walser community ;
+	8206721	http://en.wikipedia.org/wiki/Museum_Walserhaus	The Walserhaus Gurin Association	The Walserhaus Gurin Association	0	enumeration	"[E1] protect the historical , cultural and linguistic heritage of the Gurin Walser community ;"
 	8206721	http://en.wikipedia.org/wiki/Museum_Walserhaus	Projects	Projects	1	enumeration	[E1] 2008 : for the 70th anniversary , an old lime kiln was put into operation again in cooperation with the Bosco / Gurin Landscape Association . The produced lime was
 	10584285	http://en.wikipedia.org/wiki/Charles_Reznikoff	Works	Works	0	enumeration	"[E1] The Manner "" Music "" ( 1977 )"
 	7456011	http://en.wikipedia.org/wiki/Wisin	Discography	Promotional singles and other charted songs	0	table	"[ROW] "" Si Te Digo la Verdad "" ( Official Remix ) ( Gocho featuring Wisin ) [COL] 2012 [COL] – [COL] – [COL] – [COL] – [COL] – [COL]"
@@ -1622,7 +1622,7 @@ PERSON	989700	http://en.wikipedia.org/wiki/Theatre_Faculty_of_the_Academy_of_Per
 	4394283	http://en.wikipedia.org/wiki/Tucson_Roadrunners	Players	Team captains	0	enumeration	[E1] Craig Cunningham , 2016–17
 	4394283	http://en.wikipedia.org/wiki/Tucson_Roadrunners	Franchise records and leaders	Scoring leaders	1	table	[ROW] Michael Bunting [COL] LW [COL] 244 [COL] 67 [COL] 94 [COL] 161 [COL] .66
 	4692809	http://en.wikipedia.org/wiki/Ruger_SR22	Models	Models	0	table	[ROW] 3600 [COL] SR22 [COL] Black / Black Standard model . [COL] - [COL] [COL] $ 439.00
-	8669837	http://en.wikipedia.org/wiki/Empress_Victoria	Main	Main	0	enumeration	[E1] Queen Victoria of the United Kingdom ( 1819 - 1901 ) , who was also reigning Empress of India ;
+	8669837	http://en.wikipedia.org/wiki/Empress_Victoria	Main	Main	0	enumeration	"[E1] Queen Victoria of the United Kingdom ( 1819 - 1901 ) , who was also reigning Empress of India ;"
 	1809439	http://en.wikipedia.org/wiki/Vernier,_Switzerland	Notable people	Notable people	0	enumeration	[E1] Émilie de Morsier ( 1843–1896 ) a Swiss feminist , pacifist and abolitionist .
 	1809439	http://en.wikipedia.org/wiki/Vernier,_Switzerland	Education	Primary and secondary schools	1	enumeration	[E1] Moyenne :
 	6783722	http://en.wikipedia.org/wiki/Kharkari	India	India	0	enumeration	[E1] Kharkhari , Birni block , Giridih district , Jharkhand
@@ -1693,8 +1693,8 @@ PERSON	989700	http://en.wikipedia.org/wiki/Theatre_Faculty_of_the_Academy_of_Per
 	2395049	http://en.wikipedia.org/wiki/Malakoff_High_School	Athletics	State Finalist	0	enumeration	[E1] Volleyball –
 	4064812	http://en.wikipedia.org/wiki/Hasta_la_Raíz	Charts	Weekly charts	0	table	[ROW] Italy ( FIMI ) [COL] 82
 	4064812	http://en.wikipedia.org/wiki/Hasta_la_Raíz	Credits and personnel	Performance credits by song	1	enumeration	[E1] Hasta la Raíz :
-	4064812	http://en.wikipedia.org/wiki/Hasta_la_Raíz	Credits and personnel	Performance credits	2	enumeration	[E1] Hannibal Bozydar ; violin
-	4064812	http://en.wikipedia.org/wiki/Hasta_la_Raíz	Credits and personnel	Technical credits	3	enumeration	[E1] Guillermo Gutiérrez Leyva ; A&R
+	4064812	http://en.wikipedia.org/wiki/Hasta_la_Raíz	Credits and personnel	Performance credits	2	enumeration	"[E1] Hannibal Bozydar ; violin"
+	4064812	http://en.wikipedia.org/wiki/Hasta_la_Raíz	Credits and personnel	Technical credits	3	enumeration	"[E1] Guillermo Gutiérrez Leyva ; A&R"
 	4395107	http://en.wikipedia.org/wiki/Bank_Error_in_Your_Favour	Cast	Cast	0	enumeration	[E1] Gérard Lanvin - Julien Foucault
 	9231416	http://en.wikipedia.org/wiki/Acoustic_EP_(3_Doors_Down_EP)	Track listing	Track listing	0	enumeration	"[E1] "" Let Me Go "" ( Acoustic ) – 3:47"
 	13416101	http://en.wikipedia.org/wiki/Alex_Gilbey	Career statistics	Career statistics	0	table	[ROW] Colchester United [COL] 2012–13 [COL] League One [COL] 3 [COL] 0 [COL] 0 [COL] 0 [COL] 0 [COL] 0 [COL] 1Appearance in Football League Trophy [COL] 0 [COL] 4 [COL] 0
@@ -1798,7 +1798,7 @@ PERSON	989700	http://en.wikipedia.org/wiki/Theatre_Faculty_of_the_Academy_of_Per
 	11519662	http://en.wikipedia.org/wiki/Katowice	Education	Education	13	enumeration	[E1] around 80 high schools
 	11519662	http://en.wikipedia.org/wiki/Katowice	Transport	Roads	14	enumeration	[E1] European route E40 ( France – Belgium – Germany – Poland – Ukraine – Russia – Uzbekistan – Kazakhstan )
 	11519662	http://en.wikipedia.org/wiki/Katowice	Transport	Roads	15	enumeration	[E1] Motorway A1 ( Gdańsk – Toruń – Łódź – Gliwice – Polish / Czech border )
-	11519662	http://en.wikipedia.org/wiki/Katowice	Sports	Sports clubs	16	enumeration	[E1] GKS Katowice – men 's football , ( Polish Cup winner : 1986 , 1991 , 1993 ; Polish SuperCup winner : 1991 , 1995 ; 1st league in 2003/2004
+	11519662	http://en.wikipedia.org/wiki/Katowice	Sports	Sports clubs	16	enumeration	"[E1] GKS Katowice – men 's football , ( Polish Cup winner : 1986 , 1991 , 1993 ; Polish SuperCup winner : 1991 , 1995 ; 1st league in 2003/2004"
 	11519662	http://en.wikipedia.org/wiki/Katowice	Sports	Sports clubs	17	enumeration	[E1] Diana Kattowitz – football club
 	11519662	http://en.wikipedia.org/wiki/Katowice	Sports	Sports events	18	enumeration	[E1] 1975 European Athletics Indoor Championships
 	11519662	http://en.wikipedia.org/wiki/Katowice	Notable people	Notable people	19	enumeration	[E1] Hans Sachs ( 1877–1945 ) , serologist
@@ -1837,7 +1837,7 @@ PERSON	989700	http://en.wikipedia.org/wiki/Theatre_Faculty_of_the_Academy_of_Per
 	11238159	http://en.wikipedia.org/wiki/2009_NCAA_Division_I_Softball_Tournament	National seeds	National seeds	0	enumeration	[E1] Florida
 	11238159	http://en.wikipedia.org/wiki/2009_NCAA_Division_I_Softball_Tournament	Women's College World Series	Participants	1	table	[ROW] [COL] Southeastern [COL] 52–9 ( 21–6 ) [COL] Patrick Murphy [COL] 6 ( last : 2008 ) [COL] 3rd ( 2008 ) [COL] 4–10
 	11238159	http://en.wikipedia.org/wiki/2009_NCAA_Division_I_Softball_Tournament	Women's College World Series	Tournament notes	2	enumeration	[E1] Alabama advanced to the Women 's College World Series after sophomore pitcher Kelsi Dunne , threw back - to - back no - hitters in the Tuscaloosa Super Regional ,
-	11238159	http://en.wikipedia.org/wiki/2009_NCAA_Division_I_Softball_Tournament	Women's College World Series	Game Results	3	table	[ROW] May 28 , 2009 [COL] Game 1 [COL] [COL] 3 - 1 [COL] [COL] Niki Williams hit a 2 - run HR ; Danielle Lawrie allowed 6 hits in a complete game victory .
+	11238159	http://en.wikipedia.org/wiki/2009_NCAA_Division_I_Softball_Tournament	Women's College World Series	Game Results	3	table	"[ROW] May 28 , 2009 [COL] Game 1 [COL] [COL] 3 - 1 [COL] [COL] Niki Williams hit a 2 - run HR ; Danielle Lawrie allowed 6 hits in a complete game victory ."
 	11238159	http://en.wikipedia.org/wiki/2009_NCAA_Division_I_Softball_Tournament	Women's College World Series	Championship Game	4	table	[ROW] [COL] Danielle Lawrie ( P ) [COL] 2 - 3 RBI
 	11238159	http://en.wikipedia.org/wiki/2009_NCAA_Division_I_Softball_Tournament	Women's College World Series	Championship Game	5	table	[ROW] [COL] Danielle Lawrie ( W ) [COL] 7.0 [COL] 7 [COL] 2 [COL] 1 [COL] 3 [COL] 8 [COL] 27 [COL] 33
 	11238159	http://en.wikipedia.org/wiki/2009_NCAA_Division_I_Softball_Tournament	Women's College World Series	Final standings	6	table	[ROW] 1st [COL] Washington [COL] 5 - 1
@@ -1846,7 +1846,7 @@ PERSON	989700	http://en.wikipedia.org/wiki/Theatre_Faculty_of_the_Academy_of_Per
 	11793837	http://en.wikipedia.org/wiki/Walking_Tall_(2004_film)	Cast	Cast	0	enumeration	"[E1] Dwayne Johnson as Christopher "" Chris "" Vaughn , Jr."
 	11144375	http://en.wikipedia.org/wiki/2009–10_CEV_Challenge_Cup	[[#Final|Final]] standing	[[#Final|Final]] standing	0	table	[ROW] [COL] RPA-LuigiBacchi.it Perugia
 	9227774	http://en.wikipedia.org/wiki/Married_to_a_Mormon	Cast	Cast	0	enumeration	[E1] Evelyn Brent as Beryl Fane
-	6279877	http://en.wikipedia.org/wiki/Out_of_Gas_(Firefly)	Production	Production	0	enumeration	[E1] Flashbacks that take place in the distant past are lit with warm , dark tones ; yellows , reds , golds , but all with a lot of shadow ,
+	6279877	http://en.wikipedia.org/wiki/Out_of_Gas_(Firefly)	Production	Production	0	enumeration	"[E1] Flashbacks that take place in the distant past are lit with warm , dark tones ; yellows , reds , golds , but all with a lot of shadow ,"
 	6279877	http://en.wikipedia.org/wiki/Out_of_Gas_(Firefly)	Guest cast	Guest cast	1	enumeration	[E1] Steven Flynn as Captain , who tries to steal the disabled Serenity
 	8539095	http://en.wikipedia.org/wiki/1961–62_Yugoslav_Ice_Hockey_League_season	Standings	Group A	0	table	[ROW] 1 . [COL] Jesenice [COL] 6 [COL] 6 [COL] 0 [COL] 0 [COL] 12
 	8539095	http://en.wikipedia.org/wiki/1961–62_Yugoslav_Ice_Hockey_League_season	Standings	Group B	1	table	[ROW] 5 . [COL] Beograd [COL] 4 [COL] 3 [COL] 1 [COL] 0 [COL] 7
@@ -1856,7 +1856,7 @@ PERSON	989700	http://en.wikipedia.org/wiki/Theatre_Faculty_of_the_Academy_of_Per
 	13355675	http://en.wikipedia.org/wiki/Tears_(The_Crocodiles_album)	Personnel	Personnel	2	enumeration	[E1] Bass , Vocals - Tina Matthews
 	13355675	http://en.wikipedia.org/wiki/Tears_(The_Crocodiles_album)	Videos	Videos	3	enumeration	"[E1] "" Tears """
 	4404366	http://en.wikipedia.org/wiki/Duan_(surname)	Notable people	Mainland China	0	enumeration	[E1] Duan Sui ( died 386 ) , a ruler of the Xianbei state Western Yan
-	4404366	http://en.wikipedia.org/wiki/Duan_(surname)	Notable people	Vietnam	1	enumeration	[E1] Đoàn Thượng ( 段尚 ; 1181–1228 ) , general of the Lý dynasty of King Lý Cao Tông and Lý Huệ Tông .
+	4404366	http://en.wikipedia.org/wiki/Duan_(surname)	Notable people	Vietnam	1	enumeration	"[E1] Đoàn Thượng ( 段尚 ; 1181–1228 ) , general of the Lý dynasty of King Lý Cao Tông and Lý Huệ Tông ."
 	11832053	http://en.wikipedia.org/wiki/Slewing_drive	Materials	Materials	0	table	[ROW] 30,000 lbs / psi [COL] 12,000 lbs / psi
 	5638064	http://en.wikipedia.org/wiki/Coffee_Mornings	Original cast	Original cast	0	enumeration	[E1] Jane - Kaye Quinley
 	1519411	http://en.wikipedia.org/wiki/Rescue:_Special_Ops	Cast and characters	Regular cast	0	enumeration	[E1] Libby Tanner as Michelle LeTourneau ( Station Manager )
@@ -1915,7 +1915,7 @@ PERSON	989700	http://en.wikipedia.org/wiki/Theatre_Faculty_of_the_Academy_of_Per
 	873071	http://en.wikipedia.org/wiki/Baron_Grey_of_Codnor	Baron Grey of Codnor (1397)	Medieval Barons Grey of Codnor (1299)	0	enumeration	[E1] Henry Grey , 1st Baron Grey of Codnor ( died 1308 )
 	873071	http://en.wikipedia.org/wiki/Baron_Grey_of_Codnor	Baron Grey of Codnor (1397)	Barons Grey of Codnor (1397)	1	enumeration	[E1] Richard Grey , 1st ( 4th ) Baron Grey of Codnor ( – 1418 )
 	11312881	http://en.wikipedia.org/wiki/Oswaldo_Novoa	Professional boxing record	Professional boxing record	0	table	[ROW] 28 [COL] Loss [COL] 14–10–4 [COL] Esteban Bermudez [COL] KO [COL] 4 ( 8) , [COL] 4 Oct 2019 [COL] [COL]
-	3493611	http://en.wikipedia.org/wiki/Myosotis_sylvatica	Description	Description	0	enumeration	[E1] Upright , to 50 cm ; softly hairy , with hairs at more - or - less right - angles to the main stem .
+	3493611	http://en.wikipedia.org/wiki/Myosotis_sylvatica	Description	Description	0	enumeration	"[E1] Upright , to 50 cm ; softly hairy , with hairs at more - or - less right - angles to the main stem ."
 	3493611	http://en.wikipedia.org/wiki/Myosotis_sylvatica	Cultivation	Cultivation	1	enumeration	[E1] Blue Basket ' , a taller variety with deeper blue flowers
 	3713424	http://en.wikipedia.org/wiki/Fury_(2001_series)	Prints	Issues	0	table	[ROW] # 1 [COL] Be Careful What You Wish For [COL] November 2001 [COL] [COL] 56,308 , ranked 19th in North American
 	5149673	http://en.wikipedia.org/wiki/Alaskan_Board_of_Fisheries	Current Board members	Current Board members	0	enumeration	[E1] John Jensen
@@ -1955,7 +1955,7 @@ PERSON	989700	http://en.wikipedia.org/wiki/Theatre_Faculty_of_the_Academy_of_Per
 	12435435	http://en.wikipedia.org/wiki/Denisophytum	Species	Species	0	enumeration	[E1] Denisophytum bessac ( Chiov . 1929 ) E. Gagnon & G. P. Lewis 2016
 	14449092	http://en.wikipedia.org/wiki/Vice-Admiral_of_the_Blue	Order of precedence Admirals of the Colour	Order of precedence Admirals of the Colour	0	enumeration	[E1] Admiral of the Fleet
 	14449092	http://en.wikipedia.org/wiki/Vice-Admiral_of_the_Blue	Order of precedence Admirals of the Colour	Order of precedence Admirals of the Colour	1	enumeration	[E1] Admiral of the Fleet , ( rank created in 1688 )
-	13409940	http://en.wikipedia.org/wiki/Nitro_compound	Synthesis	Preparation of aliphatic nitro compounds	0	enumeration	[E1] Free radical nitration of alkanes . The reaction produces fragments from the parent alkane , creating a diverse mixture of products ; for instance , nitromethane , nitroethane , 1
+	13409940	http://en.wikipedia.org/wiki/Nitro_compound	Synthesis	Preparation of aliphatic nitro compounds	0	enumeration	"[E1] Free radical nitration of alkanes . The reaction produces fragments from the parent alkane , creating a diverse mixture of products ; for instance , nitromethane , nitroethane , 1"
 	13409940	http://en.wikipedia.org/wiki/Nitro_compound	Synthesis	Preparation of aliphatic nitro compounds	1	enumeration	[E1] Nitromethane can be produced in the laboratory by treating sodium chloroacetate with sodium nitrite .
 	3036890	http://en.wikipedia.org/wiki/2008_NASCAR_Camping_World_East_Series	Schedule	Schedule	0	table	[ROW] 04/19/2008 [COL] An American Revolution 150 Presented by Kevin Whitaker Chevrolet [COL] 150 Laps [COL] Greenville - Pickens Speedway [COL] Speed *
 	3036890	http://en.wikipedia.org/wiki/2008_NASCAR_Camping_World_East_Series	Race summaries	U.S. Cellular 200	1	table	[ROW] 36 [COL] 37 [COL] 12 [COL] E [COL] Johnathan Smith [COL] Beacon Falls , CT [COL] Dodge [COL] 150 [COL] Oil Leak
@@ -1967,9 +1967,9 @@ PERSON	989700	http://en.wikipedia.org/wiki/Theatre_Faculty_of_the_Academy_of_Per
 	10862959	http://en.wikipedia.org/wiki/Invasion_Quartet	Cast	Cast	0	enumeration	[E1] Bill Travers as Freddie Oppenheimer
 	13154651	http://en.wikipedia.org/wiki/Rudy_Simone	Published books	Published books	0	enumeration	[E1] 22 Things a Woman Must Know if She loves a Man with Asperger 's Syndrome ( Jessica Kingsley Publishers , 2009 )
 	8598903	http://en.wikipedia.org/wiki/Faith	Stages of faith development	Stages of faith	0	enumeration	[E1] Intuitive - Projective : a stage of confusion and of high impressionability through stories and rituals ( pre - school period ) .
-	8598903	http://en.wikipedia.org/wiki/Faith	Religious views	The Church of [[Jesus Christ]] of Latter-day Saints	1	enumeration	[E1] Lecture 1 explains what faith is ;
+	8598903	http://en.wikipedia.org/wiki/Faith	Religious views	The Church of [[Jesus Christ]] of Latter-day Saints	1	enumeration	"[E1] Lecture 1 explains what faith is ;"
 	8598903	http://en.wikipedia.org/wiki/Faith	Sources	Sources	2	enumeration	[E1]
-	7426110	http://en.wikipedia.org/wiki/William_Buckland_(architect)	Works	Works	0	enumeration	[E1] Gunston Hall , Fairfax County , Virginia . Patron : George Mason ( interiors , c. 1755 - 59 ) ; 10709 Gunston Rd . Mason Neck , VA Buckland
+	7426110	http://en.wikipedia.org/wiki/William_Buckland_(architect)	Works	Works	0	enumeration	"[E1] Gunston Hall , Fairfax County , Virginia . Patron : George Mason ( interiors , c. 1755 - 59 ) ; 10709 Gunston Rd . Mason Neck , VA Buckland"
 	7426110	http://en.wikipedia.org/wiki/William_Buckland_(architect)	Works	Works	1	enumeration	[E1] Brice House , Annapolis , Maryland ( interiors ) , NRHP - listed
 	14062373	http://en.wikipedia.org/wiki/Riverton,_Wyoming	Notable people	Notable people	0	enumeration	[E1] John Bennett Herrington , astronaut
 	5355989	http://en.wikipedia.org/wiki/Etisalat_Award_for_Arabic_Children's_Literature	Main	Main	0	enumeration	[E1] Best Text 100,000 AED
@@ -1982,7 +1982,7 @@ PERSON	989700	http://en.wikipedia.org/wiki/Theatre_Faculty_of_the_Academy_of_Per
 	2180920	http://en.wikipedia.org/wiki/Clarrie_Prentice	Sources	Sources	0	enumeration	[E1] Whiticker , Alan ( 2004 ) Captaining the Kangaroos , New Holland , Sydney
 	8952621	http://en.wikipedia.org/wiki/D36	Main	Main	0	enumeration	[E1] HMS Defender ( D36 ) , a British Royal Navy Type 45 air defence destroyer in service from 2013
 	8952621	http://en.wikipedia.org/wiki/D36	Main	Main	1	enumeration	[E1] a number of French départementale roads
-	10916027	http://en.wikipedia.org/wiki/Timeline_of_feminism_in_the_United_States	[[Timeline of feminism]] in the United States	[[Timeline of feminism]] in the United States	0	enumeration	[E1] 1963 : The Feminine Mystique was published ; it is a book written by Betty Friedan which is widely credited with starting the beginning of second - wave feminism in
+	10916027	http://en.wikipedia.org/wiki/Timeline_of_feminism_in_the_United_States	[[Timeline of feminism]] in the United States	[[Timeline of feminism]] in the United States	0	enumeration	"[E1] 1963 : The Feminine Mystique was published ; it is a book written by Betty Friedan which is widely credited with starting the beginning of second - wave feminism in"
 	10916027	http://en.wikipedia.org/wiki/Timeline_of_feminism_in_the_United_States	[[Timeline of feminism]] in the United States	[[Timeline of feminism]] in the United States	1	enumeration	"[E1] Difference feminism was developed by feminists in the 1980s , in part as a reaction to popular liberal feminism ( also known as "" equality feminism "" ) , which"
 	6324197	http://en.wikipedia.org/wiki/Oklahoma_Department_of_Human_Services	Organization	Structure	0	enumeration	[E1] Oklahoma Secretary of Health and Human Services
 	6324197	http://en.wikipedia.org/wiki/Oklahoma_Department_of_Human_Services	Budget and staffing	Budget and staffing	1	table	[ROW] Executive [COL] 4
@@ -2082,8 +2082,8 @@ PERSON	989700	http://en.wikipedia.org/wiki/Theatre_Faculty_of_the_Academy_of_Per
 	12705229	http://en.wikipedia.org/wiki/Henry_S._Dennison	Publications	Publications	1	enumeration	"[E1] Dennison , Henry S. "" Management and the Business Cycle . "" Journal of the American Statistical Association 18.137 ( 1922 ): 20 - 32 ."
 	12705229	http://en.wikipedia.org/wiki/Henry_S._Dennison	Publications	Publications	2	enumeration	[E1] James T. Dennison . Henry_S._Dennison , 1877 - 1952 : New England industrialist who served America , No . 187 . Newcomen Society in North America , 1955 .
 	15196738	http://en.wikipedia.org/wiki/Sumaithaangi	Cast	Cast	0	enumeration	[E1] Gemini Ganesan as Babu
-	12525368	http://en.wikipedia.org/wiki/82nd_Mixed_Brigade	Command	Command	0	enumeration	[E1] Rafael Blasco Borreguero ;
-	12525368	http://en.wikipedia.org/wiki/82nd_Mixed_Brigade	Command	Command	1	enumeration	[E1] Gabriel Rodríguez Cabezas ;
+	12525368	http://en.wikipedia.org/wiki/82nd_Mixed_Brigade	Command	Command	0	enumeration	"[E1] Rafael Blasco Borreguero ;"
+	12525368	http://en.wikipedia.org/wiki/82nd_Mixed_Brigade	Command	Command	1	enumeration	"[E1] Gabriel Rodríguez Cabezas ;"
 	7480968	http://en.wikipedia.org/wiki/Ravi_Deep	Filmography	As director	0	enumeration	[E1] Gunaah , Punjabi Telefilm , 2018
 	7480968	http://en.wikipedia.org/wiki/Ravi_Deep	Filmography	As a writer	1	enumeration	[E1] Gunaah , Punjabi Telefilm , 2018
 	7480968	http://en.wikipedia.org/wiki/Ravi_Deep	Filmography	As an actor	2	enumeration	[E1] Kurukshetre Dharmkshetre , Hindi Telefilm , 2007
@@ -2095,7 +2095,7 @@ PERSON	989700	http://en.wikipedia.org/wiki/Theatre_Faculty_of_the_Academy_of_Per
 	14496302	http://en.wikipedia.org/wiki/2019_Women's_Cricket_Super_League	Statistics	Statistics	1	enumeration	[E1] Highest Score by a team : Yorkshire Diamonds − 185/6 ( 20 overs ) vs Southern Vipers
 	13556856	http://en.wikipedia.org/wiki/2007_Women's_Oceania_Cup	Teams	Teams	0	enumeration	[E1]
 	1056048	http://en.wikipedia.org/wiki/Brahmapureeswarar_Temple	The 12 Shrines of [[Lord Shiva]]	The 12 Shrines of [[Lord Shiva]]	0	enumeration	[E1] Sri Brahmapureeswarar Presiding Deity
-	2113875	http://en.wikipedia.org/wiki/Jatco_SC	Club name	Club name	0	enumeration	[E1] 1972 - 1999 ; Jatco
+	2113875	http://en.wikipedia.org/wiki/Jatco_SC	Club name	Club name	0	enumeration	"[E1] 1972 - 1999 ; Jatco"
 	545105	http://en.wikipedia.org/wiki/1928_Newfoundland_general_election	Elected members	Elected members	0	enumeration	[E1] Bay de Verde
 	1760422	http://en.wikipedia.org/wiki/The_Double_(1971_film)	Cast	Cast	0	enumeration	[E1] Jean Sorel as Giovanni
 	2110991	http://en.wikipedia.org/wiki/1982_European_Figure_Skating_Championships	Results	Men	0	table	[ROW] 1 [COL] Norbert Schramm [COL] [COL] 4.2 [COL] 4 [COL] 2 [COL] 1
@@ -2234,7 +2234,7 @@ PERSON	989700	http://en.wikipedia.org/wiki/Theatre_Faculty_of_the_Academy_of_Per
 	4174883	http://en.wikipedia.org/wiki/Kim_Jong-hak_Production	Former managed people	Writers	4	enumeration	[E1] Jung Yoo - kyung ( now managed by Pan Entertainment )
 	5104530	http://en.wikipedia.org/wiki/Free_TV_(Italy)	Programs in Italian	Programs in Italian	0	enumeration	[E1] Sportissimo
 	9329231	http://en.wikipedia.org/wiki/Symphony_No._3_(Raff)	Structure	Structure	0	enumeration	[E1] Part I
-	1372357	http://en.wikipedia.org/wiki/Southern_Federal_University's_botanical_garden	Collection	Collection	0	enumeration	[E1] Dendrological collection ;
+	1372357	http://en.wikipedia.org/wiki/Southern_Federal_University's_botanical_garden	Collection	Collection	0	enumeration	"[E1] Dendrological collection ;"
 	13465051	http://en.wikipedia.org/wiki/Ford_O._Rogers	Decorations	Decorations	0	table	[ROW] [COL] [COL] [COL]
 	5117227	http://en.wikipedia.org/wiki/Sherman_Dreiseszun	Shopping malls	Shopping malls	0	enumeration	[E1] Buckingham Square Mall ( now The Gardens on Havana ) , Aurora , Colorado
 	6692526	http://en.wikipedia.org/wiki/Outwood_Academy_Valley	Notable former pupils	Notable former pupils	0	enumeration	[E1] Gary Bellamy , footballer
@@ -2431,7 +2431,7 @@ PERSON	989700	http://en.wikipedia.org/wiki/Theatre_Faculty_of_the_Academy_of_Per
 	864218	http://en.wikipedia.org/wiki/Padalarang_railway_station	Services	Passenger services	0	enumeration	[E1] Local economy
 	5799186	http://en.wikipedia.org/wiki/2016_AFC_Futsal_Championship	Qualification	Qualified teams	0	table	[ROW] [COL] [COL] [COL] ( 2001 , 2006 , 2010 )
 	5799186	http://en.wikipedia.org/wiki/2016_AFC_Futsal_Championship	Match officials	Match officials	1	enumeration	[E1] Chris Colley
-	5799186	http://en.wikipedia.org/wiki/2016_AFC_Futsal_Championship	Group stage	Group stage	2	enumeration	[E1] Greater number of points obtained in the group matches between the teams concerned ;
+	5799186	http://en.wikipedia.org/wiki/2016_AFC_Futsal_Championship	Group stage	Group stage	2	enumeration	"[E1] Greater number of points obtained in the group matches between the teams concerned ;"
 	5799186	http://en.wikipedia.org/wiki/2016_AFC_Futsal_Championship	Awards	Awards	3	enumeration	[E1] Most Valuable Player : Ali Asghar Hassanzadeh
 	5799186	http://en.wikipedia.org/wiki/2016_AFC_Futsal_Championship	Final ranking	Final ranking	4	table	[ROW] [COL]
 	5799186	http://en.wikipedia.org/wiki/2016_AFC_Futsal_Championship	Final ranking	Qualified teams for FIFA Futsal World Cup	5	table	[ROW] [COL] [COL] ( 1992 , 1996 , 2000 , 2004 , 2008 , 2012 )
@@ -2476,7 +2476,7 @@ PERSON	989700	http://en.wikipedia.org/wiki/Theatre_Faculty_of_the_Academy_of_Per
 	12192285	http://en.wikipedia.org/wiki/Demographics_of_Sweden	Vital statistics since 1900	Current vital statistics	5	enumeration	[E1] from January - July 2019 = 17,338
 	12192285	http://en.wikipedia.org/wiki/Demographics_of_Sweden	Life expectancy from 1751 to 2015	1950–2015	6	table	[ROW] 1950–1955 [COL] 71.9 [COL] 1985–1990 [COL] 77.2
 	12192285	http://en.wikipedia.org/wiki/Demographics_of_Sweden	Migration	Contemporary immigration	7	enumeration	[E1] Former Yugoslavia ( 176 033 ) *
-	12192285	http://en.wikipedia.org/wiki/Demographics_of_Sweden	Migration	Contemporary immigration	8	enumeration	[E1] This only lists Swedish Finns born outside of Sweden ; There are ~569,000 people of Finnish origin living in Sweden
+	12192285	http://en.wikipedia.org/wiki/Demographics_of_Sweden	Migration	Contemporary immigration	8	enumeration	"[E1] This only lists Swedish Finns born outside of Sweden ; There are ~569,000 people of Finnish origin living in Sweden"
 	12192285	http://en.wikipedia.org/wiki/Demographics_of_Sweden	Migration	Contemporary immigration	9	enumeration	[E1] Syria ( +51,540 )
 	12192285	http://en.wikipedia.org/wiki/Demographics_of_Sweden	Migration	Contemporary immigration	10	table	[ROW] Syria [COL] [COL] [COL] [COL] [COL] [COL] [COL] [COL]
 	2281474	http://en.wikipedia.org/wiki/Brian_Klaas	Published works	Published works	0	enumeration	[E1] The Despot 's Accomplice : How the West is Aiding and Abetting the Decline of Democracy , Hurst , 2016 ,
