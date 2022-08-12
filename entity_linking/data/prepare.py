@@ -38,7 +38,7 @@ def get_md_test_data() -> List[WordTokenizedPage]:
 
 
 def _load_mention_detection_goldstandard() -> Dict[int, List[str]]:
-    with open(utils.get_data_file('listpages.goldstandard_mention-detection'), mode='r', newline='') as f:
+    with open(utils.get_data_file('files.listpages.goldstandard_mention-detection'), mode='r', newline='') as f:
         md_gold = defaultdict(list)
         reader = csv.reader(f, delimiter='\t')
         next(reader, None)  # skip header
