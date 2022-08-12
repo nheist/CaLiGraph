@@ -2,6 +2,7 @@ from typing import Tuple, List
 from copy import deepcopy
 from collections import namedtuple, Counter
 import numpy as np
+from torch.utils.tensorboard import SummaryWriter
 import utils
 from transformers import Trainer, IntervalStrategy, TrainingArguments, AutoTokenizer, AutoModelForTokenClassification, EvalPrediction
 from impl.util.transformer import SpecialToken, EntityIndex
@@ -49,7 +50,11 @@ def run_evaluation(model_name: str, epochs: int, batch_size: int, learning_rate:
         compute_metrics=lambda eval_prediction: SETagsEvaluator(eval_prediction, val_dataset.listing_types, predict_single_tag).evaluate()
     )
     trainer.train()
-    trainer.predict(test_dataset)
+
+    test_metrics = trainer.predict(test_dataset).metrics
+    tb = SummaryWriter(log_dir=f'./entity_linking/MD/logs/{run_id}')
+    for key, val in test_metrics.items():
+        tb.add_scalar(key, val)
 
 
 def _load_datasets(tokenizer, ignore_tags: bool, predict_single_tag: bool, negative_sample_size: float) -> Tuple[MentionDetectionDataset, MentionDetectionDataset, MentionDetectionDataset]:
