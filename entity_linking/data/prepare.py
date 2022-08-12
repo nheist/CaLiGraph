@@ -54,9 +54,9 @@ def _find_subject_entities_for_listing_labels(wp: WikipediaPage, listing_labels:
     listing_entities = []
     for section_data in wp.sections:
         for enum_data in section_data['enums']:
-            listing_entities.append([e['idx'] for entry in enum_data for e in entry['entities']])
+            listing_entities.append([e['idx'] for entry in enum_data for e in entry['entities'] if e['idx'] >= 0])
         for table in section_data['tables']:
-            listing_entities.append([e['idx'] for row in table['data'] for cell in row for e in cell['entities']])
+            listing_entities.append([e['idx'] for row in table['data'] for cell in row for e in cell['entities'] if e['idx'] >= 0])
     # create mapping from POS labels to valid entity types
     dbo = DbpOntologyStore.instance()
     label_to_type_mapping = defaultdict(set)
