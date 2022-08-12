@@ -9,9 +9,9 @@ import utils
 from impl import wikipedia
 from impl.dbpedia.resource import DbpListpage
 from impl.util.transformer import EntityIndex
-from .word_tokenize import WordTokenizer, WordTokenizedPage, ListingType, WordTokenizedListing
-from .pos_label import POSLabel, map_entities_to_pos_labels
-from .heuristics import find_subject_entities_for_listpage
+from impl.subject_entity.preprocess.word_tokenize import WordTokenizer, WordTokenizedPage, ListingType, WordTokenizedListing
+from impl.subject_entity.preprocess.pos_label import POSLabel, map_entities_to_pos_labels
+from impl.subject_entity.preprocess.heuristics import find_subject_entities_for_listpage
 
 
 class MentionDetectionDataset(Dataset):
@@ -41,7 +41,7 @@ def get_mention_detection_listpage_training_dataset(tokenizer) -> MentionDetecti
 def _get_tokenized_listpages_with_entity_labels() -> List[WordTokenizedPage]:
     wikipedia_listpages = [wp for wp in wikipedia.get_wikipedia_pages() if isinstance(wp.resource, DbpListpage)]
     entity_labels = {wp.idx: find_subject_entities_for_listpage(wp) for wp in wikipedia_listpages}
-    return WordTokenizer()(wikipedia_listpages, entity_labels=entity_labels)
+    return WordTokenizer(max_ents_per_item=1)(wikipedia_listpages, entity_labels=entity_labels)
 
 
 def _get_mention_detection_dataset(page_data: List[WordTokenizedPage], tokenizer) -> MentionDetectionDataset:

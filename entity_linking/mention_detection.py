@@ -13,7 +13,7 @@ from entity_linking.model.mention_detection import TransformerForMentionDetectio
 
 
 def run_evaluation(model_name: str, epochs: int, batch_size: int, learning_rate: float, warmup_steps: int, weight_decay: float, ignore_tags: bool, predict_single_tag: bool, negative_sample_size: float):
-    run_id = f'{model_name}_it-{ignore_tags}_st-{predict_single_tag}_nss-{negative_sample_size}_e-{epochs}_lr-{learning_rate}_ws-{warmup_steps}_wd-{weight_decay}'
+    run_id = f'v2_{model_name}_it-{ignore_tags}_st-{predict_single_tag}_nss-{negative_sample_size}_e-{epochs}_lr-{learning_rate}_ws-{warmup_steps}_wd-{weight_decay}'
     # prepare tokenizer and model
     tokenizer = AutoTokenizer.from_pretrained(model_name, add_prefix_space=True, additional_special_tokens=list(SpecialToken.all_tokens()))
     number_of_labels = 2 if ignore_tags else len(POSLabel)
@@ -23,7 +23,7 @@ def run_evaluation(model_name: str, epochs: int, batch_size: int, learning_rate:
         model = AutoModelForTokenClassification.from_pretrained(model_name, num_labels=number_of_labels)
         model.resize_token_embeddings(len(tokenizer))
     # load data
-    train_dataset, val_dataset = _load_train_and_val_datasets(tokenizer, ignore_tags, predict_single_tag, negative_sample_size)
+    train_dataset, val_dataset, test_dataset = _load_datasets(tokenizer, ignore_tags, predict_single_tag, negative_sample_size)
     # run evaluation
     training_args = TrainingArguments(
         seed=42,
@@ -49,14 +49,18 @@ def run_evaluation(model_name: str, epochs: int, batch_size: int, learning_rate:
         compute_metrics=lambda eval_prediction: SETagsEvaluator(eval_prediction, val_dataset.listing_types, predict_single_tag).evaluate()
     )
     trainer.train()
+    trainer.predict(test_dataset)
 
 
-def _load_train_and_val_datasets(tokenizer, ignore_tags: bool, predict_single_tag: bool, negative_sample_size: float) -> Tuple[MentionDetectionDataset, MentionDetectionDataset]:
+def _load_datasets(tokenizer, ignore_tags: bool, predict_single_tag: bool, negative_sample_size: float) -> Tuple[MentionDetectionDataset, MentionDetectionDataset, MentionDetectionDataset]:
+    # load data
     train_data, val_data = utils.load_or_create_cache('MD_data', prepare.get_md_train_and_val_data)
-    # prepare data
+    test_data = utils.load_or_create_cache('MD_test_data', prepare.get_md_test_data)
+    # prepare datasets
     train_dataset = prepare_dataset(train_data, tokenizer, ignore_tags, predict_single_tag, negative_sample_size)
     val_dataset = prepare_dataset(val_data, tokenizer, ignore_tags, predict_single_tag)
-    return train_dataset, val_dataset
+    test_dataset = prepare_dataset(test_data, tokenizer, ignore_tags, predict_single_tag)
+    return train_dataset, val_dataset, test_dataset
 
 
 Entity = namedtuple("Entity", "e_type start_offset end_offset")

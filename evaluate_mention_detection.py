@@ -14,7 +14,7 @@ if __name__ == '__main__':
     parser.add_argument('-wd', '--weight_decay', type=float, default=0, help='weight decay during learning')
     parser.add_argument('-it', '--ignore_tags', action="store_true", help='Only predict entity mentions and ignore POS tags')
     parser.add_argument('-st', '--predict_single_tag', action="store_true", help='Predict only a single POS tag per chunk')
-    parser.add_argument('-nss', '--negative_sample_size', type=float, default=0.0, help='Fraction of data that should be used to create negative samples')
+    parser.add_argument('-nss', '--negative_sample_size', type=float, default=0.0, help='Ratio of artificial negative examples')
     args = parser.parse_args()
     # then set necessary environment variables
     os.environ['CUDA_VISIBLE_DEVICES'] = str(args.gpu)

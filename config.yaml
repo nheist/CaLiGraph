@@ -101,6 +101,8 @@ files:
     goldstandard_named-entity-tagging:
       filename: 'goldstandard_list-page-named-entity-tagging.json'
       url: 'http://data.dws.informatik.uni-mannheim.de/CaLiGraph/data/goldstandard_list-page-named-entity-tagging.json'
+    goldstandard_mention-detection:
+      filename: 'goldstandard_mention-detection.csv'
 
 # -- RESULT FILE CONFIGURATION --
 results:
@@ -269,7 +271,10 @@ cache:
     version: RDF2vec
   MD_data:
     filename: 'MD-data'
-    version: 1
+    version: 2
+  MD_test_data:
+    filename: 'MD-test-data'
+    version: 2
   MEM_data:
     filename: 'MEM-data'
     version: 1
