@@ -54,7 +54,7 @@ def run_evaluation(model_name: str, epochs: int, batch_size: int, learning_rate:
     test_metrics = trainer.predict(test_dataset).metrics
     tb = SummaryWriter(log_dir=f'./entity_linking/MD/logs/{run_id}')
     for key, val in test_metrics.items():
-        tb.add_scalar(key, val)
+        tb.add_scalar(f'test/{key[5:]}', val)
 
 
 def _load_datasets(tokenizer, ignore_tags: bool, predict_single_tag: bool, negative_sample_size: float) -> Tuple[MentionDetectionDataset, MentionDetectionDataset, MentionDetectionDataset]:
