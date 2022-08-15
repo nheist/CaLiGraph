@@ -274,7 +274,7 @@ cache:
     version: 2
   MD_test_data:
     filename: 'MD-test-data'
-    version: 2
+    version: 3
   MEM_data:
     filename: 'MEM-data'
     version: 1

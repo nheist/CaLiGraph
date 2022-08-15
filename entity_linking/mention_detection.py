@@ -14,7 +14,7 @@ from entity_linking.model.mention_detection import TransformerForMentionDetectio
 
 
 def run_evaluation(model_name: str, epochs: int, batch_size: int, learning_rate: float, warmup_steps: int, weight_decay: float, ignore_tags: bool, predict_single_tag: bool, negative_sample_size: float):
-    run_id = f'v2_{model_name}_it-{ignore_tags}_st-{predict_single_tag}_nss-{negative_sample_size}_e-{epochs}_lr-{learning_rate}_ws-{warmup_steps}_wd-{weight_decay}'
+    run_id = f'v3_{model_name}_it-{ignore_tags}_st-{predict_single_tag}_nss-{negative_sample_size}_e-{epochs}_lr-{learning_rate}_ws-{warmup_steps}_wd-{weight_decay}'
     # prepare tokenizer and model
     tokenizer = AutoTokenizer.from_pretrained(model_name, add_prefix_space=True, additional_special_tokens=list(SpecialToken.all_tokens()))
     number_of_labels = 2 if ignore_tags else len(POSLabel)
@@ -52,7 +52,6 @@ def run_evaluation(model_name: str, epochs: int, batch_size: int, learning_rate:
     trainer.train()
 
     test_metrics = trainer.evaluate(test_dataset, metric_key_prefix='test')
-    print(test_metrics)
     tb = SummaryWriter(log_dir=f'./entity_linking/MD/logs/{run_id}')
     for key, val in test_metrics.items():
         tb.add_scalar(f'test/{key[5:]}', val)
