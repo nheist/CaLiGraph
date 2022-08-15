@@ -51,7 +51,8 @@ def run_evaluation(model_name: str, epochs: int, batch_size: int, learning_rate:
     )
     trainer.train()
 
-    test_metrics = trainer.predict(test_dataset).metrics
+    test_metrics = trainer.evaluate(test_dataset, metric_key_prefix='test')
+    print(test_metrics)
     tb = SummaryWriter(log_dir=f'./entity_linking/MD/logs/{run_id}')
     for key, val in test_metrics.items():
         tb.add_scalar(f'test/{key[5:]}', val)
