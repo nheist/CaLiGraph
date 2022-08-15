@@ -17,7 +17,10 @@ RULE_PATTERNS = {
     'pattern_TS-Sent': ['P_basetype', 'TS_text', 'S_enttype']
 }
 
-META_SECTIONS = {'See also', 'External links', 'References', 'Notes', 'Sources'}
+META_SECTIONS = {
+    'See also', 'External links', 'References', 'Notes', 'Sources', 'External sources', 'General sources',
+    'Notes and references', 'Citations', 'References and footnotes', 'References and links', 'Maps'
+}
 
 
 def extract_listing_entity_information() -> Dict[ClgEntity, Dict[Tuple[DbpResource, str], dict]]:
