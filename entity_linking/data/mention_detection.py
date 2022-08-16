@@ -31,8 +31,9 @@ class MentionDetectionDataset(Dataset):
         return len(self.mention_labels)
 
 
-def prepare_dataset(page_data: List[WordTokenizedPage], tokenizer, ignore_tags: bool, predict_single_tag: bool, negative_sample_size: float = 0.0):
-    contexts, tokens, _, entity_indices = sample._chunk_word_tokenized_pages(page_data, negative_sample_size)
+def prepare_dataset(page_data: List[WordTokenizedPage], tokenizer, ignore_tags: bool, predict_single_tag: bool, single_item_chunks: bool, negative_sample_size: float = 0.0):
+    max_items_per_chunk = 1 if single_item_chunks else 16
+    contexts, tokens, _, entity_indices = sample._chunk_word_tokenized_pages(page_data, negative_sample_size, max_items_per_chunk)
     labels = map_entities_to_pos_labels(entity_indices, ignore_tags or predict_single_tag)
     encodings = tokenizer(tokens, is_split_into_words=True, return_offsets_mapping=True, padding=True, truncation=True)
     type_labels = None
