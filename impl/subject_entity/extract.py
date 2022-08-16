@@ -15,7 +15,7 @@ from .preprocess import sample
 
 
 # APPLY BERT MODEL
-MAX_CHUNKS = 100
+MAX_CHUNKS = 200
 
 
 def extract_subject_entities(tokenizer, model, chunks: Tuple[list, list, list, list]) -> Dict[int, dict]:
@@ -111,16 +111,11 @@ def _train_tagger():
         output_dir=f'/tmp',
         logging_dir=f'./logs/transformers/MD_{run_id}',
         logging_steps=500,
-        per_device_train_batch_size=16,
-        num_train_epochs=3,
+        per_device_train_batch_size=32,
+        num_train_epochs=1,
         learning_rate=5e-5,
     )
-
-    trainer = Trainer(
-        model=model,
-        args=training_args,
-        train_dataset=train_dataset
-    )
+    trainer = Trainer(model=model, args=training_args, train_dataset=train_dataset)
 
     trainer.train()
     path_to_model = utils._get_cache_path('transformer_for_mention_detection')
