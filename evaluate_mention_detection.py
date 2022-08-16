@@ -15,6 +15,7 @@ if __name__ == '__main__':
     parser.add_argument('-it', '--ignore_tags', action="store_true", help='Only predict entity mentions and ignore POS tags')
     parser.add_argument('-st', '--predict_single_tag', action="store_true", help='Predict only a single POS tag per chunk')
     parser.add_argument('-nss', '--negative_sample_size', type=float, default=0.0, help='Ratio of artificial negative examples')
+    parser.add_argument('-sic', '--single_item_chunks', action="store_true", help='Use only one item per chunk')
     args = parser.parse_args()
     # then set necessary environment variables
     os.environ['CUDA_VISIBLE_DEVICES'] = str(args.gpu)
@@ -30,4 +31,4 @@ if __name__ == '__main__':
     # then import application-specific code and run it
     from entity_linking.mention_detection import run_evaluation
     assert not (args.ignore_tags and args.predict_single_tag), 'Can\'t ignore tags AND predict a single tag.'
-    run_evaluation(args.model_name, args.epochs, args.batch_size, args.learning_rate, args.warmup_steps, args.weight_decay, args.ignore_tags, args.predict_single_tag, args.negative_sample_size)
+    run_evaluation(args.model_name, args.epochs, args.batch_size, args.learning_rate, args.warmup_steps, args.weight_decay, args.ignore_tags, args.predict_single_tag, args.negative_sample_size, args.single_item_chunks)
