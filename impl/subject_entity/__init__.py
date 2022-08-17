@@ -18,9 +18,10 @@ def _get_subject_entity_predictions() -> Dict[int, dict]:
 
 def _make_subject_entity_predictions() -> Dict[int, dict]:
     tokenizer, model = extract.get_tagging_tokenizer_and_model()
-    predictions = extract.extract_subject_entities(tokenizer, model, sample.get_mention_detection_page_data())
+    uncleaned_predictions = extract.extract_subject_entities(tokenizer, model, sample.get_mention_detection_page_data())
     # discard single subject entities for sections and discard empty sections
-    for page_idx, page_subject_entities in predictions.items():
+    predictions = {}
+    for page_idx, page_subject_entities in uncleaned_predictions.items():
         page_subject_entities = {ts: {s: ents for s, ents in ents_per_section.items() if len(ents) > 1} for ts, ents_per_section in page_subject_entities.items()}
         page_subject_entities = {ts: ents_per_section for ts, ents_per_section in page_subject_entities.items() if ents_per_section}
         predictions[page_idx] = page_subject_entities

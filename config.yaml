@@ -14,7 +14,7 @@ cat2ax:
   pattern_confidence: 0.05
 subject_entity:
   model_mention_detection: 'distilbert-base-cased'
-  negative_sample_size: 0.0
+  negative_sample_size: 0.3
 cali2ax:
   pattern_confidence: 0.17
 listing:
