@@ -100,7 +100,7 @@ def _generate_negative_tokenized_page_chunk(contexts: dict, items: dict, max_ite
     # pick listing quantifier randomly but weighted by occurrence (for enums we have only one quantifier, making this step irrelevant)
     quantifier = random.choices(list(items), weights=[len(vals) for vals in items.values()], k=1)[0]
     # pick number of items to put in the chunk
-    num_items = random.choice(range(3, max_items_per_chunk + 1))
+    num_items = random.choice(range(min(max_items_per_chunk, 3), max_items_per_chunk + 1))
     # draw context and items
     listing_type, listing_topsection, listing_section, listing_context = random.choice(contexts[quantifier])
     listing_items = [deepcopy(i) for i in random.choices(items[quantifier], k=num_items)]
