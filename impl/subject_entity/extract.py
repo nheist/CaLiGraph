@@ -112,7 +112,7 @@ def _train_tagger():
         logging_dir=f'./logs/transformers/MD_{run_id}',
         logging_steps=500,
         per_device_train_batch_size=32,
-        num_train_epochs=1,
+        num_train_epochs=2,
         learning_rate=5e-5,
     )
     trainer = Trainer(model=model, args=training_args, train_dataset=train_dataset)
