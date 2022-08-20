@@ -134,13 +134,13 @@ def _aggregate_types_by_section(dfp: pd.DataFrame, section_grouping: list) -> pd
     macro_df['macro_mean'] = macro_df['section_type_conf'] / macro_df['section_page_count']
     result = pd.merge(left=result, right=macro_df['macro_mean'], left_on=grp, right_index=True)
     # add page count
-    page_count = dfp.groupby(section_grouping)['P'].nunique().rename('page_count')
-    result = pd.merge(left=result, right=page_count, left_on=section_grouping, right_index=True)
+    page_count = dfp.groupby(section_grouping)['P'].nunique().rename('page_count').reset_index()
+    result = pd.merge(left=result, right=page_count, on=section_grouping)
     # compute micro_std
     confidence_deviations = pd.merge(how='left', left=dfp, right=result, on=grp)
     confidence_deviations['dev'] = np.absolute(confidence_deviations['micro_mean'] - confidence_deviations['type_conf'])
-    micro_std = confidence_deviations.groupby(grp).apply(lambda x: (x['dev'].sum() + (x['page_count'].mean() - len(x)) * x['micro_mean'].mean()) / x['page_count'].mean()).rename('micro_std')
-    result = pd.merge(left=result, right=micro_std, left_on=grp, right_index=True)
+    micro_std = confidence_deviations.groupby(grp).apply(lambda x: (x['dev'].sum() + (x['page_count'].mean() - len(x)) * x['micro_mean'].mean()) / x['page_count'].mean()).rename('micro_std').reset_index()
+    result = pd.merge(left=result, right=micro_std, on=grp)
     return result.set_index(grp)
 
 
