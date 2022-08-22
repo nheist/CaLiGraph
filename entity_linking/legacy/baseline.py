@@ -8,9 +8,9 @@ from torch.utils.data import DataLoader
 import impl.dbpedia.store as dbp_store
 import impl.dbpedia.util as dbp_util
 from torch.utils.tensorboard import SummaryWriter
-import entity_linking.vp_utils as el_util
-from entity_linking.vecpred.eval import ACCMetric, ACCMetricCalculator, ACC_THRESHOLDS
-from entity_linking.vecpred.preprocessing import EntityIndexToVectorMapper
+import entity_linking.legacy.vp_utils as el_util
+from entity_linking.legacy.eval import ACCMetric, ACCMetricCalculator, ACC_THRESHOLDS
+from entity_linking.legacy.preprocessing import EntityIndexToVectorMapper
 
 
 def evaluate_baselines(val_loader: DataLoader, entity_vectors: np.ndarray, idx2ent: dict, epochs: int):

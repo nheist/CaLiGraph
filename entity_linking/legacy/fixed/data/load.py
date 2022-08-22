@@ -6,7 +6,7 @@ from torch import Tensor
 from torch.utils.data.dataset import Dataset, TensorDataset
 from torch.utils.data import DataLoader, Sampler
 from typing import Iterator
-import entity_linking.vp_utils as el_util
+import entity_linking.legacy.vp_utils as el_util
 from typing import Tuple
 
 
