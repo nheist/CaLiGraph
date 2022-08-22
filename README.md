@@ -35,11 +35,21 @@ You can configure the application-specific parameters as well as logging- and fi
 
 ## Usage
 
-In the project root, run the extraction with `python .`
+Make sure that the virtual environment `caligraph` is activated. Then you can run the extraction in the project root folder with `python .`
 
 All the required resources, like DBpedia files, will be downloaded automatically during execution.
 CaLiGraph is serialized in N-Triple format. The resulting files are placed in the `results` folder.
 
+### Evaluations
+#### Subject Entity Detection
+
+Use the script `evaluate_mention_detection.py` to evaluate a specific configuration for subject entity detection.
+
+Make sure that there is a free GPU on your system and that the environment `caligraph` is activated. Then you can run an evaluation as follows:
+```
+python evaluate_mention_detection.py <GPU-ID> <HUGGINGFACE-MODEL> <OPTIONAL-CONFIG-PARAMS>
+```
+Have a look at the evaluation script for a description of the optional configuration parameters.
 
 ## Tests
 
