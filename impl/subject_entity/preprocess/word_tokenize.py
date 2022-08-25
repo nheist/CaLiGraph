@@ -7,7 +7,7 @@ import multiprocessing as mp
 import utils
 import impl.util.spacy.listing_parser as list_nlp
 import impl.wikipedia.wikimarkup_parser as wmp
-from impl.wikipedia import WikipediaPage
+from impl.wikipedia import WikipediaPage, META_SECTIONS
 from impl.util.transformer import EntityIndex, SpecialToken
 
 
@@ -94,7 +94,6 @@ class WordTokenizer:
         self.max_ents_per_item = max_ents_per_item
         self.max_tokens_per_item = 30
         self.word_tokenizer = English().tokenizer
-        self.meta_sections = {'see also', 'external links', 'references', 'notes', 'further reading', 'bibliography'}
 
     def __call__(self, wiki_pages: List[WikipediaPage], entity_labels: Dict[int, Tuple[Set[int], Set[int]]] = None) -> List[WordTokenizedPage]:
         if entity_labels:
@@ -120,7 +119,7 @@ class WordTokenizer:
         for section_data in wp.sections:
             section = section_data['name']
             topsection = section if section_data['level'] <= 2 else topsection
-            if topsection.lower() in self.meta_sections:
+            if topsection.lower() in META_SECTIONS:
                 continue  # skip meta sections
             for enum_data in section_data['enums']:
                 ctx = self._tokenize_context([wp.resource.get_label(), topsection, section])

@@ -5,6 +5,7 @@ from collections import defaultdict, Counter
 import utils
 from utils import get_logger
 from impl.listing import context
+from impl.wikipedia import META_SECTIONS
 from impl.dbpedia.resource import DbpResource, DbpResourceStore
 from impl.caligraph.ontology import ClgOntologyStore
 from impl.caligraph.entity import ClgEntity, ClgEntityStore
@@ -17,11 +18,6 @@ RULE_PATTERNS = {
     'pattern_TS-Sent': ['P_basetype', 'TS_text', 'S_enttype']
 }
 
-META_SECTIONS = {
-    'See also', 'External links', 'References', 'Notes', 'Sources', 'External sources', 'General sources',
-    'Notes and references', 'Citations', 'References and footnotes', 'References and links', 'Maps'
-}
-
 
 def extract_listing_entity_information() -> Dict[ClgEntity, Dict[Tuple[DbpResource, str], dict]]:
     get_logger().info('Extracting types and relations for page entities..')
@@ -32,7 +28,7 @@ def extract_listing_entity_information() -> Dict[ClgEntity, Dict[Tuple[DbpResour
     page_entities = defaultdict(lambda: defaultdict(lambda: {'labels': set(), 'types': set(), 'in': set(), 'out': set()}))
 
     df = context.retrieve_page_entity_context()
-    df = df[~df['TS_text'].isin(META_SECTIONS)]  # filter out entity occurrences in meta-sections
+    df = df[~df['TS_text'].str.lower().isin(META_SECTIONS)]  # filter out entity occurrences in meta-sections
 
     # extract list page entities
     get_logger().debug('Extracting types of list page entities..')

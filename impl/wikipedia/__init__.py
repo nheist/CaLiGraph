@@ -9,6 +9,13 @@ from impl.dbpedia.resource import DbpResourceStore, DbpResource, DbpFile
 from impl.util.rdf import Namespace
 
 
+META_SECTIONS = {
+    'see also', 'external links', 'references', 'notes', 'sources', 'external sources', 'general sources',
+    'bibliography', 'notes and references', 'citations', 'references and footnotes', 'references and links', 'maps',
+    'further reading'
+}
+
+
 def get_wikipedia_pages() -> List[WikipediaPage]:
     initializer = lambda: _parse_pages(_get_raw_pages_from_xml())
     return utils.load_or_create_cache('wikipedia_parsed_pages', initializer)
