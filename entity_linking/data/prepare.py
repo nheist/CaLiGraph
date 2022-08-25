@@ -15,8 +15,7 @@ from impl.subject_entity.preprocess.pos_label import TYPE_TO_LABEL_MAPPING, POSL
 from impl.subject_entity.preprocess.word_tokenize import WordTokenizer, WordTokenizedPage
 
 
-def get_md_train_and_val_data() -> Tuple[List[WordTokenizedPage], List[WordTokenizedPage]]:
-    # TODO: add option to use actual page data for specialization => use only "high-quality" page data for evaluation
+def get_md_listpage_data() -> Tuple[List[WordTokenizedPage], List[WordTokenizedPage]]:
     tokenized_listpages = sample._get_tokenized_listpages_with_entity_labels()
     # split into train and validation (we use a fixed 20% for validation)
     sample_size = int(len(tokenized_listpages) * .2)
@@ -26,7 +25,32 @@ def get_md_train_and_val_data() -> Tuple[List[WordTokenizedPage], List[WordToken
     return train_pages, val_pages
 
 
-def get_md_test_data() -> List[WordTokenizedPage]:
+def get_md_page_train_data() -> List[WordTokenizedPage]:
+    # filter pages to contain only the ones with SEs of matching types
+    train_pages = []
+    entity_labels = {}
+    for page in combine.get_subject_entity_page_content(subject_entity._get_subject_entity_predictions()):
+        subject_entities = set()
+        for enum in page.get_enums():
+            enum_subject_entities = [entry['subject_entity'] for entry in enum if 'subject_entity' in entry]
+            enum_se_indices = {se['idx'] for se in enum_subject_entities}
+            enum_se_tags = {se['tag'] for se in enum_subject_entities}
+            if len(enum_se_indices) > 4 and len(enum_se_tags) == 1:
+                subject_entities.update(enum_se_indices)
+        for table in page.get_tables():
+            table_subject_entities = [cell['subject_entity'] for row in table['data'] for cell in row if 'subject_entity' in cell]
+            table_se_indices = {se['idx'] for se in table_subject_entities}
+            table_se_tags = {se['tag'] for se in table_subject_entities}
+            if len(table_se_indices) > 4 and len(table_se_tags) == 1:
+                subject_entities.update(table_se_indices)
+        if subject_entities:
+            train_pages.append(page)
+            entity_labels[page.idx] = (subject_entities, set())
+    # return tokenized pages
+    return WordTokenizer(max_ents_per_item=1)(train_pages, entity_labels=entity_labels)
+
+
+def get_md_page_test_data() -> List[WordTokenizedPage]:
     # load annotations
     md_gold = _load_mention_detection_goldstandard()
     # gather respective wikipedia pages

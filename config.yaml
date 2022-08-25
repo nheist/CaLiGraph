@@ -269,11 +269,14 @@ cache:
   word_blocker_exact:
     filename: 'word-blocker-exact'
     version: RDF2vec
-  MD_data:
-    filename: 'MD-data'
+  MD_listpage_data:
+    filename: 'MD-listpage-data'
     version: 2
-  MD_test_data:
-    filename: 'MD-test-data'
+  MD_page_train_data:
+    filename: 'MD-page-train-data'
+    version: 1
+  MD_page_test_data:
+    filename: 'MD-page-test-data'
     version: 3
   MEM_data:
     filename: 'MEM-data'
