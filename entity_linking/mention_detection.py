@@ -62,7 +62,7 @@ def run_evaluation(model_name: str, epochs: int, batch_size: int, learning_rate:
 
     if train_on_pages:
         # load data
-        train_data = utils.load_or_create_cache('MD_page_train_data', prepare.get_md_page_train_data())
+        train_data = utils.load_or_create_cache('MD_page_train_data', prepare.get_md_page_train_data)
         p_train_dataset = prepare_dataset(train_data, tokenizer, ignore_tags, predict_single_tag, single_item_chunks, negative_sample_size)
 
         # run evaluation
