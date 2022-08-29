@@ -84,9 +84,9 @@ def run_evaluation(model_name: str, epochs: int, batch_size: int, learning_rate:
     test_dataset = prepare_dataset(test_data, tokenizer, ignore_tags, predict_single_tag, single_item_chunks)
     trainer = Trainer(model=model, compute_metrics=lambda eval_prediction: SETagsEvaluator(eval_prediction, test_dataset.listing_types, predict_single_tag).evaluate())
     test_metrics = trainer.evaluate(test_dataset, metric_key_prefix='test')
-    tb = SummaryWriter(log_dir=f'./entity_linking/MD/logs/{run_id}')
-    for key, val in test_metrics.items():
-        tb.add_scalar(f'test/{key[5:]}', val)
+    with SummaryWriter(log_dir=f'./entity_linking/MD/logs/{run_id}') as tb:
+        for key, val in test_metrics.items():
+            tb.add_scalar(f'test/{key[5:]}', val)
 
     if save_as is not None:
         path_to_model = f'./entity_linking/MD/models/{save_as}'
