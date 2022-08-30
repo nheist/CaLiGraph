@@ -274,7 +274,7 @@ cache:
     version: 2
   MD_page_train_data:
     filename: 'MD-page-train-data'
-    version: 1
+    version: 2
   MD_page_test_data:
     filename: 'MD-page-test-data'
     version: 3

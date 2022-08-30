@@ -34,14 +34,14 @@ def get_md_page_train_data() -> List[WordTokenizedPage]:
         for enum in page.get_enums():
             enum_subject_entities = [entry['subject_entity'] for entry in enum if 'subject_entity' in entry]
             enum_se_indices = {se['idx'] for se in enum_subject_entities}
-            enum_se_tags = {se['tag'] for se in enum_subject_entities}
-            if len(enum_se_indices) > 4 and len(enum_se_tags) == 1:
+            enum_se_tags = {se['tag'] for se in enum_subject_entities if se['tag'] != POSLabel.OTHER.value}
+            if len(enum_se_indices) >= 5 and len(enum_se_tags) == 1:
                 subject_entities.update(enum_se_indices)
         for table in page.get_tables():
             table_subject_entities = [cell['subject_entity'] for row in table['data'] for cell in row if 'subject_entity' in cell]
             table_se_indices = {se['idx'] for se in table_subject_entities}
-            table_se_tags = {se['tag'] for se in table_subject_entities}
-            if len(table_se_indices) > 4 and len(table_se_tags) == 1:
+            table_se_tags = {se['tag'] for se in table_subject_entities if se['tag'] != POSLabel.OTHER.value}
+            if len(table_se_indices) >= 5 and len(table_se_tags) == 1:
                 subject_entities.update(table_se_indices)
         if subject_entities:
             train_pages.append(page)
