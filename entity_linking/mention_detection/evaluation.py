@@ -1,7 +1,6 @@
 from typing import List
 from copy import deepcopy
 from collections import namedtuple, Counter
-import numpy as np
 from transformers import EvalPrediction
 from impl.util.transformer import EntityIndex
 from impl.subject_entity.preprocess.word_tokenize import ListingType
@@ -11,24 +10,10 @@ Entity = namedtuple("Entity", "e_type start_offset end_offset")
 
 
 class SETagsEvaluator:
-    def __init__(self, eval_prediction: EvalPrediction, listing_types: List[str], predict_single_tag: bool):
-        if predict_single_tag:
-            # with mention logits we only predict whether there is a subject entity in this position (1 or 0)
-            # so we multiply with type_id to "convert" it back to the notion where we predict types per position
-            mention_logits, type_logits = eval_prediction.predictions
-            mention_logits = mention_logits[0]  # TODO: unclear, why we need to unwrap another tuple here
-            type_ids = np.expand_dims(type_logits.argmax(-1), -1)
-            self.mentions = mention_logits.argmax(-1) * type_ids
-            # same for labels
-            mention_labels = eval_prediction.label_ids[:, 0, :]
-            type_labels = np.expand_dims(eval_prediction.label_ids[:, 1, 0], -1)
-            self.labels = mention_labels * type_labels
-            self.masks = mention_labels != EntityIndex.IGNORE.value
-        else:
-            self.mentions = eval_prediction.predictions.argmax(-1)
-            self.labels = eval_prediction.label_ids
-            self.masks = self.labels != EntityIndex.IGNORE.value
-
+    def __init__(self, eval_prediction: EvalPrediction, listing_types: List[str]):
+        self.mentions = eval_prediction.predictions.argmax(-1)
+        self.labels = eval_prediction.label_ids
+        self.masks = self.labels != EntityIndex.IGNORE.value
         self.listing_types = listing_types
 
         result_schema = {

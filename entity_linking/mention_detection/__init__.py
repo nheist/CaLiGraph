@@ -4,32 +4,28 @@ import utils
 from transformers import Trainer, IntervalStrategy, TrainingArguments, AutoTokenizer, AutoModelForTokenClassification
 from impl.util.transformer import SpecialToken
 from impl.subject_entity.preprocess.pos_label import POSLabel
-from entity_linking.data import prepare
-from entity_linking.data.mention_detection import prepare_dataset
-from entity_linking.model.mention_detection import TransformerForMentionDetectionAndTypePrediction
-from entity_linking.evaluation.mention_detection import SETagsEvaluator
+from entity_linking.mention_detection.data import get_md_listpage_data, get_md_page_train_data, get_md_page_test_data
+from entity_linking.mention_detection.dataset import prepare_dataset
+from entity_linking.mention_detection.evaluation import SETagsEvaluator
+
 
 # v5: page-data without OTHER tags
-
-def run_evaluation(model_name: str, epochs: int, batch_size: int, learning_rate: float, warmup_steps: int, weight_decay: float, ignore_tags: bool, predict_single_tag: bool, negative_sample_size: float, single_item_chunks: bool, train_on_listpages: bool, train_on_pages: bool, save_as: str):
-    run_id = f'v5_{model_name}_tlp-{train_on_pages}_tp-{train_on_pages}_it-{ignore_tags}_st-{predict_single_tag}_nss-{negative_sample_size}_sic-{single_item_chunks}_e-{epochs}_lr-{learning_rate}_ws-{warmup_steps}_wd-{weight_decay}'
+def run_evaluation(model_name: str, epochs: int, batch_size: int, learning_rate: float, warmup_steps: int, weight_decay: float, ignore_tags: bool, negative_sample_size: float, single_item_chunks: bool, train_on_listpages: bool, train_on_pages: bool, save_as: str):
+    run_id = f'v5_{model_name}_tlp-{train_on_pages}_tp-{train_on_pages}_it-{ignore_tags}_nss-{negative_sample_size}_sic-{single_item_chunks}_e-{epochs}_lr-{learning_rate}_ws-{warmup_steps}_wd-{weight_decay}'
     # check whether to use a local model or a predefined one from huggingface
     local_path_to_model = f'./entity_linking/MD/models/{model_name}'
     model_name = local_path_to_model if os.path.isdir(local_path_to_model) else model_name
     # prepare tokenizer and model
     tokenizer = AutoTokenizer.from_pretrained(model_name, add_prefix_space=True, additional_special_tokens=list(SpecialToken.all_tokens()))
     number_of_labels = 2 if ignore_tags else len(POSLabel)
-    if predict_single_tag:
-        model = TransformerForMentionDetectionAndTypePrediction(model_name, len(tokenizer), number_of_labels)
-    else:
-        model = AutoModelForTokenClassification.from_pretrained(model_name, num_labels=number_of_labels)
-        model.resize_token_embeddings(len(tokenizer))
+    model = AutoModelForTokenClassification.from_pretrained(model_name, num_labels=number_of_labels)
+    model.resize_token_embeddings(len(tokenizer))
 
     if train_on_listpages:
         # load data
-        train_data, val_data = utils.load_or_create_cache('MD_listpage_data', prepare.get_md_listpage_data)
-        lp_train_dataset = prepare_dataset(train_data, tokenizer, ignore_tags, predict_single_tag, single_item_chunks, negative_sample_size)
-        lp_val_dataset = prepare_dataset(val_data, tokenizer, ignore_tags, predict_single_tag, single_item_chunks)
+        train_data, val_data = utils.load_or_create_cache('MD_listpage_data', get_md_listpage_data)
+        lp_train_dataset = prepare_dataset(train_data, tokenizer, ignore_tags, single_item_chunks, negative_sample_size)
+        lp_val_dataset = prepare_dataset(val_data, tokenizer, ignore_tags, single_item_chunks)
 
         # run evaluation
         training_args = TrainingArguments(
@@ -53,14 +49,14 @@ def run_evaluation(model_name: str, epochs: int, batch_size: int, learning_rate:
             args=training_args,
             train_dataset=lp_train_dataset,
             eval_dataset=lp_val_dataset,
-            compute_metrics=lambda eval_prediction: SETagsEvaluator(eval_prediction, lp_val_dataset.listing_types, predict_single_tag).evaluate()
+            compute_metrics=lambda eval_prediction: SETagsEvaluator(eval_prediction, lp_val_dataset.listing_types).evaluate()
         )
         trainer.train()
 
     if train_on_pages:
         # load data
-        train_data = utils.load_or_create_cache('MD_page_train_data', prepare.get_md_page_train_data)
-        p_train_dataset = prepare_dataset(train_data, tokenizer, ignore_tags, predict_single_tag, single_item_chunks, negative_sample_size)
+        train_data = utils.load_or_create_cache('MD_page_train_data', get_md_page_train_data)
+        p_train_dataset = prepare_dataset(train_data, tokenizer, ignore_tags, single_item_chunks, negative_sample_size)
 
         # run evaluation
         training_args = TrainingArguments(
@@ -81,9 +77,9 @@ def run_evaluation(model_name: str, epochs: int, batch_size: int, learning_rate:
         trainer.train()
 
     # make test predictions
-    test_data = utils.load_or_create_cache('MD_page_test_data', prepare.get_md_page_test_data)
-    test_dataset = prepare_dataset(test_data, tokenizer, ignore_tags, predict_single_tag, single_item_chunks)
-    trainer = Trainer(model=model, compute_metrics=lambda eval_prediction: SETagsEvaluator(eval_prediction, test_dataset.listing_types, predict_single_tag).evaluate())
+    test_data = utils.load_or_create_cache('MD_page_test_data', get_md_page_test_data)
+    test_dataset = prepare_dataset(test_data, tokenizer, ignore_tags, single_item_chunks)
+    trainer = Trainer(model=model, compute_metrics=lambda eval_prediction: SETagsEvaluator(eval_prediction, test_dataset.listing_types).evaluate())
     test_metrics = trainer.evaluate(test_dataset, metric_key_prefix='test')
     with SummaryWriter(log_dir=f'./entity_linking/MD/logs/{run_id}') as tb:
         for key, val in test_metrics.items():

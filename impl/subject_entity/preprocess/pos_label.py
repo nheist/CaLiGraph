@@ -75,9 +75,7 @@ def map_entities_to_pos_labels(entity_chunks: List[List[int]], binary_labels: bo
         most_common_tags = Counter(pos_tags).most_common()
         majority_tag = most_common_tags[0][0] if len(most_common_tags) > 0 else POSLabel.NONE
         entity_value = 1 if binary_labels else majority_tag.value
-
-        chunk_labels = [_map_ent_to_pos_tag(idx, entity_value) for idx in chunk]
-        labels.append((chunk_labels, majority_tag.value) if binary_labels else chunk_labels)
+        labels.append([_map_ent_to_pos_tag(idx, entity_value) for idx in chunk])
     return labels
 
 
