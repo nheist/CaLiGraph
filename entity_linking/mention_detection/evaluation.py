@@ -10,26 +10,26 @@ Entity = namedtuple("Entity", "e_type start_offset end_offset")
 
 
 class SETagsEvaluator:
-    def __init__(self, eval_prediction: EvalPrediction, listing_types: List[str]):
-        self.mentions = eval_prediction.predictions.argmax(-1)
-        self.labels = eval_prediction.label_ids
-        self.masks = self.labels != EntityIndex.IGNORE.value
-        self.listing_types = listing_types
-
-        result_schema = {
+    def __init__(self):
+        self.result_schema = {
             'strict': Counter({'correct': 0, 'incorrect': 0, 'partial': 0, 'missed': 0, 'spurious': 0}),
             'exact': Counter({'correct': 0, 'incorrect': 0, 'partial': 0, 'missed': 0, 'spurious': 0}),
             'partial': Counter({'correct': 0, 'incorrect': 0, 'partial': 0, 'missed': 0, 'spurious': 0}),
             'ent_type': Counter({'correct': 0, 'incorrect': 0, 'partial': 0, 'missed': 0, 'spurious': 0}),
         }
+        self.results = {}
+
+    def evaluate(self, eval_prediction: EvalPrediction, listing_types: List[str]) -> dict:
         self.results = {
-            'overall': deepcopy(result_schema),
-            ListingType.ENUMERATION.value: deepcopy(result_schema),
-            ListingType.TABLE.value: deepcopy(result_schema)
+            'overall': deepcopy(self.result_schema),
+            ListingType.ENUMERATION.value: deepcopy(self.result_schema),
+            ListingType.TABLE.value: deepcopy(self.result_schema)
         }
 
-    def evaluate(self) -> dict:
-        for mention_ids, true_ids, mask, listing_type in zip(self.mentions, self.labels, self.masks, self.listing_types):
+        mentions = eval_prediction.predictions.argmax(-1)
+        labels = eval_prediction.label_ids
+        masks = labels != EntityIndex.IGNORE.value
+        for mention_ids, true_ids, mask, listing_type in zip(mentions, labels, masks, listing_types):
             # remove invalid preds/labels
             mention_ids = mention_ids[mask]
             true_ids = true_ids[mask]
@@ -41,26 +41,6 @@ class SETagsEvaluator:
             self.results['overall'][metric] = self.results[ListingType.ENUMERATION.value][metric] + self.results[ListingType.TABLE.value][metric]
 
         return self._compute_precision_recall_wrapper()
-
-    @classmethod
-    def _collect_named_entities(cls, mention_ids) -> set:
-        named_entities = set()
-        start_offset = None
-        ent_type = None
-
-        for offset, mention_id in enumerate(mention_ids):
-            if mention_id == 0:
-                if ent_type is not None and start_offset is not None:
-                    named_entities.add(Entity(ent_type, start_offset, offset))
-                    start_offset = None
-                    ent_type = None
-            elif ent_type is None:
-                ent_type = mention_id
-                start_offset = offset
-        # catches an entity that goes up until the last token
-        if ent_type is not None and start_offset is not None:
-            named_entities.add(Entity(ent_type, start_offset, len(mention_ids)))
-        return named_entities
 
     def compute_metrics(self, pred_named_entities: set, true_named_entities: set, listing_type: str):
         # keep track of entities that overlapped
@@ -157,3 +137,23 @@ class SETagsEvaluator:
             recall = correct / possible if possible > 0 else 0
 
         return {f'{listing_type}-COUNT': possible, f'{listing_type}-P-{eval_schema}': precision, f'{listing_type}-R-{eval_schema}': recall}
+
+    @classmethod
+    def _collect_named_entities(cls, mention_ids) -> set:
+        named_entities = set()
+        start_offset = None
+        ent_type = None
+
+        for offset, mention_id in enumerate(mention_ids):
+            if mention_id == 0:
+                if ent_type is not None and start_offset is not None:
+                    named_entities.add(Entity(ent_type, start_offset, offset))
+                    start_offset = None
+                    ent_type = None
+            elif ent_type is None:
+                ent_type = mention_id
+                start_offset = offset
+        # catches an entity that goes up until the last token
+        if ent_type is not None and start_offset is not None:
+            named_entities.add(Entity(ent_type, start_offset, len(mention_ids)))
+        return named_entities

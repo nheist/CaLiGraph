@@ -49,7 +49,7 @@ def run_evaluation(model_name: str, epochs: int, batch_size: int, learning_rate:
             args=training_args,
             train_dataset=lp_train_dataset,
             eval_dataset=lp_val_dataset,
-            compute_metrics=lambda eval_prediction: SETagsEvaluator(eval_prediction, lp_val_dataset.listing_types).evaluate()
+            compute_metrics=lambda eval_prediction: SETagsEvaluator().evaluate(eval_prediction, lp_val_dataset.listing_types)
         )
         trainer.train()
 
@@ -79,7 +79,7 @@ def run_evaluation(model_name: str, epochs: int, batch_size: int, learning_rate:
     # make test predictions
     test_data = utils.load_or_create_cache('MD_page_test_data', get_md_page_test_data)
     test_dataset = prepare_dataset(test_data, tokenizer, ignore_tags, single_item_chunks)
-    trainer = Trainer(model=model, compute_metrics=lambda eval_prediction: SETagsEvaluator(eval_prediction, test_dataset.listing_types).evaluate())
+    trainer = Trainer(model=model, compute_metrics=lambda eval_prediction: SETagsEvaluator().evaluate(eval_prediction, test_dataset.listing_types))
     test_metrics = trainer.evaluate(test_dataset, metric_key_prefix='test')
     with SummaryWriter(log_dir=f'./entity_linking/MD/logs/{run_id}') as tb:
         for key, val in test_metrics.items():
