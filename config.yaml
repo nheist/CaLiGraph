@@ -167,6 +167,9 @@ cache:
   dbpedia_resource_surface_form_references:
     filename: 'dbpedia-resource-surface-form-references'
     version: 1
+  dbpedia_resource_abstracts:
+    filename: 'dbpedia-resource-abstracts'
+    version: 1
   dbpedia_resource_wikilinks:
     filename: 'dbpedia-resource-wikilinks'
     version: 1

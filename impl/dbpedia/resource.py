@@ -38,6 +38,9 @@ class DbpResource(RdfResource):
 
 
 class DbpEntity(DbpResource):
+    def get_abstract(self) -> Optional[str]:
+        return self._get_store().get_abstract(self)
+
     def get_embedding_vector(self) -> Optional[List[float]]:
         return self._get_store().get_embedding_vectors()[self.idx]
 
@@ -74,6 +77,7 @@ class DbpResourceStore:
         self.labels = None
         self.surface_forms = None
         self.surface_form_references = None
+        self.abstracts = None
 
         self.types = None
         self.entities_of_type = None
@@ -190,8 +194,16 @@ class DbpResourceStore:
 
     def _init_wikilinks_cache(self) -> Dict[int, Set[int]]:
         wikilinks = rdf_util.create_multi_val_dict_from_rdf([utils.get_data_file('files.dbpedia.wikilinks')], RdfPredicate.WIKILINK, casting_fn=self.get_resource_by_iri)
-        wikilinks = {r.idx: {wl.idx for wl in wls} for r, wls in wikilinks.items()}
-        return wikilinks
+        return {r.idx: {wl.idx for wl in wls} for r, wls in wikilinks.items()}
+
+    def get_abstract(self, res: DbpResource) -> Optional[str]:
+        if self.abstracts is None:
+            self.abstracts = defaultdict(None, utils.load_or_create_cache('dbpedia_resource_abstracts', self._init_abstracts_cache))
+        return self.abstracts[res.idx]
+
+    def _init_abstracts_cache(self) -> Dict[int, Optional[str]]:
+        abstracts = rdf_util.create_single_val_dict_from_rdf([utils.get_data_file('files.dbpedia.short_abstracts')], RdfPredicate.COMMENT, casting_fn=self.get_resource_by_iri)
+        return {r.idx: abstract for r, abstract in abstracts.items()}
 
     def get_types(self, res: DbpResource) -> Set[DbpType]:
         if self.types is None:
