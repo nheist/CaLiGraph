@@ -14,6 +14,7 @@ if __name__ == '__main__':
     parser.add_argument('-wd', '--weight_decay', type=float, default=0, help='weight decay during learning')
     parser.add_argument('-it', '--ignore_tags', action=argparse.BooleanOptionalAction, default=False, help='Only predict entity mentions and ignore POS tags')
     parser.add_argument('-nss', '--negative_sample_size', type=float, default=0.0, help='Ratio of artificial negative examples')
+    parser.add_argument('-dns', '--disable_negative_sampling', action=argparse.BooleanOptionalAction, default=False, help='Disable negative sampling in fine-tuning on pages')
     parser.add_argument('-sic', '--single_item_chunks', action=argparse.BooleanOptionalAction, default=False, help='Use only one item per chunk')
     parser.add_argument('-tlp', '--train_on_listpages', action=argparse.BooleanOptionalAction, default=True, help='Train on list page data')
     parser.add_argument('-tp', '--train_on_pages', action=argparse.BooleanOptionalAction, default=False, help='Train on page data')
@@ -32,4 +33,4 @@ if __name__ == '__main__':
     torch.manual_seed(SEED)
     # then import application-specific code and run it
     from entity_linking.mention_detection import run_evaluation
-    run_evaluation(args.model_name, args.epochs, args.batch_size, args.learning_rate, args.warmup_steps, args.weight_decay, args.ignore_tags, args.negative_sample_size, args.single_item_chunks, args.train_on_listpages, args.train_on_pages, args.save_as)
+    run_evaluation(args.model_name, args.epochs, args.batch_size, args.learning_rate, args.warmup_steps, args.weight_decay, args.ignore_tags, args.negative_sample_size, args.disable_negative_sampling, args.single_item_chunks, args.train_on_listpages, args.train_on_pages, args.save_as)

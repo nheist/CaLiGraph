@@ -10,8 +10,8 @@ from entity_linking.mention_detection.evaluation import SETagsEvaluator
 
 
 # v5: page-data without OTHER tags
-def run_evaluation(model_name: str, epochs: int, batch_size: int, learning_rate: float, warmup_steps: int, weight_decay: float, ignore_tags: bool, negative_sample_size: float, single_item_chunks: bool, train_on_listpages: bool, train_on_pages: bool, save_as: str):
-    run_id = f'v5_{model_name}_tlp-{train_on_listpages}_tp-{train_on_pages}_it-{ignore_tags}_nss-{negative_sample_size}_sic-{single_item_chunks}_e-{epochs}_lr-{learning_rate}_ws-{warmup_steps}_wd-{weight_decay}'
+def run_evaluation(model_name: str, epochs: int, batch_size: int, learning_rate: float, warmup_steps: int, weight_decay: float, ignore_tags: bool, negative_sample_size: float, disable_negative_sampling: bool, single_item_chunks: bool, train_on_listpages: bool, train_on_pages: bool, save_as: str):
+    run_id = f'v5_{model_name}_tlp-{train_on_listpages}_tp-{train_on_pages}_it-{ignore_tags}_nss-{negative_sample_size}_dns-{disable_negative_sampling}_sic-{single_item_chunks}_e-{epochs}_lr-{learning_rate}_ws-{warmup_steps}_wd-{weight_decay}'
     # check whether to use a local model or a predefined one from huggingface
     local_path_to_model = f'./entity_linking/MD/models/{model_name}'
     model_name = local_path_to_model if os.path.isdir(local_path_to_model) else model_name
@@ -56,7 +56,8 @@ def run_evaluation(model_name: str, epochs: int, batch_size: int, learning_rate:
     if train_on_pages:
         # load data
         train_data = utils.load_or_create_cache('MD_page_train_data', get_md_page_train_data)
-        p_train_dataset = prepare_dataset(train_data, tokenizer, ignore_tags, single_item_chunks, negative_sample_size)
+        page_negative_sample_size = 0.0 if disable_negative_sampling else negative_sample_size
+        p_train_dataset = prepare_dataset(train_data, tokenizer, ignore_tags, single_item_chunks, page_negative_sample_size)
 
         # run evaluation
         training_args = TrainingArguments(
