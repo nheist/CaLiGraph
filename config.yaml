@@ -131,156 +131,157 @@ results:
 cache:
   spacy_cache:
     filename: 'spacy-cache'
-    version: 1
+    version: 2
   wikipedia_raw_markup:
     filename: 'wikipedia-raw-markup'
-    version: 1
+    version: 2
     compress: True
   wikipedia_parent_categories:
     filename: 'wikipedia-parent-categories'
-    version: 1
+    version: 2
   wikipedia_parsed_pages:
     filename: 'wikipedia-parsed-pages'
-    version: 1
+    version: 2
   wikipedia_type_lexicalisations:
     filename: 'wikipedia-type-lexicalisations'
-    version: 1
+    version: 2
   wikipedia_hypernyms:
     filename: 'wikipedia-hypernyms'
-    version: 1
+    version: 2
   wikitaxonomy_hypernyms:
     filename: 'wikitaxonomy-hypernyms'
-    version: 1
+    version: 2
     compress: True
   dbpedia_classes:
     filename: 'dbpedia-classes'
-    version: 1
+    version: 2
   dbpedia_resources:
     filename: 'dbpedia-resources'
-    version: 1
+    version: 2
   dbpedia_resource_labels:
     filename: 'dbpedia-resource-labels'
-    version: 1
+    version: 2
   dbpedia_resource_surface_forms:
     filename: 'dbpedia-resource-surface-forms'
-    version: 1
+    version: 2
   dbpedia_resource_surface_form_references:
     filename: 'dbpedia-resource-surface-form-references'
-    version: 1
+    version: 2
   dbpedia_resource_abstracts:
     filename: 'dbpedia-resource-abstracts'
-    version: 1
+    version: 2
   dbpedia_resource_wikilinks:
     filename: 'dbpedia-resource-wikilinks'
-    version: 1
+    version: 2
   dbpedia_resource_types:
     filename: 'dbpedia-resource-types'
-    version: 1
+    version: 2
   dbpedia_resource_properties:
     filename: 'dbpedia-resource-properties'
-    version: 1
+    version: 2
   dbpedia_resource_redirects:
     filename: 'dbpedia-resource-redirects'
-    version: 1
+    version: 2
   dbpedia_resource_embeddings:
     filename: 'dbpedia-resource-embeddings'
     version: RDF2vec
   dbpedia_categories:
     filename: 'dbpedia-categories'
-    version: 1
+    version: 2
   dbpedia_category_children:
     filename: 'dbpedia-category-children'
-    version: 1
+    version: 2
   dbpedia_category_labels:
     filename: 'dbpedia-category-labels'
-    version: 1
+    version: 2
   dbpedia_category_resources:
     filename: 'dbpedia-category-resources'
-    version: 1
+    version: 2
   dbpedia_category_sets:
     filename: 'dbpedia-category-sets'
-    version: 1
+    version: 2
   dbpedia_heuristic_domains:
     filename: 'dbpedia-heuristic-domains'
-    version: 1
+    version: 2
   dbpedia_heuristic_ranges:
     filename: 'dbpedia-heuristic-ranges'
-    version: 1
+    version: 2
   dbpedia_heuristic_disjoint_types:
     filename: 'dbpedia-heuristic-disjoint-types'
-    version: 1
+    version: 2
   dbpedia_list_equivalents:
     filename: 'dbpedia-list-equivalents'
-    version: 1
+    version: 2
   dbpedia_list_parents:
     filename: 'dbpedia-list-parents'
-    version: 1
+    version: 2
   cat2ax_axioms:
     filename: 'cat2ax-axioms'
-    version: 1
+    version: 2
   catgraph_conceptual:
     filename: 'catgraph-conceptual'
-    version: 1
+    version: 2
   catgraph_wikitaxonomy:
     filename: 'catgraph-wikitaxonomy'
-    version: 1
+    version: 2
   catgraph_merged:
     filename: 'catgraph-merged'
-    version: 1
+    version: 2
   listgraph_base:
     filename: 'listgraph-base'
-    version: 1
+    version: 2
   listgraph_wikitaxonomy:
     filename: 'listgraph-wikitaxonomy'
-    version: 1
+    version: 2
   listgraph_merged:
     filename: 'listgraph-merged'
-    version: 1
+    version: 2
   spacy_listpage_ne-tagging:
     filename: 'spacy_listpage_ne-tagging'
-    version: 1
+    version: 2
     store_as_folder: True
   subject_entity_training_data:
     filename: 'subject-entity-training-data'
-    version: 1
+    version: 2
   subject_entity_page_data:
     filename: 'subject-entity-page-data'
-    version: 1
+    version: 2
   subject_entity_predictions:
     filename: 'subject-entity-predictions'
-    version: 1
+    version: 2
   transformer_for_mention_detection:
     filename: 'transformer-for-mention-detection'
-    version: 1
+    version: 2
     store_as_folder: True
   caligraph_ontology:
     filename: 'caligraph-ontology'
-    version: 1
+    version: 2
   caligraph_entities:
     filename: 'caligraph-entities'
-    version: 1
+    version: 2
   cali2ax_axioms:
     filename: 'cali2ax-axioms'
-    version: 1
+    version: 2
   listing_page_entities:
     filename: 'listing-page-entities'
-    version: 1
+    version: 2
 
+# WIP
   entity_linking_pages:
     filename: 'entity-linking-pages'
-    version: 1
+    version: 4
   word_blocker_exact:
     filename: 'word-blocker-exact'
     version: RDF2vec
   MD_listpage_data:
     filename: 'MD-listpage-data'
-    version: 2
+    version: 4
   MD_page_train_data:
     filename: 'MD-page-train-data'
-    version: 2
+    version: 4
   MD_page_test_data:
     filename: 'MD-page-test-data'
-    version: 3
+    version: 4
   MEM_data:
     filename: 'MEM-data'
-    version: 1
+    version: 4
