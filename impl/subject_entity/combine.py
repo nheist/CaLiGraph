@@ -27,7 +27,7 @@ def _match_subject_entities_for_page(wiki_page: WikipediaPage, entities_per_ts: 
                     entry['subject_entity'] = se
         for table in section_data['tables']:
             for row in table['data']:
-                for cell in row:
+                for cell in row['cells']:
                     se = _find_subject_entity_for_item(cell, entities_per_ts[top_section_name][section_name])
                     if se:
                         cell['subject_entity'] = se
@@ -92,7 +92,7 @@ def _create_entity_maps(page_sections: list) -> Tuple[dict, dict]:
                     page_entity_map[top_section_name][section_name][entity['text']] = entity['idx']
         for table in section_data['tables']:
             for row in table['data']:
-                for cell in row:
+                for cell in row['cells']:
                     for entity in cell['entities']:
                         page_entity_map[top_section_name][section_name][entity['text']] = entity['idx']
     return page_entity_map, section_entity_map

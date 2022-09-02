@@ -184,14 +184,14 @@ class WordTokenizer:
         ents.insert(0, EntityIndex.NO_ENTITY.value)
         return WordTokenizedItem(tokens, ws, ents)
 
-    def _tokenize_row(self, row: list, page_labels: Tuple[set, set]) -> Optional[WordTokenizedItem]:
+    def _tokenize_row(self, row: dict, page_labels: Tuple[set, set]) -> Optional[WordTokenizedItem]:
         if page_labels[0] | page_labels[1]:  # page labels provided -> extract entities
-            cell_docs = [list_nlp.parse(cell['text']) for cell in row]
+            cell_docs = [list_nlp.parse(cell['text']) for cell in row['cells']]
             valid_ents, invalid_ents = page_labels
             # check whether row is valid training data
             row_entity_indices = set()
             has_untagged_entities = False
-            for cell_idx, cell in enumerate(row):
+            for cell_idx, cell in enumerate(row['cells']):
                 row_entity_indices.update({e['idx'] for e in cell['entities']})
                 has_untagged_entities = has_untagged_entities or self._has_untagged_entities(cell_docs[cell_idx], cell['entities'])
             has_valid_entities = len(row_entity_indices.intersection(valid_ents)) > 0

@@ -43,7 +43,7 @@ class WikipediaPage:
     def get_listing_entities(self) -> Set[DbpResource]:
         dbr = DbpResourceStore.instance()
         entity_indices = {ent['idx'] for enum in self.get_enums() for entry in enum for ent in entry['entities']} |\
-                         {ent['idx'] for table in self.get_tables() for row in table['data'] for cell in row for ent in cell['entities']}
+                         {ent['idx'] for table in self.get_tables() for row in table['data'] for cell in row['cells'] for ent in cell['entities']}
         return {dbr.get_resource_by_idx(idx) for idx in entity_indices if idx != EntityIndex.NEW_ENTITY.value}
 
     def discard_listings_without_seen_entities(self):
@@ -54,7 +54,7 @@ class WikipediaPage:
 
     def get_subject_entity_indices(self) -> Set[int]:
         return {entry['subject_entity']['idx'] for enum in self.get_enums() for entry in enum if 'subject_entity' in entry} |\
-               {cell['subject_entity']['idx'] for table in self.get_tables() for row in table['data'] for cell in row if 'subject_entity' in cell}
+               {cell['subject_entity']['idx'] for table in self.get_tables() for row in table['data'] for cell in row['cells'] if 'subject_entity' in cell}
 
     def __getstate__(self):
         state = self.__dict__.copy()
@@ -184,9 +184,12 @@ def _get_alphanum_words(text: str) -> Set[str]:
 
 def _extract_sections(wiki_text: WikiText) -> list:
     sections = []
+    listing_idx = 0
     for section_idx, section in enumerate(wiki_text.get_sections(include_subsections=False)):
-        enums = [_extract_enum(l) for l in section.get_lists(VALID_ENUM_PATTERNS)]
-        tables = [_extract_table(t) for t in section.get_tables()]
+        enums = [_extract_enum([idx, 0], l) for idx, l in enumerate(section.get_lists(VALID_ENUM_PATTERNS), start=listing_idx)]
+        listing_idx += len(enums)
+        tables = [_extract_table(idx, t) for idx, t in enumerate(section.get_tables(), start=listing_idx)]
+        listing_idx += len(tables)
         sections.append({
             'index': section_idx,
             'name': section.title.strip() if section.title and section.title.strip() else 'Main',
@@ -197,23 +200,25 @@ def _extract_sections(wiki_text: WikiText) -> list:
     return sections
 
 
-def _extract_enum(l: wtp.WikiList) -> list:
+def _extract_enum(index_counter: list, l: wtp.WikiList) -> list:
     entries = []
     for item_idx, item_text in enumerate(l.items):
         plaintext, entities = _convert_markup(item_text)
         sublists = l.sublists(item_idx)
         entries.append({
+            'idx': tuple(index_counter),
             'text': plaintext,
             'depth': l.level,
             'leaf': len(sublists) == 0,
             'entities': entities
         })
+        index_counter[1] += 1
         for sl in sublists:
-            entries.extend(_extract_enum(sl))
+            entries.extend(_extract_enum(index_counter, sl))
     return entries
 
 
-def _extract_table(table: wtp.Table) -> Optional[dict]:
+def _extract_table(table_idx: int, table: wtp.Table) -> Optional[dict]:
     row_header = []
     row_data = []
     try:
@@ -226,18 +231,17 @@ def _extract_table(table: wtp.Table) -> Optional[dict]:
         return None
     for row_idx, row in enumerate(rows):
         if len(row) < 2 or len(row) > 100:
-            # ignore tables with only one or more than 100 columns (likely irrelevant or markup error)
-            return None
+            return None  # ignore tables with only one or more than 100 columns (likely irrelevant or markup error)
         parsed_cells = []
         for cell in row:
             plaintext, entities = _convert_markup(str(cell))
             parsed_cells.append({'text': plaintext, 'entities': entities})
         if _is_header_row(cells, row_idx):
             row_header = parsed_cells
-        else:
-            if len(rows_with_spans) > row_idx and len(row) == len(rows_with_spans[row_idx]):
-                # only use rows that are not influenced by row-/colspan
-                row_data.append(parsed_cells)
+            continue
+        # process data row (only use rows that are not influenced by row-/colspan)
+        if len(rows_with_spans) > row_idx and len(row) == len(rows_with_spans[row_idx]):
+            row_data.append({'idx': (table_idx, row_idx), 'cells': parsed_cells})
     if len(row_data) < 2:
         return None  # ignore tables with less than 2 data rows
     return {'header': row_header, 'data': row_data}

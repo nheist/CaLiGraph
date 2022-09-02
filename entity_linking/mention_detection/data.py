@@ -37,7 +37,7 @@ def get_md_page_train_data() -> List[WordTokenizedPage]:
             if len(enum_se_indices) >= 5 and len(enum_se_tags) == 1:
                 subject_entities.update(enum_se_indices)
         for table in page.get_tables():
-            table_subject_entities = [cell['subject_entity'] for row in table['data'] for cell in row if 'subject_entity' in cell]
+            table_subject_entities = [cell['subject_entity'] for row in table['data'] for cell in row['cells'] if 'subject_entity' in cell]
             table_se_indices = {se['idx'] for se in table_subject_entities}
             table_se_tags = {se['tag'] for se in table_subject_entities if se['tag'] != POSLabel.OTHER.value}
             if len(table_se_indices) >= 5 and len(table_se_tags) == 1:
@@ -79,7 +79,7 @@ def _find_subject_entities_for_listing_labels(wp: WikipediaPage, listing_labels:
         for enum_data in section_data['enums']:
             listing_entities.append([e['idx'] for entry in enum_data for e in entry['entities'] if e['idx'] >= 0])
         for table in section_data['tables']:
-            listing_entities.append([e['idx'] for row in table['data'] for cell in row for e in cell['entities'] if e['idx'] >= 0])
+            listing_entities.append([e['idx'] for row in table['data'] for cell in row['cells'] for e in cell['entities'] if e['idx'] >= 0])
     # create mapping from POS labels to valid entity types
     dbo = DbpOntologyStore.instance()
     label_to_type_mapping = defaultdict(set)
