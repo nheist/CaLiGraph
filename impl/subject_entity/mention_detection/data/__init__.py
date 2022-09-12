@@ -8,17 +8,18 @@ from impl.subject_entity.mention_detection import labels
 
 def get_listpage_training_dataset(tokenizer) -> MentionDetectionDataset:
     listpages = WikiPageStore.instance().get_listpages()
-    return _prepare_dataset(tokenizer, listpages, False)
+    negative_sample_size = float(utils.get_config('subject_entity.negative_sample_size'))
+    return _prepare_dataset(tokenizer, listpages, False, negative_sample_size)
 
 
 def get_page_training_dataset(tokenizer) -> MentionDetectionDataset:
     pages = WikiPageStore.instance().get_pages()
-    return _prepare_dataset(tokenizer, pages, False)
-
-
-def _prepare_dataset(tokenizer, pages: List[WikiPage], binary_labels: bool) -> MentionDetectionDataset:
-    page_labels = labels.get_labels(pages)
     negative_sample_size = float(utils.get_config('subject_entity.negative_sample_size'))
+    return _prepare_dataset(tokenizer, pages, False, negative_sample_size)
+
+
+def _prepare_dataset(tokenizer, pages: List[WikiPage], binary_labels: bool, negative_sample_size: float) -> MentionDetectionDataset:
+    page_labels = labels.get_labels(pages)
     p_tokens, p_labels, listing_types = chunking.process_training_pages(pages, page_labels, negative_sample_size)
     return MentionDetectionDataset(tokenizer, p_tokens, p_labels, listing_types, binary_labels)
 

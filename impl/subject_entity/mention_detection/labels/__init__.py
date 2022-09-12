@@ -6,15 +6,19 @@ from impl.subject_entity.mention_detection.labels import heuristics
 
 
 def get_labels(pages: List[WikiPage]) -> Dict[int, Dict[int, Dict[int, List[Union[int, List[int]]]]]]:
+    subject_entities = {page.idx: heuristics.find_subject_entities_for_page(page) for page in pages}
+    return _get_labels_for_subject_entities(pages, subject_entities)
+
+
+def _get_labels_for_subject_entities(pages: List[WikiPage], subject_entities: Dict[int, Dict[int, Tuple[Set[int], Set[int]]]]) -> Dict[int, Dict[int, Dict[int, List[Union[int, List[int]]]]]]:
     labels = defaultdict(lambda: defaultdict(dict))
     for page in pages:
-        subject_entities_per_listing = heuristics.find_subject_entities_for_page(page)
         for listing in page.get_listings():
-            if listing.idx not in subject_entities_per_listing:
+            if listing.idx not in subject_entities[page.idx]:
                 continue
             for item in listing.get_items():
-                subject_entities = subject_entities_per_listing[listing.idx]
-                item_labels = _get_entry_labels(item, subject_entities) if isinstance(item, WikiEnumEntry) else _get_row_labels(item, subject_entities)
+                item_subject_entities = subject_entities[page.idx][listing.idx]
+                item_labels = _get_entry_labels(item, item_subject_entities) if isinstance(item, WikiEnumEntry) else _get_row_labels(item, item_subject_entities)
                 if item_labels is not None:
                     labels[page.idx][listing.idx][item.idx] = item_labels
     return labels

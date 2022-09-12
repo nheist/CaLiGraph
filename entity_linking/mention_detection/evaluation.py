@@ -3,10 +3,10 @@ from copy import deepcopy
 from collections import namedtuple, Counter
 from transformers import EvalPrediction
 from impl.util.transformer import EntityIndex
-from impl.subject_entity.preprocess.word_tokenize import ListingType
+from impl.subject_entity.mention_detection.data.chunking import LISTING_TYPE_ENUM, LISTING_TYPE_TABLE
 
 
-Entity = namedtuple("Entity", "e_type start_offset end_offset")
+Entity = namedtuple('Entity', ['e_type', 'start_offset', 'end_offset'])
 
 
 class SETagsEvaluator:
@@ -22,8 +22,8 @@ class SETagsEvaluator:
     def evaluate(self, eval_prediction: EvalPrediction, listing_types: List[str]) -> dict:
         self.results = {
             'overall': deepcopy(self.result_schema),
-            ListingType.ENUMERATION.value: deepcopy(self.result_schema),
-            ListingType.TABLE.value: deepcopy(self.result_schema)
+            LISTING_TYPE_ENUM: deepcopy(self.result_schema),
+            LISTING_TYPE_TABLE: deepcopy(self.result_schema)
         }
 
         mentions = eval_prediction.predictions.argmax(-1)
@@ -38,7 +38,7 @@ class SETagsEvaluator:
 
         # compute overall stats for listing types
         for metric in self.results['overall']:
-            self.results['overall'][metric] = self.results[ListingType.ENUMERATION.value][metric] + self.results[ListingType.TABLE.value][metric]
+            self.results['overall'][metric] = self.results[LISTING_TYPE_ENUM][metric] + self.results[LISTING_TYPE_TABLE][metric]
 
         return self._compute_precision_recall_wrapper()
 

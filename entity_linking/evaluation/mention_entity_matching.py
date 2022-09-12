@@ -3,8 +3,7 @@ from transformers import EvalPrediction
 
 
 class MentionEntityMatchingEvaluator:
-    def __init__(self, batch_size: int, num_ents: int, items_per_chunk: int):
-        self.batch_size = batch_size
+    def __init__(self, num_ents: int, items_per_chunk: int):
         self.num_ents = num_ents
         self.items_per_chunk = items_per_chunk
         self.thresholds = [.3, .4, .5, .6, .7, .8]
