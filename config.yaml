@@ -246,11 +246,15 @@ cache:
   subject_entity_page_data:
     filename: 'subject-entity-page-data'
     version: 2
-  subject_entity_predictions:
-    filename: 'subject-entity-predictions'
+  subject_entity_mentions:
+    filename: 'subject-entity-mentions'
     version: 2
-  transformer_for_mention_detection:
-    filename: 'transformer-for-mention-detection'
+  transformer_for_listpage_mention_detection:
+    filename: 'transformer-for-listpage-mention-detection'
+    version: 2
+    store_as_folder: True
+  transformer_for_page_mention_detection:
+    filename: 'transformer-for-page-mention-detection'
     version: 2
     store_as_folder: True
   caligraph_ontology:

@@ -1,7 +1,6 @@
 """Extract entities from listings in arbitrary Wikipedia pages.
 Learn association rules to gather types and relations for the extracted entities."""
 
-
 from typing import Dict, Tuple
 import utils
 from . import extract

@@ -6,6 +6,24 @@ from spacy.tokens import Doc, Token
 from typing import Iterable, Iterator, Optional, Callable, Union
 import re
 import inflection
+from enum import Enum
+
+
+class EntityTypeLabel(Enum):
+    NONE = 0
+    PERSON = 1
+    NORP = 2
+    FAC = 3
+    ORG = 4
+    GPE = 5
+    LOC = 6
+    PRODUCT = 7
+    EVENT = 8
+    WORK_OF_ART = 9
+    LAW = 10
+    LANGUAGE = 11
+    SPECIES = 12
+    OTHER = 13
 
 
 def without_stopwords(text: str) -> set:

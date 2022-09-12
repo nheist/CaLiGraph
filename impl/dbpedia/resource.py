@@ -117,6 +117,9 @@ class DbpResourceStore:
             raise DbpResourceNotExistingException(f'Could not find resource for index: {idx}')
         return self.resources_by_idx[idx]
 
+    def get_highest_resource_idx(self) -> int:
+        return max(self.resources_by_idx)
+
     def has_resource_with_name(self, name: str) -> bool:
         return name in self.resources_by_name
 

@@ -5,7 +5,6 @@ from collections import defaultdict, Counter
 import utils
 from utils import get_logger
 from impl.listing import context
-from impl.wikipedia import META_SECTIONS
 from impl.dbpedia.resource import DbpResource, DbpResourceStore
 from impl.caligraph.ontology import ClgOntologyStore
 from impl.caligraph.entity import ClgEntity, ClgEntityStore
@@ -28,7 +27,6 @@ def extract_listing_entity_information() -> Dict[ClgEntity, Dict[Tuple[DbpResour
     page_entities = defaultdict(lambda: defaultdict(lambda: {'labels': set(), 'types': set(), 'in': set(), 'out': set()}))
 
     df = context.retrieve_page_entity_context()
-    df = df[~df['TS_text'].str.lower().isin(META_SECTIONS)]  # filter out entity occurrences in meta-sections
 
     # extract list page entities
     get_logger().debug('Extracting types of list page entities..')
@@ -36,7 +34,7 @@ def extract_listing_entity_information() -> Dict[ClgEntity, Dict[Tuple[DbpResour
     for lp_idx, df_lp in df_lps.groupby(by='P'):
         origin = _get_origin(lp_idx, None)
         lp = dbr.get_resource_by_idx(lp_idx)
-        clg_types = {t.idx for t in ClgOntologyStore.instance().get_types_for_associated_dbp_resource(lp)}
+        clg_types = {t.idx for t in clgo.get_types_for_associated_dbp_resource(lp)}
         if clg_types:
             for _, row in df_lp.iterrows():
                 ent_idx = row['E_ent']

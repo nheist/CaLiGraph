@@ -1,6 +1,7 @@
 from typing import Set, Dict
 from collections import Counter
 import pandas as pd
+from impl.wikipedia import WikiPageStore
 from impl.dbpedia.ontology import DbpType, DbpOntologyStore
 from impl.dbpedia.resource import DbpListpage, DbpResourceStore
 from impl.caligraph.ontology import ClgType, ClgOntologyStore
@@ -11,10 +12,22 @@ from impl.caligraph.entity import ClgEntity, ClgEntityStore
 
 def retrieve_page_entity_context() -> pd.DataFrame:
     """Retrieve all subject entities on pages together with their context information (i.e. where they occur)"""
-    clge = ClgEntityStore.instance()
-    # gather data
+    # gather data about subject entities in listings
     columns = ['P', 'TS_text', 'TS_ent', 'S_text', 'S_ent', 'E_text', 'E_tag', 'E_ent']
-    data = [occ + (ent.idx,) for ent, occurrences in clge.get_page_occurrence_data().items() for occ in occurrences]
+    data = []
+    for wp in WikiPageStore.instance().get_pages():
+        for listing in wp.get_listings():
+            for se_mention in listing.get_subject_entities():
+                data.append((
+                    wp.idx,
+                    listing.topsection.title,
+                    listing.topsection.entity_idx,
+                    listing.section.title,
+                    listing.section.entity_idx,
+                    se_mention.label,
+                    se_mention.entity_type,
+                    se_mention.entity_idx
+                ))
     # create frame and add further features
     df = pd.DataFrame(data=data, columns=columns)
     df['idx'] = df.index.values
@@ -22,7 +35,6 @@ def retrieve_page_entity_context() -> pd.DataFrame:
     df = _assign_entity_types_for_section(df, 'S')
     df = _align_section_entity_types(df)
     df = _assign_pagetypes(df)
-
     # get rid of all single-letter (sub)sections distorting results
     df = df.drop(index=df[(df['TS_text'].str.len() <= 1) | (df['S_text'].str.len() <= 1)].index)
     return df

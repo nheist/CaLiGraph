@@ -4,6 +4,7 @@ import os
 import utils
 import spacy
 from spacy.tokens import Span
+from spacy.lang.en import English
 from impl.util.spacy.components import LEXICAL_HEAD, LEXICAL_HEAD_SUBJECT, LEXICAL_HEAD_SUBJECT_PLURAL, BY_PHRASE
 import impl.util.spacy.hearst_matcher as hearst_matcher
 
@@ -26,6 +27,7 @@ def _init_set_parser():
 BATCH_SIZE = 20000
 N_PROCESSES = utils.get_config('max_cpus')
 
+TOKENIZER = English().tokenizer
 BASE_PARSER = spacy.load('en_core_web_lg')
 SET_PARSER = _init_set_parser()
 
@@ -52,6 +54,11 @@ def parse_sets(taxonomic_sets: list) -> Iterator:
     return iter([CACHE_SET_DOCUMENTS[s] for s in taxonomic_sets])
 
 
+def get_hearst_pairs(text: str) -> List[Tuple[Span, Span]]:
+    """Parse text and retrieve (sub, obj) pairs for every occurrence of a hearst pattern."""
+    return hearst_matcher.get_hearst_matches(text, BASE_PARSER)
+
+
 def parse_texts(texts: list) -> Iterator:
     """Parse plain texts like the content of a Wikipedia page or a listing item."""
     if len(texts) <= BATCH_SIZE:
@@ -59,6 +66,6 @@ def parse_texts(texts: list) -> Iterator:
     return iter(tqdm(BASE_PARSER.pipe(texts, batch_size=BATCH_SIZE, n_process=N_PROCESSES), total=len(texts), desc='Parsing texts with spaCy'))
 
 
-def get_hearst_pairs(text: str) -> List[Tuple[Span, Span]]:
-    """Parse text and retrieve (sub, obj) pairs for every occurrence of a hearst pattern."""
-    return hearst_matcher.get_hearst_matches(text, BASE_PARSER)
+def get_tokens_and_whitespaces_from_text(text: str) -> Tuple[List[str], List[str]]:
+    doc = TOKENIZER(text)
+    return [w.text for w in doc], [w.whitespace_ for w in doc]

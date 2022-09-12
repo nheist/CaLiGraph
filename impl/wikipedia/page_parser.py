@@ -1,60 +1,136 @@
 """Functionality for parsing Wikipedia pages from WikiText."""
 
-from typing import Tuple, Optional, Dict, Set, List
-import wikitextparser as wtp
-from wikitextparser import WikiText
-import impl.util.nlp as nlp_util
-from impl.util.rdf import Namespace, label2name
-from impl.util.transformer import EntityIndex
-from impl.dbpedia.util import is_entity_name
-from . import wikimarkup_parser as wmp
+from typing import Tuple, Optional, Dict, Set, List, Iterable
 import re
 import signal
-import utils
-from utils import get_logger
 from tqdm import tqdm
 import multiprocessing as mp
+import wikitextparser as wtp
+from wikitextparser import WikiText
+import utils
+import impl.util.nlp as nlp_util
+from impl.util.nlp import EntityTypeLabel
+from impl.util.rdf import Namespace, label2name
+from impl.util.transformer import EntityIndex
+from impl.util.spacy import listing_parser, get_tokens_and_whitespaces_from_text
+from impl.dbpedia.util import is_entity_name
 from impl.dbpedia.resource import DbpResource, DbpResourceStore
+from . import wikimarkup_parser as wmp
 
 
-LISTING_INDICATORS = ('*', '#', '{|')
-VALID_ENUM_PATTERNS = (r'\#', r'\*')
+class WikiSubjectEntity:
+    def __init__(self, entity_idx: int, label: str, entity_type: EntityTypeLabel):
+        self.entity_idx = entity_idx
+        self.label = label
+        self.entity_type = entity_type
 
 
-class WikipediaPage:
-    idx: int
-    resource: DbpResource
-    sections: List[dict]
+class WikiMention:
+    def __init__(self, entity_idx: int, label: str, start: int, end: int):
+        self.entity_idx = entity_idx
+        self.label = label
+        self.start = start
+        self.end = end
 
-    def __init__(self, resource: DbpResource, sections: List[dict]):
-        self.idx = resource.idx
-        self.resource = resource
-        self.sections = sections
 
-    def has_listings(self) -> bool:
-        return len(self.get_enums()) > 0 or len(self.get_tables()) > 0
+class WikiListingItem:
+    def __init__(self, idx: int):
+        self.idx = idx
+        self.subject_entity = None
 
-    def get_enums(self) -> List[list]:
-        return [enum for s in self.sections for enum in s['enums']]
+    def get_mentions(self) -> List[WikiMention]:
+        raise NotImplementedError()
 
-    def get_tables(self) -> List[dict]:
-        return [table for s in self.sections for table in s['tables']]
 
-    def get_listing_entities(self) -> Set[DbpResource]:
+class WikiEnumEntry(WikiListingItem):
+    def __init__(self, idx: int, tokens: List[str], whitespaces: List[str], mentions: List[WikiMention], depth: int, is_leaf: bool):
+        super().__init__(idx)
+        self.tokens = tokens
+        self.whitespaces = whitespaces
+        self.mentions = mentions
+        self.depth = depth
+        self.is_leaf = is_leaf
+
+    def get_mentions(self) -> List[WikiMention]:
+        return self.mentions
+
+
+class WikiTableRow(WikiListingItem):
+    def __init__(self, idx: int, tokens: List[List[str]], whitespaces: List[List[str]], mentions: List[List[WikiMention]]):
+        super().__init__(idx)
+        self.tokens = tokens
+        self.whitespaces = whitespaces
+        self.mentions = mentions
+
+    def get_mentions(self) -> List[WikiMention]:
+        return [m for cell_mentions in self.mentions for m in cell_mentions]
+
+
+class WikiSection:
+    def __init__(self, section_data):
+        raw_title = section_data.title.strip() if section_data.title and section_data.title.strip() else 'Main'
+        self.title = wmp.wikitext_to_plaintext(raw_title)
+        self.tokens, self.whitespaces = get_tokens_and_whitespaces_from_text(self.title)
+        self.entity_idx = wmp.get_first_wikilink_entity(raw_title)
+        self.level = section_data.level
+
+    def is_top_section(self) -> bool:
+        return self.level <= 2
+
+    def is_meta_section(self) -> bool:
+        return self.title.lower() in {
+            'see also', 'external links', 'references', 'notes', 'sources', 'external sources', 'general sources',
+            'bibliography', 'notes and references', 'citations', 'references and footnotes', 'references and links',
+            'maps', 'further reading'
+        }
+
+
+class WikiListing:
+    def __init__(self, idx: int, topsection: WikiSection, section: WikiSection, items: List[WikiListingItem]):
+        self.idx = idx
+        self.topsection = topsection
+        self.section = section
+        self.items = {item.idx: item for item in items}
+        self.page = None
+
+    def get_items(self) -> Iterable[WikiListingItem]:
+        return self.items.values()
+
+    def get_mentioned_entities(self) -> Set[DbpResource]:
         dbr = DbpResourceStore.instance()
-        entity_indices = {ent['idx'] for enum in self.get_enums() for entry in enum for ent in entry['entities']} |\
-                         {ent['idx'] for table in self.get_tables() for row in table['data'] for cell in row['cells'] for ent in cell['entities']}
+        entity_indices = {mention.entity_idx for item in self.get_items() for mention in item.get_mentions()}
         return {dbr.get_resource_by_idx(idx) for idx in entity_indices if idx != EntityIndex.NEW_ENTITY.value}
 
-    def discard_listings_without_seen_entities(self):
-        # discard listings that either do not have any subject entities or only unseen subject entities
-        for s in self.sections:
-            s['enums'] = [enum for enum in s['enums'] if any('subject_entity' in entry and entry['subject_entity']['idx'] != EntityIndex.NEW_ENTITY.value for entry in enum)]
-            s['tables'] = [t for t in s['tables'] if any('subject_entity' in cell and cell['subject_entity']['idx'] != EntityIndex.NEW_ENTITY.value for row in t['data'] for cell in row)]
+    def get_subject_entities(self) -> List[WikiMention]:
+        return [item.subject_entity for item in self.get_items() if item.subject_entity]
 
-    def get_subject_entity_indices(self) -> Set[int]:
-        return {entry['subject_entity']['idx'] for enum in self.get_enums() for entry in enum if 'subject_entity' in entry} |\
-               {cell['subject_entity']['idx'] for table in self.get_tables() for row in table['data'] for cell in row['cells'] if 'subject_entity' in cell}
+
+class WikiEnum(WikiListing):
+    pass
+
+
+class WikiTable(WikiListing):
+    def __init__(self, idx: int, topsection: WikiSection, section: WikiSection, items: List[WikiTableRow], header: WikiTableRow):
+        super().__init__(idx, topsection, section, items)
+        self.header = header
+
+
+class WikiPage:
+    def __init__(self, resource: DbpResource, listings: List[WikiListing]):
+        self.idx = resource.idx
+        self.resource = resource
+        self.listings = {listing.idx: listing for listing in listings}
+        for listing in listings:
+            listing.page = self
+
+    def get_listings(self) -> Iterable[WikiListing]:
+        return self.listings.values()
+
+    def has_subject_entities(self) -> bool:
+        return any(item.subject_entity is not None for listing in self.get_listings() for item in listing.get_items())
+
+    def get_subject_entities(self) -> List[WikiMention]:
+        return [se for listing in self.get_listings() for se in listing.get_subject_entities()]
 
     def __getstate__(self):
         state = self.__dict__.copy()
@@ -66,7 +142,11 @@ class WikipediaPage:
         self.resource = DbpResourceStore.instance().get_resource_by_idx(self.idx)
 
 
-def _parse_pages(pages_markup: Dict[DbpResource, str]) -> List[WikipediaPage]:
+LISTING_INDICATORS = ('*', '#', '{|')
+VALID_ENUM_PATTERNS = (r'\#', r'\*')
+
+
+def _parse_pages(pages_markup: Dict[DbpResource, str]) -> List[WikiPage]:
     # warm up caches before going into multiprocessing
     dbr = DbpResourceStore.instance()
     res = dbr.get_resource_by_idx(0)
@@ -76,13 +156,13 @@ def _parse_pages(pages_markup: Dict[DbpResource, str]) -> List[WikipediaPage]:
     wikipedia_pages = []
     with mp.Pool(processes=utils.get_config('max_cpus')) as pool:
         for wp in tqdm(pool.imap_unordered(_parse_page_with_timeout, pages_markup.items(), chunksize=1000), total=len(pages_markup), desc='wikipedia/page_parser: Parsing pages'):
-            if wp.has_listings():
+            if wp is not None and wp.get_listings():
                 wikipedia_pages.append(wp)
             pages_markup[wp.resource] = ''  # discard markup after parsing to free memory
     return wikipedia_pages
 
 
-def _parse_page_with_timeout(resource_and_markup: Tuple[DbpResource, str]) -> WikipediaPage:
+def _parse_page_with_timeout(resource_and_markup: Tuple[DbpResource, str]) -> Optional[WikiPage]:
     """Return the parsed wikipedia page (with empty content, if parsing has timed out)"""
     signal.signal(signal.SIGALRM, _timeout_handler)
     signal.alarm(5 * 60)  # timeout of 5 minutes per page
@@ -95,15 +175,14 @@ def _parse_page_with_timeout(resource_and_markup: Tuple[DbpResource, str]) -> Wi
     except Exception as e:
         if type(e) == KeyboardInterrupt:
             raise e
-        get_logger().error(f'Failed to parse page {resource.name}: {e}')
-        return WikipediaPage(resource, [])
+        utils.get_logger().error(f'Failed to parse page {resource.name}: {e}')
+        return None
 
 
-def _parse_page(resource_and_markup: Tuple[DbpResource, str]) -> WikipediaPage:
+def _parse_page(resource_and_markup: Tuple[DbpResource, str]) -> Optional[WikiPage]:
     resource, page_markup = resource_and_markup
-    wp = WikipediaPage(resource, [])
     if not any(indicator in page_markup for indicator in LISTING_INDICATORS):
-        return wp  # early return if page contains no listings at all
+        return None  # early return if page contains no listings at all
     # prepare markup for parsing
     page_markup = page_markup.replace('&nbsp;', ' ')  # replace html whitespaces
     page_markup = page_markup.replace('<br />', ' ')  # replace html line breaks
@@ -115,16 +194,15 @@ def _parse_page(resource_and_markup: Tuple[DbpResource, str]) -> WikipediaPage:
     # early return if page is not useful
     wiki_text = wtp.parse(page_markup)
     if not _is_page_useful(wiki_text):
-        return wp
+        return None
     # clean and expand markup
     cleaned_wiki_text = _convert_special_enums(wiki_text)
     cleaned_wiki_text = _remove_enums_within_tables(cleaned_wiki_text)
     if not _is_page_useful(cleaned_wiki_text):
-        return wp
+        return None
     cleaned_wiki_text = _expand_wikilinks(cleaned_wiki_text, resource)
-    # extract data from sections
-    wp.sections = _extract_sections(cleaned_wiki_text)
-    return wp
+    # extract listings and return page
+    return WikiPage(resource, _extract_listings(cleaned_wiki_text))
 
 
 def _is_page_useful(wiki_text: WikiText) -> bool:
@@ -182,69 +260,82 @@ def _get_alphanum_words(text: str) -> Set[str]:
     return set(re.sub(r'[^a-zA-Z0-9_ ]+', '', text).split())
 
 
-def _extract_sections(wiki_text: WikiText) -> list:
-    sections = []
+def _extract_listings(wiki_text: WikiText) -> list:
+    listings = []
     listing_idx = 0
-    for section_idx, section in enumerate(wiki_text.get_sections(include_subsections=False)):
-        enums = [_extract_enum([idx, 0], l) for idx, l in enumerate(section.get_lists(VALID_ENUM_PATTERNS), start=listing_idx)]
-        listing_idx += len(enums)
-        tables = [_extract_table(idx, t) for idx, t in enumerate(section.get_tables(), start=listing_idx)]
-        listing_idx += len(tables)
-        sections.append({
-            'index': section_idx,
-            'name': section.title.strip() if section.title and section.title.strip() else 'Main',
-            'level': section.level,
-            'enums': [e for e in enums if len(e) >= 2],
-            'tables': [t for t in tables if t]
-        })
-    return sections
+    topsection = None
+    for section_data in wiki_text.get_sections(include_subsections=False):
+        section = WikiSection(section_data)
+        topsection = section if section.is_top_section() else topsection
+        if topsection.is_meta_section():
+            continue  # discard meta sections
+        for enum_data in section_data.get_lists(VALID_ENUM_PATTERNS):
+            enum = _extract_enum(listing_idx, topsection, section, enum_data)
+            if enum is None:
+                continue
+            listings.append(enum)
+            listing_idx += 1
+        for table_data in section_data.get_tables():
+            table = _extract_table(listing_idx, topsection, section, table_data)
+            if table is None:
+                continue
+            listings.append(table)
+            listing_idx += 1
+    return listings
 
 
-def _extract_enum(index_counter: list, l: wtp.WikiList) -> list:
+def _extract_enum(enum_idx: int, topsection: WikiSection, section: WikiSection, wiki_list: wtp.WikiList) -> Optional[WikiEnum]:
+    entries = _extract_enum_entries(wiki_list)
+    if len(entries) < 3:
+        return None
+    return WikiEnum(enum_idx, topsection, section, entries)
+
+
+def _extract_enum_entries(wiki_list: wtp.WikiList, item_idx: int = 0) -> List[WikiEnumEntry]:
     entries = []
-    for item_idx, item_text in enumerate(l.items):
-        plaintext, entities = _convert_markup(item_text)
-        sublists = l.sublists(item_idx)
-        entries.append({
-            'idx': tuple(index_counter),
-            'text': plaintext,
-            'depth': l.level,
-            'leaf': len(sublists) == 0,
-            'entities': entities
-        })
-        index_counter[1] += 1
+    for item_text in wiki_list.items:
+        tokens, whitespaces, mentions = _tokenize_wikitext(item_text)
+        sublists = wiki_list.sublists(item_idx)
+        entries.append(WikiEnumEntry(item_idx, tokens, whitespaces, mentions, wiki_list.level, len(sublists) == 0))
+        item_idx += 1
         for sl in sublists:
-            entries.extend(_extract_enum(index_counter, sl))
+            subentries = _extract_enum_entries(sl, item_idx=item_idx)
+            entries.extend(subentries)
+            item_idx += len(subentries)
     return entries
 
 
-def _extract_table(table_idx: int, table: wtp.Table) -> Optional[dict]:
-    row_header = []
-    row_data = []
+def _extract_table(table_idx: int, topsection: WikiSection, section: WikiSection, table_data: wtp.Table) -> Optional[WikiTable]:
+    header = None
+    rows = []
     try:
-        rows = table.data(strip=True, span=True)
-        cells = table.cells(span=True)
-        rows_with_spans = table.data(strip=True, span=False)
+        rows_data = table_data.data(strip=True, span=True)
+        all_cell_data = table_data.cells(span=True)
+        row_data_with_spans = table_data.data(strip=True, span=False)
     except Exception as e:
         if type(e) in [KeyboardInterrupt, ParsingTimeoutException]:
             raise e
         return None
-    for row_idx, row in enumerate(rows):
-        if len(row) < 2 or len(row) > 100:
+    for row_idx, cells in enumerate(rows_data):
+        if len(cells) < 2 or len(cells) > 100:
             return None  # ignore tables with only one or more than 100 columns (likely irrelevant or markup error)
-        parsed_cells = []
-        for cell in row:
-            plaintext, entities = _convert_markup(str(cell))
-            parsed_cells.append({'text': plaintext, 'entities': entities})
-        if _is_header_row(cells, row_idx):
-            row_header = parsed_cells
+        row_tokens, row_whitespaces, row_mentions = [], [], []
+        for cell in cells:
+            cell_tokens, cell_whitespaces, cell_mentions = _tokenize_wikitext(str(cell))
+            row_tokens.append(cell_tokens)
+            row_mentions.append(cell_mentions)
+        row = WikiTableRow(row_idx, row_tokens, row_whitespaces, row_mentions)
+        if _is_header_row(all_cell_data, row_idx):
+            header = row
+            header.idx = -1
             continue
         # process data row (only use rows that are not influenced by row-/colspan)
-        if len(rows_with_spans) > row_idx and len(row) == len(rows_with_spans[row_idx]):
-            row_data.append({'idx': (table_idx, row_idx), 'cells': parsed_cells})
-    if len(row_data) < 2:
-        return None  # ignore tables with less than 2 data rows
-    return {'header': row_header, 'data': row_data}
+        if not len(row_data_with_spans) > row_idx or not len(cells) == len(row_data_with_spans[row_idx]):
+            continue
+        rows.append(row)
+    if len(rows) < 3:
+        return None  # ignore tables with less than 3 data rows
+    return WikiTable(table_idx, topsection, section, rows, header)
 
 
 def _is_header_row(cells, row_idx: int) -> bool:
@@ -254,16 +345,16 @@ def _is_header_row(cells, row_idx: int) -> bool:
         return False  # fallback if wtp can't parse the table correctly
 
 
-def _convert_markup(wiki_text: str) -> Tuple[str, list]:
+def _tokenize_wikitext(wiki_text: str) -> Tuple[List[str], List[str], List[WikiMention]]:
     # preprocess markup text
     parsed_text = wtp.parse(wiki_text)
     parsed_text = _remove_file_wikilinks(parsed_text)
     parsed_text = _convert_sortname_templates(parsed_text)
+    doc = listing_parser.parse(wmp.wikitext_to_plaintext(parsed_text).strip())
+    tokens, whitespaces = [w.text for w in doc], [w.whitespace_ for w in doc]
 
-    plain_text = wmp.wikitext_to_plaintext(parsed_text).strip()
-
-    # extract wikilink-entities with correct positions in plain text
-    entities = []
+    # extract wikilink-mentions with correct token positions
+    mentions = []
     current_index = 0
     for w in parsed_text.wikilinks:
         # retrieve entity text and remove html tags
@@ -276,15 +367,31 @@ def _convert_markup(wiki_text: str) -> Tuple[str, list]:
         if not text:
             continue  # skip entity with empty text
 
-        # retrieve entity position
-        if text not in plain_text[current_index:]:
-            continue  # skip entity with a text that can not be located
-        entity_start_index = current_index + plain_text[current_index:].index(text)
-        current_index = entity_start_index + len(text)
-        entity_idx = wmp.get_resource_idx_for_wikilink(w)
-        if entity_idx is not None:
-            entities.append({'start': entity_start_index, 'text': text, 'idx': entity_idx})
-    return plain_text, entities
+        # retrieve mention position
+        mention_tokens, _ = get_tokens_and_whitespaces_from_text(text)
+        mention_start_idx = current_index
+        while True:  # repeat as long as we find potential starting positions of the mention
+            try:
+                mention_start_idx = tokens.index(mention_tokens[0], mention_start_idx)
+                mention_end_idx = mention_start_idx + len(mention_tokens)
+                if tokens[mention_start_idx:mention_end_idx] != mention_tokens:
+                    continue  # no exact match of position and mention text; try next potential starting position
+                entity_idx = wmp.get_resource_idx_for_wikilink(w)
+                if entity_idx is not None:
+                    mentions.append(WikiMention(entity_idx, text, mention_start_idx, mention_end_idx))
+                current_index = mention_end_idx
+                break
+            except ValueError:
+                break  # no more potential starting positions for the mention
+    # add additional mentions from spacy listing parser (that are not overlapping with existing mentions)
+    tokens_with_mentions = set()
+    for mention in mentions:
+        tokens_with_mentions.update(set(range(mention.start, mention.end)))
+    for ent in doc.ents:
+        token_indices = set(range(ent.start, ent.end))
+        if not token_indices.intersection(tokens_with_mentions):
+            mentions.append(WikiMention(EntityIndex.NEW_ENTITY.value, ent.text, ent.start, ent.end))
+    return tokens, whitespaces, mentions
 
 
 def _remove_file_wikilinks(parsed_text: wtp.WikiText) -> wtp.WikiText:
