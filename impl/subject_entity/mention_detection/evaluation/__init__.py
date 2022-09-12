@@ -4,8 +4,8 @@ from transformers import Trainer, IntervalStrategy, TrainingArguments, AutoToken
 from impl.util.transformer import SpecialToken
 from impl.util.nlp import EntityTypeLabel
 from impl.subject_entity.mention_detection.data import chunking
-from entity_linking.mention_detection import dataset
-from entity_linking.mention_detection.evaluation import SETagsEvaluator
+from impl.subject_entity.mention_detection.evaluation import dataset
+from impl.subject_entity.mention_detection.evaluation.metrics import SETagsEvaluator
 
 
 def run_evaluation(model_name: str, epochs: int, batch_size: int, learning_rate: float, warmup_steps: int, weight_decay: float, ignore_tags: bool, negative_sample_size: float, disable_negative_sampling: bool, single_item_chunks: bool, train_on_listpages: bool, train_on_pages: bool, save_as: str):

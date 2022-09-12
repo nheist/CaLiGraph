@@ -32,5 +32,5 @@ if __name__ == '__main__':
     np.random.seed(SEED)
     torch.manual_seed(SEED)
     # then import application-specific code and run it
-    from entity_linking.mention_detection import run_evaluation
+    from impl.subject_entity.mention_detection.evaluation import run_evaluation
     run_evaluation(args.model_name, args.epochs, args.batch_size, args.learning_rate, args.warmup_steps, args.weight_decay, args.ignore_tags, args.negative_sample_size, args.disable_negative_sampling, args.single_item_chunks, args.train_on_listpages, args.train_on_pages, args.save_as)
