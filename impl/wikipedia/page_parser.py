@@ -375,6 +375,7 @@ def _tokenize_wikitext(wiki_text: str) -> Tuple[List[str], List[str], List[WikiM
                 mention_start_idx = tokens.index(mention_tokens[0], mention_start_idx)
                 mention_end_idx = mention_start_idx + len(mention_tokens)
                 if tokens[mention_start_idx:mention_end_idx] != mention_tokens:
+                    mention_start_idx += 1  # increment index to avoid running into the same mention again
                     continue  # no exact match of position and mention text; try next potential starting position
                 entity_idx = wmp.get_resource_idx_for_wikilink(w)
                 if entity_idx is not None:
