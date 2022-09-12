@@ -155,14 +155,14 @@ def _parse_pages(pages_markup: Dict[DbpResource, str]) -> List[WikiPage]:
 
     wikipedia_pages = []
     with mp.Pool(processes=utils.get_config('max_cpus')) as pool:
-        for wp in tqdm(pool.imap_unordered(_parse_page_with_timeout, pages_markup.items(), chunksize=1000), total=len(pages_markup), desc='wikipedia/page_parser: Parsing pages'):
+        for wp, res in tqdm(pool.imap_unordered(_parse_page_with_timeout, pages_markup.items(), chunksize=1000), total=len(pages_markup), desc='wikipedia/page_parser: Parsing pages'):
             if wp is not None and wp.get_listings():
                 wikipedia_pages.append(wp)
-            pages_markup[wp.resource] = ''  # discard markup after parsing to free memory
+            pages_markup[res] = ''  # discard markup after parsing to free memory
     return wikipedia_pages
 
 
-def _parse_page_with_timeout(resource_and_markup: Tuple[DbpResource, str]) -> Optional[WikiPage]:
+def _parse_page_with_timeout(resource_and_markup: Tuple[DbpResource, str]) -> Tuple[Optional[WikiPage], DbpResource]:
     """Return the parsed wikipedia page (with empty content, if parsing has timed out)"""
     signal.signal(signal.SIGALRM, _timeout_handler)
     signal.alarm(5 * 60)  # timeout of 5 minutes per page
@@ -171,12 +171,12 @@ def _parse_page_with_timeout(resource_and_markup: Tuple[DbpResource, str]) -> Op
     try:
         wp = _parse_page(resource_and_markup)
         signal.alarm(0)  # reset alarm as parsing was successful
-        return wp
+        return wp, resource
     except Exception as e:
         if type(e) == KeyboardInterrupt:
             raise e
         utils.get_logger().error(f'Failed to parse page {resource.name}: {e}')
-        return None
+        return None, resource
 
 
 def _parse_page(resource_and_markup: Tuple[DbpResource, str]) -> Optional[WikiPage]:
