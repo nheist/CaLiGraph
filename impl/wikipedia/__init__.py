@@ -28,7 +28,7 @@ class WikiPageStore:
         return self.pages.values()
 
     def get_listpages(self) -> Iterable[WikiPage]:
-        return [p for p in self.pages if isinstance(p.resource, DbpListpage)]
+        return [p for p in self.get_pages() if isinstance(p.resource, DbpListpage)]
 
     def set_subject_entity_mentions(self, subject_entity_mentions: Dict[int, Dict[int, Dict[int, Tuple[str, EntityTypeLabel]]]]):
         self._reset_subject_entities()
