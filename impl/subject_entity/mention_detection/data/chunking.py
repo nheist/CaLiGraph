@@ -94,6 +94,8 @@ def _chunk_listing(listing: WikiListing, labels: Dict[int, List[Union[int, List[
         if labels and item.idx not in labels:
             continue
         processed_item = _process_listing_item(item, labels)
+        if processed_item is None:
+            continue
         new_chunk_size = current_chunk_size + len(processed_item.tokens)
         if not items_per_chunk or new_chunk_size > max_chunk_size or len(items_per_chunk[-1]) >= MAX_ITEMS_PER_CHUNK:
             items_per_chunk.append([listing_context, processed_item])
@@ -133,9 +135,11 @@ def _process_listing_context(listing: WikiListing) -> TransformerItem:
     return TransformerItem(idx=None, tokens=ctx_tokens, whitespaces=ctx_whitespaces, labels=ctx_labels)
 
 
-def _process_listing_item(item: WikiListingItem, labels: Optional[Dict[int, List[Union[str, List[str]]]]]) -> TransformerItem:
+def _process_listing_item(item: WikiListingItem, labels: Optional[Dict[int, List[Union[str, List[str]]]]]) -> Optional[TransformerItem]:
     item_labels = labels[item.idx] if labels else None
     if isinstance(item, WikiEnumEntry):
+        if not item.tokens:
+            return None
         if item_labels is None:
             item_labels = [EntityIndex.NO_ENTITY.value] * len(item.tokens)
         tokens = [SpecialToken.get_entry_by_depth(item.depth)] + item.tokens
@@ -155,6 +159,8 @@ def _process_listing_item(item: WikiListingItem, labels: Optional[Dict[int, List
             tokens += [SpecialToken.TABLE_COL.value] + cell_tokens
             whitespaces += [' '] + cell_whitespaces
             labels += [EntityIndex.NO_ENTITY.value] + cell_labels
+        if not tokens:
+            return None
         tokens[0] = SpecialToken.TABLE_ROW.value  # special indicator for start of table row
         return TransformerItem(
             idx=item.idx,
