@@ -20,19 +20,15 @@ def detect_mentions():
 
 
 def _extract_subject_entity_mentions() -> Dict[int, Dict[int, Dict[int, Tuple[str, EntityTypeLabel]]]]:
-    if model_exists(PAGE_MODEL):  # apply existing fine-tuned model on pages
-        p_tokenizer, p_model = load_tokenizer_and_model(PAGE_MODEL)
-        return _extract_mentions_for_model(p_tokenizer, p_model)
-    # otherwise, train model on listpage data; apply it on all pages; fine-tune it on page data; apply it on pages
-    if model_exists(LISTPAGE_MODEL):
+    if not model_exists(PAGE_MODEL):
+        if not model_exists(LISTPAGE_MODEL):
+            base_model = utils.get_config('subject_entity.model_mention_detection')
+            train_tokenizer_and_model(LISTPAGE_MODEL, base_model)
         lp_tokenizer, lp_model = load_tokenizer_and_model(LISTPAGE_MODEL)
-    else:
-        base_model = utils.get_config('subject_entity.model_mention_detection')
-        lp_tokenizer, lp_model = train_tokenizer_and_model(LISTPAGE_MODEL, base_model)
-    subject_entity_mentions_from_lp = _extract_mentions_for_model(lp_tokenizer, lp_model)
-    WikiPageStore.instance().set_subject_entity_mentions(subject_entity_mentions_from_lp)
-
-    p_tokenizer, p_model = train_tokenizer_and_model(PAGE_MODEL, LISTPAGE_MODEL)
+        subject_entity_mentions_from_lp = _extract_mentions_for_model(lp_tokenizer, lp_model)
+        WikiPageStore.instance().set_subject_entity_mentions(subject_entity_mentions_from_lp)
+        train_tokenizer_and_model(PAGE_MODEL, LISTPAGE_MODEL)
+    p_tokenizer, p_model = load_tokenizer_and_model(PAGE_MODEL)
     return _extract_mentions_for_model(p_tokenizer, p_model)
 
 

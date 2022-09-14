@@ -1,5 +1,5 @@
-from torch.utils.tensorboard import SummaryWriter
 import os
+from torch.utils.tensorboard import SummaryWriter
 from transformers import Trainer, IntervalStrategy, TrainingArguments, AutoTokenizer, AutoModelForTokenClassification
 from impl.util.transformer import SpecialToken
 from impl.util.nlp import EntityTypeLabel
