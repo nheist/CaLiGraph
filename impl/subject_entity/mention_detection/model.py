@@ -46,5 +46,6 @@ def train_tokenizer_and_model(model_id: str, base_model: str):
     )
     trainer = Trainer(model=model, args=training_args, train_dataset=dataset)
     trainer.train()
-    model.save_pretrained(model_id)
-    tokenizer.save_pretrained(model_id)
+    path_to_model = utils._get_cache_path(model_id)
+    model.save_pretrained(path_to_model)
+    tokenizer.save_pretrained(path_to_model)
