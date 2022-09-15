@@ -1,5 +1,5 @@
 """Basic utilities for configuration, file management, caching, and logging."""
-
+import torch.cuda.memory
 import yaml
 import logging
 import os
@@ -159,3 +159,22 @@ if get_config('logging.to_file') and 'ipykernel' not in sys.modules:
     logger.setLevel(log_level)
 else:
     logging.basicConfig(format=log_format, level=log_level)
+
+
+# GPU CACHE MANAGEMENT
+__CACHE_MEMORY_POINTER__ = None
+
+
+def reserve_gpu(memory_in_gb: int = 40):
+    global __CACHE_MEMORY_POINTER__
+    if __CACHE_MEMORY_POINTER__ is not None:
+        raise MemoryError('Tried to allocate memory but cache memory pointer is already set!')
+    __CACHE_MEMORY_POINTER__ = torch.cuda.memory.caching_allocator_alloc(1024 * 1024 * 1024 * memory_in_gb)
+
+
+def release_gpu():
+    global __CACHE_MEMORY_POINTER__
+    if isinstance(__CACHE_MEMORY_POINTER__, int):
+        torch.cuda.memory.caching_allocator_delete(__CACHE_MEMORY_POINTER__)
+        torch.cuda.memory.empty_cache()
+        __CACHE_MEMORY_POINTER__ = None
