@@ -63,7 +63,6 @@ def _extract_mentions_from_batch(context_batch: List[List[Tuple[int, int, int]]]
         predictions = np.array(predictions)
         offsets = np.array(offsets)
         word_predictions = predictions[(offsets[:, 0] == 0) & (offsets[:, 1] != 0)]
-        assert len(tokens) == len(word_predictions), f'There should be exactly one prediction per token. Tokens: {tokens} Predictions: {word_predictions}'
         # locate subject entities on item level
         for item_context, item_tokens, item_whitespaces, item_predictions in _split_predictions_into_items(contexts, tokens, whitespaces, word_predictions):
             special_tokens = SpecialToken.all_tokens()
