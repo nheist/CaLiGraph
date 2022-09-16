@@ -4,7 +4,7 @@ import utils
 from impl.util.singleton import Singleton
 from impl.util.rdf import Namespace, RdfResource
 from impl.wikipedia import WikiPageStore
-from impl.dbpedia.ontology import DbpType, DbpOntologyStore
+from impl.dbpedia.ontology import DbpType
 from impl.dbpedia.resource import DbpResource, DbpEntity, DbpResourceStore, DbpListpage
 from impl.dbpedia.category import DbpCategory, DbpCategoryStore
 from impl.caligraph.ontology import ClgType, ClgPredicate, ClgObjectPredicate, ClgOntologyStore
@@ -57,9 +57,7 @@ class ClgEntityNotExistingException(KeyError):
 @Singleton
 class ClgEntityStore:
     def __init__(self):
-        self.dbo = DbpOntologyStore.instance()
         self.dbr = DbpResourceStore.instance()
-        self.wps = WikiPageStore.instance()
         self.clgo = ClgOntologyStore.instance()
 
         all_entities = utils.load_or_create_cache('caligraph_entities', self._init_entity_cache)
@@ -85,7 +83,7 @@ class ClgEntityStore:
         self.entity_stats = None  # reset, as we are adding new entity information
         subject_entity_info = defaultdict(lambda: {'labels': Counter(), 'types': set(), 'provenance': set()})
         # collect info about subject entities
-        for wp in self.wps.get_pages():
+        for wp in WikiPageStore.instance().get_pages():
             types = self.clgo.get_types_for_associated_dbp_resource(wp.resource) if isinstance(wp.resource, DbpListpage) else set()
             for se_mention in wp.get_subject_entities():
                 idx = se_mention.entity_idx
