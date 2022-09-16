@@ -1,7 +1,10 @@
-from typing import List, Tuple, Dict, Union, Optional
+from typing import List, Tuple, Dict, Union, Optional, Iterable
 from collections import namedtuple, defaultdict
 import random
 from copy import copy
+import multiprocessing as mp
+import utils
+from tqdm import tqdm
 from impl.util.spacy import get_tokens_and_whitespaces_from_text
 from impl.util.transformer import SpecialToken, EntityIndex
 from impl.wikipedia import WikiPage
@@ -12,37 +15,28 @@ MIN_ITEMS_PER_CHUNK = 3
 MAX_ITEMS_PER_CHUNK = 16
 MAX_TOKENS_PER_ITEM = 30
 
-LISTING_TYPE_ENUM, LISTING_TYPE_TABLE = 'enum', 'table'
 TransformerItem = namedtuple('TransformerItem', ['idx', 'tokens', 'whitespaces', 'labels'])
 
 
 def process_training_pages(pages: List[WikiPage], labels: Dict[int, Dict[int, Dict[int, List[Union[int, List[int]]]]]], negative_sample_size: float) -> Tuple[List[List[str]], List[List[int]], List[str]]:
     token_chunks, label_chunks, types_of_chunks = [], [], []
     listings = [listing for p in pages for listing in p.get_listings()]
-    for listing in listings:
-        # discard listings without labels right away
-        page_idx = listing.page.idx
-        if page_idx not in labels or listing.idx not in labels[page_idx]:
-            continue
-        # chunk listings
-        listing_tokens, _, listing_labels, _ = _chunk_listing(listing, labels[page_idx][listing.idx])
+    for listing, listing_tokens, _, listing_labels, _ in _chunk_listings(listings, labels):
         token_chunks.extend(listing_tokens)
         label_chunks.extend(listing_labels)
-        listing_type = LISTING_TYPE_ENUM if isinstance(listing, WikiEnum) else LISTING_TYPE_TABLE
-        types_of_chunks.extend([listing_type] * len(listing_tokens))
+        types_of_chunks.extend([listing.get_type()] * len(listing_tokens))
     if negative_sample_size > 0:
-        for listing in _create_negative_listings(listings, types_of_chunks, negative_sample_size):
-            listing_tokens, _, listing_labels, _ = _chunk_listing(listing)
+        negative_listings = _create_negative_listings(listings, types_of_chunks, negative_sample_size)
+        for listing, listing_tokens, _, listing_labels, _ in _chunk_listings(negative_listings, None):
             token_chunks.extend(listing_tokens)
             label_chunks.extend(listing_labels)
-            listing_type = LISTING_TYPE_ENUM if isinstance(listing, WikiEnum) else LISTING_TYPE_TABLE
-            types_of_chunks.extend([listing_type] * len(listing_tokens))
+            types_of_chunks.extend([listing.get_type()] * len(listing_tokens))
     return token_chunks, label_chunks, types_of_chunks
 
 
 def _create_negative_listings(listings: List[WikiListing], types_of_chunks: List[str], negative_sample_size: float) -> List[WikiListing]:
     # compute number of negative chunks to create
-    num_enum_chunks = len([t for t in types_of_chunks if t == LISTING_TYPE_ENUM])
+    num_enum_chunks = len([t for t in types_of_chunks if t == WikiEnum.get_type()])
     num_table_chunks = len(types_of_chunks) - num_enum_chunks
     num_negative_enum_chunks = int(num_enum_chunks * negative_sample_size)
     num_negative_table_chunks = int(num_table_chunks * negative_sample_size)
@@ -74,16 +68,25 @@ def _create_negative_listing(listings: List[WikiListing]) -> WikiListing:
 
 def process_pages(pages: List[WikiPage]) -> Tuple[List[List[Tuple[int, int, int]]], List[List[str]], List[List[str]]]:
     context_chunks, token_chunks, whitespace_chunks = [], [], []
-    for page in pages:
-        for listing in page.get_listings():
-            listing_tokens, listing_whitespaces, _, listing_items = _chunk_listing(listing)
-            token_chunks.extend(listing_tokens)
-            whitespace_chunks.extend(listing_whitespaces)
-            context_chunks.extend([[(page.idx, listing.idx, item_idx) for item_idx in items] for items in listing_items])
+    listings = [listing for page in pages for listing in page.get_listings()]
+    for listing, listing_tokens, listing_whitespaces, _, listing_items in _chunk_listings(listings, None):
+        token_chunks.extend(listing_tokens)
+        whitespace_chunks.extend(listing_whitespaces)
+        context_chunks.extend([[(listing.page.idx, listing.idx, item_idx) for item_idx in items] for items in listing_items])
     return context_chunks, token_chunks, whitespace_chunks
 
 
-def _chunk_listing(listing: WikiListing, labels: Dict[int, List[Union[int, List[int]]]] = None) -> Tuple[List[List[str]], List[List[str]], List[List[int]], List[List[int]]]:
+def _chunk_listings(listings: List[WikiListing], labels: Optional[Dict[int, Dict[int, Dict[int, List[Union[int, List[int]]]]]]]) -> Iterable[WikiListing, Tuple[List[List[str]], List[List[str]], List[List[int]], List[List[int]]]]:
+    if labels is None:
+        listings_with_labels = [(listing, None) for listing in listings]
+    else:
+        listings_with_labels = [(listing, labels[listing.page.idx][listing.idx]) for listing in listings if listing.page.idx in labels and listing.idx in labels[listing.page.idx]]
+    with mp.Pool(processes=(utils.get_config('max_cpus') // 2)) as pool:
+        yield from pool.imap_unordered(_chunk_listing, tqdm(listings_with_labels, desc='Chunking listings'), chunksize=1000)
+
+
+def _chunk_listing(listing_and_labels: Tuple[WikiListing, Optional[Dict[int, List[Union[int, List[int]]]]]]) -> Tuple[WikiListing, List[List[str]], List[List[str]], List[List[int]], List[List[int]]]:
+    listing, labels = listing_and_labels
     listing_token_chunks, listing_whitespace_chunks, listing_label_chunks, listing_chunk_items = [], [], [], []
     listing_context = _process_listing_context(listing)
 
@@ -111,7 +114,7 @@ def _chunk_listing(listing: WikiListing, labels: Dict[int, List[Union[int, List[
         listing_whitespace_chunks.append([ws for i in items for ws in i.whitespaces])
         listing_label_chunks.append([label for i in items for label in i.labels])
         listing_chunk_items.append([i.idx for i in items if i.idx is not None])
-    return listing_token_chunks, listing_whitespace_chunks, listing_label_chunks, listing_chunk_items
+    return listing, listing_token_chunks, listing_whitespace_chunks, listing_label_chunks, listing_chunk_items
 
 
 def _process_listing_context(listing: WikiListing) -> TransformerItem:
@@ -135,7 +138,7 @@ def _process_listing_context(listing: WikiListing) -> TransformerItem:
     return TransformerItem(idx=None, tokens=ctx_tokens, whitespaces=ctx_whitespaces, labels=ctx_labels)
 
 
-def _process_listing_item(item: WikiListingItem, labels: Optional[Dict[int, List[Union[str, List[str]]]]]) -> Optional[TransformerItem]:
+def _process_listing_item(item: WikiListingItem, labels: Optional[Dict[int, List[Union[int, List[int]]]]]) -> Optional[TransformerItem]:
     item_labels = labels[item.idx] if labels else None
     if isinstance(item, WikiEnumEntry):
         if not item.tokens:

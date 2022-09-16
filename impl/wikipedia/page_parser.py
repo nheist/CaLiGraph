@@ -93,6 +93,10 @@ class WikiListing:
         self.items = {item.idx: item for item in items}
         self.page = None
 
+    @classmethod
+    def get_type(cls) -> str:
+        raise NotImplementedError()
+
     def get_items(self) -> Iterable[WikiListingItem]:
         return self.items.values()
 
@@ -106,13 +110,19 @@ class WikiListing:
 
 
 class WikiEnum(WikiListing):
-    pass
+    @classmethod
+    def get_type(cls) -> str:
+        return type(cls).__name__
 
 
 class WikiTable(WikiListing):
     def __init__(self, idx: int, topsection: WikiSection, section: WikiSection, items: List[WikiTableRow], header: WikiTableRow):
         super().__init__(idx, topsection, section, items)
         self.header = header
+
+    @classmethod
+    def get_type(cls) -> str:
+        return type(cls).__name__
 
 
 class WikiPage:
