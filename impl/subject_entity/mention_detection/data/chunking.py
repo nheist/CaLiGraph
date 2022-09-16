@@ -76,7 +76,7 @@ def process_pages(pages: List[WikiPage]) -> Tuple[List[List[Tuple[int, int, int]
     return context_chunks, token_chunks, whitespace_chunks
 
 
-def _chunk_listings(listings: List[WikiListing], labels: Optional[Dict[int, Dict[int, Dict[int, List[Union[int, List[int]]]]]]]) -> Iterable[WikiListing, Tuple[List[List[str]], List[List[str]], List[List[int]], List[List[int]]]]:
+def _chunk_listings(listings: List[WikiListing], labels: Optional[Dict[int, Dict[int, Dict[int, List[Union[int, List[int]]]]]]]) -> Iterable[Tuple[WikiListing, List[List[str]], List[List[str]], List[List[int]], List[List[int]]]]:
     if labels is None:
         listings_with_labels = [(listing, None) for listing in listings]
     else:
