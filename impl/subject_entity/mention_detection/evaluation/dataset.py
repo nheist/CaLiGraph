@@ -36,7 +36,7 @@ def get_md_page_train_dataset(tokenizer, ignore_tags: bool, negative_sample_size
 
 
 def get_md_page_test_dataset(tokenizer, ignore_tags: bool) -> MentionDetectionDataset:
-    md_gold = _load_mention_detection_goldstandard()  # TODO: make sure that goldstandard maps correctly to new listing layout
+    md_gold = _load_mention_detection_goldstandard()
     wps = WikiPageStore.instance()
     md_gold_pages = [wps.get_page(page_idx) for page_idx in md_gold]
     md_gold_labels = labels._get_labels_for_subject_entities(md_gold_pages, _find_subject_entities_for_listing_labels(md_gold))
