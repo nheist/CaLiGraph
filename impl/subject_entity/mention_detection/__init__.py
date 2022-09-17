@@ -43,6 +43,8 @@ def _extract_mentions_for_model(tokenizer, model) -> Dict[int, Dict[int, Dict[in
         batch_tokens = tokens[batch_idx:batch_end_idx]
         batch_whitespaces = whitespaces[batch_idx:batch_end_idx]
         _extract_mentions_from_batch(batch_contexts, batch_tokens, batch_whitespaces, tokenizer, model, subject_entity_mentions)
+    # convert result back to regular dict structure
+    subject_entity_mentions = {page_idx: dict(page_data) for page_idx, page_data in subject_entity_mentions.items()}
     return subject_entity_mentions
 
 
@@ -77,7 +79,8 @@ def _extract_mentions_from_batch(context_batch: List[List[Tuple[int, int, int]]]
                 se_label = _tokens2label(se_tokens, se_whitespaces)
                 se_tag = EntityTypeLabel(item_predictions[se_start_idx])
                 if _is_valid_entity_label(se_label):
-                    subject_entity_mentions[item_context] = (se_label, se_tag)
+                    page_idx, listing_idx, item_idx = item_context
+                    subject_entity_mentions[page_idx][listing_idx][item_idx] = (se_label, se_tag)
             except ValueError:
                 continue  # no subject entity found -> skip item
 
