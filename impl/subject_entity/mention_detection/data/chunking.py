@@ -81,7 +81,7 @@ def _chunk_listings(listings: List[WikiListing], labels: Optional[Dict[int, Dict
         listings_with_labels = [(listing, None) for listing in listings]
     else:
         listings_with_labels = [(listing, labels[listing.page.idx][listing.idx]) for listing in listings if listing.page.idx in labels and listing.idx in labels[listing.page.idx]]
-    with mp.Pool(processes=(utils.get_config('max_cpus') // 2)) as pool:
+    with mp.Pool(processes=(utils.get_config('max_cpus') // 3)) as pool:
         yield from pool.imap_unordered(_chunk_listing, tqdm(listings_with_labels, desc='Chunking listings'), chunksize=1000)
 
 
