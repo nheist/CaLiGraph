@@ -32,6 +32,8 @@ def _get_md_listpage_data() -> Tuple[List[int], List[int]]:
 
 
 def get_md_page_train_dataset(tokenizer, ignore_tags: bool, negative_sample_size: float) -> MentionDetectionDataset:
+    noisy_subject_entity_mentions = utils.load_cache('subject_entity_mentions_noisy')
+    WikiPageStore.instance().set_subject_entity_mentions(noisy_subject_entity_mentions)
     return _prepare_dataset(tokenizer, WikiPageStore.instance().get_pages(), ignore_tags, negative_sample_size)
 
 

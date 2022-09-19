@@ -3,7 +3,6 @@ from collections import namedtuple, defaultdict
 import random
 from copy import copy
 import multiprocessing as mp
-import utils
 from tqdm import tqdm
 from impl.util.spacy import get_tokens_and_whitespaces_from_text
 from impl.util.transformer import SpecialToken, EntityIndex
@@ -69,20 +68,19 @@ def _create_negative_listing(listings: List[WikiListing]) -> WikiListing:
 def process_pages(pages: List[WikiPage]) -> Tuple[List[List[Tuple[int, int, int]]], List[List[str]], List[List[str]]]:
     context_chunks, token_chunks, whitespace_chunks = [], [], []
     listings = [listing for page in pages for listing in page.get_listings()]
-    for listing, listing_tokens, listing_whitespaces, _, listing_items in _chunk_listings(listings, None, processes=4):
+    for listing, listing_tokens, listing_whitespaces, _, listing_items in _chunk_listings(listings, None):
         token_chunks.extend(listing_tokens)
         whitespace_chunks.extend(listing_whitespaces)
         context_chunks.extend([[(listing.page.idx, listing.idx, item_idx) for item_idx in items] for items in listing_items])
     return context_chunks, token_chunks, whitespace_chunks
 
 
-def _chunk_listings(listings: List[WikiListing], labels: Optional[Dict[int, Dict[int, Dict[int, List[Union[int, List[int]]]]]]], processes=None) -> Iterable[Tuple[WikiListing, List[List[str]], List[List[str]], List[List[int]], List[List[int]]]]:
+def _chunk_listings(listings: List[WikiListing], labels: Optional[Dict[int, Dict[int, Dict[int, List[Union[int, List[int]]]]]]]) -> Iterable[Tuple[WikiListing, List[List[str]], List[List[str]], List[List[int]], List[List[int]]]]:
     if labels is None:
         listings_with_labels = [(listing, None) for listing in listings]
     else:
         listings_with_labels = [(listing, labels[listing.page.idx][listing.idx]) for listing in listings if listing.page.idx in labels and listing.idx in labels[listing.page.idx]]
-    processes = utils.get_config('max_cpus') // 2 if processes is None else processes
-    with mp.Pool(processes=processes) as pool:
+    with mp.Pool(processes=4) as pool:
         yield from pool.imap_unordered(_chunk_listing, tqdm(listings_with_labels, desc='Chunking listings'), chunksize=1000)
 
 

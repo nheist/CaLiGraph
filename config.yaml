@@ -243,6 +243,9 @@ cache:
   subject_entity_listpage_labels:
     filename: 'subject-entity-listpage-labels'
     version: 2
+  subject_entity_mentions_noisy:
+    filename: 'subject-entity-mentions-noisy'
+    version: 2
   subject_entity_mentions:
     filename: 'subject-entity-mentions'
     version: 2

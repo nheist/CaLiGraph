@@ -24,8 +24,9 @@ def _extract_subject_entity_mentions() -> Dict[int, Dict[int, Dict[int, Tuple[st
         if not model_exists(LISTPAGE_MODEL):
             train_tokenizer_and_model(LISTPAGE_MODEL)
         lp_tokenizer, lp_model = load_tokenizer_and_model(LISTPAGE_MODEL)
-        subject_entity_mentions_from_lp = _extract_mentions_for_model(lp_tokenizer, lp_model)
-        WikiPageStore.instance().set_subject_entity_mentions(subject_entity_mentions_from_lp)
+        noisy_mentions_extractor = lambda: _extract_mentions_for_model(lp_tokenizer, lp_model)
+        noisy_subject_entity_mentions = utils.load_or_create_cache('subject_entity_mentions_noisy', noisy_mentions_extractor)
+        WikiPageStore.instance().set_subject_entity_mentions(noisy_subject_entity_mentions)
         train_tokenizer_and_model(PAGE_MODEL, LISTPAGE_MODEL)
     p_tokenizer, p_model = load_tokenizer_and_model(PAGE_MODEL)
     return _extract_mentions_for_model(p_tokenizer, p_model)
