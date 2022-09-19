@@ -1,6 +1,7 @@
 """Heuristic retrieval of subject entities in list pages using the mapping to DBpedia categories."""
 
 from typing import Tuple, Set, Dict, List
+from collections import defaultdict
 import utils
 import impl.dbpedia.heuristics as dbp_heur
 from impl import category
@@ -16,7 +17,7 @@ from impl.wikipedia import WikiPage, WikiPageStore
 def find_subject_entities_for_pages(pages: List[WikiPage]) -> Dict[int, Dict[int, Tuple[Set[int], Set[int]]]]:
     lp_cache = None
     if any(isinstance(page.resource, DbpListpage) for page in pages):
-        lp_cache = utils.load_or_create_cache('subject_entity_listpage_labels', _find_subject_entities_for_listpages)
+        lp_cache = defaultdict(dict, utils.load_or_create_cache('subject_entity_listpage_labels', _find_subject_entities_for_listpages))
     return {p.idx: lp_cache[p.idx] if isinstance(p.resource, DbpListpage) else _find_subject_entities_for_page(p) for p in pages}
 
 
