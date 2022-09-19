@@ -22,8 +22,7 @@ def detect_mentions():
 def _extract_subject_entity_mentions() -> Dict[int, Dict[int, Dict[int, Tuple[str, EntityTypeLabel]]]]:
     if not model_exists(PAGE_MODEL):
         if not model_exists(LISTPAGE_MODEL):
-            base_model = utils.get_config('subject_entity.model_mention_detection')
-            train_tokenizer_and_model(LISTPAGE_MODEL, base_model)
+            train_tokenizer_and_model(LISTPAGE_MODEL)
         lp_tokenizer, lp_model = load_tokenizer_and_model(LISTPAGE_MODEL)
         subject_entity_mentions_from_lp = _extract_mentions_for_model(lp_tokenizer, lp_model)
         WikiPageStore.instance().set_subject_entity_mentions(subject_entity_mentions_from_lp)

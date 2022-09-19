@@ -22,10 +22,14 @@ def load_tokenizer_and_model(model_id: str):
     return tokenizer, model
 
 
-def train_tokenizer_and_model(model_id: str, base_model: str):
-    tokenizer = AutoTokenizer.from_pretrained(base_model, add_prefix_space=True, additional_special_tokens=list(SpecialToken.all_tokens()))
-    model = AutoModelForTokenClassification.from_pretrained(base_model, num_labels=len(EntityTypeLabel))
-    model.resize_token_embeddings(len(tokenizer))
+def train_tokenizer_and_model(model_id: str, base_model_id: str = None):
+    if base_model_id is None:
+        base_model = utils.get_config('subject_entity.model_mention_detection')
+        tokenizer = AutoTokenizer.from_pretrained(base_model, add_prefix_space=True, additional_special_tokens=list(SpecialToken.all_tokens()))
+        model = AutoModelForTokenClassification.from_pretrained(base_model, num_labels=len(EntityTypeLabel))
+        model.resize_token_embeddings(len(tokenizer))
+    else:
+        tokenizer, model = load_tokenizer_and_model(base_model_id)
 
     if model_id == LISTPAGE_MODEL:
         dataset = get_listpage_training_dataset(tokenizer)
