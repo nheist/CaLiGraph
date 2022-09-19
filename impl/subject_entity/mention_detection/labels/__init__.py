@@ -6,7 +6,7 @@ from impl.subject_entity.mention_detection.labels import heuristics
 
 
 def get_labels(pages: List[WikiPage]) -> Dict[int, Dict[int, Dict[int, List[Union[int, List[int]]]]]]:
-    subject_entities = {page.idx: heuristics.find_subject_entities_for_page(page) for page in pages}
+    subject_entities = heuristics.find_subject_entities_for_pages(pages)
     return _get_labels_for_subject_entities(pages, subject_entities)
 
 

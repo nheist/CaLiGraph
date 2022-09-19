@@ -105,7 +105,7 @@ class WikiListing:
         entity_indices = {mention.entity_idx for item in self.get_items() for mention in item.get_mentions()}
         return {dbr.get_resource_by_idx(idx) for idx in entity_indices if idx != EntityIndex.NEW_ENTITY.value}
 
-    def get_subject_entities(self) -> List[WikiMention]:
+    def get_subject_entities(self) -> List[WikiSubjectEntity]:
         return [item.subject_entity for item in self.get_items() if item.subject_entity]
 
 
@@ -139,7 +139,7 @@ class WikiPage:
     def has_subject_entities(self) -> bool:
         return any(item.subject_entity is not None for listing in self.get_listings() for item in listing.get_items())
 
-    def get_subject_entities(self) -> List[WikiMention]:
+    def get_subject_entities(self) -> List[WikiSubjectEntity]:
         return [se for listing in self.get_listings() for se in listing.get_subject_entities()]
 
     def __getstate__(self):

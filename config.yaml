@@ -240,11 +240,8 @@ cache:
     filename: 'spacy_listpage_ne-tagging'
     version: 2
     store_as_folder: True
-  subject_entity_training_data:
-    filename: 'subject-entity-training-data'
-    version: 2
-  subject_entity_page_data:
-    filename: 'subject-entity-page-data'
+  subject_entity_listpage_labels:
+    filename: 'subject-entity-listpage-labels'
     version: 2
   subject_entity_mentions:
     filename: 'subject-entity-mentions'
