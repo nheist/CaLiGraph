@@ -19,6 +19,7 @@ if __name__ == '__main__':
     parser.add_argument('-tlp', '--train_on_listpages', action=argparse.BooleanOptionalAction, default=True, help='Train on list page data')
     parser.add_argument('-tp', '--train_on_pages', action=argparse.BooleanOptionalAction, default=False, help='Train on page data')
     parser.add_argument('-sa', '--save_as', type=str, default=None, help='Name of the model to save as')
+    parser.add_argument('-gm', '--gpu_memory', type=int, default=47, help='Amount of GPU memory to reserve')
     args = parser.parse_args()
     # then set necessary environment variables
     os.environ['CUDA_VISIBLE_DEVICES'] = str(args.gpu)
@@ -33,7 +34,7 @@ if __name__ == '__main__':
     torch.manual_seed(SEED)
     # reserve gpu until dataset is loaded
     import utils
-    utils.reserve_gpu()
+    utils.reserve_gpu(args.gpu_memory)
     # then import application-specific code and run it
     from impl.subject_entity.mention_detection.evaluation import run_evaluation
     run_evaluation(args.model_name, args.epochs, args.batch_size, args.learning_rate, args.warmup_steps, args.weight_decay, args.ignore_tags, args.negative_sample_size, args.disable_negative_sampling, args.single_item_chunks, args.train_on_listpages, args.train_on_pages, args.save_as)
