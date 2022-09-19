@@ -25,7 +25,7 @@ def run_evaluation(model_name: str, epochs: int, batch_size: int, learning_rate:
 
     if train_on_listpages:
         lp_train_dataset, lp_val_dataset = dataset.get_md_lp_train_and_val_datasets(tokenizer, ignore_tags, negative_sample_size)
-        utils.release_gpu()
+        #utils.release_gpu()
         training_args = TrainingArguments(
             seed=42,
             save_strategy=IntervalStrategy.NO,
@@ -54,7 +54,7 @@ def run_evaluation(model_name: str, epochs: int, batch_size: int, learning_rate:
     if train_on_pages:
         p_negative_sample_size = 0.0 if disable_negative_sampling else negative_sample_size
         p_train_dataset = dataset.get_md_page_train_dataset(tokenizer, ignore_tags, p_negative_sample_size)
-        utils.release_gpu()
+        #utils.release_gpu()
         training_args = TrainingArguments(
             seed=42,
             save_strategy=IntervalStrategy.NO,
@@ -74,7 +74,7 @@ def run_evaluation(model_name: str, epochs: int, batch_size: int, learning_rate:
 
     # make test predictions
     test_dataset = dataset.get_md_page_test_dataset(tokenizer, ignore_tags)
-    utils.release_gpu()
+    #utils.release_gpu()
     trainer = Trainer(model=model, compute_metrics=lambda eval_prediction: SETagsEvaluator().evaluate(eval_prediction, test_dataset.listing_types))
     test_metrics = trainer.evaluate(test_dataset, metric_key_prefix='test')
     with SummaryWriter(log_dir=f'./logs/MD/{run_id}') as tb:
