@@ -165,7 +165,7 @@ else:
 __CACHE_MEMORY_POINTER__ = None
 
 
-def reserve_gpu(memory_in_gb: int = 45):
+def reserve_gpu(memory_in_gb: int = 47):
     global __CACHE_MEMORY_POINTER__
     if __CACHE_MEMORY_POINTER__ is not None:
         raise MemoryError('Tried to allocate memory but cache memory pointer is already set!')
