@@ -156,7 +156,7 @@ def _process_listing_item(item: WikiListingItem, labels: Optional[Dict[int, List
             whitespaces=whitespaces[:MAX_TOKENS_PER_ITEM],
             labels=labels[:MAX_TOKENS_PER_ITEM]
         )
-    elif isinstance(item, WikiTableRow):  # WikiTableRow
+    elif isinstance(item, WikiTableRow):
         if item_labels is None:
             item_labels = [[EntityIndex.NO_ENTITY.value] * len(cell_tokens) for cell_tokens in item.tokens]
         tokens, whitespaces, labels = [], [], []

@@ -330,6 +330,7 @@ def _extract_table(table_idx: int, topsection: WikiSection, section: WikiSection
         for cell in cells:
             cell_tokens, cell_whitespaces, cell_mentions = _tokenize_wikitext(str(cell))
             row_tokens.append(cell_tokens)
+            row_whitespaces.append(cell_whitespaces)
             row_mentions.append(cell_mentions)
         row = WikiTableRow(row_idx, row_tokens, row_whitespaces, row_mentions)
         if _is_header_row(all_cell_data, row_idx):
