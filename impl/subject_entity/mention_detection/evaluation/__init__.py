@@ -24,7 +24,8 @@ def run_evaluation(model_name: str, epochs: int, batch_size: int, learning_rate:
     model.resize_token_embeddings(len(tokenizer))
 
     if train_on_listpages:
-        lp_train_dataset, lp_val_dataset = dataset.get_md_lp_train_and_val_datasets(tokenizer, ignore_tags, negative_sample_size)
+        lp_train_dataset = dataset.get_md_lp_train_dataset(tokenizer, ignore_tags, negative_sample_size)
+        lp_eval_dataset = dataset.get_md_lp_eval_dataset(tokenizer, ignore_tags)
         utils.release_gpu()
         training_args = TrainingArguments(
             seed=42,
@@ -45,7 +46,7 @@ def run_evaluation(model_name: str, epochs: int, batch_size: int, learning_rate:
             model=model,
             args=training_args,
             train_dataset=lp_train_dataset,
-            eval_dataset=lp_val_dataset,
+            eval_dataset=lp_eval_dataset,
             compute_metrics=lambda eval_prediction: SETagsEvaluator().evaluate(eval_prediction, lp_val_dataset.listing_types)
         )
         trainer.train()
