@@ -141,15 +141,15 @@ class WikiPage:
 
     def get_subject_entities(self) -> List[WikiSubjectEntity]:
         return [se for listing in self.get_listings() for se in listing.get_subject_entities()]
-
-    def __getstate__(self):
-        state = self.__dict__.copy()
-        del state['resource']  # do not persist DbpResource directly, but recover it from idx
-        return state
-
-    def __setstate__(self, state):
-        self.__dict__.update(state)
-        self.resource = DbpResourceStore.instance().get_resource_by_idx(self.idx)
+#
+#    def __getstate__(self):
+#        state = self.__dict__.copy()
+#        del state['resource']  # do not persist DbpResource directly, but recover it from idx
+#        return state
+#
+#    def __setstate__(self, state):
+#        self.__dict__.update(state)
+#        self.resource = DbpResourceStore.instance().get_resource_by_idx(self.idx)
 
 
 LISTING_INDICATORS = ('*', '#', '{|')
