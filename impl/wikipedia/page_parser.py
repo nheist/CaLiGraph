@@ -301,9 +301,9 @@ def _extract_enum(enum_idx: int, topsection: WikiSection, section: WikiSection, 
 
 def _extract_enum_entries(wiki_list: wtp.WikiList, item_idx: int = 0) -> List[WikiEnumEntry]:
     entries = []
-    for item_text in wiki_list.items:
+    for list_item_idx, item_text in enumerate(wiki_list.items):
         tokens, whitespaces, mentions = _tokenize_wikitext(item_text)
-        sublists = wiki_list.sublists(item_idx)
+        sublists = wiki_list.sublists(list_item_idx)
         entries.append(WikiEnumEntry(item_idx, tokens, whitespaces, mentions, wiki_list.level, len(sublists) == 0))
         item_idx += 1
         for sl in sublists:
