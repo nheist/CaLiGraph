@@ -81,6 +81,7 @@ def _chunk_listings(listings: List[WikiListing], labels: Optional[Dict[int, Dict
         listings_with_labels = [(listing, None) for listing in listings]
     else:
         listings_with_labels = [(listing, labels[listing.page_idx][listing.idx]) for listing in listings if listing.page_idx in labels and listing.idx in labels[listing.page_idx]]
+    DbpResourceStore.instance()  # make sure resource store is initialized once before going into multiprocessing
     with mp.Pool(processes=4) as pool:
         yield from pool.imap_unordered(_chunk_listing, tqdm(listings_with_labels, desc='Chunking listings'), chunksize=10000)
 
