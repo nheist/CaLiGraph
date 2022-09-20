@@ -47,7 +47,7 @@ def run_evaluation(model_name: str, epochs: int, batch_size: int, learning_rate:
             args=training_args,
             train_dataset=lp_train_dataset,
             eval_dataset=lp_eval_dataset,
-            compute_metrics=lambda eval_prediction: SETagsEvaluator().evaluate(eval_prediction, lp_val_dataset.listing_types)
+            compute_metrics=lambda eval_prediction: SETagsEvaluator().evaluate(eval_prediction, lp_eval_dataset.listing_types)
         )
         trainer.train()
 
