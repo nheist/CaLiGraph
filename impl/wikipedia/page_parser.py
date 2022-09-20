@@ -3,6 +3,7 @@
 from typing import Tuple, Optional, Dict, Set, List, Iterable
 import re
 import signal
+import traceback
 from tqdm import tqdm
 import multiprocessing as mp
 import wikitextparser as wtp
@@ -182,7 +183,7 @@ def _parse_page_with_timeout(resource_and_markup: Tuple[DbpResource, str]) -> Tu
     except Exception as e:
         if type(e) == KeyboardInterrupt:
             raise e
-        utils.get_logger().error(f'Failed to parse page {resource.name}: {e}')
+        utils.get_logger().error(f'Failed to parse page {resource.name}: {traceback.format_exc()}')
         return None, resource
 
 
