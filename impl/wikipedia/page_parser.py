@@ -91,7 +91,7 @@ class WikiListing:
         self.topsection = topsection
         self.section = section
         self.items = {item.idx: item for item in items}
-        self.page = None
+        self.page_idx = None
 
     @classmethod
     def get_type(cls) -> str:
@@ -107,6 +107,9 @@ class WikiListing:
 
     def get_subject_entities(self) -> List[WikiSubjectEntity]:
         return [item.subject_entity for item in self.get_items() if item.subject_entity]
+
+    def has_subject_entities(self) -> bool:
+        return len(self.get_subject_entities()) > 0
 
 
 class WikiEnum(WikiListing):
@@ -126,12 +129,15 @@ class WikiTable(WikiListing):
 
 
 class WikiPage:
-    def __init__(self, resource: DbpResource, listings: List[WikiListing]):
-        self.idx = resource.idx
-        self.resource = resource
+    def __init__(self, idx: int, listings: List[WikiListing]):
+        self.idx = idx
         self.listings = {listing.idx: listing for listing in listings}
         for listing in listings:
-            listing.page = self
+            listing.page_idx = self.idx
+
+    @property
+    def resource(self) -> DbpResource:
+        return DbpResourceStore.instance().get_resource_by_idx(self.idx)
 
     def get_listings(self) -> Iterable[WikiListing]:
         return self.listings.values()
@@ -141,15 +147,6 @@ class WikiPage:
 
     def get_subject_entities(self) -> List[WikiSubjectEntity]:
         return [se for listing in self.get_listings() for se in listing.get_subject_entities()]
-#
-#    def __getstate__(self):
-#        state = self.__dict__.copy()
-#        del state['resource']  # do not persist DbpResource directly, but recover it from idx
-#        return state
-#
-#    def __setstate__(self, state):
-#        self.__dict__.update(state)
-#        self.resource = DbpResourceStore.instance().get_resource_by_idx(self.idx)
 
 
 LISTING_INDICATORS = ('*', '#', '{|')
@@ -212,7 +209,7 @@ def _parse_page(resource_and_markup: Tuple[DbpResource, str]) -> Optional[WikiPa
         return None
     cleaned_wiki_text = _expand_wikilinks(cleaned_wiki_text, resource)
     # extract listings and return page
-    return WikiPage(resource, _extract_listings(cleaned_wiki_text))
+    return WikiPage(resource.idx, _extract_listings(cleaned_wiki_text))
 
 
 def _is_page_useful(wiki_text: WikiText) -> bool:

@@ -8,6 +8,7 @@ from impl.util.spacy import get_tokens_and_whitespaces_from_text
 from impl.util.transformer import SpecialToken, EntityIndex
 from impl.wikipedia import WikiPage
 from impl.wikipedia.page_parser import WikiListing, WikiEnum, WikiTable, WikiListingItem, WikiEnumEntry, WikiTableRow
+from impl.dbpedia.resource import DbpResourceStore
 
 MAX_TOKENS_PER_CHUNK = 300
 MIN_ITEMS_PER_CHUNK = 3
@@ -71,7 +72,7 @@ def process_pages(pages: List[WikiPage]) -> Tuple[List[List[Tuple[int, int, int]
     for listing, listing_tokens, listing_whitespaces, _, listing_items in _chunk_listings(listings, None):
         token_chunks.extend(listing_tokens)
         whitespace_chunks.extend(listing_whitespaces)
-        context_chunks.extend([[(listing.page.idx, listing.idx, item_idx) for item_idx in items] for items in listing_items])
+        context_chunks.extend([[(listing.page_idx, listing.idx, item_idx) for item_idx in items] for items in listing_items])
     return context_chunks, token_chunks, whitespace_chunks
 
 
@@ -79,7 +80,7 @@ def _chunk_listings(listings: List[WikiListing], labels: Optional[Dict[int, Dict
     if labels is None:
         listings_with_labels = [(listing, None) for listing in listings]
     else:
-        listings_with_labels = [(listing, labels[listing.page.idx][listing.idx]) for listing in listings if listing.page.idx in labels and listing.idx in labels[listing.page.idx]]
+        listings_with_labels = [(listing, labels[listing.page_idx][listing.idx]) for listing in listings if listing.page_idx in labels and listing.idx in labels[listing.page_idx]]
     with mp.Pool(processes=4) as pool:
         yield from pool.imap_unordered(_chunk_listing, tqdm(listings_with_labels, desc='Chunking listings'), chunksize=10000)
 
@@ -119,7 +120,8 @@ def _chunk_listing(listing_and_labels: Tuple[WikiListing, Optional[Dict[int, Lis
 def _process_listing_context(listing: WikiListing) -> TransformerItem:
     ctx_tokens, ctx_whitespaces = [], []
     # add page context
-    page_tokens, page_whitespaces = get_tokens_and_whitespaces_from_text(listing.page.resource.get_label())
+    resource = DbpResourceStore.instance().get_resource_by_idx(listing.page_idx)
+    page_tokens, page_whitespaces = get_tokens_and_whitespaces_from_text(resource.get_label())
     ctx_tokens.extend(page_tokens + [SpecialToken.CONTEXT_SEP.value])
     ctx_whitespaces.extend(page_whitespaces + [' '])
     # add topsection and section
