@@ -280,6 +280,21 @@ cache:
   MD_listpage_data:
     filename: 'MD-listpage-data'
     version: 4
-  MEM_data:
-    filename: 'MEM-data'
+  MD_listpage_train:
+    filename: 'MD-listpage-train'
+    version: 4
+  MD_listpage_val:
+    filename: 'MD-listpage-val'
+    version: 4
+  MD_page_train:
+    filename: 'MD-page-train'
+    version: 4
+  MD_page_test:
+    filename: 'MD-page-test'
+    version: 4
+  ME_data:
+    filename: 'ME-data'
+    version: 4
+  MM_data:
+    filename: 'MM-data'
     version: 4

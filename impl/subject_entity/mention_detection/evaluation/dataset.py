@@ -5,7 +5,7 @@ import csv
 import utils
 from impl.util.nlp import EntityTypeLabel
 from impl.wikipedia import WikiPageStore
-from impl.subject_entity.mention_detection.data import MentionDetectionDataset, _prepare_dataset, chunking
+from impl.subject_entity.mention_detection.data import MentionDetectionDataset, _prepare_labeled_chunks, chunking
 from impl.subject_entity.mention_detection import labels
 from impl.dbpedia.ontology import DbpOntologyStore
 from impl.subject_entity.mention_detection.labels.entity_type import TYPE_TO_LABEL_MAPPING
@@ -14,10 +14,16 @@ from impl.subject_entity.mention_detection.labels.entity_type import TYPE_TO_LAB
 def get_md_lp_train_and_val_datasets(tokenizer, ignore_tags: bool, negative_sample_size: float) -> Tuple[MentionDetectionDataset, MentionDetectionDataset]:
     wps = WikiPageStore.instance()
     train_data, val_data = utils.load_or_create_cache('MD_listpage_data', _get_md_listpage_data)
+    # load or create lp-train dataset
     train_pages = [wps.get_page(idx) for idx in train_data]
+    prepare_train_chunks = lambda: _prepare_labeled_chunks(train_pages, negative_sample_size)
+    train_tokens, train_labels, train_listing_types = utils.load_or_create_cache('MD_listpage_train', prepare_train_chunks, version=f'nss-{negative_sample_size}')
+    train_dataset = MentionDetectionDataset(tokenizer, train_tokens, train_labels, train_listing_types, ignore_tags)
+    # load or create lp-val dataset
     val_pages = [wps.get_page(idx) for idx in val_data]
-    train_dataset = _prepare_dataset(tokenizer, train_pages, ignore_tags, negative_sample_size)
-    val_dataset = _prepare_dataset(tokenizer, val_pages, ignore_tags, 0)
+    prepare_val_chunks = lambda: _prepare_labeled_chunks(val_pages, 0)
+    val_tokens, val_labels, val_listing_types = utils.load_or_create_cache('MD_listpage_val', prepare_val_chunks)
+    val_dataset = MentionDetectionDataset(tokenizer, val_tokens, val_labels, val_listing_types, ignore_tags)
     return train_dataset, val_dataset
 
 
@@ -34,16 +40,22 @@ def _get_md_listpage_data() -> Tuple[List[int], List[int]]:
 def get_md_page_train_dataset(tokenizer, ignore_tags: bool, negative_sample_size: float) -> MentionDetectionDataset:
     noisy_subject_entity_mentions = utils.load_cache('subject_entity_mentions_noisy')
     WikiPageStore.instance().set_subject_entity_mentions(noisy_subject_entity_mentions)
-    return _prepare_dataset(tokenizer, WikiPageStore.instance().get_pages(), ignore_tags, negative_sample_size)
+    prepare_train_chunks = lambda: _prepare_labeled_chunks(WikiPageStore.instance().get_pages(), negative_sample_size)
+    tokens, labels, listing_types = utils.load_or_create_cache('MD_page_train', prepare_train_chunks, version=f'nss-{negative_sample_size}')
+    return MentionDetectionDataset(tokenizer, tokens, labels, listing_types, ignore_tags)
 
 
 def get_md_page_test_dataset(tokenizer, ignore_tags: bool) -> MentionDetectionDataset:
+    tokens, labels, listing_types = utils.load_or_create_cache('MD_page_test', _create_md_page_test_chunks)
+    return MentionDetectionDataset(tokenizer, tokens, labels, listing_types, ignore_tags)
+
+
+def _create_md_page_test_chunks() -> Tuple[List[List[str]], List[List[int]], List[str]]:
     md_gold = _load_mention_detection_goldstandard()
     wps = WikiPageStore.instance()
     md_gold_pages = [wps.get_page(page_idx) for page_idx in md_gold]
     md_gold_labels = labels._get_labels_for_subject_entities(md_gold_pages, _find_subject_entities_for_listing_labels(md_gold))
-    p_tokens, p_labels, listing_types = chunking.process_training_pages(md_gold_pages, md_gold_labels, 0)
-    return MentionDetectionDataset(tokenizer, p_tokens, p_labels, listing_types, ignore_tags)
+    return chunking.process_training_pages(md_gold_pages, md_gold_labels, 0)
 
 
 def _load_mention_detection_goldstandard() -> Dict[int, Dict[int, str]]:
