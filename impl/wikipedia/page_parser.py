@@ -115,7 +115,7 @@ class WikiListing:
 class WikiEnum(WikiListing):
     @classmethod
     def get_type(cls) -> str:
-        return type(cls).__name__
+        return cls.__name__
 
 
 class WikiTable(WikiListing):
@@ -125,7 +125,7 @@ class WikiTable(WikiListing):
 
     @classmethod
     def get_type(cls) -> str:
-        return type(cls).__name__
+        return cls.__name__
 
 
 class WikiPage:
