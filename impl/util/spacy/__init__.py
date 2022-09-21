@@ -24,7 +24,7 @@ def _init_set_parser():
     return set_parser
 
 
-BATCH_SIZE = 20000
+BATCH_SIZE = 50000
 N_PROCESSES = utils.get_config('max_cpus')
 
 TOKENIZER = English().tokenizer
