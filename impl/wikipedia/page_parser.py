@@ -155,20 +155,20 @@ VALID_ENUM_PATTERNS = (r'\#', r'\*')
 
 
 def _parse_pages(pages_markup: Dict[DbpResource, str]) -> List[WikiPage]:
-    # warm up caches before going into multiprocessing
+    # prepare and filter markup
+    markup_iterator = tqdm(pages_markup.items(), total=len(pages_markup), desc='wikipedia/page_parser: Preparing pages')
+    with mp.Pool(processes=utils.get_config('max_cpus')) as pool:
+        pages_markup = {res: markup for res, markup in pool.imap_unordered(_prepare_page_markup, markup_iterator, chunksize=5000) if res and markup}
+    # warm up caches before going into multiprocess-parsing
     dbr = DbpResourceStore.instance()
     res = dbr.get_resource_by_idx(0)
     dbr.get_label(res)
     dbr.resolve_redirect(res)
-    # prepare and filter markup
-    markup_iterator = tqdm(pages_markup.items(), total=len(pages_markup), desc='wikipedia/page_parser: Preparing pages')
-    with mp.Pool(processes=utils.get_config('max_cpus')) as pool:
-        pages_markup = {res: markup for res, markup in pool.imap_unordered(_prepare_page_markup, markup_iterator, chunksize=2000) if res and markup}
     # parse markup
     wikipedia_pages = []
     with mp.Pool(processes=utils.get_config('max_cpus')) as pool:
         filtered_markup_iterator = tqdm(pages_markup.items(), total=len(pages_markup), desc='wikipedia/page_parser: Parsing pages')
-        for wp, res in pool.imap_unordered(_parse_page_with_timeout, filtered_markup_iterator, chunksize=1000):
+        for wp, res in pool.imap_unordered(_parse_page_with_timeout, filtered_markup_iterator, chunksize=2000):
             if wp is not None and wp.get_listings():
                 wikipedia_pages.append(wp)
             pages_markup[res] = ''  # discard markup after parsing to free memory
@@ -196,8 +196,7 @@ def _prepare_page_markup(resource_and_markup: Tuple[DbpResource, str]) -> Tuple[
     cleaned_wiki_text = _remove_enums_within_tables(cleaned_wiki_text)
     if not _is_page_useful(cleaned_wiki_text):
         return None, page_markup
-    cleaned_wiki_text = _expand_wikilinks(cleaned_wiki_text, resource)
-    return resource, cleaned_wiki_text
+    return resource, cleaned_wiki_text.string
 
 
 def _is_page_useful(wiki_text: WikiText) -> bool:
@@ -231,30 +230,6 @@ def _remove_enums_within_tables(wiki_text: WikiText) -> WikiText:
     return wtp.parse(wiki_text.string) if something_changed else wiki_text
 
 
-def _expand_wikilinks(wiki_text: WikiText, resource: DbpResource) -> str:
-    text_to_wikilink = {wl.text or wl.target: wl.string for wl in wiki_text.wikilinks if is_entity_name(label2name(wl.target))}
-    text_to_wikilink[resource.get_label()] = f'[[{resource.name}]]'  # replace mentions of the page title with a link to it
-    # discard wikilinks that have text which is fully contained in other wikilinks to avoid nested wikilinks
-    wikilinks_words = [_get_alphanum_words(wl.text) for wl in wiki_text.wikilinks if wl.text] + [_get_alphanum_words(wl.target) for wl in wiki_text.wikilinks if wl.target]
-    # if the words of a wikilink are a proper subset of the words of another wikilink, we discard it
-    # (if the sets are equal, then we are most likely looking at the words of the entity itself; this case is handled in the look-ahead of the regex)
-    text_to_wikilink = {text: wl for text, wl in text_to_wikilink.items() if not any(_get_alphanum_words(text) < wl_words for wl_words in wikilinks_words)}
-    # replace text with wikilinks
-    pattern_to_wikilink = {r'(?<![|\[])\b' + re.escape(text) + r'\b(?![|\]])': wl for text, wl in text_to_wikilink.items()}
-    regex = re.compile("|".join(pattern_to_wikilink.keys()))
-    try:
-        # For each match, look up the corresponding value in the dictionary
-        return regex.sub(lambda match: text_to_wikilink[match.group(0)], wiki_text.string)
-    except Exception as e:
-        if type(e) in [KeyboardInterrupt, ParsingTimeoutException]:
-            raise e
-        return wiki_text.string
-
-
-def _get_alphanum_words(text: str) -> Set[str]:
-    return set(re.sub(r'[^a-zA-Z0-9_ ]+', '', text).split())
-
-
 def _parse_page_with_timeout(resource_and_markup: Tuple[DbpResource, str]) -> Tuple[Optional[WikiPage], DbpResource]:
     """Return the parsed wikipedia page (with empty content, if parsing has timed out)"""
     signal.signal(signal.SIGALRM, _timeout_handler)
@@ -274,8 +249,32 @@ def _parse_page_with_timeout(resource_and_markup: Tuple[DbpResource, str]) -> Tu
 
 def _parse_page(resource_and_markup: Tuple[DbpResource, str]) -> Optional[WikiPage]:
     resource, page_markup = resource_and_markup
-    wiki_text = wtp.parse(page_markup)
+    wiki_text = _expand_wikilinks(wtp.parse(page_markup), resource)
     return WikiPage(resource.idx, _extract_listings(wiki_text))
+
+
+def _expand_wikilinks(wiki_text: WikiText, resource: DbpResource) -> WikiText:
+    text_to_wikilink = {wl.text or wl.target: wl.string for wl in wiki_text.wikilinks if is_entity_name(label2name(wl.target))}
+    text_to_wikilink[resource.get_label()] = f'[[{resource.name}]]'  # replace mentions of the page title with a link to it
+    # discard wikilinks that have text which is fully contained in other wikilinks to avoid nested wikilinks
+    wikilinks_words = [_get_alphanum_words(wl.text) for wl in wiki_text.wikilinks if wl.text] + [_get_alphanum_words(wl.target) for wl in wiki_text.wikilinks if wl.target]
+    # if the words of a wikilink are a proper subset of the words of another wikilink, we discard it
+    # (if the sets are equal, then we are most likely looking at the words of the entity itself; this case is handled in the look-ahead of the regex)
+    text_to_wikilink = {text: wl for text, wl in text_to_wikilink.items() if not any(_get_alphanum_words(text) < wl_words for wl_words in wikilinks_words)}
+    # replace text with wikilinks
+    pattern_to_wikilink = {r'(?<![|\[])\b' + re.escape(text) + r'\b(?![|\]])': wl for text, wl in text_to_wikilink.items()}
+    regex = re.compile("|".join(pattern_to_wikilink.keys()))
+    try:
+        # For each match, look up the corresponding value in the dictionary
+        return wtp.parse(regex.sub(lambda match: text_to_wikilink[match.group(0)], wiki_text.string))
+    except Exception as e:
+        if type(e) in [KeyboardInterrupt, ParsingTimeoutException]:
+            raise e
+        return wiki_text
+
+
+def _get_alphanum_words(text: str) -> Set[str]:
+    return set(re.sub(r'[^a-zA-Z0-9_ ]+', '', text).split())
 
 
 def _extract_listings(wiki_text: WikiText) -> list:
