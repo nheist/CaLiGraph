@@ -187,14 +187,20 @@ def _prepare_page_markup(resource_and_markup: Tuple[DbpResource, str]) -> Tuple[
     page_markup = re.sub(r'<ref>.*?</ref>', '', page_markup)  # remove ref markers
     page_markup = re.sub(r'<ref[^>]*?/>', '', page_markup)
     page_markup = re.sub(r"'{2,}", '', page_markup)  # remove bold and italic markers
-    # early return if page is not useful
-    wiki_text = wtp.parse(page_markup)
-    if not _is_page_useful(wiki_text):
-        return None, page_markup
-    # clean and expand markup
-    cleaned_wiki_text = _convert_special_enums(wiki_text)
-    cleaned_wiki_text = _remove_enums_within_tables(cleaned_wiki_text)
-    if not _is_page_useful(cleaned_wiki_text):
+    try:
+        # early return if page is not useful
+        wiki_text = wtp.parse(page_markup)
+        if not _is_page_useful(wiki_text):
+            return None, page_markup
+        # clean and expand markup
+        cleaned_wiki_text = _convert_special_enums(wiki_text)
+        cleaned_wiki_text = _remove_enums_within_tables(cleaned_wiki_text)
+        if not _is_page_useful(cleaned_wiki_text):
+            return None, page_markup
+    except Exception as e:
+        if type(e) == KeyboardInterrupt:
+            raise e
+        utils.get_logger().error(f'Failed to prepare page {resource.name}: {traceback.format_exc()}')
         return None, page_markup
     return resource, cleaned_wiki_text.string
 
