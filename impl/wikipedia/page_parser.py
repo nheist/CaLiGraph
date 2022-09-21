@@ -1,6 +1,7 @@
 """Functionality for parsing Wikipedia pages from WikiText."""
 
 from typing import Tuple, Optional, Dict, Set, List, Iterable
+from collections import defaultdict
 import re
 import signal
 import traceback
@@ -255,35 +256,21 @@ def _parse_page_with_timeout(resource_and_markup: Tuple[DbpResource, str]) -> Tu
 
 def _parse_page(resource_and_markup: Tuple[DbpResource, str]) -> Optional[WikiPage]:
     resource, page_markup = resource_and_markup
-    wiki_text = _expand_wikilinks(wtp.parse(page_markup), resource)
-    return WikiPage(resource.idx, _extract_listings(wiki_text))
+    wiki_text = wtp.parse(page_markup)
+    mention_entity_mapping = _create_mention_entity_mapping(wiki_text, resource)
+    return WikiPage(resource.idx, _extract_listings(wiki_text, mention_entity_mapping))
 
 
-def _expand_wikilinks(wiki_text: WikiText, resource: DbpResource) -> WikiText:
-    text_to_wikilink = {wl.text or wl.target: wl.string for wl in wiki_text.wikilinks if is_entity_name(label2name(wl.target))}
-    text_to_wikilink[resource.get_label()] = f'[[{resource.name}]]'  # replace mentions of the page title with a link to it
-    # discard wikilinks that have text which is fully contained in other wikilinks to avoid nested wikilinks
-    wikilinks_words = [_get_alphanum_words(wl.text) for wl in wiki_text.wikilinks if wl.text] + [_get_alphanum_words(wl.target) for wl in wiki_text.wikilinks if wl.target]
-    # if the words of a wikilink are a proper subset of the words of another wikilink, we discard it
-    # (if the sets are equal, then we are most likely looking at the words of the entity itself; this case is handled in the look-ahead of the regex)
-    text_to_wikilink = {text: wl for text, wl in text_to_wikilink.items() if not any(_get_alphanum_words(text) < wl_words for wl_words in wikilinks_words)}
-    # replace text with wikilinks
-    pattern_to_wikilink = {r'(?<![|\[])\b' + re.escape(text) + r'\b(?![|\]])': wl for text, wl in text_to_wikilink.items()}
-    regex = re.compile("|".join(pattern_to_wikilink.keys()))
-    try:
-        # For each match, look up the corresponding value in the dictionary
-        return wtp.parse(regex.sub(lambda match: text_to_wikilink[match.group(0)], wiki_text.string))
-    except Exception as e:
-        if type(e) in [KeyboardInterrupt, ParsingTimeoutException]:
-            raise e
-        return wiki_text
+def _create_mention_entity_mapping(wiki_text: WikiText, resource: DbpResource) -> dict:
+    mention_to_entname = {wl.text or wl.target: label2name(wl.target) for wl in wiki_text.wikilinks}
+    mention_to_entname[resource.get_label()] = resource.name  # consider mentions of page resource itself as well
+    # map resource names to resources
+    dbr = DbpResourceStore.instance()
+    mention_entity_mapping = {mention: dbr.get_resource_by_name(ent_name).idx for mention, ent_name in mention_to_entname.items() if dbr.has_resource_with_name(ent_name)}
+    return mention_entity_mapping
 
 
-def _get_alphanum_words(text: str) -> Set[str]:
-    return set(re.sub(r'[^a-zA-Z0-9_ ]+', '', text).split())
-
-
-def _extract_listings(wiki_text: WikiText) -> list:
+def _extract_listings(wiki_text: WikiText, mention_entity_mapping: dict) -> list:
     listings = []
     listing_idx = 0
     topsection = None
@@ -293,13 +280,13 @@ def _extract_listings(wiki_text: WikiText) -> list:
         if topsection.is_meta_section():
             continue  # discard meta sections
         for enum_data in section_data.get_lists(VALID_ENUM_PATTERNS):
-            enum = _extract_enum(listing_idx, topsection, section, enum_data)
+            enum = _extract_enum(listing_idx, topsection, section, enum_data, mention_entity_mapping)
             if enum is None:
                 continue
             listings.append(enum)
             listing_idx += 1
         for table_data in section_data.get_tables():
-            table = _extract_table(listing_idx, topsection, section, table_data)
+            table = _extract_table(listing_idx, topsection, section, table_data, mention_entity_mapping)
             if table is None:
                 continue
             listings.append(table)
@@ -307,28 +294,28 @@ def _extract_listings(wiki_text: WikiText) -> list:
     return listings
 
 
-def _extract_enum(enum_idx: int, topsection: WikiSection, section: WikiSection, wiki_list: wtp.WikiList) -> Optional[WikiEnum]:
-    entries = _extract_enum_entries(wiki_list)
+def _extract_enum(enum_idx: int, topsection: WikiSection, section: WikiSection, wiki_list: wtp.WikiList, mention_entity_mapping: dict) -> Optional[WikiEnum]:
+    entries = _extract_enum_entries(wiki_list, mention_entity_mapping)
     if len(entries) < 3:
         return None
     return WikiEnum(enum_idx, topsection, section, entries)
 
 
-def _extract_enum_entries(wiki_list: wtp.WikiList, item_idx: int = 0) -> List[WikiEnumEntry]:
+def _extract_enum_entries(wiki_list: wtp.WikiList, mention_entity_mapping: dict, item_idx: int = 0) -> List[WikiEnumEntry]:
     entries = []
     for list_item_idx, item_text in enumerate(wiki_list.items):
-        tokens, whitespaces, mentions = _tokenize_wikitext(item_text)
+        tokens, whitespaces, mentions = _tokenize_wikitext(item_text, mention_entity_mapping)
         sublists = wiki_list.sublists(list_item_idx)
         entries.append(WikiEnumEntry(item_idx, tokens, whitespaces, mentions, wiki_list.level, len(sublists) == 0))
         item_idx += 1
         for sl in sublists:
-            subentries = _extract_enum_entries(sl, item_idx=item_idx)
+            subentries = _extract_enum_entries(sl, mention_entity_mapping, item_idx=item_idx)
             entries.extend(subentries)
             item_idx += len(subentries)
     return entries
 
 
-def _extract_table(table_idx: int, topsection: WikiSection, section: WikiSection, table_data: wtp.Table) -> Optional[WikiTable]:
+def _extract_table(table_idx: int, topsection: WikiSection, section: WikiSection, table_data: wtp.Table, mention_entity_mapping: dict) -> Optional[WikiTable]:
     header = None
     rows = []
     try:
@@ -344,7 +331,7 @@ def _extract_table(table_idx: int, topsection: WikiSection, section: WikiSection
             return None  # ignore tables with only one or more than 100 columns (likely irrelevant or markup error)
         row_tokens, row_whitespaces, row_mentions = [], [], []
         for cell in cells:
-            cell_tokens, cell_whitespaces, cell_mentions = _tokenize_wikitext(str(cell))
+            cell_tokens, cell_whitespaces, cell_mentions = _tokenize_wikitext(str(cell), mention_entity_mapping)
             row_tokens.append(cell_tokens)
             row_whitespaces.append(cell_whitespaces)
             row_mentions.append(cell_mentions)
@@ -369,7 +356,7 @@ def _is_header_row(cells, row_idx: int) -> bool:
         return False  # fallback if wtp can't parse the table correctly
 
 
-def _tokenize_wikitext(wiki_text: str) -> Tuple[List[str], List[str], List[WikiMention]]:
+def _tokenize_wikitext(wiki_text: str, mention_entity_mapping: dict) -> Tuple[List[str], List[str], List[WikiMention]]:
     # preprocess markup text
     parsed_text = wtp.parse(wiki_text)
     parsed_text = _remove_file_wikilinks(parsed_text)
@@ -408,15 +395,43 @@ def _tokenize_wikitext(wiki_text: str) -> Tuple[List[str], List[str], List[WikiM
                 break
             except ValueError:
                 break  # no more potential starting positions for the mention
-    # add additional mentions from spacy listing parser (that are not overlapping with existing mentions)
+    # add additional mentions that may be labeled somewhere else on the page (mention expansion)
     tokens_with_mentions = set()
     for mention in mentions:
         tokens_with_mentions.update(set(range(mention.start, mention.end)))
+    expanded_mentions = _find_expanded_mentions(tokens, mention_entity_mapping, tokens_with_mentions)
+    mentions.extend(expanded_mentions)
+    # add additional mentions from spacy listing parser (that are not overlapping with existing mentions)
     for ent in doc.ents:
         token_indices = set(range(ent.start, ent.end))
         if not token_indices.intersection(tokens_with_mentions):
             mentions.append(WikiMention(EntityIndex.NEW_ENTITY.value, ent.text, ent.start, ent.end))
+    mentions = list(sorted(mentions, key=lambda m: m.start))
     return tokens, whitespaces, mentions
+
+
+def _find_expanded_mentions(tokens: List[str], mention_entity_mapping: dict, tokens_with_mentions: Set[int]) -> List[WikiMention]:
+    # tokenize every mention and index by their first word for easy retrieval
+    mention_token_entities = defaultdict(list)
+    for mention, ent_idx in mention_entity_mapping.items():
+        mention_tokens, _ = get_tokens_and_whitespaces_from_text(mention)
+        if not mention_tokens[0]:
+            continue
+        mention_token_entities[mention_tokens[0]].append((mention_tokens, mention, ent_idx))
+    # sort the lists by descending length to always find the longest mention
+    mention_token_entities = {idx: sorted(mte, key=lambda x: len(x[0]), reverse=True) for idx, mte in mention_token_entities.items()}
+    # go over every token and check whether it is the start of a undetected mention
+    expanded_mentions = []
+    for idx, token in enumerate(tokens):
+        if idx in tokens_with_mentions or token not in mention_token_entities:
+            continue
+        for mention_tokens, mention, ent_idx in mention_token_entities[token]:
+            mention_length = len(mention_tokens)
+            if tokens[idx:idx+mention_length] == mention_tokens:
+                expanded_mentions.append(WikiMention(ent_idx, mention, idx, idx+mention_length))
+                tokens_with_mentions.update(set(range(idx, idx+mention_length)))
+                break
+    return expanded_mentions
 
 
 def _remove_file_wikilinks(parsed_text: wtp.WikiText) -> wtp.WikiText:
