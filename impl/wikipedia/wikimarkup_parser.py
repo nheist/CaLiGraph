@@ -52,7 +52,7 @@ def get_resource_idx_for_wikilink(wikilink: wtp.WikiLink) -> Optional[int]:
 
 
 def _remove_language_tag(link_target: str) -> str:
-    if link_target[0] != ':':
+    if not link_target or link_target[0] != ':':
         return link_target
     if len(link_target) < 4 or link_target[3] != ':':
         return link_target[1:]

@@ -418,7 +418,11 @@ def _convert_sortname_templates(parsed_text: wtp.WikiText) -> wtp.WikiText:
     Documentation of Sortname template: https://en.wikipedia.org/wiki/Template:Sortname
     """
     for t in parsed_text.templates:
-        if not t.string.startswith('{{') or t.normal_name(capitalize=True) != 'Sortname':
+        if not t.string.startswith('{{'):
+            continue
+        if t.normal_name(capitalize=True) != 'Sortname':
+            continue
+        if not t.has_arg('1') or not t.has_arg('2'):
             continue
         text = (t.get_arg('1').value + ' ' + t.get_arg('2').value).strip()
         if t.has_arg('nolink'):
