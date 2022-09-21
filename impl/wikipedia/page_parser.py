@@ -160,37 +160,25 @@ def _parse_pages(pages_markup: Dict[DbpResource, str]) -> List[WikiPage]:
     res = dbr.get_resource_by_idx(0)
     dbr.get_label(res)
     dbr.resolve_redirect(res)
-
+    # prepare and filter markup
+    markup_iterator = tqdm(pages_markup.items(), total=len(pages_markup), desc='wikipedia/page_parser: Preparing pages')
+    with mp.Pool(processes=utils.get_config('max_cpus')) as pool:
+        pages_markup = {res: markup for res, markup in pool.imap_unordered(_prepare_page_markup, markup_iterator, chunksize=2000) if res and markup}
+    # parse markup
     wikipedia_pages = []
     with mp.Pool(processes=utils.get_config('max_cpus')) as pool:
-        for wp, res in tqdm(pool.imap_unordered(_parse_page_with_timeout, pages_markup.items(), chunksize=10000), total=len(pages_markup), desc='wikipedia/page_parser: Parsing pages'):
+        filtered_markup_iterator = tqdm(pages_markup.items(), total=len(pages_markup), desc='wikipedia/page_parser: Parsing pages')
+        for wp, res in pool.imap_unordered(_parse_page_with_timeout, filtered_markup_iterator, chunksize=1000):
             if wp is not None and wp.get_listings():
                 wikipedia_pages.append(wp)
             pages_markup[res] = ''  # discard markup after parsing to free memory
     return wikipedia_pages
 
 
-def _parse_page_with_timeout(resource_and_markup: Tuple[DbpResource, str]) -> Tuple[Optional[WikiPage], DbpResource]:
-    """Return the parsed wikipedia page (with empty content, if parsing has timed out)"""
-    signal.signal(signal.SIGALRM, _timeout_handler)
-    signal.alarm(5 * 60)  # timeout of 5 minutes per page
-
-    resource = resource_and_markup[0]
-    try:
-        wp = _parse_page(resource_and_markup)
-        signal.alarm(0)  # reset alarm as parsing was successful
-        return wp, resource
-    except Exception as e:
-        if type(e) == KeyboardInterrupt:
-            raise e
-        utils.get_logger().error(f'Failed to parse page {resource.name}: {traceback.format_exc()}')
-        return None, resource
-
-
-def _parse_page(resource_and_markup: Tuple[DbpResource, str]) -> Optional[WikiPage]:
+def _prepare_page_markup(resource_and_markup: Tuple[DbpResource, str]) -> Tuple[Optional[DbpResource], str]:
     resource, page_markup = resource_and_markup
     if not any(indicator in page_markup for indicator in LISTING_INDICATORS):
-        return None  # early return if page contains no listings at all
+        return None, page_markup  # early return if page contains no listings at all
     # prepare markup for parsing
     page_markup = page_markup.replace('&nbsp;', ' ')  # replace html whitespaces
     page_markup = page_markup.replace('<br />', ' ')  # replace html line breaks
@@ -202,15 +190,14 @@ def _parse_page(resource_and_markup: Tuple[DbpResource, str]) -> Optional[WikiPa
     # early return if page is not useful
     wiki_text = wtp.parse(page_markup)
     if not _is_page_useful(wiki_text):
-        return None
+        return None, page_markup
     # clean and expand markup
     cleaned_wiki_text = _convert_special_enums(wiki_text)
     cleaned_wiki_text = _remove_enums_within_tables(cleaned_wiki_text)
     if not _is_page_useful(cleaned_wiki_text):
-        return None
+        return None, page_markup
     cleaned_wiki_text = _expand_wikilinks(cleaned_wiki_text, resource)
-    # extract listings and return page
-    return WikiPage(resource.idx, _extract_listings(cleaned_wiki_text))
+    return resource, cleaned_wiki_text
 
 
 def _is_page_useful(wiki_text: WikiText) -> bool:
@@ -244,7 +231,7 @@ def _remove_enums_within_tables(wiki_text: WikiText) -> WikiText:
     return wtp.parse(wiki_text.string) if something_changed else wiki_text
 
 
-def _expand_wikilinks(wiki_text: WikiText, resource: DbpResource) -> WikiText:
+def _expand_wikilinks(wiki_text: WikiText, resource: DbpResource) -> str:
     text_to_wikilink = {wl.text or wl.target: wl.string for wl in wiki_text.wikilinks if is_entity_name(label2name(wl.target))}
     text_to_wikilink[resource.get_label()] = f'[[{resource.name}]]'  # replace mentions of the page title with a link to it
     # discard wikilinks that have text which is fully contained in other wikilinks to avoid nested wikilinks
@@ -257,15 +244,38 @@ def _expand_wikilinks(wiki_text: WikiText, resource: DbpResource) -> WikiText:
     regex = re.compile("|".join(pattern_to_wikilink.keys()))
     try:
         # For each match, look up the corresponding value in the dictionary
-        return wtp.parse(regex.sub(lambda match: text_to_wikilink[match.group(0)], wiki_text.string))
+        return regex.sub(lambda match: text_to_wikilink[match.group(0)], wiki_text.string)
     except Exception as e:
         if type(e) in [KeyboardInterrupt, ParsingTimeoutException]:
             raise e
-        return wiki_text
+        return wiki_text.string
 
 
 def _get_alphanum_words(text: str) -> Set[str]:
     return set(re.sub(r'[^a-zA-Z0-9_ ]+', '', text).split())
+
+
+def _parse_page_with_timeout(resource_and_markup: Tuple[DbpResource, str]) -> Tuple[Optional[WikiPage], DbpResource]:
+    """Return the parsed wikipedia page (with empty content, if parsing has timed out)"""
+    signal.signal(signal.SIGALRM, _timeout_handler)
+    signal.alarm(5 * 60)  # timeout of 5 minutes per page
+
+    resource = resource_and_markup[0]
+    try:
+        wp = _parse_page(resource_and_markup)
+        signal.alarm(0)  # reset alarm as parsing was successful
+        return wp, resource
+    except Exception as e:
+        if type(e) == KeyboardInterrupt:
+            raise e
+        utils.get_logger().error(f'Failed to parse page {resource.name}: {traceback.format_exc()}')
+        return None, resource
+
+
+def _parse_page(resource_and_markup: Tuple[DbpResource, str]) -> Optional[WikiPage]:
+    resource, page_markup = resource_and_markup
+    wiki_text = wtp.parse(page_markup)
+    return WikiPage(resource.idx, _extract_listings(wiki_text))
 
 
 def _extract_listings(wiki_text: WikiText) -> list:
