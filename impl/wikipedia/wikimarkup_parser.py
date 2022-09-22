@@ -1,10 +1,10 @@
 import wikitextparser as wtp
 from typing import Union, Optional
 import re
+from impl.dbpedia.resource import DbpResourceStore
 import impl.util.string as str_util
-from impl.dbpedia.resource import DbpEntity, DbpResourceStore
-from impl.dbpedia.util import is_entity_name
-from impl.util.rdf import label2name
+from impl.util.rdf import Namespace, label2name
+import impl.util.nlp as nlp_util
 
 
 def wikitext_to_plaintext(text: Union[str, wtp.WikiText]) -> str:
@@ -19,28 +19,36 @@ def wikitext_to_plaintext(text: Union[str, wtp.WikiText]) -> str:
         return str(text)
 
 
-def get_first_wikilink_entity(text: Union[str, wtp.WikiText]) -> Optional[int]:
-    dbr = DbpResourceStore.instance()
+def get_first_wikilink_resource(text: str) -> Optional[str]:
     try:
-        parsed_text = wtp.parse(text) if type(text) == str else text
-        for wl in parsed_text.wikilinks:
-            res_idx = get_resource_idx_for_wikilink(wl)
-            if not dbr.has_resource_with_idx(res_idx):
+        for wl in wtp.parse(text).wikilinks:
+            res = get_resource_name_for_wikilink(wl)
+            if res is None:
                 continue
-            res = dbr.get_resource_by_idx(res_idx)
-            if not isinstance(res, DbpEntity):
-                continue
-            return res_idx
+            return res
         return None
     except (AttributeError, IndexError):
         return None
 
 
-def get_resource_idx_for_wikilink(wikilink: wtp.WikiLink) -> Optional[int]:
-    if not wikilink.target:
+def get_label_for_wikilink(wikilink: wtp.WikiLink) -> Optional[str]:
+    text = wikilink.text or wikilink.target
+    if not text:
         return None
+    text = nlp_util.remove_bracket_content(text.strip(), bracket_type='<')
+    if wikilink.target.startswith((Namespace.PREFIX_FILE.value, Namespace.PREFIX_IMAGE.value)):
+        return None
+    if '|' in text:  # deal with invalid markup in wikilinks
+        text = text[text.rindex('|') + 1:].strip()
+    return text
+
+
+def get_resource_name_for_wikilink(wikilink: wtp.WikiLink) -> Optional[str]:
+    return label2name(str_util.capitalize(_remove_language_tag(wikilink.target.strip()))) if wikilink.target else None
+
+
+def get_entity_idx_for_resource_name(res_name: str) -> Optional[int]:
     dbr = DbpResourceStore.instance()
-    res_name = label2name(str_util.capitalize(_remove_language_tag(wikilink.target.strip())))
     if dbr.has_resource_with_name(res_name):
         res = dbr.get_resource_by_name(res_name)
         if not res.is_meta:
@@ -48,7 +56,7 @@ def get_resource_idx_for_wikilink(wikilink: wtp.WikiLink) -> Optional[int]:
         redirected_res = dbr.resolve_spelling_redirect(res)
         if not redirected_res.is_meta:
             return redirected_res.idx
-    return -1 if is_entity_name(res_name) else None
+    return None
 
 
 def _remove_language_tag(link_target: str) -> str:

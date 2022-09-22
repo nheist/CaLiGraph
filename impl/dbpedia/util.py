@@ -48,4 +48,4 @@ def is_category_iri(iri: str) -> bool:
 def is_entity_name(name: str) -> bool:
     invalid_prefixes = (Namespace.PREFIX_LIST.value, Namespace.PREFIX_FILE.value, Namespace.PREFIX_IMAGE.value,
                         Namespace.PREFIX_CATEGORY.value, Namespace.PREFIX_TEMPLATE.value)
-    return not name.startswith(invalid_prefixes)
+    return name and not name.startswith(invalid_prefixes)

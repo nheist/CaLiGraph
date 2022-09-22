@@ -6,7 +6,8 @@ from .nif_parser import extract_wiki_corpus_resources
 from .xml_parser import _parse_raw_markup_from_xml
 from .page_parser import _parse_pages, WikiPage, WikiSubjectEntity
 from .category_parser import _extract_parent_categories_from_markup
-from impl.dbpedia.resource import DbpResourceStore, DbpResource, DbpFile, DbpListpage
+from impl.dbpedia.resource import DbpListpage
+import impl.dbpedia.util as dbp_util
 from impl.util.rdf import Namespace
 from impl.util.nlp import EntityTypeLabel
 from impl.util.transformer import EntityIndex
@@ -18,8 +19,7 @@ class WikiPageStore:
         self.pages = {p.idx: p for p in self._init_page_cache()}
 
     def _init_page_cache(self) -> List[WikiPage]:
-        initializer = lambda: _parse_pages(_get_raw_pages_from_xml())
-        return utils.load_or_create_cache('wikipedia_parsed_pages', initializer)
+        return utils.load_or_create_cache('wikipedia_parsed_pages', lambda: _parse_pages(_get_raw_pages_from_xml()))
 
     def get_page(self, page_idx: int) -> WikiPage:
         return self.pages[page_idx]
@@ -73,10 +73,8 @@ def _get_raw_categories_and_templates_from_xml() -> Tuple[Dict[str, str], Dict[s
     return categories, templates
 
 
-def _get_raw_pages_from_xml() -> Dict[DbpResource, str]:
-    dbr = DbpResourceStore.instance()
-    pages = {dbr.get_resource_by_iri(iri): markup for iri, markup in _get_raw_markup_from_xml().items() if dbr.has_resource_with_iri(iri)}
-    return {res: page_content for res, page_content in pages.items() if not res.is_meta and not isinstance(res, DbpFile)}
+def _get_raw_pages_from_xml() -> Dict[str, str]:
+    return {dbp_util.resource_iri2name(iri): markup for iri, markup in _get_raw_markup_from_xml().items()}
 
 
 def _get_raw_markup_from_xml() -> Dict[str, str]:

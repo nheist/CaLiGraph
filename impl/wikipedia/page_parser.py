@@ -3,21 +3,18 @@
 from typing import Tuple, Optional, Dict, Set, List, Iterable
 from collections import defaultdict
 import re
-import math
 import signal
 import traceback
-from itertools import islice
 from tqdm import tqdm
 import multiprocessing as mp
 import wikitextparser as wtp
 from wikitextparser import WikiText
 import utils
-import impl.util.nlp as nlp_util
 from impl.util.nlp import EntityTypeLabel
-from impl.util.rdf import Namespace
 from impl.util.transformer import EntityIndex
 from impl.util.spacy import listing_parser, get_tokens_and_whitespaces_from_text
-from impl.dbpedia.resource import DbpResource, DbpResourceStore
+from impl.dbpedia.resource import DbpResource, DbpFile, DbpResourceStore
+from impl.dbpedia.util import is_entity_name
 from . import wikimarkup_parser as wmp
 
 
@@ -29,8 +26,9 @@ class WikiSubjectEntity:
 
 
 class WikiMention:
-    def __init__(self, entity_idx: int, label: str, start: int, end: int):
-        self.entity_idx = entity_idx
+    def __init__(self, name: Optional[str], label: str, start: int, end: int):
+        self.name = name
+        self.entity_idx = None  # set after parsing
         self.label = label
         self.start = start
         self.end = end
@@ -74,8 +72,9 @@ class WikiSection:
         raw_title = section_data.title.strip() if section_data.title and section_data.title.strip() else 'Main'
         self.title = wmp.wikitext_to_plaintext(raw_title)
         self.tokens, self.whitespaces = get_tokens_and_whitespaces_from_text(self.title)
-        self.entity_idx = wmp.get_first_wikilink_entity(raw_title)
         self.level = section_data.level
+        self.resource_name = wmp.get_first_wikilink_resource(raw_title)
+        self.entity_idx = None  # set after parsing
 
     def is_top_section(self) -> bool:
         return self.level <= 2
@@ -95,6 +94,9 @@ class WikiListing:
         self.section = section
         self.items = {item.idx: item for item in items}
         self.page_idx = None
+
+    def get_sections(self) -> Set[WikiSection]:
+        return {self.topsection, self.section}
 
     @classmethod
     def get_type(cls) -> str:
@@ -132,15 +134,17 @@ class WikiTable(WikiListing):
 
 
 class WikiPage:
-    def __init__(self, idx: int, listings: List[WikiListing]):
-        self.idx = idx
+    def __init__(self, name: str, listings: List[WikiListing]):
+        self.name = name
+        self.idx = None  # set after parsing
         self.listings = {listing.idx: listing for listing in listings}
-        for listing in listings:
-            listing.page_idx = self.idx
 
     @property
     def resource(self) -> DbpResource:
         return DbpResourceStore.instance().get_resource_by_idx(self.idx)
+
+    def get_sections(self) -> Set[WikiSection]:
+        return {section for listing in self.get_listings() for section in listing.get_sections()}
 
     def get_listings(self) -> Iterable[WikiListing]:
         return self.listings.values()
@@ -156,32 +160,41 @@ LISTING_INDICATORS = ('*', '#', '{|')
 VALID_ENUM_PATTERNS = (r'\#', r'\*')
 
 
-def _parse_pages(pages_markup: Dict[DbpResource, str]) -> List[WikiPage]:
+def _parse_pages(pages_markup: Dict[str, str]) -> List[WikiPage]:
     # prepare and filter markup
     markup_iterator = tqdm(pages_markup.items(), total=len(pages_markup), desc='wikipedia/page_parser: Preparing pages')
     with mp.Pool(processes=utils.get_config('max_cpus')) as pool:
         pages_markup = {res: markup for res, markup in pool.imap_unordered(_prepare_page_markup, markup_iterator, chunksize=5000) if res and markup}
-    # warm up caches before going into multiprocess-parsing
-    dbr = DbpResourceStore.instance()
-    res = dbr.get_resource_by_idx(0)
-    dbr.get_label(res)
-    dbr.resolve_redirect(res)
-    # process markup in 10 batches
+    # process markup
     wikipedia_pages = []
-    pages = iter(pages_markup)
-    pages_size = len(pages_markup)
-    batch_size = math.ceil(pages_size / 10)
-    for i in range(0, pages_size, batch_size):
-        with mp.Pool(processes=utils.get_config('max_cpus')) as pool:
-            markup_iterator = tqdm(((p, pages_markup[p]) for p in islice(pages, batch_size)), total=batch_size, desc=f'wikipedia/page_parser: Parsing page batch {i}')
-            for wp, res in pool.imap_unordered(_parse_page_with_timeout, markup_iterator, chunksize=1000):
-                if wp is not None and wp.get_listings():
-                    wikipedia_pages.append(wp)
-                pages_markup[res] = ''  # discard markup after parsing to free memory
+    with mp.Pool(processes=utils.get_config('max_cpus')) as pool:
+        markup_iterator = tqdm(pages_markup.items(), total=len(pages_markup), desc=f'wikipedia/page_parser: Parsing pages')
+        for res, wp in pool.imap_unordered(_parse_page_with_timeout, markup_iterator, chunksize=5000):
+            if wp is not None and wp.get_listings():
+                wikipedia_pages.append(wp)
+            pages_markup[res] = ''  # discard markup after parsing to free memory
+    # finalize pages
+    for page in wikipedia_pages:
+        page.idx = wmp.get_entity_idx_for_resource_name(page.name)
+        for listing in page.get_listings():
+            listing.page_idx = page.idx
+    wikipedia_pages = [p for p in wikipedia_pages if not isinstance(p.resource, DbpFile) and not p.resource.is_meta]
+    # finalize sections
+    sections = {s for page in wikipedia_pages for s in page.get_sections()}
+    for section in sections:
+        section.entity_idx = wmp.get_entity_idx_for_resource_name(section.resource_name)
+    # finalize mentions
+    for page in wikipedia_pages:
+        for listing in page.get_listings():
+            for item in listing.get_items():
+                if isinstance(item, WikiEnumEntry):
+                    item.mentions = _init_mention_entities(item.mentions)
+                elif isinstance(item, WikiTableRow):
+                    item.mentions = [_init_mention_entities(cell_mentions) for cell_mentions in item.mentions]
     return wikipedia_pages
 
 
-def _prepare_page_markup(resource_and_markup: Tuple[DbpResource, str]) -> Tuple[Optional[DbpResource], str]:
+def _prepare_page_markup(resource_and_markup: Tuple[str, str]) -> Tuple[Optional[str], str]:
     resource, page_markup = resource_and_markup
     if not any(indicator in page_markup for indicator in LISTING_INDICATORS):
         return None, page_markup  # early return if page contains no listings at all
@@ -206,7 +219,7 @@ def _prepare_page_markup(resource_and_markup: Tuple[DbpResource, str]) -> Tuple[
     except Exception as e:
         if type(e) == KeyboardInterrupt:
             raise e
-        utils.get_logger().error(f'Failed to prepare page {resource.name}: {traceback.format_exc()}')
+        utils.get_logger().error(f'Failed to prepare page {resource}: {traceback.format_exc()}')
         return None, page_markup
     return resource, cleaned_wiki_text.string
 
@@ -242,38 +255,37 @@ def _remove_enums_within_tables(wiki_text: WikiText) -> WikiText:
     return wtp.parse(wiki_text.string) if something_changed else wiki_text
 
 
-def _parse_page_with_timeout(resource_and_markup: Tuple[DbpResource, str]) -> Tuple[Optional[WikiPage], DbpResource]:
+def _parse_page_with_timeout(resource_and_markup: Tuple[str, str]) -> Tuple[str, Optional[WikiPage]]:
     """Return the parsed wikipedia page (with empty content, if parsing has timed out)"""
     signal.signal(signal.SIGALRM, _timeout_handler)
-    signal.alarm(5 * 60)  # timeout of 5 minutes per page
+    signal.alarm(60)  # timeout of one minute per page
 
-    resource = resource_and_markup[0]
+    resource, page_markup = resource_and_markup
     try:
-        wp = _parse_page(resource_and_markup)
+        wp = _parse_page(resource, page_markup)
         signal.alarm(0)  # reset alarm as parsing was successful
-        return wp, resource
+        return resource, wp
     except Exception as e:
         if type(e) == KeyboardInterrupt:
             raise e
-        utils.get_logger().error(f'Failed to parse page {resource.name}: {traceback.format_exc()}')
-        return None, resource
+        utils.get_logger().error(f'Failed to parse page {resource}: {traceback.format_exc()}')
+        return resource, None
 
 
-def _parse_page(resource_and_markup: Tuple[DbpResource, str]) -> Optional[WikiPage]:
-    resource, page_markup = resource_and_markup
+def _parse_page(resource: str, page_markup: str) -> Optional[WikiPage]:
     wiki_text = wtp.parse(page_markup)
-    mention_entity_mapping = _create_mention_entity_mapping(wiki_text, resource)
-    return WikiPage(resource.idx, _extract_listings(wiki_text, mention_entity_mapping))
+    mention_resource_mapping = _create_mention_resource_mapping(wiki_text, resource)
+    return WikiPage(resource, _extract_listings(wiki_text, mention_resource_mapping))
 
 
-def _create_mention_entity_mapping(wiki_text: WikiText, resource: DbpResource) -> dict:
-    mention_to_entity = {wl.text or wl.target: wmp.get_resource_idx_for_wikilink(wl) for wl in wiki_text.wikilinks}
-    mention_to_entity[resource.get_label()] = resource.idx  # consider mentions of page resource itself as well
-    mention_to_entity = {mention: ent_idx for mention, ent_idx in mention_to_entity.items() if ent_idx is not None}
-    return mention_to_entity
+def _create_mention_resource_mapping(wiki_text: WikiText, resource: str) -> dict:
+    mention_to_resource = {wmp.get_label_for_wikilink(wl): wmp.get_resource_name_for_wikilink(wl) for wl in wiki_text.wikilinks}
+    mention_to_resource[resource] = resource  # consider mentions of page resource itself as well
+    mention_to_resource = {mention: res for mention, res in mention_to_resource.items() if mention and res}
+    return mention_to_resource
 
 
-def _extract_listings(wiki_text: WikiText, mention_entity_mapping: dict) -> list:
+def _extract_listings(wiki_text: WikiText, mention_resource_mapping: dict) -> list:
     listings = []
     listing_idx = 0
     topsection = None
@@ -283,13 +295,13 @@ def _extract_listings(wiki_text: WikiText, mention_entity_mapping: dict) -> list
         if topsection.is_meta_section():
             continue  # discard meta sections
         for enum_data in section_data.get_lists(VALID_ENUM_PATTERNS):
-            enum = _extract_enum(listing_idx, topsection, section, enum_data, mention_entity_mapping)
+            enum = _extract_enum(listing_idx, topsection, section, enum_data, mention_resource_mapping)
             if enum is None:
                 continue
             listings.append(enum)
             listing_idx += 1
         for table_data in section_data.get_tables():
-            table = _extract_table(listing_idx, topsection, section, table_data, mention_entity_mapping)
+            table = _extract_table(listing_idx, topsection, section, table_data, mention_resource_mapping)
             if table is None:
                 continue
             listings.append(table)
@@ -297,28 +309,28 @@ def _extract_listings(wiki_text: WikiText, mention_entity_mapping: dict) -> list
     return listings
 
 
-def _extract_enum(enum_idx: int, topsection: WikiSection, section: WikiSection, wiki_list: wtp.WikiList, mention_entity_mapping: dict) -> Optional[WikiEnum]:
-    entries = _extract_enum_entries(wiki_list, mention_entity_mapping)
+def _extract_enum(enum_idx: int, topsection: WikiSection, section: WikiSection, wiki_list: wtp.WikiList, mention_resource_mapping: dict) -> Optional[WikiEnum]:
+    entries = _extract_enum_entries(wiki_list, mention_resource_mapping)
     if len(entries) < 3:
         return None
     return WikiEnum(enum_idx, topsection, section, entries)
 
 
-def _extract_enum_entries(wiki_list: wtp.WikiList, mention_entity_mapping: dict, item_idx: int = 0) -> List[WikiEnumEntry]:
+def _extract_enum_entries(wiki_list: wtp.WikiList, mention_resource_mapping: dict, item_idx: int = 0) -> List[WikiEnumEntry]:
     entries = []
     for list_item_idx, item_text in enumerate(wiki_list.items):
-        tokens, whitespaces, mentions = _tokenize_wikitext(item_text, mention_entity_mapping)
+        tokens, whitespaces, mentions = _tokenize_wikitext(item_text, mention_resource_mapping)
         sublists = wiki_list.sublists(list_item_idx)
         entries.append(WikiEnumEntry(item_idx, tokens, whitespaces, mentions, wiki_list.level, len(sublists) == 0))
         item_idx += 1
         for sl in sublists:
-            subentries = _extract_enum_entries(sl, mention_entity_mapping, item_idx=item_idx)
+            subentries = _extract_enum_entries(sl, mention_resource_mapping, item_idx=item_idx)
             entries.extend(subentries)
             item_idx += len(subentries)
     return entries
 
 
-def _extract_table(table_idx: int, topsection: WikiSection, section: WikiSection, table_data: wtp.Table, mention_entity_mapping: dict) -> Optional[WikiTable]:
+def _extract_table(table_idx: int, topsection: WikiSection, section: WikiSection, table_data: wtp.Table, mention_resource_mapping: dict) -> Optional[WikiTable]:
     header = None
     rows = []
     try:
@@ -334,7 +346,7 @@ def _extract_table(table_idx: int, topsection: WikiSection, section: WikiSection
             return None  # ignore tables with only one or more than 100 columns (likely irrelevant or markup error)
         row_tokens, row_whitespaces, row_mentions = [], [], []
         for cell in cells:
-            cell_tokens, cell_whitespaces, cell_mentions = _tokenize_wikitext(str(cell), mention_entity_mapping)
+            cell_tokens, cell_whitespaces, cell_mentions = _tokenize_wikitext(str(cell), mention_resource_mapping)
             row_tokens.append(cell_tokens)
             row_whitespaces.append(cell_whitespaces)
             row_mentions.append(cell_mentions)
@@ -359,7 +371,7 @@ def _is_header_row(cells, row_idx: int) -> bool:
         return False  # fallback if wtp can't parse the table correctly
 
 
-def _tokenize_wikitext(wiki_text: str, mention_entity_mapping: dict) -> Tuple[List[str], List[str], List[WikiMention]]:
+def _tokenize_wikitext(wiki_text: str, mention_resource_mapping: dict) -> Tuple[List[str], List[str], List[WikiMention]]:
     # preprocess markup text
     parsed_text = wtp.parse(wiki_text)
     parsed_text = _remove_file_wikilinks(parsed_text)
@@ -371,13 +383,7 @@ def _tokenize_wikitext(wiki_text: str, mention_entity_mapping: dict) -> Tuple[Li
     mentions = []
     current_index = 0
     for w in parsed_text.wikilinks:
-        # retrieve entity text and remove html tags
-        text = (w.text or w.target).strip()
-        text = nlp_util.remove_bracket_content(text, bracket_type='<')
-        if w.target.startswith((Namespace.PREFIX_FILE.value, Namespace.PREFIX_IMAGE.value)):
-            continue  # ignore files and images
-        if '|' in text:  # deal with invalid markup in wikilinks
-            text = text[text.rindex('|')+1:].strip()
+        text = wmp.get_label_for_wikilink(w)
         if not text:
             continue  # skip entity with empty text
 
@@ -391,9 +397,9 @@ def _tokenize_wikitext(wiki_text: str, mention_entity_mapping: dict) -> Tuple[Li
                 if tokens[mention_start_idx:mention_end_idx] != mention_tokens:
                     mention_start_idx += 1  # increment index to avoid running into the same mention again
                     continue  # no exact match of position and mention text; try next potential starting position
-                entity_idx = wmp.get_resource_idx_for_wikilink(w)
-                if entity_idx is not None:
-                    mentions.append(WikiMention(entity_idx, text, mention_start_idx, mention_end_idx))
+                res = wmp.get_resource_name_for_wikilink(w)
+                if res is not None:
+                    mentions.append(WikiMention(res, text, mention_start_idx, mention_end_idx))
                 current_index = mention_end_idx
                 break
             except ValueError:
@@ -402,25 +408,25 @@ def _tokenize_wikitext(wiki_text: str, mention_entity_mapping: dict) -> Tuple[Li
     tokens_with_mentions = set()
     for mention in mentions:
         tokens_with_mentions.update(set(range(mention.start, mention.end)))
-    expanded_mentions = _find_expanded_mentions(tokens, mention_entity_mapping, tokens_with_mentions)
+    expanded_mentions = _find_expanded_mentions(tokens, mention_resource_mapping, tokens_with_mentions)
     mentions.extend(expanded_mentions)
     # add additional mentions from spacy listing parser (that are not overlapping with existing mentions)
     for ent in doc.ents:
         token_indices = set(range(ent.start, ent.end))
         if not token_indices.intersection(tokens_with_mentions):
-            mentions.append(WikiMention(EntityIndex.NEW_ENTITY.value, ent.text, ent.start, ent.end))
+            mentions.append(WikiMention(None, ent.text, ent.start, ent.end))
     mentions = list(sorted(mentions, key=lambda m: m.start))
     return tokens, whitespaces, mentions
 
 
-def _find_expanded_mentions(tokens: List[str], mention_entity_mapping: dict, tokens_with_mentions: Set[int]) -> List[WikiMention]:
+def _find_expanded_mentions(tokens: List[str], mention_resource_mapping: dict, tokens_with_mentions: Set[int]) -> List[WikiMention]:
     # tokenize every mention and index by their first word for easy retrieval
     mention_token_entities = defaultdict(list)
-    for mention, ent_idx in mention_entity_mapping.items():
+    for mention, res in mention_resource_mapping.items():
         mention_tokens, _ = get_tokens_and_whitespaces_from_text(mention)
         if not mention_tokens[0]:
             continue
-        mention_token_entities[mention_tokens[0]].append((mention_tokens, mention, ent_idx))
+        mention_token_entities[mention_tokens[0]].append((mention_tokens, mention, res))
     # sort the lists by descending length to always find the longest mention
     mention_token_entities = {idx: sorted(mte, key=lambda x: len(x[0]), reverse=True) for idx, mte in mention_token_entities.items()}
     # go over every token and check whether it is the start of a undetected mention
@@ -428,10 +434,10 @@ def _find_expanded_mentions(tokens: List[str], mention_entity_mapping: dict, tok
     for idx, token in enumerate(tokens):
         if idx in tokens_with_mentions or token not in mention_token_entities:
             continue
-        for mention_tokens, mention, ent_idx in mention_token_entities[token]:
+        for mention_tokens, mention, res in mention_token_entities[token]:
             mention_length = len(mention_tokens)
             if tokens[idx:idx+mention_length] == mention_tokens:
-                expanded_mentions.append(WikiMention(ent_idx, mention, idx, idx+mention_length))
+                expanded_mentions.append(WikiMention(res, mention, idx, idx+mention_length))
                 tokens_with_mentions.update(set(range(idx, idx+mention_length)))
                 break
     return expanded_mentions
@@ -468,6 +474,15 @@ def _convert_sortname_templates(parsed_text: wtp.WikiText) -> wtp.WikiText:
                 result = f'[[{text}]]'
         parsed_text[slice(*t.span)] = result
     return parsed_text
+
+
+def _init_mention_entities(mentions: List[WikiMention]) -> List[WikiMention]:
+    for mention in mentions:
+        ent_idx = wmp.get_entity_idx_for_resource_name(mention.name)
+        if ent_idx is None:
+            ent_idx = -1 if is_entity_name(mention.name) else None
+        mention.entity_idx = ent_idx
+    return [m for m in mentions if m.entity_idx is not None]
 
 
 # define functionality for parsing timeouts
