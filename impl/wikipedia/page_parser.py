@@ -174,23 +174,22 @@ def _parse_pages(pages_markup: Dict[str, str]) -> List[WikiPage]:
                 wikipedia_pages.append(wp)
             pages_markup[res] = ''  # discard markup after parsing to free memory
     # finalize pages
-    for page in wikipedia_pages:
+    for page in tqdm(wikipedia_pages, desc='wikipedia/page_parser: Finalizing pages'):
+        # set page index
         page.idx = wmp.get_entity_idx_for_resource_name(page.name)
         for listing in page.get_listings():
             listing.page_idx = page.idx
-    wikipedia_pages = [p for p in wikipedia_pages if not isinstance(p.resource, DbpFile) and not p.resource.is_meta]
-    # finalize sections
-    sections = {s for page in wikipedia_pages for s in page.get_sections()}
-    for section in sections:
-        section.entity_idx = wmp.get_entity_idx_for_resource_name(section.resource_name)
-    # finalize mentions
-    for page in wikipedia_pages:
+        # update section entities
+        for section in page.get_sections():
+            section.entity_idx = wmp.get_entity_idx_for_resource_name(section.resource_name)
+        # update mention entities and discard invalid mentions
         for listing in page.get_listings():
             for item in listing.get_items():
                 if isinstance(item, WikiEnumEntry):
                     item.mentions = _init_mention_entities(item.mentions)
                 elif isinstance(item, WikiTableRow):
                     item.mentions = [_init_mention_entities(cell_mentions) for cell_mentions in item.mentions]
+    wikipedia_pages = [p for p in wikipedia_pages if not isinstance(p.resource, DbpFile) and not p.resource.is_meta]
     return wikipedia_pages
 
 
