@@ -4,8 +4,8 @@ from impl.caligraph.graph import CaLiGraph
 from impl.caligraph.ontology import ClgOntologyStore
 from impl.caligraph.entity import ClgEntityStore
 import impl.caligraph.serialize as clg_serialize
-from impl import subject_entity
-from impl import listing
+from impl.wikipedia import WikiPageStore
+from impl import subject_entity, listing
 from impl.caligraph import cali2ax
 
 
@@ -13,6 +13,8 @@ def extract_and_serialize():
     """Extract and serialize CaLiGraph."""
     # initialize ontology
     ClgOntologyStore.instance()
+    # initialize parsed Wikipedia page corpus
+    WikiPageStore.instance()
     # initalize entities from DBpedia
     clge = ClgEntityStore.instance()
     # run subject entity extraction
