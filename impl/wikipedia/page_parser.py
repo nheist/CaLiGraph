@@ -12,10 +12,9 @@ from wikitextparser import WikiText
 import utils
 import impl.util.nlp as nlp_util
 from impl.util.nlp import EntityTypeLabel
-from impl.util.rdf import Namespace, label2name
+from impl.util.rdf import Namespace
 from impl.util.transformer import EntityIndex
 from impl.util.spacy import listing_parser, get_tokens_and_whitespaces_from_text
-from impl.dbpedia.util import is_entity_name
 from impl.dbpedia.resource import DbpResource, DbpResourceStore
 from . import wikimarkup_parser as wmp
 
@@ -262,12 +261,10 @@ def _parse_page(resource_and_markup: Tuple[DbpResource, str]) -> Optional[WikiPa
 
 
 def _create_mention_entity_mapping(wiki_text: WikiText, resource: DbpResource) -> dict:
-    mention_to_entname = {wl.text or wl.target: label2name(wl.target) for wl in wiki_text.wikilinks}
-    mention_to_entname[resource.get_label()] = resource.name  # consider mentions of page resource itself as well
-    # map resource names to resources
-    dbr = DbpResourceStore.instance()
-    mention_entity_mapping = {mention: dbr.get_resource_by_name(ent_name).idx for mention, ent_name in mention_to_entname.items() if dbr.has_resource_with_name(ent_name)}
-    return mention_entity_mapping
+    mention_to_entity = {wl.text or wl.target: wmp.get_resource_idx_for_wikilink(wl) for wl in wiki_text.wikilinks}
+    mention_to_entity[resource.get_label()] = resource.idx  # consider mentions of page resource itself as well
+    mention_to_entity = {mention: ent_idx for mention, ent_idx in mention_to_entity.items() if ent_idx is not None}
+    return mention_to_entity
 
 
 def _extract_listings(wiki_text: WikiText, mention_entity_mapping: dict) -> list:
