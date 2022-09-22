@@ -224,8 +224,10 @@ def _prepare_page_markup(resource_and_markup: Tuple[str, str]) -> Tuple[Optional
 
 
 def _is_page_useful(wiki_text: WikiText) -> bool:
-    # ignore pages without any lists and pages with very small lists (e.g. redirect pages have a list with length of 1)
-    return len(wiki_text.get_lists(VALID_ENUM_PATTERNS)) + len(wiki_text.get_tables()) > 0
+    # ignore pages without any lists and pages with very small lists (e.g. redirect pages have a list of length 1)
+    valid_list_count = len([list for list in wiki_text.get_lists(VALID_ENUM_PATTERNS) if len(list.items) >= 3])
+    valid_table_count = len([table for table in wiki_text.get_tables() if len(table.data()) >= 3])
+    return valid_list_count + valid_table_count > 0
 
 
 def _convert_special_enums(wiki_text: WikiText) -> WikiText:
