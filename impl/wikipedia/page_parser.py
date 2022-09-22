@@ -3,8 +3,10 @@
 from typing import Tuple, Optional, Dict, Set, List, Iterable
 from collections import defaultdict
 import re
+import math
 import signal
 import traceback
+from itertools import islice
 from tqdm import tqdm
 import multiprocessing as mp
 import wikitextparser as wtp
@@ -164,14 +166,18 @@ def _parse_pages(pages_markup: Dict[DbpResource, str]) -> List[WikiPage]:
     res = dbr.get_resource_by_idx(0)
     dbr.get_label(res)
     dbr.resolve_redirect(res)
-    # parse markup
+    # process markup in 10 batches
     wikipedia_pages = []
-    with mp.Pool(processes=utils.get_config('max_cpus')) as pool:
-        filtered_markup_iterator = tqdm(pages_markup.items(), total=len(pages_markup), desc='wikipedia/page_parser: Parsing pages')
-        for wp, res in pool.imap_unordered(_parse_page_with_timeout, filtered_markup_iterator, chunksize=2000):
-            if wp is not None and wp.get_listings():
-                wikipedia_pages.append(wp)
-            pages_markup[res] = ''  # discard markup after parsing to free memory
+    pages = iter(pages_markup)
+    pages_size = len(pages_markup)
+    batch_size = math.ceil(pages_size / 10)
+    for i in range(0, pages_size, batch_size):
+        with mp.Pool(processes=utils.get_config('max_cpus')) as pool:
+            markup_iterator = tqdm(((p, pages_markup[p]) for p in islice(pages, batch_size)), total=batch_size, desc=f'wikipedia/page_parser: Parsing page batch {i}')
+            for wp, res in pool.imap_unordered(_parse_page_with_timeout, markup_iterator, chunksize=1000):
+                if wp is not None and wp.get_listings():
+                    wikipedia_pages.append(wp)
+                pages_markup[res] = ''  # discard markup after parsing to free memory
     return wikipedia_pages
 
 

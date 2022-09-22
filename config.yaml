@@ -1,5 +1,5 @@
 # -- SYSTEM CONFIGURATION --
-max_cpus: 10
+max_cpus: 20
 
 # -- CALIGRAPH CONFIGURATION --
 caligraph:
