@@ -47,7 +47,7 @@ def get_resource_name_for_wikilink(wikilink: wtp.WikiLink) -> Optional[str]:
     return label2name(str_util.capitalize(_remove_language_tag(wikilink.target.strip()))) if wikilink.target else None
 
 
-def get_entity_idx_for_resource_name(res_name: str) -> Optional[int]:
+def get_resource_idx_for_resource_name(res_name: str) -> Optional[int]:
     dbr = DbpResourceStore.instance()
     if dbr.has_resource_with_name(res_name):
         res = dbr.get_resource_by_name(res_name)

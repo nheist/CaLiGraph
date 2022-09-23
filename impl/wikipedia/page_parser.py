@@ -174,14 +174,22 @@ def _parse_pages(pages_markup: Dict[str, str]) -> List[WikiPage]:
                 wikipedia_pages.append(wp)
             pages_markup[res] = ''  # discard markup after parsing to free memory
     # finalize pages
+    cleaned_wikipedia_pages = []
+    dbr = DbpResourceStore.instance()
     for page in tqdm(wikipedia_pages, desc='wikipedia/page_parser: Finalizing pages'):
+        # check page validity
+        if not dbr.has_resource_with_name(page.name):
+            continue
+        res = dbr.get_resource_by_name(page.name)
+        if isinstance(res, DbpFile) or res.is_meta:
+            continue
         # set page index
-        page.idx = wmp.get_entity_idx_for_resource_name(page.name)
+        page.idx = res.idx
         for listing in page.get_listings():
             listing.page_idx = page.idx
         # update section entities
         for section in page.get_sections():
-            section.entity_idx = wmp.get_entity_idx_for_resource_name(section.resource_name)
+            section.entity_idx = wmp.get_resource_idx_for_resource_name(section.resource_name)
         # update mention entities and discard invalid mentions
         for listing in page.get_listings():
             for item in listing.get_items():
@@ -189,8 +197,8 @@ def _parse_pages(pages_markup: Dict[str, str]) -> List[WikiPage]:
                     item.mentions = _init_mention_entities(item.mentions)
                 elif isinstance(item, WikiTableRow):
                     item.mentions = [_init_mention_entities(cell_mentions) for cell_mentions in item.mentions]
-    wikipedia_pages = [p for p in wikipedia_pages if not isinstance(p.resource, DbpFile) and not p.resource.is_meta]
-    return wikipedia_pages
+        cleaned_wikipedia_pages.append(page)
+    return cleaned_wikipedia_pages
 
 
 def _prepare_page_markup(resource_and_markup: Tuple[str, str]) -> Tuple[Optional[str], str]:
@@ -479,7 +487,7 @@ def _convert_sortname_templates(parsed_text: wtp.WikiText) -> wtp.WikiText:
 
 def _init_mention_entities(mentions: List[WikiMention]) -> List[WikiMention]:
     for mention in mentions:
-        ent_idx = wmp.get_entity_idx_for_resource_name(mention.name)
+        ent_idx = wmp.get_resource_idx_for_resource_name(mention.name)
         if ent_idx is None:
             ent_idx = -1 if is_entity_name(mention.name) else None
         mention.entity_idx = ent_idx
