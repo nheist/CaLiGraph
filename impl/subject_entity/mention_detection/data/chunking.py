@@ -60,7 +60,8 @@ def _create_negative_listing(listings: List[WikiListing]) -> WikiListing:
     # select listing context (i.e. pick a random listing)
     negative_listing = copy(random.choice(listings))
     # randomly assign items from arbitrary listings
-    num_items = random.choice(range(MIN_ITEMS_PER_CHUNK, MAX_ITEMS_PER_CHUNK + 1))
+    max_chunk_size = min(len(listings), MAX_ITEMS_PER_CHUNK + 1)
+    num_items = random.choice(range(MIN_ITEMS_PER_CHUNK, max_chunk_size))
     items = [random.choice(list(listing.get_items())) for listing in random.sample(listings, num_items)]
     negative_listing.items = {idx: item for idx, item in enumerate(items)}
     return negative_listing
