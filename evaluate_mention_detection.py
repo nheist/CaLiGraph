@@ -28,7 +28,7 @@ if __name__ == '__main__':
     import random
     import numpy as np
     import torch
-    SEED = 42
+    SEED = 310
     random.seed(SEED)
     np.random.seed(SEED)
     torch.manual_seed(SEED)
