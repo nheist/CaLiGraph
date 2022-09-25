@@ -5,14 +5,14 @@ NONE	58181	http://en.wikipedia.org/wiki/Ionuț_Gheorghe	Olympic results 2004	Oly
 PERSON	63695	http://en.wikipedia.org/wiki/Wilson_Staff	Sponsorship deals	European Tour	0	WikiEnum	Andreas Hartø
 PERSON	63695	http://en.wikipedia.org/wiki/Wilson_Staff	Sponsorship deals	PGA Tour	1	WikiEnum	Pádraig Harrington
 PERSON	63695	http://en.wikipedia.org/wiki/Wilson_Staff	Sponsorship deals	Former players	2	WikiEnum	Brad McIntosh
-OTHER	104921	http://en.wikipedia.org/wiki/1977_Summer_Universiade	Sports	Sports	0	WikiEnum	
+OTHER	104921	http://en.wikipedia.org/wiki/1977_Summer_Universiade	Sports	Sports	0	WikiEnum
 OTHER	124548	http://en.wikipedia.org/wiki/Conservation_and_restoration_of_herbaria	History	Types of specimens	0	WikiEnum	Pressed and dried : Vascular plant ( flowering plants , conifers , ferns ) specimens are pressed and dried plants that are mounted on herbarium sheets . Various techniques are used to attach the plants with the most common method of using archival adhesive with heavier portions of the plant supported additionally by linen thread or narrow strips of gum - backed linen tape or polyester film . Specimens are best pressed with moderate pressure , permitting as much air circulation as possible . This is commonly achieved by strapping sheets in a press made of heavy cardboard or plywood . If there are loose seeds or fruits , these are placed in a small fragment packet , which also is glued to the sheet . A label with collection information is glued on the bottom right corner .
 NONE	124548	http://en.wikipedia.org/wiki/Conservation_and_restoration_of_herbaria	Education, Research, and Training Opportunities	North America	1	WikiEnum	The University of New Mexico 's Museum of Southwest Biology hosts an Herbarium in which the director hosts undergraduate and graduate students interested in learning more about the flora of the state .
 NONE	124548	http://en.wikipedia.org/wiki/Conservation_and_restoration_of_herbaria	Education, Research, and Training Opportunities	Europe	2	WikiEnum	The Royal Botanic Gardens , Kew Herbarium hosts scientists from all around the world to complete botanical research . The Herbarium is open to academic visitors upon request and to the public during special events .
 OTHER	131794	http://en.wikipedia.org/wiki/C14H18N2O	Main	Main	0	WikiEnum	AL-37350A , a tryptamine derivative
 OTHER	134690	http://en.wikipedia.org/wiki/Faith	Stages of faith development	Stages of faith	0	WikiEnum	Intuitive - Projective : a stage of confusion and of high impressionability through stories and rituals ( pre - school period ) .
 NONE	134690	http://en.wikipedia.org/wiki/Faith	Religious views	The Church of Jesus Christ of Latter-day Saints	1	WikiEnum	"Lecture 1 explains what faith is ;"
-WORK_OF_ART	144533	http://en.wikipedia.org/wiki/Lyall_Smith	Selected articles by Smith	Selected articles by Smith	0	WikiEnum	My Greatest Diamond Thrill , By Lou Boudreau , As Told To Lyall_Smith : Long Homers Off Rigney Gave Shortstop Top Kick ( Lou Boudreau ) , The Sporting News , November 18 , 1943 , page 9
+WORK_OF_ART	144533	http://en.wikipedia.org/wiki/Lyall_Smith	Selected articles by Smith	Selected articles by Smith	0	WikiEnum	My Greatest Diamond Thrill , By Lou Boudreau , As Told To Lyall Smith : Long Homers Off Rigney Gave Shortstop Top Kick ( Lou Boudreau ) , The Sporting News , November 18 , 1943 , page 9
 WORK_OF_ART	163130	http://en.wikipedia.org/wiki/Blurt_(album)	Track Listing	Track Listing	0	WikiEnum	""" Dog Save My Sole "" 4:37"
 PERSON	163130	http://en.wikipedia.org/wiki/Blurt_(album)	Personnel	Personnel	1	WikiEnum	Ted Milton : Vocals , Saxophone
 WORK_OF_ART	188442	http://en.wikipedia.org/wiki/Alphorn	Music for alphorn	Music for alphorn	0	WikiEnum	Concerto Grosso No . 1 ( 2013 ) for four alphorns and orchestra by Georg Friedrich Haas
@@ -25,7 +25,7 @@ ORG	207619	http://en.wikipedia.org/wiki/Camaligan	Educational institutions	Eleme
 ORG	207619	http://en.wikipedia.org/wiki/Camaligan	Educational institutions	Preschools	4	WikiEnum	Hansel & Gretel Day Care Center
 PERSON	257614	http://en.wikipedia.org/wiki/Baron_Grey_of_Codnor	Baron Grey of Codnor (1397)	Medieval Barons Grey of Codnor (1299)	0	WikiEnum	Henry Grey , 1st Baron Grey of Codnor ( died 1308 )
 PERSON	257614	http://en.wikipedia.org/wiki/Baron_Grey_of_Codnor	Baron Grey of Codnor (1397)	Barons Grey of Codnor (1397)	1	WikiEnum	Richard Grey , 1st ( 4th ) Baron Grey of Codnor ( – 1418 )
-WORK_OF_ART	278392	http://en.wikipedia.org/wiki/It's_Only_Pain	Track listings	Track listings	0	WikiEnum	""" It's_Only_Pain "" ( Mike Batt )"
+WORK_OF_ART	278392	http://en.wikipedia.org/wiki/It's_Only_Pain	Track listings	Track listings	0	WikiEnum	""" It 's Only Pain "" ( Mike Batt )"
 NONE	280273	http://en.wikipedia.org/wiki/Shortest_common_supersequence_problem	Shortest common superstring	Shortest common superstring	0	WikiEnum	Let be empty .
 NONE	292229	http://en.wikipedia.org/wiki/Dead_man's_switch	Alternative names	Alternative names	0	WikiEnum	"Replacement of "" switch "" with "" control "" or name denoting a specific type of switch , e.g. , "" button "" , "" trigger "" , "" throttle "" , "" pedal "" , "" handle "" , "" grip "" , or "" brake """
 PRODUCT	320205	http://en.wikipedia.org/wiki/Porsche_991	First phase (2011–2016) (991)	Engines	0	WikiTable	Carrera at 7,400 rpm at 5,600 rpm
@@ -40,7 +40,7 @@ NONE	372810	http://en.wikipedia.org/wiki/East_Preston_&_Ferring_(electoral_divis
 NONE	379852	http://en.wikipedia.org/wiki/2016_AFC_Futsal_Championship	Qualification	Qualified teams	0	WikiTable	( 2001 , 2006 , 2010 )
 PERSON	379852	http://en.wikipedia.org/wiki/2016_AFC_Futsal_Championship	Match officials	Match officials	1	WikiEnum	Chris Colley
 NONE	379852	http://en.wikipedia.org/wiki/2016_AFC_Futsal_Championship	Group stage	Group stage	2	WikiEnum	"Greater number of points obtained in the group matches between the teams concerned ;"
-NONE	379852	http://en.wikipedia.org/wiki/2016_AFC_Futsal_Championship	Final ranking	Final ranking	3	WikiTable	
+NONE	379852	http://en.wikipedia.org/wiki/2016_AFC_Futsal_Championship	Final ranking	Final ranking	3	WikiTable
 NONE	379852	http://en.wikipedia.org/wiki/2016_AFC_Futsal_Championship	Final ranking	Qualified teams for FIFA Futsal World Cup	4	WikiTable	( 1992 , 1996 , 2000 , 2004 , 2008 , 2012 )
 GPE	379852	http://en.wikipedia.org/wiki/2016_AFC_Futsal_Championship	Broadcasting	Broadcasting	5	WikiTable	Asia - Pacific Fox Sports Asia
 ORG	382980	http://en.wikipedia.org/wiki/Engineer_Services_Regiment	Units	Regular Army	0	WikiEnum	1st Engineer Service Regiment
@@ -76,8 +76,6 @@ NONE	841942	http://en.wikipedia.org/wiki/Cloncurkney	Census	Census	0	WikiTable	1
 FAC	853409	http://en.wikipedia.org/wiki/Chambon-sur-Voueize	Sights	Sights	0	WikiEnum	The abbey church of St. Valerie , dating from the eleventh century .
 NONE	879231	http://en.wikipedia.org/wiki/Philippine_Accrediting_Association_of_Schools,_Colleges_and_Universities	Accredited Programs by PAASCU	Accredited Programs by PAASCU	0	WikiTable	1 Accountancy
 NONE	879231	http://en.wikipedia.org/wiki/Philippine_Accrediting_Association_of_Schools,_Colleges_and_Universities	Accredited Programs by PAASCU	Accredited Programs by PAASCU	1	WikiTable	9 Entrepreneurship
-NONE	904600	http://en.wikipedia.org/wiki/2000_US_Open_–_Men's_Doubles_Qualifying	Seeds	Seeds	0	WikiEnum	Daniel Melo / Alexandre Simoni ( First Round )
-NONE	904600	http://en.wikipedia.org/wiki/2000_US_Open_–_Men's_Doubles_Qualifying	Qualifiers	Qualifiers	1	WikiEnum	Lorenzo Manta / Laurence Tieleman
 WORK_OF_ART	914846	http://en.wikipedia.org/wiki/Kim_Jong-hak_Production	Works	Works	0	WikiTable	"1999 SBS TV rowspan=""41 """
 PERSON	914846	http://en.wikipedia.org/wiki/Kim_Jong-hak_Production	Managed people	Producers	1	WikiEnum	Lee Byung - hoon
 PERSON	914846	http://en.wikipedia.org/wiki/Kim_Jong-hak_Production	Managed people	Writers	2	WikiEnum	Song Ji - na
@@ -158,7 +156,6 @@ OTHER	1255682	http://en.wikipedia.org/wiki/1974_Queensland_state_election	Key da
 GPE	1255682	http://en.wikipedia.org/wiki/1974_Queensland_state_election	Seats changing hands	Seats changing hands	1	WikiTable	Albert Labor Bill D'Arcy 4.1 -14.2 10.1 Ivan Gibbs National
 GPE	1255682	http://en.wikipedia.org/wiki/1974_Queensland_state_election	Post-election pendulum	Post-election pendulum	2	WikiTable	Wynnum Bill Lamond NAT 0.1 %
 GPE	1255682	http://en.wikipedia.org/wiki/1974_Queensland_state_election	Post-election pendulum	Post-election pendulum	3	WikiTable	Bulimba Jack Houston ALP 1.7 %
-GPE	1287587	http://en.wikipedia.org/wiki/2017_Odlum_Brown_Vancouver_Open_–_Men's_Singles	Seeds	Seeds	0	WikiEnum	Dudi Sela ( Second round )
 WORK_OF_ART	1301106	http://en.wikipedia.org/wiki/R.wan	Discography	Albums	0	WikiEnum	2000 : Hawaï
 WORK_OF_ART	1301106	http://en.wikipedia.org/wiki/R.wan	Discography	Albums	1	WikiTable	2006 Radio Cortex
 WORK_OF_ART	1307627	http://en.wikipedia.org/wiki/Fountain_of_Youth_(album)	Track listing	Track listing	0	WikiEnum	""" Spice Route "" - 4:06"
@@ -216,14 +213,14 @@ NONE	2054472	http://en.wikipedia.org/wiki/Marie_Anne_de_Bourbon	Titles and style
 NONE	2067699	http://en.wikipedia.org/wiki/Acura_TSX	"Second generation (CU2; 2008)"	Safety	0	WikiTable	Small overlap frontal offset Marginal
 NONE	2067699	http://en.wikipedia.org/wiki/Acura_TSX	Awards and recognition	Awards and recognition	1	WikiEnum	2008 Wheels Car of the Year award winner .
 NONE	2067699	http://en.wikipedia.org/wiki/Acura_TSX	Sales	Sales	2	WikiTable	2003 18,932
-OTHER	2071561	http://en.wikipedia.org/wiki/Siebel_Systems	Key dates	Key dates	0	WikiEnum	1993 : Siebel_Systems , Inc. is founded .
+OTHER	2071561	http://en.wikipedia.org/wiki/Siebel_Systems	Key dates	Key dates	0	WikiEnum	1993 : Siebel Systems , Inc. is founded .
 WORK_OF_ART	2105422	http://en.wikipedia.org/wiki/Catherine_McLeod	Filmography	Filmography	0	WikiTable	1944 The Tiger Woman Temple Dancer Serial , [ Chs . 1 - 2 ] , Uncredited
 OTHER	2116570	http://en.wikipedia.org/wiki/Plus_sizing	Advantages	Advantages	0	WikiEnum	Larger tires improve handling and cornering , due to wider tread faces and stiffer sidewalls .
 OTHER	2116570	http://en.wikipedia.org/wiki/Plus_sizing	Disadvantages	Disadvantages	1	WikiEnum	Larger wheels typically cost more . Wider tires tend to be more expensive because they are less common , and there is less competition between brands .
-WORK_OF_ART	2141104	http://en.wikipedia.org/wiki/Henry_S._Dennison	Publications	Publications	0	WikiEnum	Henry_S._Dennison . E.W. Dennison : a memorial . Boston : Merrymount Press , 1909 .
-WORK_OF_ART	2141104	http://en.wikipedia.org/wiki/Henry_S._Dennison	Publications	Publications	1	WikiEnum	James T. Dennison . Henry_S._Dennison , 1877 - 1952 : New England industrialist who served America , No . 187 . Newcomen Society in North America , 1955 .
+WORK_OF_ART	2141104	http://en.wikipedia.org/wiki/Henry_S._Dennison	Publications	Publications	0	WikiEnum	Henry S. Dennison . E.W. Dennison : a memorial . Boston : Merrymount Press , 1909 .
+WORK_OF_ART	2141104	http://en.wikipedia.org/wiki/Henry_S._Dennison	Publications	Publications	1	WikiEnum	James T. Dennison . Henry S. Dennison , 1877 - 1952 : New England industrialist who served America , No . 187 . Newcomen Society in North America , 1955 .
 PERSON	2184280	http://en.wikipedia.org/wiki/Walking_Tall_(2004_film)	Cast	Cast	0	WikiEnum	"Dwayne Johnson as Christopher "" Chris "" Vaughn , Jr."
-SPECIES	2185445	http://en.wikipedia.org/wiki/Caprona_alida	Subspecies	Subspecies	0	WikiEnum	Caprona_alida lanka Evans , 1932 ( Sri Lanka )
+SPECIES	2185445	http://en.wikipedia.org/wiki/Caprona_alida	Subspecies	Subspecies	0	WikiEnum	Caprona alida lanka Evans , 1932 ( Sri Lanka )
 GPE	2211888	http://en.wikipedia.org/wiki/Project_Blowed	Expansion	Expansion	0	WikiEnum	Original location : Los Angeles , California ( hosted by NGA FSH , Rhymin ' Riddlore ? , Chu Chu and J - Smoov )
 PERSON	2211888	http://en.wikipedia.org/wiki/Project_Blowed	Notable artists	Notable artists	1	WikiEnum	Abstract Rude
 SPECIES	2228672	http://en.wikipedia.org/wiki/Egglestonichthys	Species	Species	0	WikiEnum	Egglestonichthys bombylios Larson & Hoese , 1997 ( Egglestone 's bumblebee goby )
@@ -233,7 +230,7 @@ WORK_OF_ART	2241873	http://en.wikipedia.org/wiki/Kim_Hyun-sook	Filmography	Film	
 WORK_OF_ART	2241873	http://en.wikipedia.org/wiki/Kim_Hyun-sook	Filmography	Variety show	2	WikiTable	2004 Bang Bang KBS2
 WORK_OF_ART	2241873	http://en.wikipedia.org/wiki/Kim_Hyun-sook	Theater	Theater	3	WikiTable	The Can
 WORK_OF_ART	2241873	http://en.wikipedia.org/wiki/Kim_Hyun-sook	Awards and nominations	Awards and nominations	4	WikiTable	2003 Kyungsung University Film Festival Best Actress An Old Proposal of Marriage
-FAC	2254862	http://en.wikipedia.org/wiki/Listed_buildings_in_Hunsonby	Buildings	Buildings	0	WikiTable	Salkeld Hall 100px|centre ] ] A country house , incorporating earlier material , it was extended in the 17th century , a Georgian front was added in about 1790 , and there were further additions in 1836 and in the 1870s . The house is in sandstone with quoins and green slate roofs . The Georgian front is on a chamfered plinth , it has a cornice , two storeys , five bays , and flanking single - storey two - bay wings . Elsewhere parts of the house have three storeys . In the older part the windows are mullioned , some with transoms , and with hood moulds , and there is one medieval window . Elsewhere most windows are sashes . and there are also Venetian windows and round - headed windows . At the rear is a projecting 19th - century two - storey battlemented porch .
+FAC	2254862	http://en.wikipedia.org/wiki/Listed_buildings_in_Hunsonby	Buildings	Buildings	0	WikiTable	Salkeld Hall A country house , incorporating earlier material , it was extended in the 17th century , a Georgian front was added in about 1790 , and there were further additions in 1836 and in the 1870s . The house is in sandstone with quoins and green slate roofs . The Georgian front is on a chamfered plinth , it has a cornice , two storeys , five bays , and flanking single - storey two - bay wings . Elsewhere parts of the house have three storeys . In the older part the windows are mullioned , some with transoms , and with hood moulds , and there is one medieval window . Elsewhere most windows are sashes . and there are also Venetian windows and round - headed windows . At the rear is a projecting 19th - century two - storey battlemented porch .
 PERSON	2309028	http://en.wikipedia.org/wiki/July_28_(Eastern_Orthodox_liturgics)	Saints	Saints	0	WikiEnum	Martyr Julian of Dalmatia ( c. 138 - 161)August 10 / July 28 . HOLY TRINITY RUSSIAN ORTHODOX CHURCH ( A parish of the Patriarchate of Moscow ) . 10 августа ( 28 июля ) . Православная Энциклопедия под редакцией Патриарха Московского и всея Руси Кирилла ( электронная версия ) . ( Orthodox Encyclopedia - Pravenc.ru ) .
 PERSON	2309028	http://en.wikipedia.org/wiki/July_28_(Eastern_Orthodox_liturgics)	Pre-Schism Western saints	Pre-Schism Western saints	1	WikiEnum	Martyrs Nazarius and Celsus , martyrs in Milan in Italy under Nero ( c. 68)July 28 . Latin Saints of the Orthodox Patriarchate of Rome . ( see also : October 14 )
 PERSON	2309028	http://en.wikipedia.org/wiki/July_28_(Eastern_Orthodox_liturgics)	Post-Schism Orthodox saints	Post-Schism Orthodox saints	2	WikiEnum	Venerable Moses of the Kiev Caves , Wonderworker ( 13th-14th centuries )
@@ -277,7 +274,7 @@ OTHER	2709407	http://en.wikipedia.org/wiki/2009_Miami_RedHawks_football_team	Gam
 OTHER	2709407	http://en.wikipedia.org/wiki/2009_Miami_RedHawks_football_team	Game summaries	Northern Illinois	5	WikiEnum	12:49 MIAMI Cook 32 - yard field goal 17 - 10 NIU
 OTHER	2709407	http://en.wikipedia.org/wiki/2009_Miami_RedHawks_football_team	Game summaries	Toledo	6	WikiEnum	13:14 MIAMI Cruse 10 - yard pass from Dysert ( Cook kick ) 7 - 14 MIAMI
 OTHER	2709407	http://en.wikipedia.org/wiki/2009_Miami_RedHawks_football_team	Game summaries	Toledo	7	WikiEnum	12:55 TOLEDO Page 14 - yard pass from Opelt ( Steigerwald kick ) 14 - 24 MIAMI
-NONE	2735244	http://en.wikipedia.org/wiki/2008_Asian_Youth_Girls_Volleyball_Championship	Final standing	Final standing	0	WikiTable	
+NONE	2735244	http://en.wikipedia.org/wiki/2008_Asian_Youth_Girls_Volleyball_Championship	Final standing	Final standing	0	WikiTable
 WORK_OF_ART	2735244	http://en.wikipedia.org/wiki/2008_Asian_Youth_Girls_Volleyball_Championship	Awards	Awards	1	WikiEnum	MVP : Shiori Murata
 WORK_OF_ART	2770844	http://en.wikipedia.org/wiki/Moving_(Supergrass_song)	Track listings	Track listings	0	WikiEnum	""" Moving "" ( 4:29 )"
 WORK_OF_ART	2770844	http://en.wikipedia.org/wiki/Moving_(Supergrass_song)	Track listings	Track listings	1	WikiEnum	""" Moving "" ( 4:29 )"
@@ -353,10 +350,10 @@ SPECIES	3156017	http://en.wikipedia.org/wiki/Mestra_(butterfly)	Subspecies	Subsp
 WORK_OF_ART	3159255	http://en.wikipedia.org/wiki/Film_Fans_Award_(Czech_Lion_Awards)	Winners	Winners	0	WikiTable	2013 Burning Bush Hořící keř
 PRODUCT	3162248	http://en.wikipedia.org/wiki/463L_master_pallet	Aircraft capabilities	Aircraft capabilities	0	WikiEnum	AgustaWestland AW101 : 2
 	3186320	http://en.wikipedia.org/wiki/Cascadia_subduction_zone	Megathrust earthquakes	Earthquake timing	0	WikiTable	W 780–1190 CE 880–960 CE 210
-	3186320	http://en.wikipedia.org/wiki/Cascadia_subduction_zone	Cascade Volcanic Arc	Cascade Volcanic Arc	1	WikiEnum	Lassen Peak and Mt. Shasta ( California )
-	3186320	http://en.wikipedia.org/wiki/Cascadia_subduction_zone	Cascade Volcanic Arc	Cascade Volcanic Arc	2	WikiEnum	Silverthrone Caldera
-	3186320	http://en.wikipedia.org/wiki/Cascadia_subduction_zone	Cascade Volcanic Arc	Cascade Volcanic Arc	3	WikiEnum	Mount St. Helens
-	3186320	http://en.wikipedia.org/wiki/Cascadia_subduction_zone	Cascade Volcanic Arc	Cascade Volcanic Arc	4	WikiEnum	Mount Mazama ( Crater Lake )
+LOC	3186320	http://en.wikipedia.org/wiki/Cascadia_subduction_zone	Cascade Volcanic Arc	Cascade Volcanic Arc	1	WikiEnum	Lassen Peak and Mt. Shasta ( California )
+LOC	3186320	http://en.wikipedia.org/wiki/Cascadia_subduction_zone	Cascade Volcanic Arc	Cascade Volcanic Arc	2	WikiEnum	Silverthrone Caldera
+LOC	3186320	http://en.wikipedia.org/wiki/Cascadia_subduction_zone	Cascade Volcanic Arc	Cascade Volcanic Arc	3	WikiEnum	Mount St. Helens
+LOC	3186320	http://en.wikipedia.org/wiki/Cascadia_subduction_zone	Cascade Volcanic Arc	Cascade Volcanic Arc	4	WikiEnum	Mount Mazama ( Crater Lake )
 	3204646	http://en.wikipedia.org/wiki/1963_in_the_Philippines	Incumbents	Incumbents	0	WikiEnum	President : Diosdado Macapagal ( Liberal )
 	3204646	http://en.wikipedia.org/wiki/1963_in_the_Philippines	Events	Events	1	WikiEnum	April 5 – Ferdinand Marcos became President of the Senate of the Philippines .
 	3204646	http://en.wikipedia.org/wiki/1963_in_the_Philippines	Births	Births	2	WikiEnum	February 17 – Jinggoy Estrada , Filipino actor and politician
@@ -391,7 +388,6 @@ ORG	3628479	http://en.wikipedia.org/wiki/Music_Schools_Group_in_Bydgoszcz	Histor
 NONE	3628479	http://en.wikipedia.org/wiki/Music_Schools_Group_in_Bydgoszcz	Organization	Organization	1	WikiEnum	"School of Music - first degree ( six - year course ) ;"
 NONE	3628479	http://en.wikipedia.org/wiki/Music_Schools_Group_in_Bydgoszcz	Organization	Organization	2	WikiEnum	"Keyboard - piano , pipe organ , accordion , harpsichord ;"
 EVENT	3628479	http://en.wikipedia.org/wiki/Music_Schools_Group_in_Bydgoszcz	Competitions	Competitions	3	WikiEnum	"The International Competition for Young Pianists Arthur Rubinstein in memoriam ( every 2 years , in April ) ;"
-	3635105	http://en.wikipedia.org/wiki/2017_Vietnam_Open_(tennis)_–_Doubles	Seeds	Seeds	0	WikiEnum	James Cerretani / Marc Polmans ( Quarterfinals )
 	3642262	http://en.wikipedia.org/wiki/Katowice	Geography	Conurbation	0	WikiTable	Katowice 297,197 164.67 1,896
 	3642262	http://en.wikipedia.org/wiki/Katowice	Architecture	Tourist attractions	1	WikiEnum	"Market square and adjacent streets : Warszawska , Teatralna , Dyrekcyjna , Staromiejska , Dworcowa , św . Jana , Pocztowa , Wawelska , 3 Maja , Stawowa , Mielęckiego , Starowiejska and Mickiewicza , the so - called "" Great Market Square of Katowice "" or "" Old town of Katowice""—many historic ( monument ) buildings . This is a group of functional - architectural . On the market square and most of the above - mentioned streets are prohibitions or restrictions on cars . Streets : Staromiejska , Dyrekcyjna , Wawelska , Stawowa and Warszawska is lined decorative cobblestone creating a pedestrian zone . The authority plans to Katowice — Quarter streets : św . Jana , Dworcowa , Mariacka , Mielęckiego , Stanisława and Starowiejska is to become so "" small market square "" ."
 	3642262	http://en.wikipedia.org/wiki/Katowice	Architecture	Tourist attractions	2	WikiEnum	Silesian Parliament , built in 1925–1929 . For a very long time , it was the biggest structure in Poland
@@ -419,7 +415,7 @@ PRODUCT	3748583	http://en.wikipedia.org/wiki/Thunder_Bay_Transit	Fleet	Fleet	0	W
 	3797295	http://en.wikipedia.org/wiki/Empty_name	Overview	Overview	0	WikiEnum	"The meaning of a proper name is not the same as the object ( if there is any ) it refers to . Hence , though "" Pegasus "" refers to nothing , it still has a meaning . The German philosopher Gottlob Frege seems to have held a theory of this sort . He says that the sentence Odysseus was set ashore at Ithaca while sound asleep ' obviously has a sense . ... the thought [ expressed by that sentence ] remains the same whether ' Odysseus ' has reference or not . "" Bertrand Russell may also have held a similar theory , that a proper name is a disguised definite description that signifies some unique characteristic . If any object has this characteristic feature , the name has a referent . Otherwise it is empty . Perhaps "" Aristotle "" means "" the teacher of Alexander "" . Since there was such a person , "" Aristotle "" refers to that person . By contrast , "" Pegasus "" may mean "" the winged horse of Bellerophon "" . Since there was no such horse , the name has no referent . This is the so - called description theory of names . The difficulty with this account is that we may always use a proper name to deny that the individual bearing the name actually has some characteristic feature . So , we can meaningfully say that Aristotle was not the teacher of Alexander . But if "" Aristotle "" means "" teacher of Alexander "" , it would follow that this assertion is self - contradictory , which it is not . Saul Kripke proposed this argument in a series of influential papers in the 1970s . Another difficulty is that different people may have different ideas about the defining characteristics of any individual . Yet we all understand what the name means . The sole information carried by the name seems to be the identity of the individual that it belongs to . This information therefore can not be descriptive , it can not describe the individual . As John Stuart Mill argued , a proper name tells us the identity of its bearer , without telling us anything else about it . Naming is rather like pointing ."
 	3797295	http://en.wikipedia.org/wiki/Empty_name	Fictional entities	Fictional entities	1	WikiEnum	"Discourse within fiction : The story itself saying that "" [ Holmes was ] the most perfect reasoning and observing machine """
 	3813053	http://en.wikipedia.org/wiki/Oswaldo_Novoa	Professional boxing record	Professional boxing record	0	WikiTable	28 Loss 14–10–4 Esteban Bermudez KO 4 ( 8) , 4 Oct 2019
-	3818574	http://en.wikipedia.org/wiki/Otto_Krause_Technical_School	Notable alumni	Notable alumni	0	WikiEnum	Gregorio Baro , scientist
+PERSON	3818574	http://en.wikipedia.org/wiki/Otto_Krause_Technical_School	Notable alumni	Notable alumni	0	WikiEnum	Gregorio Baro , scientist
 PERSON	3823656	http://en.wikipedia.org/wiki/Disney_Infinity_3.0	Characters	Characters	0	WikiTable	Star Wars : The Clone Wars Anakin Skywalker Starter Pack / Twilight of the Republic Playset / Twilight of the Republic playset and software bundle Star Wars Saga Bundle ( PS3 and PS4 exclusives ) August 30 , 2015 Wave 1
 WORK_OF_ART	3823656	http://en.wikipedia.org/wiki/Disney_Infinity_3.0	Reception	Awards	1	WikiTable	The Game Awards 2015 Best Family Game
 ORG	3845877	http://en.wikipedia.org/wiki/KakaoPay	Sites That Accept KakaoPay	Sites That Accept KakaoPay	0	WikiEnum	Coupang ( 쿠팡 )
@@ -461,13 +457,13 @@ OTHER	4150443	http://en.wikipedia.org/wiki/Enolase	Isozymes	Isozymes	0	WikiEnum	
 GPE	4227464	http://en.wikipedia.org/wiki/Cyprus_in_the_Eurovision_Song_Contest_2013	At Eurovision	Semi-final 1	0	WikiTable	10 points
 GPE	4227464	http://en.wikipedia.org/wiki/Cyprus_in_the_Eurovision_Song_Contest_2013	At Eurovision	Final	1	WikiTable	10 points
 PERSON	4262483	http://en.wikipedia.org/wiki/Roman_Catholic_Diocese_of_Caldas	Bishops	Ordinaries	0	WikiEnum	Germán Garcia Isaza , C.M. ( 1988.06.18 – 2002.03.01 ) Appointed , Bishop of Apartadó
-OTHER	4264487	http://en.wikipedia.org/wiki/Order_to_cash	Order_to_cash in ERP software	Order_to_cash in ERP software	0	WikiEnum	Customer master data entry
+OTHER	4264487	http://en.wikipedia.org/wiki/Order_to_cash	Order to cash in ERP software	Order to cash in ERP software	0	WikiEnum	Customer master data entry
 OTHER	4273421	http://en.wikipedia.org/wiki/Jorge_Abraham_Hazoury	Reconocimientos Nacionales e Internacionales	Reconocimientos Nacionales e Internacionales	0	WikiEnum	1975 : Miembro de Honor de la Asociación Venezolana de Diabetes .
 OTHER	4280383	http://en.wikipedia.org/wiki/Robert_Z._Lawrence	Other notable assignments	Other notable assignments	0	WikiEnum	Senior fellow in the Economic Studies Program at the Brookings Institution ( 1983–91 )
 WORK_OF_ART	4280383	http://en.wikipedia.org/wiki/Robert_Z._Lawrence	Selected publication and citations	Books	1	WikiEnum	Lawrence , Robert Z. Regionalism , Multilateralism , and Deeper Integration . The Brookings Institution , 1996 .
 WORK_OF_ART	4280383	http://en.wikipedia.org/wiki/Robert_Z._Lawrence	Selected publication and citations	Book chapters	2	WikiEnum	"Lawrence , Robert Z. , and Juan Lara . "" Puerto Rico : Trade Performance and Industrial Policy . "" The Economy of Puerto Rico : Restoring Growth . Ed . Susan M. Collins , Barry Bosworth , and Miguel A. Soto - Class . Brookings Institution Press and the Center for the New Economy , 2006 ."
 WORK_OF_ART	4280383	http://en.wikipedia.org/wiki/Robert_Z._Lawrence	Selected publication and citations	Research papers/reports	3	WikiEnum	"Lawrence , Richard Z. "" Recent US Free Trade Initiatives in the Middle East : Opportunities but no Guarantees . "" KSG Faculty Research Working Paper Series RWP06 - 050 , December 2006 ."
-PERSON	4285566	http://en.wikipedia.org/wiki/NWL_Cruiserweight_Championship	Title history	NWL_Cruiserweight_Championship	0	WikiTable	Fumar 1 December 13 , 1997 Moorefield , West Virginia
+PERSON	4285566	http://en.wikipedia.org/wiki/NWL_Cruiserweight_Championship	Title history	NWL Cruiserweight Championship	0	WikiTable	Fumar 1 December 13 , 1997 Moorefield , West Virginia
 PERSON	4285566	http://en.wikipedia.org/wiki/NWL_Cruiserweight_Championship	Title history	NWL/HoPWF Luchadore Championship	1	WikiTable	Spyral 1 November 1 , 2003 Blue Ridge Summit , Pennsylvania
 WORK_OF_ART	4328819	http://en.wikipedia.org/wiki/Pop_Tart_(album)	Track listing	Track listing	0	WikiEnum	""" Sparkplug """
 PERSON	4328819	http://en.wikipedia.org/wiki/Pop_Tart_(album)	Personnel	Personnel	1	WikiEnum	Andrez Bergen - Samples , Composition , Engineering
@@ -611,7 +607,7 @@ OTHER	5553454	http://en.wikipedia.org/wiki/Extron	Market Segments Served	Market 
 ORG	5553454	http://en.wikipedia.org/wiki/Extron	Clients	Clients	4	WikiEnum	Media , Inc
 WORK_OF_ART	5558326	http://en.wikipedia.org/wiki/Each_One_Teach_One_(Oneida_album)	Track listing	Disc two	0	WikiEnum	""" Each One Teach One "" ( 3:25 )"
 WORK_OF_ART	5568468	http://en.wikipedia.org/wiki/Iman_Sen	Discography	Discography	0	WikiTable	Pagli 2017 Bengali
-WORK_OF_ART	5573332	http://en.wikipedia.org/wiki/Elisabeth_van_Houts	Selected publications	Selected publications	0	WikiEnum	
+WORK_OF_ART	5573332	http://en.wikipedia.org/wiki/Elisabeth_van_Houts	Selected publications	Selected publications	0	WikiEnum
 	5581553	http://en.wikipedia.org/wiki/Vețca	Main	Main	0	WikiEnum	Jacodu / Magyarzsákod
 	5585172	http://en.wikipedia.org/wiki/Timeline_of_feminism_in_the_United_States	Timeline of feminism in the United States	Timeline of feminism in the United States	0	WikiEnum	"1963 : The Feminine Mystique was published ; it is a book written by Betty Friedan which is widely credited with starting the beginning of second - wave feminism in the United States . Second - wave feminism was a period of feminist activity and thought that first began in the early 1960s in the United States , and eventually spread throughout the Western world and beyond . In the United States the movement lasted through the early 1980s ."
 	5620888	http://en.wikipedia.org/wiki/Larry_Vincent	Filmography	Filmography	0	WikiEnum	The New Three Stooges ( 1965 ) - Captain Starr
@@ -646,7 +642,7 @@ OTHER	5806663	http://en.wikipedia.org/wiki/Government_Arts_College,_Ambedkar_Vee
 WORK_OF_ART	5822458	http://en.wikipedia.org/wiki/Amaia_(singer)	Discography	Discography	0	WikiEnum	""" Tu canción "" ( 2018 ) ( with Alfred García )"
 WORK_OF_ART	5822458	http://en.wikipedia.org/wiki/Amaia_(singer)	Discography	Discography	1	WikiEnum	""" Un Nuevo Lugar "" ( 2018 )"
 WORK_OF_ART	5822458	http://en.wikipedia.org/wiki/Amaia_(singer)	Filmatography	Television	2	WikiTable	2010 El Número Uno Contestant
-LOC	5852437	http://en.wikipedia.org/wiki/Cabin_John_Creek	Tributaries of Cabin_John_Creek	Tributaries of Cabin_John_Creek	0	WikiEnum	Booze Creek
+LOC	5852437	http://en.wikipedia.org/wiki/Cabin_John_Creek	Tributaries of Cabin John Creek	Tributaries of Cabin John Creek	0	WikiEnum	Booze Creek
 GPE	5855164	http://en.wikipedia.org/wiki/Vlorë_District	Administrative divisions	Administrative divisions	0	WikiEnum	Armen
 	5899803	http://en.wikipedia.org/wiki/2020_Women's_National_League_(Ireland)	Teams	Teams	0	WikiTable	Athlone Town Athlone Athlone Town Stadium n / a
 	5899803	http://en.wikipedia.org/wiki/2020_Women's_National_League_(Ireland)	Teams	Personnel and kits	1	WikiTable	Athlone Town Tommy Hewitt Paula Doran Nike Palfinger
@@ -663,9 +659,9 @@ GPE	5935555	http://en.wikipedia.org/wiki/Heqing,_Lengshuijiang	Administrative di
 	5979190	http://en.wikipedia.org/wiki/Austrian_Congregation	History	History	0	WikiEnum	Altenburg Abbey
 	5979190	http://en.wikipedia.org/wiki/Austrian_Congregation	Salzburg Congregation	Salzburg Congregation	1	WikiEnum	Admont Abbey
 	5979190	http://en.wikipedia.org/wiki/Austrian_Congregation	Present Congregation	Present Congregation	2	WikiEnum	Admont Abbey
-PERSON	5985293	http://en.wikipedia.org/wiki/Ochterlony_baronets	Ochterlony_baronets, of Ochterlony (1823)	Ochterlony_baronets, of Ochterlony (1823)	0	WikiEnum	Sir David Ochterlony , 1st Baronet ( 1758–1825 )
-	6036753	http://en.wikipedia.org/wiki/Three_Rivers_District_Council_elections	Political control	Political control	0	WikiTable	No overall control 1973 - 1976
-	6036753	http://en.wikipedia.org/wiki/Three_Rivers_District_Council_elections	Council elections	Council elections	1	WikiEnum	1973 Three Rivers District Council election
+PERSON	5985293	http://en.wikipedia.org/wiki/Ochterlony_baronets	Ochterlony baronets, of Ochterlony (1823)	Ochterlony baronets, of Ochterlony (1823)	0	WikiEnum	Sir David Ochterlony , 1st Baronet ( 1758–1825 )
+NONE	6036753	http://en.wikipedia.org/wiki/Three_Rivers_District_Council_elections	Political control	Political control	0	WikiTable	No overall control 1973 - 1976
+EVENT	6036753	http://en.wikipedia.org/wiki/Three_Rivers_District_Council_elections	Council elections	Council elections	1	WikiEnum	1973 Three Rivers District Council election
 NONE	6049582	http://en.wikipedia.org/wiki/United_States_men's_national_basketball_team	Honors	Honors	0	WikiEnum	Gold medalists ( 15 ): 1936 , 1948 , 1952 , 1956 , 1960 , 1964 , 1968 , 1976 , 1984 , 1992 , 1996 , 2000 , 2008 , 2012 , 2016
 NONE	6049582	http://en.wikipedia.org/wiki/United_States_men's_national_basketball_team	Honors	Honors	1	WikiEnum	Champions ( 5 ): 1954 , 1986 , 1994 , 2010 , 2014
 NONE	6049582	http://en.wikipedia.org/wiki/United_States_men's_national_basketball_team	Honors	Honors	2	WikiTable	Olympic Games 15 1 2 18
@@ -702,7 +698,7 @@ NONE	6296686	http://en.wikipedia.org/wiki/2006_Avispa_Fukuoka_season	Domestic re
 PERSON	6296686	http://en.wikipedia.org/wiki/2006_Avispa_Fukuoka_season	Player statistics	Player statistics	3	WikiTable	1 GK Yuichi Mizutani cm / kg 33 0
 ORG	6309299	http://en.wikipedia.org/wiki/Curzon_Mill,_Ashton-under-Lyne	Usage	Owners	0	WikiEnum	The Ashton syndicate
 SPECIES	6315629	http://en.wikipedia.org/wiki/Osteopilus	Species	Species	0	WikiTable	O. crucialis Jamaican snoring frog or Harlan 's Antilles frog
-	6356476	http://en.wikipedia.org/wiki/Cambridge_105	Broadcasting	Outside broadcasts	0	WikiEnum	Red Nose Day - The station completed its first outside broadcast with the help of Cambridge Repeater Group on 18 March 2011 . Cambridge_105 broadcast live from three separate locations in the centre of the city . The broadcast featured reports on fundraising activities around the city as well as a number of live sets by local bands . A total of £ 321.03 was raised in aid of Comic Relief .
+	6356476	http://en.wikipedia.org/wiki/Cambridge_105	Broadcasting	Outside broadcasts	0	WikiEnum	Red Nose Day - The station completed its first outside broadcast with the help of Cambridge Repeater Group on 18 March 2011 . Cambridge 105 broadcast live from three separate locations in the centre of the city . The broadcast featured reports on fundraising activities around the city as well as a number of live sets by local bands . A total of £ 321.03 was raised in aid of Comic Relief .
 PERSON	6361185	http://en.wikipedia.org/wiki/Jeanne_d'Arc_au_bûcher	Roles	Roles	0	WikiEnum	Jeanne d'Arc , spoken ( dancer ) – Ida Rubinstein
 	6361384	http://en.wikipedia.org/wiki/Starwater_Strains	Contents	Contents	0	WikiEnum	""" Viewpoint """
 NONE	6363687	http://en.wikipedia.org/wiki/Drive_eO	OSCar eO	OSCar eO	0	WikiTable	Chassis controller eO master controller
@@ -725,7 +721,7 @@ GPE	6494060	http://en.wikipedia.org/wiki/Fazilka_district	Administration	Adminis
 GPE	6494060	http://en.wikipedia.org/wiki/Fazilka_district	Demographics	Religion	1	WikiTable	Fazilka Hindu 76,492 84.97 % 13.35 % 0.89 % 0.45 % 0.01 % 0.25 % 0.00 % 0.08 %
 PERSON	6521012	http://en.wikipedia.org/wiki/Dudu_(Rajasthan_Assembly_constituency)	List of MLA's	List of MLA's	0	WikiTable	1 . 1957 Ajeet Singh Bajya Akhil Bharatiya Ram Rajya Parishad
 	6540498	http://en.wikipedia.org/wiki/William_Thurston	Mathematical contributions	Foliations	0	WikiEnum	The proof that every Haefliger structure on a manifold can be integrated to a foliation ( this implies , in particular , that every manifold with zero Euler characteristic admits a foliation of codimension one ) .
-	6540498	http://en.wikipedia.org/wiki/William_Thurston	Education and career	Selected works	1	WikiEnum	William_Thurston , The geometry and topology of three - manifolds , Princeton lecture notes ( 1978–1981 ) .
+	6540498	http://en.wikipedia.org/wiki/William_Thurston	Education and career	Selected works	1	WikiEnum	William Thurston , The geometry and topology of three - manifolds , Princeton lecture notes ( 1978–1981 ) .
 NONE	6554020	http://en.wikipedia.org/wiki/Wendy_M._Masiello	Assignments	Assignments	0	WikiEnum	March 1981 - May 1983 , procurement and production officer , Air Force Plant Representative Office , General Electric Space Systems Division , King of Prussia , Pa.
 WORK_OF_ART	6554020	http://en.wikipedia.org/wiki/Wendy_M._Masiello	Awards and decorations	Awards and decorations	1	WikiTable	Bronze Star Medal
 OTHER	6554020	http://en.wikipedia.org/wiki/Wendy_M._Masiello	Effective dates of promotion	Effective dates of promotion	2	WikiTable	Lieutenant General May 8 , 2014
@@ -828,10 +824,10 @@ NONE	7649567	http://en.wikipedia.org/wiki/Europhobia	Main	Main	0	WikiEnum	Racial
 	7727272	http://en.wikipedia.org/wiki/Ravi_Deep	Filmography	As an actor	2	WikiEnum	Kurukshetre Dharmkshetre , Hindi Telefilm , 2007
 	7727272	http://en.wikipedia.org/wiki/Ravi_Deep	Filmography	As production designer	3	WikiEnum	Viji Amma , Documentary ( credited as Ravi Mahajan )
 	7727272	http://en.wikipedia.org/wiki/Ravi_Deep	Awards and nominations	Awards and nominations	4	WikiTable	Sahyadri Award 2010 Won Best in house Fiction Godaveri Ne Kay Kele
-OTHER	7734994	http://en.wikipedia.org/wiki/Learning_and_Teaching_Support_Network	List of Learning_and_Teaching_Support_Network Subject Centres	List of Learning_and_Teaching_Support_Network Subject Centres	0	WikiEnum	Art , Design and Communication
+OTHER	7734994	http://en.wikipedia.org/wiki/Learning_and_Teaching_Support_Network	List of Learning and Teaching Support Network Subject Centres	List of Learning and Teaching Support Network Subject Centres	0	WikiEnum	Art , Design and Communication
 	7758161	http://en.wikipedia.org/wiki/Alex_Gilbey	Career statistics	Career statistics	0	WikiTable	Colchester United 2012–13 League One 3 0 0 0 0 0 1Appearance in Football League Trophy 0 4 0
 	7758161	http://en.wikipedia.org/wiki/Alex_Gilbey	Honours	Honours	1	WikiEnum	Colchester United Young Player of the Year : 2013–14
-	7767685	http://en.wikipedia.org/wiki/Jacques_Poulin	Awards and recognition	Awards and recognition	0	WikiEnum	Winner of the Governor General 's Award in 1978 for Les grandes marées .
+WORK_OF_ART	7767685	http://en.wikipedia.org/wiki/Jacques_Poulin	Awards and recognition	Awards and recognition	0	WikiEnum	Winner of the Governor General 's Award in 1978 for Les grandes marées .
 WORK_OF_ART	7768042	http://en.wikipedia.org/wiki/Gettin'_Enough??	Track listing	Track listing	0	WikiEnum	""" Gettin ' Enough ? ? "" - 2:56"
 	7779062	http://en.wikipedia.org/wiki/Prospect_Hill_Cemetery_(Brattleboro,_Vermont)	Notable burials	Notable burials	0	WikiEnum	James Fisk
 	7803466	http://en.wikipedia.org/wiki/The_Nader_Report_on_the_Federal_Trade_Commission	Summary	Summary	0	WikiEnum	The FTC is ineffective .
@@ -931,7 +927,7 @@ WORK_OF_ART	8526589	http://en.wikipedia.org/wiki/Chris_Leslie_(musician)	Discogr
 WORK_OF_ART	8526589	http://en.wikipedia.org/wiki/Chris_Leslie_(musician)	Discography	In Groups	1	WikiEnum	1985 - Whippersnapper : Promises
 WORK_OF_ART	8526589	http://en.wikipedia.org/wiki/Chris_Leslie_(musician)	Discography	Appearances with Steve Ashley	2	WikiEnum	1999 - The Test of Time
 NONE	8543683	http://en.wikipedia.org/wiki/Terpene_synthase_N_terminal_domain	Conservation	Conservation	0	WikiEnum	Tpsa includes vetispiridiene synthase .
-WORK_OF_ART	8545455	http://en.wikipedia.org/wiki/Julia_Brannen	Selected bibliography	Selected bibliography	0	WikiEnum	
+WORK_OF_ART	8545455	http://en.wikipedia.org/wiki/Julia_Brannen	Selected bibliography	Selected bibliography	0	WikiEnum
 	8553908	http://en.wikipedia.org/wiki/Sulanga_Gini_Aran	International recognition	International recognition	0	WikiEnum	Locarno International Film Festival 2015 - Nominated Golden Leopard
 PERSON	8553908	http://en.wikipedia.org/wiki/Sulanga_Gini_Aran	Cast	Cast	1	WikiEnum	Steve De La Zilwa as Surgeon
 PERSON	8556801	http://en.wikipedia.org/wiki/Skippy_(radio_series)	Cast	Cast	0	WikiEnum	Skippy : Franklin Adams , Jr.
@@ -971,9 +967,8 @@ PERSON	8947100	http://en.wikipedia.org/wiki/Swapna_Sundari_(film)	Crew	Crew	1	Wi
 WORK_OF_ART	8947100	http://en.wikipedia.org/wiki/Swapna_Sundari_(film)	Soundtrack	Soundtrack	2	WikiTable	"1 "" Saagumaa Saahinee "" Ghantasala 2:52"
 OTHER	8972656	http://en.wikipedia.org/wiki/Shared_earning/shared_parenting_marriage	In popular culture	In popular culture	0	WikiEnum	In TV series Parenthood , set in contemporary time , Julia , a lawyer , and Joel , a construction contractor , trade off between them periods of stay - at - home parenthood to their preschool - age daughter , and , later , their adopted grade - school - aged son .
 OTHER	9051441	http://en.wikipedia.org/wiki/Carole_Ormaca	Results	Results	0	WikiTable	Winter Olympic Games 5th
-NONE	9057661	http://en.wikipedia.org/wiki/Kenny_Veal	Main	Main	0	WikiEnum	Nashville Venom ( { { PIFL Year|2014}}–{{PIFL Year|2015 } } )
-NONE	9057661	http://en.wikipedia.org/wiki/Kenny_Veal	College career	Statistics	1	WikiTable	2008 18 6 24 0.0 0.0 0 1 0 0.0 0 3 9 155 17.2 0 28
-SPECIES	9069346	http://en.wikipedia.org/wiki/Oenothera_californica	Subspecies	Subspecies	0	WikiEnum	Oenothera_californica ssp . avita — desert regions .
+NONE	9057661	http://en.wikipedia.org/wiki/Kenny_Veal	College career	Statistics	0	WikiTable	2008 18 6 24 0.0 0.0 0 1 0 0.0 0 3 9 155 17.2 0 28
+SPECIES	9069346	http://en.wikipedia.org/wiki/Oenothera_californica	Subspecies	Subspecies	0	WikiEnum	Oenothera californica ssp . avita — desert regions .
 PERSON	9073032	http://en.wikipedia.org/wiki/Das_unsichtbare_Visier	Cast	Cast	0	WikiEnum	"Armin Mueller - Stahl : Werner Bredebusch/""Achim Detjen """
 WORK_OF_ART	9073032	http://en.wikipedia.org/wiki/Das_unsichtbare_Visier	Broadcasts	Broadcasts	1	WikiTable	01 Der Römische Weg 23 December 1973 84 minutes
 WORK_OF_ART	9120899	http://en.wikipedia.org/wiki/Norma_Waterson	Solo discography	Solo discography	0	WikiEnum	Norma Waterson ( Hannibal Records , 1996 )
@@ -1050,11 +1045,10 @@ PERSON	9755450	http://en.wikipedia.org/wiki/2012–13_Biathlon_World_Cup_–_Wor
 	9839767	http://en.wikipedia.org/wiki/Vision_chip	Types of processing performed in a vision chip	Spatial processing techniques	1	WikiEnum	Lateral inhibition
 	9896314	http://en.wikipedia.org/wiki/Love_Breakups_Zindagi	Cast	Cast	0	WikiEnum	Zayed Khan as Jai Malhotra
 	9968941	http://en.wikipedia.org/wiki/Robyn_Sarah	Works	Poetry	0	WikiEnum	The Space Between Sleep and Waking ( 1981 )
-WORK_OF_ART	9971908	http://en.wikipedia.org/wiki/Out_Is_Through	Track listing	Track listing	0	WikiEnum	""" Out_Is_Through """
+WORK_OF_ART	9971908	http://en.wikipedia.org/wiki/Out_Is_Through	Track listing	Track listing	0	WikiEnum	""" Out Is Through """
 ORG	9971908	http://en.wikipedia.org/wiki/Out_Is_Through	Charts	Charts	1	WikiTable	UK Singles Chart 56
 	10000017	http://en.wikipedia.org/wiki/Ford_O._Rogers	Decorations	Decorations	0	WikiTable	
 	10004081	http://en.wikipedia.org/wiki/Ring-tailed_lemur	Evolutionary history	Taxonomic classification	0	WikiEnum	Genus Lemur : the ring - tailed lemur
-	10015071	http://en.wikipedia.org/wiki/2009_Morocco_Tennis_Tour_–_Rabat_–_Singles	Seeds	Seeds	0	WikiEnum	Marcos Daniel ( Second Round )
 	10058063	http://en.wikipedia.org/wiki/Julián_Irízar	Later career	Later career	0	WikiEnum	He led the Argentine delegation to the Naval Commission in Europe after World War I. Upon returning was promoted to admiral ( U.S.A equivalent Commodore ) and appointed to head Naval Division I.
 NONE	10058063	http://en.wikipedia.org/wiki/Julián_Irízar	Tributes	Tributes	1	WikiEnum	An icebreaker of the Argentine Navy is named ARA Almirante Irízar in his honor .
 	10066747	http://en.wikipedia.org/wiki/50:50@50	Track listing	Track listing	0	WikiEnum	""" Eleanor 's Dream "" ( Chris Leslie )"
@@ -1087,7 +1081,7 @@ ORG	10275303	http://en.wikipedia.org/wiki/Licking_Heights_Local_School_District	
 	10347976	http://en.wikipedia.org/wiki/Ionic_compound	Structure	Structure	0	WikiTable	MX 6:6 all octahedral 0.4142 sodium chloride 1.747565 nickeline < 1.73
 	10347976	http://en.wikipedia.org/wiki/Ionic_compound	Structure	Structure	1	WikiTable	MX 8:8 entirely filled cesium chloride 0.7321 1.762675
 	10365948	http://en.wikipedia.org/wiki/Calidota	Species	Species	0	WikiEnum	Calidota bahamensis Rothschild , 1933
-	10390366	http://en.wikipedia.org/wiki/Harisu	Discography	Studio albums	0	WikiTable	Temptation September 22 , 2001Discography , Harisu Official Website . Retrieved on June 6 , 2007 . 32K - pop album chart , September 2001 , Music Industry Association of Korea . Retrieved on June 3 , 2007 . Note : although the information was verified on the retrieval date , the website has since been taken down and no archive copy is available . 25,474K - pop album chart , October 2001 , Music Industry Association of Korea . Retrieved on June 3 , 2007 . Note : although the information was verified on the retrieval date , the website has since been taken down and no archive copy is available . ( as of October 2001 ) Also released in Taiwan .
+WORK_OF_ART	10390366	http://en.wikipedia.org/wiki/Harisu	Discography	Studio albums	0	WikiTable	Temptation September 22 , 2001Discography , Harisu Official Website . Retrieved on June 6 , 2007 . 32K - pop album chart , September 2001 , Music Industry Association of Korea . Retrieved on June 3 , 2007 . Note : although the information was verified on the retrieval date , the website has since been taken down and no archive copy is available . 25,474K - pop album chart , October 2001 , Music Industry Association of Korea . Retrieved on June 3 , 2007 . Note : although the information was verified on the retrieval date , the website has since been taken down and no archive copy is available . ( as of October 2001 ) Also released in Taiwan .
 WORK_OF_ART	10390366	http://en.wikipedia.org/wiki/Harisu	Discography	Other releases	1	WikiTable	"Yellow Hair 2 OST July 23 , 2001 Film soundtrack by various artists ; includes two songs by Harisu , "" Paradise "" and "" Sad Love "" ."
 WORK_OF_ART	10390366	http://en.wikipedia.org/wiki/Harisu	Discography	Music videos	2	WikiEnum	""" History "" by Turbo ( 2001 )"
 WORK_OF_ART	10390366	http://en.wikipedia.org/wiki/Harisu	Filmography	Filmography	3	WikiTable	2001 Yellow Hair 2 J Also performed two songs on the soundtrack .
@@ -1135,8 +1129,8 @@ NONE	10715367	http://en.wikipedia.org/wiki/Nigeria_Pitch_Awards	Categories	Playe
 WORK_OF_ART	10715367	http://en.wikipedia.org/wiki/Nigeria_Pitch_Awards	Categories	Club category	2	WikiEnum	Club of the Year
 WORK_OF_ART	10715367	http://en.wikipedia.org/wiki/Nigeria_Pitch_Awards	Categories	Media category	3	WikiEnum	Football Journalist of the Year ( Print )
 WORK_OF_ART	10715367	http://en.wikipedia.org/wiki/Nigeria_Pitch_Awards	Categories	Corporate category	4	WikiEnum	Corporate Sponsor of Football Award
-NONE	10715367	http://en.wikipedia.org/wiki/Nigeria_Pitch_Awards	Past editions	Winners	5	WikiEnum	Goalkeeper of the Year – Vincent Enyeama
-NONE	10715367	http://en.wikipedia.org/wiki/Nigeria_Pitch_Awards	Past editions	Winners	6	WikiEnum	Goalkeeper of the Year – Vincent Enyeama
+	10715367	http://en.wikipedia.org/wiki/Nigeria_Pitch_Awards	Past editions	Winners	5	WikiEnum	Goalkeeper of the Year – Vincent Enyeama
+	10715367	http://en.wikipedia.org/wiki/Nigeria_Pitch_Awards	Past editions	Winners	6	WikiEnum	Goalkeeper of the Year – Vincent Enyeama
 NONE	10715367	http://en.wikipedia.org/wiki/Nigeria_Pitch_Awards	Past editions	Winners	7	WikiEnum	Ikechukwu Ezenwa - Goal Keeper of the Year
 GPE	10728620	http://en.wikipedia.org/wiki/Washington_Township,_Jackson_County,_Kansas	Geography	Adjacent townships	0	WikiEnum	Adrian Township ( north )
 	10792873	http://en.wikipedia.org/wiki/1988_in_Philippine_television	Events	Events	0	WikiEnum	August 29 : TV Patrol Central Visayas is launched on DYCB Channel 3 , the first regional edition of the national TV Patrol newscast , airing an hour of national and local news at primetime until December , when it moves to late afternoons and its broadcast reduces to 30 minutes .
@@ -1200,9 +1194,9 @@ NONE	11323898	http://en.wikipedia.org/wiki/Earley_parser	The algorithm	The algor
 NONE	11323898	http://en.wikipedia.org/wiki/Earley_parser	Example	Example	2	WikiTable	1 P → • S 0 start rule
 NONE	11323898	http://en.wikipedia.org/wiki/Earley_parser	Constructing the parse forest	Constructing the parse forest	3	WikiEnum	Predicted items have a null SPPF pointer .
 NONE	11323898	http://en.wikipedia.org/wiki/Earley_parser	Implementations	Java	4	WikiEnum	– a Java implementation of the Earley algorithm
-NONE	11323898	http://en.wikipedia.org/wiki/Earley_parser	Implementations	C#	5	WikiEnum	coonsta / earley - An Earley_parser in C #
-NONE	11323898	http://en.wikipedia.org/wiki/Earley_parser	Implementations	JavaScript	6	WikiEnum	Nearley – an Earley_parser that 's starting to integrate the improvements that Marpa adopted
-NONE	11323898	http://en.wikipedia.org/wiki/Earley_parser	Implementations	Python	7	WikiEnum	Lark – an object - oriented , procedural implementation of an Earley_parser in under 200 lines of code
+NONE	11323898	http://en.wikipedia.org/wiki/Earley_parser	Implementations	C#	5	WikiEnum	coonsta / earley - An Earley parser in C #
+NONE	11323898	http://en.wikipedia.org/wiki/Earley_parser	Implementations	JavaScript	6	WikiEnum	Nearley – an Earley parser that 's starting to integrate the improvements that Marpa adopted
+NONE	11323898	http://en.wikipedia.org/wiki/Earley_parser	Implementations	Python	7	WikiEnum	Lark – an object - oriented , procedural implementation of an Earley parser in under 200 lines of code
 PERSON	11376619	http://en.wikipedia.org/wiki/The_Day_He_Arrives	Cast	Cast	0	WikiEnum	Yoo Jun - sang as Seong - jun , a professor of film studies
 	11381465	http://en.wikipedia.org/wiki/Fusicoccum	Species	Species	0	WikiEnum	F. abietis
 	11458026	http://en.wikipedia.org/wiki/Ángel_Gallardo_(golfer)	Professional wins (6)	Other wins (5)	0	WikiEnum	1967 Portuguese Open
@@ -1233,8 +1227,8 @@ WORK_OF_ART	11813218	http://en.wikipedia.org/wiki/Dirce_Migliaccio	Films	Films	0
 WORK_OF_ART	11813895	http://en.wikipedia.org/wiki/Still_Got_a_Long_Way_to_Go	Track listings	Track listings	0	WikiEnum	""" Still Got A Long Way To Go "" ( Diesel )"
 WORK_OF_ART	11813895	http://en.wikipedia.org/wiki/Still_Got_a_Long_Way_to_Go	Track listings	Track listings	1	WikiEnum	""" Still Got A Long Way To Go "" ( with Diesel )"
 WORK_OF_ART	11813895	http://en.wikipedia.org/wiki/Still_Got_a_Long_Way_to_Go	Credits	Credits	2	WikiEnum	Acoustic Guitar – Diesel
-NONE	11823223	http://en.wikipedia.org/wiki/Bouley_Bay_Hill_Climb	Bouley_Bay_Hill_Climb past winners	Bouley_Bay_Hill_Climb past winners	0	WikiTable	1946 G. Bainbridge E.R.A. 55.9 sec
-PERSON	11850130	http://en.wikipedia.org/wiki/DiscReet_Records	List of DiscReet_Records artists	List of DiscReet_Records artists	0	WikiEnum	Christopher Bond
+NONE	11823223	http://en.wikipedia.org/wiki/Bouley_Bay_Hill_Climb	Bouley Bay Hill Climb past winners	Bouley Bay Hill Climb past winners	0	WikiTable	1946 G. Bainbridge E.R.A. 55.9 sec
+PERSON	11850130	http://en.wikipedia.org/wiki/DiscReet_Records	List of DiscReet Records artists	List of DiscReet Records artists	0	WikiEnum	Christopher Bond
 WORK_OF_ART	11871637	http://en.wikipedia.org/wiki/Syd_Cain	Selected filmography	Selected filmography	0	WikiEnum	The Inn of the Sixth Happiness ( 1958 )
 	11876070	http://en.wikipedia.org/wiki/Grin_and_Bear_It_(Ugly_Betty)	Guest starring	Guest starring	0	WikiEnum	Robert Desiderio as Mr. Gallico
 WORK_OF_ART	11887141	http://en.wikipedia.org/wiki/John_Scoble	Works	Works	0	WikiEnum	British Guiana , London , 1838
@@ -1323,7 +1317,7 @@ WORK_OF_ART	12459940	http://en.wikipedia.org/wiki/Anton_Gustafsson_tolkar_Iron_M
 WORK_OF_ART	12501740	http://en.wikipedia.org/wiki/Ziba_Shirazi	Discography	Discography	0	WikiEnum	Red Apple ( Sibe Sorkh ) ( 1993 )
 	12506802	http://en.wikipedia.org/wiki/Marian_Saastad_Ottesen	Films and TV	Selected film appearances	0	WikiEnum	2006 : Art of Negative Thinking : Marte
 	12506802	http://en.wikipedia.org/wiki/Marian_Saastad_Ottesen	Films and TV	Selected television appearances	1	WikiEnum	2016 : Norsemen : Hildur
-NONE	12551211	http://en.wikipedia.org/wiki/Jagan_Institute_of_Management_Studies	Rankings	Rankings	0	WikiEnum	Jagan_Institute_of_Management_Studies , Sector 5 , Rohini is accredited with ' A ' grade by NAAC ( National Assessment and Accreditation Council )
+NONE	12551211	http://en.wikipedia.org/wiki/Jagan_Institute_of_Management_Studies	Rankings	Rankings	0	WikiEnum	Jagan Institute of Management Studies , Sector 5 , Rohini is accredited with ' A ' grade by NAAC ( National Assessment and Accreditation Council )
 	12575533	http://en.wikipedia.org/wiki/Thringstone	Saint Andrew's Parish Church	Vicars of Thringstone	0	WikiTable	Edwin Samuel Crane , MA 1876 1907 Mission Curate , 1873 - 1876 , Died in office . Son , Revd A.N Crane , later Vicar of Bardon Hill and Rural Dean .
 	12575533	http://en.wikipedia.org/wiki/Thringstone	Public Houses	Public Houses	1	WikiEnum	Thringstone Members ' Club ( formerly Thringstone Rangers ' Supporters ' club ) 01530 222737
 	12575533	http://en.wikipedia.org/wiki/Thringstone	Notable residents	Notable residents	2	WikiEnum	Thomas Elsdon Ashford , VC - Leicestershire 's first recipient of the Victoria Cross , married in St Andrew 's Church in 1891 and resident for some time at Brook Lane , Thringstone
@@ -1346,7 +1340,7 @@ WORK_OF_ART	12736199	http://en.wikipedia.org/wiki/Ann_Tyrrell	Filmography	Filmog
 	12777434	http://en.wikipedia.org/wiki/War_of_the_Worlds:_Global_Dispatches	Table of contents	Table of contents	0	WikiTable	Forward H. G. Wells Kevin J. Anderson - -
 PERSON	12794049	http://en.wikipedia.org/wiki/Members_of_the_New_South_Wales_Legislative_Assembly,_1956–1959	Main	Main	0	WikiTable	Tom Armstrong Kahibah 1953–1957
 	12798290	http://en.wikipedia.org/wiki/135_BC	Births	Births	0	WikiEnum	Mithridates VI , king of Pontus ( d. 63 BC )
-WORK_OF_ART	12798967	http://en.wikipedia.org/wiki/The_Promise_Hero	Discography	Discography	0	WikiEnum	The_Promise_Hero ( CD / EP ) 2008
+WORK_OF_ART	12798967	http://en.wikipedia.org/wiki/The_Promise_Hero	Discography	Discography	0	WikiEnum	The Promise Hero ( CD / EP ) 2008
 	12814305	http://en.wikipedia.org/wiki/Arbora_&_Ausonia	Brands and products	Brands and products	0	WikiEnum	Dodot , Kandoo and Charmin nappies and wipes
 	12814305	http://en.wikipedia.org/wiki/Arbora_&_Ausonia	Other agreements and campaigns	Other agreements and campaigns	1	WikiEnum	Dodot collaboration agreement with Unicef
 	12825133	http://en.wikipedia.org/wiki/Martin_JRM_Mars	Variants	Aircraft	0	WikiEnum	The Old Lady – Bureau Number ( BuNo ) 1520 . Ordered on 23 August 1938 and completed as the prototype long - range patrol XPB2M-1 , it was first flown on 3 July 1942 and converted in December 1943 to transport variant and designated XPB2M-1R. Assigned initially to VR-8 at NAS Patuxent River , Maryland for crew training , it was later transferred to VR-2 at NAS Alameda , California and scrapped in 1945 .
@@ -1355,7 +1349,7 @@ WORK_OF_ART	12798967	http://en.wikipedia.org/wiki/The_Promise_Hero	Discography	D
 	12832673	http://en.wikipedia.org/wiki/Jul_(Loa_Falkman_album)	Contributors	Contributors	1	WikiEnum	Loa Falkman - singer
 PERSON	12904033	http://en.wikipedia.org/wiki/NA-122_(Lahore-V)	Election 2013	Election 2013	0	WikiTable	1 Sardar Ayaz Sadiq Pakistan Muslim League ( N ) 93,362 Winner
 NONE	12904202	http://en.wikipedia.org/wiki/Mark_E._Ferguson_III	Awards and decorations	Awards and decorations	0	WikiTable	
-NONE	12904202	http://en.wikipedia.org/wiki/Mark_E._Ferguson_III	Awards and decorations	Awards and decorations	1	WikiTable	Navy Distinguished Service Medal w/ 2 award stars Defense Superior Service Medal Legion of Merit w/ 2 award stars
+	12904202	http://en.wikipedia.org/wiki/Mark_E._Ferguson_III	Awards and decorations	Awards and decorations	1	WikiTable	Navy Distinguished Service Medal w/ 2 award stars Defense Superior Service Medal Legion of Merit w/ 2 award stars
 	12921224	http://en.wikipedia.org/wiki/Tears_(The_Crocodiles_album)	Track listing	Track listing	0	WikiEnum	""" New Wave Goodbye "" ( Flaws ) – 3:20"
 	12921224	http://en.wikipedia.org/wiki/Tears_(The_Crocodiles_album)	Singles	Singles	1	WikiEnum	""" Tears""/""In My Suit "" - RCA ( MS 433 ) ( 1980 ) ( NZ # 17 )"
 	12921224	http://en.wikipedia.org/wiki/Tears_(The_Crocodiles_album)	Personnel	Personnel	2	WikiEnum	Bass , Vocals - Tina Matthews
@@ -1460,10 +1454,10 @@ WORK_OF_ART	13574324	http://en.wikipedia.org/wiki/Olympe_(singer)	Discography	Al
 	13575362	http://en.wikipedia.org/wiki/Max_Drischner	Works (selected)	Works (selected)	0	WikiEnum	Die Weihnachtsgeschichte nach Lukas 2 - Brieger Christnacht 1944 mit Liedern aus der Grafschaft Glatz Für Chor / ein- oder vierstimmig / Einzelstimme und Orgel / statt Orgel Harmonium , Klavier oder Cembalo . ( 1944 )
 WORK_OF_ART	13575362	http://en.wikipedia.org/wiki/Max_Drischner	Works (selected)	Works (selected)	1	WikiEnum	Spielmannslieder , Lute accompaniment of Texts by Paul Steinmüller [ Greiner & Pfeiffer , Stuttgart 1923 ]
 WORK_OF_ART	13575362	http://en.wikipedia.org/wiki/Max_Drischner	Works (selected)	Works (selected)	2	WikiEnum	Lobe den Herrn , meine Seele ( Psalm 104 ) for soloists , choir and organ ( 1946 )
-WORK_OF_ART	13575362	http://en.wikipedia.org/wiki/Max_Drischner	Literature	Literature	3	WikiEnum	Bryan Hesford : The Life and Work of Max_Drischner , 2 volumes , England 1974
+WORK_OF_ART	13575362	http://en.wikipedia.org/wiki/Max_Drischner	Literature	Literature	3	WikiEnum	Bryan Hesford : The Life and Work of Max Drischner , 2 volumes , England 1974
 WORK_OF_ART	13583759	http://en.wikipedia.org/wiki/William_Rowan	Awards	Awards	0	WikiEnum	Knight Grand Cross of the Order of the Bath 1838 ,
 	13586346	http://en.wikipedia.org/wiki/Collegiate_School_Celbridge	Principals	Principals	0	WikiEnum	1783 Mary Taylor
-NONE	13589502	http://en.wikipedia.org/wiki/Joseph_Gabriel_de_Poulpiquet_de_Coatlès	Sources and references	Sources and references	0	WikiEnum	
+	13589502	http://en.wikipedia.org/wiki/Joseph_Gabriel_de_Poulpiquet_de_Coatlès	Sources and references	Sources and references	0	WikiEnum	
 NONE	13628749	http://en.wikipedia.org/wiki/Arizona_Federal_Theatre	Noted concerts	Noted concerts	0	WikiTable	"November 3 , 2009 Ian Anderson rowspan=""3 "" An Acoustic Evening with Ian Anderson 1,574 / 4,059 ( 39 % ) $ 66,233"
 NONE	13628829	http://en.wikipedia.org/wiki/South_African_Class_32-200	Service	Post-SAR service	0	WikiEnum	Numbers and are with Sheltam , renumbered 2012 and 2013 , and have been working in Welkom .
 NONE	13628829	http://en.wikipedia.org/wiki/South_African_Class_32-200	Works numbers	Works numbers	1	WikiTable	32 - 201 35842 Sheltam 2012
@@ -1480,7 +1474,7 @@ PERSON	13722555	http://en.wikipedia.org/wiki/Julie_and_the_Phantoms	Cast and cha
 	13742513	http://en.wikipedia.org/wiki/2011–12_FA_Cup	Top scorers	Top scorers	2	WikiTable	1 Jermaine Beckford Leicester City 6
 	13742513	http://en.wikipedia.org/wiki/2011–12_FA_Cup	Media coverage	Media coverage	3	WikiTable	Tring Sport
 	13744225	http://en.wikipedia.org/wiki/Achilles_Rink	Notable facts	Notable facts	0	WikiEnum	On March 12 , 2010 , Quinnipiac University beat Union College 3 - 2 in the second longest game in NCAA history . Greg Holt scored at 10:22 of the 5th overtime . The game took 150:22 to decide the winner . The box score can be found at http://collegehockeystats.net/0910/boxes/mquiuni1.m12 .
-WORK_OF_ART	13763608	http://en.wikipedia.org/wiki/You_Can_Win_If_You_Want	Single	Single	0	WikiEnum	""" You_Can_Win_If_You_Want "" ( Special Dance Version ) - 5:19"
+WORK_OF_ART	13763608	http://en.wikipedia.org/wiki/You_Can_Win_If_You_Want	Single	Single	0	WikiEnum	""" You Can Win If You Want "" ( Special Dance Version ) - 5:19"
 OTHER	13763608	http://en.wikipedia.org/wiki/You_Can_Win_If_You_Want	Chart position	Chart position	1	WikiTable	Belgium ( VRT Top 30 Flanders ) 2
 	13799185	http://en.wikipedia.org/wiki/Demographics_of_Sweden	Population statistics	Population statistics	0	WikiEnum	One birth every 4 minutes
 	13799185	http://en.wikipedia.org/wiki/Demographics_of_Sweden	Population statistics	Population projections	1	WikiTable	2016 9,995,000
@@ -1503,7 +1497,7 @@ WORK_OF_ART	13914764	http://en.wikipedia.org/wiki/Frank_B._Wilderson_III	Works	W
 	13916693	http://en.wikipedia.org/wiki/Production_flow_analysis	Rank Order Clustering	Rank Order Clustering	1	WikiEnum	For each row i compute the number \sum_{p=1}^{m}b_{ip}*2^{m - p }
 	13916693	http://en.wikipedia.org/wiki/Production_flow_analysis	Similarity coefficients	Similarity coefficients	2	WikiEnum	Compute the similarity coefficient s_{ij}=n_{ij}/(n_{ij}+u ) for all with n_{ij } being the number of products that need to be processed on both machine i and machine j , u comprises the number of components which visit machine j but not k and vice versa .
 PERSON	13927671	http://en.wikipedia.org/wiki/Zehnder_(surname)	Main	Main	0	WikiEnum	Eduard Zehnder , Swiss mathematician
-	13939732	http://en.wikipedia.org/wiki/Boris_Ratnikov	Publications	Publications	0	WikiEnum	"Б. К. Ратников ( Boris_Ratnikov ) , Г. Г. Рогозин Georgy Ragozin , Д. Н. Фонарев , « За гранью познанного » , изд . « ВеГа » ( НАСТ России ) , 2008 г . ( УДК 004—027.21 ББК 32.81 P25 ) ; ( "" Abroad the knowledge "" )"
+	13939732	http://en.wikipedia.org/wiki/Boris_Ratnikov	Publications	Publications	0	WikiEnum	"Б. К. Ратников ( Boris Ratnikov ) , Г. Г. Рогозин Georgy Ragozin , Д. Н. Фонарев , « За гранью познанного » , изд . « ВеГа » ( НАСТ России ) , 2008 г . ( УДК 004—027.21 ББК 32.81 P25 ) ; ( "" Abroad the knowledge "" )"
 PERSON	13942700	http://en.wikipedia.org/wiki/Habanastation	Cast	Cast	0	WikiEnum	Claudia Alvariño as Maestra Claudia
 WORK_OF_ART	13943231	http://en.wikipedia.org/wiki/Heather_D._Gibson	Works	Books	0	WikiEnum	The Eurocurrency Markets , Domestic Financial Policy and International Instability ( London , etc . , Longman : 1989 )
 	13943231	http://en.wikipedia.org/wiki/Heather_D._Gibson	Works	Articles and papers	1	WikiEnum	""" Fundamentally Wrong : Market Pricing of Sovereigns and the Greek Financial Crisis , "" Journal of Macroeconomics , Elsevier , vol . 39(PB ) , pp . 405–419 ( with Stephen G. & Tavlas , George S. , 2014 )"
@@ -1517,7 +1511,7 @@ PERSON	14088916	http://en.wikipedia.org/wiki/Lord_of_Mann	List of lords	16th cen
 PERSON	14088916	http://en.wikipedia.org/wiki/Lord_of_Mann	List of lords	17th and 18th centuries	1	WikiEnum	William , Earl of Derby , 1609–1612
 	14102125	http://en.wikipedia.org/wiki/Florence_Hoath	Selected filmography	Selected filmography	0	WikiEnum	A Pin for the Butterfly ( 1994 )
 	14117285	http://en.wikipedia.org/wiki/Kids_on_Q	Reporters	Reporters	0	WikiEnum	Renford Alano
-	14117285	http://en.wikipedia.org/wiki/Kids_on_Q	Kids_on_Q Super Squad	Kids_on_Q Super Squad	1	WikiEnum	"Renford Alano "" Taste Buddy Renford """
+	14117285	http://en.wikipedia.org/wiki/Kids_on_Q	Kids on Q Super Squad	Kids on Q Super Squad	1	WikiEnum	"Renford Alano "" Taste Buddy Renford """
 	14117898	http://en.wikipedia.org/wiki/Aviation_in_the_Philadelphia_metropolitan_area	Commercial airports	Commercial airports	0	WikiEnum	Philadelphia International Airport
 NONE	14155080	http://en.wikipedia.org/wiki/1876_Italian_general_election	Results	Results	0	WikiTable	Historical Left 243,319 70.2 414 +182
 NONE	14157777	http://en.wikipedia.org/wiki/Tarawli_Kalan	Demographics	Demographics	0	WikiTable	Population 1212 624 588
@@ -1535,7 +1529,6 @@ PERSON	14216865	http://en.wikipedia.org/wiki/Japan_Professional_Bowling_Associat
 	14297055	http://en.wikipedia.org/wiki/Bubonic_plague	Diagnosis	Diagnosis	1	WikiEnum	Buboes : Swollen lymph nodes ( buboes ) characteristic of bubonic plague , a fluid sample can be taken from them with a needle .
 PERSON	14303366	http://en.wikipedia.org/wiki/Mary_Baldwin_University	Notable alumni	Notable alumni	0	WikiEnum	Tallulah Bankhead , actress
 	14330656	http://en.wikipedia.org/wiki/Agua_Caliente_Handicap	Main	Main	0	WikiEnum	1917 - 1937 : 1¼ miles
-WORK_OF_ART	14336565	http://en.wikipedia.org/wiki/European_Journal_of_Human_Genetics	Abstracting and indexing	Abstracting and indexing	0	WikiEnum	BIOSIS Previews
 	14338098	http://en.wikipedia.org/wiki/Dress_(Sophie_Villy_album)	Personnel	Personnel	0	WikiEnum	Sophie Villy – Vocal , Guitar , Piano , Organ
 NONE	14360538	http://en.wikipedia.org/wiki/Ľuba_Lesná	Professional Biography	Professional Biography	0	WikiEnum	Verejnosť newspaper , deputy chief editorBack cover , Únos demokracie
 WORK_OF_ART	14360538	http://en.wikipedia.org/wiki/Ľuba_Lesná	Plays	Plays	1	WikiEnum	Skamenelina [ The Fossil ] ( 1986 ) -- for radio
@@ -1607,8 +1600,8 @@ WORK_OF_ART	14721899	http://en.wikipedia.org/wiki/Ted_Cooper	Selected credits	Ga
 WORK_OF_ART	14721899	http://en.wikipedia.org/wiki/Ted_Cooper	Selected credits	Broadway	2	WikiEnum	Texas , Li'l Darlin ' ( 1949 - 1950 )
 	14747603	http://en.wikipedia.org/wiki/Pirate_television	Stations	Known stations	0	WikiEnum	beoutQ - Saudi Arabia . Started broadcasting after Qatar - based programs like beIN Sports were banned following the Qatar diplomatic crisis . Primarily airs sports programs .
 	14747603	http://en.wikipedia.org/wiki/Pirate_television	Stations	Proposed stations	1	WikiEnum	Caroline TV - Advertised in 1970 , this was to have been a project related to Radio Caroline , which at the time was off the air . Artwork showing the proposed station 's identification graphics were released , but the station , which was to be broadcast from an airplane ( similar to Stratovision ) , never materialized , although there are two website domains , called www.carolinetv.co.uk . And carolinetelevision.com
-	14747603	http://en.wikipedia.org/wiki/Pirate_television	Pirate_television in popular culture	Movies	2	WikiEnum	Band Waggon ( 1940 ) - British film about a pair of out - of - work performers who are evicted from squatting on the roof of Broadcasting House ( where BBC 's studios were located ) . After moving into a supposedly haunted castle , they discover television transmission equipment used by German secret agents and use it to put on a show on the BBC 's frequencies .
-	14747603	http://en.wikipedia.org/wiki/Pirate_television	Pirate_television in popular culture	Television	3	WikiEnum	"Al TV ( 1980s-90s ) - Series of MTV specials hosted by "" Weird Al "" Yankovic , using his own pirate transmitter to take over MTV 's signal to play unusual music videos and comedy bits ."
+	14747603	http://en.wikipedia.org/wiki/Pirate_television	Pirate television in popular culture	Movies	2	WikiEnum	Band Waggon ( 1940 ) - British film about a pair of out - of - work performers who are evicted from squatting on the roof of Broadcasting House ( where BBC 's studios were located ) . After moving into a supposedly haunted castle , they discover television transmission equipment used by German secret agents and use it to put on a show on the BBC 's frequencies .
+	14747603	http://en.wikipedia.org/wiki/Pirate_television	Pirate television in popular culture	Television	3	WikiEnum	"Al TV ( 1980s-90s ) - Series of MTV specials hosted by "" Weird Al "" Yankovic , using his own pirate transmitter to take over MTV 's signal to play unusual music videos and comedy bits ."
 WORK_OF_ART	14759609	http://en.wikipedia.org/wiki/Q-Tip_production_discography	1990	A Tribe Called Quest - People's Instinctive Travels and the Paths of Rhythm	0	WikiEnum	"01 . "" Push It Along """
 WORK_OF_ART	14759609	http://en.wikipedia.org/wiki/Q-Tip_production_discography	1991	A Tribe Called Quest - The Low End Theory	1	WikiEnum	"01 . "" Excursions """
 WORK_OF_ART	14759609	http://en.wikipedia.org/wiki/Q-Tip_production_discography	1992	A Tribe Called Quest - Revised Quest for the Seasoned Traveller	2	WikiEnum	"04 . "" Pubic Enemy ( Saturday Night Virus Discomix ) "" ( originally released in 1990 )"
@@ -1625,7 +1618,7 @@ WORK_OF_ART	14759609	http://en.wikipedia.org/wiki/Q-Tip_production_discography	2
 WORK_OF_ART	14759609	http://en.wikipedia.org/wiki/Q-Tip_production_discography	2013	Busta Rhymes & Q-Tip - The Abstract and the Dragon	13	WikiEnum	"07 . "" The Abstract & the Dragon """
 WORK_OF_ART	14759609	http://en.wikipedia.org/wiki/Q-Tip_production_discography	2016	A Tribe Called Quest - We Got It from Here... Thank You 4 Your Service	14	WikiEnum	"01 . "" The Space Program """
 WORK_OF_ART	14759609	http://en.wikipedia.org/wiki/Q-Tip_production_discography	2019	Danny Brown - U Know What I'm Sayin?	15	WikiEnum	"03 . "" Dirty Laundry """
-	14759621	http://en.wikipedia.org/wiki/Tusenfryd	Rides	Roller Coasters	0	WikiTable	"Loopen Steel roller coaster Vekoma 1988 This attraction was built in 1988 , and was the first roller coaster in TusenFryd . The name literally means "" the loop "" . The ride is a custom Vekoma looping coaster with a top speed of 75 km / h. 150px ] ]"
+	14759621	http://en.wikipedia.org/wiki/Tusenfryd	Rides	Roller Coasters	0	WikiTable	"Loopen Steel roller coaster Vekoma 1988 This attraction was built in 1988 , and was the first roller coaster in TusenFryd . The name literally means "" the loop "" . The ride is a custom Vekoma looping coaster with a top speed of 75 km / h."
 	14759621	http://en.wikipedia.org/wiki/Tusenfryd	Rides	Water Rides	1	WikiEnum	Tømmerstupet - A 330 meters long log flume ride that ends in a 7 meter high drop . Opened in 1988 , made by Arrow Dynamics with an on - ride photo camera .
 FAC	14759621	http://en.wikipedia.org/wiki/Tusenfryd	Rides	Other Rides	2	WikiEnum	"Kanofarten - swinging pirate ship ; height limit 1,1 m / 1,2 m alone . Opened in 2008 ."
 FAC	14759621	http://en.wikipedia.org/wiki/Tusenfryd	Rides	Kiddie Rides	3	WikiEnum	"Ballongferden - mini Ferris wheel ; opened in 2005 . Zamperla ."
@@ -1640,8 +1633,8 @@ NONE	14759621	http://en.wikipedia.org/wiki/Tusenfryd	Timeline	Timeline	5	WikiEnu
 	14774372	http://en.wikipedia.org/wiki/Etisalat_Award_for_Arabic_Children's_Literature	Winners	Winners	6	WikiTable	"2009 Nabiha Muhaidali Ana Oheb ( "" I Love "" ) Nadeen Saidani Dar Al Hadaeq Lebanon"
 ORG	14776015	http://en.wikipedia.org/wiki/Huzar_v_Jet2.com	Huzar V Jet2.com in the media	Huzar V Jet2.com in the media	0	WikiEnum	BBC Radio 4 ( 5 May 2014 ): You & Yours - Flight Compensation
 	14783224	http://en.wikipedia.org/wiki/Ambroise_Croizat	Government functions	Government functions	0	WikiEnum	"Minister of Labour under "" le gouvernement de Charles de Gaulle "" ( 2 ) ( 21 November 1945 – 26 January 1946 )"
-	14783224	http://en.wikipedia.org/wiki/Ambroise_Croizat	Posterity	Streets	1	WikiEnum	Grand boulevard Ambroise_Croizat , Venissieux ( Rhône ) .
-	14783224	http://en.wikipedia.org/wiki/Ambroise_Croizat	Posterity	Buildings	2	WikiEnum	Ambroise_Croizat Festival hall , Venissieux .
+	14783224	http://en.wikipedia.org/wiki/Ambroise_Croizat	Posterity	Streets	1	WikiEnum	Grand boulevard Ambroise Croizat , Venissieux ( Rhône ) .
+	14783224	http://en.wikipedia.org/wiki/Ambroise_Croizat	Posterity	Buildings	2	WikiEnum	Ambroise Croizat Festival hall , Venissieux .
 	14785911	http://en.wikipedia.org/wiki/81st_Infantry_Division_(Wehrmacht)	Orders of battle	81. Infanterie-Division 1939	0	WikiEnum	Infanterie - Regiment 161
 	14785911	http://en.wikipedia.org/wiki/81st_Infantry_Division_(Wehrmacht)	Orders of battle	81. Infanterie-Division 1944	1	WikiEnum	Grenadier - Regiment 161
 	14785911	http://en.wikipedia.org/wiki/81st_Infantry_Division_(Wehrmacht)	Commanding officers	Commanding officers	2	WikiEnum	Generalleutnant Friedrich - Wilhelm von Loeper , 1 December 1939 – 5 October 1940
@@ -1651,9 +1644,8 @@ PERSON	14813047	http://en.wikipedia.org/wiki/Polaris_(convention)	History	Polari
 PERSON	14813047	http://en.wikipedia.org/wiki/Polaris_(convention)	History	Polaris 25	1	WikiEnum	"Ben Browder - Actor : Farscape ; Stargate SG-1"
 PERSON	14813047	http://en.wikipedia.org/wiki/Polaris_(convention)	History	Polaris 24	2	WikiEnum	Robin Dunne - Actor : Sanctuary
 WORK_OF_ART	14835389	http://en.wikipedia.org/wiki/Ludwig_Adamovich_Jr.	Selected awards	Selected awards	0	WikiEnum	1974 : Decoration of Honor in Gold for Services to the Republic of Austria
-WORK_OF_ART	14835389	http://en.wikipedia.org/wiki/Ludwig_Adamovich_Jr.	Publications	Standard textbooks	1	WikiEnum	
-WORK_OF_ART	14835389	http://en.wikipedia.org/wiki/Ludwig_Adamovich_Jr.	Publications	Selected other books	2	WikiEnum	
-	14837335	http://en.wikipedia.org/wiki/2010_Movistar_Open_–_Doubles	Seeds	Seeds	0	WikiEnum	Łukasz Kubot / Oliver Marach ( Champions )
+WORK_OF_ART	14835389	http://en.wikipedia.org/wiki/Ludwig_Adamovich_Jr.	Publications	Standard textbooks	1	WikiEnum
+WORK_OF_ART	14835389	http://en.wikipedia.org/wiki/Ludwig_Adamovich_Jr.	Publications	Selected other books	2	WikiEnum
 	14884742	http://en.wikipedia.org/wiki/Rescue:_Special_Ops	Cast and characters	Regular cast	0	WikiEnum	Libby Tanner as Michelle LeTourneau ( Station Manager )
 	14884742	http://en.wikipedia.org/wiki/Rescue:_Special_Ops	Cast and characters	Recurring cast	1	WikiEnum	Wil Traval as Hamish McIntyre
 	14884742	http://en.wikipedia.org/wiki/Rescue:_Special_Ops	Reception	Reception	2	WikiTable	2009 13 Sunday 8:30pm 2 August 25 October 1,227,000 1,005,000 # 10 # 40
@@ -1689,7 +1681,7 @@ NONE	14947714	http://en.wikipedia.org/wiki/Yuniel_Hernández	Achievements	Achiev
 WORK_OF_ART	15011658	http://en.wikipedia.org/wiki/Dink_Trout	Filmography	Filmography	0	WikiEnum	Under Your Spell ( 1936 ) - Small Man ( uncredited )
 	15012315	http://en.wikipedia.org/wiki/Theodore_Newcomb	Awards	Awards	0	WikiEnum	Kurt Lewin Award from Division 9 of the American Psychological Association
 	15012315	http://en.wikipedia.org/wiki/Theodore_Newcomb	Works	Works	1	WikiEnum	Newcomb , Theodore M. : The Love of Ideas ( 1980 )
-	15016259	http://en.wikipedia.org/wiki/The_Pebbles_and_Bamm-Bamm_Show	Cast and characters	Cast and characters	0	WikiEnum	"Sally Struthers as Pebbles Flintstone , Fred and Wilma 's daughter and a beautiful , social teenager . She often tries to help someone in trouble , but usually ends up getting herself and her friends into even bigger trouble . Like her father , her catchphrase was "" Yabba - dabba - doozy ! "" , which was appropriate as most of her schemes were indeed doozies . Much like The Flintstones , Pebbles ' "" trademark "" ponytail was held in place with a bone in the show . When Struthers left the series in order to fulfill a role on the American sitcom All in the Family , actress Mickey Stevens took her place for "" The_Pebbles_and_Bamm - Bamm_Show "" segments on The Flintstone Comedy Hour ."
+	15016259	http://en.wikipedia.org/wiki/The_Pebbles_and_Bamm-Bamm_Show	Cast and characters	Cast and characters	0	WikiEnum	"Sally Struthers as Pebbles Flintstone , Fred and Wilma 's daughter and a beautiful , social teenager . She often tries to help someone in trouble , but usually ends up getting herself and her friends into even bigger trouble . Like her father , her catchphrase was "" Yabba - dabba - doozy ! "" , which was appropriate as most of her schemes were indeed doozies . Much like The Flintstones , Pebbles ' "" trademark "" ponytail was held in place with a bone in the show . When Struthers left the series in order to fulfill a role on the American sitcom All in the Family , actress Mickey Stevens took her place for "" The Pebbles and Bamm - Bamm Show "" segments on The Flintstone Comedy Hour ."
 	15058238	http://en.wikipedia.org/wiki/Ministry_of_Energy_(Petroleum_Division)	Wings /Sections	Wings /Sections	0	WikiEnum	Directorate General of Gas
 	15061244	http://en.wikipedia.org/wiki/Common_Eldarin	Consonants	Consonants	0	WikiTable	Voiceless stops Puntar alómear
 	15094538	http://en.wikipedia.org/wiki/Museum_Walserhaus	The Walserhaus Gurin Association	The Walserhaus Gurin Association	0	WikiEnum	"protect the historical , cultural and linguistic heritage of the Gurin Walser community ;"
@@ -1697,13 +1689,11 @@ WORK_OF_ART	15011658	http://en.wikipedia.org/wiki/Dink_Trout	Filmography	Filmogr
 NONE	15164964	http://en.wikipedia.org/wiki/Ricarda_Lisk	ITU Competitions	ITU Competitions	0	WikiTable	1999 - 07 - 03 European Championships ( Junior ) Funchal 20
 	15175998	http://en.wikipedia.org/wiki/Big_Brother_Angola:_Tesouro	Nomination History	Notes	0	WikiEnum	": On day 1 , Nany was selected by random draw as the HoH. She won immunity and had to evict 4 housemates . She chose to evict Sandra , Larama , Suzete and Massaqui . However , they were not really evicted , and moved to a special part of the House named "" Apartamento Baía Azul "" . They will live there for 2 weeks ."
 	15210859	http://en.wikipedia.org/wiki/20_Odd_Years	Track listing	Track listing	0	WikiEnum	""" Superstars Do n't Love """
-	15210859	http://en.wikipedia.org/wiki/20_Odd_Years	20_Odd_Years EPs	20_Odd_Years, Vol. 1: Avant	1	WikiEnum	""" Gee Whiz "" ( feat . Nick Thorburn )"
-	15210859	http://en.wikipedia.org/wiki/20_Odd_Years	20_Odd_Years EPs	20_Odd_Years, Vol. 2: Distance	2	WikiEnum	""" BCC "" ( feat . John Southworth )"
-	15210859	http://en.wikipedia.org/wiki/20_Odd_Years	20_Odd_Years EPs	20_Odd_Years, Vol. 3: Albuquerque	3	WikiEnum	""" Final Approach "" ( feat . Marie - Pierre Arthur )"
-	15210859	http://en.wikipedia.org/wiki/20_Odd_Years	20_Odd_Years EPs	20_Odd_Years, Vol. 4: Cenotaph	4	WikiEnum	""" Smalltown Boy "" ( feat . Gentleman Reg )"
-	15210859	http://en.wikipedia.org/wiki/20_Odd_Years	20_Odd_Years EPs	20_Odd_Years, Vol. 4: Ostranenie	5	WikiEnum	""" Days Go By "" ( feat . Jenn Grant )"
-	15218920	http://en.wikipedia.org/wiki/2018_Rogers_Cup_–_Women's_Singles	Qualifying	Seeds	0	WikiEnum	Carla Suárez Navarro ( Qualified )
-	15218920	http://en.wikipedia.org/wiki/2018_Rogers_Cup_–_Women's_Singles	Qualifying	Qualifiers	1	WikiEnum	Carla Suárez Navarro
+	15210859	http://en.wikipedia.org/wiki/20_Odd_Years	20 Odd Years EPs	20 Odd Years, Vol. 1: Avant	1	WikiEnum	""" Gee Whiz "" ( feat . Nick Thorburn )"
+	15210859	http://en.wikipedia.org/wiki/20_Odd_Years	20 Odd Years EPs	20 Odd Years, Vol. 2: Distance	2	WikiEnum	""" BCC "" ( feat . John Southworth )"
+	15210859	http://en.wikipedia.org/wiki/20_Odd_Years	20 Odd Years EPs	20 Odd Years, Vol. 3: Albuquerque	3	WikiEnum	""" Final Approach "" ( feat . Marie - Pierre Arthur )"
+	15210859	http://en.wikipedia.org/wiki/20_Odd_Years	20 Odd Years EPs	20 Odd Years, Vol. 4: Cenotaph	4	WikiEnum	""" Smalltown Boy "" ( feat . Gentleman Reg )"
+	15210859	http://en.wikipedia.org/wiki/20_Odd_Years	20 Odd Years EPs	20 Odd Years, Vol. 4: Ostranenie	5	WikiEnum	""" Days Go By "" ( feat . Jenn Grant )"
 NONE	15254547	http://en.wikipedia.org/wiki/1970_Boston_Patriots_season	Regular season	Schedule	0	WikiTable	1 September 20 Miami Dolphins W 27–14 1–0 32,607
 WORK_OF_ART	15256640	http://en.wikipedia.org/wiki/Debbie_Reese	Awards	For An Indigenous Peoples' History of the United States for Young People:	0	WikiEnum	2020 American Indian Youth Literature Young Adult Honor Book
 	15266863	http://en.wikipedia.org/wiki/Brut_Productions	Select films	Select films	0	WikiEnum	Night Watch ( 1973 )
