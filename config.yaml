@@ -141,7 +141,7 @@ cache:
     version: 2
   wikipedia_parsed_pages:
     filename: 'wikipedia-parsed-pages'
-    version: 2
+    version: 3
   wikipedia_type_lexicalisations:
     filename: 'wikipedia-type-lexicalisations'
     version: 2
@@ -242,20 +242,20 @@ cache:
     store_as_folder: True
   subject_entity_listpage_labels:
     filename: 'subject-entity-listpage-labels'
-    version: 2
+    version: 3
   subject_entity_mentions_noisy:
     filename: 'subject-entity-mentions-noisy'
-    version: 2
+    version: 3
   subject_entity_mentions:
     filename: 'subject-entity-mentions'
-    version: 2
+    version: 3
   transformer_for_listpage_mention_detection:
     filename: 'transformer-for-listpage-mention-detection'
-    version: 2
+    version: 3
     store_as_folder: True
   transformer_for_page_mention_detection:
     filename: 'transformer-for-page-mention-detection'
-    version: 2
+    version: 3
     store_as_folder: True
   caligraph_ontology:
     filename: 'caligraph-ontology'
@@ -265,36 +265,36 @@ cache:
     version: 2
   cali2ax_axioms:
     filename: 'cali2ax-axioms'
-    version: 2
+    version: 3
   listing_page_entities:
     filename: 'listing-page-entities'
-    version: 2
+    version: 3
 
 # WIP
   entity_linking_pages:
     filename: 'entity-linking-pages'
-    version: 4
+    version: 5
   word_blocker_exact:
     filename: 'word-blocker-exact'
     version: RDF2vec
   MD_listpage_data:
     filename: 'MD-listpage-data'
-    version: 4
+    version: 5
   MD_listpage_train:
     filename: 'MD-listpage-train'
-    version: 4
+    version: 5
   MD_listpage_eval:
     filename: 'MD-listpage-eval'
-    version: 4
+    version: 5
   MD_page_train:
     filename: 'MD-page-train'
-    version: 4
+    version: 5
   MD_page_test:
     filename: 'MD-page-test'
-    version: 4
+    version: 5
   ME_data:
     filename: 'ME-data'
-    version: 4
+    version: 5
   MM_data:
     filename: 'MM-data'
-    version: 4
+    version: 5
