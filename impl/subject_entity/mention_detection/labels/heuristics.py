@@ -56,6 +56,8 @@ def _find_subject_entities_for_listpages() -> Dict[int, Dict[int, Tuple[Set[int]
                     negatives.add(ent.idx)
             if positives or negatives:
                 subject_entities_per_listing[listing.idx] = (positives, negatives)
+        # filter out listings having only one or two positves (as this means a single entity is repeating multiple times)
+        subject_entities_per_listing = {listing_idx: (positives, negatives) for listing_idx, (positives, negatives) in subject_entities_per_listing.items() if len(positives) == 0 or len(positives) > 2}
         if subject_entities_per_listing:
             subject_entities[page.idx] = subject_entities_per_listing
     return subject_entities

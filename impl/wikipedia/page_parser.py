@@ -68,12 +68,12 @@ class WikiTableRow(WikiListingItem):
 
 
 class WikiSection:
-    def __init__(self, section_data):
+    def __init__(self, section_data, mention_resource_mapping: dict):
         raw_title = section_data.title.strip() if section_data.title and section_data.title.strip() else 'Main'
         self.title = wmp.wikitext_to_plaintext(raw_title)
         self.tokens, self.whitespaces = get_tokens_and_whitespaces_from_text(self.title)
         self.level = section_data.level
-        self.resource_name = wmp.get_first_wikilink_resource(raw_title)
+        self.resource_name = wmp.get_first_wikilink_resource(raw_title) or _find_first_entity_with_mention_resource_mapping(self.tokens, mention_resource_mapping)
         self.entity_idx = None  # set after parsing
 
     def is_top_section(self) -> bool:
@@ -291,7 +291,27 @@ def _create_mention_resource_mapping(wiki_text: WikiText, resource: str) -> dict
     mention_to_resource = {wmp.get_label_for_wikilink(wl): wmp.get_resource_name_for_wikilink(wl) for wl in wiki_text.wikilinks}
     mention_to_resource[resource] = resource  # consider mentions of page resource itself as well
     mention_to_resource = {mention: res for mention, res in mention_to_resource.items() if mention and res}
-    return mention_to_resource
+    # tokenize every mention and index by their first word for easy retrieval
+    mention_token_entities = defaultdict(list)
+    for mention, res in mention_to_resource.items():
+        mention_tokens, _ = get_tokens_and_whitespaces_from_text(mention)
+        if not mention_tokens[0]:
+            continue
+        mention_token_entities[mention_tokens[0]].append((mention_tokens, mention, res))
+    # sort the lists by descending length to always find the longest mention
+    mention_token_entities = {idx: sorted(mte, key=lambda x: len(x[0]), reverse=True) for idx, mte in mention_token_entities.items()}
+    return mention_token_entities
+
+
+def _find_first_entity_with_mention_resource_mapping(tokens: List[str], mention_resource_mapping: dict) -> Optional[str]:
+    for idx, token in enumerate(tokens):
+        if token not in mention_resource_mapping:
+            continue
+        for mention_tokens, _, res in mention_resource_mapping[token]:
+            mention_length = len(mention_tokens)
+            if tokens[idx:idx + mention_length] == mention_tokens:
+                return res
+    return None
 
 
 def _extract_listings(wiki_text: WikiText, mention_resource_mapping: dict) -> list:
@@ -299,7 +319,7 @@ def _extract_listings(wiki_text: WikiText, mention_resource_mapping: dict) -> li
     listing_idx = 0
     topsection = None
     for section_data in wiki_text.get_sections(include_subsections=False):
-        section = WikiSection(section_data)
+        section = WikiSection(section_data, mention_resource_mapping)
         topsection = section if section.is_top_section() else topsection
         if topsection.is_meta_section():
             continue  # discard meta sections
@@ -429,21 +449,12 @@ def _tokenize_wikitext(wiki_text: str, mention_resource_mapping: dict) -> Tuple[
 
 
 def _find_expanded_mentions(tokens: List[str], mention_resource_mapping: dict, tokens_with_mentions: Set[int]) -> List[WikiMention]:
-    # tokenize every mention and index by their first word for easy retrieval
-    mention_token_entities = defaultdict(list)
-    for mention, res in mention_resource_mapping.items():
-        mention_tokens, _ = get_tokens_and_whitespaces_from_text(mention)
-        if not mention_tokens[0]:
-            continue
-        mention_token_entities[mention_tokens[0]].append((mention_tokens, mention, res))
-    # sort the lists by descending length to always find the longest mention
-    mention_token_entities = {idx: sorted(mte, key=lambda x: len(x[0]), reverse=True) for idx, mte in mention_token_entities.items()}
-    # go over every token and check whether it is the start of a undetected mention
+    # go over every token and check whether it is the start of an undetected mention
     expanded_mentions = []
     for idx, token in enumerate(tokens):
-        if idx in tokens_with_mentions or token not in mention_token_entities:
+        if idx in tokens_with_mentions or token not in mention_resource_mapping:
             continue
-        for mention_tokens, mention, res in mention_token_entities[token]:
+        for mention_tokens, mention, res in mention_resource_mapping[token]:
             mention_length = len(mention_tokens)
             if tokens[idx:idx+mention_length] == mention_tokens:
                 expanded_mentions.append(WikiMention(res, mention, idx, idx+mention_length))
@@ -489,7 +500,7 @@ def _init_mention_entities(mentions: List[WikiMention]) -> List[WikiMention]:
     for mention in mentions:
         ent_idx = wmp.get_resource_idx_for_resource_name(mention.name)
         if ent_idx is None:
-            ent_idx = -1 if is_entity_name(mention.name) else None
+            ent_idx = -1 if mention.name is None or is_entity_name(mention.name) else None
         mention.entity_idx = ent_idx
     return [m for m in mentions if m.entity_idx is not None]
 
