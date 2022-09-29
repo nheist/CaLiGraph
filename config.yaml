@@ -13,7 +13,7 @@ category:
 cat2ax:
   pattern_confidence: 0.05
 subject_entity:
-  model_mention_detection: 'distilbert-base-cased'
+  model_mention_detection: 'roberta-base'
   negative_sample_size: 0.3
 cali2ax:
   pattern_confidence: 0.17
@@ -242,20 +242,20 @@ cache:
     store_as_folder: True
   subject_entity_listpage_labels:
     filename: 'subject-entity-listpage-labels'
-    version: 3
+    version: 4
   subject_entity_mentions_noisy:
     filename: 'subject-entity-mentions-noisy'
-    version: 3
+    version: 4
   subject_entity_mentions:
     filename: 'subject-entity-mentions'
-    version: 3
+    version: 4
   transformer_for_listpage_mention_detection:
     filename: 'transformer-for-listpage-mention-detection'
-    version: 3
+    version: 4
     store_as_folder: True
   transformer_for_page_mention_detection:
     filename: 'transformer-for-page-mention-detection'
-    version: 3
+    version: 4
     store_as_folder: True
   caligraph_ontology:
     filename: 'caligraph-ontology'

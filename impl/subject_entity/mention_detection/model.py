@@ -33,8 +33,10 @@ def train_tokenizer_and_model(model_id: str, base_model_id: str = None):
 
     if model_id == LISTPAGE_MODEL:
         dataset = get_listpage_training_dataset(tokenizer)
+        num_epochs = 2
     elif model_id == PAGE_MODEL:
         dataset = get_page_training_dataset(tokenizer)
+        num_epochs = 1
     else:
         raise ValueError(f'Invalid value for model_id: {model_id}')
 
@@ -44,8 +46,8 @@ def train_tokenizer_and_model(model_id: str, base_model_id: str = None):
         output_dir=f'/tmp',
         logging_dir=f'./logs/transformers/MD_{run_id}',
         logging_steps=500,
-        per_device_train_batch_size=32,
-        num_train_epochs=1,
+        per_device_train_batch_size=64,
+        num_train_epochs=num_epochs,
         learning_rate=5e-5,
     )
     trainer = Trainer(model=model, args=training_args, train_dataset=dataset)

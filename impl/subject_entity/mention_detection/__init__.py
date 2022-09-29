@@ -11,7 +11,7 @@ from .data import get_listpage_training_dataset, get_page_training_dataset, get_
 from .model import LISTPAGE_MODEL, PAGE_MODEL, model_exists, load_tokenizer_and_model, train_tokenizer_and_model
 
 
-PREDICTION_BATCH_SIZE = 600
+PREDICTION_BATCH_SIZE = 500
 
 
 def detect_mentions():
