@@ -24,7 +24,7 @@ def run_evaluation(model_name: str, epochs: int, batch_size: int, learning_rate:
     model.resize_token_embeddings(len(tokenizer))
 
     if train_on_listpages:
-        lp_train_dataset = dataset.get_md_lp_train_dataset(tokenizer, ignore_tags, negative_sample_size)
+        lp_train_dataset = dataset.get_md_lp_train_dataset(tokenizer, ignore_tags, negative_sample_size, single_item_chunks)
         lp_eval_dataset = dataset.get_md_lp_eval_dataset(tokenizer, ignore_tags)
         utils.release_gpu()
         training_args = TrainingArguments(
@@ -53,7 +53,7 @@ def run_evaluation(model_name: str, epochs: int, batch_size: int, learning_rate:
 
     if train_on_pages:
         p_negative_sample_size = 0.0 if disable_negative_sampling else negative_sample_size
-        p_train_dataset = dataset.get_md_page_train_dataset(tokenizer, ignore_tags, p_negative_sample_size)
+        p_train_dataset = dataset.get_md_page_train_dataset(tokenizer, ignore_tags, p_negative_sample_size, single_item_chunks)
         utils.release_gpu()
         training_args = TrainingArguments(
             seed=42,

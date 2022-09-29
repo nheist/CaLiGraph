@@ -11,9 +11,10 @@ from impl.dbpedia.ontology import DbpOntologyStore
 from impl.subject_entity.mention_detection.labels.entity_type import TYPE_TO_LABEL_MAPPING
 
 
-def get_md_lp_train_dataset(tokenizer, ignore_tags: bool, negative_sample_size: float) -> MentionDetectionDataset:
+def get_md_lp_train_dataset(tokenizer, ignore_tags: bool, negative_sample_size: float, single_item_chunks: bool) -> MentionDetectionDataset:
     prepare_train_chunks = lambda: _create_md_lp_chunks(0, negative_sample_size)
-    train_tokens, train_labels, train_listing_types = utils.load_or_create_cache('MD_listpage_train', prepare_train_chunks, version=f'nss-{negative_sample_size}')
+    version = f'nss-{negative_sample_size}-sic' if single_item_chunks else f'nss-{negative_sample_size}'
+    train_tokens, train_labels, train_listing_types = utils.load_or_create_cache('MD_listpage_train', prepare_train_chunks, version=version)
     return MentionDetectionDataset(tokenizer, train_tokens, train_labels, train_listing_types, ignore_tags)
 
 
@@ -39,9 +40,10 @@ def _get_md_listpage_data() -> Tuple[List[int], List[int]]:
     return train_pages, val_pages
 
 
-def get_md_page_train_dataset(tokenizer, ignore_tags: bool, negative_sample_size: float) -> MentionDetectionDataset:
+def get_md_page_train_dataset(tokenizer, ignore_tags: bool, negative_sample_size: float, single_item_chunks: bool) -> MentionDetectionDataset:
     prepare_train_chunks = lambda: _create_md_page_train_chunks(negative_sample_size)
-    tokens, labels, listing_types = utils.load_or_create_cache('MD_page_train', prepare_train_chunks, version=f'nss-{negative_sample_size}')
+    version = f'nss-{negative_sample_size}-sic' if single_item_chunks else f'nss-{negative_sample_size}'
+    tokens, labels, listing_types = utils.load_or_create_cache('MD_page_train', prepare_train_chunks, version=version)
     return MentionDetectionDataset(tokenizer, tokens, labels, listing_types, ignore_tags)
 
 
