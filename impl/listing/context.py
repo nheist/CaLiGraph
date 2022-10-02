@@ -25,7 +25,7 @@ def retrieve_page_entity_context() -> pd.DataFrame:
                     listing.section.title,
                     listing.section.entity_idx,
                     se_mention.label,
-                    se_mention.entity_type,
+                    se_mention.entity_type.value,
                     se_mention.entity_idx
                 ))
     # create frame and add further features

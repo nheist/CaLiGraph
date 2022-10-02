@@ -150,7 +150,7 @@ class WikiPage:
         return self.listings.values()
 
     def has_subject_entities(self) -> bool:
-        return any(item.subject_entity is not None for listing in self.get_listings() for item in listing.get_items())
+        return any(listing.has_subject_entities() for listing in self.get_listings())
 
     def get_subject_entities(self) -> List[WikiSubjectEntity]:
         return [se for listing in self.get_listings() for se in listing.get_subject_entities()]
