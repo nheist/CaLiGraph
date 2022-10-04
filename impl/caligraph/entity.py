@@ -38,6 +38,9 @@ class ClgEntity(RdfResource):
     def get_properties(self, as_tuple=False) -> Dict[ClgPredicate, set]:
         return self._get_store().get_properties(self, as_tuple=as_tuple)
 
+    def get_inverse_properties(self, as_tuple=False) -> Dict[ClgPredicate, set]:
+        return self._get_store().get_inverse_properties(self, as_tuple=as_tuple)
+
     def get_axiom_properties(self) -> Dict[ClgPredicate, set]:
         return self._get_store().get_axiom_properties(self)
 
@@ -69,18 +72,24 @@ class ClgEntityStore:
         self.types = self._init_types()
         self._clean_types()
         self.properties = self._init_properties()
+        self.inverse_properties = None
         self.provenance_resources = defaultdict(set)
         self.entity_stats = None
 
         self.axioms = None
         self.axiom_properties = None
 
+    def _reset_precomputed_attributes(self):
+        """Reset precomputed attributes in case new information is added to the store."""
+        self.inverse_properties = None
+        self.entity_stats = None
+
     def _init_entity_cache(self) -> List[ClgEntity]:
         # incorporate existing entities from DBpedia (but no redirects or disambiguations)
         return [ClgEntity(e.idx, e.name, False) for e in self.dbr.get_entities()]
 
     def add_subject_entities(self):
-        self.entity_stats = None  # reset, as we are adding new entity information
+        self._reset_precomputed_attributes()
         subject_entity_info = defaultdict(lambda: {'labels': Counter(), 'types': set(), 'provenance': set()})
         # collect info about subject entities
         for wp in WikiPageStore.instance().get_pages():
@@ -107,7 +116,7 @@ class ClgEntityStore:
         self._clean_types()
 
     def add_axiom_information(self, axiom_information: Dict[ClgType, Set[Tuple[ClgPredicate, Any, float]]]):
-        self.entity_stats = None  # reset, as we are adding new entity information
+        self._reset_precomputed_attributes()
         self.axioms = defaultdict(set, {ct: {tuple(axiom[1:3]) for axiom in axioms} for ct, axioms in axiom_information.items()})
         # remove redundant axioms by first applying full transitivity to the axioms and then reducing bottom-up
         for node in self.clgo.graph.traverse_nodes_topdown():
@@ -127,7 +136,7 @@ class ClgEntityStore:
                     self.properties[ent][pred].add(val)
 
     def add_listing_information(self, listing_information: Dict[int, Dict[Tuple[int, str], dict]]):
-        self.entity_stats = None  # reset, as we are adding new entity information
+        self._reset_precomputed_attributes()
         for ent_idx, origin_data in listing_information.items():
             for (res_idx, section_name), data in origin_data.items():
                 ent = self.get_entity_by_idx(ent_idx)
@@ -251,6 +260,17 @@ class ClgEntityStore:
 
     def get_entity_properties(self) -> Dict[ClgEntity, Dict[ClgPredicate, set]]:
         return {e: self.get_properties(e) for e in self.get_entities()}
+
+    def get_inverse_properties(self, ent: ClgEntity, as_tuple=False) -> Union[Dict[ClgPredicate, Set[ClgEntity]], Set[Tuple[ClgPredicate, ClgEntity]]]:
+        if self.inverse_properties is None:
+            self.inverse_properties = defaultdict(lambda: defaultdict(set))
+            for sub, props in self.properties.items():
+                for pred, vals in props.items():
+                    for val in vals:
+                        if not isinstance(val, ClgEntity):
+                            continue
+                        self.inverse_properties[val][pred].add(sub)
+        return {(p, v) for p, vals in self.inverse_properties[ent].items() for v in vals} if as_tuple else self.inverse_properties[ent]
 
     def get_property_frequencies(self, clg_type: ClgType) -> Dict[Tuple[ClgPredicate, Any], float]:
         if self.entity_stats is None:
