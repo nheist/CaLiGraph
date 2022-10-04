@@ -4,7 +4,7 @@ from .matching import MatchingScenario, MatchingApproach, initialize_matcher
 
 
 def run_evaluation(scenario: MatchingScenario, approach: MatchingApproach, params: dict, save_alignment: bool):
-    train_corpus, eval_corpus, test_corpus = data.get_train_val_test_corpora_for_scenario(scenario)
+    train_corpus, eval_corpus, test_corpus = _get_train_val_test_corpora_for_scenario(scenario)
     matcher = initialize_matcher(scenario, approach, params)
     if save_alignment:
         train_alignment = matcher.train(train_corpus)
@@ -19,3 +19,11 @@ def run_evaluation(scenario: MatchingScenario, approach: MatchingApproach, param
         matcher.train(train_corpus)
         matcher.eval(eval_corpus)
         matcher.test(test_corpus)
+
+
+def _get_train_val_test_corpora_for_scenario(scenario: MatchingScenario):
+    match scenario:
+        case MatchingScenario.MENTION_MENTION:
+            return data.get_mm_train_val_test_corpora()
+        case MatchingScenario.MENTION_ENTITY:
+            return data.get_me_train_val_test_corpora()

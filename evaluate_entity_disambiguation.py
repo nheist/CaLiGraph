@@ -1,9 +1,9 @@
 import argparse
 import os
-os.environ['DISABLE_SPACY_CACHE'] = '1'
 
 
 if __name__ == '__main__':
+    os.environ['DISABLE_SPACY_CACHE'] = '1'  # make sure that spaCy cache is disabled
     # make relevant imports and parse all the arguments
     from entity_linking.entity_disambiguation.matching import MatchingScenario, MatchingApproach
     parser = argparse.ArgumentParser(description='Run the evaluation of entity disambiguation approaches.')

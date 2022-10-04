@@ -7,19 +7,10 @@ from impl.util.transformer import EntityIndex
 from impl.wikipedia import WikiPageStore, WikiPage
 from impl.caligraph.entity import ClgEntityStore
 from impl.subject_entity import mention_detection
-from entity_linking.entity_disambiguation.matching import MatchingScenario
 
 
 Pair = namedtuple('Pair', ['source', 'target'])
 DataCorpus = namedtuple('DataCorpus', ['source', 'target', 'alignment'])
-
-
-def get_train_val_test_corpora_for_scenario(scenario: MatchingScenario):
-    match scenario:
-        case MatchingScenario.MENTION_MENTION:
-            return get_mm_train_val_test_corpora()
-        case MatchingScenario.MENTION_ENTITY:
-            return get_me_train_val_test_corpora()
 
 
 # MENTION-MENTION
