@@ -271,9 +271,6 @@ cache:
     version: 3
 
 # WIP
-  entity_linking_pages:
-    filename: 'entity-linking-pages'
-    version: 5
   word_blocker_exact:
     filename: 'word-blocker-exact'
     version: RDF2vec
@@ -292,9 +289,15 @@ cache:
   MD_page_test:
     filename: 'MD-page-test'
     version: 5
+  MM_data:
+    filename: 'MM-data'
+    version: 5
+  MM_datasets:
+    filename: 'MM-datasets'
+    version: 5
   ME_data:
     filename: 'ME-data'
     version: 5
-  MM_data:
-    filename: 'MM-data'
+  ME_datasets:
+    filename: 'ME-datasets'
     version: 5

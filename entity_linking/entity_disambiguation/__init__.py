@@ -1,3 +1,4 @@
+import utils
 from . import data
 from .matching import util as matching_util
 from .matching import MatchingScenario, MatchingApproach, initialize_matcher
@@ -24,6 +25,6 @@ def run_evaluation(scenario: MatchingScenario, approach: MatchingApproach, param
 def _get_train_val_test_corpora_for_scenario(scenario: MatchingScenario):
     match scenario:
         case MatchingScenario.MENTION_MENTION:
-            return data.get_mm_train_val_test_corpora()
+            return utils.load_or_create_cache('MM_datasets', data.get_mm_train_val_test_corpora)
         case MatchingScenario.MENTION_ENTITY:
-            return data.get_me_train_val_test_corpora()
+            return utils.load_or_create_cache('ME_datasets', data.get_me_train_val_test_corpora)

@@ -15,11 +15,8 @@ DataCorpus = namedtuple('DataCorpus', ['source', 'target', 'alignment'])
 
 # MENTION-MENTION
 
-# TODO: first, try random split; if number of matches is proportional and sufficient, then ok. otherwise:
-# IDEA: try to split based on existing matches, so that as many pages with matches are together as possible
-
-
 def get_mm_train_val_test_corpora() -> Tuple[DataCorpus, DataCorpus, DataCorpus]:
+    mention_detection.detect_mentions()  # annotate pages with subject entities
     train_pages, val_pages, test_pages = _get_mm_train_val_test_pages()
     return _create_mm_corpus_from_pages(train_pages), _create_mm_corpus_from_pages(val_pages), _create_mm_corpus_from_pages(test_pages)
 
@@ -46,6 +43,7 @@ def _create_mm_corpus_from_pages(pages: List[WikiPage]) -> DataCorpus:
 # MENTION-ENTITY
 
 def get_me_train_val_test_corpora() -> Tuple[DataCorpus, DataCorpus, DataCorpus]:
+    mention_detection.detect_mentions()  # annotate pages with subject entities
     train_pages, val_pages, test_pages = _get_me_train_val_test_pages()
     return _create_me_corpus_from_pages(train_pages), _create_me_corpus_from_pages(val_pages), _create_me_corpus_from_pages(test_pages)
 
@@ -72,7 +70,6 @@ def _get_me_train_val_test_pages() -> Tuple[List[WikiPage], List[WikiPage], List
 
 def _load_page_data(sample_size: float) -> Tuple[List[int], List[int], List[int]]:
     # retrieve all pages with subject entities
-    mention_detection.detect_mentions()
     wiki_pages = [wp.idx for wp in WikiPageStore.instance().get_pages() if wp.has_subject_entities()]
     # sample, shuffle, split
     wiki_pages = random.sample(wiki_pages, int(len(wiki_pages) * sample_size))
