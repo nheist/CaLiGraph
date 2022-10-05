@@ -36,6 +36,6 @@ class PrecisionRecallF1Evaluator:
         return precision, recall, f1
 
     def _log_metrics(self, prefix: str, metrics: dict, step: int = 0):
-        with SummaryWriter(log_dir=f'./logs/MM/{self.approach_name}') as tb:
+        with SummaryWriter(log_dir=f'./logs/ED/{self.approach_name}') as tb:
             for key, val in metrics.items():
                 tb.add_scalar(f'{prefix}/{key}', val, step)
