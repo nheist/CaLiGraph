@@ -14,4 +14,4 @@ def load_candidates(approach_id: str) -> dict:
 
 
 def _get_approach_path(approach_id: str) -> str:
-    return os.path.join(utils._get_root_path(), 'entity_linking', 'data', approach_id)
+    return os.path.join(utils._get_root_path(), 'entity_linking', 'data', approach_id, '.p')
