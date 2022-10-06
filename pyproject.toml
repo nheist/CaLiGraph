@@ -5,7 +5,7 @@ description = ""
 authors = ["Nicolas Heist <nico@informatik.uni-mannheim.de>"]
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.9"
 inflection = "*"
 pandas = "*"
 wikitextparser = "*"
@@ -23,6 +23,7 @@ unidecode = "*"
 transformers = "*"
 torch = "*"
 poethepoet = "*"
+sentence-transformers = "^2.2.2"
 
 [tool.poetry.dev-dependencies]
 pytest = "*"
