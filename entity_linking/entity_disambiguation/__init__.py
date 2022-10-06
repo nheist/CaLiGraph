@@ -17,11 +17,8 @@ def run_evaluation(scenario: MatchingScenario, approach: MatchingApproach, param
 
 
 def _get_train_val_test_corpora_for_scenario(scenario: MatchingScenario):
-    print(scenario)
-    match scenario:
-        case MatchingScenario.MENTION_MENTION:
-            return utils.load_or_create_cache('MM_datasets', data.get_mm_train_val_test_corpora)
-        case MatchingScenario.MENTION_ENTITY:
-            return utils.load_or_create_cache('ME_datasets', data.get_me_train_val_test_corpora)
-        case _:
-            raise ValueError(f'Invalid scenario: {scenario.name}')
+    if scenario == MatchingScenario.MENTION_MENTION:
+        return utils.load_or_create_cache('MM_datasets', data.get_mm_train_val_test_corpora)
+    elif scenario == MatchingScenario.MENTION_ENTITY:
+        return utils.load_or_create_cache('ME_datasets', data.get_me_train_val_test_corpora)
+    raise ValueError(f'Invalid scenario: {scenario.name}')

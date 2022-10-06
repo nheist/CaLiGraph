@@ -71,10 +71,8 @@ def _find_type_for_ent(ent_idx: int) -> EntityTypeLabel:
 
 
 def _map_ent_to_type_label(ent_idx: int, entity_value: int):
-    match ent_idx:
-        case EntityIndex.IGNORE.value:
-            return EntityIndex.IGNORE.value
-        case EntityIndex.NO_ENTITY.value:
-            return EntityTypeLabel.NONE.value
-        case _:
-            return entity_value
+    if ent_idx == EntityIndex.IGNORE.value:
+        return EntityIndex.IGNORE.value
+    elif ent_idx == EntityIndex.NO_ENTITY.value:
+        return EntityTypeLabel.NONE.value
+    return entity_value

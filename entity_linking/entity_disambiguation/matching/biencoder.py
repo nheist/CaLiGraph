@@ -45,15 +45,13 @@ class BiEncoderMatcher(Matcher):
         return DataLoader(input_examples, shuffle=True, batch_size=self.batch_size)
 
     def _get_loss_function(self) -> nn.Module:
-        match self.loss:
-            case 'COS':
-                return losses.CosineSimilarityLoss(model=self.model)
-            case 'RL':
-                return losses.MultipleNegativesRankingLoss(model=self.model)
-            case 'SRL':
-                return losses.MultipleNegativesSymmetricRankingLoss(model=self.model)
-            case _:
-                raise ValueError(f'Unknown loss identifier: {self.loss}')
+        if self.loss == 'COS':
+            return losses.CosineSimilarityLoss(model=self.model)
+        elif self.loss == 'RL':
+            return losses.MultipleNegativesRankingLoss(model=self.model)
+        elif self.loss == 'SRL':
+            return losses.MultipleNegativesSymmetricRankingLoss(model=self.model)
+        raise ValueError(f'Unknown loss identifier: {self.loss}')
 
     # HINT: use ANN search with e.g. hnswlib (https://github.com/nmslib/hnswlib/) if exact NN search is too costly
     # EXAMPLE: https://github.com/UKPLab/sentence-transformers/tree/master/examples/applications/semantic-search/semantic_search_quora_hnswlib.py

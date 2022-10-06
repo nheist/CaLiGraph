@@ -10,15 +10,14 @@ def initialize_matcher(scenario: MatchingScenario, approach: MatchingApproach, p
     if params['blocking_approach'] is not None:
         params['candidates'] = matching_util.load_candidates(params['blocking_approach'])
     # initialize main matcher
-    match approach:
-        case MatchingApproach.EXACT:
-            matcher_factory = ExactMatcher
-        case MatchingApproach.WORD:
-            matcher_factory = WordMatcher
-        case MatchingApproach.POPULARITY:
-            matcher_factory = PopularityMatcher
-        case MatchingApproach.BIENCODER:
-            matcher_factory = BiEncoderMatcher
-        case _:
-            raise ValueError(f'Blocking approach not implemented: {approach.value}')
+    if approach == MatchingApproach.EXACT:
+        matcher_factory = ExactMatcher
+    elif approach == MatchingApproach.WORD:
+        matcher_factory = WordMatcher
+    elif approach == MatchingApproach.POPULARITY:
+        matcher_factory = PopularityMatcher
+    elif approach == MatchingApproach.BIENCODER:
+        matcher_factory = BiEncoderMatcher
+    else:
+        raise ValueError(f'Blocking approach not implemented: {approach.value}')
     return matcher_factory(scenario, params)
