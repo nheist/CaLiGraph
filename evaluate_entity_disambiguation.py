@@ -20,7 +20,7 @@ if __name__ == '__main__':
     parser.add_argument('-ws', '--warmup_steps', type=int, default=0, help='Number of warmup steps for training the bi/cross-encoder')
     parser.add_argument('-bs', '--batch_size', type=int, default=64, help='Batch size for training the bi/cross-encoder')
     # for bi-encoder
-    parser.add_argument('-k', '--top_k', type=int, help='Number of matches to return per input (only for bi-encoder)')
+    parser.add_argument('-k', '--top_k', type=int, default=3, help='Number of matches to return per input (only for bi-encoder)')
 
     args = parser.parse_args()
     # and set necessary environment variables
