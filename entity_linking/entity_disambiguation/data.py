@@ -50,14 +50,18 @@ def get_me_train_val_test_corpora() -> Tuple[DataCorpus, DataCorpus, DataCorpus]
 
 def _create_me_corpus_from_pages(pages: List[WikiPage]) -> DataCorpus:
     listings = [listing for page in pages for listing in page.get_listings() if listing.has_subject_entities()]
-    entities = ClgEntityStore.instance().get_entities()
+    clge = ClgEntityStore.instance()
+    entities = clge.get_entities()
     alignment = set()
     for listing in listings:
         for item in listing.get_items():
             if not item.subject_entity or item.subject_entity.entity_idx == EntityIndex.NEW_ENTITY.value:
                 continue
             item_id = (listing.page_idx, listing.idx, item.idx)
-            alignment.add(Pair(item_id, item.subject_entity.entity_idx))
+            se_id = item.subject_entity.entity_idx
+            if not clge.has_entity_with_idx(se_id):
+                continue
+            alignment.add(Pair(item_id, se_id))
     return DataCorpus(listings, entities, alignment)
 
 
