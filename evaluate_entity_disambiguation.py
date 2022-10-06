@@ -3,16 +3,13 @@ import os
 
 
 if __name__ == '__main__':
-    os.environ['DISABLE_SPACY_CACHE'] = '1'  # make sure that spaCy cache is disabled
-    # make relevant imports and parse all the arguments
-    from entity_linking.entity_disambiguation.matching import MatchingScenario, MatchingApproach
     parser = argparse.ArgumentParser(description='Run the evaluation of entity disambiguation approaches.')
     # machine-specific
     parser.add_argument('gpu', type=int, choices=range(-1, 8), help='Number of GPU to use')
     parser.add_argument('-gm', '--gpu_memory', type=int, default=47, help='Amount of GPU memory to reserve')
     # general matching
-    parser.add_argument('scenario', type=str, choices=[s.value for s in MatchingScenario], help='Whether to match mention-mention or mention-entity')
-    parser.add_argument('approach', type=str, choices=[a.value for a in MatchingApproach], help='Approach used for matching')
+    parser.add_argument('scenario', type=str, help='Whether to match mention-mention or mention-entity')
+    parser.add_argument('approach', type=str, help='Approach used for matching')
     parser.add_argument('-sa', '--save_alignment', action=argparse.BooleanOptionalAction, default=False, help='Whether to save the produced alignment for train/val/test')
     # matchers needing candidates
     parser.add_argument('-ba', '--blocking_approach', type=str, help='Matcher (ID) to retrieve candidates from')
@@ -26,6 +23,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     # and set necessary environment variables
+    os.environ['DISABLE_SPACY_CACHE'] = '1'  # make sure that spaCy cache is disabled
     if args.gpu >= 0:
         os.environ['CUDA_VISIBLE_DEVICES'] = str(args.gpu)
         import utils
@@ -39,6 +37,7 @@ if __name__ == '__main__':
     np.random.seed(SEED)
     torch.manual_seed(SEED)
     # initialize parameters
+    from entity_linking.entity_disambiguation.matching import MatchingScenario, MatchingApproach
     scenario = MatchingScenario(args.scenario)
     approach = MatchingApproach(args.approach)
     params = {
