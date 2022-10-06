@@ -1,4 +1,4 @@
-from typing import Set, List, Optional
+from typing import Set, List, Optional, Dict
 from abc import ABC, abstractmethod
 from enum import Enum
 from time import process_time
@@ -30,19 +30,19 @@ class Matcher(ABC):
     def get_approach_id(self) -> str:
         return '_'.join([self.scenario.value, f'v{self.version}', type(self).__name__])
 
-    def train(self, training_set: DataCorpus) -> Set[Pair]:
-        self._train_model(training_set)
-        return self._evaluate(self.MODE_TRAIN, training_set)
+    def train(self, training_set: DataCorpus, eval_set: DataCorpus) -> Dict[str, Set[Pair]]:
+        self._train_model(training_set, eval_set)
+        return {
+            self.MODE_TRAIN: self._evaluate(self.MODE_TRAIN, training_set),
+            self.MODE_EVAL: self._evaluate(self.MODE_EVAL, eval_set)
+        }
 
     @abstractmethod
-    def _train_model(self, training_set: DataCorpus):
+    def _train_model(self, training_set: DataCorpus, eval_set: DataCorpus):
         pass
 
-    def eval(self, eval_set: DataCorpus) -> Set[Pair]:
-        return self._evaluate(self.MODE_EVAL, eval_set)
-
-    def test(self, test_set: DataCorpus) -> Set[Pair]:
-        return self._evaluate(self.MODE_TEST, test_set)
+    def test(self, test_set: DataCorpus) -> Dict[str, Set[Pair]]:
+        return {self.MODE_TEST: self._evaluate(self.MODE_TEST, test_set)}
 
     def _evaluate(self, prefix: str, data_corpus: DataCorpus) -> Set[Pair]:
         pred_start = process_time()

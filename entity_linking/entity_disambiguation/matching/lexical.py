@@ -12,7 +12,7 @@ from entity_linking.entity_disambiguation.matching.matcher import Matcher
 
 
 class LexicalMatcher(Matcher, ABC):
-    def _train_model(self, training_set: DataCorpus):
+    def _train_model(self, training_set: DataCorpus, eval_set: DataCorpus):
         pass  # no training necessary
 
     def predict(self, prefix: str, source: List[WikiListing], target: Optional[List[ClgEntity]]) -> Set[Pair]:

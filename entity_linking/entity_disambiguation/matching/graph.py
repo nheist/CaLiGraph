@@ -11,7 +11,7 @@ class PopularityMatcher(MatcherWithCandidates):
         super().__init__(scenario, params)
         self.entity_popularity = None
 
-    def _train_model(self, training_set: DataCorpus):
+    def _train_model(self, training_set: DataCorpus, eval_set: DataCorpus):
         self.entity_popularity = self._compute_entity_popularity(training_set.target)
 
     @classmethod
