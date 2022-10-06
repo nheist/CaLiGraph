@@ -1,11 +1,12 @@
 from typing import Set, List, Optional
 from collections import defaultdict
 from sentence_transformers import CrossEncoder
+import utils
+from impl.caligraph.entity import ClgEntity
+from impl.wikipedia.page_parser import WikiListing
 from entity_linking.entity_disambiguation.data import Pair, DataCorpus
 from entity_linking.entity_disambiguation.matching.matcher import MatcherWithCandidates, MatchingScenario
 from entity_linking.entity_disambiguation.matching import transformer_util
-from impl.caligraph.entity import ClgEntity
-from impl.wikipedia.page_parser import WikiListing
 
 
 class CrossEncoderMatcher(MatcherWithCandidates):
@@ -25,6 +26,7 @@ class CrossEncoderMatcher(MatcherWithCandidates):
             return  # skip training
         train_dataloader = transformer_util.generate_training_data(training_set, self.batch_size)
         train_loss = transformer_util.get_loss_function(self.loss, self.model)
+        utils.release_gpu()
         self.model.fit(train_dataloader=train_dataloader, loss_fct=train_loss, epochs=self.epochs, warmup_steps=self.warmup_steps, save_best_model=False)
 
     def predict(self, prefix: str, source: List[WikiListing], target: Optional[List[ClgEntity]]) -> Set[Pair]:

@@ -2,11 +2,12 @@ from typing import Set, List, Optional
 from collections import defaultdict
 from sentence_transformers import util as st_util
 from sentence_transformers import SentenceTransformer
+import utils
+from impl.caligraph.entity import ClgEntity
+from impl.wikipedia.page_parser import WikiListing
 from entity_linking.entity_disambiguation.data import Pair, DataCorpus
 from entity_linking.entity_disambiguation.matching.matcher import Matcher, MatchingScenario
 from entity_linking.entity_disambiguation.matching import transformer_util
-from impl.caligraph.entity import ClgEntity
-from impl.wikipedia.page_parser import WikiListing
 
 
 class BiEncoderMatcher(Matcher):
@@ -30,6 +31,7 @@ class BiEncoderMatcher(Matcher):
             return  # skip training
         train_dataloader = transformer_util.generate_training_data(training_set, self.batch_size)
         train_loss = transformer_util.get_loss_function(self.loss, self.model)
+        utils.release_gpu()
         self.model.fit(train_objectives=[(train_dataloader, train_loss)], epochs=self.epochs, warmup_steps=self.warmup_steps, save_best_model=False)
 
     # HINT: use ANN search with e.g. hnswlib (https://github.com/nmslib/hnswlib/) if exact NN search is too costly
