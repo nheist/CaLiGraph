@@ -1,9 +1,7 @@
 from typing import Set, List, Optional
 from collections import defaultdict
-from torch.utils.data import DataLoader
-import torch.nn as nn
 from sentence_transformers import util as st_util
-from sentence_transformers import SentenceTransformer, InputExample, losses
+from sentence_transformers import SentenceTransformer
 from entity_linking.entity_disambiguation.data import Pair, DataCorpus
 from entity_linking.entity_disambiguation.matching.matcher import Matcher, MatchingScenario
 from entity_linking.entity_disambiguation.matching import transformer_util
@@ -25,33 +23,14 @@ class BiEncoderMatcher(Matcher):
         transformer_util.add_special_tokens(self.model)
 
     def get_approach_id(self) -> str:
-        return super().get_approach_id() + f'bm={self.base_model}_k={self.top_k}_l={self.loss}_bs={self.batch_size}_e={self.epochs}_ws={self.warmup_steps}'
+        return super().get_approach_id() + f'_bm={self.base_model}_k={self.top_k}_l={self.loss}_bs={self.batch_size}_e={self.epochs}_ws={self.warmup_steps}'
 
     def _train_model(self, training_set: DataCorpus, eval_set: DataCorpus):
         if self.epochs == 0:
             return  # skip training
-        train_dataloader = self._generate_training_data(training_set)
-        train_loss = self._get_loss_function()
+        train_dataloader = transformer_util.generate_training_data(training_set, self.batch_size)
+        train_loss = transformer_util.get_loss_function(self.loss, self.model)
         self.model.fit(train_objectives=[(train_dataloader, train_loss)], epochs=self.epochs, warmup_steps=self.warmup_steps, save_best_model=False)
-
-    def _generate_training_data(self, training_set: DataCorpus) -> DataLoader:
-        source_input = transformer_util.prepare_listing_items(training_set.source)
-        if self.scenario == MatchingScenario.MENTION_MENTION:
-            target_input = source_input
-        else:  # scenario: MENTION_ENTITY
-            target_input = transformer_util.prepare_entities(training_set.target)
-        input_examples = [InputExample(texts=[source_input[source_id], target_input[target_id]], label=1) for source_id, target_id in training_set.alignment]
-        # TODO: explicit hard negatives
-        return DataLoader(input_examples, shuffle=True, batch_size=self.batch_size)
-
-    def _get_loss_function(self) -> nn.Module:
-        if self.loss == 'COS':
-            return losses.CosineSimilarityLoss(model=self.model)
-        elif self.loss == 'RL':
-            return losses.MultipleNegativesRankingLoss(model=self.model)
-        elif self.loss == 'SRL':
-            return losses.MultipleNegativesSymmetricRankingLoss(model=self.model)
-        raise ValueError(f'Unknown loss identifier: {self.loss}')
 
     # HINT: use ANN search with e.g. hnswlib (https://github.com/nmslib/hnswlib/) if exact NN search is too costly
     # EXAMPLE: https://github.com/UKPLab/sentence-transformers/tree/master/examples/applications/semantic-search/semantic_search_quora_hnswlib.py

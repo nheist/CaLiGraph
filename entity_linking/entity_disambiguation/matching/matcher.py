@@ -18,6 +18,7 @@ class MatchingApproach(Enum):
     WORD = 'word'
     POPULARITY = 'popularity'
     BIENCODER = 'biencoder'
+    CROSSENCODER = 'crossencoder'
 
 
 class Matcher(ABC):
@@ -33,10 +34,10 @@ class Matcher(ABC):
 
     def train(self, training_set: DataCorpus, eval_set: DataCorpus) -> Dict[str, Set[Pair]]:
         self._train_model(training_set, eval_set)
-        return {
-            self.MODE_TRAIN: self._evaluate(self.MODE_TRAIN, training_set),
-            self.MODE_EVAL: self._evaluate(self.MODE_EVAL, eval_set)
-        }
+        return {}
+#            self.MODE_TRAIN: self._evaluate(self.MODE_TRAIN, training_set),
+#            self.MODE_EVAL: self._evaluate(self.MODE_EVAL, eval_set)
+#        }
 
     @abstractmethod
     def _train_model(self, training_set: DataCorpus, eval_set: DataCorpus):

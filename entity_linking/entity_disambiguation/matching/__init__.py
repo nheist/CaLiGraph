@@ -3,6 +3,7 @@ from entity_linking.entity_disambiguation.matching.matcher import MatchingScenar
 from entity_linking.entity_disambiguation.matching.lexical import ExactMatcher, WordMatcher
 from entity_linking.entity_disambiguation.matching.graph import PopularityMatcher
 from entity_linking.entity_disambiguation.matching.biencoder import BiEncoderMatcher
+from entity_linking.entity_disambiguation.matching.crossencoder import CrossEncoderMatcher
 
 
 def initialize_matcher(scenario: MatchingScenario, approach: MatchingApproach, params: dict) -> Matcher:
@@ -18,6 +19,8 @@ def initialize_matcher(scenario: MatchingScenario, approach: MatchingApproach, p
         matcher_factory = PopularityMatcher
     elif approach == MatchingApproach.BIENCODER:
         matcher_factory = BiEncoderMatcher
+    elif approach == MatchingApproach.CROSSENCODER:
+        matcher_factory = CrossEncoderMatcher
     else:
         raise ValueError(f'Blocking approach not implemented: {approach.value}')
     return matcher_factory(scenario, params)
