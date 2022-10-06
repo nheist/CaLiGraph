@@ -17,6 +17,7 @@ class MatchingApproach(Enum):
     EXACT = 'exact'
     WORD = 'word'
     POPULARITY = 'popularity'
+    BIENCODER = 'biencoder'
 
 
 class Matcher(ABC):
