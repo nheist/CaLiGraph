@@ -32,11 +32,11 @@ def get_loss_function(loss: str, model) -> nn.Module:
     raise ValueError(f'Unknown loss identifier: {loss}')
 
 
-def generate_training_data(training_set: DataCorpus, batch_size: int) -> DataLoader:
+def generate_training_data(training_set: DataCorpus, negatives: set, batch_size: int) -> DataLoader:
     source_input = prepare_listing_items(training_set.source)
     target_input = source_input if training_set.target is None else prepare_entities(training_set.target)
     input_examples = [InputExample(texts=[source_input[source_id], target_input[target_id]], label=1) for source_id, target_id in training_set.alignment]
-    # TODO: explicit hard negatives
+    input_examples.extend([InputExample(texts=[source_input[source_id], target_input[target_id]], label=0) for source_id, target_id in negatives])
     return DataLoader(input_examples, shuffle=True, batch_size=batch_size)
 
 

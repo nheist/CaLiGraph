@@ -29,7 +29,7 @@ class BiEncoderMatcher(Matcher):
     def _train_model(self, training_set: DataCorpus, eval_set: DataCorpus):
         if self.epochs == 0:
             return  # skip training
-        train_dataloader = transformer_util.generate_training_data(training_set, self.batch_size)
+        train_dataloader = transformer_util.generate_training_data(training_set, set(), self.batch_size)
         train_loss = transformer_util.get_loss_function(self.loss, self.model)
         utils.release_gpu()
         self.model.fit(train_objectives=[(train_dataloader, train_loss)], epochs=self.epochs, warmup_steps=self.warmup_steps, save_best_model=False)
