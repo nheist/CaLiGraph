@@ -24,6 +24,7 @@ transformers = "*"
 torch = "*"
 poethepoet = "*"
 sentence-transformers = "^2.2.2"
+ConfigArgParse = "^1.5.3"
 
 [tool.poetry.dev-dependencies]
 pytest = "*"
