@@ -42,7 +42,7 @@ class BiEncoderMatcher(Matcher):
         source_embeddings = self.model.encode(source_input, batch_size=self.batch_size, normalize_embeddings=True, convert_to_tensor=True, show_progress_bar=True)
         if self.scenario == MatchingScenario.MENTION_MENTION:
             alignment = defaultdict(set)
-            for score, i, j in st_util.paraphrase_mining_embeddings(source_embeddings, max_pairs=10**8, top_k=self.top_k, score_function=st_util.dot_score):
+            for score, i, j in st_util.paraphrase_mining_embeddings(source_embeddings, max_pairs=10**6, top_k=self.top_k, score_function=st_util.dot_score):
                 alignment[i].add((j, score))
             alignment = {(i, j[0]) for i, js in alignment.items() for j in sorted(js, key=lambda x: x[1], reverse=True)[:self.top_k]}
             alignment_indices = {tuple(sorted([source_ids[i], source_ids[j]])) for i, j in alignment}
