@@ -51,5 +51,5 @@ class BiEncoderMatcher(Matcher):
             target_ids, target_input = list(target_ids_with_input), list(target_ids_with_input.values())
             target_embeddings = self.model.encode(target_input, batch_size=self.batch_size, normalize_embeddings=True, convert_to_tensor=True, show_progress_bar=True)
             matched_pairs = st_util.semantic_search(source_embeddings, target_embeddings, top_k=self.top_k, score_function=st_util.dot_score)
-            alignment_indices = {(source_ids[s], target_ids[t['corpus_id']]) for s, ts in matched_pairs.items() for t in ts}
+            alignment_indices = {(source_ids[s], target_ids[t['corpus_id']]) for s, ts in enumerate(matched_pairs) for t in ts}
         return {Pair(*item_pair) for item_pair in alignment_indices}
