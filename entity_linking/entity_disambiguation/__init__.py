@@ -8,11 +8,11 @@ def run_evaluation(scenario: MatchingScenario, approach: MatchingApproach, param
     train_corpus, eval_corpus, test_corpus = _get_train_val_test_corpora_for_scenario(scenario)
     matcher = initialize_matcher(scenario, approach, params)
     if save_alignment:
-        alignments = matcher.train(train_corpus, eval_corpus)
+        alignments = matcher.train(train_corpus, eval_corpus, save_alignment)
         alignments |= matcher.test(test_corpus)
         matching_util.store_candidates(matcher.get_approach_id(), alignments)
     else:
-        matcher.train(train_corpus, eval_corpus)
+        matcher.train(train_corpus, eval_corpus, save_alignment)
         matcher.test(test_corpus)
 
 
