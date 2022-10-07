@@ -291,13 +291,13 @@ cache:
     version: 5
   MM_data:
     filename: 'MM-data'
-    version: 5
+    version: 1
   MM_datasets:
     filename: 'MM-datasets'
-    version: 5
+    version: 1
   ME_data:
     filename: 'ME-data'
-    version: 5
+    version: 1
   ME_datasets:
     filename: 'ME-datasets'
-    version: 5
+    version: 1

@@ -22,7 +22,7 @@ def get_mm_train_val_test_corpora() -> Tuple[DataCorpus, DataCorpus, DataCorpus]
 
 
 def _get_mm_train_val_test_pages() -> Tuple[List[WikiPage], List[WikiPage], List[WikiPage]]:
-    train_idxs, val_idxs, test_idxs = utils.load_or_create_cache('MM_data', lambda: _load_page_data(1.0))
+    train_idxs, val_idxs, test_idxs = utils.load_or_create_cache('MM_data', lambda: _load_page_data(.1))
     return _get_pages_for_idxs(train_idxs), _get_pages_for_idxs(val_idxs), _get_pages_for_idxs(test_idxs)
 
 
@@ -66,7 +66,7 @@ def _create_me_corpus_from_pages(pages: List[WikiPage]) -> DataCorpus:
 
 
 def _get_me_train_val_test_pages() -> Tuple[List[WikiPage], List[WikiPage], List[WikiPage]]:
-    train_idxs, val_idxs, test_idxs = utils.load_or_create_cache('ME_data', lambda: _load_page_data(.25))
+    train_idxs, val_idxs, test_idxs = utils.load_or_create_cache('ME_data', lambda: _load_page_data(.1))
     return _get_pages_for_idxs(train_idxs), _get_pages_for_idxs(val_idxs), _get_pages_for_idxs(test_idxs)
 
 
@@ -78,9 +78,9 @@ def _load_page_data(sample_size: float) -> Tuple[List[int], List[int], List[int]
     # sample, shuffle, split
     wiki_pages = random.sample(wiki_pages, int(len(wiki_pages) * sample_size))
     random.shuffle(wiki_pages)
-    # divide into 40% train, 20% val, 40% test
-    val_start_idx = int(len(wiki_pages) * .4)
-    test_start_idx = int(len(wiki_pages) * .6)
+    # divide into 60% train, 20% val, 20% test
+    val_start_idx = int(len(wiki_pages) * .6)
+    test_start_idx = int(len(wiki_pages) * .8)
     train_pages = wiki_pages[:val_start_idx]
     val_pages = wiki_pages[val_start_idx:test_start_idx]
     test_pages = wiki_pages[test_start_idx:]
