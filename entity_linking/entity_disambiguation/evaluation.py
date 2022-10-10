@@ -83,7 +83,7 @@ class PrecisionRecallF1Evaluator:
             }
         # predicted cross-type distribution
         cross_type_counts = self._compute_cross_type_counts(predicted_with_types)
-        metrics |= {f'7_{type_a}-{type_b}': cnt for (type_a, type_b), cnt in cross_type_counts.items()}
+        metrics |= {f'7_{type_a.name}-{type_b.name}': cnt for (type_a, type_b), cnt in cross_type_counts.items()}
         return metrics
 
     def _get_types_for_pair(self, pair: Pair) -> Tuple[EntityTypeLabel, EntityTypeLabel]:
