@@ -27,7 +27,7 @@ class PrecisionRecallF1Evaluator:
 
     def _compute_and_log_metrics_for_partition(self, prefix: str, predicted_pairs: Set[Pair], actual_pairs: Set[Pair], runtime: int, partition_func = None):
         if partition_func:
-            for partition_key, (predicted_pair_partition, actual_pair_partition) in self._make_partitions(predicted_pairs, actual_pairs, partition_func):
+            for partition_key, (predicted_pair_partition, actual_pair_partition) in self._make_partitions(predicted_pairs, actual_pairs, partition_func).items():
                 metrics = self._compute_metrics(predicted_pair_partition, actual_pair_partition, runtime)
                 self._log_metrics(prefix + partition_key, metrics)
         else:
