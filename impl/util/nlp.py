@@ -26,6 +26,46 @@ class EntityTypeLabel(Enum):
     OTHER = 13
 
 
+TYPE_TO_LABEL_MAPPING = {
+    # PERSON
+    'Person': EntityTypeLabel.PERSON,
+    'Deity': EntityTypeLabel.PERSON,
+    # NORP
+    'PoliticalParty': EntityTypeLabel.NORP,
+    'Family': EntityTypeLabel.NORP,
+    'EthnicGroup': EntityTypeLabel.NORP,
+    # FAC
+    'ArchitecturalStructure': EntityTypeLabel.FAC,
+    'Mine': EntityTypeLabel.FAC,
+    'Monument': EntityTypeLabel.FAC,
+    # ORG
+    'Organisation': EntityTypeLabel.ORG,
+    # GPE
+    'PopulatedPlace': EntityTypeLabel.GPE,
+    # LOC
+    'Place': EntityTypeLabel.LOC,
+    'Location': EntityTypeLabel.LOC,
+    # PRODUCT
+    'Food': EntityTypeLabel.PRODUCT,
+    'MeanOfTransportation': EntityTypeLabel.PRODUCT,
+    'Software': EntityTypeLabel.PRODUCT,
+    'Device': EntityTypeLabel.PRODUCT,
+    # EVENT
+    'Event': EntityTypeLabel.EVENT,
+    # WORK_OF_ART
+    'Work': EntityTypeLabel.WORK_OF_ART,
+    'Award': EntityTypeLabel.WORK_OF_ART,
+    # LAW
+    'Law': EntityTypeLabel.LAW,
+    'LegalCase': EntityTypeLabel.LAW,
+    'Treaty': EntityTypeLabel.LAW,
+    # LANGUAGE
+    'Language': EntityTypeLabel.LANGUAGE,
+    # SPECIES
+    'Species': EntityTypeLabel.SPECIES
+}
+
+
 def without_stopwords(text: str) -> set:
     """Return the lemmatized versions of all non-stop-words in `text`."""
     text = remove_bracket_content(text.replace('-', ' '))

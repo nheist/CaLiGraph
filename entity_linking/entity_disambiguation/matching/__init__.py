@@ -1,5 +1,5 @@
-from entity_linking.entity_disambiguation.matching import util as matching_util
-from entity_linking.entity_disambiguation.matching.matcher import MatchingScenario, MatchingApproach, Matcher
+from entity_linking.entity_disambiguation.matching.matcher import Matcher
+from entity_linking.entity_disambiguation.matching.util import MatchingScenario, MatchingApproach, load_candidates
 from entity_linking.entity_disambiguation.matching.lexical import ExactMatcher, WordMatcher
 from entity_linking.entity_disambiguation.matching.graph import PopularityMatcher
 from entity_linking.entity_disambiguation.matching.biencoder import BiEncoderMatcher
@@ -9,7 +9,7 @@ from entity_linking.entity_disambiguation.matching.crossencoder import CrossEnco
 def initialize_matcher(scenario: MatchingScenario, approach: MatchingApproach, params: dict) -> Matcher:
     # prepare candidates (if necessary)
     if params['blocking_approach'] is not None:
-        params['candidates'] = matching_util.load_candidates(params['blocking_approach'])
+        params['candidates'] = load_candidates(params['blocking_approach'])
     # initialize main matcher
     if approach == MatchingApproach.EXACT:
         matcher_factory = ExactMatcher

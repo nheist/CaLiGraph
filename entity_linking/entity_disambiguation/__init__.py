@@ -1,7 +1,7 @@
 import utils
 from . import data
-from .matching import util as matching_util
-from .matching import MatchingScenario, MatchingApproach, initialize_matcher
+from .matching.util import MatchingScenario, MatchingApproach, store_candidates
+from .matching import initialize_matcher
 
 
 def run_evaluation(scenario: MatchingScenario, approach: MatchingApproach, params: dict, save_alignment: bool):
@@ -10,7 +10,7 @@ def run_evaluation(scenario: MatchingScenario, approach: MatchingApproach, param
     if save_alignment:
         alignments = matcher.train(train_corpus, eval_corpus, save_alignment)
         alignments |= matcher.test(test_corpus)
-        matching_util.store_candidates(matcher.get_approach_id(), alignments)
+        store_candidates(matcher.get_approach_id(), alignments)
     else:
         matcher.train(train_corpus, eval_corpus, save_alignment)
         matcher.test(test_corpus)

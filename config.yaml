@@ -176,6 +176,9 @@ cache:
   dbpedia_resource_types:
     filename: 'dbpedia-resource-types'
     version: 2
+  dbpedia_resource_typelabels:
+    filename: 'dbpedia-resource-typelabels'
+    version: 2
   dbpedia_resource_properties:
     filename: 'dbpedia-resource-properties'
     version: 2

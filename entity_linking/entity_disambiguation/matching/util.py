@@ -1,6 +1,20 @@
-import utils
+from enum import Enum
 import os
 import pickle
+import utils
+
+
+class MatchingScenario(Enum):
+    MENTION_MENTION = 'MM'
+    MENTION_ENTITY = 'ME'
+
+
+class MatchingApproach(Enum):
+    EXACT = 'exact'
+    WORD = 'word'
+    POPULARITY = 'popularity'
+    BIENCODER = 'biencoder'
+    CROSSENCODER = 'crossencoder'
 
 
 def store_candidates(approach_id: str, candidates: dict):

@@ -1,24 +1,11 @@
 from typing import Set, List, Optional, Dict
 from abc import ABC, abstractmethod
-from enum import Enum
 from time import process_time
 from entity_linking.entity_disambiguation.data import Pair, DataCorpus
 from entity_linking.entity_disambiguation.evaluation import PrecisionRecallF1Evaluator
+from entity_linking.entity_disambiguation.matching.util import MatchingScenario
 from impl.wikipedia.page_parser import WikiListing
 from impl.caligraph.entity import ClgEntity
-
-
-class MatchingScenario(Enum):
-    MENTION_MENTION = 'MM'
-    MENTION_ENTITY = 'ME'
-
-
-class MatchingApproach(Enum):
-    EXACT = 'exact'
-    WORD = 'word'
-    POPULARITY = 'popularity'
-    BIENCODER = 'biencoder'
-    CROSSENCODER = 'crossencoder'
 
 
 class Matcher(ABC):
@@ -48,7 +35,7 @@ class Matcher(ABC):
         prediction = self.predict(prefix, data_corpus.source, data_corpus.target)
         prediction_time_in_seconds = int(process_time() - pred_start)
 
-        evaluator = PrecisionRecallF1Evaluator(self.get_approach_id())
+        evaluator = PrecisionRecallF1Evaluator(self.get_approach_id(), self.scenario)
         evaluator.compute_and_log_metrics(prefix, prediction, data_corpus.alignment, prediction_time_in_seconds)
         return prediction
 

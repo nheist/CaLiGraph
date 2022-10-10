@@ -6,7 +6,8 @@ import utils
 from impl.caligraph.entity import ClgEntity
 from impl.wikipedia.page_parser import WikiListing
 from entity_linking.entity_disambiguation.data import Pair, DataCorpus
-from entity_linking.entity_disambiguation.matching.matcher import Matcher, MatchingScenario
+from entity_linking.entity_disambiguation.matching.util import MatchingScenario
+from entity_linking.entity_disambiguation.matching.matcher import Matcher
 from entity_linking.entity_disambiguation.matching import transformer_util
 
 

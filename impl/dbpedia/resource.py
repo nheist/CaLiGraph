@@ -2,8 +2,8 @@ from typing import Union, Dict, Optional, Set, Any, Tuple, List
 from collections import defaultdict, Counter
 from impl.util.singleton import Singleton
 import impl.util.rdf as rdf_util
-from impl.util.rdf import Namespace
-from impl.util.rdf import RdfPredicate, RdfResource
+from impl.util.rdf import Namespace, RdfPredicate, RdfResource
+from impl.util.nlp import EntityTypeLabel, TYPE_TO_LABEL_MAPPING
 import impl.dbpedia.util as dbp_util
 from impl.dbpedia.ontology import DbpType, DbpPredicate, DbpObjectPredicate, DbpOntologyStore
 from polyleven import levenshtein
@@ -81,6 +81,7 @@ class DbpResourceStore:
 
         self.types = None
         self.entities_of_type = None
+        self.type_labels = None
         self.wikilinks = None
         self.properties = None
         self.inverse_properties = None
@@ -233,6 +234,19 @@ class DbpResourceStore:
                 for it in r.get_independent_types():
                     self.entities_of_type[it].add(r)
         return self.entities_of_type[t]
+
+    def get_type_label(self, res_idx: int) -> EntityTypeLabel:
+        if self.type_labels is None:
+            self.type_labels = defaultdict(lambda: EntityTypeLabel.OTHER, utils.load_or_create_cache('dbpedia_resource_typelabels', self._init_type_label_cache))
+        return self.type_labels[res_idx]
+
+    def _init_type_label_cache(self) -> Dict[int, EntityTypeLabel]:
+        type_labels = {}
+        for ent in self.get_entities():
+            for t in ent.get_transitive_types():
+                if t.name in TYPE_TO_LABEL_MAPPING:
+                    type_labels[ent.idx] = TYPE_TO_LABEL_MAPPING[t.name]
+        return type_labels
 
     def get_properties(self, res: DbpResource, as_tuple=False) -> Union[Dict[DbpPredicate, set], Set[Tuple[DbpPredicate, Any]]]:
         if self.properties is None:
