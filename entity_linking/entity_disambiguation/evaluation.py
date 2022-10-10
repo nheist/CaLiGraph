@@ -52,7 +52,7 @@ class PrecisionRecallF1Evaluator:
         return partitioning
 
     def _get_listing_type(self, item_id: Tuple[int, int, int]) -> str:
-        return self.wps.get_page(item_id[0]).listing[item_id[1]].get_type()
+        return self.wps.get_page(item_id[0]).listings[item_id[1]].get_type()
 
     def _get_entity_status(self, item_id: Tuple[int, int, int]) -> str:
         return 'Unknown' if self.wps.get_subject_entity(item_id).entity_idx == EntityIndex.NEW_ENTITY.value else 'Known'
