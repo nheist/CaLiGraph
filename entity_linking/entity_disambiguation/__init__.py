@@ -2,9 +2,11 @@ import utils
 from . import data
 from .matching.util import MatchingScenario, MatchingApproach, store_candidates
 from .matching import initialize_matcher
+from impl.subject_entity import mention_detection
 
 
 def run_evaluation(scenario: MatchingScenario, approach: MatchingApproach, params: dict, save_alignment: bool):
+    mention_detection.detect_mentions()  # make sure subject entities are initialized
     train_corpus, eval_corpus, test_corpus = _get_train_val_test_corpora_for_scenario(scenario)
     matcher = initialize_matcher(scenario, approach, params)
     if save_alignment:

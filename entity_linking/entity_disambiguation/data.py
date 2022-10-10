@@ -6,7 +6,6 @@ import utils
 from impl.util.transformer import EntityIndex
 from impl.wikipedia import WikiPageStore, WikiPage
 from impl.caligraph.entity import ClgEntityStore
-from impl.subject_entity import mention_detection
 
 
 Pair = namedtuple('Pair', ['source', 'target'])
@@ -16,7 +15,6 @@ DataCorpus = namedtuple('DataCorpus', ['source', 'target', 'alignment'])
 # MENTION-MENTION
 
 def get_mm_train_val_test_corpora() -> Tuple[DataCorpus, DataCorpus, DataCorpus]:
-    mention_detection.detect_mentions()  # annotate pages with subject entities
     train_pages, val_pages, test_pages = _get_mm_train_val_test_pages()
     return _create_mm_corpus_from_pages(train_pages), _create_mm_corpus_from_pages(val_pages), _create_mm_corpus_from_pages(test_pages)
 
@@ -43,7 +41,6 @@ def _create_mm_corpus_from_pages(pages: List[WikiPage]) -> DataCorpus:
 # MENTION-ENTITY
 
 def get_me_train_val_test_corpora() -> Tuple[DataCorpus, DataCorpus, DataCorpus]:
-    mention_detection.detect_mentions()  # annotate pages with subject entities
     train_pages, val_pages, test_pages = _get_me_train_val_test_pages()
     return _create_me_corpus_from_pages(train_pages), _create_me_corpus_from_pages(val_pages), _create_me_corpus_from_pages(test_pages)
 

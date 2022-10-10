@@ -3,12 +3,11 @@ from collections import defaultdict
 import random
 import csv
 import utils
-from impl.util.nlp import EntityTypeLabel
+from impl.util.nlp import EntityTypeLabel, TYPE_TO_LABEL_MAPPING
 from impl.wikipedia import WikiPageStore
 from impl.subject_entity.mention_detection.data import MentionDetectionDataset, _prepare_labeled_chunks, chunking
 from impl.subject_entity.mention_detection import labels
 from impl.dbpedia.ontology import DbpOntologyStore
-from impl.subject_entity.mention_detection.labels.entity_type import TYPE_TO_LABEL_MAPPING
 
 
 def get_md_lp_train_dataset(tokenizer, ignore_tags: bool, negative_sample_size: float, single_item_chunks: bool) -> MentionDetectionDataset:
