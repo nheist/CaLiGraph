@@ -82,8 +82,8 @@ class PrecisionRecallF1Evaluator:
             metrics |= {
                 f'6_{t.name}-1_predicted': t_predicted,
                 f'6_{t.name}-2_actual': t_actual,
-                f'6_{t.name}-3_precision': t_common / t_predicted,
-                f'6_{t.name}-4_recall': t_common / t_actual,
+                f'6_{t.name}-3_precision': t_common / t_predicted if t_predicted else 0,
+                f'6_{t.name}-4_recall': t_common / t_actual if t_actual else 0,
             }
         # predicted cross-type distribution
         cross_type_counts = self._compute_cross_type_counts(predicted_with_types)
