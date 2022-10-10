@@ -76,10 +76,14 @@ class PrecisionRecallF1Evaluator:
         predicted_by_type = self._get_pairs_by_matching_type(predicted_with_types)
         actual_by_type = self._get_pairs_by_matching_type(actual_with_types)
         for t in set(predicted_by_type) | set(actual_by_type):
+            t_actual = len(actual_by_type[t])
+            t_predicted = len(predicted_by_type[t])
+            t_common = len(actual_by_type[t].intersection(predicted_by_type[t]))
             metrics |= {
-                f'6_{t.name}-actual': len(actual_by_type[t]),
-                f'6_{t.name}-predicted': len(predicted_by_type[t]),
-                f'6_{t.name}-correct': len(actual_by_type[t].intersection(predicted_by_type[t]))
+                f'6_{t.name}-1_predicted': t_predicted,
+                f'6_{t.name}-2_actual': t_actual,
+                f'6_{t.name}-3_precision': t_common / t_predicted,
+                f'6_{t.name}-4_recall': t_common / t_actual,
             }
         # predicted cross-type distribution
         cross_type_counts = self._compute_cross_type_counts(predicted_with_types)
