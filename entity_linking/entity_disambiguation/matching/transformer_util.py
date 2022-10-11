@@ -57,6 +57,8 @@ def prepare_listing_items(listings: List[WikiListing], add_page_context: bool, a
         for l in listings:
             for i in l.get_items():
                 se = i.subject_entity
+                if se is None:
+                    continue
                 result[(l.page_idx, l.idx, i.idx)] = f'{se.label} {CXS} {se.entity_type.name}'
         return result
     for listing in listings:
