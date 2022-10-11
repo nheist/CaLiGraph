@@ -202,7 +202,7 @@ class DbpResourceStore:
 
     def get_abstract(self, res: DbpResource) -> Optional[str]:
         if self.abstracts is None:
-            self.abstracts = defaultdict(None, utils.load_or_create_cache('dbpedia_resource_abstracts', self._init_abstracts_cache))
+            self.abstracts = defaultdict(lambda: None, utils.load_or_create_cache('dbpedia_resource_abstracts', self._init_abstracts_cache))
         return self.abstracts[res.idx]
 
     def _init_abstracts_cache(self) -> Dict[int, Optional[str]]:

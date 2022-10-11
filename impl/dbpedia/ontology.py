@@ -122,7 +122,7 @@ class DbpOntologyStore:
     def get_label(self, cls: DbpClass) -> Optional[str]:
         if not self.labels:
             labels = rdf_util.create_single_val_dict_from_rdf([utils.get_data_file('files.dbpedia.taxonomy')], RdfPredicate.LABEL, casting_fn=self.get_class_by_iri)
-            self.labels = defaultdict(None, labels)
+            self.labels = defaultdict(lambda: None, labels)
         return self.labels[cls]
 
     # types
