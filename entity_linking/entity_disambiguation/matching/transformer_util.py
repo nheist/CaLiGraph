@@ -12,6 +12,12 @@ from impl.caligraph.entity import ClgEntity
 from entity_linking.entity_disambiguation.data import DataCorpus
 
 
+CXS = SpecialToken.CONTEXT_SEP.value
+CXE = SpecialToken.CONTEXT_END.value
+COL = SpecialToken.TABLE_COL.value
+ROW = SpecialToken.TABLE_ROW.value
+
+
 def add_special_tokens(model: Union[SentenceTransformer, CrossEncoder]):
     if isinstance(model, SentenceTransformer):
         word_embedding_model = model._first_module()
@@ -46,9 +52,13 @@ def generate_training_data(training_set: DataCorpus, negatives: set, batch_size:
 
 def prepare_listing_items(listings: List[WikiListing], add_page_context: bool, add_listing_entities: bool) -> Dict[Tuple[int, int, int], str]:
     utils.get_logger().debug('Preparing listing items..')
-    if not add_page_context and not add_listing_entities:
-        return {(l.page_idx, l.idx, i.idx): i.subject_entity.label for l in listings for i in l.get_items() if i.subject_entity is not None}
     result = {}
+    if not add_page_context and not add_listing_entities:
+        for l in listings:
+            for i in l.get_items():
+                se = i.subject_entity
+                result[(l.page_idx, l.idx, i.idx)] = f'{se.label} {CXS} {se.entity_type.name}'
+        return result
     for listing in listings:
         prepared_context = _prepare_listing_context(listing)
         prepared_items = [_prepare_listing_item(item) for item in listing.get_items()]
@@ -58,7 +68,7 @@ def prepare_listing_items(listings: List[WikiListing], add_page_context: bool, a
                 continue
             item_id = (listing.page_idx, listing.idx, item.idx)
             # add subject entity, its type, and page context
-            item_content = f' {SpecialToken.CONTEXT_SEP.value} '.join([item_se.label, item_se.entity_type, prepared_context])
+            item_content = f' {CXS} '.join([item_se.label, item_se.entity_type.name, prepared_context])
             # add item and `add_listing_entities` subsequent items (add items from start if no subsequent items left)
             item_content += ''.join(islice(cycle(prepared_items), idx, idx + add_listing_entities + 1))
             result[item_id] = item_content
@@ -70,7 +80,7 @@ def _prepare_listing_context(listing: WikiListing) -> str:
     ctx = [page_resource.get_label(), listing.topsection.title, listing.section.title]
     if isinstance(listing, WikiTable):
         ctx.append(_prepare_listing_item(listing.header))
-    return f' {SpecialToken.CONTEXT_SEP.value} '.join(ctx) + f' {SpecialToken.CONTEXT_END.value} '
+    return f' {CXS} '.join(ctx) + f' {CXE} '
 
 
 def _prepare_listing_item(item: WikiListingItem) -> str:
@@ -80,9 +90,9 @@ def _prepare_listing_item(item: WikiListingItem) -> str:
     else:  # WikiTableRow
         tokens, whitespaces = [], []
         for cell_tokens, cell_whitespaces in zip(item.tokens, item.whitespaces):
-            tokens += [SpecialToken.TABLE_COL.value] + cell_tokens
+            tokens += [COL] + cell_tokens
             whitespaces += [' '] + cell_whitespaces[:-1] + [' ']
-        tokens[0] = SpecialToken.TABLE_ROW.value  # special indicator for start of table row
+        tokens[0] = ROW  # special indicator for start of table row
     return alternate_iters_to_string(tokens, whitespaces)
 
 
@@ -100,5 +110,5 @@ def prepare_entities(entities: List[ClgEntity], add_entity_abstract: bool, add_k
             if prop_count > 0:
                 props = list(e.get_properties(as_tuple=True))[:prop_count]
                 kg_info += [f'{pred.get_label()} = {val.get_label() if isinstance(val, ClgEntity) else val}' for pred, val in props]
-        result[e.idx] = f' {SpecialToken.CONTEXT_SEP.value} '.join(ent_description)
+        result[e.idx] = f' {CXS} '.join(ent_description)
     return result
