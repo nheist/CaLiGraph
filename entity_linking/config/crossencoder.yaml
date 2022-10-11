@@ -1,0 +1,2 @@
+base_model: bert-base-cased
+batch_size: 64

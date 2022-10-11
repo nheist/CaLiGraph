@@ -1,0 +1,2 @@
+base_model: all-MiniLM-L12-v2
+batch_size: 256
