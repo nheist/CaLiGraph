@@ -15,7 +15,6 @@ class CrossEncoderMatcher(MatcherWithCandidates):
         super().__init__(scenario, params)
         # model params
         self.base_model = params['base_model']
-        self.loss = params['loss']
         self.epochs = params['epochs']
         self.warmup_steps = params['warmup_steps']
         self.batch_size = params['batch_size']
@@ -34,10 +33,9 @@ class CrossEncoderMatcher(MatcherWithCandidates):
         utils.get_logger().debug('Preparing training data..')
         negatives = self.candidates[self.MODE_TRAIN].difference(training_set.alignment)
         train_dataloader = transformer_util.generate_training_data(training_set, negatives, self.batch_size, self.add_page_context, self.add_listing_entities, self.add_entity_abstract, self.add_kg_info)
-        train_loss = transformer_util.get_loss_function(self.loss, self.model)
         utils.release_gpu()
         utils.get_logger().debug('Starting training..')
-        self.model.fit(train_dataloader=train_dataloader, loss_fct=train_loss, epochs=self.epochs, warmup_steps=self.warmup_steps, save_best_model=False)
+        self.model.fit(train_dataloader=train_dataloader, epochs=self.epochs, warmup_steps=self.warmup_steps, save_best_model=False)
 
     def predict(self, prefix: str, source: List[WikiListing], target: Optional[List[ClgEntity]]) -> Set[Pair]:
         source_input = transformer_util.prepare_listing_items(source, self.add_page_context, self.add_listing_entities)
