@@ -11,7 +11,7 @@ if __name__ == '__main__':
     parser.add_argument('-c', '--config', is_config_file=True, help='Path to config file')
     # machine-specific
     parser.add_argument('gpu', type=int, choices=range(-1, 8), help='Number of GPU to use')
-    parser.add_argument('-gm', '--gpu_memory', type=int, default=47, help='Amount of GPU memory to reserve')
+    parser.add_argument('-gm', '--gpu_memory', type=int, default=46, help='Amount of GPU memory to reserve')
     # general matching
     parser.add_argument('scenario', type=str, help='Whether to match mention-mention or mention-entity')
     parser.add_argument('approach', type=str, help='Approach used for matching')
