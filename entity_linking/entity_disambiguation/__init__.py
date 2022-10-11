@@ -12,6 +12,7 @@ def run_evaluation(scenario: MatchingScenario, approach: MatchingApproach, param
     if save_alignment:
         alignments = matcher.train(train_corpus, eval_corpus, save_alignment)
         alignments |= matcher.test(test_corpus)
+        utils.get_logger().info('Storing candidates..')
         store_candidates(matcher.get_approach_id(), alignments)
     else:
         matcher.train(train_corpus, eval_corpus, save_alignment)
@@ -19,6 +20,7 @@ def run_evaluation(scenario: MatchingScenario, approach: MatchingApproach, param
 
 
 def _get_train_val_test_corpora_for_scenario(scenario: MatchingScenario):
+    utils.get_logger().info('Loading training data..')
     if scenario == MatchingScenario.MENTION_MENTION:
         return utils.load_or_create_cache('MM_datasets', data.get_mm_train_val_test_corpora)
     elif scenario == MatchingScenario.MENTION_ENTITY:

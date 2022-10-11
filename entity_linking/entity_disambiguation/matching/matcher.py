@@ -1,6 +1,7 @@
 from typing import Set, List, Optional, Dict
 from abc import ABC, abstractmethod
 from time import process_time
+import utils
 from entity_linking.entity_disambiguation.data import Pair, DataCorpus
 from entity_linking.entity_disambiguation.evaluation import PrecisionRecallF1Evaluator
 from entity_linking.entity_disambiguation.matching.util import MatchingScenario
@@ -20,6 +21,7 @@ class Matcher(ABC):
         return '_'.join([self.scenario.value, f'v{self.version}', type(self).__name__])
 
     def train(self, training_set: DataCorpus, eval_set: DataCorpus, save_alignment: bool) -> Dict[str, Set[Pair]]:
+        utils.get_logger().info('Training matcher..')
         self._train_model(training_set, eval_set)
         return {self.MODE_TRAIN: self._evaluate(self.MODE_TRAIN, training_set)} if save_alignment else {}
 
@@ -28,6 +30,7 @@ class Matcher(ABC):
         pass
 
     def test(self, test_set: DataCorpus) -> Dict[str, Set[Pair]]:
+        utils.get_logger().info('Testing matcher..')
         return {self.MODE_TEST: self._evaluate(self.MODE_TEST, test_set)}
 
     def _evaluate(self, prefix: str, data_corpus: DataCorpus) -> Set[Pair]:

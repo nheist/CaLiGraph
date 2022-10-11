@@ -3,7 +3,10 @@ import configargparse
 import os
 from entity_linking.entity_disambiguation.matching.util import MatchingScenario, MatchingApproach
 
-
+# TODO: configurable context for transformers
+# TODO: merging of MM and ME results (remove edges by confidence, MM/ME first, classifier, graph partitioning algorithm?)
+# TODO: lexical model with more recall (levenshtein distance, n-grams) or other baselines
+# TODO: symbolic approach from Manni?
 if __name__ == '__main__':
     parser = configargparse.ArgumentParser(description='Run the evaluation of entity disambiguation approaches.')
     # config
@@ -24,6 +27,10 @@ if __name__ == '__main__':
     parser.add_argument('-ws', '--warmup_steps', type=int, default=0, help='Number of warmup steps for training the bi/cross-encoder')
     parser.add_argument('-bs', '--batch_size', type=int, default=64, help='Batch size for training the bi/cross-encoder')
     parser.add_argument('-k', '--top_k', type=int, default=3, help='Number of matches to return per input (only for bi-encoder)')
+    parser.add_argument('-apc', '--add_page_context', action=argparse.BooleanOptionalAction, default=False, help='Use page context for disambiguation (M)')
+    parser.add_argument('-ale', '--add_listing_entities', type=int, default=0, help='Other listing entities to append for disambiguation (M)')
+    parser.add_argument('-aea', '--add_entity_abstract', action=argparse.BooleanOptionalAction, default=False, help='Use entity abstract for disambiguation (E)')
+    parser.add_argument('-aki', '--add_kg_info', type=int, default=0, help='Types/properties to add from KG for disambiguation (E)')
 
     args = parser.parse_args()
     # and set necessary environment variables
@@ -52,6 +59,10 @@ if __name__ == '__main__':
         'warmup_steps': args.warmup_steps,
         'batch_size': args.batch_size,
         'top_k': args.top_k,
+        'add_page_context': args.add_page_context,
+        'add_listing_entities': args.add_listing_entities,
+        'add_entity_abstract': args.add_entity_abstract,
+        'add_kg_info': args.add_kg_info,
     }
     # then import application-specific code and run it
     from entity_linking import entity_disambiguation

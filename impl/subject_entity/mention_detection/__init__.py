@@ -15,6 +15,7 @@ PREDICTION_BATCH_SIZE = 500
 
 
 def detect_mentions():
+    utils.get_logger().info('Detecting entity mentions..')
     subject_entity_mentions = utils.load_or_create_cache('subject_entity_mentions', _extract_subject_entity_mentions)
     WikiPageStore.instance().set_subject_entity_mentions(subject_entity_mentions)
 

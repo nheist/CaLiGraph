@@ -1,8 +1,9 @@
-from typing import Set, Dict, Union, Tuple, Any, List
+from typing import Set, Dict, Union, Tuple, Any, List, Optional
 from collections import defaultdict, Counter
 import utils
 from impl.util.singleton import Singleton
 from impl.util.rdf import Namespace, RdfResource
+from impl.util.nlp import EntityTypeLabel
 from impl.wikipedia import WikiPageStore
 from impl.dbpedia.ontology import DbpType
 from impl.dbpedia.resource import DbpResource, DbpEntity, DbpResourceStore, DbpListpage
@@ -23,8 +24,16 @@ class ClgEntity(RdfResource):
     def get_surface_forms(self) -> Set[str]:
         return self._get_store().get_surface_forms(self)
 
+    def get_abstract(self) -> Optional[str]:
+        if not self.has_dbp_entity():
+            return None
+        return self.get_dbp_entity().get_abstract()
+
     def get_types(self) -> Set[ClgType]:
         return self._get_store().get_types(self)
+
+    def get_type_label(self) -> EntityTypeLabel:
+        return self._get_store().dbr.get_type_label(self.idx)
 
     def get_transitive_types(self, include_root=False) -> Set[ClgType]:
         return self._get_store().get_transitive_types(self, include_root=include_root)

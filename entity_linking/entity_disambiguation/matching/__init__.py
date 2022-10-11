@@ -4,13 +4,17 @@ from entity_linking.entity_disambiguation.matching.lexical import ExactMatcher, 
 from entity_linking.entity_disambiguation.matching.graph import PopularityMatcher
 from entity_linking.entity_disambiguation.matching.biencoder import BiEncoderMatcher
 from entity_linking.entity_disambiguation.matching.crossencoder import CrossEncoderMatcher
+import utils
 
 
 def initialize_matcher(scenario: MatchingScenario, approach: MatchingApproach, params: dict) -> Matcher:
+    utils.get_logger().info('Initializing matcher..')
     # prepare candidates (if necessary)
     if params['blocking_approach'] is not None:
+        utils.get_logger().debug('Loading candidates from blocker..')
         params['candidates'] = load_candidates(params['blocking_approach'])
     # initialize main matcher
+    utils.get_logger().debug('Creating matcher..')
     if approach == MatchingApproach.EXACT:
         matcher_factory = ExactMatcher
     elif approach == MatchingApproach.WORD:

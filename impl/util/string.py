@@ -1,5 +1,5 @@
+from typing import Iterable
 import re
-
 
 def capitalize(text: str) -> str:
     return text[0].upper() + text[1:] if len(text) > 1 else text.upper()
@@ -7,6 +7,10 @@ def capitalize(text: str) -> str:
 
 def regularize_spaces(text: str) -> str:
     return ' '.join(text.split())
+
+
+def alternate_iters_to_string(iter_a: Iterable, iter_b: Iterable) -> str:
+    return ''.join(a + b for a, b in zip(iter_a, iter_b))
 
 
 def transfer_word_casing(source_word: str, target_word: str) -> str:
