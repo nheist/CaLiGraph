@@ -1,7 +1,6 @@
 import argparse
 import configargparse
 import os
-from entity_linking.entity_disambiguation.matching.util import MatchingScenario, MatchingApproach
 
 # TODO: merging of MM and ME results (remove edges by confidence, MM/ME first, classifier, graph partitioning algorithm?)
 # TODO: lexical model with more recall (levenshtein distance, n-grams) or other baselines
@@ -14,8 +13,8 @@ if __name__ == '__main__':
     parser.add_argument('gpu', type=int, choices=range(-1, 8), help='Number of GPU to use')
     parser.add_argument('-gm', '--gpu_memory', type=int, default=47, help='Amount of GPU memory to reserve')
     # general matching
-    parser.add_argument('scenario', type=str, choices=[x.value for x in MatchingScenario], help='Whether to match mention-mention or mention-entity')
-    parser.add_argument('approach', type=str, choices=[x.value for x in MatchingApproach], help='Approach used for matching')
+    parser.add_argument('scenario', type=str, help='Whether to match mention-mention or mention-entity')
+    parser.add_argument('approach', type=str, help='Approach used for matching')
     parser.add_argument('-sa', '--save_alignment', action=argparse.BooleanOptionalAction, default=False, help='Whether to save the produced alignment for train/val/test')
     # matchers needing candidates
     parser.add_argument('-ba', '--blocking_approach', type=str, help='Matcher (ID) to retrieve candidates from')
@@ -47,6 +46,7 @@ if __name__ == '__main__':
     np.random.seed(SEED)
     torch.manual_seed(SEED)
     # initialize parameters
+    from entity_linking.entity_disambiguation.matching.util import MatchingScenario, MatchingApproach
     scenario = MatchingScenario(args.scenario)
     approach = MatchingApproach(args.approach)
     params = {
