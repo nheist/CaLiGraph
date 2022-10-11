@@ -74,7 +74,7 @@ def prepare_listing_items(listings: List[WikiListing], add_page_context: bool, a
             # add item and `add_listing_entities` subsequent items (add items from start if no subsequent items left)
             item_content += ''.join(islice(cycle(prepared_items), idx, idx + add_listing_entities + 1))
             result[item_id] = item_content
-        return result
+    return result
 
 
 def _prepare_listing_context(listing: WikiListing) -> str:
