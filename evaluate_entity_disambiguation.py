@@ -3,7 +3,6 @@ import configargparse
 import os
 from entity_linking.entity_disambiguation.matching.util import MatchingScenario, MatchingApproach
 
-# TODO: configurable context for transformers
 # TODO: merging of MM and ME results (remove edges by confidence, MM/ME first, classifier, graph partitioning algorithm?)
 # TODO: lexical model with more recall (levenshtein distance, n-grams) or other baselines
 # TODO: symbolic approach from Manni?

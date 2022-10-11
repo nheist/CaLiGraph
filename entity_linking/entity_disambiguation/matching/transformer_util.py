@@ -95,9 +95,10 @@ def prepare_entities(entities: List[ClgEntity], add_entity_abstract: bool, add_k
         if add_entity_abstract:
             ent_description.append((e.get_abstract() or '')[:200])
         if add_kg_info:
-            kg_info = [('type', t) for t in e.get_types()]
+            kg_info = [f'type = {t.get_label()}' for t in e.get_types()]
             prop_count = max(0, add_kg_info - len(kg_info))
             if prop_count > 0:
-                kg_info += list(e.get_properties(as_tuple=True))[:prop_count]
+                props = list(e.get_properties(as_tuple=True))[:prop_count]
+                kg_info += [f'{pred.get_label()} = {val.get_label() if isinstance(val, ClgEntity) else val}' for pred, val in props]
         result[e.idx] = f' {SpecialToken.CONTEXT_SEP.value} '.join(ent_description)
     return result
