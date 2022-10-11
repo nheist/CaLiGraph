@@ -27,7 +27,7 @@ listing:
 # -- LOGGING CONFIGURATION --
 logging:
   level: 'DEBUG'
-  to_file: True
+  to_file: False
   filename: 'caligraph_v2_2_0'
 
 # -- ERROR-MAILER CONFIGURATION --
