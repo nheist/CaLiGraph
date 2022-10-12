@@ -61,12 +61,12 @@ class BiEncoderMatcher(Matcher):
         source_ids, source_input = list(source_ids_with_input), list(source_ids_with_input.values())
         source_embeddings = self.model.encode(source_input, batch_size=self.batch_size, normalize_embeddings=True, convert_to_tensor=True, show_progress_bar=True)
         if self.scenario == MatchingScenario.MENTION_MENTION:
-            alignment = {(i, j) for _, i, j in st_util.paraphrase_mining_embeddings(source_embeddings, max_pairs=int(5e6), top_k=self.top_k, score_function=st_util.dot_score)}
-            alignment_indices = {tuple(sorted([source_ids[i], source_ids[j]])) for i, j in alignment}
+            alignment = {(i, j, s) for s, i, j in st_util.paraphrase_mining_embeddings(source_embeddings, max_pairs=int(5e6), top_k=self.top_k, score_function=st_util.dot_score)}
+            alignment_indices = {tuple([*sorted([source_ids[i], source_ids[j]]), s]) for i, j, s in alignment}
         else:  # scenario: MENTION_ENTITY
             target_ids_with_input = transformer_util.prepare_entities(target, self.add_entity_abstract, self.add_kg_info)
             target_ids, target_input = list(target_ids_with_input), list(target_ids_with_input.values())
             target_embeddings = self.model.encode(target_input, batch_size=self.batch_size, normalize_embeddings=True, convert_to_tensor=True, show_progress_bar=True)
             matched_pairs = st_util.semantic_search(source_embeddings, target_embeddings, top_k=self.top_k, score_function=st_util.dot_score)
-            alignment_indices = {(source_ids[s], target_ids[t['corpus_id']]) for s, ts in enumerate(matched_pairs) for t in ts}
+            alignment_indices = {(source_ids[s], target_ids[t['corpus_id']], t['score']) for s, ts in enumerate(matched_pairs) for t in ts}
         return {Pair(*item_pair) for item_pair in alignment_indices}

@@ -67,5 +67,5 @@ class CrossEncoderMatcher(MatcherWithCandidates):
             item_entity_scores = defaultdict(set)
             for (item_id, entity_id), score in zip(candidates, candidate_scores):
                 item_entity_scores[item_id].add((entity_id, score))
-            alignment = [(i, max(js, key=lambda x: x[1])[0]) for i, js in item_entity_scores.items()]
+            alignment = [(i, *max(js, key=lambda x: x[1])) for i, js in item_entity_scores.items()]
         return {Pair(*item_pair) for item_pair in alignment}

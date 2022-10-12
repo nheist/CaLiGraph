@@ -8,7 +8,7 @@ from impl.wikipedia import WikiPageStore, WikiPage
 from impl.caligraph.entity import ClgEntityStore
 
 
-Pair = namedtuple('Pair', ['source', 'target'])
+Pair = namedtuple('Pair', ['source', 'target', 'confidence'])
 DataCorpus = namedtuple('DataCorpus', ['source', 'target', 'alignment'])
 
 
@@ -34,7 +34,7 @@ def _create_mm_corpus_from_pages(pages: List[WikiPage]) -> DataCorpus:
             entity_to_item_mapping[item.subject_entity.entity_idx].add((listing.page_idx, listing.idx, item.idx))
     alignment = set()
     for item_group in entity_to_item_mapping.values():
-        alignment.update({Pair(*sorted(item_pair)) for item_pair in itertools.combinations(item_group, 2)})
+        alignment.update({Pair(*sorted(item_pair), 1) for item_pair in itertools.combinations(item_group, 2)})
     return DataCorpus(listings, None, alignment)
 
 
@@ -58,7 +58,7 @@ def _create_me_corpus_from_pages(pages: List[WikiPage]) -> DataCorpus:
             se_id = item.subject_entity.entity_idx
             if not clge.has_entity_with_idx(se_id):
                 continue
-            alignment.add(Pair(item_id, se_id))
+            alignment.add(Pair(item_id, se_id, 1))
     return DataCorpus(listings, entities, alignment)
 
 
