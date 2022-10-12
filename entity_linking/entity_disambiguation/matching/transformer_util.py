@@ -98,7 +98,7 @@ def _prepare_listing_item(item: WikiListingItem) -> str:
     return alternate_iters_to_string(tokens, whitespaces)
 
 
-# TODO: potential caching of prepared entities w.r.t add_entity_abstract and add_kg_info
+# TODO: potential caching of prepared entities w.r.t add_entity_abstract and add_kg_info (and over session as we always use full set of entities for train/test)
 def prepare_entities(entities: List[ClgEntity], add_entity_abstract: bool, add_kg_info: int) -> Dict[int, str]:
     utils.get_logger().debug('Preparing entities..')
     result = {}

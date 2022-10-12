@@ -39,6 +39,7 @@ class Matcher(ABC):
         return {self.MODE_TEST: self._evaluate(self.MODE_TEST, test_set)}
 
     def _evaluate(self, prefix: str, data_corpus: DataCorpus) -> Set[Pair]:
+        utils.release_gpu()
         pred_start = process_time()
         prediction = self.predict(prefix, data_corpus.source, data_corpus.target)
         prediction_time_in_seconds = int(process_time() - pred_start)
