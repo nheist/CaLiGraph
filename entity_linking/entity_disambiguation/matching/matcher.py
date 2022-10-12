@@ -18,7 +18,12 @@ class Matcher(ABC):
         self.version = params['version']
 
     def get_approach_id(self) -> str:
-        return '_'.join([self.scenario.value, f'v{self.version}', type(self).__name__])
+        approach_params = [self.scenario.value, f'v{self.version}', type(self).__name__]
+        approach_params += [f'{k}={v}' for k, v in self._get_param_dict().items()]
+        return '_'.join(approach_params)
+
+    def _get_param_dict(self) -> dict:
+        return {}
 
     def train(self, training_set: DataCorpus, eval_set: DataCorpus, save_alignment: bool) -> Dict[str, Set[Pair]]:
         utils.get_logger().info('Training matcher..')
@@ -53,5 +58,5 @@ class MatcherWithCandidates(Matcher, ABC):
         self.blocking_approach = params['blocking_approach']
         self.candidates = params['candidates']
 
-    def get_approach_id(self) -> str:
-        return f'{super().get_approach_id()}_b={self.blocking_approach}'
+    def _get_param_dict(self) -> dict:
+        return super()._get_param_dict() | {'b': self.blocking_approach}

@@ -15,17 +15,30 @@ class CrossEncoderMatcher(MatcherWithCandidates):
         super().__init__(scenario, params)
         # model params
         self.base_model = params['base_model']
-        self.epochs = params['epochs']
-        self.warmup_steps = params['warmup_steps']
-        self.batch_size = params['batch_size']
-        # data params
         self.add_page_context = params['add_page_context']
         self.add_listing_entities = params['add_listing_entities']
         self.add_entity_abstract = params['add_entity_abstract']
         self.add_kg_info = params['add_kg_info']
+        # training params
+        self.batch_size = params['batch_size']
+        self.epochs = params['epochs']
+        self.warmup_steps = params['warmup_steps']
         # prepare Cross-Encoder
         self.model = CrossEncoder(self.base_model, num_labels=1)
         transformer_util.add_special_tokens(self.model)
+
+    def _get_param_dict(self) -> dict:
+        params = {
+            'bm': self.base_model,
+            'apc': self.add_page_context,
+            'ale': self.add_listing_entities,
+            'aea': self.add_entity_abstract,
+            'aki': self.add_kg_info,
+            'bs': self.batch_size,
+            'e': self.epochs,
+            'ws': self.warmup_steps,
+        }
+        return super()._get_param_dict() | params
 
     def _train_model(self, training_set: DataCorpus, eval_set: DataCorpus):
         if self.epochs == 0:

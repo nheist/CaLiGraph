@@ -15,22 +15,34 @@ class BiEncoderMatcher(Matcher):
         super().__init__(scenario, params)
         # model params
         self.base_model = params['base_model']
-        self.loss = params['loss']
-        self.epochs = params['epochs']
-        self.warmup_steps = params['warmup_steps']
-        self.batch_size = params['batch_size']
         self.top_k = params['top_k']
-        # data params
         self.add_page_context = params['add_page_context']
         self.add_listing_entities = params['add_listing_entities']
         self.add_entity_abstract = params['add_entity_abstract']
         self.add_kg_info = params['add_kg_info']
+        # training params
+        self.loss = params['loss']
+        self.batch_size = params['batch_size']
+        self.epochs = params['epochs']
+        self.warmup_steps = params['warmup_steps']
         # prepare Bi-Encoder
         self.model = SentenceTransformer(self.base_model)
         transformer_util.add_special_tokens(self.model)
 
-    def get_approach_id(self) -> str:
-        return super().get_approach_id() + f'_bm={self.base_model}_k={self.top_k}_l={self.loss}_bs={self.batch_size}_e={self.epochs}_ws={self.warmup_steps}'
+    def _get_param_dict(self) -> dict:
+        params = {
+            'bm': self.base_model,
+            'k': self.top_k,
+            'apc': self.add_page_context,
+            'ale': self.add_listing_entities,
+            'aea': self.add_entity_abstract,
+            'aki': self.add_kg_info,
+            'l': self.loss,
+            'bs': self.batch_size,
+            'e': self.epochs,
+            'ws': self.warmup_steps,
+        }
+        return super()._get_param_dict() | params
 
     def _train_model(self, training_set: DataCorpus, eval_set: DataCorpus):
         if self.epochs == 0:
