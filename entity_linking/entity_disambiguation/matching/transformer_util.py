@@ -45,8 +45,8 @@ def get_loss_function(loss: str, model) -> nn.Module:
 def generate_training_data(training_set: DataCorpus, negatives: set, batch_size: int, add_page_context: bool, add_listing_entities: bool, add_entity_abstract: bool, add_kg_info: bool) -> DataLoader:
     source_input = prepare_listing_items(training_set.source, add_page_context, add_listing_entities)
     target_input = source_input if training_set.target is None else prepare_entities(training_set.target, add_entity_abstract, add_kg_info)
-    input_examples = [InputExample(texts=[source_input[source_id], target_input[target_id]], label=1) for source_id, target_id in training_set.alignment]
-    input_examples.extend([InputExample(texts=[source_input[source_id], target_input[target_id]], label=0) for source_id, target_id in negatives])
+    input_examples = [InputExample(texts=[source_input[source_id], target_input[target_id]], label=1) for source_id, target_id, _ in training_set.alignment]
+    input_examples.extend([InputExample(texts=[source_input[source_id], target_input[target_id]], label=0) for source_id, target_id, _ in negatives])
     return DataLoader(input_examples, shuffle=True, batch_size=batch_size)
 
 
