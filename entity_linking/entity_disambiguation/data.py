@@ -9,6 +9,8 @@ from impl.caligraph.entity import ClgEntityStore
 
 
 Pair = namedtuple('Pair', ['source', 'target', 'confidence'])
+Pair.__eq__ = lambda self, other: self.source == other.source and self.target == other.target
+Pair.__hash__ = lambda self: self.source.__hash__() + self.target.__hash__()
 DataCorpus = namedtuple('DataCorpus', ['source', 'target', 'alignment'])
 
 
