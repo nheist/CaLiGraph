@@ -65,7 +65,7 @@ class PrecisionRecallF1Evaluator:
             tp = len(predicted_pairs.intersection(actual_pairs))
             precision = tp / predicted
             recall = tp / actual
-            f1 = 2 * precision * recall / (precision + recall)
+            f1 = 2 * precision * recall / (precision + recall) if precision > 0 and recall > 0 else 0
         else:
             precision = recall = f1 = 0.0
         metrics = {'0_runtime': runtime, '1_predicted': predicted, '2_actual': actual, '3_precision': precision, '4_recall': recall, '5_f1-score': f1}
