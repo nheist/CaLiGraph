@@ -50,7 +50,7 @@ if __name__ == '__main__':
     scenario = MatchingScenario(args.scenario)
     approach = MatchingApproach(args.approach)
     params = {
-        'version': 1,
+        'version': 2,
         'blocking_approach': args.blocking_approach,
         'base_model': args.base_model,
         'loss': args.loss,

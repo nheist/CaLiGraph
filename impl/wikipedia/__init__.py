@@ -1,12 +1,12 @@
 from impl.util.singleton import Singleton
 from typing import Dict, Tuple, Set, List, Iterable
-from collections import defaultdict
+from collections import defaultdict, Counter
 import utils
 from .nif_parser import extract_wiki_corpus_resources
 from .xml_parser import _parse_raw_markup_from_xml
 from .page_parser import _parse_pages, WikiPage, WikiSubjectEntity
 from .category_parser import _extract_parent_categories_from_markup
-from impl.dbpedia.resource import DbpListpage
+from impl.dbpedia.resource import DbpListpage, DbpResourceStore
 import impl.dbpedia.util as dbp_util
 from impl.util.rdf import Namespace
 from impl.util.nlp import EntityTypeLabel
@@ -36,6 +36,7 @@ class WikiPageStore:
 
     def set_subject_entity_mentions(self, subject_entity_mentions: Dict[int, Dict[int, Dict[int, Tuple[str, EntityTypeLabel]]]]):
         self._reset_subject_entities()
+        unknown_se_labels = Counter()
         for wp_idx, wp_mentions in subject_entity_mentions.items():
             wp = self.pages[wp_idx]
             for listing_idx, listing_mentions in wp_mentions.items():
@@ -48,7 +49,18 @@ class WikiPageStore:
                         if mention.label == se_label:
                             se_idx = mention.entity_idx
                             break
+                    if se_idx == EntityIndex.NEW_ENTITY.value:
+                        unknown_se_labels[se_label] += 1
                     item.subject_entity = WikiSubjectEntity(se_idx, se_label, se_type)
+        # discard unknown subject entities with labels that are too frequent
+        entity_labels = {e.get_label() for e in DbpResourceStore.instance().get_entities()}
+        invalid_labels = {label for label, cnt in unknown_se_labels if label not in entity_labels and cnt > 50}
+        for wp in self.get_pages():
+            for listing in wp.get_listings():
+                for item in listing.get_items():
+                    se = item.subject_entity
+                    if se and se.entity_idx == EntityIndex.NEW_ENTITY.value and se.label in invalid_labels:
+                        item.subject_entity = None
 
     def _reset_subject_entities(self):
         for wp in self.get_pages():
