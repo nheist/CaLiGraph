@@ -1,7 +1,7 @@
 """Functionality for parsing Wikipedia pages from WikiText."""
 
 from typing import Tuple, Optional, Dict, Set, List, Iterable
-from collections import defaultdict
+from collections import defaultdict, Counter
 import re
 import signal
 import traceback
@@ -115,6 +115,14 @@ class WikiListing:
 
     def has_subject_entities(self) -> bool:
         return len(self.get_subject_entities()) > 0
+
+    def has_main_subject_entity(self) -> bool:
+        """Return True, if there is a known subject entity that appears in at least 3/4 of all items."""
+        subject_entities = self.get_subject_entities()
+        named_se_counter = Counter([se.entity_idx for se in subject_entities if se.entity_idx != EntityIndex.NEW_ENTITY.value])
+        if not named_se_counter:
+            return False
+        return named_se_counter.most_common(1)[0][1] / len(subject_entities) >= .75
 
 
 class WikiEnum(WikiListing):

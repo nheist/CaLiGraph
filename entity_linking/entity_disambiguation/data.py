@@ -1,17 +1,30 @@
-from typing import List, Tuple
-from collections import namedtuple, defaultdict
+from typing import List, Set, Tuple, Union, Optional, NamedTuple
+from collections import defaultdict
 import itertools
 import random
 import utils
 from impl.util.transformer import EntityIndex
 from impl.wikipedia import WikiPageStore, WikiPage
-from impl.caligraph.entity import ClgEntityStore
+from impl.wikipedia.page_parser import WikiListing
+from impl.caligraph.entity import ClgEntityStore, ClgEntity
 
 
-Pair = namedtuple('Pair', ['source', 'target', 'confidence'])
-Pair.__eq__ = lambda self, other: self.source == other.source and self.target == other.target
-Pair.__hash__ = lambda self: self.source.__hash__() + self.target.__hash__()
-DataCorpus = namedtuple('DataCorpus', ['source', 'target', 'alignment'])
+class Pair(NamedTuple):
+    source: Tuple[int, int, int]
+    target: Union[Tuple[int, int, int], int]
+    confidence: float
+
+    def __eq__(self, other) -> bool:
+        return self.source == other.source and self.target == other.target
+
+    def __hash__(self):
+        return self.source.__hash__() + self.target.__hash__()
+
+
+class DataCorpus(NamedTuple):
+    source: List[WikiListing]
+    target: Optional[List[ClgEntity]]
+    alignment: Set[Pair]
 
 
 # MENTION-MENTION
@@ -27,7 +40,7 @@ def _get_mm_train_val_test_pages() -> Tuple[List[WikiPage], List[WikiPage], List
 
 
 def _create_mm_corpus_from_pages(pages: List[WikiPage]) -> DataCorpus:
-    listings = [listing for page in pages for listing in page.get_listings() if listing.has_subject_entities()]
+    listings = [listing for page in pages for listing in page.get_listings() if listing.has_subject_entities() and not listing.has_main_subject_entity()]
     entity_to_item_mapping = defaultdict(set)
     for listing in listings:
         for item in listing.get_items():
