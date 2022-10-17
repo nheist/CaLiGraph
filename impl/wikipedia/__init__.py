@@ -54,7 +54,7 @@ class WikiPageStore:
                     item.subject_entity = WikiSubjectEntity(se_idx, se_label, se_type)
         # discard unknown subject entities with labels that are too frequent
         entity_labels = {e.get_label() for e in DbpResourceStore.instance().get_entities()}
-        invalid_labels = {label for label, cnt in unknown_se_labels if label not in entity_labels and cnt > 50}
+        invalid_labels = {label for label, cnt in unknown_se_labels.items() if label not in entity_labels and cnt > 50}
         for wp in self.get_pages():
             for listing in wp.get_listings():
                 for item in listing.get_items():
