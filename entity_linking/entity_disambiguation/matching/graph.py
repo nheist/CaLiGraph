@@ -1,4 +1,4 @@
-from typing import List, Optional, Set
+from typing import List, Optional, Set, Tuple
 from collections import defaultdict
 from entity_linking.entity_disambiguation.data import Pair, DataCorpus
 from entity_linking.entity_disambiguation.matching.matcher import MatcherWithCandidates
@@ -25,13 +25,14 @@ class PopularityMatcher(MatcherWithCandidates):
             entity_popularity[ent.idx] = out_degree + in_degree
         return entity_popularity
 
-    def _get_entity_popularity(self, ent_idx: int) -> int:
+    def _get_entity_popularity(self, ent_with_score: Tuple[int, float]) -> int:
+        ent_idx = ent_with_score[0]
         return self.entity_popularity[ent_idx]
 
     def predict(self, prefix: str, source: List[WikiListing], target: Optional[List[ClgEntity]]) -> Set[Pair]:
         assert target is not None, 'PopularityMatcher can only be applied to corpus with target.'
         candidates_by_source = defaultdict(set)
-        for item, ent in self.candidates[prefix]:
-            candidates_by_source[item].add(ent)
+        for item, ent, score in self.candidates[prefix]:
+            candidates_by_source[item].add((ent, score))
         alignment = {item: max(ents, key=self._get_entity_popularity) for item, ents in candidates_by_source.items()}
         return {Pair(source_item, target_entity, 1) for source_item, target_entity in alignment.items()}
