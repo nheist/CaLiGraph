@@ -1,2 +1,2 @@
-base_model: bert-base-cased
+base_model: roberta-base
 batch_size: 64
