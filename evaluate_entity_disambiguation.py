@@ -5,11 +5,11 @@ import os
 
 VERSION = 2
 
-# TODO: Fusion (MM/ME first, remove by confidence [weighted by scenario precision], graph partitioning algorithm -> Holland-sameAs) -> how big is the "problem"?
+# TODO: Fusion (graph partitioning algorithm -> Holland-sameAs) -> how big is the "problem"?
 # Holland-sameAs: https://link.springer.com/chapter/10.1007/978-3-030-00671-6_23
 # Implementation: https://github.com/dwslab/melt/blob/e94287f1349217e04cdb3a6b6565f3345f216b45/matching-jena-matchers/src/main/java/de/uni_mannheim/informatik/dws/melt/matching_jena_matchers/multisource/clustering/ComputeErrDegree.java
-# TODO: lexical model with more recall (levenshtein distance, n-grams) or other baselines
 # TODO: Filtering (consistent alignment for every listing) -> before or after Fusion? e.g. apply WWW-Approach before
+# TODO: lexical model with more recall (levenshtein distance, n-grams) or other baselines
 if __name__ == '__main__':
     parser = configargparse.ArgumentParser(description='Run the evaluation of entity disambiguation approaches.')
     # config
@@ -53,12 +53,12 @@ if __name__ == '__main__':
     import random
     import numpy as np
     import torch
+    approach_id = args.approach_id or f'V{VERSION}{args.scenario}{args.approach[:2]}{str(random.randint(0, 999)).zfill(3)}'
     SEED = 310
     random.seed(SEED)
     np.random.seed(SEED)
     torch.manual_seed(SEED)
     # initialize parameters
-    approach_id = args.approach_id or f'V{VERSION}{args.scenario}{args.approach[:2]}{str(random.randint(0, 999)).zfill(3)}'
     from entity_linking.entity_disambiguation.matching.util import MatchingScenario, MatchingApproach
     scenario = MatchingScenario(args.scenario)
     approach = MatchingApproach(args.approach)
