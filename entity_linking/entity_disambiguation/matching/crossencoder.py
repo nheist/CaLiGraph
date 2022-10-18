@@ -1,5 +1,6 @@
 from typing import Set, List, Optional
 from collections import defaultdict
+import random
 from sentence_transformers import CrossEncoder
 import utils
 from impl.caligraph.entity import ClgEntity
@@ -44,8 +45,9 @@ class CrossEncoderMatcher(MatcherWithCandidates):
         if self.epochs == 0:
             return  # skip training
         utils.get_logger().debug('Preparing training data..')
-        negatives = self.candidates[self.MODE_TRAIN].difference(training_set.alignment)
-        train_dataloader = transformer_util.generate_training_data(training_set, negatives, self.batch_size, self.add_page_context, self.add_listing_entities, self.add_entity_abstract, self.add_kg_info)
+        negatives = list(self.candidates[self.MODE_TRAIN].difference(training_set.alignment))
+        negatives_sample = random.sample(negatives, min([len(negatives), len(training_set.alignment) * 2]))
+        train_dataloader = transformer_util.generate_training_data(training_set, negatives_sample, self.batch_size, self.add_page_context, self.add_listing_entities, self.add_entity_abstract, self.add_kg_info)
         utils.release_gpu()
         utils.get_logger().debug('Starting training..')
         self.model.fit(train_dataloader=train_dataloader, epochs=self.epochs, warmup_steps=self.warmup_steps, save_best_model=False)
