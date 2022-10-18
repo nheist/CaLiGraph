@@ -4,7 +4,7 @@ from time import process_time
 import utils
 from entity_linking.entity_disambiguation.data import Pair, DataCorpus
 from entity_linking.entity_disambiguation.evaluation import PrecisionRecallF1Evaluator
-from entity_linking.entity_disambiguation.matching.util import MatchingScenario
+from entity_linking.entity_disambiguation.matching.util import MatchingScenario, load_candidates
 from impl.wikipedia.page_parser import WikiListing
 from impl.caligraph.entity import ClgEntity
 
@@ -15,11 +15,10 @@ class Matcher(ABC):
     def __init__(self, scenario: MatchingScenario, params: dict):
         super().__init__()
         self.scenario = scenario
-        self.version = params['version']
+        self.id = params['id']
 
-    def get_approach_id(self) -> str:
-        approach_params = [self.scenario.value, f'v{self.version}', type(self).__name__]
-        approach_params += [f'{k}={v}' for k, v in self._get_param_dict().items()]
+    def get_approach_name(self) -> str:
+        approach_params = [self.id] + [f'{k}={v}' for k, v in self._get_param_dict().items()]
         return '_'.join(approach_params)
 
     def _get_param_dict(self) -> dict:
@@ -44,7 +43,7 @@ class Matcher(ABC):
         prediction = self.predict(prefix, data_corpus.source, data_corpus.target)
         prediction_time_in_seconds = int(process_time() - pred_start)
 
-        evaluator = PrecisionRecallF1Evaluator(self.get_approach_id(), self.scenario)
+        evaluator = PrecisionRecallF1Evaluator(self.get_approach_name(), self.scenario)
         evaluator.compute_and_log_metrics(prefix, prediction, data_corpus.alignment, prediction_time_in_seconds)
         return prediction
 
@@ -57,7 +56,7 @@ class MatcherWithCandidates(Matcher, ABC):
     def __init__(self, scenario: MatchingScenario, params: dict):
         super().__init__(scenario, params)
         self.blocking_approach = params['blocking_approach']
-        self.candidates = params['candidates']
+        self.candidates = load_candidates(self.blocking_approach)
 
     def _get_param_dict(self) -> dict:
         return super()._get_param_dict() | {'b': self.blocking_approach}

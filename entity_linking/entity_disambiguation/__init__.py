@@ -13,7 +13,7 @@ def run_evaluation(scenario: MatchingScenario, approach: MatchingApproach, param
         alignments = matcher.train(train_corpus, eval_corpus, save_alignment)
         alignments |= matcher.test(test_corpus)
         utils.get_logger().info('Storing candidates..')
-        store_candidates(matcher.get_approach_id(), alignments)
+        store_candidates(matcher.get_approach_name(), alignments)
     else:
         matcher.train(train_corpus, eval_corpus, save_alignment)
         matcher.test(test_corpus)

@@ -2,13 +2,19 @@ import argparse
 import configargparse
 import os
 
-# TODO: merging of MM and ME results (remove edges by confidence, MM/ME first, classifier, graph partitioning algorithm?)
+
+VERSION = 2
+
+# TODO: Fusion (MM/ME first, remove by confidence [weighted by scenario precision], graph partitioning algorithm -> Holland-sameAs) -> how big is the "problem"?
+# Holland-sameAs: https://link.springer.com/chapter/10.1007/978-3-030-00671-6_23
+# Implementation: https://github.com/dwslab/melt/blob/e94287f1349217e04cdb3a6b6565f3345f216b45/matching-jena-matchers/src/main/java/de/uni_mannheim/informatik/dws/melt/matching_jena_matchers/multisource/clustering/ComputeErrDegree.java
 # TODO: lexical model with more recall (levenshtein distance, n-grams) or other baselines
-# TODO: symbolic approach from Manni?
+# TODO: Filtering (consistent alignment for every listing) -> before or after Fusion? e.g. apply WWW-Approach before
 if __name__ == '__main__':
     parser = configargparse.ArgumentParser(description='Run the evaluation of entity disambiguation approaches.')
     # config
     parser.add_argument('-c', '--config', is_config_file=True, help='Path to config file')
+    parser.add_argument('-id', '--approach_id', type=str, help='ID to identify the approach')
     # machine-specific
     parser.add_argument('gpu', type=int, choices=range(-1, 8), help='Number of GPU to use')
     parser.add_argument('-gm', '--gpu_memory', type=int, default=46, help='Amount of GPU memory to reserve')
@@ -46,11 +52,12 @@ if __name__ == '__main__':
     np.random.seed(SEED)
     torch.manual_seed(SEED)
     # initialize parameters
+    approach_id = args.approach_id or f'V{VERSION}{args.scenario}{args.approach[:2]}{str(random.randint(0, 999)).zfill(3)}'
     from entity_linking.entity_disambiguation.matching.util import MatchingScenario, MatchingApproach
     scenario = MatchingScenario(args.scenario)
     approach = MatchingApproach(args.approach)
     params = {
-        'version': 2,
+        'id': approach_id,
         'blocking_approach': args.blocking_approach,
         'base_model': args.base_model,
         'loss': args.loss,
