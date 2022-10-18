@@ -7,15 +7,22 @@ import utils
 class MatchingScenario(Enum):
     MENTION_MENTION = 'MM'
     MENTION_ENTITY = 'ME'
+    FUSION = 'F'
 
 
 class MatchingApproach(Enum):
     # MM/ME
     EXACT = 'exact'
     WORD = 'word'
-    POPULARITY = 'popularity'
     BIENCODER = 'biencoder'
     CROSSENCODER = 'crossencoder'
+    # ME
+    POPULARITY = 'popularity'
+    # F
+    WEAKEST_MENTION = 'wmention'
+    WEAKEST_ENTITY = 'wentity'
+    WEAKEST_LINK = 'wlink'
+    PRECISION_WEIGHTED_WEAKEST_LINK = 'pwlink'
 
 
 def store_candidates(approach_name: str, candidates: dict):

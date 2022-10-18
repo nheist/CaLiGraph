@@ -19,7 +19,7 @@ if __name__ == '__main__':
     parser.add_argument('gpu', type=int, choices=range(-1, 8), help='Number of GPU to use')
     parser.add_argument('-gm', '--gpu_memory', type=int, default=46, help='Amount of GPU memory to reserve')
     # general matching
-    parser.add_argument('scenario', type=str, help='Whether to match mention-mention or mention-entity')
+    parser.add_argument('scenario', type=str, choices=['MM', 'ME', 'F'], help='Mention-mention, mention-entity, or fusion matching')
     parser.add_argument('approach', type=str, help='Approach used for matching')
     parser.add_argument('-sa', '--save_alignment', action=argparse.BooleanOptionalAction, default=False, help='Whether to save the produced alignment for train/val/test')
     # matchers needing candidates
@@ -35,6 +35,12 @@ if __name__ == '__main__':
     parser.add_argument('-ale', '--add_listing_entities', type=int, default=0, help='Other listing entities to append for disambiguation (M)')
     parser.add_argument('-aea', '--add_entity_abstract', action=argparse.BooleanOptionalAction, default=False, help='Use entity abstract for disambiguation (E)')
     parser.add_argument('-aki', '--add_kg_info', type=int, default=0, help='Types/properties to add from KG for disambiguation (E)')
+    # fusion
+    parser.add_argument('-mma', '--mm_approach', type=str, help='Mention-mention approach (ID) used for fusion')
+    parser.add_argument('-mea', '--me_approach', type=str, help='Mention-entity approach (ID) used for fusion')
+    parser.add_argument('-mmw', '--mm_weight', type=str, help='Weight of mention-mention approach used for fusion')
+    parser.add_argument('-mew', '--me_weight', type=str, help='Weight of mention-entity approach used for fusion')
+
 
     args = parser.parse_args()
     # and set necessary environment variables
@@ -69,6 +75,10 @@ if __name__ == '__main__':
         'add_listing_entities': args.add_listing_entities,
         'add_entity_abstract': args.add_entity_abstract,
         'add_kg_info': args.add_kg_info,
+        'mm_approach': args.mm_approach,
+        'me_approach': args.me_approach,
+        'mm_weight': args.mm_weight,
+        'me_weight': args.me_weight,
     }
     # then import application-specific code and run it
     from entity_linking import entity_disambiguation
