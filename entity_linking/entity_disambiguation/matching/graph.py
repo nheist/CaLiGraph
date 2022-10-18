@@ -34,5 +34,5 @@ class PopularityMatcher(MatcherWithCandidates):
         candidates_by_source = defaultdict(set)
         for item, ent, score in self.candidates[prefix]:
             candidates_by_source[item].add((ent, score))
-        alignment = {item: max(ents, key=self._get_entity_popularity) for item, ents in candidates_by_source.items()}
-        return {Pair(source_item, target_entity, 1) for source_item, target_entity in alignment.items()}
+        alignment = [(item, *max(ents, key=self._get_entity_popularity)) for item, ents in candidates_by_source.items()]
+        return {Pair(source, target, score) for source, target, score in alignment}
