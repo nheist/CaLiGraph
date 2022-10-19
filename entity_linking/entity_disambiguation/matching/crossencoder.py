@@ -59,15 +59,15 @@ class CrossEncoderMatcher(MatcherWithCandidates):
         else:
             target_input = transformer_util.prepare_entities(target, self.add_entity_abstract, self.add_kg_info)
         candidates = self.candidates[prefix]
-        model_input = [[source_input[source_id], target_input[target_id]] for source_id, target_id in candidates]
+        model_input = [[source_input[source_id], target_input[target_id]] for source_id, target_id, _ in candidates]
         candidate_scores = self.model.predict(model_input, batch_size=self.batch_size, show_progress_bar=True)
         if self.scenario == MatchingScenario.MENTION_MENTION:
             # take all matches that are higher than threshold
-            alignment = [cand for cand, score in zip(candidates, candidate_scores) if score > .5]
+            alignment = [(cand[0], cand[1], score) for cand, score in zip(candidates, candidate_scores) if score > .5]
         else:  # MENTION_ENTITY
             # take only the most likely match for an item
             item_entity_scores = defaultdict(set)
-            for (item_id, entity_id), score in zip(candidates, candidate_scores):
+            for (item_id, entity_id, _), score in zip(candidates, candidate_scores):
                 item_entity_scores[item_id].add((entity_id, score))
             alignment = [(i, *max(js, key=lambda x: x[1])) for i, js in item_entity_scores.items()]
-        return {Pair(*item_pair) for item_pair in alignment}
+        return {Pair(source, target, score) for source, target, score in alignment}
