@@ -1,4 +1,4 @@
-from typing import Set, List, Optional
+from typing import Set, List, Optional, Dict
 from collections import defaultdict
 import random
 from sentence_transformers import CrossEncoder
@@ -40,6 +40,11 @@ class CrossEncoderMatcher(MatcherWithCandidates):
             'ws': self.warmup_steps,
         }
         return super()._get_param_dict() | params
+
+    def train(self, training_set: DataCorpus, eval_set: DataCorpus, save_alignment: bool) -> Dict[str, Set[Pair]]:
+        utils.get_logger().info('Training matcher..')
+        self._train_model(training_set, eval_set)
+        return {}  # never predict on the training set with the cross-encoder
 
     def _train_model(self, training_set: DataCorpus, eval_set: DataCorpus):
         if self.epochs == 0:
