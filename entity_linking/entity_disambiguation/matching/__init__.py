@@ -1,14 +1,15 @@
+from typing import Union
 from entity_linking.entity_disambiguation.matching.matcher import Matcher
 from entity_linking.entity_disambiguation.matching.util import MatchingScenario, MatchingApproach, load_candidates
 from entity_linking.entity_disambiguation.matching.lexical import ExactMatcher, WordMatcher
 from entity_linking.entity_disambiguation.matching.graph import PopularityMatcher
 from entity_linking.entity_disambiguation.matching.biencoder import BiEncoderMatcher
 from entity_linking.entity_disambiguation.matching.crossencoder import CrossEncoderMatcher
-from entity_linking.entity_disambiguation.matching.fusion import WeakestMentionMatcher, WeakestEntityMatcher, WeakestLinkMatcher, PrecisionWeightedWeakestLinkMatcher
+from entity_linking.entity_disambiguation.matching.fusion import FusionMatcher, WeakestMentionMatcher, WeakestEntityMatcher, WeakestLinkMatcher, PrecisionWeightedWeakestLinkMatcher
 import utils
 
 
-def initialize_matcher(scenario: MatchingScenario, approach: MatchingApproach, params: dict) -> Matcher:
+def initialize_matcher(scenario: MatchingScenario, approach: MatchingApproach, params: dict) -> Union[Matcher, FusionMatcher]:
     utils.get_logger().info('Initializing matcher..')
     if approach == MatchingApproach.EXACT:
         matcher_factory = ExactMatcher

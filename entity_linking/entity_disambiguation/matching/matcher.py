@@ -9,7 +9,7 @@ from impl.wikipedia.page_parser import WikiListing
 from impl.caligraph.entity import ClgEntity
 
 
-class Matcher(ABC):
+class BaseMatcher:
     MODE_TRAIN, MODE_EVAL, MODE_TEST = 'train', 'eval', 'test'
 
     def __init__(self, scenario: MatchingScenario, params: dict):
@@ -24,6 +24,8 @@ class Matcher(ABC):
     def _get_param_dict(self) -> dict:
         return {}
 
+
+class Matcher(BaseMatcher, ABC):
     def train(self, training_set: DataCorpus, eval_set: DataCorpus, save_alignment: bool) -> Dict[str, Set[Pair]]:
         utils.get_logger().info('Training matcher..')
         self._train_model(training_set, eval_set)
