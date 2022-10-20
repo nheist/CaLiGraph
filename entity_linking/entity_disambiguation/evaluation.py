@@ -1,6 +1,7 @@
 from typing import Set, Tuple, Dict
 from collections import defaultdict, Counter
 from operator import attrgetter
+from sklearn.metrics import roc_curve
 from torch.utils.tensorboard import SummaryWriter
 from entity_linking.entity_disambiguation.data import Pair
 from entity_linking.entity_disambiguation.matching.util import MatchingScenario
@@ -28,11 +29,14 @@ class PrecisionRecallF1Evaluator:
     def _compute_and_log_metrics_for_partition(self, prefix: str, predicted_pairs: Set[Pair], actual_pairs: Set[Pair], runtime: int, partition_func = None):
         if partition_func:
             for partition_key, (predicted_pair_partition, actual_pair_partition) in self._make_partitions(predicted_pairs, actual_pairs, partition_func).items():
+                partition_prefix = prefix + partition_key
                 metrics = self._compute_metrics(predicted_pair_partition, actual_pair_partition, runtime)
-                self._log_metrics(prefix + partition_key, metrics)
+                self._log_metrics(partition_prefix, metrics)
+                self._log_roc_curve(partition_prefix, predicted_pair_partition, actual_pair_partition)
         else:
             metrics = self._compute_metrics(predicted_pairs, actual_pairs, runtime)
             self._log_metrics(prefix, metrics)
+            self._log_roc_curve(prefix, predicted_pairs, actual_pairs)
 
     def _make_partitions(self, predicted_pairs: Set[Pair], actual_pairs: Set[Pair], partition_func) -> Dict[str, Tuple[Set[Pair], Set[Pair]]]:
         partitioned_predicted_pairs = self._apply_partition_func(partition_func, predicted_pairs)
@@ -117,3 +121,11 @@ class PrecisionRecallF1Evaluator:
         with SummaryWriter(log_dir=f'./logs/ED/{self.approach_name}') as tb:
             for key, val in metrics.items():
                 tb.add_scalar(f'{prefix}/{key}', val, step)
+
+    def _log_roc_curve(self, prefix: str, predicted_pairs: Set[Pair], actual_pairs: Set[Pair]):
+        pred = [p[2] for p in predicted_pairs]
+        actual = [p[2] for p in actual_pairs]
+        tpr, fpr = roc_curve(actual, pred)
+        with SummaryWriter(log_dir=f'./logs/ED/{self.approach_name}') as tb:
+            for tp, fp in zip(tpr, fpr):
+                tb.add_scalar(f'{prefix}/roc', tp * 100, fp * 100)

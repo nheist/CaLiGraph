@@ -58,7 +58,8 @@ class FusionMatcher(BaseMatcher, ABC):
             if num_ents > 1:  # subgraph contains more than one entity -> should be avoided
                 subgraphs.append(sg.copy())
                 ents_per_subgraph.append(num_ents)
-        utils.get_logger().debug(f'Found {len(ents_per_subgraph)} invalid subgraphs with avg./med. of {np.mean(ents_per_subgraph)}/{np.median(ents_per_subgraph)} entities.')
+        if subgraphs:
+            utils.get_logger().debug(f'Found {len(ents_per_subgraph)} invalid subgraphs with avg./med. of {np.mean(ents_per_subgraph)}/{np.median(ents_per_subgraph)} entities.')
         return subgraphs
 
     @classmethod
