@@ -16,6 +16,7 @@ class CrossEncoderMatcher(MatcherWithCandidates):
         super().__init__(scenario, params)
         # model params
         self.base_model = params['base_model']
+        self.confidence_threshold = params['confidence_threshold']
         self.add_page_context = params['add_page_context']
         self.add_listing_entities = params['add_listing_entities']
         self.add_entity_abstract = params['add_entity_abstract']
@@ -31,6 +32,7 @@ class CrossEncoderMatcher(MatcherWithCandidates):
     def _get_param_dict(self) -> dict:
         params = {
             'bm': self.base_model,
+            'ct': self.confidence_threshold,
             'apc': self.add_page_context,
             'ale': self.add_listing_entities,
             'aea': self.add_entity_abstract,
@@ -68,11 +70,12 @@ class CrossEncoderMatcher(MatcherWithCandidates):
         candidate_scores = self.model.predict(model_input, batch_size=self.batch_size, show_progress_bar=True)
         if self.scenario == MatchingScenario.MENTION_MENTION:
             # take all matches that are higher than threshold
-            alignment = [(cand[0], cand[1], score) for cand, score in zip(candidates, candidate_scores) if score > .5]
+            alignment = [(cand[0], cand[1], score) for cand, score in zip(candidates, candidate_scores) if score > self.confidence_threshold]
         else:  # MENTION_ENTITY
             # take only the most likely match for an item
             item_entity_scores = defaultdict(set)
             for (item_id, entity_id, _), score in zip(candidates, candidate_scores):
-                item_entity_scores[item_id].add((entity_id, score))
+                if score > self.confidence_threshold:
+                    item_entity_scores[item_id].add((entity_id, score))
             alignment = [(i, *max(js, key=lambda x: x[1])) for i, js in item_entity_scores.items()]
         return {Pair(source, target, score) for source, target, score in alignment}

@@ -36,6 +36,8 @@ if __name__ == '__main__':
     # bi-encoder
     parser.add_argument('-l', '--loss', type=str, choices=['COS', 'RL', 'SRL'], default='RL', help='Loss function for training (only for bi-encoder)')
     parser.add_argument('-k', '--top_k', type=int, default=3, help='Number of matches to return per input (only for bi-encoder)')
+    # cross-encoder
+    parser.add_argument('-ct', '--confidence_threshold', type=float, default=.5, help="Confidence threshold to filter predictions.")
     # fusion
     parser.add_argument('-mma', '--mm_approach', type=str, help='Mention-mention approach (ID) used for fusion')
     parser.add_argument('-mea', '--me_approach', type=str, help='Mention-entity approach (ID) used for fusion')
@@ -76,6 +78,7 @@ if __name__ == '__main__':
         'add_listing_entities': args.add_listing_entities,
         'add_entity_abstract': args.add_entity_abstract,
         'add_kg_info': args.add_kg_info,
+        'confidence_threshold': args.confidence_threshold,
         'mm_approach': args.mm_approach,
         'me_approach': args.me_approach,
         'mm_weight': args.mm_weight,
