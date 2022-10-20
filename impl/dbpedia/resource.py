@@ -25,6 +25,9 @@ class DbpResource(RdfResource):
     def get_transitive_types(self, include_root=False) -> Set[DbpType]:
         return self._get_store().get_transitive_types(self, include_root=include_root)
 
+    def get_type_label(self) -> EntityTypeLabel:
+        return self._get_store().get_type_label(self.idx)
+
     def get_properties(self, as_tuple=False) -> Union[Dict[DbpPredicate, set], Set[Tuple[DbpPredicate, Any]]]:
         return self._get_store().get_properties(self, as_tuple)
 
