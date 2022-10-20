@@ -128,4 +128,4 @@ class PrecisionRecallF1Evaluator:
         tpr, fpr = roc_curve(actual, pred)
         with SummaryWriter(log_dir=f'./logs/ED/{self.approach_name}') as tb:
             for tp, fp in zip(tpr, fpr):
-                tb.add_scalar(f'{prefix}/roc', tp * 100, fp * 100)
+                tb.add_scalar(f'{prefix}/5_roc', tp * 100, fp * 100)
