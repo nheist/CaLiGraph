@@ -59,7 +59,7 @@ def prepare_listing_items(listings: List[WikiListing], add_page_context: bool, a
                 se = i.subject_entity
                 if se is None:
                     continue
-                result[(l.page_idx, l.idx, i.idx)] = f'{se.label} {CXS} {se.entity_type.name}'
+                result[(l.page_idx, l.idx, i.idx)] = f'{se.label} {SpecialToken.get_type_token(se.entity_type)}'
         return result
     for listing in listings:
         prepared_context = _prepare_listing_context(listing)
@@ -70,7 +70,7 @@ def prepare_listing_items(listings: List[WikiListing], add_page_context: bool, a
                 continue
             item_id = (listing.page_idx, listing.idx, item.idx)
             # add subject entity, its type, and page context
-            item_content = f' {CXS} '.join([item_se.label, item_se.entity_type.name, prepared_context])
+            item_content = f' {CXS} '.join([f'{item_se.label} {SpecialToken.get_type_token(item_se.entity_type)}', prepared_context])
             # add item and `add_listing_entities` subsequent items (add items from start if no subsequent items left)
             item_content += ''.join(islice(cycle(prepared_items), idx, idx + add_listing_entities + 1))
             result[item_id] = item_content
@@ -78,8 +78,8 @@ def prepare_listing_items(listings: List[WikiListing], add_page_context: bool, a
 
 
 def _prepare_listing_context(listing: WikiListing) -> str:
-    page_resource = DbpResourceStore.instance().get_resource_by_idx(listing.page_idx)
-    ctx = [page_resource.get_label(), listing.topsection.title, listing.section.title]
+    res = DbpResourceStore.instance().get_resource_by_idx(listing.page_idx)
+    ctx = [f'{res.get_label()} {SpecialToken.get_type_token(res.get_type_label())}', listing.topsection.title, listing.section.title]
     if isinstance(listing, WikiTable):
         ctx.append(_prepare_listing_item(listing.header))
     return f' {CXS} '.join(ctx) + f' {CXE} '
@@ -98,12 +98,11 @@ def _prepare_listing_item(item: WikiListingItem) -> str:
     return alternate_iters_to_string(tokens, whitespaces)
 
 
-# TODO: potential caching of prepared entities w.r.t add_entity_abstract and add_kg_info (and over session as we always use full set of entities for train/test)
 def prepare_entities(entities: List[ClgEntity], add_entity_abstract: bool, add_kg_info: int) -> Dict[int, str]:
     utils.get_logger().debug('Preparing entities..')
     result = {}
     for e in entities:
-        ent_description = [e.get_label(), e.get_type_label().name]
+        ent_description = [f'{e.get_label()} {SpecialToken.get_type_token(e.get_type_label())}']
         if add_entity_abstract:
             ent_description.append((e.get_abstract() or '')[:200])
         if add_kg_info:

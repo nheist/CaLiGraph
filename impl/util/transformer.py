@@ -1,4 +1,5 @@
 from enum import Enum
+from impl.util.nlp import EntityTypeLabel
 
 
 class EntityIndex(Enum):
@@ -8,6 +9,7 @@ class EntityIndex(Enum):
 
 
 class SpecialToken(Enum):
+    # CONTEXT TOKENS
     CONTEXT_SEP = '[CXS]'
     CONTEXT_END = '[CXE]'
     TABLE_ROW = '[ROW]'
@@ -15,6 +17,21 @@ class SpecialToken(Enum):
     ENTRY_L1 = '[E1]'
     ENTRY_L2 = '[E2]'
     ENTRY_L3 = '[E3]'
+
+    # TYPE TOKENS
+    PERSON = '[TPE]'
+    NORP = '[TNO]'
+    FAC = '[TFA]'
+    ORG = '[TOR]'
+    GPE = '[TGP]'
+    LOC = '[TLO]'
+    PRODUCT = '[TPR]'
+    EVENT = '[TEV]'
+    WORK_OF_ART = '[TWO]'
+    LAW = '[TLA]'
+    LANGUAGE = '[TLN]'
+    SPECIES = '[TSP]'
+    OTHER = '[TOT]'
 
     @classmethod
     def all_tokens(cls):
@@ -33,3 +50,7 @@ class SpecialToken(Enum):
         elif depth >= 3:
             return cls.ENTRY_L3.value
         raise ValueError(f'Trying to retrieve a transformer special token for an entry of depth {depth}.')
+
+    @classmethod
+    def get_type_token(cls, type_label: EntityTypeLabel) -> str:
+        return cls[type_label.name].value
