@@ -55,25 +55,20 @@ def prepare_listing_items(listings: List[WikiListing], add_page_context: bool, a
     result = {}
     if not add_page_context and not add_listing_entities:
         for l in listings:
-            for i in l.get_items():
+            for i in l.get_items(has_subject_entity=True):
                 se = i.subject_entity
-                if se is None:
-                    continue
                 result[(l.page_idx, l.idx, i.idx)] = f'{se.label} {SpecialToken.get_type_token(se.entity_type)}'
         return result
     for listing in listings:
         prepared_context = _prepare_listing_context(listing)
         prepared_items = [_prepare_listing_item(item) for item in listing.get_items()]
-        for idx, item in enumerate(listing.get_items()):
+        for idx, item in enumerate(listing.get_items(has_subject_entity=True)):
             item_se = item.subject_entity
-            if item_se is None:
-                continue
-            item_id = (listing.page_idx, listing.idx, item.idx)
             # add subject entity, its type, and page context
             item_content = f' {CXS} '.join([f'{item_se.label} {SpecialToken.get_type_token(item_se.entity_type)}', prepared_context])
             # add item and `add_listing_entities` subsequent items (add items from start if no subsequent items left)
             item_content += ''.join(islice(cycle(prepared_items), idx, idx + add_listing_entities + 1))
-            result[item_id] = item_content
+            result[(listing.page_idx, listing.idx, item.idx)] = item_content
     return result
 
 

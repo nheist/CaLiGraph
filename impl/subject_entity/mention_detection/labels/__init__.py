@@ -16,8 +16,8 @@ def _get_labels_for_subject_entities(pages: List[WikiPage], subject_entities: Di
         for listing in page.get_listings():
             if listing.idx not in subject_entities[page.idx]:
                 continue
+            item_subject_entities = subject_entities[page.idx][listing.idx]
             for item in listing.get_items():
-                item_subject_entities = subject_entities[page.idx][listing.idx]
                 item_labels = _get_entry_labels(item, item_subject_entities) if isinstance(item, WikiEnumEntry) else _get_row_labels(item, item_subject_entities)
                 if item_labels is not None:
                     labels[page.idx][listing.idx][item.idx] = item_labels

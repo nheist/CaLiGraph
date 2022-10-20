@@ -16,8 +16,8 @@ def _disambiguate_by_creating_new_entities() -> Dict[int, Dict[int, Dict[int, in
     next_entity_idx = DbpResourceStore.instance().get_highest_resource_idx() + 1
     for wp in WikiPageStore.instance().get_pages():
         for listing in wp.get_listings():
-            for item in listing.get_items():
-                if item.subject_entity is not None and item.subject_entity.entity_idx == EntityIndex.NEW_ENTITY.value:
+            for item in listing.get_items(has_subject_entity=True):
+                if item.subject_entity.entity_idx == EntityIndex.NEW_ENTITY.value:
                     disambiguated_subject_entities[wp.idx][listing.idx][item.idx] = next_entity_idx
                     next_entity_idx += 1
     return disambiguated_subject_entities

@@ -32,9 +32,7 @@ class LexicalMatcher(Matcher, ABC):
     def _get_item_labels_for_listings(cls, listings: List[WikiListing]) -> dict:
         item_labels = {}
         for listing in listings:
-            for item in listing.get_items():
-                if item.subject_entity is None:
-                    continue
+            for item in listing.get_items(has_subject_entity=True):
                 item_labels[(listing.page_idx, listing.idx, item.idx)] = item.subject_entity.label
         return item_labels
 

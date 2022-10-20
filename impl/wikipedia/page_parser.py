@@ -102,8 +102,8 @@ class WikiListing:
     def get_type(cls) -> str:
         raise NotImplementedError()
 
-    def get_items(self) -> Iterable[WikiListingItem]:
-        return self.items.values()
+    def get_items(self, has_subject_entity: bool = False) -> Iterable[WikiListingItem]:
+        return [i for i in self.items.values() if i.subject_entity is not None] if has_subject_entity else self.items.values()
 
     def get_mentioned_entities(self) -> Set[DbpResource]:
         dbr = DbpResourceStore.instance()
@@ -111,7 +111,7 @@ class WikiListing:
         return {dbr.get_resource_by_idx(idx) for idx in entity_indices if idx != EntityIndex.NEW_ENTITY.value}
 
     def get_subject_entities(self) -> List[WikiSubjectEntity]:
-        return [item.subject_entity for item in self.get_items() if item.subject_entity]
+        return [item.subject_entity for item in self.get_items(has_subject_entity=True)]
 
     def has_subject_entities(self) -> bool:
         return len(self.get_subject_entities()) > 0

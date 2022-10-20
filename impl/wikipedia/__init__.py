@@ -57,9 +57,9 @@ class WikiPageStore:
         invalid_labels = {label for label, cnt in unknown_se_labels.items() if label not in entity_labels and cnt > 50}
         for wp in self.get_pages():
             for listing in wp.get_listings():
-                for item in listing.get_items():
+                for item in listing.get_items(has_subject_entity=True):
                     se = item.subject_entity
-                    if se and se.entity_idx == EntityIndex.NEW_ENTITY.value and se.label in invalid_labels:
+                    if se.entity_idx == EntityIndex.NEW_ENTITY.value and se.label in invalid_labels:
                         item.subject_entity = None
 
     def _reset_subject_entities(self):

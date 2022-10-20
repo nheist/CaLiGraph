@@ -43,10 +43,11 @@ def _create_mm_corpus_from_pages(pages: List[WikiPage]) -> DataCorpus:
     listings = [listing for page in pages for listing in page.get_listings() if listing.has_subject_entities() and not listing.has_main_subject_entity()]
     entity_to_item_mapping = defaultdict(set)
     for listing in listings:
-        for item in listing.get_items():
-            if not item.subject_entity or item.subject_entity.entity_idx == EntityIndex.NEW_ENTITY.value:
+        for item in listing.get_items(has_subject_entity=True):
+            se_id = item.subject_entity.entity_idx
+            if se_id == EntityIndex.NEW_ENTITY.value:
                 continue
-            entity_to_item_mapping[item.subject_entity.entity_idx].add((listing.page_idx, listing.idx, item.idx))
+            entity_to_item_mapping[se_id].add((listing.page_idx, listing.idx, item.idx))
     alignment = set()
     for item_group in entity_to_item_mapping.values():
         alignment.update({Pair(*sorted(item_pair), 1) for item_pair in itertools.combinations(item_group, 2)})
@@ -66,14 +67,13 @@ def _create_me_corpus_from_pages(pages: List[WikiPage]) -> DataCorpus:
     entities = clge.get_entities()
     alignment = set()
     for listing in listings:
-        for item in listing.get_items():
-            if not item.subject_entity or item.subject_entity.entity_idx == EntityIndex.NEW_ENTITY.value:
-                continue
-            item_id = (listing.page_idx, listing.idx, item.idx)
+        for item in listing.get_items(has_subject_entity=True):
             se_id = item.subject_entity.entity_idx
+            if se_id == EntityIndex.NEW_ENTITY.value:
+                continue
             if not clge.has_entity_with_idx(se_id):
                 continue
-            alignment.add(Pair(item_id, se_id, 1))
+            alignment.add(Pair((listing.page_idx, listing.idx, item.idx), se_id, 1))
     return DataCorpus(listings, entities, alignment)
 
 
