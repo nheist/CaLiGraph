@@ -43,26 +43,27 @@ def get_loss_function(loss: str, model) -> nn.Module:
 
 
 def generate_training_data(training_set: DataCorpus, negatives: list, batch_size: int, add_page_context: bool, add_listing_entities: bool, add_entity_abstract: bool, add_kg_info: bool) -> DataLoader:
-    source_input = prepare_listing_items(training_set.source, add_page_context, add_listing_entities)
-    target_input = source_input if training_set.target is None else prepare_entities(training_set.target, add_entity_abstract, add_kg_info)
+    is_mm_scenario = training_set.target is None
+    source_input = prepare_listing_items(training_set.source, is_mm_scenario, add_page_context, add_listing_entities)
+    target_input = source_input if is_mm_scenario else prepare_entities(training_set.target, add_entity_abstract, add_kg_info)
     input_examples = [InputExample(texts=[source_input[source_id], target_input[target_id]], label=1) for source_id, target_id, _ in training_set.alignment]
     input_examples.extend([InputExample(texts=[source_input[source_id], target_input[target_id]], label=0) for source_id, target_id, _ in negatives])
     return DataLoader(input_examples, shuffle=True, batch_size=batch_size)
 
 
-def prepare_listing_items(listings: List[WikiListing], add_page_context: bool, add_listing_entities: bool) -> Dict[Tuple[int, int, int], str]:
+def prepare_listing_items(listings: List[WikiListing], ignore_unknown: bool, add_page_context: bool, add_listing_entities: bool) -> Dict[Tuple[int, int, int], str]:
     utils.get_logger().debug('Preparing listing items..')
     result = {}
     if not add_page_context and not add_listing_entities:
         for l in listings:
-            for i in l.get_items(has_subject_entity=True):
+            for i in l.get_items(has_subject_entity=True, has_known_entity=ignore_unknown):
                 se = i.subject_entity
                 result[(l.page_idx, l.idx, i.idx)] = f'{se.label} {SpecialToken.get_type_token(se.entity_type)}'
         return result
     for listing in listings:
         prepared_context = _prepare_listing_context(listing)
         prepared_items = [_prepare_listing_item(item) for item in listing.get_items()]
-        for idx, item in enumerate(listing.get_items(has_subject_entity=True)):
+        for idx, item in enumerate(listing.get_items(has_subject_entity=True, has_known_entity=ignore_unknown)):
             item_se = item.subject_entity
             # add subject entity, its type, and page context
             item_content = f' {CXS} '.join([f'{item_se.label} {SpecialToken.get_type_token(item_se.entity_type)}', prepared_context])

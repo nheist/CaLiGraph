@@ -60,11 +60,9 @@ class CrossEncoderMatcher(MatcherWithCandidates):
         self.model.fit(train_dataloader=train_dataloader, epochs=self.epochs, warmup_steps=self.warmup_steps, save_best_model=False)
 
     def predict(self, prefix: str, source: List[WikiListing], target: Optional[List[ClgEntity]]) -> Set[Pair]:
-        source_input = transformer_util.prepare_listing_items(source, self.add_page_context, self.add_listing_entities)
-        if self.scenario == MatchingScenario.MENTION_MENTION:
-            target_input = source_input
-        else:
-            target_input = transformer_util.prepare_entities(target, self.add_entity_abstract, self.add_kg_info)
+        is_mm_scenario = self.scenario == MatchingScenario.MENTION_MENTION
+        source_input = transformer_util.prepare_listing_items(source, is_mm_scenario, self.add_page_context, self.add_listing_entities)
+        target_input = source_input if is_mm_scenario else transformer_util.prepare_entities(target, self.add_entity_abstract, self.add_kg_info)
         candidates = self.candidates[prefix]
         model_input = [[source_input[source_id], target_input[target_id]] for source_id, target_id, _ in candidates]
         candidate_scores = self.model.predict(model_input, batch_size=self.batch_size, show_progress_bar=True)

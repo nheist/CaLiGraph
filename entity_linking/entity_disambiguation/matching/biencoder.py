@@ -60,14 +60,15 @@ class BiEncoderMatcher(Matcher):
     # HINT: use ANN search with e.g. hnswlib (https://github.com/nmslib/hnswlib/) if exact NN search is too costly
     # EXAMPLE: https://github.com/UKPLab/sentence-transformers/tree/master/examples/applications/semantic-search/semantic_search_quora_hnswlib.py
     def predict(self, prefix: str, source: List[WikiListing], target: Optional[List[ClgEntity]]) -> Set[Pair]:
-        source_ids_with_input = transformer_util.prepare_listing_items(source, self.add_page_context, self.add_listing_entities)
+        is_mm_scenario = self.scenario == MatchingScenario.MENTION_MENTION
+        source_ids_with_input = transformer_util.prepare_listing_items(source, is_mm_scenario, self.add_page_context, self.add_listing_entities)
         source_ids, source_input = list(source_ids_with_input), list(source_ids_with_input.values())
         source_embeddings = self.model.encode(source_input, batch_size=self.batch_size, normalize_embeddings=True, convert_to_tensor=True, show_progress_bar=True)
-        if self.scenario == MatchingScenario.MENTION_MENTION:
+        if is_mm_scenario:
             alignment = {(i, j, s) for s, i, j in st_util.paraphrase_mining_embeddings(source_embeddings, max_pairs=int(5e6), top_k=self.top_k, score_function=st_util.dot_score)}
             alignment_indices = {tuple([*sorted([source_ids[i], source_ids[j]]), s]) for i, j, s in alignment}
         else:  # scenario: MENTION_ENTITY
-            if self.target_embeddings is None:
+            if self.target_embeddings is None:  # init cached target embeddings
                 target_ids_with_input = transformer_util.prepare_entities(target, self.add_entity_abstract, self.add_kg_info)
                 self.target_ids, target_input = list(target_ids_with_input), list(target_ids_with_input.values())
                 self.target_embeddings = self.model.encode(target_input, batch_size=self.batch_size, normalize_embeddings=True, convert_to_tensor=True, show_progress_bar=True)
