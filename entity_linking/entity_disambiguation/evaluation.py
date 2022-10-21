@@ -124,7 +124,7 @@ class PrecisionRecallF1Evaluator:
 
     def _log_roc_curve(self, prefix: str, predicted_pairs: Set[Pair], actual_pairs: Set[Pair]):
         pred = [p[2] for p in predicted_pairs]
-        actual = [p[2] for p in actual_pairs]
+        actual = [1 if p in actual_pairs else 0 for p in predicted_pairs]
         tpr, fpr = roc_curve(actual, pred)
         with SummaryWriter(log_dir=f'./logs/ED/{self.approach_name}') as tb:
             for tp, fp in zip(tpr, fpr):
