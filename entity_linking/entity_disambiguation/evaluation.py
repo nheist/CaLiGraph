@@ -2,6 +2,7 @@ from typing import Set, Tuple, Dict
 from collections import defaultdict, Counter
 from operator import attrgetter
 from sklearn.metrics import roc_curve
+import matplotlib.pyplot as plt
 from torch.utils.tensorboard import SummaryWriter
 from entity_linking.entity_disambiguation.data import Pair
 from entity_linking.entity_disambiguation.matching.util import MatchingScenario
@@ -73,25 +74,25 @@ class PrecisionRecallF1Evaluator:
         else:
             precision = recall = f1 = 0.0
         metrics = {'0_runtime': runtime, '1_predicted': predicted, '2_actual': actual, '3_precision': precision, '4_recall': recall, '5_f1-score': f1}
-        # distributions over types
-        predicted_with_types = {pair: self._get_types_for_pair(pair) for pair in predicted_pairs}
-        actual_with_types = {pair: self._get_types_for_pair(pair) for pair in actual_pairs}
-        # true type distribution
-        predicted_by_type = self._get_pairs_by_matching_type(predicted_with_types)
-        actual_by_type = self._get_pairs_by_matching_type(actual_with_types)
-        for t in set(predicted_by_type) | set(actual_by_type):
-            t_actual = len(actual_by_type[t])
-            t_predicted = len(predicted_by_type[t])
-            t_common = len(actual_by_type[t].intersection(predicted_by_type[t]))
-            metrics |= {
-                f'6_{t.name}-1_predicted': t_predicted,
-                f'6_{t.name}-2_actual': t_actual,
-                f'6_{t.name}-3_precision': t_common / t_predicted if t_predicted else 0,
-                f'6_{t.name}-4_recall': t_common / t_actual if t_actual else 0,
-            }
-        # predicted cross-type distribution
-        cross_type_counts = self._compute_cross_type_counts(predicted_with_types)
-        metrics |= {f'7_{type_a.name}-{type_b.name}': cnt for (type_a, type_b), cnt in cross_type_counts.items()}
+#        # distributions over types
+#        predicted_with_types = {pair: self._get_types_for_pair(pair) for pair in predicted_pairs}
+#        actual_with_types = {pair: self._get_types_for_pair(pair) for pair in actual_pairs}
+#        # true type distribution
+#        predicted_by_type = self._get_pairs_by_matching_type(predicted_with_types)
+#        actual_by_type = self._get_pairs_by_matching_type(actual_with_types)
+#        for t in set(predicted_by_type) | set(actual_by_type):
+#            t_actual = len(actual_by_type[t])
+#            t_predicted = len(predicted_by_type[t])
+#            t_common = len(actual_by_type[t].intersection(predicted_by_type[t]))
+#            metrics |= {
+#                f'6_{t.name}-1_predicted': t_predicted,
+#                f'6_{t.name}-2_actual': t_actual,
+#                f'6_{t.name}-3_precision': t_common / t_predicted if t_predicted else 0,
+#                f'6_{t.name}-4_recall': t_common / t_actual if t_actual else 0,
+#            }
+#        # predicted cross-type distribution
+#        cross_type_counts = self._compute_cross_type_counts(predicted_with_types)
+#        metrics |= {f'7_{type_a.name}-{type_b.name}': cnt for (type_a, type_b), cnt in cross_type_counts.items()}
         return metrics
 
     def _get_types_for_pair(self, pair: Pair) -> Tuple[EntityTypeLabel, EntityTypeLabel]:
@@ -122,10 +123,12 @@ class PrecisionRecallF1Evaluator:
             for key, val in metrics.items():
                 tb.add_scalar(f'{prefix}/{key}', val, step)
 
-    def _log_roc_curve(self, prefix: str, predicted_pairs: Set[Pair], actual_pairs: Set[Pair]):
+    def _log_roc_curve(self, prefix: str, predicted_pairs: Set[Pair], actual_pairs: Set[Pair], step: int = 0):
         pred = [p[2] for p in predicted_pairs]
         actual = [1 if p in actual_pairs else 0 for p in predicted_pairs]
-        tpr, fpr, _ = roc_curve(actual, pred)
+        fpr, tpr, _ = roc_curve(actual, pred)
+        plt.plot(fpr, tpr)
+        plt.ylabel('True Positive Rate')
+        plt.xlabel('False Positive Rate')
         with SummaryWriter(log_dir=f'./logs/ED/{self.approach_name}') as tb:
-            for tp, fp in zip(tpr, fpr):
-                tb.add_scalar(f'{prefix}/5_roc', tp * 100, fp * 100)
+            tb.add_figure(f'{prefix}/5_roc', plt.gcf(), step)
