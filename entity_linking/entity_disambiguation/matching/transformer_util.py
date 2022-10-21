@@ -8,6 +8,7 @@ from impl.util.string import alternate_iters_to_string
 from impl.util.transformer import SpecialToken
 from impl.wikipedia.page_parser import WikiListing, WikiTable, WikiListingItem, WikiEnumEntry
 from impl.dbpedia.resource import DbpResourceStore
+from impl.dbpedia.category import DbpCategoryStore
 from impl.caligraph.entity import ClgEntity
 from entity_linking.entity_disambiguation.data import DataCorpus
 
@@ -42,16 +43,16 @@ def get_loss_function(loss: str, model) -> nn.Module:
     raise ValueError(f'Unknown loss identifier: {loss}')
 
 
-def generate_training_data(training_set: DataCorpus, negatives: list, batch_size: int, add_page_context: bool, add_listing_entities: bool, add_entity_abstract: bool, add_kg_info: bool) -> DataLoader:
+def generate_training_data(training_set: DataCorpus, negatives: list, batch_size: int, add_page_context: bool, add_category_context: bool, add_listing_entities: bool, add_entity_abstract: bool, add_kg_info: bool) -> DataLoader:
     is_mm_scenario = training_set.target is None
-    source_input = prepare_listing_items(training_set.source, is_mm_scenario, add_page_context, add_listing_entities)
+    source_input = prepare_listing_items(training_set.source, is_mm_scenario, add_page_context, add_category_context, add_listing_entities)
     target_input = source_input if is_mm_scenario else prepare_entities(training_set.target, add_entity_abstract, add_kg_info)
     input_examples = [InputExample(texts=[source_input[source_id], target_input[target_id]], label=1) for source_id, target_id, _ in training_set.alignment]
     input_examples.extend([InputExample(texts=[source_input[source_id], target_input[target_id]], label=0) for source_id, target_id, _ in negatives])
     return DataLoader(input_examples, shuffle=True, batch_size=batch_size)
 
 
-def prepare_listing_items(listings: List[WikiListing], ignore_unknown: bool, add_page_context: bool, add_listing_entities: bool) -> Dict[Tuple[int, int, int], str]:
+def prepare_listing_items(listings: List[WikiListing], ignore_unknown: bool, add_page_context: bool, add_category_context: bool, add_listing_entities: bool) -> Dict[Tuple[int, int, int], str]:
     utils.get_logger().debug('Preparing listing items..')
     result = {}
     if not add_page_context and not add_listing_entities:
@@ -61,7 +62,7 @@ def prepare_listing_items(listings: List[WikiListing], ignore_unknown: bool, add
                 result[(l.page_idx, l.idx, i.idx)] = f'{se.label} {SpecialToken.get_type_token(se.entity_type)}'
         return result
     for listing in listings:
-        prepared_context = _prepare_listing_context(listing)
+        prepared_context = _prepare_listing_context(listing, add_category_context)
         prepared_items = [_prepare_listing_item(item) for item in listing.get_items()]
         for idx, item in enumerate(listing.get_items(has_subject_entity=True, has_known_entity=ignore_unknown)):
             item_se = item.subject_entity
@@ -73,9 +74,14 @@ def prepare_listing_items(listings: List[WikiListing], ignore_unknown: bool, add
     return result
 
 
-def _prepare_listing_context(listing: WikiListing) -> str:
+def _prepare_listing_context(listing: WikiListing, add_category_context: bool) -> str:
     res = DbpResourceStore.instance().get_resource_by_idx(listing.page_idx)
-    ctx = [f'{res.get_label()} {SpecialToken.get_type_token(res.get_type_label())}', listing.topsection.title, listing.section.title]
+    res_description = f'{res.get_label()} {SpecialToken.get_type_token(res.get_type_label())}'
+    if add_category_context:
+        cats = list(DbpCategoryStore.instance().get_categories_for_resource(res.idx))[:3]
+        if cats:
+            res_description += ' ' + ', '.join([cat.get_label() for cat in cats])
+    ctx = [res_description, listing.topsection.title, listing.section.title]
     if isinstance(listing, WikiTable):
         ctx.append(_prepare_listing_item(listing.header))
     return f' {CXS} '.join(ctx) + f' {CXE} '

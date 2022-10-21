@@ -30,6 +30,7 @@ if __name__ == '__main__':
     parser.add_argument('-ws', '--warmup_steps', type=int, default=0, help='Number of warmup steps for training the bi/cross-encoder')
     parser.add_argument('-bs', '--batch_size', type=int, default=64, help='Batch size for training the bi/cross-encoder')
     parser.add_argument('-apc', '--add_page_context', action=argparse.BooleanOptionalAction, default=False, help='Use page context for disambiguation (M)')
+    parser.add_argument('-acc', '--add_category_context', action=argparse.BooleanOptionalAction, default=False, help='Use category context for disambiguation (M)')
     parser.add_argument('-ale', '--add_listing_entities', type=int, default=0, help='Other listing entities to append for disambiguation (M)')
     parser.add_argument('-aea', '--add_entity_abstract', action=argparse.BooleanOptionalAction, default=False, help='Use entity abstract for disambiguation (E)')
     parser.add_argument('-aki', '--add_kg_info', type=int, default=0, help='Types/properties to add from KG for disambiguation (E)')
@@ -75,6 +76,7 @@ if __name__ == '__main__':
         'batch_size': args.batch_size,
         'top_k': args.top_k,
         'add_page_context': args.add_page_context,
+        'add_category_context': args.add_category_context,
         'add_listing_entities': args.add_listing_entities,
         'add_entity_abstract': args.add_entity_abstract,
         'add_kg_info': args.add_kg_info,

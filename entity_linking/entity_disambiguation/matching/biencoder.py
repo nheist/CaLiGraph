@@ -17,6 +17,7 @@ class BiEncoderMatcher(Matcher):
         self.base_model = params['base_model']
         self.top_k = params['top_k']
         self.add_page_context = params['add_page_context']
+        self.add_category_context = params['add_category_context']
         self.add_listing_entities = params['add_listing_entities']
         self.add_entity_abstract = params['add_entity_abstract']
         self.add_kg_info = params['add_kg_info']
@@ -37,6 +38,7 @@ class BiEncoderMatcher(Matcher):
             'bm': self.base_model,
             'k': self.top_k,
             'apc': self.add_page_context,
+            'acc': self.add_category_context,
             'ale': self.add_listing_entities,
             'aea': self.add_entity_abstract,
             'aki': self.add_kg_info,
@@ -51,7 +53,7 @@ class BiEncoderMatcher(Matcher):
         if self.epochs == 0:
             return  # skip training
         utils.get_logger().debug('Preparing training data..')
-        train_dataloader = transformer_util.generate_training_data(training_set, [], self.batch_size, self.add_page_context, self.add_listing_entities, self.add_entity_abstract, self.add_kg_info)
+        train_dataloader = transformer_util.generate_training_data(training_set, [], self.batch_size, self.add_page_context, self.add_category_context, self.add_listing_entities, self.add_entity_abstract, self.add_kg_info)
         train_loss = transformer_util.get_loss_function(self.loss, self.model)
         utils.release_gpu()
         utils.get_logger().debug('Starting training..')
@@ -61,7 +63,7 @@ class BiEncoderMatcher(Matcher):
     # EXAMPLE: https://github.com/UKPLab/sentence-transformers/tree/master/examples/applications/semantic-search/semantic_search_quora_hnswlib.py
     def predict(self, prefix: str, source: List[WikiListing], target: Optional[List[ClgEntity]]) -> Set[Pair]:
         is_mm_scenario = self.scenario == MatchingScenario.MENTION_MENTION
-        source_ids_with_input = transformer_util.prepare_listing_items(source, is_mm_scenario, self.add_page_context, self.add_listing_entities)
+        source_ids_with_input = transformer_util.prepare_listing_items(source, is_mm_scenario, self.add_page_context, self.add_category_context, self.add_listing_entities)
         source_ids, source_input = list(source_ids_with_input), list(source_ids_with_input.values())
         source_embeddings = self.model.encode(source_input, batch_size=self.batch_size, normalize_embeddings=True, convert_to_tensor=True, show_progress_bar=True)
         if is_mm_scenario:

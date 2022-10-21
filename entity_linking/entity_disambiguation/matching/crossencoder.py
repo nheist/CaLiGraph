@@ -18,6 +18,7 @@ class CrossEncoderMatcher(MatcherWithCandidates):
         self.base_model = params['base_model']
         self.confidence_threshold = params['confidence_threshold']
         self.add_page_context = params['add_page_context']
+        self.add_category_context = params['add_category_context']
         self.add_listing_entities = params['add_listing_entities']
         self.add_entity_abstract = params['add_entity_abstract']
         self.add_kg_info = params['add_kg_info']
@@ -34,6 +35,7 @@ class CrossEncoderMatcher(MatcherWithCandidates):
             'bm': self.base_model,
             'ct': self.confidence_threshold,
             'apc': self.add_page_context,
+            'acc': self.add_category_context,
             'ale': self.add_listing_entities,
             'aea': self.add_entity_abstract,
             'aki': self.add_kg_info,
@@ -54,14 +56,14 @@ class CrossEncoderMatcher(MatcherWithCandidates):
         utils.get_logger().debug('Preparing training data..')
         negatives = list(self.candidates[self.MODE_TRAIN].difference(training_set.alignment))
         negatives_sample = random.sample(negatives, min([len(negatives), len(training_set.alignment) * 2]))
-        train_dataloader = transformer_util.generate_training_data(training_set, negatives_sample, self.batch_size, self.add_page_context, self.add_listing_entities, self.add_entity_abstract, self.add_kg_info)
+        train_dataloader = transformer_util.generate_training_data(training_set, negatives_sample, self.batch_size, self.add_page_context, self.add_category_context, self.add_listing_entities, self.add_entity_abstract, self.add_kg_info)
         utils.release_gpu()
         utils.get_logger().debug('Starting training..')
         self.model.fit(train_dataloader=train_dataloader, epochs=self.epochs, warmup_steps=self.warmup_steps, save_best_model=False)
 
     def predict(self, prefix: str, source: List[WikiListing], target: Optional[List[ClgEntity]]) -> Set[Pair]:
         is_mm_scenario = self.scenario == MatchingScenario.MENTION_MENTION
-        source_input = transformer_util.prepare_listing_items(source, is_mm_scenario, self.add_page_context, self.add_listing_entities)
+        source_input = transformer_util.prepare_listing_items(source, is_mm_scenario, self.add_page_context, self.add_category_context, self.add_listing_entities)
         target_input = source_input if is_mm_scenario else transformer_util.prepare_entities(target, self.add_entity_abstract, self.add_kg_info)
         candidates = self.candidates[prefix]
         model_input = [[source_input[source_id], target_input[target_id]] for source_id, target_id, _ in candidates]
