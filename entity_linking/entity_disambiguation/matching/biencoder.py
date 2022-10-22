@@ -67,7 +67,7 @@ class BiEncoderMatcher(Matcher):
         source_ids, source_input = list(source_ids_with_input), list(source_ids_with_input.values())
         source_embeddings = self.model.encode(source_input, batch_size=self.batch_size, normalize_embeddings=True, convert_to_tensor=True, show_progress_bar=True)
         if is_mm_scenario:
-            alignment = {(i, j, s) for s, i, j in st_util.paraphrase_mining_embeddings(source_embeddings, max_pairs=int(5e6), top_k=self.top_k, score_function=st_util.dot_score)}
+            alignment = {(i, j, s) for s, i, j in st_util.paraphrase_mining_embeddings(source_embeddings, max_pairs=int(1e7), top_k=self.top_k, score_function=st_util.dot_score)}
             alignment_indices = {tuple([*sorted([source_ids[i], source_ids[j]]), s]) for i, j, s in alignment}
         else:  # scenario: MENTION_ENTITY
             if self.target_embeddings is None:  # init cached target embeddings
