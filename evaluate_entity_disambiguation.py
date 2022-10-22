@@ -3,7 +3,7 @@ import configargparse
 import os
 
 
-VERSION = 3
+VERSION = 4
 
 # TODO: Fusion (graph partitioning algorithm -> Holland-sameAs) -> how big is the "problem"?
 # Holland-sameAs: https://link.springer.com/chapter/10.1007/978-3-030-00671-6_23
