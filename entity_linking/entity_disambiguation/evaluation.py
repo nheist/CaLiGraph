@@ -33,7 +33,6 @@ class PrecisionRecallF1Evaluator:
                 partition_prefix = prefix + partition_key
                 metrics = self._compute_metrics(predicted_pair_partition, actual_pair_partition, runtime)
                 self._log_metrics(partition_prefix, metrics)
-                self._log_roc_curve(partition_prefix, predicted_pair_partition, actual_pair_partition)
         else:
             metrics = self._compute_metrics(predicted_pairs, actual_pairs, runtime)
             self._log_metrics(prefix, metrics)
