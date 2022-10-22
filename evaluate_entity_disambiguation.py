@@ -38,7 +38,7 @@ if __name__ == '__main__':
     parser.add_argument('-l', '--loss', type=str, choices=['COS', 'RL', 'SRL'], default='RL', help='Loss function for training (only for bi-encoder)')
     parser.add_argument('-k', '--top_k', type=int, default=3, help='Number of matches to return per input (only for bi-encoder)')
     # cross-encoder
-    parser.add_argument('-ct', '--confidence_threshold', type=float, default=.5, help="Confidence threshold to filter predictions.")
+    parser.add_argument('-t', '--confidence_threshold', type=float, default=.5, help="Confidence threshold to filter predictions.")
     # fusion
     parser.add_argument('-mma', '--mm_approach', type=str, help='Mention-mention approach (ID) used for fusion')
     parser.add_argument('-mea', '--me_approach', type=str, help='Mention-entity approach (ID) used for fusion')
