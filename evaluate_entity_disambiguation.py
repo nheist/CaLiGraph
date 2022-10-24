@@ -5,11 +5,33 @@ import os
 
 VERSION = 5
 
-# TODO: Fusion (graph partitioning algorithm -> Holland-sameAs) -> how big is the "problem"?
+# TODO: ANALYSIS
+# > investigate the errors made
+# TODO: SEQUENCE CONTEXT
+# > experiment with different item/entity layouts (E4.1/4.2/4.4)
+# TODO: Bi-Encoder
+# > Implement hard-sampling (lexically similar but unrelated items/ents batched together to get fewer candidates)
+# > analyze currently used pooling function in bi-encoder (possible improvements in E4.4)
+# TODO: FUSION
+# > how big is the "problem"? -> BIG
+# > graph partitioning algorithm -> Holland-sameAs
 # Holland-sameAs: https://link.springer.com/chapter/10.1007/978-3-030-00671-6_23
 # Implementation: https://github.com/dwslab/melt/blob/e94287f1349217e04cdb3a6b6565f3345f216b45/matching-jena-matchers/src/main/java/de/uni_mannheim/informatik/dws/melt/matching_jena_matchers/multisource/clustering/ComputeErrDegree.java
-# TODO: Filtering (consistent alignment for every listing) -> before or after Fusion? e.g. apply WWW-Approach before
-# TODO: lexical model with more recall (levenshtein distance, n-grams) or other baselines
+# > Filtering (consistent alignment for every listing) -> before or after Fusion?
+#  > e.g. apply WWW-Approach before
+#  > e.g. for every listing, collect intermediate entity representation and go for majority
+# > Cluster-Strategy
+#  > assume ME-predictions to be correct
+#  > initialize mention/entity clusters based on ME-predictions
+#  > order MM candidates by confidence, then process candidate (m1, m2) one by one:
+#    > if they are in the same cluster, discard
+#    > if they have different matched entities, discard
+#    > sample Tcand candidates for MM/ME comparison from cluster of m1 and cluster of m2 -> merge clusters if avg. confidence > Tconf
+# TODO: COMPARSION
+# > apply to NILK dataset
+#   > generalize implementation to mention_id and mention_context
+#   > convert NILK data (https://zenodo.org/record/6607514#.Y1JyOi8Rr0o) to processable format
+#   > compare approach
 if __name__ == '__main__':
     parser = configargparse.ArgumentParser(description='Run the evaluation of entity disambiguation approaches.')
     # config
@@ -23,8 +45,8 @@ if __name__ == '__main__':
     parser.add_argument('approach', type=str, help='Approach used for matching')
     parser.add_argument('-sa', '--save_alignment', action=argparse.BooleanOptionalAction, default=False, help='Whether to save the produced alignment for train/val/test')
     # matchers needing candidates
-    parser.add_argument('-mma', '--mm_approach', type=str, help='Mention-mention approach (ID) used for candidate generation')
-    parser.add_argument('-mea', '--me_approach', type=str, help='Mention-entity approach (ID) used for candidate generation')
+    parser.add_argument('--mm_approach', type=str, help='Mention-mention approach (ID) used for candidate generation')
+    parser.add_argument('--me_approach', type=str, help='Mention-entity approach (ID) used for candidate generation')
     # bi/cross-encoder
     parser.add_argument('-bm', '--base_model', type=str, default='all-MiniLM-L12-v2', help='Base model used for the bi/cross-encoder')
     parser.add_argument('-e', '--epochs', type=int, default=1, help='Number of epochs for training the bi/cross-encoder')
@@ -39,13 +61,11 @@ if __name__ == '__main__':
     parser.add_argument('-l', '--loss', type=str, choices=['COS', 'RL', 'SRL'], default='RL', help='Loss function for training (only for bi-encoder)')
     parser.add_argument('-k', '--top_k', type=int, default=3, help='Number of ME matches to return per input (only for bi-encoder)')
     # cross-encoder
-    parser.add_argument('-mmt', '--mm_threshold', type=float, default=.5, help="Confidence threshold to filter MM predictions.")
-    parser.add_argument('-met', '--me_threshold', type=float, default=.5, help="Confidence threshold to filter ME predictions.")
+    parser.add_argument('--mm_threshold', type=float, default=.5, help="Confidence threshold to filter MM predictions.")
+    parser.add_argument('--me_threshold', type=float, default=.5, help="Confidence threshold to filter ME predictions.")
     # fusion
-    parser.add_argument('-mma', '--mm_approach', type=str, help='Mention-mention approach (ID) used for fusion')
-    parser.add_argument('-mea', '--me_approach', type=str, help='Mention-entity approach (ID) used for fusion')
-    parser.add_argument('-mmw', '--mm_weight', type=str, help='Weight of mention-mention approach used for fusion')
-    parser.add_argument('-mew', '--me_weight', type=str, help='Weight of mention-entity approach used for fusion')
+    parser.add_argument('--mm_weight', type=str, help='Weight of mention-mention approach used for fusion')
+    parser.add_argument('--me_weight', type=str, help='Weight of mention-entity approach used for fusion')
 
 
     args = parser.parse_args()
@@ -70,7 +90,6 @@ if __name__ == '__main__':
     approach = MatchingApproach(args.approach)
     params = {
         'id': approach_id,
-        'blocking_approach': args.blocking_approach,
         'base_model': args.base_model,
         'loss': args.loss,
         'epochs': args.epochs,
