@@ -1,6 +1,8 @@
 from typing import Set, List, Optional
+import torch.nn as nn
+from torch.utils.data import DataLoader
 from sentence_transformers import util as st_util
-from sentence_transformers import SentenceTransformer
+from sentence_transformers import SentenceTransformer, losses
 import utils
 from impl.caligraph.entity import ClgEntity
 from impl.wikipedia.page_parser import WikiListing
@@ -49,25 +51,39 @@ class BiEncoderMatcher(Matcher):
         }
         return super()._get_param_dict() | params
 
-    def _train_model(self, training_set: DataCorpus, eval_set: DataCorpus):
+    def _train_model(self, train_corpus: DataCorpus, eval_corpus: DataCorpus):
         if self.epochs == 0:
             return  # skip training
         utils.get_logger().debug('Preparing training data..')
-        train_dataloader = transformer_util.generate_training_data(training_set, [], self.batch_size, self.add_page_context, self.add_category_context, self.add_listing_entities, self.add_entity_abstract, self.add_kg_info)
-        train_loss = transformer_util.get_loss_function(self.loss, self.model)
-        utils.release_gpu()
+        training_examples = []
+        if self.scenario.is_MM():
+            training_examples += transformer_util.generate_training_data(MatchingScenario.MENTION_MENTION, train_corpus, [], self.add_page_context, self.add_category_context, self.add_listing_entities, self.add_entity_abstract, self.add_kg_info)
+        if self.scenario.is_ME():
+            training_examples += transformer_util.generate_training_data(MatchingScenario.MENTION_ENTITY, train_corpus, [], self.add_page_context, self.add_category_context, self.add_listing_entities, self.add_entity_abstract, self.add_kg_info)
+        train_dataloader = DataLoader(training_examples, shuffle=True, batch_size=self.batch_size)
         utils.get_logger().debug('Starting training..')
-        self.model.fit(train_objectives=[(train_dataloader, train_loss)], epochs=self.epochs, warmup_steps=self.warmup_steps, save_best_model=False)
+        utils.release_gpu()
+        self.model.fit(train_objectives=[(train_dataloader, self._get_loss_function())], epochs=self.epochs, warmup_steps=self.warmup_steps, save_best_model=False)
+
+    def _get_loss_function(self) -> nn.Module:
+        if self.loss == 'COS':
+            return losses.CosineSimilarityLoss(model=self.model)
+        elif self.loss == 'RL':
+            return losses.MultipleNegativesRankingLoss(model=self.model)
+        elif self.loss == 'SRL':
+            return losses.MultipleNegativesSymmetricRankingLoss(model=self.model)
+        raise ValueError(f'Unknown loss identifier: {self.loss}')
 
     # HINT: use ANN search with e.g. hnswlib (https://github.com/nmslib/hnswlib/) if exact NN search is too costly
     # EXAMPLE: https://github.com/UKPLab/sentence-transformers/tree/master/examples/applications/semantic-search/semantic_search_quora_hnswlib.py
-    def predict(self, prefix: str, source: List[WikiListing], target: Optional[List[ClgEntity]]) -> Set[Pair]:
-        is_mm_scenario = self.scenario == MatchingScenario.MENTION_MENTION
+    def predict(self, eval_mode: str, source: List[WikiListing], target: Optional[Set[ClgEntity]]) -> Set[Pair]:
+        is_mm_scenario = target is None
         source_ids_with_input = transformer_util.prepare_listing_items(source, is_mm_scenario, self.add_page_context, self.add_category_context, self.add_listing_entities)
         source_ids, source_input = list(source_ids_with_input), list(source_ids_with_input.values())
         source_embeddings = self.model.encode(source_input, batch_size=self.batch_size, normalize_embeddings=True, convert_to_tensor=True, show_progress_bar=True)
-        if is_mm_scenario:
-            alignment = {(i, j, s) for s, i, j in st_util.paraphrase_mining_embeddings(source_embeddings, max_pairs=int(1e7), top_k=self.top_k, score_function=st_util.dot_score)}
+        if is_mm_scenario:  # scenario: MENTION_MENTION
+            # TODO: implement "real" top-k approach
+            alignment = {(i, j, s) for s, i, j in st_util.paraphrase_mining_embeddings(source_embeddings, max_pairs=int(5e6), top_k=50, score_function=st_util.dot_score)}
             alignment_indices = {tuple([*sorted([source_ids[i], source_ids[j]]), s]) for i, j, s in alignment}
         else:  # scenario: MENTION_ENTITY
             if self.target_embeddings is None:  # init cached target embeddings

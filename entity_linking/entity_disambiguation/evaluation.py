@@ -20,6 +20,7 @@ class PrecisionRecallF1Evaluator:
         self.dbr = DbpResourceStore.instance()
 
     def compute_and_log_metrics(self, prefix: str, predicted_pairs: Set[Pair], actual_pairs: Set[Pair], runtime: int):
+        prefix += self.scenario.value
         # overall
         self._compute_and_log_metrics_for_partition(prefix, predicted_pairs, actual_pairs, runtime)
         # listing type

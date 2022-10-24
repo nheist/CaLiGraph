@@ -1,7 +1,7 @@
 """Functionality for parsing Wikipedia pages from WikiText."""
 
 from typing import Tuple, Optional, Dict, Set, List, Iterable
-from collections import defaultdict, Counter
+from collections import defaultdict, namedtuple, Counter
 import re
 import signal
 import traceback
@@ -16,6 +16,10 @@ from impl.util.spacy import listing_parser, get_tokens_and_whitespaces_from_text
 from impl.dbpedia.resource import DbpResource, DbpFile, DbpResourceStore
 from impl.dbpedia.util import is_entity_name
 from . import wikimarkup_parser as wmp
+
+
+ListingId = namedtuple('ListingId', ['page_idx', 'listing_idx'])
+MentionId = namedtuple('MentionId', ['page_idx', 'listing_idx', 'item_idx'])
 
 
 class WikiSubjectEntity:
@@ -95,6 +99,9 @@ class WikiListing:
         self.items = {item.idx: item for item in items}
         self.page_idx = None
 
+    def get_id(self) -> ListingId:
+        return ListingId(self.page_idx, self.idx)
+
     def get_sections(self) -> Set[WikiSection]:
         return {self.topsection, self.section}
 
@@ -102,9 +109,9 @@ class WikiListing:
     def get_type(cls) -> str:
         raise NotImplementedError()
 
-    def get_items(self, has_subject_entity: bool = False, has_known_entity: bool = False) -> Iterable[WikiListingItem]:
+    def get_items(self, has_subject_entity: bool = False, has_known_entity: bool = False) -> List[WikiListingItem]:
         if not has_subject_entity:
-            return self.items.values()
+            return list(self.items.values())
         items = [i for i in self.items.values() if i.subject_entity is not None]
         if not has_known_entity:
             return items

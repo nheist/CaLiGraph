@@ -3,7 +3,7 @@ import configargparse
 import os
 
 
-VERSION = 4
+VERSION = 5
 
 # TODO: Fusion (graph partitioning algorithm -> Holland-sameAs) -> how big is the "problem"?
 # Holland-sameAs: https://link.springer.com/chapter/10.1007/978-3-030-00671-6_23
@@ -23,7 +23,8 @@ if __name__ == '__main__':
     parser.add_argument('approach', type=str, help='Approach used for matching')
     parser.add_argument('-sa', '--save_alignment', action=argparse.BooleanOptionalAction, default=False, help='Whether to save the produced alignment for train/val/test')
     # matchers needing candidates
-    parser.add_argument('-ba', '--blocking_approach', type=str, help='Matcher (ID) to retrieve candidates from')
+    parser.add_argument('-mma', '--mm_approach', type=str, help='Mention-mention approach (ID) used for candidate generation')
+    parser.add_argument('-mea', '--me_approach', type=str, help='Mention-entity approach (ID) used for candidate generation')
     # bi/cross-encoder
     parser.add_argument('-bm', '--base_model', type=str, default='all-MiniLM-L12-v2', help='Base model used for the bi/cross-encoder')
     parser.add_argument('-e', '--epochs', type=int, default=1, help='Number of epochs for training the bi/cross-encoder')
@@ -36,9 +37,10 @@ if __name__ == '__main__':
     parser.add_argument('-aki', '--add_kg_info', type=int, default=0, help='Types/properties to add from KG for disambiguation (E)')
     # bi-encoder
     parser.add_argument('-l', '--loss', type=str, choices=['COS', 'RL', 'SRL'], default='RL', help='Loss function for training (only for bi-encoder)')
-    parser.add_argument('-k', '--top_k', type=int, default=3, help='Number of matches to return per input (only for bi-encoder)')
+    parser.add_argument('-k', '--top_k', type=int, default=3, help='Number of ME matches to return per input (only for bi-encoder)')
     # cross-encoder
-    parser.add_argument('-t', '--confidence_threshold', type=float, default=.5, help="Confidence threshold to filter predictions.")
+    parser.add_argument('-mmt', '--mm_threshold', type=float, default=.5, help="Confidence threshold to filter MM predictions.")
+    parser.add_argument('-met', '--me_threshold', type=float, default=.5, help="Confidence threshold to filter ME predictions.")
     # fusion
     parser.add_argument('-mma', '--mm_approach', type=str, help='Mention-mention approach (ID) used for fusion')
     parser.add_argument('-mea', '--me_approach', type=str, help='Mention-entity approach (ID) used for fusion')
@@ -80,9 +82,10 @@ if __name__ == '__main__':
         'add_listing_entities': args.add_listing_entities,
         'add_entity_abstract': args.add_entity_abstract,
         'add_kg_info': args.add_kg_info,
-        'confidence_threshold': args.confidence_threshold,
         'mm_approach': args.mm_approach,
         'me_approach': args.me_approach,
+        'mm_threshold': args.mm_threshold,
+        'me_threshold': args.me_threshold,
         'mm_weight': args.mm_weight,
         'me_weight': args.me_weight,
     }

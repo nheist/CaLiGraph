@@ -12,10 +12,10 @@ from entity_linking.entity_disambiguation.matching.matcher import Matcher
 
 
 class LexicalMatcher(Matcher, ABC):
-    def _train_model(self, training_set: DataCorpus, eval_set: DataCorpus):
+    def _train_model(self, train_corpus: DataCorpus, eval_corpus: DataCorpus):
         pass  # no training necessary
 
-    def predict(self, prefix: str, source: List[WikiListing], target: Optional[List[ClgEntity]]) -> Set[Pair]:
+    def predict(self, eval_mode: str, source: List[WikiListing], target: Optional[List[ClgEntity]]) -> Set[Pair]:
         alignment = set()
         source_grouping = self._make_grouping(self._get_item_labels_for_listings(source))
         if target is None:

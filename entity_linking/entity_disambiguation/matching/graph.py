@@ -12,11 +12,11 @@ class PopularityMatcher(MatcherWithCandidates):
         super().__init__(scenario, params)
         self.entity_popularity = None
 
-    def _train_model(self, training_set: DataCorpus, eval_set: DataCorpus):
-        self.entity_popularity = self._compute_entity_popularity(training_set.target)
+    def _train_model(self, train_corpus: DataCorpus, eval_corpus: DataCorpus):
+        self.entity_popularity = self._compute_entity_popularity(train_corpus.get_entities())
 
     @classmethod
-    def _compute_entity_popularity(cls, entities: List[ClgEntity]) -> dict:
+    def _compute_entity_popularity(cls, entities: Set[ClgEntity]) -> dict:
         assert entities is not None, 'PopularityMatcher can only be applied to corpus with entities.'
         entity_popularity = defaultdict(int)
         for ent in entities:
@@ -29,10 +29,10 @@ class PopularityMatcher(MatcherWithCandidates):
         ent_idx = ent_with_score[0]
         return self.entity_popularity[ent_idx]
 
-    def predict(self, prefix: str, source: List[WikiListing], target: Optional[List[ClgEntity]]) -> Set[Pair]:
+    def predict(self, eval_mode: str, source: List[WikiListing], target: Optional[List[ClgEntity]]) -> Set[Pair]:
         assert target is not None, 'PopularityMatcher can only be applied to corpus with target.'
         candidates_by_source = defaultdict(set)
-        for item, ent, score in self.candidates[prefix]:
+        for item, ent, score in self.me_candidates[eval_mode]:
             candidates_by_source[item].add((ent, score))
         alignment = [(item, *max(ents, key=self._get_entity_popularity)) for item, ents in candidates_by_source.items()]
         return {Pair(source, target, score) for source, target, score in alignment}

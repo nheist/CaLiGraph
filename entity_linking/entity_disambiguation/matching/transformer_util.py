@@ -1,7 +1,5 @@
-from typing import List, Tuple, Dict, Union
+from typing import List, Tuple, Dict, Union, Set, Optional
 from itertools import cycle, islice
-import torch.nn as nn
-from torch.utils.data import DataLoader
 from sentence_transformers import SentenceTransformer, CrossEncoder, losses, InputExample
 import utils
 from impl.util.string import alternate_iters_to_string
@@ -10,7 +8,8 @@ from impl.wikipedia.page_parser import WikiListing, WikiTable, WikiListingItem, 
 from impl.dbpedia.resource import DbpResourceStore
 from impl.dbpedia.category import DbpCategoryStore
 from impl.caligraph.entity import ClgEntity
-from entity_linking.entity_disambiguation.data import DataCorpus
+from entity_linking.entity_disambiguation.matching.util import MatchingScenario
+from entity_linking.entity_disambiguation.data import DataCorpus, Pair
 
 
 CXS = SpecialToken.CONTEXT_SEP.value
@@ -33,23 +32,13 @@ def add_special_tokens(model: Union[SentenceTransformer, CrossEncoder]):
     transformer.resize_token_embeddings(len(tokenizer))
 
 
-def get_loss_function(loss: str, model) -> nn.Module:
-    if loss == 'COS':
-        return losses.CosineSimilarityLoss(model=model)
-    elif loss == 'RL':
-        return losses.MultipleNegativesRankingLoss(model=model)
-    elif loss == 'SRL':
-        return losses.MultipleNegativesSymmetricRankingLoss(model=model)
-    raise ValueError(f'Unknown loss identifier: {loss}')
-
-
-def generate_training_data(training_set: DataCorpus, negatives: list, batch_size: int, add_page_context: bool, add_category_context: bool, add_listing_entities: bool, add_entity_abstract: bool, add_kg_info: bool) -> DataLoader:
-    is_mm_scenario = training_set.target is None
-    source_input = prepare_listing_items(training_set.source, is_mm_scenario, add_page_context, add_category_context, add_listing_entities)
-    target_input = source_input if is_mm_scenario else prepare_entities(training_set.target, add_entity_abstract, add_kg_info)
-    input_examples = [InputExample(texts=[source_input[source_id], target_input[target_id]], label=1) for source_id, target_id, _ in training_set.alignment]
+def generate_training_data(scenario: MatchingScenario, data_corpus: DataCorpus, negatives: List[Pair], add_page_context: bool, add_category_context: bool, add_listing_entities: bool, add_entity_abstract: bool, add_kg_info: bool) -> List[InputExample]:
+    source_input = prepare_listing_items(data_corpus.get_listings(), scenario.is_MM(), add_page_context, add_category_context, add_listing_entities)
+    target_input = source_input if scenario.is_MM() else prepare_entities(data_corpus.get_entities(), add_entity_abstract, add_kg_info)
+    positives = data_corpus.mm_alignment if scenario.is_MM() else data_corpus.me_alignment
+    input_examples = [InputExample(texts=[source_input[source_id], target_input[target_id]], label=1) for source_id, target_id, _ in positives]
     input_examples.extend([InputExample(texts=[source_input[source_id], target_input[target_id]], label=0) for source_id, target_id, _ in negatives])
-    return DataLoader(input_examples, shuffle=True, batch_size=batch_size)
+    return input_examples
 
 
 def prepare_listing_items(listings: List[WikiListing], ignore_unknown: bool, add_page_context: bool, add_category_context: bool, add_listing_entities: bool) -> Dict[Tuple[int, int, int], str]:
@@ -100,7 +89,7 @@ def _prepare_listing_item(item: WikiListingItem) -> str:
     return alternate_iters_to_string(tokens, whitespaces)
 
 
-def prepare_entities(entities: List[ClgEntity], add_entity_abstract: bool, add_kg_info: int) -> Dict[int, str]:
+def prepare_entities(entities: Set[ClgEntity], add_entity_abstract: bool, add_kg_info: int) -> Dict[int, str]:
     utils.get_logger().debug('Preparing entities..')
     result = {}
     for e in entities:

@@ -9,6 +9,12 @@ class MatchingScenario(Enum):
     MENTION_ENTITY = 'ME'
     FUSION = 'F'
 
+    def is_MM(self) -> bool:
+        return self in [self.MENTION_MENTION, self.FUSION]
+
+    def is_ME(self) -> bool:
+        return self in [self.MENTION_ENTITY, self.FUSION]
+
 
 class MatchingApproach(Enum):
     # MM/ME
@@ -31,10 +37,12 @@ def store_candidates(approach_name: str, candidates: dict):
         return pickle.dump(candidates, f, protocol=pickle.HIGHEST_PROTOCOL)
 
 
-def load_candidates(approach_id: str) -> dict:
+def load_candidates(approach_id: str, scenario: MatchingScenario) -> dict:
     utils.get_logger().debug(f'Loading candidates from matcher with id "{approach_id}"..')
     with open(_get_approach_path_by_id(approach_id), mode='rb') as f:
-        return pickle.load(f)
+        candidates = pickle.load(f)
+        candidates = {eval_mode: candidates_by_scenario[scenario] for eval_mode, candidates_by_scenario in candidates.items()}
+        return candidates
 
 
 def _get_approach_path(approach_name: str) -> str:

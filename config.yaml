@@ -292,15 +292,6 @@ cache:
   MD_page_test:
     filename: 'MD-page-test'
     version: 5
-  MM_data:
-    filename: 'MM-data'
-    version: 2
-  MM_datasets:
-    filename: 'MM-datasets'
-    version: 2
-  ME_data:
-    filename: 'ME-data'
-    version: 2
-  ME_datasets:
-    filename: 'ME-datasets'
-    version: 2
+  ED_datasets:
+    filename: 'ED-datasets'
+    version: 1

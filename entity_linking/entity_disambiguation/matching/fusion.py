@@ -1,43 +1,21 @@
-from typing import Set, List, Tuple
+from typing import Set, List, Tuple, Optional
 from abc import ABC, abstractmethod
-from time import process_time
 import numpy as np
 import networkx as nx
 from entity_linking.entity_disambiguation.data import Pair, DataCorpus
-from entity_linking.entity_disambiguation.evaluation import PrecisionRecallF1Evaluator
-from entity_linking.entity_disambiguation.matching.util import MatchingScenario, load_candidates
-from entity_linking.entity_disambiguation.matching.matcher import BaseMatcher
+from entity_linking.entity_disambiguation.matching.util import MatchingScenario
+from entity_linking.entity_disambiguation.matching.matcher import MatcherWithCandidates
 import utils
+from impl.wikipedia.page_parser import WikiListing
+from impl.caligraph.entity import ClgEntity
 
 
-class FusionMatcher(BaseMatcher, ABC):
-    def __init__(self, scenario: MatchingScenario, params: dict):
-        super().__init__(scenario, params)
-        self.mm_approach = params['mm_approach']
-        self.mm_candidates = load_candidates(self.mm_approach)
-        self.me_approach = params['me_approach']
-        self.me_candidates = load_candidates(self.me_approach)
+class FusionMatcher(MatcherWithCandidates, ABC):
+    def _train_model(self, train_corpus: DataCorpus, eval_corpus: DataCorpus):
+        pass  # no training necessary
 
-    def _get_param_dict(self) -> dict:
-        return super()._get_param_dict() | {'mm': self.mm_approach, 'me': self.me_approach}
-
-    def test(self, mm_test_set: DataCorpus, me_test_set: DataCorpus):
-        utils.get_logger().info('Testing matcher..')
-        self._evaluate(self.MODE_TEST, mm_test_set, me_test_set)
-
-    def _evaluate(self, prefix: str, mm_corpus: DataCorpus, me_corpus: DataCorpus):
-        utils.release_gpu()
-        pred_start = process_time()
-        prediction_mm, prediction_me = self.predict(prefix)
-        prediction_time_in_seconds = int(process_time() - pred_start)
-
-        evaluator_mm = PrecisionRecallF1Evaluator('MM-' + self.get_approach_name(), MatchingScenario.MENTION_MENTION)
-        evaluator_mm.compute_and_log_metrics(prefix, prediction_mm, mm_corpus.alignment, prediction_time_in_seconds)
-        evaluator_me = PrecisionRecallF1Evaluator('ME-' + self.get_approach_name(), MatchingScenario.MENTION_ENTITY)
-        evaluator_me.compute_and_log_metrics(prefix, prediction_me, me_corpus.alignment, prediction_time_in_seconds)
-
-    def predict(self, prefix: str) -> Tuple[Set[Pair], Set[Pair]]:
-        mm_candidates, me_candidates = self.mm_candidates[prefix], self.me_candidates[prefix]
+    def predict(self, eval_mode: str, source: List[WikiListing], target: Optional[List[ClgEntity]]) -> Tuple[Set[Pair], Set[Pair]]:
+        mm_candidates, me_candidates = self.mm_candidates[eval_mode], self.me_candidates[eval_mode]
         ag = self._get_alignment_graph(mm_candidates, me_candidates)
         edges_to_delete = self._compute_edges_to_delete(ag)
         utils.get_logger().debug(f'Found {len(edges_to_delete)} edges to delete.')
