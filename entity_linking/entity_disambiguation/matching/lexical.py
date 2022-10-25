@@ -1,4 +1,4 @@
-from typing import Set, List, Optional
+from typing import Set, List
 from abc import ABC, abstractmethod
 from collections import defaultdict
 import itertools
@@ -6,7 +6,6 @@ from unidecode import unidecode
 from nltk.corpus import stopwords
 from impl.util.string import make_alphanumeric
 from impl.wikipedia.page_parser import WikiListing
-from impl.caligraph.entity import ClgEntity
 from entity_linking.entity_disambiguation.data import Pair, DataCorpus
 from entity_linking.entity_disambiguation.matching.matcher import Matcher
 
@@ -15,14 +14,14 @@ class LexicalMatcher(Matcher, ABC):
     def _train_model(self, train_corpus: DataCorpus, eval_corpus: DataCorpus):
         pass  # no training necessary
 
-    def predict(self, eval_mode: str, source: List[WikiListing], target: Optional[List[ClgEntity]]) -> Set[Pair]:
+    def predict(self, eval_mode: str, data_corpus: DataCorpus) -> Set[Pair]:
+        source_grouping = self._make_grouping(self._get_item_labels_for_listings(data_corpus.get_listings()))
         alignment = set()
-        source_grouping = self._make_grouping(self._get_item_labels_for_listings(source))
-        if target is None:
+        if self.scenario.is_MM():
             for item_group in source_grouping.values():
                 alignment.update({Pair(*sorted(item_pair), 1) for item_pair in itertools.combinations(item_group, 2)})
-        else:
-            target_grouping = self._make_grouping({res.idx: res.get_label() for res in target})
+        if self.scenario.is_ME():
+            target_grouping = self._make_grouping({res.idx: res.get_label() for res in data_corpus.get_entities()})
             for key in set(source_grouping).intersection(set(target_grouping)):
                 source_group, target_group = source_grouping[key], target_grouping[key]
                 alignment.update({Pair(*item_pair, 1) for item_pair in itertools.product(source_group, target_group)})

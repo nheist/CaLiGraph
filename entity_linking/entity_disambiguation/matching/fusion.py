@@ -1,4 +1,4 @@
-from typing import Set, List, Tuple, Optional
+from typing import Set, List, Tuple
 from abc import ABC, abstractmethod
 import numpy as np
 import networkx as nx
@@ -6,20 +6,18 @@ from entity_linking.entity_disambiguation.data import Pair, DataCorpus
 from entity_linking.entity_disambiguation.matching.util import MatchingScenario
 from entity_linking.entity_disambiguation.matching.matcher import MatcherWithCandidates
 import utils
-from impl.wikipedia.page_parser import WikiListing
-from impl.caligraph.entity import ClgEntity
 
 
 class FusionMatcher(MatcherWithCandidates, ABC):
     def _train_model(self, train_corpus: DataCorpus, eval_corpus: DataCorpus):
         pass  # no training necessary
 
-    def predict(self, eval_mode: str, source: List[WikiListing], target: Optional[List[ClgEntity]]) -> Tuple[Set[Pair], Set[Pair]]:
+    def predict(self, eval_mode: str, data_corpus: DataCorpus) -> Tuple[Set[Pair], Set[Pair]]:
         mm_candidates, me_candidates = self.mm_candidates[eval_mode], self.me_candidates[eval_mode]
         ag = self._get_alignment_graph(mm_candidates, me_candidates)
         edges_to_delete = self._compute_edges_to_delete(ag)
         utils.get_logger().debug(f'Found {len(edges_to_delete)} edges to delete.')
-        return mm_candidates.difference(edges_to_delete), me_candidates.difference(edges_to_delete)
+        return (mm_candidates | me_candidates).difference(edges_to_delete)
 
     def _get_alignment_graph(self, mm_candidates: Set[Pair], me_candidates: Set[Pair]) -> nx.Graph:
         ag = nx.Graph()

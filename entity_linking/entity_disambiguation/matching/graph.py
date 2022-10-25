@@ -1,10 +1,9 @@
-from typing import List, Optional, Set, Tuple
+from typing import Set, Tuple
 from collections import defaultdict
 from entity_linking.entity_disambiguation.data import Pair, DataCorpus
 from entity_linking.entity_disambiguation.matching.matcher import MatcherWithCandidates
 from entity_linking.entity_disambiguation.matching.util import MatchingScenario
 from impl.caligraph.entity import ClgEntity
-from impl.wikipedia.page_parser import WikiListing
 
 
 class PopularityMatcher(MatcherWithCandidates):
@@ -29,8 +28,8 @@ class PopularityMatcher(MatcherWithCandidates):
         ent_idx = ent_with_score[0]
         return self.entity_popularity[ent_idx]
 
-    def predict(self, eval_mode: str, source: List[WikiListing], target: Optional[List[ClgEntity]]) -> Set[Pair]:
-        assert target is not None, 'PopularityMatcher can only be applied to corpus with target.'
+    def predict(self, eval_mode: str, data_corpus: DataCorpus) -> Set[Pair]:
+        assert self.scenario == MatchingScenario.MENTION_ENTITY, 'PopularityMatcher can only be applied in ME scenario.'
         candidates_by_source = defaultdict(set)
         for item, ent, score in self.me_candidates[eval_mode]:
             candidates_by_source[item].add((ent, score))

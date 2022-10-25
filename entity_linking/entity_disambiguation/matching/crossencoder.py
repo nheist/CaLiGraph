@@ -1,11 +1,9 @@
-from typing import Set, List, Optional, Dict
+from typing import Set, Dict
 from collections import defaultdict
 import random
 from torch.utils.data import DataLoader
 from sentence_transformers import CrossEncoder
 import utils
-from impl.caligraph.entity import ClgEntity
-from impl.wikipedia.page_parser import WikiListing
 from entity_linking.entity_disambiguation.data import Pair, DataCorpus
 from entity_linking.entity_disambiguation.matching.util import MatchingScenario
 from entity_linking.entity_disambiguation.matching.matcher import MatcherWithCandidates
@@ -71,17 +69,20 @@ class CrossEncoderMatcher(MatcherWithCandidates):
         utils.release_gpu()
         self.model.fit(train_dataloader=train_dataloader, epochs=self.epochs, warmup_steps=self.warmup_steps, save_best_model=False)
 
-    def predict(self, eval_mode: str, source: List[WikiListing], target: Optional[Set[ClgEntity]]) -> Set[Pair]:
-        is_mm_scenario = target is None
-        source_input = transformer_util.prepare_listing_items(source, is_mm_scenario, self.add_page_context, self.add_category_context, self.add_listing_entities)
-        target_input = source_input if is_mm_scenario else transformer_util.prepare_entities(target, self.add_entity_abstract, self.add_kg_info)
-        candidates = self.mm_candidates[eval_mode] if is_mm_scenario else self.me_candidates[eval_mode]
-        model_input = [[source_input[source_id], target_input[target_id]] for source_id, target_id, _ in candidates]
-        candidate_scores = self.model.predict(model_input, batch_size=self.batch_size, show_progress_bar=True)
-        if is_mm_scenario:  # scenario: MENTION_MENTION
+    def predict(self, eval_mode: str, data_corpus: DataCorpus) -> Set[Pair]:
+        source_input, source_known = transformer_util.prepare_listing_items(data_corpus.get_listings(), self.add_page_context, self.add_category_context, self.add_listing_entities)
+        alignment = set()
+        if self.scenario.is_MM():
+            candidates = self.mm_candidates[eval_mode]
+            model_input = [[source_input[mention_a], source_input[mention_b]] for mention_a, mention_b, _ in candidates]
+            candidate_scores = self.model.predict(model_input, batch_size=self.batch_size, show_progress_bar=True)
             # take all matches that are higher than threshold
-            alignment = [(cand[0], cand[1], score) for cand, score in zip(candidates, candidate_scores) if score > self.mm_threshold]
-        else:  # scenario: MENTION_ENTITY
+            alignment.update([(cand[0], cand[1], score) for cand, score in zip(candidates, candidate_scores) if score > self.mm_threshold])
+        if self.scenario.is_ME():
+            target_input = transformer_util.prepare_entities(data_corpus.get_entities(), self.add_entity_abstract, self.add_kg_info)
+            candidates = self.me_candidates[eval_mode]
+            model_input = [[source_input[source_id], target_input[target_id]] for source_id, target_id, _ in candidates]
+            candidate_scores = self.model.predict(model_input, batch_size=self.batch_size, show_progress_bar=True)
             # take only the most likely match for an item (if higher than threshold)
             item_entity_scores = defaultdict(set)
             for (item_id, entity_id, _), score in zip(candidates, candidate_scores):

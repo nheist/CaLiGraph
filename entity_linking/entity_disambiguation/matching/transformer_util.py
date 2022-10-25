@@ -1,10 +1,10 @@
-from typing import List, Tuple, Dict, Union, Set, Optional
+from typing import List, Tuple, Dict, Union, Set
 from itertools import cycle, islice
-from sentence_transformers import SentenceTransformer, CrossEncoder, losses, InputExample
+from sentence_transformers import SentenceTransformer, CrossEncoder, InputExample
 import utils
 from impl.util.string import alternate_iters_to_string
-from impl.util.transformer import SpecialToken
-from impl.wikipedia.page_parser import WikiListing, WikiTable, WikiListingItem, WikiEnumEntry
+from impl.util.transformer import SpecialToken, EntityIndex
+from impl.wikipedia.page_parser import WikiListing, WikiTable, WikiListingItem, WikiEnumEntry, MentionId
 from impl.dbpedia.resource import DbpResourceStore
 from impl.dbpedia.category import DbpCategoryStore
 from impl.caligraph.entity import ClgEntity
@@ -33,34 +33,44 @@ def add_special_tokens(model: Union[SentenceTransformer, CrossEncoder]):
 
 
 def generate_training_data(scenario: MatchingScenario, data_corpus: DataCorpus, negatives: List[Pair], add_page_context: bool, add_category_context: bool, add_listing_entities: bool, add_entity_abstract: bool, add_kg_info: bool) -> List[InputExample]:
-    source_input = prepare_listing_items(data_corpus.get_listings(), scenario.is_MM(), add_page_context, add_category_context, add_listing_entities)
-    target_input = source_input if scenario.is_MM() else prepare_entities(data_corpus.get_entities(), add_entity_abstract, add_kg_info)
-    positives = data_corpus.mm_alignment if scenario.is_MM() else data_corpus.me_alignment
+    source_input, source_known = prepare_listing_items(data_corpus.get_listings(), add_page_context, add_category_context, add_listing_entities)
+    if scenario == MatchingScenario.MENTION_MENTION:
+        source_input = {m_id: m_input for m_id, m_input in source_input.items() if source_known[m_id]}
+        target_input = source_input
+        positives = data_corpus.mm_alignment
+    else:  # scenario: MENTION_ENTITY
+        target_input = prepare_entities(data_corpus.get_entities(), add_entity_abstract, add_kg_info)
+        positives = data_corpus.me_alignment
     input_examples = [InputExample(texts=[source_input[source_id], target_input[target_id]], label=1) for source_id, target_id, _ in positives]
     input_examples.extend([InputExample(texts=[source_input[source_id], target_input[target_id]], label=0) for source_id, target_id, _ in negatives])
     return input_examples
 
 
-def prepare_listing_items(listings: List[WikiListing], ignore_unknown: bool, add_page_context: bool, add_category_context: bool, add_listing_entities: bool) -> Dict[Tuple[int, int, int], str]:
+def prepare_listing_items(listings: List[WikiListing], add_page_context: bool, add_category_context: bool, add_listing_entities: bool) -> Tuple[Dict[MentionId, str], Dict[MentionId, bool]]:
     utils.get_logger().debug('Preparing listing items..')
     result = {}
+    result_ent_known = {}
     if not add_page_context and not add_listing_entities:
         for l in listings:
-            for i in l.get_items(has_subject_entity=True, has_known_entity=ignore_unknown):
+            for i in l.get_items(has_subject_entity=True):
+                mention_id = MentionId(l.page_idx, l.idx, i.idx)
                 se = i.subject_entity
-                result[(l.page_idx, l.idx, i.idx)] = f'{se.label} {SpecialToken.get_type_token(se.entity_type)}'
-        return result
+                result[mention_id] = f'{se.label} {SpecialToken.get_type_token(se.entity_type)}'
+                result_ent_known[mention_id] = se.entity_idx != EntityIndex.NEW_ENTITY.value
+        return result, result_ent_known
     for listing in listings:
         prepared_context = _prepare_listing_context(listing, add_category_context)
         prepared_items = [_prepare_listing_item(item) for item in listing.get_items()]
-        for idx, item in enumerate(listing.get_items(has_subject_entity=True, has_known_entity=ignore_unknown)):
+        for idx, item in enumerate(listing.get_items(has_subject_entity=True)):
+            mention_id = MentionId(listing.page_idx, listing.idx, item.idx)
             item_se = item.subject_entity
             # add subject entity, its type, and page context
             item_content = f' {CXS} '.join([f'{item_se.label} {SpecialToken.get_type_token(item_se.entity_type)}', prepared_context])
             # add item and `add_listing_entities` subsequent items (add items from start if no subsequent items left)
             item_content += ''.join(islice(cycle(prepared_items), idx, idx + add_listing_entities + 1))
-            result[(listing.page_idx, listing.idx, item.idx)] = item_content
-    return result
+            result[mention_id] = item_content
+            result_ent_known[mention_id] = item_se.entity_idx != EntityIndex.NEW_ENTITY.value
+    return result, result_ent_known
 
 
 def _prepare_listing_context(listing: WikiListing, add_category_context: bool) -> str:

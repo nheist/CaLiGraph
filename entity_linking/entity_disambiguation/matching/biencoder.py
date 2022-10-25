@@ -1,11 +1,9 @@
-from typing import Set, List, Optional
+from typing import Set
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from sentence_transformers import util as st_util
 from sentence_transformers import SentenceTransformer, losses
 import utils
-from impl.caligraph.entity import ClgEntity
-from impl.wikipedia.page_parser import WikiListing
 from entity_linking.entity_disambiguation.data import Pair, DataCorpus
 from entity_linking.entity_disambiguation.matching.util import MatchingScenario
 from entity_linking.entity_disambiguation.matching.matcher import Matcher
@@ -76,20 +74,21 @@ class BiEncoderMatcher(Matcher):
 
     # HINT: use ANN search with e.g. hnswlib (https://github.com/nmslib/hnswlib/) if exact NN search is too costly
     # EXAMPLE: https://github.com/UKPLab/sentence-transformers/tree/master/examples/applications/semantic-search/semantic_search_quora_hnswlib.py
-    def predict(self, eval_mode: str, source: List[WikiListing], target: Optional[Set[ClgEntity]]) -> Set[Pair]:
-        is_mm_scenario = target is None
-        source_ids_with_input = transformer_util.prepare_listing_items(source, is_mm_scenario, self.add_page_context, self.add_category_context, self.add_listing_entities)
+    def predict(self, eval_mode: str, data_corpus: DataCorpus) -> Set[Pair]:
+        source_ids_with_input, source_known = transformer_util.prepare_listing_items(data_corpus.get_listings(), self.add_page_context, self.add_category_context, self.add_listing_entities)
         source_ids, source_input = list(source_ids_with_input), list(source_ids_with_input.values())
         source_embeddings = self.model.encode(source_input, batch_size=self.batch_size, normalize_embeddings=True, convert_to_tensor=True, show_progress_bar=True)
-        if is_mm_scenario:  # scenario: MENTION_MENTION
+        alignment = set()
+        if self.scenario.is_MM():
+            known_mask = [source_known[m_id] for m_id in source_ids]
             # TODO: implement "real" top-k approach
-            alignment = {(i, j, s) for s, i, j in st_util.paraphrase_mining_embeddings(source_embeddings, max_pairs=int(5e6), top_k=50, score_function=st_util.dot_score)}
-            alignment_indices = {tuple([*sorted([source_ids[i], source_ids[j]]), s]) for i, j, s in alignment}
-        else:  # scenario: MENTION_ENTITY
+            matched_pairs = st_util.paraphrase_mining_embeddings(source_embeddings[known_mask], max_pairs=int(5e6), top_k=50, score_function=st_util.dot_score)
+            alignment.update({tuple([*sorted([source_ids[i], source_ids[j]]), s]) for s, i, j in matched_pairs})
+        if self.scenario.is_ME():
             if self.target_embeddings is None:  # init cached target embeddings
-                target_ids_with_input = transformer_util.prepare_entities(target, self.add_entity_abstract, self.add_kg_info)
+                target_ids_with_input = transformer_util.prepare_entities(data_corpus.get_entities(), self.add_entity_abstract, self.add_kg_info)
                 self.target_ids, target_input = list(target_ids_with_input), list(target_ids_with_input.values())
                 self.target_embeddings = self.model.encode(target_input, batch_size=self.batch_size, normalize_embeddings=True, convert_to_tensor=True, show_progress_bar=True)
             matched_pairs = st_util.semantic_search(source_embeddings, self.target_embeddings, top_k=self.top_k, score_function=st_util.dot_score)
-            alignment_indices = {(source_ids[s], self.target_ids[t['corpus_id']], t['score']) for s, ts in enumerate(matched_pairs) for t in ts}
-        return {Pair(*item_pair) for item_pair in alignment_indices}
+            alignment.update({(source_ids[s], self.target_ids[t['corpus_id']], t['score']) for s, ts in enumerate(matched_pairs) for t in ts})
+        return {Pair(*item_pair) for item_pair in alignment}
