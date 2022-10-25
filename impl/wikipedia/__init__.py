@@ -4,7 +4,7 @@ from collections import defaultdict, Counter
 import utils
 from .nif_parser import extract_wiki_corpus_resources
 from .xml_parser import _parse_raw_markup_from_xml
-from .page_parser import _parse_pages, WikiPage, WikiSubjectEntity, ListingId, MentionId
+from .page_parser import _parse_pages, WikiPage, WikiListing, WikiSubjectEntity, ListingId, MentionId
 from .category_parser import _extract_parent_categories_from_markup
 from impl.dbpedia.resource import DbpListpage, DbpResourceStore
 import impl.dbpedia.util as dbp_util
@@ -29,6 +29,10 @@ class WikiPageStore:
 
     def get_listpages(self) -> Iterable[WikiPage]:
         return [p for p in self.get_pages() if isinstance(p.resource, DbpListpage)]
+
+    def get_listing(self, listing_id: ListingId) -> WikiListing:
+        page_idx, listing_idx = listing_id
+        return self.pages[page_idx].listings[listing_idx]
 
     def get_subject_entity(self, mention_id: MentionId) -> WikiSubjectEntity:
         page_idx, listing_idx, item_idx = mention_id
