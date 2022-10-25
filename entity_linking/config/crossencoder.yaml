@@ -1,2 +1,2 @@
-base_model: roberta-base
-batch_size: 64
+base_model: distilbert-base-cased
+batch_size: 128

@@ -48,9 +48,9 @@ class CrossEncoderMatcher(MatcherWithCandidates):
         }
         return super()._get_param_dict() | params
 
-    def train(self, mm_train: DataCorpus, me_train: DataCorpus, save_alignment: bool) -> Dict[str, Set[Pair]]:
+    def train(self, train_corpus: DataCorpus, eval_corpus: DataCorpus, save_alignment: bool) -> Dict[str, Set[Pair]]:
         utils.get_logger().info('Training matcher..')
-        self._train_model(mm_train, me_train)
+        self._train_model(train_corpus, eval_corpus)
         return {}  # never predict on the training set with the cross-encoder
 
     def _train_model(self, train_corpus: DataCorpus, eval_corpus: DataCorpus):
