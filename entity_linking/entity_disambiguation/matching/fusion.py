@@ -12,7 +12,7 @@ class FusionMatcher(MatcherWithCandidates, ABC):
     def _train_model(self, train_corpus: DataCorpus, eval_corpus: DataCorpus):
         pass  # no training necessary
 
-    def predict(self, eval_mode: str, data_corpus: DataCorpus) -> Tuple[Set[Pair], Set[Pair]]:
+    def predict(self, eval_mode: str, data_corpus: DataCorpus) -> Set[Pair]:
         mm_candidates, me_candidates = self.mm_candidates[eval_mode], self.me_candidates[eval_mode]
         ag = self._get_alignment_graph(mm_candidates, me_candidates)
         edges_to_delete = self._compute_edges_to_delete(ag)
