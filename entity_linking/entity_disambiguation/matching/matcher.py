@@ -67,10 +67,10 @@ class Matcher(ABC):
 class MatcherWithCandidates(Matcher, ABC):
     def __init__(self, scenario: MatchingScenario, params: dict):
         super().__init__(scenario, params)
-        if 'mm_approach' in params:
+        if params['mm_approach']:
             self.mm_approach = params['mm_approach']
             self.mm_candidates = load_candidates(self.mm_approach, MatchingScenario.MENTION_MENTION)
-        if 'me_approach' in params:
+        if params['me_approach']:
             self.me_approach = params['me_approach']
             self.me_candidates = load_candidates(self.me_approach, MatchingScenario.MENTION_ENTITY)
 
