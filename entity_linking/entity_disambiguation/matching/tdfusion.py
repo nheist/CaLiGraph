@@ -1,4 +1,4 @@
-from typing import Set, List, Tuple
+from typing import Set, List
 from abc import ABC, abstractmethod
 import numpy as np
 import networkx as nx
@@ -8,7 +8,7 @@ from entity_linking.entity_disambiguation.matching.matcher import MatcherWithCan
 import utils
 
 
-class FusionMatcher(MatcherWithCandidates, ABC):
+class TopDownFusionMatcher(MatcherWithCandidates, ABC):
     def _train_model(self, train_corpus: DataCorpus, eval_corpus: DataCorpus):
         pass  # no training necessary
 
@@ -47,7 +47,7 @@ class FusionMatcher(MatcherWithCandidates, ABC):
         pass
 
 
-class WeakestMentionMatcher(FusionMatcher):
+class WeakestMentionMatcher(TopDownFusionMatcher):
     def _compute_edges_to_delete(self, ag: nx.Graph) -> Set[Pair]:
         edges_to_delete = set()
         for sg in self._find_invalid_subgraphs(ag):
@@ -60,7 +60,7 @@ class WeakestMentionMatcher(FusionMatcher):
         return edges_to_delete
 
 
-class WeakestEntityMatcher(FusionMatcher):
+class WeakestEntityMatcher(TopDownFusionMatcher):
     def _compute_edges_to_delete(self, ag: nx.Graph) -> Set[Pair]:
         edges_to_delete = set()
         for sg in self._find_invalid_subgraphs(ag):
@@ -73,7 +73,7 @@ class WeakestEntityMatcher(FusionMatcher):
         return edges_to_delete
 
 
-class WeakestLinkMatcher(FusionMatcher):
+class WeakestLinkMatcher(TopDownFusionMatcher):
     def _compute_edges_to_delete(self, ag: nx.Graph) -> Set[Pair]:
         edges_to_delete = set()
         for sg in self._find_invalid_subgraphs(ag):

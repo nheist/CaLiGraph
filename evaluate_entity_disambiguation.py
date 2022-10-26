@@ -13,20 +13,13 @@ VERSION = 5
 # > Implement hard-sampling (lexically similar but unrelated items/ents batched together to get fewer candidates)
 # > analyze currently used pooling function in bi-encoder (possible improvements in E4.4)
 # TODO: FUSION
-# > how big is the "problem"? -> BIG
+# Top-Down Fusion
 # > graph partitioning algorithm -> Holland-sameAs
 # Holland-sameAs: https://link.springer.com/chapter/10.1007/978-3-030-00671-6_23
 # Implementation: https://github.com/dwslab/melt/blob/e94287f1349217e04cdb3a6b6565f3345f216b45/matching-jena-matchers/src/main/java/de/uni_mannheim/informatik/dws/melt/matching_jena_matchers/multisource/clustering/ComputeErrDegree.java
 # > Filtering (consistent alignment for every listing) -> before or after Fusion?
 #  > e.g. apply WWW-Approach before
 #  > e.g. for every listing, collect intermediate entity representation and go for majority
-# > Cluster-Strategy
-#  > assume ME-predictions to be correct
-#  > initialize mention/entity clusters based on ME-predictions
-#  > order MM candidates by confidence, then process candidate (m1, m2) one by one:
-#    > if they are in the same cluster, discard
-#    > if they have different matched entities, discard
-#    > sample Tcand candidates for MM/ME comparison from cluster of m1 and cluster of m2 -> merge clusters if avg. confidence > Tconf
 # TODO: COMPARSION
 # > apply to NILK dataset
 #   > generalize implementation to mention_id and mention_context
@@ -63,10 +56,12 @@ if __name__ == '__main__':
     # cross-encoder
     parser.add_argument('--mm_threshold', type=float, default=.5, help="Confidence threshold to filter MM predictions.")
     parser.add_argument('--me_threshold', type=float, default=.5, help="Confidence threshold to filter ME predictions.")
-    # fusion
+    # top-down fusion
     parser.add_argument('--mm_weight', type=str, help='Weight of mention-mention approach used for fusion')
     parser.add_argument('--me_weight', type=str, help='Weight of mention-entity approach used for fusion')
-
+    # bottom-up fusion
+    parser.add_argument('--cluster_comparisons', type=int, default=2, help='Number of mentions/entities per cluster that are considered for a merge')
+    parser.add_argument('--cluster_threshold', type=float, default=.5, help='Confidence threshold to filter cluster merges')
 
     args = parser.parse_args()
     # and set necessary environment variables
@@ -107,6 +102,8 @@ if __name__ == '__main__':
         'me_threshold': args.me_threshold,
         'mm_weight': args.mm_weight,
         'me_weight': args.me_weight,
+        'cluster_comparisons': args.cluster_comparisons,
+        'cluster_threshold': args.cluster_threshold,
     }
     # then import application-specific code and run it
     from entity_linking import entity_disambiguation

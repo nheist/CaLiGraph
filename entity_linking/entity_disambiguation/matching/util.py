@@ -24,11 +24,13 @@ class MatchingApproach(Enum):
     CROSSENCODER = 'crossencoder'
     # ME
     POPULARITY = 'popularity'
-    # F
+    # Top-Down Fusion
     WEAKEST_MENTION = 'wmention'
     WEAKEST_ENTITY = 'wentity'
     WEAKEST_LINK = 'wlink'
     PRECISION_WEIGHTED_WEAKEST_LINK = 'pwlink'
+    # Bottom-Up Fusion
+    BOTTOM_UP_FUSION = 'buf'
 
 
 def store_candidates(approach_name: str, candidates: dict):

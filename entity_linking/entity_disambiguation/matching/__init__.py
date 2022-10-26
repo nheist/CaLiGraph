@@ -1,15 +1,15 @@
-from typing import Union
 from entity_linking.entity_disambiguation.matching.matcher import Matcher
 from entity_linking.entity_disambiguation.matching.util import MatchingScenario, MatchingApproach, load_candidates
 from entity_linking.entity_disambiguation.matching.lexical import ExactMatcher, WordMatcher
 from entity_linking.entity_disambiguation.matching.graph import PopularityMatcher
 from entity_linking.entity_disambiguation.matching.biencoder import BiEncoderMatcher
 from entity_linking.entity_disambiguation.matching.crossencoder import CrossEncoderMatcher
-from entity_linking.entity_disambiguation.matching.fusion import FusionMatcher, WeakestMentionMatcher, WeakestEntityMatcher, WeakestLinkMatcher, PrecisionWeightedWeakestLinkMatcher
+from entity_linking.entity_disambiguation.matching.tdfusion import WeakestMentionMatcher, WeakestEntityMatcher, WeakestLinkMatcher, PrecisionWeightedWeakestLinkMatcher
+from entity_linking.entity_disambiguation.matching.bufusion import BottomUpFusionMatcher
 import utils
 
 
-def initialize_matcher(scenario: MatchingScenario, approach: MatchingApproach, params: dict) -> Union[Matcher, FusionMatcher]:
+def initialize_matcher(scenario: MatchingScenario, approach: MatchingApproach, params: dict) -> Matcher:
     utils.get_logger().info('Initializing matcher..')
     if approach == MatchingApproach.EXACT:
         matcher_factory = ExactMatcher
@@ -29,6 +29,8 @@ def initialize_matcher(scenario: MatchingScenario, approach: MatchingApproach, p
         matcher_factory = WeakestLinkMatcher
     elif approach == MatchingApproach.PRECISION_WEIGHTED_WEAKEST_LINK:
         matcher_factory = PrecisionWeightedWeakestLinkMatcher
+    elif approach == MatchingApproach.BOTTOM_UP_FUSION:
+        matcher_factory = BottomUpFusionMatcher
     else:
         raise ValueError(f'Matching approach not implemented: {approach.value}')
     return matcher_factory(scenario, params)

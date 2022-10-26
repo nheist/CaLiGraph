@@ -70,7 +70,7 @@ class CrossEncoderMatcher(MatcherWithCandidates):
         self.model.fit(train_dataloader=train_dataloader, epochs=self.epochs, warmup_steps=self.warmup_steps, save_best_model=False)
 
     def predict(self, eval_mode: str, data_corpus: DataCorpus) -> Set[Pair]:
-        source_input, source_known = transformer_util.prepare_listing_items(data_corpus.get_listings(), self.add_page_context, self.add_category_context, self.add_listing_entities)
+        source_input, _ = transformer_util.prepare_listing_items(data_corpus.get_listings(), self.add_page_context, self.add_category_context, self.add_listing_entities)
         alignment = set()
         if self.scenario.is_MM():
             candidates = self.mm_candidates[eval_mode]
