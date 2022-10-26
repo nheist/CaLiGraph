@@ -35,7 +35,7 @@ class MatchingApproach(Enum):
 
 def store_candidates(approach_name: str, candidates: dict):
     utils.get_logger().debug(f'Storing candidates for matcher with name "{approach_name}"..')
-    with open(_get_approach_path(approach_name), mode='wb') as f:
+    with open(get_model_path(approach_name) + '.p', mode='wb') as f:
         return pickle.dump(candidates, f, protocol=pickle.HIGHEST_PROTOCOL)
 
 
@@ -47,14 +47,14 @@ def load_candidates(approach_id: str, scenario: MatchingScenario) -> dict:
         return candidates
 
 
-def _get_approach_path(approach_name: str) -> str:
-    return os.path.join(utils._get_root_path(), 'entity_linking', 'data', f'{approach_name}.p')
+def get_model_path(approach_name: str) -> str:
+    return os.path.join(utils._get_root_path(), 'entity_linking', 'data', approach_name)
 
 
 def _get_approach_path_by_id(approach_id: str) -> str:
-    approach_dir = os.path.join(utils._get_root_path(), 'entity_linking', 'data')
-    for filename in os.listdir(approach_dir):
-        filepath = os.path.join(approach_dir, filename)
+    data_dir = os.path.join(utils._get_root_path(), 'entity_linking', 'data')
+    for filename in os.listdir(data_dir):
+        filepath = os.path.join(data_dir, filename)
         if os.path.isfile(filepath) and filename.startswith(approach_id):
             return filepath
     raise FileNotFoundError(f'Could not find file for approach with ID {approach_id}.')

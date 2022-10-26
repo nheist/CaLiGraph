@@ -1,11 +1,12 @@
 from typing import Set, Dict
 from collections import defaultdict
+import os
 import random
 from torch.utils.data import DataLoader
 from sentence_transformers import CrossEncoder
 import utils
 from entity_linking.entity_disambiguation.data import Pair, DataCorpus
-from entity_linking.entity_disambiguation.matching.util import MatchingScenario
+from entity_linking.entity_disambiguation.matching.util import MatchingScenario, get_model_path
 from entity_linking.entity_disambiguation.matching.matcher import MatcherWithCandidates
 from entity_linking.entity_disambiguation.matching import transformer_util
 
@@ -26,9 +27,6 @@ class CrossEncoderMatcher(MatcherWithCandidates):
         self.batch_size = params['batch_size']
         self.epochs = params['epochs']
         self.warmup_steps = params['warmup_steps']
-        # prepare Cross-Encoder
-        self.model = CrossEncoder(self.base_model, num_labels=1)
-        transformer_util.add_special_tokens(self.model)
 
     def _get_param_dict(self) -> dict:
         params = {
@@ -52,6 +50,13 @@ class CrossEncoderMatcher(MatcherWithCandidates):
         return {}  # never predict on the training set with the cross-encoder
 
     def _train_model(self, train_corpus: DataCorpus, eval_corpus: DataCorpus):
+        path_to_model = get_model_path(self.base_model)
+        if os.path.exists(path_to_model):  # load local model
+            self.model = CrossEncoder(path_to_model, num_labels=1)
+            return
+        else:  # initialize model from huggingface hub
+            self.model = CrossEncoder(self.base_model, num_labels=1)
+            transformer_util.add_special_tokens(self.model)
         if self.epochs == 0:
             return  # skip training
         utils.get_logger().debug('Preparing training data..')
@@ -68,6 +73,7 @@ class CrossEncoderMatcher(MatcherWithCandidates):
         utils.get_logger().debug('Starting training..')
         utils.release_gpu()
         self.model.fit(train_dataloader=train_dataloader, epochs=self.epochs, warmup_steps=self.warmup_steps, save_best_model=False)
+        self.model.save(get_model_path(self.id))
 
     def predict(self, eval_mode: str, data_corpus: DataCorpus) -> Set[Pair]:
         source_input, _ = transformer_util.prepare_listing_items(data_corpus.get_listings(), self.add_page_context, self.add_category_context, self.add_listing_entities)
