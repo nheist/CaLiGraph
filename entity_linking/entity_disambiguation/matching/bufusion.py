@@ -1,8 +1,9 @@
-from typing import Set, Dict, NamedTuple, Optional, Tuple, List, Union
+from typing import Set, Dict, Optional, Tuple, List, Union
 from collections import defaultdict
 import random
 import itertools
 import numpy as np
+import utils
 from impl.wikipedia.page_parser import MentionId
 from entity_linking.entity_disambiguation.data import Pair, DataCorpus
 from entity_linking.entity_disambiguation.matching.util import MatchingScenario
@@ -11,11 +12,13 @@ from entity_linking.entity_disambiguation.matching import transformer_util
 
 
 class FusionCluster:
+    idx: int
     mentions: Set[MentionId]
     candidates: Dict[MentionId, float]
     entity: Optional[int]
 
-    def __init__(self, mentions: Set[MentionId], candidates: Dict[MentionId, float], entity: Optional[int] = None):
+    def __init__(self, idx: int, mentions: Set[MentionId], candidates: Dict[MentionId, float], entity: Optional[int] = None):
+        self.idx = idx
         self.mentions = mentions
         self.candidates = candidates
         self.entity = entity
@@ -48,7 +51,7 @@ class BottomUpFusionMatcher(CrossEncoderMatcher):
                 cluster.candidates = {cand: score for cand, score in cluster.candidates.items() if cluster_by_mid[cand].entity in [None, cluster.entity]}
                 # try merge with most promising candidate
                 mention_merge_candidate = max(cluster.candidates.items(), key=lambda x: x[1])[0]
-                cluster_merge_candidate = cluster_by_mid[mention_merge_candidate]
+                cluster_merge_candidate = cluster_by_mid[mention_merge_candidate].idx
                 cluster_merge_candidates.add(tuple(sorted([cluster_id, cluster_merge_candidate])))
             # sample and evaluate MM/ME matches for cluster-pairs; aggregate by cluster
             mention_candidates, candidate_clusters = self._sample_candidates_for_cluster_merges(cluster_by_id, cluster_merge_candidates)
@@ -91,6 +94,7 @@ class BottomUpFusionMatcher(CrossEncoderMatcher):
             else:
                 mention_id, entity_id = cand
                 model_input.append([mention_input[mention_id], entity_input[entity_id]])
+        utils.release_gpu()
         return self.model.predict(model_input, batch_size=self.batch_size, show_progress_bar=True)
 
     def _init_clusters(self, eval_mode: str, predictions: Dict[MentionId, Dict[int, float]]) -> Tuple[Dict[int, FusionCluster], Dict[MentionId, FusionCluster]]:
@@ -117,7 +121,7 @@ class BottomUpFusionMatcher(CrossEncoderMatcher):
                     if cand_id in mention_ids:
                         continue  # discard candidates in same cluster
                     cluster_candidates[cand_id] = max(cluster_candidates[cand_id], score)
-            cluster = FusionCluster(mention_ids, cluster_candidates, e_id)
+            cluster = FusionCluster(cluster_id, mention_ids, cluster_candidates, e_id)
             cluster_by_id[cluster_id] = cluster
             for m_id in mention_ids:
                 cluster_by_mid[m_id] = cluster
@@ -126,7 +130,7 @@ class BottomUpFusionMatcher(CrossEncoderMatcher):
         for m_id, candidates in mention_candidates.items():
             if m_id in cluster_by_mid:
                 continue
-            cluster = FusionCluster({m_id}, candidates)
+            cluster = FusionCluster(cluster_id, {m_id}, candidates)
             cluster_by_id[cluster_id] = cluster
             cluster_by_mid[m_id] = cluster
             cluster_id += 1
