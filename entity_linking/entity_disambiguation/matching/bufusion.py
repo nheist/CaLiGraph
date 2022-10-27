@@ -10,11 +10,15 @@ from entity_linking.entity_disambiguation.matching.crossencoder import CrossEnco
 from entity_linking.entity_disambiguation.matching import transformer_util
 
 
-class FusionCluster(NamedTuple):
-    id: int
+class FusionCluster:
     mentions: Set[MentionId]
     candidates: Dict[MentionId, float]
     entity: Optional[int]
+
+    def __init__(self, mentions: Set[MentionId], candidates: Dict[MentionId, float], entity: Optional[int] = None):
+        self.mentions = mentions
+        self.candidates = candidates
+        self.entity = entity
 
 
 class BottomUpFusionMatcher(CrossEncoderMatcher):
@@ -113,7 +117,7 @@ class BottomUpFusionMatcher(CrossEncoderMatcher):
                     if cand_id in mention_ids:
                         continue  # discard candidates in same cluster
                     cluster_candidates[cand_id] = max(cluster_candidates[cand_id], score)
-            cluster = FusionCluster(cluster_id, mention_ids, cluster_candidates, e_id)
+            cluster = FusionCluster(mention_ids, cluster_candidates, e_id)
             cluster_by_id[cluster_id] = cluster
             for m_id in mention_ids:
                 cluster_by_mid[m_id] = cluster
@@ -122,7 +126,7 @@ class BottomUpFusionMatcher(CrossEncoderMatcher):
         for m_id, candidates in mention_candidates.items():
             if m_id in cluster_by_mid:
                 continue
-            cluster = FusionCluster(cluster_id, {m_id}, candidates, None)
+            cluster = FusionCluster({m_id}, candidates)
             cluster_by_id[cluster_id] = cluster
             cluster_by_mid[m_id] = cluster
             cluster_id += 1
