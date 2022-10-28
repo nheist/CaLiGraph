@@ -30,6 +30,11 @@ class BottomUpFusionMatcher(CrossEncoderMatcher):
         # model params
         self.cluster_comparisons = params['cluster_comparisons']
         self.cluster_threshold = params['cluster_threshold']
+        # ensure backwards-compatibility of MentionId
+        for eval_mode, candidates in self.mm_candidates.items():
+            self.mm_candidates[eval_mode] = [(MentionId(*m_a), MentionId(*m_b), score) for m_a, m_b, score in candidates]
+        for eval_mode, candidates in self.me_candidates.items():
+            self.me_candidates[eval_mode] = [(MentionId(*m_id), e_id, score) for m_id, e_id, score in candidates]
 
     def _get_param_dict(self) -> dict:
         return super()._get_param_dict() | {'cc': self.cluster_comparisons, 'ct': self.cluster_threshold}
@@ -61,6 +66,7 @@ class BottomUpFusionMatcher(CrossEncoderMatcher):
             cluster_merge_scores = self._compute_cluster_merge_scores(mention_candidate_scores, candidate_clusters)
             # merge clusters starting with highest left cluster index (in the case of a merge, we keep the left index)
             for (cluster_a_id, cluster_b_id), score in sorted(cluster_merge_scores.items(), key=lambda x: x[0][0], reverse=True):
+                print(f'Merging clusters: {cluster_a_id} and {cluster_b_id}')
                 cluster_a, cluster_b = cluster_by_id[cluster_a_id], cluster_by_id[cluster_b_id]
                 if score > self.cluster_threshold:  # merge clusters and update indices
                     cluster_a.mentions |= cluster_b.mentions
@@ -90,7 +96,7 @@ class BottomUpFusionMatcher(CrossEncoderMatcher):
     def _compute_scores_for_mention_candidates(self, candidates: List[Tuple[MentionId, Union[MentionId, int]]], mention_input: Dict[MentionId, str], entity_input: Dict[int, str]) -> List[float]:
         model_input = []
         for cand in candidates:
-            if isinstance(cand[1], (MentionId, tuple)):
+            if isinstance(cand[1], MentionId):
                 mention_a, mention_b = cand
                 model_input.append([mention_input[mention_a], mention_input[mention_b]])
             else:
