@@ -77,8 +77,8 @@ class BottomUpFusionMatcher(CrossEncoderMatcher):
                     for m_id in cluster_b.mentions:
                         cluster_by_mid[m_id] = cluster_a
                 else:  # make sure clusters are not considered for merge again (by deleting candidates in other cluster)
-                    cluster_a.candidates = {cand: score for cand, score in cluster_a.candidates.items() if cand not in cluster_b.mentions}
-                    cluster_b.candidates = {cand: score for cand, score in cluster_b.candidates.items() if cand not in cluster_a.mentions}
+                    cluster_a.candidates = defaultdict(float, {cand: score for cand, score in cluster_a.candidates.items() if cand not in cluster_b.mentions})
+                    cluster_b.candidates = defaultdict(float, {cand: score for cand, score in cluster_b.candidates.items() if cand not in cluster_a.mentions})
         # compute final alignment
         alignment = set()
         for cluster in cluster_by_id.values():
