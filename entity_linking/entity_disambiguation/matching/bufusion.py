@@ -90,7 +90,7 @@ class BottomUpFusionMatcher(CrossEncoderMatcher):
     def _compute_scores_for_mention_candidates(self, candidates: List[Tuple[MentionId, Union[MentionId, int]]], mention_input: Dict[MentionId, str], entity_input: Dict[int, str]) -> List[float]:
         model_input = []
         for cand in candidates:
-            if isinstance(cand[1], MentionId):
+            if isinstance(cand[1], (MentionId, tuple)):
                 mention_a, mention_b = cand
                 model_input.append([mention_input[mention_a], mention_input[mention_b]])
             else:
