@@ -66,13 +66,14 @@ class BottomUpFusionMatcher(CrossEncoderMatcher):
             cluster_merge_scores = self._compute_cluster_merge_scores(mention_candidate_scores, candidate_clusters)
             # merge clusters starting with highest left cluster index (in the case of a merge, we keep the left index)
             for (cluster_a_id, cluster_b_id), score in sorted(cluster_merge_scores.items(), key=lambda x: x[0][0], reverse=True):
-                print(f'Merging clusters: {cluster_a_id} and {cluster_b_id}')
                 cluster_a, cluster_b = cluster_by_id[cluster_a_id], cluster_by_id[cluster_b_id]
+                if cluster_a == cluster_b:
+                    continue
                 if score > self.cluster_threshold:  # merge clusters and update indices
                     cluster_a.mentions |= cluster_b.mentions
                     merged_candidates = (set(cluster_a.candidates) | set(cluster_b.candidates)).difference(cluster_a.mentions)
                     cluster_a.candidates = {cand: max(cluster_a.candidates[cand], cluster_b.candidates[cand]) for cand in merged_candidates}
-                    del cluster_by_id[cluster_b_id]
+                    cluster_by_id[cluster_b_id] = cluster_a
                     for m_id in cluster_b.mentions:
                         cluster_by_mid[m_id] = cluster_a
                 else:  # make sure clusters are not considered for merge again (by deleting candidates in other cluster)
