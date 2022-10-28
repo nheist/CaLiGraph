@@ -81,6 +81,7 @@ class DbpResourceStore:
         self.surface_forms = None
         self.surface_form_references = None
         self.abstracts = None
+        self.page_ids = None
 
         self.types = None
         self.entities_of_type = None
@@ -139,6 +140,12 @@ class DbpResourceStore:
         if not self.has_resource_with_iri(iri):
             raise DbpResourceNotExistingException(f'Could not find resource for iri: {iri}')
         return self.get_resource_by_name(dbp_util.resource_iri2name(iri))
+
+    def get_resource_by_page_id(self, page_id: int) -> Optional[DbpResource]:
+        if self.page_ids is None:
+            page_id_to_res = rdf_util.create_single_val_dict_from_rdf([utils.get_data_file('files.dbpedia.page_ids')], RdfPredicate.WIKIID, reverse_key=True, casting_fn=self.get_resource_by_iri)
+            self.page_ids = defaultdict(lambda: None, {int(page_id): res for res, page_id in page_id_to_res.items()})
+        return self.page_ids[page_id]
 
     def get_resources(self) -> Set[DbpResource]:
         return set(self.resources_by_idx.values())

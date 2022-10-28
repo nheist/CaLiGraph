@@ -62,6 +62,7 @@ class RdfPredicate(Enum):
     RANGE = 'http://www.w3.org/2000/01/rdf-schema#range'
     SAME_AS = 'http://www.w3.org/2002/07/owl#sameAs'
     EQUIVALENT_PROPERTY = 'http://www.w3.org/2002/07/owl#equivalentProperty'
+    WIKIID = 'http://dbpedia.org/ontology/wikiPageID'
     WIKILINK = 'http://dbpedia.org/ontology/wikiPageWikiLink'
     ANCHOR_TEXT = 'http://dbpedia.org/ontology/wikiPageWikiLinkText'
 

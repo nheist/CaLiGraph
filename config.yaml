@@ -82,6 +82,9 @@ files:
     disambiguations:
       filename: 'disambiguations_lang=en.ttl.bz2'
       url: 'https://downloads.dbpedia.org/repo/dbpedia/generic/disambiguations/2020.10.01/disambiguations_lang=en.ttl.bz2'
+    page_ids:
+      filename: 'page_lang=en_ids.ttl.bz2'
+      url: 'https://downloads.dbpedia.org/repo/dbpedia/generic/page/2020.10.01/page_lang=en_ids.ttl.bz2'
     nif_context:
       filename: 'nif-context_lang=en.ttl.bz2'
       url: 'https://downloads.dbpedia.org/repo/dbpedia/text/nif-context/2020.07.01/nif-context_lang=en.ttl.bz2'
