@@ -53,7 +53,7 @@ class BottomUpFusionMatcher(CrossEncoderMatcher):
             cluster_merge_candidates = set()
             for cluster_id, cluster in cluster_by_id.items():
                 # discard candidates that are in a cluster with another entity
-                cluster.candidates = {cand: score for cand, score in cluster.candidates.items() if cluster_by_mid[cand].entity in [None, cluster.entity]}
+                cluster.candidates = defaultdict(float, {cand: score for cand, score in cluster.candidates.items() if cluster_by_mid[cand].entity in [None, cluster.entity]})
                 # try merge with most promising candidate
                 if not cluster.candidates:
                     continue  # ignore cluster without further candidates
