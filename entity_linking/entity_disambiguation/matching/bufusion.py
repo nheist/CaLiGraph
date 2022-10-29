@@ -45,15 +45,15 @@ class BottomUpFusionMatcher(CrossEncoderMatcher):
         entity_input = transformer_util.prepare_entities(data_corpus.get_entities(), self.add_entity_abstract, self.add_kg_info)
         # retrieve entities for mentions and form clusters based on best entities; init remaining mentions as 1-clusters
         predictions = self._make_me_predictions(eval_mode, mention_input, entity_input)
-        cluster_by_id, cluster_by_mid = self._init_clusters(eval_mode, predictions)
+        clusters, cluster_by_mid = self._init_clusters(eval_mode, predictions)
         # merge clusters
         iteration = 0
         while True:  # repeat as long as we have candidate matches
             iteration += 1
-            if all(len(cluster.candidates) == 0 for cluster in cluster_by_id.values()):
+            if all(len(cluster.candidates) == 0 for cluster in clusters):
                 break
             cluster_merge_candidates = set()
-            for cluster_id, cluster in cluster_by_id.items():
+            for cluster in clusters:
                 if cluster.entity is not None:
                     # discard candidates that are in a cluster with another entity
                     cluster.candidates = defaultdict(float, {cand: score for cand, score in cluster.candidates.items() if cluster_by_mid[cand].entity is None})
@@ -63,8 +63,9 @@ class BottomUpFusionMatcher(CrossEncoderMatcher):
                 # try merge with most promising candidate
                 mention_merge_candidate = max(cluster.candidates.items(), key=lambda x: x[1])[0]
                 cluster_merge_candidate = cluster_by_mid[mention_merge_candidate].idx
-                cluster_merge_candidates.add(tuple(sorted([cluster_id, cluster_merge_candidate])))
+                cluster_merge_candidates.add(tuple(sorted([cluster.idx, cluster_merge_candidate])))
             # sample and evaluate MM/ME matches for cluster-pairs; aggregate by cluster
+            cluster_by_id = {cluster.idx: cluster for cluster in clusters}
             mention_candidates, candidate_clusters = self._sample_candidates_for_cluster_merges(cluster_by_id, cluster_merge_candidates)
             mention_candidate_scores = self._compute_scores_for_mention_candidates(mention_candidates, mention_input, entity_input)
             cluster_merge_scores = self._compute_cluster_merge_scores(mention_candidate_scores, candidate_clusters)
@@ -78,6 +79,7 @@ class BottomUpFusionMatcher(CrossEncoderMatcher):
                     cluster_a.mentions |= cluster_b.mentions
                     merged_candidates = (set(cluster_a.candidates) | set(cluster_b.candidates)).difference(cluster_a.mentions)
                     cluster_a.candidates = defaultdict(float, {cand: max(cluster_a.candidates[cand], cluster_b.candidates[cand]) for cand in merged_candidates})
+                    clusters.remove(cluster_b)
                     cluster_by_id[cluster_b_id] = cluster_a
                     for m_id in cluster_b.mentions:
                         cluster_by_mid[m_id] = cluster_a
@@ -86,10 +88,10 @@ class BottomUpFusionMatcher(CrossEncoderMatcher):
                     cluster_a.candidates = defaultdict(float, {cand: score for cand, score in cluster_a.candidates.items() if cand not in cluster_b.mentions})
                     cluster_b.candidates = defaultdict(float, {cand: score for cand, score in cluster_b.candidates.items() if cand not in cluster_a.mentions})
                     merge_discarded += 1
-            utils.get_logger().debug(f'BUF: Iteration {iteration}; Clusters: {len(set(cluster_by_id))}; Cluster Candidates: {len(cluster_merge_candidates)}; Mention Candidates: {len(mention_candidates)}; Merged: {merge_conducted}; Discarded: {merge_discarded}')
+            utils.get_logger().debug(f'BUF: Iteration {iteration}; Clusters: {len(clusters)}; Cluster Candidates: {len(cluster_merge_candidates)}; Mention Candidates: {len(mention_candidates)}; Merged: {merge_conducted}; Discarded: {merge_discarded}')
         # compute final alignment
         alignment = set()
-        for cluster in cluster_by_id.values():
+        for cluster in clusters:
             alignment.update({Pair(m_id, cluster.entity, 1) for m_id in cluster.mentions})
             alignment.update({Pair(*sorted(item_pair), 1) for item_pair in itertools.combinations(cluster.mentions, 2)})
         return alignment
@@ -114,7 +116,7 @@ class BottomUpFusionMatcher(CrossEncoderMatcher):
         utils.release_gpu()
         return self.model.predict(model_input, batch_size=self.batch_size, show_progress_bar=True)
 
-    def _init_clusters(self, eval_mode: str, predictions: Dict[MentionId, Dict[int, float]]) -> Tuple[Dict[int, FusionCluster], Dict[MentionId, FusionCluster]]:
+    def _init_clusters(self, eval_mode: str, predictions: Dict[MentionId, Dict[int, float]]) -> Tuple[List[FusionCluster], Dict[MentionId, FusionCluster]]:
         # group mentions by matching entity
         me_mapping = {m_id: max(ents.items(), key=lambda x: x[1]) for m_id, ents in predictions.items()}
         me_mapping = {m_id: ent_id for m_id, (ent_id, score) in me_mapping.items() if score > self.me_threshold}
@@ -127,7 +129,7 @@ class BottomUpFusionMatcher(CrossEncoderMatcher):
             mention_candidates[mention_a][mention_b] = score
             mention_candidates[mention_b][mention_a] = score
         # form clusters with known entities
-        cluster_by_id = {}
+        clusters = []
         cluster_by_mid = {}
         cluster_id = 0
         for e_id, mention_ids in em_mapping.items():
@@ -139,7 +141,7 @@ class BottomUpFusionMatcher(CrossEncoderMatcher):
                         continue  # discard candidates in same cluster
                     cluster_candidates[cand_id] = max(cluster_candidates[cand_id], score)
             cluster = FusionCluster(cluster_id, mention_ids, cluster_candidates, e_id)
-            cluster_by_id[cluster_id] = cluster
+            clusters.append(cluster)
             for m_id in mention_ids:
                 cluster_by_mid[m_id] = cluster
             cluster_id += 1
@@ -148,10 +150,10 @@ class BottomUpFusionMatcher(CrossEncoderMatcher):
             if m_id in cluster_by_mid:
                 continue
             cluster = FusionCluster(cluster_id, {m_id}, defaultdict(float, candidates))
-            cluster_by_id[cluster_id] = cluster
+            clusters.append(cluster)
             cluster_by_mid[m_id] = cluster
             cluster_id += 1
-        return cluster_by_id, cluster_by_mid
+        return clusters, cluster_by_mid
 
     def _sample_candidates_for_cluster_merges(self, cluster_by_id: Dict[int, FusionCluster], cluster_merge_candidates: Set[Tuple[int, int]]) -> Tuple[List[Tuple[MentionId, Union[MentionId, int]]], List[Tuple[int, int]]]:
         mention_candidates = []
