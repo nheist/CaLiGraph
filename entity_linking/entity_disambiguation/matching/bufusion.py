@@ -79,7 +79,10 @@ class BottomUpFusionMatcher(CrossEncoderMatcher):
                     cluster_a.mentions |= cluster_b.mentions
                     merged_candidates = (set(cluster_a.candidates) | set(cluster_b.candidates)).difference(cluster_a.mentions)
                     cluster_a.candidates = defaultdict(float, {cand: max(cluster_a.candidates[cand], cluster_b.candidates[cand]) for cand in merged_candidates})
-                    clusters.remove(cluster_b)
+                    try:
+                        clusters.remove(cluster_b)
+                    except ValueError:
+                        pass  # cluster already removed in another merge of this iteration
                     cluster_by_id[cluster_b_id] = cluster_a
                     for m_id in cluster_b.mentions:
                         cluster_by_mid[m_id] = cluster_a
