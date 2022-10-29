@@ -54,11 +54,13 @@ class BottomUpFusionMatcher(CrossEncoderMatcher):
                 break
             cluster_merge_candidates = set()
             for cluster_id, cluster in cluster_by_id.items():
-                # discard candidates that are in a cluster with another entity
-                cluster.candidates = defaultdict(float, {cand: score for cand, score in cluster.candidates.items() if cluster_by_mid[cand].entity in [None, cluster.entity]})
-                # try merge with most promising candidate
+                if cluster.entity is not None:
+                    # discard candidates that are in a cluster with another entity
+                    cluster.candidates = defaultdict(float, {cand: score for cand, score in cluster.candidates.items() if cluster_by_mid[cand].entity is None})
                 if not cluster.candidates:
-                    continue  # ignore cluster without further candidates
+                    # ignore cluster without further candidates
+                    continue
+                # try merge with most promising candidate
                 mention_merge_candidate = max(cluster.candidates.items(), key=lambda x: x[1])[0]
                 cluster_merge_candidate = cluster_by_mid[mention_merge_candidate].idx
                 cluster_merge_candidates.add(tuple(sorted([cluster_id, cluster_merge_candidate])))
@@ -145,7 +147,7 @@ class BottomUpFusionMatcher(CrossEncoderMatcher):
         for m_id, candidates in mention_candidates.items():
             if m_id in cluster_by_mid:
                 continue
-            cluster = FusionCluster(cluster_id, {m_id}, candidates)
+            cluster = FusionCluster(cluster_id, {m_id}, defaultdict(float, candidates))
             cluster_by_id[cluster_id] = cluster
             cluster_by_mid[m_id] = cluster
             cluster_id += 1
