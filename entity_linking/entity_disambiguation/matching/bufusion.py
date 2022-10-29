@@ -47,7 +47,9 @@ class BottomUpFusionMatcher(CrossEncoderMatcher):
         predictions = self._make_me_predictions(eval_mode, mention_input, entity_input)
         cluster_by_id, cluster_by_mid = self._init_clusters(eval_mode, predictions)
         # merge clusters
+        iteration = 0
         while True:  # repeat as long as we have candidate matches
+            iteration += 1
             if all(len(cluster.candidates) == 0 for cluster in cluster_by_id.values()):
                 break
             cluster_merge_candidates = set()
@@ -65,6 +67,7 @@ class BottomUpFusionMatcher(CrossEncoderMatcher):
             mention_candidate_scores = self._compute_scores_for_mention_candidates(mention_candidates, mention_input, entity_input)
             cluster_merge_scores = self._compute_cluster_merge_scores(mention_candidate_scores, candidate_clusters)
             # merge clusters starting with highest left cluster index (in the case of a merge, we keep the left index)
+            merge_conducted, merge_discarded = 0, 0
             for (cluster_a_id, cluster_b_id), score in sorted(cluster_merge_scores.items(), key=lambda x: x[0][0], reverse=True):
                 cluster_a, cluster_b = cluster_by_id[cluster_a_id], cluster_by_id[cluster_b_id]
                 if cluster_a == cluster_b:
@@ -76,9 +79,12 @@ class BottomUpFusionMatcher(CrossEncoderMatcher):
                     cluster_by_id[cluster_b_id] = cluster_a
                     for m_id in cluster_b.mentions:
                         cluster_by_mid[m_id] = cluster_a
+                    merge_conducted += 1
                 else:  # make sure clusters are not considered for merge again (by deleting candidates in other cluster)
                     cluster_a.candidates = defaultdict(float, {cand: score for cand, score in cluster_a.candidates.items() if cand not in cluster_b.mentions})
                     cluster_b.candidates = defaultdict(float, {cand: score for cand, score in cluster_b.candidates.items() if cand not in cluster_a.mentions})
+                    merge_discarded += 1
+            utils.get_logger().debug(f'BUF: Iteration {iteration}; Clusters: {len(set(cluster_by_id))}; Cluster Candidates: {len(cluster_merge_candidates)}; Mention Candidates: {len(mention_candidates)}; Merged: {merge_conducted}; Discarded: {merge_discarded}')
         # compute final alignment
         alignment = set()
         for cluster in cluster_by_id.values():
