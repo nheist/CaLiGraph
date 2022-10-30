@@ -93,9 +93,6 @@ class PrecisionWeightedWeakestLinkMatcher(WeakestLinkMatcher):
     def _get_alignment_graph(self, mm_candidates: Set[Pair], me_candidates: Set[Pair]) -> nx.Graph:
         ag = nx.Graph()
         ag.add_nodes_from([p.target for p in me_candidates], is_ent=True)
-        for s, t, conf in mm_candidates:
-            if not isinstance(conf, float):
-                print(s, t, conf, type(conf))
         edges = [(s, t, conf * self.mm_weight) for s, t, conf in mm_candidates]
         edges += [(s, t, conf * self.me_weight) for s, t, conf in me_candidates]
         ag.add_weighted_edges_from(edges)
