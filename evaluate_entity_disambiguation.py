@@ -57,8 +57,8 @@ if __name__ == '__main__':
     parser.add_argument('--mm_threshold', type=float, default=.5, help="Confidence threshold to filter MM predictions.")
     parser.add_argument('--me_threshold', type=float, default=.5, help="Confidence threshold to filter ME predictions.")
     # top-down fusion
-    parser.add_argument('--mm_weight', type=str, help='Weight of mention-mention approach used for fusion')
-    parser.add_argument('--me_weight', type=str, help='Weight of mention-entity approach used for fusion')
+    parser.add_argument('--mm_weight', type=float, help='Weight of mention-mention approach used for fusion')
+    parser.add_argument('--me_weight', type=float, help='Weight of mention-entity approach used for fusion')
     # bottom-up fusion
     parser.add_argument('--cluster_comparisons', type=int, default=2, help='Number of mentions/entities per cluster that are considered for a merge')
     parser.add_argument('--cluster_threshold', type=float, default=.5, help='Confidence threshold to filter cluster merges')
