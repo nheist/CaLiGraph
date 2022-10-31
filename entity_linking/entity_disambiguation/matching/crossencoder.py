@@ -95,5 +95,5 @@ class CrossEncoderMatcher(MatcherWithCandidates):
             for (item_id, entity_id, _), score in zip(candidates, candidate_scores):
                 if score > self.me_threshold:
                     item_entity_scores[item_id].add((entity_id, score))
-            alignment = [(i, *max(js, key=lambda x: x[1])) for i, js in item_entity_scores.items()]
+            alignment.update([(i, *max(js, key=lambda x: x[1])) for i, js in item_entity_scores.items()])
         return {Pair(source, target, score) for source, target, score in alignment}
