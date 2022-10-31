@@ -82,6 +82,7 @@ class DbpResourceStore:
         self.surface_form_references = None
         self.abstracts = None
         self.page_ids = None
+        self.wikidata_links = None
 
         self.types = None
         self.entities_of_type = None
@@ -140,12 +141,6 @@ class DbpResourceStore:
         if not self.has_resource_with_iri(iri):
             raise DbpResourceNotExistingException(f'Could not find resource for iri: {iri}')
         return self.get_resource_by_name(dbp_util.resource_iri2name(iri))
-
-    def get_resource_by_page_id(self, page_id: int) -> Optional[DbpResource]:
-        if self.page_ids is None:
-            page_id_to_res = rdf_util.create_single_val_dict_from_rdf([utils.get_data_file('files.dbpedia.page_ids')], RdfPredicate.WIKIID, reverse_key=True, casting_fn=self.get_resource_by_iri)
-            self.page_ids = defaultdict(lambda: None, {int(page_id): res for res, page_id in page_id_to_res.items()})
-        return self.page_ids[page_id]
 
     def get_resources(self) -> Set[DbpResource]:
         return set(self.resources_by_idx.values())
@@ -316,6 +311,18 @@ class DbpResourceStore:
     def _init_redirect_cache(self) -> Dict[int, int]:
         redirects = rdf_util.create_single_val_dict_from_rdf([utils.get_data_file('files.dbpedia.redirects')], RdfPredicate.REDIRECTS, casting_fn=self.get_resource_by_iri)
         return {source.idx: target.idx for source, target in redirects.items()}
+
+    def get_resource_by_page_id(self, page_id: int) -> Optional[DbpResource]:
+        if self.page_ids is None:
+            page_id_to_res = rdf_util.create_single_val_dict_from_rdf([utils.get_data_file('files.dbpedia.page_ids')], RdfPredicate.WIKIID, reverse_key=True, casting_fn=self.get_resource_by_iri)
+            self.page_ids = defaultdict(lambda: None, {int(page_id): res for res, page_id in page_id_to_res.items()})
+        return self.page_ids[page_id]
+
+    def get_resource_by_wikidata_id(self, wikidata_id: str) -> Optional[DbpResource]:
+        if self.wikidata_links is None:
+            wikidata_to_res = rdf_util.create_single_val_dict_from_rdf([utils.get_data_file('files.dbpedia.wikidata_links')], RdfPredicate.SAME_AS, casting_fn=self.get_resource_by_iri)
+            self.wikidata_links = {wd_url[wd_url.rindex('/')+1:]: res for wd_url, resources in wikidata_to_res.items() for res in resources if isinstance(res, DbpResource)}
+        return self.wikidata_links[wikidata_id]
 
     def get_embedding_vectors(self) -> Dict[int, List[float]]:
         if self.embedding_vectors is None:
