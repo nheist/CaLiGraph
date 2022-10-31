@@ -10,6 +10,9 @@ __pycache__/
 # Jupyter
 .ipynb_checkpoints/
 
+# Poetry
+poetry.lock
+
 # Project
 data/*
 data/cache/*
