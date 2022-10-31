@@ -196,15 +196,6 @@ class DbpResourceStore:
         sf_reference_frequencies = {sub: {obj.idx: count / obj_counts.total() for obj, count in obj_counts.items()} for sub, obj_counts in sf_reference_counts.items()}
         return sf_reference_frequencies
 
-    def get_wikilinks(self, res: DbpResource) -> Set[DbpResource]:
-        if self.wikilinks is None:
-            self.wikilinks = defaultdict(set, utils.load_or_create_cache('dbpedia_resource_wikilinks', self._init_wikilinks_cache))
-        return {self.get_resource_by_idx(idx) for idx in self.wikilinks[res.idx]}
-
-    def _init_wikilinks_cache(self) -> Dict[int, Set[int]]:
-        wikilinks = rdf_util.create_multi_val_dict_from_rdf([utils.get_data_file('files.dbpedia.wikilinks')], RdfPredicate.WIKILINK, casting_fn=self.get_resource_by_iri)
-        return {r.idx: {wl.idx for wl in wls} for r, wls in wikilinks.items()}
-
     def get_abstract(self, res: DbpResource) -> Optional[str]:
         if self.abstracts is None:
             self.abstracts = defaultdict(lambda: None, utils.load_or_create_cache('dbpedia_resource_abstracts', self._init_abstracts_cache))
@@ -320,8 +311,9 @@ class DbpResourceStore:
 
     def get_resource_by_wikidata_id(self, wikidata_id: str) -> Optional[DbpResource]:
         if self.wikidata_links is None:
-            wikidata_to_res = rdf_util.create_single_val_dict_from_rdf([utils.get_data_file('files.dbpedia.wikidata_links')], RdfPredicate.SAME_AS, casting_fn=self.get_resource_by_iri)
-            self.wikidata_links = {wd_url[wd_url.rindex('/')+1:]: res for wd_url, resources in wikidata_to_res.items() for res in resources if isinstance(res, DbpResource)}
+            wikidata_to_res = rdf_util.create_multi_val_dict_from_rdf([utils.get_data_file('files.dbpedia.wikidata_links')], RdfPredicate.SAME_AS)
+            wikidata_to_res = {wd_url[wd_url.rindex('/')+1:]: self.get_resource_by_iri(res_iri) for wd_url, res_iris in wikidata_to_res.items() for res_iri in res_iris if self.has_resource_with_iri(res_iri)}
+            self.wikidata_links = defaultdict(lambda: None, wikidata_to_res)
         return self.wikidata_links[wikidata_id]
 
     def get_embedding_vectors(self) -> Dict[int, List[float]]:
