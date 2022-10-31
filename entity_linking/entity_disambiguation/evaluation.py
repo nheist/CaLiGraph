@@ -126,6 +126,8 @@ class PrecisionRecallF1Evaluator:
     def _log_roc_curve(self, prefix: str, predicted_pairs: Set[Pair], actual_pairs: Set[Pair], step: int = 0):
         pred = [p[2] for p in predicted_pairs]
         actual = [1 if p in actual_pairs else 0 for p in predicted_pairs]
+        if not pred or sum(actual) == 0:
+            return
         fpr, tpr, _ = roc_curve(actual, pred)
         plt.plot(fpr, tpr)
         plt.ylabel('True Positive Rate')
