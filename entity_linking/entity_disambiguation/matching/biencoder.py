@@ -1,7 +1,6 @@
 from typing import Set
 import torch.nn as nn
 from torch.utils.data import DataLoader
-from sentence_transformers import util as st_util
 from sentence_transformers import SentenceTransformer, losses
 import utils
 from entity_linking.entity_disambiguation.data import Pair, DataCorpus
