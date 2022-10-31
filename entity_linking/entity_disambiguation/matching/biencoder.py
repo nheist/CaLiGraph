@@ -81,14 +81,13 @@ class BiEncoderMatcher(Matcher):
         alignment = set()
         if self.scenario.is_MM():
             known_mask = [source_known[m_id] for m_id in source_ids]
-            # TODO: implement "real" top-k approach
-            matched_pairs = st_util.paraphrase_mining_embeddings(source_embeddings[known_mask], max_pairs=int(5e6), top_k=50, score_function=st_util.dot_score)
-            alignment.update({tuple([*sorted([source_ids[i], source_ids[j]]), s]) for s, i, j in matched_pairs})
+            matched_pairs = transformer_util.paraphrase_mining_embeddings(source_embeddings[known_mask], source_ids, max_pairs=int(5e6), top_k=50, add_best=True)
+            alignment.update(matched_pairs)
         if self.scenario.is_ME():
             if self.target_embeddings is None:  # init cached target embeddings
                 target_ids_with_input = transformer_util.prepare_entities(data_corpus.get_entities(), self.add_entity_abstract, self.add_kg_info)
                 self.target_ids, target_input = list(target_ids_with_input), list(target_ids_with_input.values())
                 self.target_embeddings = self.model.encode(target_input, batch_size=self.batch_size, normalize_embeddings=True, convert_to_tensor=True, show_progress_bar=True)
-            matched_pairs = st_util.semantic_search(source_embeddings, self.target_embeddings, top_k=self.top_k, score_function=st_util.dot_score)
-            alignment.update({(source_ids[s], self.target_ids[t['corpus_id']], t['score']) for s, ts in enumerate(matched_pairs) for t in ts})
-        return {Pair(*item_pair) for item_pair in alignment}
+            matched_pairs = transformer_util.semantic_search(source_embeddings, self.target_embeddings, source_ids, self.target_ids, top_k=self.top_k)
+            alignment.update(matched_pairs)
+        return alignment

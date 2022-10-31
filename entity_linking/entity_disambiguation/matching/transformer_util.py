@@ -1,6 +1,10 @@
 from typing import List, Tuple, Dict, Union, Set
+from collections import defaultdict
 from itertools import cycle, islice
+import torch
+import queue
 from sentence_transformers import SentenceTransformer, CrossEncoder, InputExample
+from sentence_transformers.util import dot_score
 import utils
 from impl.util.string import alternate_iters_to_string
 from impl.util.transformer import SpecialToken, EntityIndex
@@ -114,3 +118,77 @@ def prepare_entities(entities: Set[ClgEntity], add_entity_abstract: bool, add_kg
                 kg_info += [f'{pred.get_label()} = {val.get_label() if isinstance(val, ClgEntity) else val}' for pred, val in props]
         result[e.idx] = f' {CXS} '.join(ent_description)
     return result
+
+
+# optimized version of function in sentence_transformers.util
+def paraphrase_mining_embeddings(embeddings: torch.Tensor, mention_ids: List[MentionId], query_chunk_size: int = 5000, corpus_chunk_size: int = 100000, max_pairs: int = 500000, top_k: int = 100, add_best: bool = False) -> Set[Pair]:
+    top_k += 1  # A sentence has the highest similarity to itself. Increase +1 as we are interest in distinct pairs
+    best_pairs_per_item = defaultdict(lambda: (None, 0.0))
+    top_pairs = queue.PriorityQueue()
+    min_score = -1
+    num_added = 0
+
+    for corpus_start_idx in range(0, len(embeddings), corpus_chunk_size):
+        for query_start_idx in range(0, len(embeddings), query_chunk_size):
+            scores = dot_score(embeddings[query_start_idx:query_start_idx+query_chunk_size], embeddings[corpus_start_idx:corpus_start_idx+corpus_chunk_size])
+
+            scores_top_k_values, scores_top_k_idx = torch.topk(scores, min(top_k, len(scores[0])), dim=1, largest=True, sorted=False)
+            scores_top_k_values = scores_top_k_values.cpu().tolist()
+            scores_top_k_idx = scores_top_k_idx.cpu().tolist()
+
+            for query_itr in range(len(scores)):
+                for top_k_idx, corpus_itr in enumerate(scores_top_k_idx[query_itr]):
+                    i = query_start_idx + query_itr
+                    j = corpus_start_idx + corpus_itr
+                    if i == j:
+                        continue
+                    score = scores_top_k_values[query_itr][top_k_idx]
+                    if add_best and score > .5:
+                        # collect best pairs per item
+                        if best_pairs_per_item[i][1] < score:
+                            best_pairs_per_item[i] = (j, score)
+                        if best_pairs_per_item[j][1] < score:
+                            best_pairs_per_item[j] = (i, score)
+                    if score > min_score:
+                        # collect overall top pairs
+                        top_pairs.put((score, i, j))
+                        num_added += 1
+                        if num_added >= max_pairs:
+                            entry = top_pairs.get()
+                            min_score = entry[0]
+
+    # Assemble the final pairs
+    pairs = {Pair(*sorted([mention_ids[i], mention_ids[j]]), score) for i, (j, score) in best_pairs_per_item.items()} if add_best else set()
+    while not top_pairs.empty():
+        score, i, j = top_pairs.get()
+        pairs.add(Pair(*sorted([mention_ids[i], mention_ids[j]]), score))
+    return pairs
+
+
+# optimized version of function in sentence_transformers.util
+def semantic_search(query_embeddings: torch.Tensor, corpus_embeddings: torch.Tensor, mention_ids: List[MentionId], entity_ids: List[int], query_chunk_size: int = 100, corpus_chunk_size: int = 500000, top_k: int = 10) -> Set[Pair]:
+    # check that corpus and queries are on the same device
+    if corpus_embeddings.device != query_embeddings.device:
+        query_embeddings = query_embeddings.to(corpus_embeddings.device)
+    # collect documents per query
+    queries_result_list = defaultdict(dict)
+    for query_start_idx in range(0, len(query_embeddings), query_chunk_size):
+        # Iterate over chunks of the corpus
+        for corpus_start_idx in range(0, len(corpus_embeddings), corpus_chunk_size):
+            # Compute similarities
+            cos_scores = dot_score(query_embeddings[query_start_idx:query_start_idx+query_chunk_size], corpus_embeddings[corpus_start_idx:corpus_start_idx+corpus_chunk_size])
+            # Get top-k scores
+            cos_scores_top_k_values, cos_scores_top_k_idx = torch.topk(cos_scores, min(top_k, len(cos_scores[0])), dim=1, largest=True, sorted=False)
+            cos_scores_top_k_values = cos_scores_top_k_values.cpu().tolist()
+            cos_scores_top_k_idx = cos_scores_top_k_idx.cpu().tolist()
+            for query_itr in range(len(cos_scores)):
+                for sub_corpus_id, score in zip(cos_scores_top_k_idx[query_itr], cos_scores_top_k_values[query_itr]):
+                    corpus_id = corpus_start_idx + sub_corpus_id
+                    query_id = query_start_idx + query_itr
+                    queries_result_list[query_id][corpus_id] = score
+    # sort and strip to top_k results; convert to original indices
+    pairs = set()
+    for mention_idx, entity_scores in queries_result_list.items():
+        top_k_entity_scores = sorted(entity_scores.items(), key=lambda x: x[1], reverse=True)[:top_k]
+        pairs.update({Pair(mention_ids[mention_idx], entity_ids[entity_idx], score) for entity_idx, score in top_k_entity_scores})
+    return pairs
