@@ -80,7 +80,9 @@ class BiEncoderMatcher(Matcher):
         alignment = set()
         if self.scenario.is_MM():
             known_mask = [source_known[m_id] for m_id in source_ids]
-            matched_pairs = transformer_util.paraphrase_mining_embeddings(source_embeddings[known_mask], source_ids, max_pairs=int(5e6), top_k=50, add_best=True)
+            mm_source_ids = [m_id for m_id, known in zip(source_ids, known_mask) if known]
+            mm_source_embeddings = source_embeddings[known_mask]
+            matched_pairs = transformer_util.paraphrase_mining_embeddings(mm_source_embeddings, mm_source_ids, max_pairs=int(5e6), top_k=50, add_best=True)
             alignment.update(matched_pairs)
         if self.scenario.is_ME():
             if self.target_embeddings is None:  # init cached target embeddings
