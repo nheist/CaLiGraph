@@ -6,7 +6,7 @@ import torch
 import utils
 from impl.util.nlp import EntityTypeLabel
 from impl.util.transformer import SpecialToken
-from impl.wikipedia import WikiPageStore
+from impl.wikipedia import WikiPageStore, MentionId
 from .data import get_listpage_training_dataset, get_page_training_dataset, get_page_data
 from .model import LISTPAGE_MODEL, PAGE_MODEL, model_exists, load_tokenizer_and_model, train_tokenizer_and_model
 
@@ -49,7 +49,7 @@ def _extract_mentions_for_model(tokenizer, model) -> Dict[int, Dict[int, Dict[in
     return subject_entity_mentions
 
 
-def _extract_mentions_from_batch(context_batch: List[List[Tuple[int, int, int]]], token_batch: List[List[str]], whitespace_batch: List[List[str]], tokenizer, model, subject_entity_mentions: dict):
+def _extract_mentions_from_batch(context_batch: List[List[MentionId]], token_batch: List[List[str]], whitespace_batch: List[List[str]], tokenizer, model, subject_entity_mentions: dict):
     input_batch = tokenizer(token_batch, is_split_into_words=True, padding=True, truncation=True, return_offsets_mapping=True, return_tensors="pt")
     offset_mapping_batch = input_batch.offset_mapping
     input_batch.pop('offset_mapping')
@@ -86,7 +86,7 @@ def _extract_mentions_from_batch(context_batch: List[List[Tuple[int, int, int]]]
                 continue  # no subject entity found -> skip item
 
 
-def _split_predictions_into_items(contexts: List[Tuple[int, int, int]], tokens: List[str], whitespaces: List[str], word_predictions: List[int]) -> Tuple[Tuple[int, int, int], List[str], List[str], List[int]]:
+def _split_predictions_into_items(contexts: List[MentionId], tokens: List[str], whitespaces: List[str], word_predictions: List[int]) -> Tuple[Tuple[int, int, int], List[str], List[str], List[int]]:
     # discard context of items in token sequence
     items_start_idx = tokens.index(SpecialToken.CONTEXT_END.value) + 1
     tokens = tokens[items_start_idx:]

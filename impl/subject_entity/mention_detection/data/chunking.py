@@ -7,7 +7,7 @@ from tqdm import tqdm
 from impl.util.spacy import get_tokens_and_whitespaces_from_text
 from impl.util.transformer import SpecialToken, EntityIndex
 from impl.wikipedia import WikiPage
-from impl.wikipedia.page_parser import WikiListing, WikiEnum, WikiTable, WikiListingItem, WikiEnumEntry, WikiTableRow
+from impl.wikipedia.page_parser import MentionId, WikiListing, WikiEnum, WikiTable, WikiListingItem, WikiEnumEntry, WikiTableRow
 from impl.dbpedia.resource import DbpResourceStore
 
 MAX_TOKENS_PER_CHUNK = 300
@@ -68,13 +68,13 @@ def _create_negative_listing(listings: List[WikiListing]) -> WikiListing:
     return negative_listing
 
 
-def process_pages(pages: List[WikiPage]) -> Tuple[List[List[Tuple[int, int, int]]], List[List[str]], List[List[str]]]:
+def process_pages(pages: List[WikiPage]) -> Tuple[List[List[MentionId]], List[List[str]], List[List[str]]]:
     context_chunks, token_chunks, whitespace_chunks = [], [], []
     listings = [listing for page in pages for listing in page.get_listings()]
     for listing, listing_tokens, listing_whitespaces, _, listing_items in _chunk_listings(listings, None):
         token_chunks.extend(listing_tokens)
         whitespace_chunks.extend(listing_whitespaces)
-        context_chunks.extend([[(listing.page_idx, listing.idx, item_idx) for item_idx in items] for items in listing_items])
+        context_chunks.extend([[MentionId(listing.page_idx, listing.idx, item_idx) for item_idx in items] for items in listing_items])
     return context_chunks, token_chunks, whitespace_chunks
 
 

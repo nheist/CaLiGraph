@@ -1,6 +1,6 @@
 from typing import List, Tuple
 import utils
-from impl.wikipedia import WikiPageStore, WikiPage
+from impl.wikipedia import WikiPageStore, WikiPage, MentionId
 from .dataset import MentionDetectionDataset
 from . import chunking
 from impl.subject_entity.mention_detection import labels
@@ -27,7 +27,7 @@ def _prepare_labeled_chunks(pages: List[WikiPage], negative_sample_size: float) 
     return chunking.process_training_pages(pages, page_labels, negative_sample_size)
 
 
-def get_page_data() -> Tuple[List[List[Tuple[int, int, int]]], List[List[str]], List[List[str]]]:
+def get_page_data() -> Tuple[List[List[MentionId]], List[List[str]], List[List[str]]]:
     utils.get_logger().debug('Loading page dataset for mention detection..')
     pages = WikiPageStore.instance().get_pages()
     return chunking.process_pages(pages)

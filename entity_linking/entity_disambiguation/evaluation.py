@@ -9,6 +9,7 @@ from entity_linking.entity_disambiguation.matching.util import MatchingScenario
 from impl.util.nlp import EntityTypeLabel
 from impl.util.transformer import EntityIndex
 from impl.wikipedia import WikiPageStore
+from impl.wikipedia.page_parser import MentionId
 from impl.dbpedia.resource import DbpResourceStore
 
 
@@ -28,7 +29,7 @@ class PrecisionRecallF1Evaluator:
         # entity status (known vs. unknown)
         self._compute_and_log_metrics_for_partition(f'{prefix}-ES=', predicted_pairs, actual_pairs, runtime, self._get_entity_status)
 
-    def _compute_and_log_metrics_for_partition(self, prefix: str, predicted_pairs: Set[Pair], actual_pairs: Set[Pair], runtime: int, partition_func = None):
+    def _compute_and_log_metrics_for_partition(self, prefix: str, predicted_pairs: Set[Pair], actual_pairs: Set[Pair], runtime: int, partition_func=None):
         if partition_func:
             for partition_key, (predicted_pair_partition, actual_pair_partition) in self._make_partitions(predicted_pairs, actual_pairs, partition_func).items():
                 partition_prefix = prefix + partition_key
@@ -56,11 +57,18 @@ class PrecisionRecallF1Evaluator:
             partitioning[partition_key].add(pair)
         return partitioning
 
-    def _get_listing_type(self, item_id: Tuple[int, int, int]) -> str:
-        return self.wps.get_page(item_id[0]).listings[item_id[1]].get_type()
+    def _get_listing_type(self, mention_id: MentionId) -> str:
+        return self.wps.get_page(mention_id.page_idx).listings[mention_id.listing_idx].get_type()
 
-    def _get_entity_status(self, item_id: Tuple[int, int, int]) -> str:
-        return 'Unknown' if self.wps.get_subject_entity(item_id).entity_idx == EntityIndex.NEW_ENTITY.value else 'Known'
+    def _get_entity_status(self, mention_id: MentionId) -> str:
+        new_ent_idx = EntityIndex.NEW_ENTITY.value
+        if mention_id[1] == new_ent_idx:  # NILK dataset
+            if mention_id[2] == new_ent_idx:
+                return 'Unknown'
+        else:  # LIST dataset
+            if self.wps.get_subject_entity(mention_id).entity_idx == new_ent_idx:
+                return 'Unknown'
+        return 'Known'
 
     def _compute_metrics(self, predicted_pairs: Set[Pair], actual_pairs: Set[Pair], runtime: int):
         # base metrics
