@@ -88,7 +88,7 @@ files:
     short_abstracts:
       filename: 'short-abstracts_lang=en.ttl.bz2'
       url: 'https://downloads.dbpedia.org/repo/dbpedia/text/short-abstracts/2020.07.01/short-abstracts_lang=en.ttl.bz2'
-    wikilinks:
+    wikilinks:  # CURRENTLY UNUSED!
       filename: 'wikilinks_lang=en.ttl.bz2'
       url: 'https://downloads.dbpedia.org/repo/dbpedia/generic/wikilinks/2020.10.01/wikilinks_lang=en.ttl.bz2'
     embedding_vectors:
@@ -300,4 +300,7 @@ cache:
     version: 5
   ED_datasets:
     filename: 'ED-datasets'
+    version: 1
+  ED_nilk_datasets:
+    filename: 'ED-nilk-datasets'
     version: 1

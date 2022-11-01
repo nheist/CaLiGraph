@@ -30,8 +30,8 @@ class PopularityMatcher(MatcherWithCandidates):
 
     def predict(self, eval_mode: str, data_corpus: DataCorpus) -> Set[Pair]:
         assert self.scenario == MatchingScenario.MENTION_ENTITY, 'PopularityMatcher can only be applied in ME scenario.'
-        candidates_by_source = defaultdict(set)
-        for item, ent, score in self.me_candidates[eval_mode]:
-            candidates_by_source[item].add((ent, score))
-        alignment = [(item, *max(ents, key=self._get_entity_popularity)) for item, ents in candidates_by_source.items()]
+        candidates_by_mention = defaultdict(set)
+        for mention, ent, score in self.me_candidates[eval_mode]:
+            candidates_by_mention[mention].add((ent, score))
+        alignment = [(mention, *max(ents, key=self._get_entity_popularity)) for mention, ents in candidates_by_mention.items()]
         return {Pair(source, target, score) for source, target, score in alignment}

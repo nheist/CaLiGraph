@@ -8,7 +8,6 @@ from impl.wikipedia.page_parser import MentionId
 from entity_linking.entity_disambiguation.data import Pair, DataCorpus
 from entity_linking.entity_disambiguation.matching.util import MatchingScenario
 from entity_linking.entity_disambiguation.matching.crossencoder import CrossEncoderMatcher
-from entity_linking.entity_disambiguation.matching import transformer_util
 
 
 class FusionCluster:
@@ -41,8 +40,8 @@ class BottomUpFusionMatcher(CrossEncoderMatcher):
 
     def predict(self, eval_mode: str, data_corpus: DataCorpus) -> Set[Pair]:
         # prepare inputs
-        mention_input, _ = transformer_util.prepare_listing_items(data_corpus.get_listings(), self.add_page_context, self.add_category_context, self.add_listing_entities)
-        entity_input = transformer_util.prepare_entities(data_corpus.get_entities(), self.add_entity_abstract, self.add_kg_info)
+        mention_input, _ = data_corpus.get_mention_input(self.add_page_context, self.add_text_context)
+        entity_input = data_corpus.get_entity_input(self.add_entity_abstract, self.add_kg_info)
         # retrieve entities for mentions and form clusters based on best entities; init remaining mentions as 1-clusters
         predictions = self._make_me_predictions(eval_mode, mention_input, entity_input)
         clusters, cluster_by_mid = self._init_clusters(eval_mode, predictions)

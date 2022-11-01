@@ -1,11 +1,10 @@
-from typing import Set, List
+from typing import Set
 from abc import ABC, abstractmethod
 from collections import defaultdict
 import itertools
 from unidecode import unidecode
 from nltk.corpus import stopwords
 from impl.util.string import make_alphanumeric
-from impl.wikipedia.page_parser import WikiListing
 from entity_linking.entity_disambiguation.data import Pair, DataCorpus
 from entity_linking.entity_disambiguation.matching.matcher import Matcher
 
@@ -15,25 +14,17 @@ class LexicalMatcher(Matcher, ABC):
         pass  # no training necessary
 
     def predict(self, eval_mode: str, data_corpus: DataCorpus) -> Set[Pair]:
-        source_grouping = self._make_grouping(self._get_item_labels_for_listings(data_corpus.get_listings()))
+        mention_grouping = self._make_grouping(data_corpus.get_mention_labels())
         alignment = set()
         if self.scenario.is_MM():
-            for item_group in source_grouping.values():
-                alignment.update({Pair(*sorted(item_pair), 1) for item_pair in itertools.combinations(item_group, 2)})
+            for mention_group in mention_grouping.values():
+                alignment.update({Pair(*sorted(mention_pair), 1) for mention_pair in itertools.combinations(mention_group, 2)})
         if self.scenario.is_ME():
-            target_grouping = self._make_grouping({res.idx: res.get_label() for res in data_corpus.get_entities()})
-            for key in set(source_grouping).intersection(set(target_grouping)):
-                source_group, target_group = source_grouping[key], target_grouping[key]
-                alignment.update({Pair(*item_pair, 1) for item_pair in itertools.product(source_group, target_group)})
+            entity_grouping = self._make_grouping({res.idx: res.get_label() for res in data_corpus.get_entities()})
+            for key in set(mention_grouping).intersection(set(entity_grouping)):
+                mention_group, entity_group = mention_grouping[key], entity_grouping[key]
+                alignment.update({Pair(*pair, 1) for pair in itertools.product(mention_group, entity_group)})
         return alignment
-
-    @classmethod
-    def _get_item_labels_for_listings(cls, listings: List[WikiListing]) -> dict:
-        item_labels = {}
-        for listing in listings:
-            for item in listing.get_items(has_subject_entity=True):
-                item_labels[(listing.page_idx, listing.idx, item.idx)] = item.subject_entity.label
-        return item_labels
 
     @abstractmethod
     def _make_grouping(self, item_labels: dict) -> dict:

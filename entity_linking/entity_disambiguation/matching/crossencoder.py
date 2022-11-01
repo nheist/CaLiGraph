@@ -19,8 +19,7 @@ class CrossEncoderMatcher(MatcherWithCandidates):
         self.mm_threshold = params['mm_threshold']
         self.me_threshold = params['me_threshold']
         self.add_page_context = params['add_page_context']
-        self.add_category_context = params['add_category_context']
-        self.add_listing_entities = params['add_listing_entities']
+        self.add_text_context = params['add_text_context']
         self.add_entity_abstract = params['add_entity_abstract']
         self.add_kg_info = params['add_kg_info']
         # training params
@@ -34,8 +33,7 @@ class CrossEncoderMatcher(MatcherWithCandidates):
             'mmt': self.mm_threshold,
             'met': self.me_threshold,
             'apc': self.add_page_context,
-            'acc': self.add_category_context,
-            'ale': self.add_listing_entities,
+            'atc': self.add_text_context,
             'aea': self.add_entity_abstract,
             'aki': self.add_kg_info,
             'bs': self.batch_size,
@@ -64,11 +62,11 @@ class CrossEncoderMatcher(MatcherWithCandidates):
         if self.scenario.is_MM():
             negatives = list(self.mm_candidates[self.MODE_TRAIN].difference(train_corpus.mm_alignment))
             negatives_sample = random.sample(negatives, min(len(negatives), len(train_corpus.mm_alignment) * 2))
-            training_examples += transformer_util.generate_training_data(MatchingScenario.MENTION_MENTION, train_corpus, negatives_sample, self.add_page_context, self.add_category_context, self.add_listing_entities, self.add_entity_abstract, self.add_kg_info)
+            training_examples += transformer_util.generate_training_data(MatchingScenario.MENTION_MENTION, train_corpus, negatives_sample, self.add_page_context, self.add_text_context, self.add_entity_abstract, self.add_kg_info)
         if self.scenario.is_ME():
             negatives = list(self.me_candidates[self.MODE_TRAIN].difference(train_corpus.me_alignment))
             negatives_sample = random.sample(negatives, min(len(negatives), len(train_corpus.me_alignment) * 2))
-            training_examples += transformer_util.generate_training_data(MatchingScenario.MENTION_ENTITY, train_corpus, negatives_sample, self.add_page_context, self.add_category_context, self.add_listing_entities, self.add_entity_abstract, self.add_kg_info)
+            training_examples += transformer_util.generate_training_data(MatchingScenario.MENTION_ENTITY, train_corpus, negatives_sample, self.add_page_context, self.add_text_context, self.add_entity_abstract, self.add_kg_info)
         train_dataloader = DataLoader(training_examples, shuffle=True, batch_size=self.batch_size)
         utils.get_logger().debug('Starting training..')
         utils.release_gpu()
@@ -76,24 +74,24 @@ class CrossEncoderMatcher(MatcherWithCandidates):
         self.model.save(get_model_path(self.id))
 
     def predict(self, eval_mode: str, data_corpus: DataCorpus) -> Set[Pair]:
-        source_input, _ = transformer_util.prepare_listing_items(data_corpus.get_listings(), self.add_page_context, self.add_category_context, self.add_listing_entities)
+        mention_input, _ = data_corpus.get_mention_input(self.add_page_context, self.add_text_context)
         utils.release_gpu()
         alignment = set()
         if self.scenario.is_MM():
             candidates = self.mm_candidates[eval_mode]
-            model_input = [[source_input[mention_a], source_input[mention_b]] for mention_a, mention_b, _ in candidates]
+            model_input = [[mention_input[mention_a], mention_input[mention_b]] for mention_a, mention_b, _ in candidates]
             candidate_scores = self.model.predict(model_input, batch_size=self.batch_size, show_progress_bar=True)
             # take all matches that are higher than threshold
             alignment.update([(cand[0], cand[1], score) for cand, score in zip(candidates, candidate_scores) if score > self.mm_threshold])
         if self.scenario.is_ME():
-            target_input = transformer_util.prepare_entities(data_corpus.get_entities(), self.add_entity_abstract, self.add_kg_info)
+            entity_input = data_corpus.get_entity_input(self.add_entity_abstract, self.add_kg_info)
             candidates = self.me_candidates[eval_mode]
-            model_input = [[source_input[source_id], target_input[target_id]] for source_id, target_id, _ in candidates]
+            model_input = [[mention_input[m_id], entity_input[e_id]] for m_id, e_id, _ in candidates]
             candidate_scores = self.model.predict(model_input, batch_size=self.batch_size, show_progress_bar=True)
             # take only the most likely match for an item (if higher than threshold)
-            item_entity_scores = defaultdict(set)
-            for (item_id, entity_id, _), score in zip(candidates, candidate_scores):
+            mention_entity_scores = defaultdict(set)
+            for (mention_id, entity_id, _), score in zip(candidates, candidate_scores):
                 if score > self.me_threshold:
-                    item_entity_scores[item_id].add((entity_id, score))
-            alignment.update([(i, *max(js, key=lambda x: x[1])) for i, js in item_entity_scores.items()])
+                    mention_entity_scores[mention_id].add((entity_id, score))
+            alignment.update([(i, *max(js, key=lambda x: x[1])) for i, js in mention_entity_scores.items()])
         return {Pair(source, target, score) for source, target, score in alignment}

@@ -3,7 +3,7 @@ import configargparse
 import os
 
 
-VERSION = 6
+VERSION = 0
 
 # TODO: ANALYSIS
 # > investigate the errors made
@@ -36,6 +36,7 @@ if __name__ == '__main__':
     # general matching
     parser.add_argument('scenario', type=str, choices=['MM', 'ME', 'F'], help='Mention-mention, mention-entity, or fusion matching')
     parser.add_argument('approach', type=str, help='Approach used for matching')
+    parser.add_argument('corpus', type=str, choices=['LIST', 'NILK'], default='LIST', help='Data corpus to use for the experiments')
     parser.add_argument('-sa', '--save_alignment', action=argparse.BooleanOptionalAction, default=False, help='Whether to save the produced alignment for train/val/test')
     # matchers needing candidates
     parser.add_argument('--mm_approach', type=str, help='Mention-mention approach (ID) used for candidate generation')
@@ -46,8 +47,7 @@ if __name__ == '__main__':
     parser.add_argument('-ws', '--warmup_steps', type=int, default=0, help='Number of warmup steps for training the bi/cross-encoder')
     parser.add_argument('-bs', '--batch_size', type=int, default=64, help='Batch size for training the bi/cross-encoder')
     parser.add_argument('-apc', '--add_page_context', action=argparse.BooleanOptionalAction, default=True, help='Use page context for disambiguation (M)')
-    parser.add_argument('-acc', '--add_category_context', action=argparse.BooleanOptionalAction, default=True, help='Use category context for disambiguation (M)')
-    parser.add_argument('-ale', '--add_listing_entities', type=int, default=0, help='Other listing entities to append for disambiguation (M)')
+    parser.add_argument('-atc', '--add_text_context', type=int, default=0, help='Other listing entities to append for disambiguation (M)')
     parser.add_argument('-aea', '--add_entity_abstract', action=argparse.BooleanOptionalAction, default=True, help='Use entity abstract for disambiguation (E)')
     parser.add_argument('-aki', '--add_kg_info', type=int, default=0, help='Types/properties to add from KG for disambiguation (E)')
     # bi-encoder
@@ -74,15 +74,17 @@ if __name__ == '__main__':
     import random
     import numpy as np
     import torch
-    approach_id = args.approach_id or f'V{VERSION}{args.scenario}{args.approach[:2]}{str(random.randint(0, 999)).zfill(3)}'
+    approach_id = args.approach_id or f'{args.corpus}v{VERSION}{args.scenario}{args.approach[:2]}{str(random.randint(0, 999)).zfill(3)}'
     SEED = 310
     random.seed(SEED)
     np.random.seed(SEED)
     torch.manual_seed(SEED)
     # initialize parameters
-    from entity_linking.entity_disambiguation.matching.util import MatchingScenario, MatchingApproach
+    from entity_linking.entity_disambiguation.matching import MatchingScenario, MatchingApproach
+    from entity_linking.entity_disambiguation.data import CorpusType
     scenario = MatchingScenario(args.scenario)
     approach = MatchingApproach(args.approach)
+    corpus_type = CorpusType(args.corpus)
     params = {
         'id': approach_id,
         'base_model': args.base_model,
@@ -92,8 +94,7 @@ if __name__ == '__main__':
         'batch_size': args.batch_size,
         'top_k': args.top_k,
         'add_page_context': args.add_page_context,
-        'add_category_context': args.add_category_context,
-        'add_listing_entities': args.add_listing_entities,
+        'add_text_context': args.add_text_context,
         'add_entity_abstract': args.add_entity_abstract,
         'add_kg_info': args.add_kg_info,
         'mm_approach': args.mm_approach,
@@ -107,4 +108,4 @@ if __name__ == '__main__':
     }
     # then import application-specific code and run it
     from entity_linking import entity_disambiguation
-    entity_disambiguation.run_evaluation(scenario, approach, params, args.save_alignment)
+    entity_disambiguation.run_evaluation(scenario, approach, corpus_type, params, args.save_alignment)
