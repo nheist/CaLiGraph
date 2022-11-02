@@ -1,4 +1,4 @@
-from typing import Set, Dict, List, Union
+from typing import Set, Dict, List, Union, Tuple
 from collections import defaultdict
 import os
 import random
@@ -78,23 +78,23 @@ class CrossEncoderMatcher(MatcherWithCandidates):
         mention_input, _ = data_corpus.get_mention_input(self.add_page_context, self.add_text_context)
         alignment = set()
         if self.scenario.is_MM():
-            candidates = self.mm_candidates[eval_mode]
-            candidate_scores = self._score_candidates(candidates, mention_input, mention_input)
+            mm_pairs = self._score_candidates(self.mm_candidates[eval_mode], mention_input, mention_input)
             # take all matches that are higher than threshold
-            alignment.update([(cand[0], cand[1], score) for cand, score in zip(candidates, candidate_scores) if score > self.mm_threshold])
+            alignment.update({p for p in mm_pairs if p.confidence > self.mm_threshold})
         if self.scenario.is_ME():
             entity_input = data_corpus.get_entity_input(self.add_entity_abstract, self.add_kg_info)
-            candidates = self.me_candidates[eval_mode]
-            candidate_scores = self._score_candidates(candidates, mention_input, entity_input)
+            me_pairs = self._score_candidates(self.me_candidates[eval_mode], mention_input, entity_input)
             # take only the most likely match for an item (if higher than threshold)
-            mention_entity_scores = defaultdict(set)
-            for (mention_id, entity_id, _), score in zip(candidates, candidate_scores):
-                if score > self.me_threshold:
-                    mention_entity_scores[mention_id].add((entity_id, score))
-            alignment.update([(i, *max(js, key=lambda x: x[1])) for i, js in mention_entity_scores.items()])
-        return {Pair(source, target, score) for source, target, score in alignment}
+            pairs_by_mention = defaultdict(set)
+            for pair in me_pairs:
+                if pair.confidence <= self.me_threshold:
+                    continue
+                pairs_by_mention[pair.source].add(pair)
+            alignment.update({max(mention_pairs, key=lambda p: p.confidence) for mention_pairs in pairs_by_mention.values()})
+        return alignment
 
-    def _score_candidates(self, candidates: Set[Pair], source_input: Dict[MentionId, str], target_input: Dict[Union[MentionId, int], str]) -> List[float]:
+    def _score_candidates(self, candidates: Set[Pair], source_input: Dict[MentionId, str], target_input: Dict[Union[MentionId, int], str]) -> Set[Pair]:
         model_input = [[source_input[s_id], target_input[t_id]] for s_id, t_id, _ in candidates]
         utils.release_gpu()
-        return self.model.predict(model_input, batch_size=self.batch_size, show_progress_bar=True)
+        predictions = self.model.predict(model_input, batch_size=self.batch_size, show_progress_bar=True)
+        return {Pair(cand[0], cand[1], score) for cand, score in zip(candidates, predictions)}
