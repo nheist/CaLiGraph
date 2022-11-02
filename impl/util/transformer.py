@@ -12,6 +12,7 @@ class SpecialToken(Enum):
     # CONTEXT TOKENS
     CONTEXT_SEP = '[CXS]'
     CONTEXT_END = '[CXE]'
+    TEXT_SEP = '[TXS]'
     TABLE_ROW = '[ROW]'
     TABLE_COL = '[COL]'
     ENTRY_L1 = '[E1]'

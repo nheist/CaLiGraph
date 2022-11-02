@@ -11,6 +11,7 @@ CXS = SpecialToken.CONTEXT_SEP.value
 CXE = SpecialToken.CONTEXT_END.value
 COL = SpecialToken.TABLE_COL.value
 ROW = SpecialToken.TABLE_ROW.value
+TXS = SpecialToken.TEXT_SEP.value
 
 
 class CorpusType(Enum):

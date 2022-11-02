@@ -54,8 +54,7 @@ class ListingDataCorpus(DataCorpus):
                 mention_id = MentionId(listing.page_idx, listing.idx, item.idx)
                 item_se = item.subject_entity
                 # add subject entity, its type, and page context
-                item_content = f' {CXS} '.join(
-                    [f'{item_se.label} {SpecialToken.get_type_token(item_se.entity_type)}', prepared_context])
+                item_content = f' {CXS} '.join([f'{item_se.label} {SpecialToken.get_type_token(item_se.entity_type)}', prepared_context])
                 # add item and `add_text_context` subsequent items (add items from start if no subsequent items left)
                 item_content += ''.join(islice(cycle(prepared_items), idx, idx + add_text_context + 1))
                 result[mention_id] = item_content
@@ -69,10 +68,9 @@ class ListingDataCorpus(DataCorpus):
         res_description = f'{res.get_label()} {SpecialToken.get_type_token(res.get_type_label())}'
         # add categories
         cats = list(DbpCategoryStore.instance().get_categories_for_resource(res.idx))[:3]
-        if cats:
-            res_description += ' ' + ', '.join([cat.get_label() for cat in cats])
+        cats_text = ' | '.join([cat.get_label() for cat in cats])
         # assemble context
-        ctx = [res_description, listing.topsection.title, listing.section.title]
+        ctx = [res_description, cats_text, listing.topsection.title, listing.section.title]
         if isinstance(listing, WikiTable):
             ctx.append(cls._prepare_listing_item(listing.header))
         return f' {CXS} '.join(ctx) + f' {CXE} '

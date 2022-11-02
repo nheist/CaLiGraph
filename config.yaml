@@ -109,6 +109,13 @@ files:
       url: 'http://data.dws.informatik.uni-mannheim.de/CaLiGraph/data/goldstandard_list-page-named-entity-tagging.json'
     goldstandard_mention-detection:
       filename: 'goldstandard_mention-detection.csv'
+  nilk:
+    train:
+      filename: 'nilk_train.jsonl'
+    eval:
+      filename: 'nilk_eval.jsonl'
+    test:
+      filename: 'nilk_test.jsonl'
 
 # -- RESULT FILE CONFIGURATION --
 results:
