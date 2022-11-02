@@ -53,7 +53,7 @@ class Matcher(ABC):
 
     def _evaluate_scenario(self, eval_mode: str, prediction: Set[Pair], actual: Set[Pair], prediction_time: int, scenario: MatchingScenario) -> Set[Pair]:
         pred_type = MentionId if scenario == MatchingScenario.MENTION_MENTION else int
-        scenario_prediction = {pred for pred in prediction if isinstance(pred[1], pred_type)}
+        scenario_prediction = {pred for pred in prediction if isinstance(pred.target, pred_type)}
         scenario_prediction_time = int(len(scenario_prediction) / len(prediction) * prediction_time)
         evaluator = PrecisionRecallF1Evaluator(self.get_approach_name(), scenario)
         evaluator.compute_and_log_metrics(eval_mode, scenario_prediction, actual, scenario_prediction_time)

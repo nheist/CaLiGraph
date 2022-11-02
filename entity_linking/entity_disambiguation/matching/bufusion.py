@@ -29,11 +29,6 @@ class BottomUpFusionMatcher(CrossEncoderMatcher):
         # model params
         self.cluster_comparisons = params['cluster_comparisons']
         self.cluster_threshold = params['cluster_threshold']
-        # ensure backwards-compatibility of MentionId
-        for eval_mode, candidates in self.mm_candidates.items():
-            self.mm_candidates[eval_mode] = [(MentionId(*m_a), MentionId(*m_b), score) for m_a, m_b, score in candidates]
-        for eval_mode, candidates in self.me_candidates.items():
-            self.me_candidates[eval_mode] = [(MentionId(*m_id), e_id, score) for m_id, e_id, score in candidates]
 
     def _get_param_dict(self) -> dict:
         return super()._get_param_dict() | {'cc': self.cluster_comparisons, 'ct': self.cluster_threshold}
