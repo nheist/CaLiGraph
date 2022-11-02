@@ -1,7 +1,9 @@
+from typing import Dict, Set
 from enum import Enum
 import os
 import pickle
 import utils
+from entity_linking.entity_disambiguation.data import Pair
 
 
 class MatchingScenario(Enum):
@@ -33,13 +35,13 @@ class MatchingApproach(Enum):
     BOTTOM_UP_FUSION = 'buf'
 
 
-def store_candidates(approach_name: str, candidates: dict):
+def store_candidates(approach_name: str, candidates: Dict[str, Dict[MatchingScenario, Set[Pair]]]):
     utils.get_logger().debug(f'Storing candidates for matcher with name "{approach_name}"..')
     with open(get_model_path(approach_name) + '.p', mode='wb') as f:
         return pickle.dump(candidates, f, protocol=pickle.HIGHEST_PROTOCOL)
 
 
-def load_candidates(approach_id: str, scenario: MatchingScenario) -> dict:
+def load_candidates(approach_id: str, scenario: MatchingScenario) -> Dict[str, Set[Pair]]:
     utils.get_logger().debug(f'Loading candidates from matcher with id "{approach_id}"..')
     with open(_get_approach_path_by_id(approach_id), mode='rb') as f:
         candidates = pickle.load(f)

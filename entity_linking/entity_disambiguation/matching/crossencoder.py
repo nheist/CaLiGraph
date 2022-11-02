@@ -1,10 +1,11 @@
-from typing import Set, Dict
+from typing import Set, Dict, List, Union
 from collections import defaultdict
 import os
 import random
 from torch.utils.data import DataLoader
 from sentence_transformers import CrossEncoder
 import utils
+from impl.wikipedia import MentionId
 from entity_linking.entity_disambiguation.data import Pair, DataCorpus
 from entity_linking.entity_disambiguation.matching.util import MatchingScenario, get_model_path
 from entity_linking.entity_disambiguation.matching.matcher import MatcherWithCandidates
@@ -75,19 +76,16 @@ class CrossEncoderMatcher(MatcherWithCandidates):
 
     def predict(self, eval_mode: str, data_corpus: DataCorpus) -> Set[Pair]:
         mention_input, _ = data_corpus.get_mention_input(self.add_page_context, self.add_text_context)
-        utils.release_gpu()
         alignment = set()
         if self.scenario.is_MM():
             candidates = self.mm_candidates[eval_mode]
-            model_input = [[mention_input[mention_a], mention_input[mention_b]] for mention_a, mention_b, _ in candidates]
-            candidate_scores = self.model.predict(model_input, batch_size=self.batch_size, show_progress_bar=True)
+            candidate_scores = self._score_candidates(candidates, mention_input, mention_input)
             # take all matches that are higher than threshold
             alignment.update([(cand[0], cand[1], score) for cand, score in zip(candidates, candidate_scores) if score > self.mm_threshold])
         if self.scenario.is_ME():
             entity_input = data_corpus.get_entity_input(self.add_entity_abstract, self.add_kg_info)
             candidates = self.me_candidates[eval_mode]
-            model_input = [[mention_input[m_id], entity_input[e_id]] for m_id, e_id, _ in candidates]
-            candidate_scores = self.model.predict(model_input, batch_size=self.batch_size, show_progress_bar=True)
+            candidate_scores = self._score_candidates(candidates, mention_input, entity_input)
             # take only the most likely match for an item (if higher than threshold)
             mention_entity_scores = defaultdict(set)
             for (mention_id, entity_id, _), score in zip(candidates, candidate_scores):
@@ -95,3 +93,8 @@ class CrossEncoderMatcher(MatcherWithCandidates):
                     mention_entity_scores[mention_id].add((entity_id, score))
             alignment.update([(i, *max(js, key=lambda x: x[1])) for i, js in mention_entity_scores.items()])
         return {Pair(source, target, score) for source, target, score in alignment}
+
+    def _score_candidates(self, candidates: Set[Pair], source_input: Dict[MentionId, str], target_input: Dict[Union[MentionId, int], str]) -> List[float]:
+        model_input = [[source_input[s_id], target_input[t_id]] for s_id, t_id, _ in candidates]
+        utils.release_gpu()
+        return self.model.predict(model_input, batch_size=self.batch_size, show_progress_bar=True)

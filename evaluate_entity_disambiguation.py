@@ -36,7 +36,7 @@ if __name__ == '__main__':
     # general matching
     parser.add_argument('scenario', type=str, choices=['MM', 'ME', 'F'], help='Mention-mention, mention-entity, or fusion matching')
     parser.add_argument('approach', type=str, help='Approach used for matching')
-    parser.add_argument('corpus', type=str, choices=['LIST', 'NILK'], default='LIST', help='Data corpus to use for the experiments')
+    parser.add_argument('corpus', type=str, choices=['LIST', 'NILK'], help='Data corpus to use for the experiments')
     parser.add_argument('-sa', '--save_alignment', action=argparse.BooleanOptionalAction, default=False, help='Whether to save the produced alignment for train/val/test')
     # matchers needing candidates
     parser.add_argument('--mm_approach', type=str, help='Mention-mention approach (ID) used for candidate generation')
