@@ -1,6 +1,9 @@
-from typing import Set, Tuple, Union, NamedTuple, Dict
+import random
+from typing import List, Tuple, Union, NamedTuple, Dict, Optional, Set
 from abc import ABC, abstractmethod
 from enum import Enum
+from scipy.special import comb
+import itertools
 import utils
 from impl.util.transformer import SpecialToken
 from impl.wikipedia.page_parser import MentionId
@@ -31,9 +34,58 @@ class Pair(NamedTuple):
         return self.source.__hash__() + self.target.__hash__()
 
 
+class Alignment:
+    sample_size: int(1e6)
+
+    def __init__(self, entity_to_mention_mapping: Dict[int, Set[MentionId]], nil_entities: Set[int]):
+        self.entity_to_mention_mapping = entity_to_mention_mapping
+        self.mention_to_entity_mapping = {m_id: e_id for e_id, m_ids in entity_to_mention_mapping.items() for m_id in m_ids}
+        self.nil_entities = nil_entities
+
+    def __contains__(self, item) -> bool:
+        if not isinstance(item, Pair):
+            return False
+        if isinstance(item.target, MentionId):
+            return self.mention_to_entity_mapping[item.source] == self.mention_to_entity_mapping[item.target]
+        return item.target == self.mention_to_entity_mapping[item.source]
+
+    def sample_mm_matches(self) -> List[Pair]:
+        mm_matches = []
+        if self.sample_size < self.mm_match_count():  # return all
+            for mention_group in self.entity_to_mention_mapping.values():
+                mm_matches.extend([Pair(*sorted(item_pair), 1) for item_pair in itertools.combinations(mention_group, 2)])
+        else:  # return sample
+            sample_grps = [grp for grp in self.entity_to_mention_mapping.values() if len(grp) > 1]
+            sample_grp_weights = [len(grp) for grp in sample_grps]
+            while len(mm_matches) < self.sample_size:
+                grp = random.choices(sample_grps, weights=sample_grp_weights)[0]
+                mm_matches.append(Pair(*sorted(random.sample(grp, 2)), 1))
+        return mm_matches
+
+    def mm_match_count(self, nil_partition: Optional[bool] = None) -> int:
+        if nil_partition is None:
+            grps = list(self.entity_to_mention_mapping.values())
+        elif nil_partition:
+            grps = [grp for e_id, grp in self.entity_to_mention_mapping.items() if e_id in self.nil_entities]
+        else:
+            grps = [grp for e_id, grp in self.entity_to_mention_mapping.items() if e_id not in self.nil_entities]
+        return sum(comb(len(grp), 2) for grp in grps)
+
+    def sample_me_matches(self) -> List[Pair]:
+        known_mentions = [m_id for m_id in self.mention_to_entity_mapping if m_id not in self.nil_entities]
+        if self.sample_size < self.me_match_count():
+            return [Pair(m_id, self.mention_to_entity_mapping[m_id], 1) for m_id in known_mentions]
+        sample_mentions = random.sample(known_mentions, self.sample_size)
+        return [Pair(m_id, self.mention_to_entity_mapping[m_id], 1) for m_id in sample_mentions]
+
+    def me_match_count(self, nil_partition: Optional[bool] = None) -> int:
+        if nil_partition:
+            return 0
+        return len({e_id for e_id in self.entity_to_mention_mapping if e_id not in self.nil_entities})
+
+
 class DataCorpus(ABC):
-    mm_alignment: Set[Pair]
-    me_alignment: Set[Pair]
+    alignment: Alignment
 
     @abstractmethod
     def get_mention_labels(self) -> Dict[MentionId, str]:

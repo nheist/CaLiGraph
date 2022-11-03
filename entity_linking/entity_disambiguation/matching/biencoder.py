@@ -86,7 +86,7 @@ class BiEncoderMatcher(Matcher):
             known_mask = [mention_known[m_id] for m_id in mention_ids]
             known_mention_ids = [m_id for m_id, known in zip(mention_ids, known_mask) if known]
             known_mention_embeddings = mention_embeddings[known_mask]
-            max_pairs = len(data_corpus.mm_alignment) * 3
+            max_pairs = data_corpus.alignment.mm_match_count() * 2
             matched_pairs = transformer_util.paraphrase_mining_embeddings(known_mention_embeddings, known_mention_ids, max_pairs=max_pairs, top_k=50, add_best=True)
             alignment.update(matched_pairs)
         if self.scenario.is_ME():

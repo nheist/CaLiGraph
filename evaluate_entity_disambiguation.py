@@ -3,7 +3,7 @@ import configargparse
 import os
 
 
-VERSION = 0
+VERSION = 1
 
 # TODO: ANALYSIS
 # > investigate the errors made

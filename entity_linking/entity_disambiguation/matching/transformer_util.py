@@ -29,10 +29,10 @@ def generate_training_data(scenario: MatchingScenario, data_corpus: DataCorpus, 
     if scenario == MatchingScenario.MENTION_MENTION:
         mention_input = {m_id: m_input for m_id, m_input in mention_input.items() if mention_known[m_id]}
         target_input = mention_input
-        positives = data_corpus.mm_alignment
+        positives = data_corpus.alignment.sample_mm_matches()
     else:  # scenario: MENTION_ENTITY
         target_input = data_corpus.get_entity_input(add_entity_abstract, add_kg_info)
-        positives = data_corpus.me_alignment
+        positives = data_corpus.alignment.sample_me_matches()
     input_examples = [InputExample(texts=[mention_input[mention_id], target_input[target_id]], label=1) for mention_id, target_id, _ in positives]
     input_examples.extend([InputExample(texts=[mention_input[mention_id], target_input[target_id]], label=0) for mention_id, target_id, _ in negatives])
     return input_examples

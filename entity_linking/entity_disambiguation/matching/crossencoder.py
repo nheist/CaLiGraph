@@ -61,12 +61,12 @@ class CrossEncoderMatcher(MatcherWithCandidates):
         utils.get_logger().debug('Preparing training data..')
         training_examples = []
         if self.scenario.is_MM():
-            negatives = list(self.mm_candidates[self.MODE_TRAIN].difference(train_corpus.mm_alignment))
-            negatives_sample = random.sample(negatives, min(len(negatives), len(train_corpus.mm_alignment) * 2))
+            negatives = [cand for cand in self.mm_candidates[self.MODE_TRAIN] if cand not in train_corpus.alignment]
+            negatives_sample = random.sample(negatives, min(len(negatives), train_corpus.alignment.sample_size * 2))
             training_examples += transformer_util.generate_training_data(MatchingScenario.MENTION_MENTION, train_corpus, negatives_sample, self.add_page_context, self.add_text_context, self.add_entity_abstract, self.add_kg_info)
         if self.scenario.is_ME():
-            negatives = list(self.me_candidates[self.MODE_TRAIN].difference(train_corpus.me_alignment))
-            negatives_sample = random.sample(negatives, min(len(negatives), len(train_corpus.me_alignment) * 2))
+            negatives = [cand for cand in self.me_candidates[self.MODE_TRAIN] if cand not in train_corpus.alignment]
+            negatives_sample = random.sample(negatives, min(len(negatives), train_corpus.alignment.sample_size * 2))
             training_examples += transformer_util.generate_training_data(MatchingScenario.MENTION_ENTITY, train_corpus, negatives_sample, self.add_page_context, self.add_text_context, self.add_entity_abstract, self.add_kg_info)
         train_dataloader = DataLoader(training_examples, shuffle=True, batch_size=self.batch_size)
         utils.get_logger().debug('Starting training..')

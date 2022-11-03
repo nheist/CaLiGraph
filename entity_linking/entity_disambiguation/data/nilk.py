@@ -1,7 +1,6 @@
 from typing import Set, Tuple, Dict, List
 from collections import namedtuple, defaultdict
 import json
-import itertools
 import random
 from tqdm import tqdm
 import utils
@@ -10,13 +9,13 @@ from impl.dbpedia.resource import DbpResourceStore, DbpEntity
 from impl.dbpedia.category import DbpCategoryStore
 from impl.caligraph.entity import ClgEntity, ClgEntityStore
 from impl.wikipedia import MentionId
-from .util import DataCorpus, Pair, CXS, CXE, TXS
+from .util import DataCorpus, Alignment, CXS, CXE, TXS
 
 
 NEW_ENT = EntityIndex.NEW_ENTITY.value
 
 
-NilkExample = namedtuple('NilkExample', ['mention_id', 'label', 'left_text', 'right_text', 'page_res_id', 'wikidata_id', 'ent_id', 'is_nil_entity'])
+NilkExample = namedtuple('NilkExample', ['mention_id', 'label', 'left_text', 'right_text', 'page_res_id', 'ent_id', 'is_nil_entity'])
 
 
 class NilkDataCorpus(DataCorpus):
@@ -26,20 +25,17 @@ class NilkDataCorpus(DataCorpus):
         self.mention_right_text = {ex.mention_id: ex.right_text for ex in examples}
         self.mention_pages = {ex.mention_id: ex.page_res_id for ex in examples}
         self.entity_indices = entity_indices
-        self.mm_alignment, self.me_alignment = self._init_alignments(examples)
+        self.alignment = self._init_alignment(examples)
 
     @classmethod
-    def _init_alignments(cls, examples: List[NilkExample]) -> Tuple[Set[Pair], Set[Pair]]:
-        utils.get_logger().debug('NILK: Initializing MM alignment')
-        mm_alignment = set()
-        example_groups = defaultdict(set)
+    def _init_alignment(cls, examples: List[NilkExample]) -> Alignment:
+        entity_to_mention_mapping = defaultdict(set)
+        nil_entities = set()
         for ex in examples:
-            example_groups[ex.wikidata_id].add(ex)
-        for ex_grp in tqdm(example_groups.values(), desc='MM alignment'):
-            mm_alignment.update({Pair(*sorted([ex_a.mention_id, ex_b.mention_id]), 1) for ex_a, ex_b in itertools.combinations(ex_grp, 2)})
-        utils.get_logger().debug('NILK: Initializing ME alignment')
-        me_alignment = {Pair(ex.mention_id, ex.ent_id, 1) for ex in examples if not ex.is_nil_entity}
-        return mm_alignment, me_alignment
+            entity_to_mention_mapping[ex.ent_id].add(ex.mention_id)
+            if ex.is_nil_entity:
+                nil_entities.add(ex.ent_id)
+        return Alignment(entity_to_mention_mapping, nil_entities)
 
     def get_mention_labels(self) -> Dict[MentionId, str]:
         return self.mention_labels
@@ -89,6 +85,8 @@ def _init_nilk_data_corpora(sample_size: int) -> Tuple[NilkDataCorpus, NilkDataC
 def _load_valid_examples_from_jsonl(filepath: str) -> List[NilkExample]:
     result = []
     dbr = DbpResourceStore.instance()
+    new_ent_id = 50 * 10**6  # let the entity index of unknown entities start with 50M so we can be sure that they do not overlap with existing ones
+    new_ent_dict = {}
     with open(filepath, mode='r') as f:
         for line in tqdm(f, desc='Parsing examples'):
             example = json.loads(line)
@@ -107,11 +105,17 @@ def _load_valid_examples_from_jsonl(filepath: str) -> List[NilkExample]:
             wikidata_res = dbr.get_resource_by_wikidata_id(wikidata_id)
             if not is_nil and not isinstance(wikidata_res, DbpEntity):
                 continue  # discard examples for which the mapped resource should exist (non-NIL) but does not
-            ent_id = wikidata_res.idx if wikidata_res else NEW_ENT
+            if wikidata_res:
+                ent_id = wikidata_res.idx
+            else:
+                if wikidata_id not in new_ent_dict:
+                    new_ent_dict[wikidata_id] = new_ent_id
+                    new_ent_id += 1
+                ent_id = new_ent_dict[wikidata_id]
             # create mentionId with Pos0 = example id, Pos1 = indicator for NILK dataset, Pos2 = -1 if new entity else 0
             mention_id = MentionId(ex_id, NEW_ENT, NEW_ENT if is_nil else 0)
             # get text context
             left_text = context[:label_start_idx].strip()
             right_text = context[label_end_idx:].strip()
-            result.append(NilkExample(mention_id, label, left_text, right_text, page_res.idx, wikidata_id, ent_id, is_nil))
+            result.append(NilkExample(mention_id, label, left_text, right_text, page_res.idx, ent_id, is_nil))
     return result

@@ -1,16 +1,15 @@
-from typing import Set, Tuple, Dict
-from collections import defaultdict, Counter
-from operator import attrgetter
+from typing import Set, Optional
 from sklearn.metrics import roc_curve
 import matplotlib.pyplot as plt
 from torch.utils.tensorboard import SummaryWriter
-from entity_linking.entity_disambiguation.data import Pair
+from entity_linking.entity_disambiguation.data import Pair, Alignment
 from entity_linking.entity_disambiguation.matching.util import MatchingScenario
-from impl.util.nlp import EntityTypeLabel
 from impl.util.transformer import EntityIndex
 from impl.wikipedia import WikiPageStore
 from impl.wikipedia.page_parser import MentionId
-from impl.dbpedia.resource import DbpResourceStore
+
+
+NEW_ENT = EntityIndex.NEW_ENTITY.value
 
 
 class PrecisionRecallF1Evaluator:
@@ -18,122 +17,53 @@ class PrecisionRecallF1Evaluator:
         self.approach_name = approach_name
         self.scenario = scenario
         self.wps = WikiPageStore.instance()
-        self.dbr = DbpResourceStore.instance()
 
-    def compute_and_log_metrics(self, prefix: str, predicted_pairs: Set[Pair], actual_pairs: Set[Pair], runtime: int):
+    def compute_and_log_metrics(self, prefix: str, predicted_pairs: Set[Pair], alignment: Alignment, runtime: int):
         prefix += self.scenario.value
-        # overall
-        self._compute_and_log_metrics_for_partition(prefix, predicted_pairs, actual_pairs, runtime)
-        # listing type
-        self._compute_and_log_metrics_for_partition(f'{prefix}-LT=', predicted_pairs, actual_pairs, runtime, self._get_listing_type)
-        # entity status (known vs. unknown)
-        self._compute_and_log_metrics_for_partition(f'{prefix}-ES=', predicted_pairs, actual_pairs, runtime, self._get_entity_status)
+        self._compute_and_log_metrics_for_partition(prefix, predicted_pairs, alignment, runtime, None)
+        self._compute_and_log_metrics_for_partition(prefix, predicted_pairs, alignment, runtime, True)
+        self._compute_and_log_metrics_for_partition(prefix, predicted_pairs, alignment, runtime, False)
 
-    def _compute_and_log_metrics_for_partition(self, prefix: str, predicted_pairs: Set[Pair], actual_pairs: Set[Pair], runtime: int, partition_func=None):
-        if partition_func:
-            for partition_key, (predicted_pair_partition, actual_pair_partition) in self._make_partitions(predicted_pairs, actual_pairs, partition_func).items():
-                partition_prefix = prefix + partition_key
-                metrics = self._compute_metrics(predicted_pair_partition, actual_pair_partition, runtime)
-                self._log_metrics(partition_prefix, metrics)
-        else:
-            metrics = self._compute_metrics(predicted_pairs, actual_pairs, runtime)
-            self._log_metrics(prefix, metrics)
-            self._log_roc_curve(prefix, predicted_pairs, actual_pairs)
+    def _compute_and_log_metrics_for_partition(self, prefix: str, predicted_pairs: Set[Pair], alignment: Alignment, runtime: int, nil_partition: Optional[bool]):
+        if nil_partition:  # partition for NIL only
+            prefix += '-NIL'
+            predicted_pairs = {p for p in predicted_pairs if self._is_nil_mention(p.source) or (self.scenario.is_MM() and self._is_nil_mention(p.target))}
+        else:  # partition for non-NIL only
+            prefix +='-nonNIL'
+            predicted_pairs = {p for p in predicted_pairs if not self._is_nil_mention(p.source) or (self.scenario.is_MM() and not self._is_nil_mention(p.target))}
+        pred_count = len(predicted_pairs)
+        actual_count = alignment.mm_match_count(nil_partition) if self.scenario.is_MM() else alignment.me_match_count(nil_partition)
+        tp = len({p for p in predicted_pairs if p in alignment})
 
-    def _make_partitions(self, predicted_pairs: Set[Pair], actual_pairs: Set[Pair], partition_func) -> Dict[str, Tuple[Set[Pair], Set[Pair]]]:
-        partitioned_predicted_pairs = self._apply_partition_func(partition_func, predicted_pairs)
-        partitioned_actual_pairs = self._apply_partition_func(partition_func, actual_pairs)
-        partitioning = {}
-        for partition_key in set(partitioned_predicted_pairs) | set(partitioned_actual_pairs):
-            partitioning[partition_key] = (partitioned_predicted_pairs[partition_key], partitioned_actual_pairs[partition_key])
-        return partitioning
+        metrics = self._compute_metrics(pred_count, actual_count, tp, runtime)
+        self._log_metrics(prefix, metrics)
+        self._log_roc_curve(prefix, predicted_pairs, alignment)
 
-    def _apply_partition_func(self, partition_func, pairs: Set[Pair]) -> Dict[str, Set[Pair]]:
-        partitioning = defaultdict(set)
-        for pair in pairs:
-            partition_key = partition_func(pair.source)
-            if self.scenario == MatchingScenario.MENTION_MENTION and partition_key != partition_func(pair.target):
-                partition_key = 'Mixed'
-            partitioning[partition_key].add(pair)
-        return partitioning
-
-    def _get_listing_type(self, mention_id: MentionId) -> str:
-        return self.wps.get_page(mention_id.page_idx).listings[mention_id.listing_idx].get_type()
-
-    def _get_entity_status(self, mention_id: MentionId) -> str:
-        new_ent_idx = EntityIndex.NEW_ENTITY.value
-        if mention_id[1] == new_ent_idx:  # NILK dataset
-            if mention_id[2] == new_ent_idx:
-                return 'Unknown'
+    def _is_nil_mention(self, mention_id: MentionId) -> bool:
+        if mention_id[1] == NEW_ENT:  # NILK dataset
+            return mention_id[2] == NEW_ENT
         else:  # LIST dataset
-            if self.wps.get_subject_entity(mention_id).entity_idx == new_ent_idx:
-                return 'Unknown'
-        return 'Known'
+            return self.wps.get_subject_entity(mention_id).entity_idx == NEW_ENT
 
-    def _compute_metrics(self, predicted_pairs: Set[Pair], actual_pairs: Set[Pair], runtime: int):
+    def _compute_metrics(self, pred_count: int, actual_count: int, tp: int, runtime: int):
         # base metrics
-        predicted = len(predicted_pairs)
-        actual = len(actual_pairs)
-        if predicted > 0 and actual > 0:
-            tp = len(predicted_pairs.intersection(actual_pairs))
-            precision = tp / predicted
-            recall = tp / actual
+        if pred_count > 0 and actual_count > 0:
+            precision = tp / pred_count
+            recall = tp / actual_count
             f1 = 2 * precision * recall / (precision + recall) if precision > 0 and recall > 0 else 0
         else:
             precision = recall = f1 = 0.0
-        metrics = {'0_runtime': runtime, '1_predicted': predicted, '2_actual': actual, '3_precision': precision, '4_recall': recall, '5_f1-score': f1}
-#        # distributions over types
-#        predicted_with_types = {pair: self._get_types_for_pair(pair) for pair in predicted_pairs}
-#        actual_with_types = {pair: self._get_types_for_pair(pair) for pair in actual_pairs}
-#        # true type distribution
-#        predicted_by_type = self._get_pairs_by_matching_type(predicted_with_types)
-#        actual_by_type = self._get_pairs_by_matching_type(actual_with_types)
-#        for t in set(predicted_by_type) | set(actual_by_type):
-#            t_actual = len(actual_by_type[t])
-#            t_predicted = len(predicted_by_type[t])
-#            t_common = len(actual_by_type[t].intersection(predicted_by_type[t]))
-#            metrics |= {
-#                f'6_{t.name}-1_predicted': t_predicted,
-#                f'6_{t.name}-2_actual': t_actual,
-#                f'6_{t.name}-3_precision': t_common / t_predicted if t_predicted else 0,
-#                f'6_{t.name}-4_recall': t_common / t_actual if t_actual else 0,
-#            }
-#        # predicted cross-type distribution
-#        cross_type_counts = self._compute_cross_type_counts(predicted_with_types)
-#        metrics |= {f'7_{type_a.name}-{type_b.name}': cnt for (type_a, type_b), cnt in cross_type_counts.items()}
+        metrics = {'0_runtime': runtime, '1_predicted': pred_count, '2_actual': actual_count, '3_precision': precision, '4_recall': recall, '5_f1-score': f1}
         return metrics
-
-    def _get_types_for_pair(self, pair: Pair) -> Tuple[EntityTypeLabel, EntityTypeLabel]:
-        type_a = self.wps.get_subject_entity(pair[0]).entity_type
-        type_b = self.wps.get_subject_entity(pair[1]).entity_type if self.scenario == MatchingScenario.MENTION_MENTION else self.dbr.get_type_label(pair[1])
-        return type_a, type_b
-
-    @classmethod
-    def _get_pairs_by_matching_type(cls, pairs_with_types: Dict[Pair, Tuple[EntityTypeLabel, EntityTypeLabel]]):
-        pairs_by_type = defaultdict(set)
-        for pair, (type_a, type_b) in pairs_with_types.items():
-            if type_a == type_b:
-                pairs_by_type[type_a].add(pair)
-        return pairs_by_type
-
-    def _compute_cross_type_counts(self, pairs_with_types: Dict[Pair, Tuple[EntityTypeLabel, EntityTypeLabel]]) -> Dict[Tuple[EntityTypeLabel, EntityTypeLabel], int]:
-        cross_type_counts = Counter()
-        for type_a, type_b in pairs_with_types.values():
-            if type_a == type_b:
-                continue
-            if self.scenario == MatchingScenario.MENTION_MENTION:
-                type_a, type_b = sorted([type_a, type_b], key=attrgetter('name'))
-            cross_type_counts[(type_a, type_b)] += 1
-        return cross_type_counts
 
     def _log_metrics(self, prefix: str, metrics: dict, step: int = 0):
         with SummaryWriter(log_dir=f'./logs/ED/{self.approach_name}') as tb:
             for key, val in metrics.items():
                 tb.add_scalar(f'{prefix}/{key}', val, step)
 
-    def _log_roc_curve(self, prefix: str, predicted_pairs: Set[Pair], actual_pairs: Set[Pair], step: int = 0):
+    def _log_roc_curve(self, prefix: str, predicted_pairs: Set[Pair], alignment: Alignment, step: int = 0):
         pred = [p[2] for p in predicted_pairs]
-        actual = [1 if p in actual_pairs else 0 for p in predicted_pairs]
+        actual = [1 if p in alignment else 0 for p in predicted_pairs]
         if not pred or sum(actual) == 0:
             return
         fpr, tpr, _ = roc_curve(actual, pred)

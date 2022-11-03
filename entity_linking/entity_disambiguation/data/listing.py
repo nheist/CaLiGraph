@@ -1,6 +1,5 @@
 from typing import List, Set, Tuple, Dict
 from collections import defaultdict
-import itertools
 from itertools import cycle, islice
 import random
 import utils
@@ -11,14 +10,13 @@ from impl.dbpedia.category import DbpCategoryStore
 from impl.wikipedia import WikiPageStore, WikiPage
 from impl.wikipedia.page_parser import ListingId, MentionId, WikiListing, WikiTable, WikiListingItem, WikiEnumEntry
 from impl.caligraph.entity import ClgEntityStore, ClgEntity
-from .util import DataCorpus, Pair, CXS, CXE, ROW, COL
+from .util import DataCorpus, Alignment, CXS, CXE, ROW, COL
 
 
 class ListingDataCorpus(DataCorpus):
-    def __init__(self, listing_ids: List[ListingId], mm_alignment: Set[Pair], me_alignment: Set[Pair]):
+    def __init__(self, listing_ids: List[ListingId], alignment: Alignment):
         self.listing_ids = listing_ids
-        self.mm_alignment = mm_alignment
-        self.me_alignment = me_alignment
+        self.alignment = alignment
 
     def get_listings(self) -> List[WikiListing]:
         wps = WikiPageStore.instance()
@@ -96,21 +94,15 @@ def _init_listing_data_corpora(sample_size: int) -> Tuple[ListingDataCorpus, Lis
 
 def _create_corpus_from_pages(pages: List[WikiPage]) -> ListingDataCorpus:
     listings = [listing for page in pages for listing in page.get_listings() if listing.has_subject_entities()]
+    listing_ids = [listing.get_id() for listing in listings]
     entity_to_mention_mapping = defaultdict(set)
     for listing in listings:
         for item in listing.get_items(has_subject_entity=True, has_known_entity=True):
             mention_id = MentionId(listing.page_idx, listing.idx, item.idx)
             entity_to_mention_mapping[item.subject_entity.entity_idx].add(mention_id)
-    mm_alignment = set()
-    for mention_group in entity_to_mention_mapping.values():
-        mm_alignment.update({Pair(*sorted(item_pair), 1) for item_pair in itertools.combinations(mention_group, 2)})
-    me_alignment = set()
     clge = ClgEntityStore.instance()
-    for ent_id, mentions in entity_to_mention_mapping.items():
-        if not clge.has_entity_with_idx(ent_id):
-            continue  # discard unknown entities
-        me_alignment.update({Pair(mention_id, ent_id, 1) for mention_id in mentions})
-    return ListingDataCorpus([listing.get_id() for listing in listings], mm_alignment, me_alignment)
+    nil_entities = {ent_id for ent_id in entity_to_mention_mapping if not clge.has_entity_with_idx(ent_id)}
+    return ListingDataCorpus(listing_ids, Alignment(entity_to_mention_mapping, nil_entities))
 
 
 def _load_page_data(sample_size: float) -> Tuple[List[WikiPage], List[WikiPage], List[WikiPage]]:

@@ -1,6 +1,6 @@
 from typing import Tuple
 import utils
-from .util import CorpusType, DataCorpus, Pair
+from .util import CorpusType, DataCorpus, Pair, Alignment
 from .listing import ListingDataCorpus, _init_listing_data_corpora
 from .nilk import NilkDataCorpus, _init_nilk_data_corpora
 
