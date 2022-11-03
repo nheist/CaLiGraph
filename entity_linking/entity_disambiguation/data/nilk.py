@@ -2,6 +2,7 @@ from typing import Set, Tuple, Dict, List
 from collections import namedtuple, defaultdict
 import json
 import itertools
+from tqdm import tqdm
 import utils
 from impl.util.transformer import SpecialToken, EntityIndex
 from impl.dbpedia.resource import DbpResourceStore, DbpEntity
@@ -28,12 +29,14 @@ class NilkDataCorpus(DataCorpus):
 
     @classmethod
     def _init_alignments(cls, examples: List[NilkExample]) -> Tuple[Set[Pair], Set[Pair]]:
+        utils.get_logger().debug('NILK: Initializing MM alignment')
         mm_alignment = set()
         example_groups = defaultdict(set)
         for ex in examples:
             example_groups[ex.wikidata_id].add(ex)
         for ex_grp in example_groups.values():
             mm_alignment.update({Pair(*sorted([ex_a.mention_id, ex_b.mention_id]), 1) for ex_a, ex_b in itertools.combinations(ex_grp, 2)})
+        utils.get_logger().debug('NILK: Initializing ME alignment')
         me_alignment = {Pair(ex.mention_id, ex.ent_id, 1) for ex in examples if not ex.is_nil_entity}
         return mm_alignment, me_alignment
 
@@ -68,10 +71,14 @@ class NilkDataCorpus(DataCorpus):
 
 def _init_nilk_data_corpora() -> Tuple[NilkDataCorpus, NilkDataCorpus, NilkDataCorpus]:
     clge = ClgEntityStore.instance()
+    utils.get_logger().debug('NILK: Loading train examples..')
     train_examples = _load_valid_examples_from_jsonl(utils.get_data_file('files.nilk.train'))
+    utils.get_logger().debug('NILK: Loading eval examples..')
     eval_examples = _load_valid_examples_from_jsonl(utils.get_data_file('files.nilk.eval'))
+    utils.get_logger().debug('NILK: Loading test examples..')
     test_examples = _load_valid_examples_from_jsonl(utils.get_data_file('files.nilk.test'))
     # collect valid entities (i.e., all entities that are not flagged as NIL)
+    utils.get_logger().debug('NILK: Collecting valid entities..')
     invalid_entity_ids = {ex.ent_id for ex in train_examples + eval_examples + test_examples if ex.is_nil_entity}
     entity_ids = {e.idx for e in clge.get_entities() if e.idx not in invalid_entity_ids}
     return NilkDataCorpus(train_examples, entity_ids), NilkDataCorpus(eval_examples, entity_ids), NilkDataCorpus(test_examples, entity_ids)
@@ -81,7 +88,7 @@ def _load_valid_examples_from_jsonl(filepath: str) -> List[NilkExample]:
     result = []
     dbr = DbpResourceStore.instance()
     with open(filepath, mode='r') as f:
-        for line in f:
+        for line in tqdm(f, desc='Parsing examples'):
             example = json.loads(line)
             ex_id = example['id']
             label = example['mention']
