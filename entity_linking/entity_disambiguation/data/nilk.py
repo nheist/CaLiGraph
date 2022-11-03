@@ -2,6 +2,7 @@ from typing import Set, Tuple, Dict, List
 from collections import namedtuple, defaultdict
 import json
 import itertools
+import random
 from tqdm import tqdm
 import utils
 from impl.util.transformer import SpecialToken, EntityIndex
@@ -34,7 +35,7 @@ class NilkDataCorpus(DataCorpus):
         example_groups = defaultdict(set)
         for ex in examples:
             example_groups[ex.wikidata_id].add(ex)
-        for ex_grp in example_groups.values():
+        for ex_grp in tqdm(example_groups.values(), desc='MM alignment'):
             mm_alignment.update({Pair(*sorted([ex_a.mention_id, ex_b.mention_id]), 1) for ex_a, ex_b in itertools.combinations(ex_grp, 2)})
         utils.get_logger().debug('NILK: Initializing ME alignment')
         me_alignment = {Pair(ex.mention_id, ex.ent_id, 1) for ex in examples if not ex.is_nil_entity}
@@ -73,6 +74,7 @@ def _init_nilk_data_corpora() -> Tuple[NilkDataCorpus, NilkDataCorpus, NilkDataC
     clge = ClgEntityStore.instance()
     utils.get_logger().debug('NILK: Loading train examples..')
     train_examples = _load_valid_examples_from_jsonl(utils.get_data_file('files.nilk.train'))
+    train_examples = random.sample(train_examples, k=int(len(train_examples) / 3))  # using a third of train is enough
     utils.get_logger().debug('NILK: Loading eval examples..')
     eval_examples = _load_valid_examples_from_jsonl(utils.get_data_file('files.nilk.eval'))
     utils.get_logger().debug('NILK: Loading test examples..')
