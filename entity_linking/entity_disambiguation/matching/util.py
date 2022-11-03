@@ -22,6 +22,7 @@ class MatchingApproach(Enum):
     # MM/ME
     EXACT = 'exact'
     WORD = 'word'
+    BM25 = 'bm25'
     BIENCODER = 'biencoder'
     CROSSENCODER = 'crossencoder'
     # ME
