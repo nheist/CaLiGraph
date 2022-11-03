@@ -70,11 +70,11 @@ class NilkDataCorpus(DataCorpus):
         return {clge.get_entity_by_idx(idx) for idx in self.entity_indices}
 
 
-def _init_nilk_data_corpora() -> Tuple[NilkDataCorpus, NilkDataCorpus, NilkDataCorpus]:
+def _init_nilk_data_corpora(sample_size: int) -> Tuple[NilkDataCorpus, NilkDataCorpus, NilkDataCorpus]:
     clge = ClgEntityStore.instance()
     utils.get_logger().debug('NILK: Loading train examples..')
     train_examples = _load_valid_examples_from_jsonl(utils.get_data_file('files.nilk.train'))
-    train_examples = random.sample(train_examples, k=int(len(train_examples) / 3))  # using a third of train is enough
+    train_examples = random.sample(train_examples, int(len(train_examples) * sample_size / 100))
     utils.get_logger().debug('NILK: Loading eval examples..')
     eval_examples = _load_valid_examples_from_jsonl(utils.get_data_file('files.nilk.eval'))
     utils.get_logger().debug('NILK: Loading test examples..')

@@ -38,6 +38,7 @@ if __name__ == '__main__':
     parser.add_argument('approach', type=str, help='Approach used for matching')
     parser.add_argument('corpus', type=str, choices=['LIST', 'NILK'], help='Data corpus to use for the experiments')
     parser.add_argument('-sa', '--save_alignment', action=argparse.BooleanOptionalAction, default=False, help='Whether to save the produced alignment for train/val/test')
+    parser.add_argument('-ss', '--sample_size', type=int, choices=list(range(101)), default=5, help='Percentage of dataset to use')
     # matchers needing candidates
     parser.add_argument('--mm_approach', type=str, help='Mention-mention approach (ID) used for candidate generation')
     parser.add_argument('--me_approach', type=str, help='Mention-entity approach (ID) used for candidate generation')
@@ -74,7 +75,7 @@ if __name__ == '__main__':
     import random
     import numpy as np
     import torch
-    approach_id = args.approach_id or f'{args.corpus}v{VERSION}{args.scenario}{args.approach[:2]}{str(random.randint(0, 999)).zfill(3)}'
+    approach_id = args.approach_id or f'{args.corpus}{args.sample_size}v{VERSION}{args.scenario}{args.approach[:2]}{str(random.randint(0, 999)).zfill(3)}'
     SEED = 310
     random.seed(SEED)
     np.random.seed(SEED)
@@ -108,4 +109,4 @@ if __name__ == '__main__':
     }
     # then import application-specific code and run it
     from entity_linking import entity_disambiguation
-    entity_disambiguation.run_evaluation(scenario, approach, corpus_type, params, args.save_alignment)
+    entity_disambiguation.run_evaluation(scenario, approach, corpus_type, args.sample_size, params, args.save_alignment)

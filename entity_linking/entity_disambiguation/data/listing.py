@@ -89,8 +89,8 @@ class ListingDataCorpus(DataCorpus):
         return alternate_iters_to_string(tokens, whitespaces)
 
 
-def _init_listing_data_corpora() -> Tuple[ListingDataCorpus, ListingDataCorpus, ListingDataCorpus]:
-    train_pages, val_pages, test_pages = _load_page_data(.05)
+def _init_listing_data_corpora(sample_size: int) -> Tuple[ListingDataCorpus, ListingDataCorpus, ListingDataCorpus]:
+    train_pages, val_pages, test_pages = _load_page_data(sample_size)
     return _create_corpus_from_pages(train_pages), _create_corpus_from_pages(val_pages), _create_corpus_from_pages(test_pages)
 
 
@@ -117,7 +117,7 @@ def _load_page_data(sample_size: float) -> Tuple[List[WikiPage], List[WikiPage],
     # retrieve all pages with subject entities
     wiki_pages = [wp for wp in WikiPageStore.instance().get_pages() if wp.has_subject_entities()]
     # sample, shuffle, split
-    wiki_pages = random.sample(wiki_pages, int(len(wiki_pages) * sample_size))
+    wiki_pages = random.sample(wiki_pages, int(len(wiki_pages) * sample_size / 100))
     random.shuffle(wiki_pages)
     # divide into 60% train, 20% val, 20% test
     val_start_idx = int(len(wiki_pages) * .6)
