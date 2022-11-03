@@ -1,10 +1,11 @@
 from typing import Set, List
+import os
 from torch import Tensor, nn
 from torch.utils.data import DataLoader
 from sentence_transformers import SentenceTransformer, losses
 import utils
 from entity_linking.entity_disambiguation.data import Pair, DataCorpus
-from entity_linking.entity_disambiguation.matching.util import MatchingScenario
+from entity_linking.entity_disambiguation.matching.util import MatchingScenario, get_model_path
 from entity_linking.entity_disambiguation.matching.matcher import Matcher
 from entity_linking.entity_disambiguation.matching import transformer_util
 
@@ -24,9 +25,6 @@ class BiEncoderMatcher(Matcher):
         self.batch_size = params['batch_size']
         self.epochs = params['epochs']
         self.warmup_steps = params['warmup_steps']
-        # prepare Bi-Encoder
-        self.model = SentenceTransformer(self.base_model)
-        transformer_util.add_special_tokens(self.model)
         # cache for entity ids and embeddings (as this is the same for all datasets and samples)
         self.entity_ids = None
         self.entity_embeddings = None
@@ -47,6 +45,13 @@ class BiEncoderMatcher(Matcher):
         return super()._get_param_dict() | params
 
     def _train_model(self, train_corpus: DataCorpus, eval_corpus: DataCorpus):
+        path_to_model = get_model_path(self.base_model)
+        if os.path.exists(path_to_model):  # load local model
+            self.model = SentenceTransformer(path_to_model)
+            return
+        else:  # initialize model from huggingface hub
+            self.model = SentenceTransformer(self.base_model)
+            transformer_util.add_special_tokens(self.model)
         if self.epochs == 0:
             return  # skip training
         utils.get_logger().debug('Preparing training data..')
@@ -59,6 +64,7 @@ class BiEncoderMatcher(Matcher):
         utils.get_logger().debug('Starting training..')
         utils.release_gpu()
         self.model.fit(train_objectives=[(train_dataloader, self._get_loss_function())], epochs=self.epochs, warmup_steps=self.warmup_steps, save_best_model=False)
+        self.model.save(get_model_path(self.id))
 
     def _get_loss_function(self) -> nn.Module:
         if self.loss == 'COS':
