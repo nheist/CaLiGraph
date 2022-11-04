@@ -55,9 +55,9 @@ class Alignment:
                 mm_matches.extend([Pair(*sorted(item_pair), 1) for item_pair in itertools.combinations(mention_group, 2)])
         else:  # return sample
             sample_grps = [grp for grp in self.entity_to_mention_mapping.values() if len(grp) > 1]
-            sample_grp_weights = [len(grp) for grp in sample_grps]
-            while len(mm_matches) < self.sample_size:
-                grp = random.choices(sample_grps, weights=sample_grp_weights)[0]
+            sample_grp_weights = list(itertools.accumulate([len(grp) for grp in sample_grps]))
+            for _ in tqdm(range(self.sample_size), desc='Sampling mention-mention matches'):
+                grp = random.choices(sample_grps, cum_weights=sample_grp_weights)[0]
                 mm_matches.append(Pair(*sorted(random.sample(grp, 2)), 1))
         return mm_matches
 
