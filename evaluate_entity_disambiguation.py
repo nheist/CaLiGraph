@@ -5,26 +5,7 @@ import os
 
 VERSION = 1
 
-# TODO: ANALYSIS
-# > investigate the errors made
-# TODO: SEQUENCE CONTEXT
-# > experiment with different item/entity layouts (E4.1/4.2/4.4)
-# TODO: Bi-Encoder
-# > Implement hard-sampling (lexically similar but unrelated items/ents batched together to get fewer candidates)
-# > analyze currently used pooling function in bi-encoder (possible improvements in E4.4)
-# TODO: FUSION
-# Top-Down Fusion
-# > graph partitioning algorithm -> Holland-sameAs
-# Holland-sameAs: https://link.springer.com/chapter/10.1007/978-3-030-00671-6_23
-# Implementation: https://github.com/dwslab/melt/blob/e94287f1349217e04cdb3a6b6565f3345f216b45/matching-jena-matchers/src/main/java/de/uni_mannheim/informatik/dws/melt/matching_jena_matchers/multisource/clustering/ComputeErrDegree.java
-# > Filtering (consistent alignment for every listing) -> before or after Fusion?
-#  > e.g. apply WWW-Approach before
-#  > e.g. for every listing, collect intermediate entity representation and go for majority
-# TODO: COMPARSION
-# > apply to NILK dataset
-#   > generalize implementation to mention_id and mention_context
-#   > convert NILK data (https://zenodo.org/record/6607514#.Y1JyOi8Rr0o) to processable format
-#   > compare approach
+
 if __name__ == '__main__':
     parser = configargparse.ArgumentParser(description='Run the evaluation of entity disambiguation approaches.')
     # config

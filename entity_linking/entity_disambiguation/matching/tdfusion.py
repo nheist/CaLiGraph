@@ -1,23 +1,29 @@
 from typing import Set, List
-from abc import ABC, abstractmethod
-import numpy as np
+from collections import defaultdict
+import itertools
 import networkx as nx
+from impl.wikipedia import MentionId
 from entity_linking.entity_disambiguation.data import Pair, DataCorpus
-from entity_linking.entity_disambiguation.matching.util import MatchingScenario
 from entity_linking.entity_disambiguation.matching.matcher import MatcherWithCandidates
-import utils
 
 
-class TopDownFusionMatcher(MatcherWithCandidates, ABC):
+class TopDownFusionMatcher(MatcherWithCandidates):
     def _train_model(self, train_corpus: DataCorpus, eval_corpus: DataCorpus):
         pass  # no training necessary
 
     def predict(self, eval_mode: str, data_corpus: DataCorpus) -> Set[Pair]:
         mm_candidates, me_candidates = self.mm_candidates[eval_mode], self.me_candidates[eval_mode]
         ag = self._get_alignment_graph(mm_candidates, me_candidates)
-        edges_to_delete = self._compute_edges_to_delete(ag)
-        utils.get_logger().debug(f'Found {len(edges_to_delete)} edges to delete.')
-        return (mm_candidates | me_candidates).difference(edges_to_delete)
+        valid_subgraphs = self._compute_valid_subgraphs(ag)
+        alignment = set()
+        for g in valid_subgraphs:
+            mention_nodes = self._get_mention_nodes(g)
+            alignment.update({Pair(*sorted(mention_pair), 1) for mention_pair in itertools.combinations(mention_nodes, 2)})
+            ent_nodes = self._get_entity_nodes(g)
+            if ent_nodes:
+                ent_node = ent_nodes.pop()
+                alignment.update({Pair(m_id, ent_node, 1) for m_id in mention_nodes})
+        return alignment
 
     def _get_alignment_graph(self, mm_candidates: Set[Pair], me_candidates: Set[Pair]) -> nx.Graph:
         ag = nx.Graph()
@@ -25,76 +31,31 @@ class TopDownFusionMatcher(MatcherWithCandidates, ABC):
         ag.add_weighted_edges_from(mm_candidates | me_candidates)  # then add all edges
         return ag
 
-    def _find_invalid_subgraphs(self, ag: nx.Graph) -> List[nx.Graph]:
-        subgraphs = []
-        ents_per_subgraph = []
+    def _compute_valid_subgraphs(self, ag: nx.Graph) -> List[nx.Graph]:
+        valid_subgraphs = []
         for nodes in nx.connected_components(ag):
             sg = ag.subgraph(nodes)
-            num_ents = len(self._get_entity_nodes(sg))
-            if num_ents > 1:  # subgraph contains more than one entity -> should be avoided
-                subgraphs.append(sg.copy())
-                ents_per_subgraph.append(num_ents)
-        if subgraphs:
-            utils.get_logger().debug(f'Found {len(ents_per_subgraph)} invalid subgraphs with avg./med. of {np.mean(ents_per_subgraph)}/{np.median(ents_per_subgraph)} entities.')
-        return subgraphs
+            if self._is_valid_graph(sg):
+                valid_subgraphs.append(sg)
+            else:
+                valid_subgraphs.extend(self._split_into_valid_subgraphs(sg))
+        return valid_subgraphs
+
+    def _is_valid_graph(self, ag: nx.Graph) -> bool:
+        return len(self._get_entity_nodes(ag)) <= 1
 
     @classmethod
-    def _get_entity_nodes(cls, g: nx.Graph) -> set:
+    def _get_entity_nodes(cls, g: nx.Graph) -> Set[int]:
         return {node for node, is_ent in g.nodes(data='is_ent') if is_ent}
 
-    @abstractmethod
-    def _compute_edges_to_delete(self, ag: nx.Graph) -> Set[Pair]:
-        pass
+    @classmethod
+    def _get_mention_nodes(cls, g: nx.Graph) -> Set[MentionId]:
+        return {node for node, is_ent in g.nodes(data='is_ent') if not is_ent}
 
-
-class WeakestMentionMatcher(TopDownFusionMatcher):
-    def _compute_edges_to_delete(self, ag: nx.Graph) -> Set[Pair]:
-        edges_to_delete = set()
-        for sg in self._find_invalid_subgraphs(ag):
-            ent_nodes = self._get_entity_nodes(sg)
-            mm_edges = [e for e in sg.edges(data='weight') if e[0] not in ent_nodes and e[1] not in ent_nodes]
-            edge_to_delete = min(mm_edges, key=lambda x: x[2])
-            edges_to_delete.add(Pair(*edge_to_delete))
-            sg.remove_edge(edge_to_delete[0], edge_to_delete[1])
-            edges_to_delete.update(self._compute_edges_to_delete(sg))
-        return edges_to_delete
-
-
-class WeakestEntityMatcher(TopDownFusionMatcher):
-    def _compute_edges_to_delete(self, ag: nx.Graph) -> Set[Pair]:
-        edges_to_delete = set()
-        for sg in self._find_invalid_subgraphs(ag):
-            ent_nodes = self._get_entity_nodes(sg)
-            me_edges = [e for e in sg.edges(data='weight') if e[0] in ent_nodes or e[1] in ent_nodes]
-            edge_to_delete = min(me_edges, key=lambda x: x[2])
-            edges_to_delete.add(Pair(*edge_to_delete))
-            sg.remove_edge(edge_to_delete[0], edge_to_delete[1])
-            edges_to_delete.update(self._compute_edges_to_delete(sg))
-        return edges_to_delete
-
-
-class WeakestLinkMatcher(TopDownFusionMatcher):
-    def _compute_edges_to_delete(self, ag: nx.Graph) -> Set[Pair]:
-        edges_to_delete = set()
-        for sg in self._find_invalid_subgraphs(ag):
-            edge_to_delete = min(sg.edges(data='weight'), key=lambda x: x[2])
-            edges_to_delete.add(Pair(*edge_to_delete))
-            sg.remove_edge(edge_to_delete[0], edge_to_delete[1])
-            edges_to_delete.update(self._compute_edges_to_delete(sg))
-        return edges_to_delete
-
-
-class PrecisionWeightedWeakestLinkMatcher(WeakestLinkMatcher):
-    def __init__(self, scenario: MatchingScenario, params: dict):
-        super().__init__(scenario, params)
-        self.mm_weight = params['mm_weight']
-        self.me_weight = params['me_weight']
-
-    def _get_alignment_graph(self, mm_candidates: Set[Pair], me_candidates: Set[Pair]) -> nx.Graph:
-        ag = nx.Graph()
-        ag.add_nodes_from([p.target for p in me_candidates], is_ent=True)
-        edges = [(s, t, conf * self.mm_weight) for s, t, conf in mm_candidates]
-        edges += [(s, t, conf * self.me_weight) for s, t, conf in me_candidates]
-        ag.add_weighted_edges_from(edges)
-        ag.nodes()
-        return ag
+    def _split_into_valid_subgraphs(self, ag: nx.Graph) -> List[nx.Graph]:
+        node_groups = defaultdict(set)
+        weight_fct = lambda u, v, edge_attrs: 1 - edge_attrs['weight']  # use inversed weight
+        for node, path in nx.multi_source_dijkstra_path(ag, self._get_entity_nodes(ag), weight=weight_fct).items():
+            ent_node = path[0]
+            node_groups[ent_node].add(node)
+        return [ag.subgraph(nodes) for nodes in node_groups.values()]

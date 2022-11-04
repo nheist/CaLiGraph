@@ -19,20 +19,13 @@ class MatchingScenario(Enum):
 
 
 class MatchingApproach(Enum):
-    # MM/ME
     EXACT = 'exact'
     WORD = 'word'
     BM25 = 'bm25'
     BIENCODER = 'biencoder'
     CROSSENCODER = 'crossencoder'
-    # ME
-    POPULARITY = 'popularity'
-    # Top-Down Fusion
-    WEAKEST_MENTION = 'wmention'
-    WEAKEST_ENTITY = 'wentity'
-    WEAKEST_LINK = 'wlink'
-    PRECISION_WEIGHTED_WEAKEST_LINK = 'pwlink'
-    # Bottom-Up Fusion
+    POPULARITY = 'popularity'  # ME only!
+    TOP_DOWN_FUSION = 'tdf'
     BOTTOM_UP_FUSION = 'buf'
 
 
