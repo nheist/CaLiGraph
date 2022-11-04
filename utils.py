@@ -147,18 +147,17 @@ def get_logger():
     return logging.getLogger('impl')
 
 
-log_format = '%(asctime)s|%(levelname)s|%(module)s->%(funcName)s: %(message)s'
-log_level = get_config('logging.level')
 if get_config('logging.to_file') and 'ipykernel' not in sys.modules:
     log_filename = '{}_{}.log'.format(datetime.datetime.now().strftime('%Y%m%d-%H%M%S'), get_config('logging.filename'))
     log_filepath = os.path.join(_get_root_path(), 'logs', log_filename)
-    log_file_handler = logging.FileHandler(log_filepath, 'a', 'utf-8')
-    log_file_handler.setFormatter(logging.Formatter(log_format))
-    logger = get_logger()
-    logger.addHandler(log_file_handler)
-    logger.setLevel(log_level)
+    log_handler = logging.FileHandler(log_filepath, 'a', 'utf-8')
 else:
-    logging.basicConfig(format=log_format, level=log_level)
+    log_handler = logging.StreamHandler()
+log_handler.setFormatter(logging.Formatter('%(asctime)s|%(levelname)s|%(module)s->%(funcName)s: %(message)s'))
+log_handler.setLevel(get_config('logging.level'))
+logger = get_logger()
+logger.addHandler(log_handler)
+logger.setLevel(get_config('logging.level'))
 
 
 # GPU CACHE MANAGEMENT
