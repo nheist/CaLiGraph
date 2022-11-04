@@ -35,12 +35,11 @@ class Pair(NamedTuple):
 
 
 class Alignment:
-    sample_size: int(1e6)
-
     def __init__(self, entity_to_mention_mapping: Dict[int, Set[MentionId]], nil_entities: Set[int]):
         self.entity_to_mention_mapping = entity_to_mention_mapping
         self.mention_to_entity_mapping = {m_id: e_id for e_id, m_ids in entity_to_mention_mapping.items() for m_id in m_ids}
         self.nil_entities = nil_entities
+        self.sample_size = int(1e6)
 
     def __contains__(self, item) -> bool:
         if not isinstance(item, Pair):
