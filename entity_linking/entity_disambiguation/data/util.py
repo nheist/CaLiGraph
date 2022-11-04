@@ -1,10 +1,10 @@
 import random
 from typing import List, Tuple, Union, NamedTuple, Dict, Optional, Set
+from tqdm import tqdm
 from abc import ABC, abstractmethod
 from enum import Enum
 from scipy.special import comb
 import itertools
-import utils
 from impl.util.transformer import SpecialToken
 from impl.wikipedia.page_parser import MentionId
 from impl.caligraph.entity import ClgEntity
@@ -99,9 +99,8 @@ class DataCorpus(ABC):
         pass
 
     def get_entity_input(self, add_entity_abstract: bool, add_kg_info: int) -> Dict[int, str]:
-        utils.get_logger().debug('Preparing entities..')
         result = {}
-        for e in self.get_entities():
+        for e in tqdm(self.get_entities(), desc='Preparing entities'):
             ent_description = [f'{e.get_label()} {SpecialToken.get_type_token(e.get_type_label())}']
             if add_entity_abstract:
                 ent_description.append((e.get_abstract() or '')[:200])

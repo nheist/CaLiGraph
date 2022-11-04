@@ -41,10 +41,9 @@ class NilkDataCorpus(DataCorpus):
         return self.mention_labels
 
     def get_mention_input(self, add_page_context: bool, add_text_context: int) -> Tuple[Dict[MentionId, str], Dict[MentionId, bool]]:
-        utils.get_logger().debug('Preparing listing items..')
         result = {}
         result_ent_known = {}
-        for m_id, label in self.mention_labels.items():
+        for m_id, label in tqdm(self.mention_labels.items(), desc='Preparing listing items'):
             result[m_id] = label
             if add_page_context:
                 result[m_id] += self._prepare_page_context(self.mention_pages[m_id])
