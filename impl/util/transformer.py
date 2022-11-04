@@ -1,8 +1,8 @@
-from enum import Enum
+from enum import Enum, IntEnum
 from impl.util.nlp import EntityTypeLabel
 
 
-class EntityIndex(Enum):
+class EntityIndex(IntEnum):
     NEW_ENTITY = -1
     NO_ENTITY = -2
     IGNORE = -100

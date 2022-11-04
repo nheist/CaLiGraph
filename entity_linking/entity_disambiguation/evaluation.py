@@ -9,9 +9,6 @@ from impl.wikipedia import WikiPageStore
 from impl.wikipedia.page_parser import MentionId
 
 
-NEW_ENT = EntityIndex.NEW_ENTITY.value
-
-
 class PrecisionRecallF1Evaluator:
     def __init__(self, approach_name: str, scenario: MatchingScenario):
         self.approach_name = approach_name
@@ -40,10 +37,10 @@ class PrecisionRecallF1Evaluator:
         self._log_roc_curve(prefix, predicted_pairs, alignment)
 
     def _is_nil_mention(self, mention_id: MentionId) -> bool:
-        if mention_id[1] == NEW_ENT:  # NILK dataset
-            return mention_id[2] == NEW_ENT
+        if mention_id[1] == EntityIndex.NEW_ENTITY:  # NILK dataset
+            return mention_id[2] == EntityIndex.NEW_ENTITY
         else:  # LIST dataset
-            return self.wps.get_subject_entity(mention_id).entity_idx == NEW_ENT
+            return self.wps.get_subject_entity(mention_id).entity_idx == EntityIndex.NEW_ENTITY
 
     def _compute_metrics(self, pred_count: int, actual_count: int, tp: int, runtime: int):
         # base metrics

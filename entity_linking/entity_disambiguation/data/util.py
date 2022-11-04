@@ -46,7 +46,7 @@ class Alignment:
             return False
         if isinstance(item.target, MentionId):
             return self.mention_to_entity_mapping[item.source] == self.mention_to_entity_mapping[item.target]
-        return item.target == self.mention_to_entity_mapping[item.source]
+        return self.mention_to_entity_mapping[item.source] == item.target
 
     def sample_mm_matches(self) -> List[Pair]:
         mm_matches = []

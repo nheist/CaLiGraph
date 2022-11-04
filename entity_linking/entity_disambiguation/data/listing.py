@@ -43,7 +43,7 @@ class ListingDataCorpus(DataCorpus):
                     mention_id = MentionId(l.page_idx, l.idx, i.idx)
                     se = i.subject_entity
                     result[mention_id] = f'{se.label} {SpecialToken.get_type_token(se.entity_type)}'
-                    result_ent_known[mention_id] = se.entity_idx != EntityIndex.NEW_ENTITY.value
+                    result_ent_known[mention_id] = se.entity_idx != EntityIndex.NEW_ENTITY
             return result, result_ent_known
         for listing in self.get_listings():
             prepared_context = self._prepare_listing_context(listing)
@@ -56,7 +56,7 @@ class ListingDataCorpus(DataCorpus):
                 # add item and `add_text_context` subsequent items (add items from start if no subsequent items left)
                 item_content += ''.join(islice(cycle(prepared_items), idx, idx + add_text_context + 1))
                 result[mention_id] = item_content
-                result_ent_known[mention_id] = item_se.entity_idx != EntityIndex.NEW_ENTITY.value
+                result_ent_known[mention_id] = item_se.entity_idx != EntityIndex.NEW_ENTITY
         return result, result_ent_known
 
     @classmethod

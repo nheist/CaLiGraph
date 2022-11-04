@@ -12,9 +12,6 @@ from impl.wikipedia import MentionId
 from .util import DataCorpus, Alignment, CXS, CXE, TXS
 
 
-NEW_ENT = EntityIndex.NEW_ENTITY.value
-
-
 NilkExample = namedtuple('NilkExample', ['mention_id', 'label', 'left_text', 'right_text', 'page_res_id', 'ent_id', 'is_nil_entity'])
 
 
@@ -112,7 +109,7 @@ def _load_valid_examples_from_jsonl(filepath: str) -> List[NilkExample]:
                     new_ent_id += 1
                 ent_id = new_ent_dict[wikidata_id]
             # create mentionId with Pos0 = example id, Pos1 = indicator for NILK dataset, Pos2 = -1 if new entity else 0
-            mention_id = MentionId(ex_id, NEW_ENT, NEW_ENT if is_nil else 0)
+            mention_id = MentionId(ex_id, EntityIndex.NEW_ENTITY, EntityIndex.NEW_ENTITY if is_nil else 0)
             # get text context
             left_text = context[:label_start_idx].strip()
             right_text = context[label_end_idx:].strip()

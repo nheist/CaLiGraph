@@ -115,12 +115,12 @@ class WikiListing:
         items = [i for i in self.items.values() if i.subject_entity is not None]
         if not has_known_entity:
             return items
-        return [i for i in items if i.subject_entity.entity_idx != EntityIndex.NEW_ENTITY.value]
+        return [i for i in items if i.subject_entity.entity_idx != EntityIndex.NEW_ENTITY]
 
     def get_mentioned_entities(self) -> Set[DbpResource]:
         dbr = DbpResourceStore.instance()
         entity_indices = {mention.entity_idx for item in self.get_items() for mention in item.get_mentions()}
-        return {dbr.get_resource_by_idx(idx) for idx in entity_indices if idx != EntityIndex.NEW_ENTITY.value}
+        return {dbr.get_resource_by_idx(idx) for idx in entity_indices if idx != EntityIndex.NEW_ENTITY}
 
     def get_subject_entities(self) -> List[WikiSubjectEntity]:
         return [item.subject_entity for item in self.get_items(has_subject_entity=True)]
@@ -131,7 +131,7 @@ class WikiListing:
     def has_main_subject_entity(self) -> bool:
         """Return True, if there is a known subject entity that appears in at least 3/4 of all items."""
         subject_entities = self.get_subject_entities()
-        named_se_counter = Counter([se.entity_idx for se in subject_entities if se.entity_idx != EntityIndex.NEW_ENTITY.value])
+        named_se_counter = Counter([se.entity_idx for se in subject_entities if se.entity_idx != EntityIndex.NEW_ENTITY])
         if not named_se_counter:
             return False
         return named_se_counter.most_common(1)[0][1] / len(subject_entities) >= .75

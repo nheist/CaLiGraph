@@ -48,12 +48,12 @@ class WikiPageStore:
                 for item_idx, (se_label, se_type) in listing_mentions.items():
                     item = listing.items[item_idx]
                     # check whether there is an existing mention for the subject entity -> if yes, use its entity_idx
-                    se_idx = EntityIndex.NEW_ENTITY.value
+                    se_idx = EntityIndex.NEW_ENTITY
                     for mention in item.get_mentions():
                         if mention.label == se_label:
                             se_idx = mention.entity_idx
                             break
-                    if se_idx == EntityIndex.NEW_ENTITY.value:
+                    if se_idx == EntityIndex.NEW_ENTITY:
                         unknown_se_labels[se_label] += 1
                     item.subject_entity = WikiSubjectEntity(se_idx, se_label, se_type)
         # discard unknown subject entities with labels that are too frequent
@@ -63,7 +63,7 @@ class WikiPageStore:
             for listing in wp.get_listings():
                 for item in listing.get_items(has_subject_entity=True):
                     se = item.subject_entity
-                    if se.entity_idx == EntityIndex.NEW_ENTITY.value and se.label in invalid_labels:
+                    if se.entity_idx == EntityIndex.NEW_ENTITY and se.label in invalid_labels:
                         item.subject_entity = None
 
     def _reset_subject_entities(self):
