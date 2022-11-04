@@ -48,6 +48,22 @@ class Alignment:
             return self.mention_to_entity_mapping[item.source] == self.mention_to_entity_mapping[item.target]
         return item.source in self.mention_to_entity_mapping and self.mention_to_entity_mapping[item.source] == item.target
 
+    def mention_count(self, nil_partition: Optional[bool]) -> int:
+        if nil_partition is None:
+            return len(self.mention_to_entity_mapping)
+        elif nil_partition:
+            return len([m_id for m_id, e_id in self.mention_to_entity_mapping.items() if e_id not in self.known_entities])
+        else:
+            return len([m_id for m_id, e_id in self.mention_to_entity_mapping.items() if e_id in self.known_entities])
+
+    def entity_count(self, nil_partition: Optional[bool]) -> int:
+        if nil_partition is None:
+            return len(self.entity_to_mention_mapping)
+        elif nil_partition:
+            return len(set(self.entity_to_mention_mapping).difference(self.known_entities))
+        else:
+            return len(set(self.entity_to_mention_mapping).intersection(self.known_entities))
+
     def sample_mm_matches(self) -> List[Pair]:
         mm_matches = []
         if self.sample_size > self.mm_match_count():  # return all

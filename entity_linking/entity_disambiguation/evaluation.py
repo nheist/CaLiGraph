@@ -34,7 +34,7 @@ class PrecisionRecallF1Evaluator:
         actual_count = alignment.mm_match_count(nil_partition) if self.scenario.is_MM() else alignment.me_match_count(nil_partition)
         tp = len({p for p in predicted_pairs if p in alignment})
 
-        metrics = self._compute_metrics(pred_count, actual_count, tp, runtime)
+        metrics = self._compute_metrics(pred_count, actual_count, tp, runtime, alignment.mention_count(nil_partition), alignment.entity_count(nil_partition))
         self._log_metrics(prefix, metrics)
         self._log_roc_curve(prefix, predicted_pairs, alignment)
 
@@ -44,7 +44,7 @@ class PrecisionRecallF1Evaluator:
         else:  # LIST dataset
             return self.wps.get_subject_entity(mention_id).entity_idx == EntityIndex.NEW_ENTITY
 
-    def _compute_metrics(self, pred_count: int, actual_count: int, tp: int, runtime: int):
+    def _compute_metrics(self, pred_count: int, actual_count: int, tp: int, runtime: int, mention_count: int, entity_count: int):
         # base metrics
         if pred_count > 0 and actual_count > 0:
             precision = tp / pred_count
@@ -52,7 +52,7 @@ class PrecisionRecallF1Evaluator:
             f1 = 2 * precision * recall / (precision + recall) if precision > 0 and recall > 0 else 0
         else:
             precision = recall = f1 = 0.0
-        metrics = {'0_runtime': runtime, '1_predicted': pred_count, '2_actual': actual_count, '3_precision': precision, '4_recall': recall, '5_f1-score': f1}
+        metrics = {'0_runtime': runtime, '1_predicted': pred_count, '2_actual': actual_count, '3_precision': precision, '4_recall': recall, '5_f1-score': f1, '6_mentions': mention_count, '7_entities': entity_count}
         return metrics
 
     def _log_metrics(self, prefix: str, metrics: dict, step: int = 0):
