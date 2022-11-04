@@ -19,12 +19,13 @@ class LexicalMatcher(Matcher, ABC):
         pass  # no training necessary
 
     def predict(self, eval_mode: str, data_corpus: DataCorpus) -> Set[Pair]:
-        mention_grouping = self._make_grouping(data_corpus.get_mention_labels())
         alignment = set()
         if self.scenario.is_MM():
+            mention_grouping = self._make_grouping(data_corpus.get_mention_labels(True))
             for mention_group in mention_grouping.values():
                 alignment.update({Pair(*sorted(mention_pair), 1) for mention_pair in itertools.combinations(mention_group, 2)})
         if self.scenario.is_ME():
+            mention_grouping = self._make_grouping(data_corpus.get_mention_labels())
             entity_grouping = self._make_grouping({res.idx: res.get_label() for res in data_corpus.get_entities()})
             for key in set(mention_grouping).intersection(set(entity_grouping)):
                 mention_group, entity_group = mention_grouping[key], entity_grouping[key]
@@ -60,14 +61,15 @@ class BM25Matcher(Matcher):
         pass  # no training necessary
 
     def predict(self, eval_mode: str, data_corpus: DataCorpus) -> Set[Pair]:
-        tokenized_mentions = {m_id: _tokenize_label(label) for m_id, label in data_corpus.get_mention_labels().items()}
-        mention_ids = list(tokenized_mentions)
         alignment = set()
         if self.scenario.is_MM():
+            tokenized_mentions = {m_id: _tokenize_label(label) for m_id, label in data_corpus.get_mention_labels(True).items()}
+            mention_ids = list(tokenized_mentions)
             model = fastbm25(list(tokenized_mentions.values()))
             for m_id, tokens in tqdm(tokenized_mentions.items(), desc='BM25/MM'):
                 alignment.update({Pair(*sorted([m_id, mention_ids[idx]]), score) for _, idx, score in model.top_k_sentence(tokens, k=5)})
         if self.scenario.is_ME():
+            tokenized_mentions = {m_id: _tokenize_label(label) for m_id, label in data_corpus.get_mention_labels().items()}
             tokenized_ents = {e.idx: _tokenize_label(e.get_label()) for e in data_corpus.get_entities()}
             ent_ids = list(tokenized_ents)
             model = fastbm25(list(tokenized_ents.values()))

@@ -25,10 +25,12 @@ class ListingDataCorpus(DataCorpus):
     def get_entities(self) -> Set[ClgEntity]:
         return ClgEntityStore.instance().get_entities()
 
-    def get_mention_labels(self) -> Dict[MentionId, str]:
+    def get_mention_labels(self, discard_unknown: bool = False) -> Dict[MentionId, str]:
         mention_labels = {}
         for listing in self.get_listings():
             for item in listing.get_items(has_subject_entity=True):
+                if discard_unknown and item.subject_entity.entity_idx == EntityIndex.NEW_ENTITY:
+                    continue
                 mention_id = MentionId(listing.page_idx, listing.idx, item.idx)
                 mention_labels[mention_id] = item.subject_entity.label
         return mention_labels

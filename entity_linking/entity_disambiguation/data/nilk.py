@@ -34,7 +34,7 @@ class NilkDataCorpus(DataCorpus):
                 nil_entities.add(ex.ent_id)
         return Alignment(entity_to_mention_mapping, nil_entities)
 
-    def get_mention_labels(self) -> Dict[MentionId, str]:
+    def get_mention_labels(self, discard_unknown: bool = False) -> Dict[MentionId, str]:
         return self.mention_labels
 
     def get_mention_input(self, add_page_context: bool, add_text_context: int) -> Tuple[Dict[MentionId, str], Dict[MentionId, bool]]:

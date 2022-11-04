@@ -87,7 +87,7 @@ class DataCorpus(ABC):
     alignment: Alignment
 
     @abstractmethod
-    def get_mention_labels(self) -> Dict[MentionId, str]:
+    def get_mention_labels(self, discard_unknown: bool = False) -> Dict[MentionId, str]:
         pass
 
     @abstractmethod
