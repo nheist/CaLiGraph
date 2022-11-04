@@ -5,7 +5,8 @@ from impl.subject_entity import mention_detection
 
 
 def run_evaluation(scenario: MatchingScenario, approach: MatchingApproach, corpus_type: CorpusType, sample_size: int, params: dict, save_alignment: bool):
-    mention_detection.detect_mentions()  # make sure subject entities are initialized
+    if corpus_type == CorpusType.LIST:  # make sure subject entities are initialized
+        mention_detection.detect_mentions()
     matcher = initialize_matcher(scenario, approach, params)
     train_data, eval_data, test_data = get_data_corpora(corpus_type, sample_size)
 
