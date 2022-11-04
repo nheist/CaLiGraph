@@ -16,23 +16,20 @@ NilkExample = namedtuple('NilkExample', ['mention_id', 'label', 'left_text', 'ri
 
 
 class NilkDataCorpus(DataCorpus):
-    def __init__(self, examples: List[NilkExample], entity_indices: Set[int]):
+    def __init__(self, examples: List[NilkExample], known_entities: Set[int]):
         self.mention_labels = {ex.mention_id: ex.label for ex in examples}
         self.mention_left_text = {ex.mention_id: ex.left_text for ex in examples}
         self.mention_right_text = {ex.mention_id: ex.right_text for ex in examples}
         self.mention_pages = {ex.mention_id: ex.page_res_id for ex in examples}
-        self.entity_indices = entity_indices
-        self.alignment = self._init_alignment(examples)
+        self.known_entities = known_entities
+        self.alignment = self._init_alignment(examples, known_entities)
 
     @classmethod
-    def _init_alignment(cls, examples: List[NilkExample]) -> Alignment:
+    def _init_alignment(cls, examples: List[NilkExample], known_entities: Set[int]) -> Alignment:
         entity_to_mention_mapping = defaultdict(set)
-        nil_entities = set()
         for ex in examples:
             entity_to_mention_mapping[ex.ent_id].add(ex.mention_id)
-            if ex.is_nil_entity:
-                nil_entities.add(ex.ent_id)
-        return Alignment(entity_to_mention_mapping, nil_entities)
+        return Alignment(entity_to_mention_mapping, known_entities)
 
     def get_mention_labels(self, discard_unknown: bool = False) -> Dict[MentionId, str]:
         return self.mention_labels
@@ -59,7 +56,7 @@ class NilkDataCorpus(DataCorpus):
 
     def get_entities(self) -> Set[ClgEntity]:
         clge = ClgEntityStore.instance()
-        return {clge.get_entity_by_idx(idx) for idx in self.entity_indices}
+        return {clge.get_entity_by_idx(idx) for idx in self.known_entities}
 
 
 def _init_nilk_data_corpora(sample_size: int) -> Tuple[NilkDataCorpus, NilkDataCorpus, NilkDataCorpus]:
@@ -73,9 +70,9 @@ def _init_nilk_data_corpora(sample_size: int) -> Tuple[NilkDataCorpus, NilkDataC
     test_examples = _load_valid_examples_from_jsonl(utils.get_data_file('files.nilk.test'))
     # collect valid entities (i.e., all entities that are not flagged as NIL)
     utils.get_logger().debug('NILK: Collecting valid entities..')
-    invalid_entity_ids = {ex.ent_id for ex in train_examples + eval_examples + test_examples if ex.is_nil_entity}
-    entity_ids = {e.idx for e in clge.get_entities() if e.idx not in invalid_entity_ids}
-    return NilkDataCorpus(train_examples, entity_ids), NilkDataCorpus(eval_examples, entity_ids), NilkDataCorpus(test_examples, entity_ids)
+    unknown_entities = {ex.ent_id for ex in train_examples + eval_examples + test_examples if ex.is_nil_entity}
+    known_entities = {e.idx for e in clge.get_entities() if e.idx not in unknown_entities}
+    return NilkDataCorpus(train_examples, known_entities), NilkDataCorpus(eval_examples, known_entities), NilkDataCorpus(test_examples, known_entities)
 
 
 def _load_valid_examples_from_jsonl(filepath: str) -> List[NilkExample]:

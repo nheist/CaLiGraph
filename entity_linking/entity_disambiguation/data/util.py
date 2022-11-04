@@ -35,10 +35,10 @@ class Pair(NamedTuple):
 
 
 class Alignment:
-    def __init__(self, entity_to_mention_mapping: Dict[int, Set[MentionId]], nil_entities: Set[int]):
+    def __init__(self, entity_to_mention_mapping: Dict[int, Set[MentionId]], known_entities: Set[int]):
         self.entity_to_mention_mapping = entity_to_mention_mapping
         self.mention_to_entity_mapping = {m_id: e_id for e_id, m_ids in entity_to_mention_mapping.items() for m_id in m_ids}
-        self.nil_entities = nil_entities
+        self.known_entities = known_entities
         self.sample_size = int(1e6)
 
     def __contains__(self, item) -> bool:
@@ -65,13 +65,13 @@ class Alignment:
         if nil_partition is None:
             grps = list(self.entity_to_mention_mapping.values())
         elif nil_partition:
-            grps = [grp for e_id, grp in self.entity_to_mention_mapping.items() if e_id in self.nil_entities]
+            grps = [grp for e_id, grp in self.entity_to_mention_mapping.items() if e_id not in self.known_entities]
         else:
-            grps = [grp for e_id, grp in self.entity_to_mention_mapping.items() if e_id not in self.nil_entities]
+            grps = [grp for e_id, grp in self.entity_to_mention_mapping.items() if e_id in self.known_entities]
         return sum(comb(len(grp), 2) for grp in grps)
 
     def sample_me_matches(self) -> List[Pair]:
-        known_mentions = [m_id for m_id, e_id in self.mention_to_entity_mapping.items() if e_id not in self.nil_entities]
+        known_mentions = [m_id for m_id, e_id in self.mention_to_entity_mapping.items() if e_id in self.known_entities]
         if self.sample_size > len(known_mentions):  # return all
             return [Pair(m_id, self.mention_to_entity_mapping[m_id], 1) for m_id in known_mentions]
         sample_mentions = random.sample(known_mentions, self.sample_size)
@@ -80,7 +80,7 @@ class Alignment:
     def me_match_count(self, nil_partition: Optional[bool] = None) -> int:
         if nil_partition:
             return 0
-        return len([m_id for m_id, e_id in self.mention_to_entity_mapping.items() if e_id not in self.nil_entities])
+        return len([m_id for m_id, e_id in self.mention_to_entity_mapping.items() if e_id in self.known_entities])
 
 
 class DataCorpus(ABC):
