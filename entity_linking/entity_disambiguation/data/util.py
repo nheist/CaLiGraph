@@ -50,7 +50,7 @@ class Alignment:
 
     def sample_mm_matches(self) -> List[Pair]:
         mm_matches = []
-        if self.sample_size < self.mm_match_count():  # return all
+        if self.sample_size > self.mm_match_count():  # return all
             for mention_group in self.entity_to_mention_mapping.values():
                 mm_matches.extend([Pair(*sorted(item_pair), 1) for item_pair in itertools.combinations(mention_group, 2)])
         else:  # return sample
@@ -71,8 +71,8 @@ class Alignment:
         return sum(comb(len(grp), 2) for grp in grps)
 
     def sample_me_matches(self) -> List[Pair]:
-        known_mentions = [m_id for m_id in self.mention_to_entity_mapping if m_id not in self.nil_entities]
-        if self.sample_size < self.me_match_count():
+        known_mentions = [m_id for m_id, e_id in self.mention_to_entity_mapping.items() if e_id not in self.nil_entities]
+        if self.sample_size > len(known_mentions):  # return all
             return [Pair(m_id, self.mention_to_entity_mapping[m_id], 1) for m_id in known_mentions]
         sample_mentions = random.sample(known_mentions, self.sample_size)
         return [Pair(m_id, self.mention_to_entity_mapping[m_id], 1) for m_id in sample_mentions]
@@ -80,7 +80,7 @@ class Alignment:
     def me_match_count(self, nil_partition: Optional[bool] = None) -> int:
         if nil_partition:
             return 0
-        return len({e_id for e_id in self.entity_to_mention_mapping if e_id not in self.nil_entities})
+        return len([m_id for m_id, e_id in self.mention_to_entity_mapping.items() if e_id not in self.nil_entities])
 
 
 class DataCorpus(ABC):
