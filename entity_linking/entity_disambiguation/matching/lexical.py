@@ -1,12 +1,14 @@
-from typing import Set, List
+from typing import Set, List, Dict
 from abc import ABC, abstractmethod
 from collections import defaultdict
 import itertools
+import queue
 from tqdm import tqdm
 from unidecode import unidecode
 from nltk.corpus import stopwords
 from fastbm25 import fastbm25
 from impl.util.string import make_alphanumeric
+from impl.wikipedia import MentionId
 from entity_linking.entity_disambiguation.data import Pair, DataCorpus
 from entity_linking.entity_disambiguation.matching.util import MatchingScenario
 from entity_linking.entity_disambiguation.matching.matcher import Matcher
@@ -72,10 +74,8 @@ class BM25Matcher(Matcher):
         alignment = set()
         if self.scenario.is_MM():
             tokenized_mentions = {m_id: _tokenize_label(label) for m_id, label in data_corpus.get_mention_labels(True).items()}
-            mention_ids = list(tokenized_mentions)
-            model = fastbm25(list(tokenized_mentions.values()))
-            for m_id, tokens in tqdm(tokenized_mentions.items(), desc='BM25/MM'):
-                alignment.update({Pair(*sorted([m_id, mention_ids[idx]]), score) for _, idx, score in model.top_k_sentence(tokens, k=self.top_k)})
+            max_pairs = data_corpus.alignment.mm_match_count() * 2
+            alignment.update(self._find_best_pairs(tokenized_mentions, max_pairs, 50, True))
         if self.scenario.is_ME():
             tokenized_mentions = {m_id: _tokenize_label(label) for m_id, label in data_corpus.get_mention_labels().items()}
             tokenized_ents = {e.idx: _tokenize_label(e.get_label()) for e in data_corpus.get_entities()}
@@ -84,6 +84,39 @@ class BM25Matcher(Matcher):
             for m_id, tokens in tqdm(tokenized_mentions.items(), desc='BM25/ME'):
                 alignment.update({Pair(m_id, ent_ids[idx], score) for _, idx, score in model.top_k_sentence(tokens, k=self.top_k)})
         return alignment
+
+    @classmethod
+    def _find_best_pairs(cls, tokenized_mentions: Dict[MentionId, List[str]], max_pairs: int = 500000, top_k: int = 100, add_best: bool = False) -> Set[Pair]:
+        top_k += 1  # A sentence has the highest similarity to itself. Increase +1 as we are interest in distinct pairs
+        best_pairs_per_item = defaultdict(lambda: (None, 0.0))
+        top_pairs = queue.PriorityQueue()
+        min_score = -1
+        num_added = 0
+
+        mention_ids = list(tokenized_mentions)
+        model = fastbm25(list(tokenized_mentions.values()))
+        for mention_a, tokens in tqdm(tokenized_mentions.items(), desc='BM25/MM'):
+            for _, idx, score in model.top_k_sentence(tokens, k=top_k):
+                mention_b = mention_ids[idx]
+                if add_best:
+                    # collect best pairs per item
+                    if best_pairs_per_item[mention_a][1] < score:
+                        best_pairs_per_item[mention_a] = (mention_b, score)
+                    if best_pairs_per_item[mention_b][1] < score:
+                        best_pairs_per_item[mention_b] = (mention_a, score)
+                if score > min_score:
+                    # collect overall top pairs
+                    top_pairs.put((score, *sorted([mention_a, mention_b])))
+                    num_added += 1
+                    if num_added >= max_pairs:
+                        entry = top_pairs.get()
+                        min_score = entry[0]
+        # assemble the final pairs
+        pairs = {Pair(*sorted([mention_a, mention_b]), score) for mention_a, (mention_b, score) in best_pairs_per_item.items()} if add_best else set()
+        while not top_pairs.empty():
+            score, mention_a, mention_b = top_pairs.get()
+            pairs.add(Pair(mention_a, mention_b, score))
+        return pairs
 
 
 def _tokenize_label(label: str) -> List[str]:

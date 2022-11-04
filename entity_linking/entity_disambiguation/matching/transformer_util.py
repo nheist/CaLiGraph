@@ -75,7 +75,7 @@ def paraphrase_mining_embeddings(embeddings: torch.Tensor, mention_ids: List[Men
                             entry = top_pairs.get()
                             min_score = entry[0]
 
-    # Assemble the final pairs
+    # assemble the final pairs
     pairs = {Pair(*sorted([mention_ids[i], mention_ids[j]]), score) for i, (j, score) in best_pairs_per_item.items()} if add_best else set()
     while not top_pairs.empty():
         score, i, j = top_pairs.get()
@@ -91,11 +91,11 @@ def semantic_search(query_embeddings: torch.Tensor, corpus_embeddings: torch.Ten
     # collect documents per query
     queries_result_list = defaultdict(dict)
     for query_start_idx in range(0, len(query_embeddings), query_chunk_size):
-        # Iterate over chunks of the corpus
+        # iterate over chunks of the corpus
         for corpus_start_idx in range(0, len(corpus_embeddings), corpus_chunk_size):
-            # Compute similarities
+            # compute similarities
             cos_scores = dot_score(query_embeddings[query_start_idx:query_start_idx+query_chunk_size], corpus_embeddings[corpus_start_idx:corpus_start_idx+corpus_chunk_size])
-            # Get top-k scores
+            # get top-k scores
             cos_scores_top_k_values, cos_scores_top_k_idx = torch.topk(cos_scores, min(top_k, len(cos_scores[0])), dim=1, largest=True, sorted=False)
             cos_scores_top_k_values = cos_scores_top_k_values.cpu().tolist()
             cos_scores_top_k_idx = cos_scores_top_k_idx.cpu().tolist()
