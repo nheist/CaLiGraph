@@ -1,5 +1,6 @@
 from typing import List, Union, Set
 from collections import defaultdict
+from tqdm import tqdm
 import torch
 import queue
 from sentence_transformers import SentenceTransformer, CrossEncoder, InputExample
@@ -46,7 +47,7 @@ def paraphrase_mining_embeddings(embeddings: torch.Tensor, mention_ids: List[Men
     min_score = -1
     num_added = 0
 
-    for corpus_start_idx in range(0, len(embeddings), corpus_chunk_size):
+    for corpus_start_idx in tqdm(range(0, len(embeddings), corpus_chunk_size), total=len(embeddings) // corpus_chunk_size, desc='MM nn-search'):
         for query_start_idx in range(0, len(embeddings), query_chunk_size):
             scores = dot_score(embeddings[query_start_idx:query_start_idx+query_chunk_size], embeddings[corpus_start_idx:corpus_start_idx+corpus_chunk_size])
 
@@ -90,7 +91,7 @@ def semantic_search(query_embeddings: torch.Tensor, corpus_embeddings: torch.Ten
         query_embeddings = query_embeddings.to(corpus_embeddings.device)
     # collect documents per query
     queries_result_list = defaultdict(dict)
-    for query_start_idx in range(0, len(query_embeddings), query_chunk_size):
+    for query_start_idx in tqdm(range(0, len(query_embeddings), query_chunk_size), total=len(query_embeddings) // query_chunk_size, desc='ME nn-search'):
         # iterate over chunks of the corpus
         for corpus_start_idx in range(0, len(corpus_embeddings), corpus_chunk_size):
             # compute similarities
