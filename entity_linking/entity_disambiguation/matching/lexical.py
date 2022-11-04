@@ -8,6 +8,7 @@ from nltk.corpus import stopwords
 from fastbm25 import fastbm25
 from impl.util.string import make_alphanumeric
 from entity_linking.entity_disambiguation.data import Pair, DataCorpus
+from entity_linking.entity_disambiguation.matching.util import MatchingScenario
 from entity_linking.entity_disambiguation.matching.matcher import Matcher
 
 
@@ -56,6 +57,13 @@ class WordMatcher(LexicalMatcher):
 
 
 class BM25Matcher(Matcher):
+    def __init__(self, scenario: MatchingScenario, params: dict):
+        super().__init__(scenario, params)
+        # model params
+        self.top_k = params['top_k']
+
+    def _get_param_dict(self) -> dict:
+        return super()._get_param_dict() | {'k': self.top_k}
 
     def _train_model(self, train_corpus: DataCorpus, eval_corpus: DataCorpus):
         pass  # no training necessary
@@ -67,14 +75,14 @@ class BM25Matcher(Matcher):
             mention_ids = list(tokenized_mentions)
             model = fastbm25(list(tokenized_mentions.values()))
             for m_id, tokens in tqdm(tokenized_mentions.items(), desc='BM25/MM'):
-                alignment.update({Pair(*sorted([m_id, mention_ids[idx]]), score) for _, idx, score in model.top_k_sentence(tokens, k=5)})
+                alignment.update({Pair(*sorted([m_id, mention_ids[idx]]), score) for _, idx, score in model.top_k_sentence(tokens, k=self.top_k)})
         if self.scenario.is_ME():
             tokenized_mentions = {m_id: _tokenize_label(label) for m_id, label in data_corpus.get_mention_labels().items()}
             tokenized_ents = {e.idx: _tokenize_label(e.get_label()) for e in data_corpus.get_entities()}
             ent_ids = list(tokenized_ents)
             model = fastbm25(list(tokenized_ents.values()))
             for m_id, tokens in tqdm(tokenized_mentions.items(), desc='BM25/ME'):
-                alignment.update({Pair(m_id, ent_ids[idx], score) for _, idx, score in model.top_k_sentence(tokens)})
+                alignment.update({Pair(m_id, ent_ids[idx], score) for _, idx, score in model.top_k_sentence(tokens, k=self.top_k)})
         return alignment
 
 
