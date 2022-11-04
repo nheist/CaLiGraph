@@ -22,7 +22,9 @@ class PrecisionRecallF1Evaluator:
         self._compute_and_log_metrics_for_partition(prefix, predicted_pairs, alignment, runtime, False)
 
     def _compute_and_log_metrics_for_partition(self, prefix: str, predicted_pairs: Set[Pair], alignment: Alignment, runtime: int, nil_partition: Optional[bool]):
-        if nil_partition:  # partition for NIL only
+        if nil_partition is None:
+            pass  # no partitioning
+        elif nil_partition:  # partition for NIL only
             prefix += '-NIL'
             predicted_pairs = {p for p in predicted_pairs if self._is_nil_mention(p.source) or (self.scenario.is_MM() and self._is_nil_mention(p.target))}
         else:  # partition for non-NIL only
