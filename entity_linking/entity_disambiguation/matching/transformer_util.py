@@ -131,6 +131,8 @@ def approximate_paraphrase_mining_embeddings(mention_embeddings: torch.Tensor, m
         mention_a = mention_ids[idx_a]
         for idx_b, dist in index.knn_query(mention_emb, k=top_k):
             mention_b = mention_ids[idx_b]
+            if mention_a == mention_b:
+                continue
             score = 1 - dist
             if add_best and score > .5:
                 # collect best pairs per item

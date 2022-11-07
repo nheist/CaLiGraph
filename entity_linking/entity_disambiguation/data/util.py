@@ -46,7 +46,7 @@ class Alignment:
             return False
         if isinstance(item.target, MentionId):
             if item.source not in self.mention_to_entity_mapping or item.target not in self.mention_to_entity_mapping:
-                return False
+                return True
             return self.mention_to_entity_mapping[item.source] == self.mention_to_entity_mapping[item.target]
         return item.source in self.mention_to_entity_mapping and self.mention_to_entity_mapping[item.source] == item.target
 

@@ -98,6 +98,8 @@ class BM25Matcher(Matcher):
         for mention_a, tokens in tqdm(tokenized_mentions.items(), desc='BM25/MM'):
             for _, idx, score in model.top_k_sentence(tokens, k=top_k):
                 mention_b = mention_ids[idx]
+                if mention_a == mention_b:
+                    continue
                 if add_best:
                     # collect best pairs per item
                     if best_pairs_per_item[mention_a][1] < score:
