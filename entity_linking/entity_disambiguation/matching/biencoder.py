@@ -107,4 +107,4 @@ class BiEncoderMatcher(Matcher):
         return alignment
 
     def _compute_embeddings(self, inputs: List[str]) -> Tensor:
-        return self.model.encode(inputs, batch_size=self.batch_size, normalize_embeddings=True, convert_to_tensor=True, show_progress_bar=True)
+        return self.model.encode(inputs, batch_size=self.batch_size, normalize_embeddings=True, convert_to_numpy=self.ans, convert_to_tensor=(not self.ans), show_progress_bar=True)
