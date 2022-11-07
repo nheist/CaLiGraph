@@ -16,6 +16,7 @@ class BiEncoderMatcher(Matcher):
         # model params
         self.base_model = params['base_model']
         self.top_k = params['top_k']
+        self.ans = params['approximate_neighbor_search']
         self.add_page_context = params['add_page_context']
         self.add_text_context = params['add_text_context']
         self.add_entity_abstract = params['add_entity_abstract']
@@ -33,6 +34,7 @@ class BiEncoderMatcher(Matcher):
         params = {
             'bm': self.base_model,
             'k': self.top_k,
+            'ans': self.ans,
             'apc': self.add_page_context,
             'atc': self.add_text_context,
             'aea': self.add_entity_abstract,
@@ -87,14 +89,20 @@ class BiEncoderMatcher(Matcher):
             known_mention_ids = [m_id for m_id, known in zip(mention_ids, known_mask) if known]
             known_mention_embeddings = mention_embeddings[known_mask]
             max_pairs = data_corpus.alignment.mm_match_count() * 50
-            matched_pairs = transformer_util.paraphrase_mining_embeddings(known_mention_embeddings, known_mention_ids, max_pairs=max_pairs, top_k=50, add_best=True)
+            if self.ans:
+                matched_pairs = transformer_util.approximate_paraphrase_mining_embeddings(known_mention_embeddings, known_mention_ids, max_pairs=max_pairs, top_k=50, add_best=True)
+            else:
+                matched_pairs = transformer_util.paraphrase_mining_embeddings(known_mention_embeddings, known_mention_ids, max_pairs=max_pairs, top_k=50, add_best=True)
             alignment.update(matched_pairs)
         if self.scenario.is_ME():
             if self.entity_embeddings is None:  # init cached target embeddings
                 entity_input = data_corpus.get_entity_input(self.add_entity_abstract, self.add_kg_info)
                 self.entity_ids = list(entity_input)
                 self.entity_embeddings = self._compute_embeddings(list(entity_input.values()))
-            matched_pairs = transformer_util.semantic_search(mention_embeddings, self.entity_embeddings, mention_ids, self.entity_ids, top_k=self.top_k)
+            if self.ans:
+                matched_pairs = transformer_util.approximate_semantic_search(mention_embeddings, self.entity_embeddings, mention_ids, self.entity_ids, top_k=self.top_k)
+            else:
+                matched_pairs = transformer_util.semantic_search(mention_embeddings, self.entity_embeddings, mention_ids, self.entity_ids, top_k=self.top_k)
             alignment.update(matched_pairs)
         return alignment
 

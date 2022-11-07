@@ -3,6 +3,7 @@ from collections import defaultdict
 from tqdm import tqdm
 import torch
 import queue
+import hnswlib
 from sentence_transformers import SentenceTransformer, CrossEncoder, InputExample
 from sentence_transformers.util import dot_score
 from impl.util.transformer import SpecialToken
@@ -37,6 +38,9 @@ def generate_training_data(scenario: MatchingScenario, data_corpus: DataCorpus, 
     input_examples = [InputExample(texts=[mention_input[mention_id], target_input[target_id]], label=1) for mention_id, target_id, _ in positives]
     input_examples.extend([InputExample(texts=[mention_input[mention_id], target_input[target_id]], label=0) for mention_id, target_id, _ in negatives])
     return input_examples
+
+
+# NEAREST-NEIGHBOR SEARCH
 
 
 # optimized version of function in sentence_transformers.util
@@ -111,3 +115,53 @@ def semantic_search(query_embeddings: torch.Tensor, corpus_embeddings: torch.Ten
         top_k_entity_scores = sorted(entity_scores.items(), key=lambda x: x[1], reverse=True)[:top_k]
         pairs.update({Pair(mention_ids[mention_idx], entity_ids[entity_idx], score) for entity_idx, score in top_k_entity_scores})
     return pairs
+
+
+def approximate_paraphrase_mining_embeddings(mention_embeddings: torch.Tensor, mention_ids: List[MentionId], max_pairs: int = 500000, top_k: int = 100, add_best: bool = False) -> Set[Pair]:
+    index = _build_ann_index(mention_embeddings, 400, 64, 100)
+
+    top_k += 1  # a sentence has the highest similarity to itself. Increase +1 as we are interest in distinct pairs
+    best_pairs_per_item = defaultdict(lambda: (None, 0.0))
+    top_pairs = queue.PriorityQueue()
+    min_score = -1
+    num_added = 0
+    for idx_a, mention_emb in mention_embeddings:
+        mention_a = mention_ids[idx_a]
+        for idx_b, dist in index.knn_query(mention_emb, k=top_k):
+            mention_b = mention_ids[idx_b]
+            score = 1 - dist
+            if add_best and score > .5:
+                # collect best pairs per item
+                if best_pairs_per_item[mention_a][1] < score:
+                    best_pairs_per_item[mention_a] = (mention_b, score)
+                if best_pairs_per_item[mention_b][1] < score:
+                    best_pairs_per_item[mention_b] = (mention_a, score)
+            if score > min_score:
+                # collect overall top pairs
+                top_pairs.put((score, *sorted([mention_a, mention_b])))
+                num_added += 1
+                if num_added >= max_pairs:
+                    entry = top_pairs.get()
+                    min_score = entry[0]
+    # assemble the final pairs
+    pairs = {Pair(*sorted([m_a, m_b]), score) for m_a, (m_b, score) in best_pairs_per_item.items()} if add_best else set()
+    while not top_pairs.empty():
+        score, m_a, m_b = top_pairs.get()
+        pairs.add(Pair(m_a, m_b, score))
+    return pairs
+
+
+def approximate_semantic_search(mention_embeddings: torch.Tensor, entity_embeddings: torch.Tensor, mention_ids: List[MentionId], entity_ids: List[int], top_k: int = 10) -> Set[Pair]:
+    pairs = set()
+    index = _build_ann_index(entity_embeddings, 400, 64, 50)
+    for mention_idx, mention_emb in mention_embeddings:
+        pairs.update({Pair(mention_ids[mention_idx], entity_ids[ent_idx], 1 - dist) for ent_idx, dist in index.knn_query(mention_emb, k=top_k)})
+    return pairs
+
+
+def _build_ann_index(embeddings: torch.Tensor, ef_construction: int, M: int, ef: int) -> hnswlib.Index:
+    index = hnswlib.Index(space='ip', dim=embeddings.shape[-1])
+    index.init_index(max_elements=len(embeddings), ef_construction=ef_construction, M=M)
+    index.add_items(embeddings, list(range(len(embeddings))))
+    index.set_ef(ef)
+    return index

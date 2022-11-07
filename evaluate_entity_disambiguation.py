@@ -35,6 +35,7 @@ if __name__ == '__main__':
     # bi-encoder
     parser.add_argument('-l', '--loss', type=str, choices=['COS', 'RL', 'SRL'], default='SRL', help='Loss function for training (only for bi-encoder)')
     parser.add_argument('-k', '--top_k', type=int, default=3, help='Number of ME matches to return per input (only for bi-encoder)')
+    parser.add_argument('-ans', '--approximate_neighbor_search', action=argparse.BooleanOptionalAction, default=False, help='Use approximate nearest neighbor search')
     # cross-encoder
     parser.add_argument('--mm_threshold', type=float, default=.5, help="Confidence threshold to filter MM predictions.")
     parser.add_argument('--me_threshold', type=float, default=.5, help="Confidence threshold to filter ME predictions.")
@@ -75,6 +76,7 @@ if __name__ == '__main__':
         'warmup_steps': args.warmup_steps,
         'batch_size': args.batch_size,
         'top_k': args.top_k,
+        'approximate_neighbor_search': args.approximate_neighbor_search,
         'add_page_context': args.add_page_context,
         'add_text_context': args.add_text_context,
         'add_entity_abstract': args.add_entity_abstract,
