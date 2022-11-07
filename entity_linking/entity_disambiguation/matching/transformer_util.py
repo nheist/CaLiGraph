@@ -127,7 +127,7 @@ def approximate_paraphrase_mining_embeddings(mention_embeddings: torch.Tensor, m
     top_pairs = queue.PriorityQueue()
     min_score = -1
     num_added = 0
-    for idx_a, mention_emb in tqdm(mention_embeddings, desc='MM ann-search'):
+    for idx_a, mention_emb in tqdm(enumerate(mention_embeddings), desc='MM ann-search'):
         mention_a = mention_ids[idx_a]
         for idx_b, dist in index.knn_query(mention_emb, k=top_k):
             mention_b = mention_ids[idx_b]
@@ -158,7 +158,7 @@ def approximate_paraphrase_mining_embeddings(mention_embeddings: torch.Tensor, m
 def approximate_semantic_search(mention_embeddings: torch.Tensor, entity_embeddings: torch.Tensor, mention_ids: List[MentionId], entity_ids: List[int], top_k: int = 10) -> Set[Pair]:
     pairs = set()
     index = _build_ann_index(entity_embeddings, 400, 64, 50)
-    for mention_idx, mention_emb in tqdm(mention_embeddings, desc='ME ann-search'):
+    for mention_idx, mention_emb in tqdm(enumerate(mention_embeddings), desc='ME ann-search'):
         pairs.update({Pair(mention_ids[mention_idx], entity_ids[ent_idx], 1 - dist) for ent_idx, dist in index.knn_query(mention_emb, k=top_k)})
     return pairs
 
