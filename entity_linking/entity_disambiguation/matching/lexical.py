@@ -74,7 +74,7 @@ class BM25Matcher(Matcher):
         alignment = set()
         if self.scenario.is_MM():
             tokenized_mentions = {m_id: _tokenize_label(label) for m_id, label in data_corpus.get_mention_labels(True).items()}
-            max_pairs = data_corpus.alignment.mm_match_count() * 2
+            max_pairs = data_corpus.alignment.mm_match_count() * 50
             alignment.update(self._find_best_pairs(tokenized_mentions, max_pairs, 50, True))
         if self.scenario.is_ME():
             tokenized_mentions = {m_id: _tokenize_label(label) for m_id, label in data_corpus.get_mention_labels().items()}
