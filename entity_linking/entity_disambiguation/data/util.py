@@ -1,4 +1,5 @@
 from typing import List, Tuple, Union, Dict, Optional, Set, Iterable, TypeVar
+from collections import defaultdict
 import random
 from tqdm import tqdm
 from abc import ABC, abstractmethod
@@ -6,9 +7,8 @@ from enum import Enum
 from scipy.special import comb
 import itertools
 from impl.util.transformer import SpecialToken, EntityIndex
-from impl.wikipedia.page_parser import MentionId
+from impl.wikipedia import MentionId, WikiPageStore
 from impl.caligraph.entity import ClgEntity
-from entity_linking.entity_disambiguation.matching.util import MatchingScenario
 
 
 CXS = SpecialToken.CONTEXT_SEP.value
@@ -57,12 +57,9 @@ class Alignment:
         else:
             return len(set(self.entity_to_mention_mapping).intersection(self.known_entities))
 
-    def sample_matches(self, scenario: MatchingScenario) -> List[Pair]:
-        return self._sample_mm_matches() if scenario.is_MM() else self._sample_me_matches()
-
-    def _sample_mm_matches(self) -> List[Pair]:
+    def sample_mm_matches(self) -> List[Pair]:
         mm_matches = []
-        if self.sample_size > self._get_mm_match_count(None):  # return all
+        if self.sample_size > self.get_mm_match_count(None):  # return all
             for mention_group in self.entity_to_mention_mapping.values():
                 mm_matches.extend([tuple(pair) for pair in itertools.combinations(mention_group, 2)])
         else:  # return sample
@@ -73,17 +70,14 @@ class Alignment:
                 mm_matches.append(tuple(random.sample(grp, 2)))
         return mm_matches
 
-    def _sample_me_matches(self) -> List[Pair]:
+    def sample_me_matches(self) -> List[Pair]:
         known_mentions = [m_id for m_id, e_id in self.mention_to_entity_mapping.items() if e_id in self.known_entities]
         if self.sample_size > len(known_mentions):  # return all
             return [(m_id, self.mention_to_entity_mapping[m_id]) for m_id in known_mentions]
         sample_mentions = random.sample(known_mentions, self.sample_size)
         return [(m_id, self.mention_to_entity_mapping[m_id]) for m_id in sample_mentions]
 
-    def get_match_count(self, scenario: MatchingScenario, nil_flag: Optional[bool] = None) -> int:
-        return self._get_mm_match_count(nil_flag) if scenario.is_MM() else self._get_me_match_count(nil_flag)
-
-    def _get_mm_match_count(self, nil_flag: Optional[bool]) -> int:
+    def get_mm_match_count(self, nil_flag: Optional[bool] = None) -> int:
         if nil_flag is None:
             grps = list(self.entity_to_mention_mapping.values())
         elif nil_flag:
@@ -92,7 +86,7 @@ class Alignment:
             grps = [grp for e_id, grp in self.entity_to_mention_mapping.items() if e_id in self.known_entities]
         return sum(comb(len(grp), 2) for grp in grps)
 
-    def _get_me_match_count(self, nil_flag: Optional[bool]) -> int:
+    def get_me_match_count(self, nil_flag: Optional[bool] = None) -> int:
         if nil_flag:
             return 0
         return len([m_id for m_id, e_id in self.mention_to_entity_mapping.items() if e_id in self.known_entities])
@@ -100,42 +94,57 @@ class Alignment:
 
 class CandidateAlignment:
     def __init__(self):
-        pass
+        self.mention_to_target_mapping = defaultdict(dict)
 
     def add_candidate(self, pair: Pair, score: float):
-        pass
+        item_a, item_b = pair
+        if isinstance(item_b, MentionId):
+            item_a, item_b = sorted([item_a, item_b])
+        self.mention_to_target_mapping[item_a][item_b] = score
 
-    def get_mm_candidates(self) -> Iterable[Tuple[Pair, float]]:
-        pass
+    def get_mm_candidates(self, nil_flag: Optional[bool] = None) -> Iterable[Tuple[Pair, float]]:
+        for m_id, targets in self.mention_to_target_mapping.items():
+            for t_id, score in targets.items():
+                pair = (m_id, t_id)
+                if isinstance(t_id, MentionId) and self._is_consistent_with_nil_flag(pair, nil_flag):
+                    yield (m_id, t_id), score
 
-    def get_me_candidates(self) -> Iterable[Tuple[Pair, float]]:
-        pass
+    def get_me_candidates(self, nil_flag: Optional[bool] = None) -> Iterable[Tuple[Pair, float]]:
+        for m_id, targets in self.mention_to_target_mapping.items():
+            for t_id, score in targets.items():
+                pair = (m_id, t_id)
+                if isinstance(t_id, int) and self._is_consistent_with_nil_flag(pair, nil_flag):
+                    yield (m_id, t_id), score
 
-    def get_candidate_count(self, scenario: MatchingScenario = None, nil_flag: Optional[bool] = None) -> int:
-        if scenario is None:
-            return self._get_mm_candidate_count(nil_flag) + self._get_me_candidate_count(nil_flag)
-        return self._get_mm_candidate_count(nil_flag) if scenario.is_MM() else self._get_me_candidate_count(nil_flag)
+    def get_mm_candidate_count(self, nil_flag: Optional[bool] = None) -> int:
+        return sum(1 for pair, _ in self.get_mm_candidates() if self._is_consistent_with_nil_flag(pair, nil_flag))
 
-    def _get_mm_candidate_count(self, nil_flag: Optional[bool]) -> int:
-        pass
+    def get_me_candidate_count(self, nil_flag: Optional[bool] = None) -> int:
+        return sum(1 for pair, _ in self.get_me_candidates() if self._is_consistent_with_nil_flag(pair, nil_flag))
 
-    def _get_me_candidate_count(self, nil_flag: Optional[bool]) -> int:
-        pass
+    def get_mm_overlap(self, alignment: Alignment, nil_flag: Optional[bool] = None) -> int:
+        return sum(1 for pair, _ in self.get_mm_candidates(nil_flag) if pair in alignment)
 
-    def get_overlap(self, alignment: Alignment, scenario: MatchingScenario, nil_flag: Optional[bool] = None) -> int:
-        pass
+    def get_me_overlap(self, alignment: Alignment, nil_flag: Optional[bool] = None) -> int:
+        return sum(1 for pair, _ in self.get_me_candidates(nil_flag) if pair in alignment)
 
-    def _get_mm_overlap(self, alignment: Alignment, nil_flag: Optional[bool]) -> int:
-        pass
+    @classmethod
+    def _is_consistent_with_nil_flag(cls, pair: Pair, nil_flag: Optional[bool]) -> bool:
+        if nil_flag is None:
+            return True
+        if nil_flag:  # True, if any mention id is nil
+            item_a, item_b = pair
+            return cls._is_nil_mention(item_a) or isinstance(item_b, MentionId) and cls._is_nil_mention(item_b)
+        else:  # True, if any mention id is not nil
+            item_a, item_b = pair
+            return not cls._is_nil_mention(item_a) or isinstance(item_b, MentionId) and not cls._is_nil_mention(item_b)
 
-    def _get_me_overlap(self, alignment: Alignment, nil_flag: Optional[bool]) -> int:
-        pass
-
-    def _is_nil_mention(self, mention_id: MentionId) -> bool:
+    @classmethod
+    def _is_nil_mention(cls, mention_id: MentionId) -> bool:
         if mention_id[1] == EntityIndex.NEW_ENTITY:  # NILK dataset
             return mention_id[2] == EntityIndex.NEW_ENTITY
         else:  # LIST dataset
-            return self.wps.get_subject_entity(mention_id).entity_idx == EntityIndex.NEW_ENTITY
+            return WikiPageStore.instance().get_subject_entity(mention_id).entity_idx == EntityIndex.NEW_ENTITY
 
 
 class DataCorpus(ABC):

@@ -18,15 +18,21 @@ class PrecisionRecallF1Evaluator:
         self._compute_and_log_metrics_for_partition(prefix + '-nonNIL', prediction, alignment, runtime, False)
 
     def _compute_and_log_metrics_for_partition(self, prefix: str, prediction: CandidateAlignment, alignment: Alignment, runtime: int, nil_flag: Optional[bool]):
-        pred_count = prediction.get_candidate_count(self.scenario, nil_flag)
-        actual_count = alignment.get_match_count(self.scenario, nil_flag)
-        tp = prediction.get_overlap(alignment, self.scenario, nil_flag)
+        if self.scenario.is_MM():
+            pred_count = prediction.get_mm_candidate_count(nil_flag)
+            actual_count = alignment.get_mm_match_count(nil_flag)
+            tp = prediction.get_mm_overlap(alignment, nil_flag)
+        else:
+            pred_count = prediction.get_me_candidate_count(nil_flag)
+            actual_count = alignment.get_me_match_count(nil_flag)
+            tp = prediction.get_me_overlap(alignment, nil_flag)
         mention_count = alignment.mention_count(nil_flag)
         entity_count = alignment.entity_count(nil_flag)
         metrics = self._compute_metrics(pred_count, actual_count, tp, runtime, mention_count, entity_count)
         self._log_metrics(prefix, metrics)
 
-    def _compute_metrics(self, pred_count: int, actual_count: int, tp: int, runtime: int, mention_count: int, entity_count: int):
+    @classmethod
+    def _compute_metrics(cls, pred_count: int, actual_count: int, tp: int, runtime: int, mention_count: int, entity_count: int):
         # base metrics
         if pred_count > 0 and actual_count > 0:
             precision = tp / pred_count

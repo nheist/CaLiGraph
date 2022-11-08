@@ -48,7 +48,11 @@ class Matcher(ABC):
         return prediction
 
     def _evaluate_scenario(self, eval_mode: str, scenario: MatchingScenario, prediction: CandidateAlignment, alignment: Alignment, prediction_time: int):
-        scenario_prediction_time = int(prediction.get_candidate_count(scenario) / prediction.get_candidate_count() * prediction_time)
+        mm_candidate_count = prediction.get_mm_candidate_count()
+        me_candidate_count = prediction.get_me_candidate_count()
+        scenario_candidate_count = mm_candidate_count if scenario.is_MM() else me_candidate_count
+        total_candidate_count = mm_candidate_count + me_candidate_count
+        scenario_prediction_time = int(scenario_candidate_count / total_candidate_count * prediction_time)
         evaluator = PrecisionRecallF1Evaluator(self.get_approach_name(), scenario)
         evaluator.compute_and_log_metrics(eval_mode, prediction, alignment, scenario_prediction_time)
 
