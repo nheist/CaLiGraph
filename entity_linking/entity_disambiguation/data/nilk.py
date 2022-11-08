@@ -63,16 +63,18 @@ def _init_nilk_data_corpora(sample_size: int) -> Tuple[NilkDataCorpus, NilkDataC
     clge = ClgEntityStore.instance()
     utils.get_logger().debug('NILK: Loading train examples..')
     train_examples = _load_valid_examples_from_jsonl(utils.get_data_file('files.nilk.train'))
-    train_examples = random.sample(train_examples, int(len(train_examples) * sample_size / 100))
+    train_sample = random.sample(train_examples, int(len(train_examples) * sample_size / 100))
     utils.get_logger().debug('NILK: Loading eval examples..')
     eval_examples = _load_valid_examples_from_jsonl(utils.get_data_file('files.nilk.eval'))
+    eval_sample = random.sample(eval_examples, int(len(eval_examples) * sample_size / 100))
     utils.get_logger().debug('NILK: Loading test examples..')
     test_examples = _load_valid_examples_from_jsonl(utils.get_data_file('files.nilk.test'))
+    test_sample = random.sample(test_examples, int(len(test_examples) * sample_size / 100))
     # collect valid entities (i.e., all entities that are not flagged as NIL)
     utils.get_logger().debug('NILK: Collecting valid entities..')
     unknown_entities = {ex.ent_id for ex in train_examples + eval_examples + test_examples if ex.is_nil_entity}
     known_entities = {e.idx for e in clge.get_entities() if e.idx not in unknown_entities}
-    return NilkDataCorpus(train_examples, known_entities), NilkDataCorpus(eval_examples, known_entities), NilkDataCorpus(test_examples, known_entities)
+    return NilkDataCorpus(train_sample, known_entities), NilkDataCorpus(eval_sample, known_entities), NilkDataCorpus(test_sample, known_entities)
 
 
 def _load_valid_examples_from_jsonl(filepath: str) -> List[NilkExample]:
