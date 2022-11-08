@@ -1,4 +1,4 @@
-from typing import Set, Dict, Union
+from typing import Set, Dict, Union, Tuple
 from collections import defaultdict
 import os
 import random
@@ -6,8 +6,9 @@ from torch.utils.data import DataLoader
 from sentence_transformers import CrossEncoder
 import utils
 from impl.wikipedia import MentionId
-from entity_linking.entity_disambiguation.data import Pair, DataCorpus
-from entity_linking.entity_disambiguation.matching.util import MatchingScenario, get_model_path
+from entity_linking.entity_disambiguation.data import CandidateAlignment, DataCorpus, Pair
+from entity_linking.entity_disambiguation.matching.util import MatchingScenario
+from entity_linking.entity_disambiguation.matching.io import get_model_path
 from entity_linking.entity_disambiguation.matching.matcher import MatcherWithCandidates
 from entity_linking.entity_disambiguation.matching import transformer_util
 
@@ -43,7 +44,7 @@ class CrossEncoderMatcher(MatcherWithCandidates):
         }
         return super()._get_param_dict() | params
 
-    def train(self, train_corpus: DataCorpus, eval_corpus: DataCorpus, save_alignment: bool) -> Dict[str, Set[Pair]]:
+    def train(self, train_corpus: DataCorpus, eval_corpus: DataCorpus, save_alignment: bool) -> Dict[str, CandidateAlignment]:
         utils.get_logger().info('Training matcher..')
         self._train_model(train_corpus, eval_corpus)
         return {}  # never predict on the training set with the cross-encoder
@@ -61,11 +62,11 @@ class CrossEncoderMatcher(MatcherWithCandidates):
         utils.get_logger().debug('Preparing training data..')
         training_examples = []
         if self.scenario.is_MM():
-            negatives = [cand for cand in self.mm_candidates[self.MODE_TRAIN] if cand not in train_corpus.alignment]
+            negatives = [pair for pair, _ in self.mm_ca[self.MODE_TRAIN].get_mm_candidates() if pair not in train_corpus.alignment]
             negatives_sample = random.sample(negatives, min(len(negatives), train_corpus.alignment.sample_size * 2))
             training_examples += transformer_util.generate_training_data(MatchingScenario.MENTION_MENTION, train_corpus, negatives_sample, self.add_page_context, self.add_text_context, self.add_entity_abstract, self.add_kg_info)
         if self.scenario.is_ME():
-            negatives = [cand for cand in self.me_candidates[self.MODE_TRAIN] if cand not in train_corpus.alignment]
+            negatives = [pair for pair, _ in self.me_ca[self.MODE_TRAIN].get_me_candidates() if pair not in train_corpus.alignment]
             negatives_sample = random.sample(negatives, min(len(negatives), train_corpus.alignment.sample_size * 2))
             training_examples += transformer_util.generate_training_data(MatchingScenario.MENTION_ENTITY, train_corpus, negatives_sample, self.add_page_context, self.add_text_context, self.add_entity_abstract, self.add_kg_info)
         train_dataloader = DataLoader(training_examples, shuffle=True, batch_size=self.batch_size)
@@ -74,27 +75,31 @@ class CrossEncoderMatcher(MatcherWithCandidates):
         self.model.fit(train_dataloader=train_dataloader, epochs=self.epochs, warmup_steps=self.warmup_steps, save_best_model=False)
         self.model.save(get_model_path(self.id))
 
-    def predict(self, eval_mode: str, data_corpus: DataCorpus) -> Set[Pair]:
+    def predict(self, eval_mode: str, data_corpus: DataCorpus) -> CandidateAlignment:
         mention_input, _ = data_corpus.get_mention_input(self.add_page_context, self.add_text_context)
-        alignment = set()
+        ca = CandidateAlignment()
         if self.scenario.is_MM():
-            mm_pairs = self._score_candidates(self.mm_candidates[eval_mode], mention_input, mention_input)
-            # take all matches that are higher than threshold
-            alignment.update({p for p in mm_pairs if p.confidence > self.mm_threshold})
+            mm_scored_pairs = self._score_pairs(self.mm_ca[eval_mode].get_mm_candidates(), mention_input, mention_input)
+            for pair, score in mm_scored_pairs:
+                if score <= self.mm_threshold:
+                    continue
+                ca.add_candidate(pair, score)
         if self.scenario.is_ME():
             entity_input = data_corpus.get_entity_input(self.add_entity_abstract, self.add_kg_info)
-            me_pairs = self._score_candidates(self.me_candidates[eval_mode], mention_input, entity_input)
+            me_scored_pairs = self._score_pairs(self.me_ca[eval_mode].get_me_candidates(), mention_input, entity_input)
             # take only the most likely match for an item (if higher than threshold)
-            pairs_by_mention = defaultdict(set)
-            for pair in me_pairs:
-                if pair.confidence <= self.me_threshold:
+            scored_pairs_by_mention = defaultdict(set)
+            for pair, score in me_scored_pairs:
+                if score <= self.me_threshold:
                     continue
-                pairs_by_mention[pair.source].add(pair)
-            alignment.update({max(mention_pairs, key=lambda p: p.confidence) for mention_pairs in pairs_by_mention.values()})
-        return alignment
+                scored_pairs_by_mention[pair[0]].add((pair, score))
+            for mention_pairs in scored_pairs_by_mention.values():
+                pair, score = max(mention_pairs, key=lambda x: x[1])
+                ca.add_candidate(pair, score)
+        return ca
 
-    def _score_candidates(self, candidates: Set[Pair], source_input: Dict[MentionId, str], target_input: Dict[Union[MentionId, int], str]) -> Set[Pair]:
-        model_input = [[source_input[s_id], target_input[t_id]] for s_id, t_id, _ in candidates]
+    def _score_pairs(self, pairs: Set[Pair], source_input: Dict[MentionId, str], target_input: Dict[Union[MentionId, int], str]) -> Set[Tuple[Pair, float]]:
+        model_input = [[source_input[s_id], target_input[t_id]] for s_id, t_id in pairs]
         utils.release_gpu()
         predictions = self.model.predict(model_input, batch_size=self.batch_size, show_progress_bar=True)
-        return {Pair(cand[0], cand[1], score) for cand, score in zip(candidates, predictions)}
+        return set(zip(pairs, predictions))

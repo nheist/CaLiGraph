@@ -1,5 +1,5 @@
 from entity_linking.entity_disambiguation.matching.matcher import Matcher
-from entity_linking.entity_disambiguation.matching.util import MatchingScenario, MatchingApproach, load_candidates
+from entity_linking.entity_disambiguation.matching.util import MatchingScenario, MatchingApproach
 from entity_linking.entity_disambiguation.matching.lexical import ExactMatcher, WordMatcher, BM25Matcher
 from entity_linking.entity_disambiguation.matching.graph import PopularityMatcher
 from entity_linking.entity_disambiguation.matching.biencoder import BiEncoderMatcher

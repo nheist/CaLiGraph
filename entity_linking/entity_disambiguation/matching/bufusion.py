@@ -1,11 +1,11 @@
-from typing import Set, Dict, Optional, Tuple, List, Union
+from typing import Set, Dict, Optional, Tuple, List
 from collections import defaultdict
 import random
 import itertools
 import numpy as np
 import utils
 from impl.wikipedia.page_parser import MentionId
-from entity_linking.entity_disambiguation.data import Pair, DataCorpus
+from entity_linking.entity_disambiguation.data import CandidateAlignment, DataCorpus, Pair
 from entity_linking.entity_disambiguation.matching.util import MatchingScenario
 from entity_linking.entity_disambiguation.matching.crossencoder import CrossEncoderMatcher
 
@@ -33,7 +33,7 @@ class BottomUpFusionMatcher(CrossEncoderMatcher):
     def _get_param_dict(self) -> dict:
         return super()._get_param_dict() | {'cc': self.cluster_comparisons, 'ct': self.cluster_threshold}
 
-    def predict(self, eval_mode: str, data_corpus: DataCorpus) -> Set[Pair]:
+    def predict(self, eval_mode: str, data_corpus: DataCorpus) -> CandidateAlignment:
         # prepare inputs
         mention_input, _ = data_corpus.get_mention_input(self.add_page_context, self.add_text_context)
         entity_input = data_corpus.get_entity_input(self.add_entity_abstract, self.add_kg_info)
@@ -87,28 +87,30 @@ class BottomUpFusionMatcher(CrossEncoderMatcher):
                     merge_discarded += 1
             utils.get_logger().debug(f'BUF: Iteration {iteration}; Clusters: {len(clusters)}; Cluster Candidates: {len(cluster_merge_candidates)}; Mention Candidates: {len(mention_candidates)}; Merged: {merge_conducted}; Discarded: {merge_discarded}')
         # compute final alignment
-        alignment = set()
+        ca = CandidateAlignment()
         for cluster in clusters:
-            alignment.update({Pair(m_id, cluster.entity, 1) for m_id in cluster.mentions})
-            alignment.update({Pair(*sorted(item_pair), 1) for item_pair in itertools.combinations(cluster.mentions, 2)})
-        return alignment
+            for m_id in cluster.mentions:
+                ca.add_candidate((m_id, cluster.entity), 1)
+            for pair in itertools.combinations(cluster.mentions, 2):
+                ca.add_candidate(pair, 1)
+        return ca
 
     def _make_me_predictions(self, eval_mode: str, mention_input: Dict[MentionId, str], entity_input: Dict[int, str]) -> Dict[MentionId, Dict[int, float]]:
-        candidates = [cand[:2] for cand in self.me_candidates[eval_mode]]
+        candidates = [pair for pair, _ in self.me_ca[eval_mode].get_me_candidates()]
         candidate_scores = self._compute_scores_for_mention_candidates(candidates, mention_input, entity_input)
         predictions = defaultdict(dict)
         for (mention_id, entity_id), score in zip(candidates, candidate_scores):
             predictions[mention_id][entity_id] = score
         return predictions
 
-    def _compute_scores_for_mention_candidates(self, candidates: List[Tuple[MentionId, Union[MentionId, int]]], mention_input: Dict[MentionId, str], entity_input: Dict[int, str]) -> List[float]:
+    def _compute_scores_for_mention_candidates(self, candidates: List[Pair], mention_input: Dict[MentionId, str], entity_input: Dict[int, str]) -> List[float]:
         model_input = []
-        for cand in candidates:
-            if isinstance(cand[1], MentionId):
-                mention_a, mention_b = cand
+        for pair in candidates:
+            if isinstance(pair[1], MentionId):
+                mention_a, mention_b = pair
                 model_input.append([mention_input[mention_a], mention_input[mention_b]])
             else:
-                mention_id, entity_id = cand
+                mention_id, entity_id = pair
                 model_input.append([mention_input[mention_id], entity_input[entity_id]])
         utils.release_gpu()
         return self.model.predict(model_input, batch_size=self.batch_size, show_progress_bar=True)
@@ -122,7 +124,7 @@ class BottomUpFusionMatcher(CrossEncoderMatcher):
             em_mapping[e_id].add(m_id)
         # group candidates by mention
         mention_candidates = defaultdict(dict)
-        for mention_a, mention_b, score in self.mm_candidates[eval_mode]:
+        for (mention_a, mention_b), score in self.mm_ca[eval_mode].get_mm_candidates():
             mention_candidates[mention_a][mention_b] = score
             mention_candidates[mention_b][mention_a] = score
         # form clusters with known entities
@@ -152,7 +154,7 @@ class BottomUpFusionMatcher(CrossEncoderMatcher):
             cluster_id += 1
         return clusters, cluster_by_mid
 
-    def _sample_candidates_for_cluster_merges(self, cluster_by_id: Dict[int, FusionCluster], cluster_merge_candidates: Set[Tuple[int, int]]) -> Tuple[List[Tuple[MentionId, Union[MentionId, int]]], List[Tuple[int, int]]]:
+    def _sample_candidates_for_cluster_merges(self, cluster_by_id: Dict[int, FusionCluster], cluster_merge_candidates: Set[Tuple[int, int]]) -> Tuple[List[Pair], List[Tuple[int, int]]]:
         mention_candidates = []
         candidate_clusters = []
         for cluster_a_id, cluster_b_id in cluster_merge_candidates:

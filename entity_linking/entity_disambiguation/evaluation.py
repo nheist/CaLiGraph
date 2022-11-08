@@ -1,12 +1,8 @@
-from typing import Set, Optional
-from sklearn.metrics import roc_curve
-import matplotlib.pyplot as plt
+from typing import Optional
 from torch.utils.tensorboard import SummaryWriter
-from entity_linking.entity_disambiguation.data import Pair, Alignment
+from entity_linking.entity_disambiguation.data import Alignment, CandidateAlignment
 from entity_linking.entity_disambiguation.matching.util import MatchingScenario
-from impl.util.transformer import EntityIndex
 from impl.wikipedia import WikiPageStore
-from impl.wikipedia.page_parser import MentionId
 
 
 class PrecisionRecallF1Evaluator:
@@ -15,34 +11,20 @@ class PrecisionRecallF1Evaluator:
         self.scenario = scenario
         self.wps = WikiPageStore.instance()
 
-    def compute_and_log_metrics(self, prefix: str, predicted_pairs: Set[Pair], alignment: Alignment, runtime: int):
+    def compute_and_log_metrics(self, prefix: str, prediction: CandidateAlignment, alignment: Alignment, runtime: int):
         prefix += self.scenario.value
-        self._compute_and_log_metrics_for_partition(prefix, predicted_pairs, alignment, runtime, None)
-        self._compute_and_log_metrics_for_partition(prefix, predicted_pairs, alignment, runtime, True)
-        self._compute_and_log_metrics_for_partition(prefix, predicted_pairs, alignment, runtime, False)
+        self._compute_and_log_metrics_for_partition(prefix, prediction, alignment, runtime, None)
+        self._compute_and_log_metrics_for_partition(prefix + '-NIL', prediction, alignment, runtime, True)
+        self._compute_and_log_metrics_for_partition(prefix + '-nonNIL', prediction, alignment, runtime, False)
 
-    def _compute_and_log_metrics_for_partition(self, prefix: str, predicted_pairs: Set[Pair], alignment: Alignment, runtime: int, nil_partition: Optional[bool]):
-        if nil_partition is None:
-            pass  # no partitioning
-        elif nil_partition:  # partition for NIL only
-            prefix += '-NIL'
-            predicted_pairs = {p for p in predicted_pairs if self._is_nil_mention(p.source) or (self.scenario.is_MM() and self._is_nil_mention(p.target))}
-        else:  # partition for non-NIL only
-            prefix +='-nonNIL'
-            predicted_pairs = {p for p in predicted_pairs if not self._is_nil_mention(p.source) or (self.scenario.is_MM() and not self._is_nil_mention(p.target))}
-        pred_count = len(predicted_pairs)
-        actual_count = alignment.mm_match_count(nil_partition) if self.scenario.is_MM() else alignment.me_match_count(nil_partition)
-        tp = len({p for p in predicted_pairs if p in alignment})
-
-        metrics = self._compute_metrics(pred_count, actual_count, tp, runtime, alignment.mention_count(nil_partition), alignment.entity_count(nil_partition))
+    def _compute_and_log_metrics_for_partition(self, prefix: str, prediction: CandidateAlignment, alignment: Alignment, runtime: int, nil_flag: Optional[bool]):
+        pred_count = prediction.get_candidate_count(self.scenario, nil_flag)
+        actual_count = alignment.get_match_count(self.scenario, nil_flag)
+        tp = prediction.get_overlap(alignment, self.scenario, nil_flag)
+        mention_count = alignment.mention_count(nil_flag)
+        entity_count = alignment.entity_count(nil_flag)
+        metrics = self._compute_metrics(pred_count, actual_count, tp, runtime, mention_count, entity_count)
         self._log_metrics(prefix, metrics)
-        self._log_roc_curve(prefix, predicted_pairs, alignment)
-
-    def _is_nil_mention(self, mention_id: MentionId) -> bool:
-        if mention_id[1] == EntityIndex.NEW_ENTITY:  # NILK dataset
-            return mention_id[2] == EntityIndex.NEW_ENTITY
-        else:  # LIST dataset
-            return self.wps.get_subject_entity(mention_id).entity_idx == EntityIndex.NEW_ENTITY
 
     def _compute_metrics(self, pred_count: int, actual_count: int, tp: int, runtime: int, mention_count: int, entity_count: int):
         # base metrics
@@ -59,15 +41,3 @@ class PrecisionRecallF1Evaluator:
         with SummaryWriter(log_dir=f'./logs/ED/{self.approach_name}') as tb:
             for key, val in metrics.items():
                 tb.add_scalar(f'{prefix}/{key}', val, step)
-
-    def _log_roc_curve(self, prefix: str, predicted_pairs: Set[Pair], alignment: Alignment, step: int = 0):
-        pred = [p[2] for p in predicted_pairs]
-        actual = [1 if p in alignment else 0 for p in predicted_pairs]
-        if not pred or sum(actual) == 0:
-            return
-        fpr, tpr, _ = roc_curve(actual, pred)
-        plt.plot(fpr, tpr)
-        plt.ylabel('True Positive Rate')
-        plt.xlabel('False Positive Rate')
-        with SummaryWriter(log_dir=f'./logs/ED/{self.approach_name}') as tb:
-            tb.add_figure(f'{prefix}/5_roc', plt.gcf(), step)

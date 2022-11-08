@@ -3,7 +3,7 @@ from collections import defaultdict
 import itertools
 import networkx as nx
 from impl.wikipedia import MentionId
-from entity_linking.entity_disambiguation.data import Pair, DataCorpus
+from entity_linking.entity_disambiguation.data import CandidateAlignment, DataCorpus
 from entity_linking.entity_disambiguation.matching.matcher import MatcherWithCandidates
 
 
@@ -11,24 +11,27 @@ class TopDownFusionMatcher(MatcherWithCandidates):
     def _train_model(self, train_corpus: DataCorpus, eval_corpus: DataCorpus):
         pass  # no training necessary
 
-    def predict(self, eval_mode: str, data_corpus: DataCorpus) -> Set[Pair]:
-        mm_candidates, me_candidates = self.mm_candidates[eval_mode], self.me_candidates[eval_mode]
-        ag = self._get_alignment_graph(mm_candidates, me_candidates)
+    def predict(self, eval_mode: str, data_corpus: DataCorpus) -> CandidateAlignment:
+        ag = self._get_alignment_graph(eval_mode)
         valid_subgraphs = self._compute_valid_subgraphs(ag)
-        alignment = set()
+        ca = CandidateAlignment()
         for g in valid_subgraphs:
             mention_nodes = self._get_mention_nodes(g)
-            alignment.update({Pair(*sorted(mention_pair), 1) for mention_pair in itertools.combinations(mention_nodes, 2)})
+            for mention_pair in itertools.combinations(mention_nodes, 2):
+                ca.add_candidate(mention_pair, 1)
             ent_nodes = self._get_entity_nodes(g)
             if ent_nodes:
                 ent_node = ent_nodes.pop()
-                alignment.update({Pair(m_id, ent_node, 1) for m_id in mention_nodes})
-        return alignment
+                for m_id in mention_nodes:
+                    ca.add_candidate((m_id, ent_node), 1)
+        return ca
 
-    def _get_alignment_graph(self, mm_candidates: Set[Pair], me_candidates: Set[Pair]) -> nx.Graph:
+    def _get_alignment_graph(self, eval_mode: str) -> nx.Graph:
         ag = nx.Graph()
-        ag.add_nodes_from([p.target for p in me_candidates], is_ent=True)  # first initialize entity nodes
-        ag.add_weighted_edges_from(mm_candidates | me_candidates)  # then add all edges
+        for (m_id, e_id), score in self.me_ca[eval_mode].get_me_candidates():
+            ag.add_node(e_id, is_ent=True)
+            ag.add_edge(e_id, m_id, weight=score)
+        ag.add_weighted_edges_from([(u, v, score) for (u, v), score in self.mm_ca[eval_mode].get_mm_candidates()])
         return ag
 
     def _compute_valid_subgraphs(self, ag: nx.Graph) -> List[nx.Graph]:

@@ -1,5 +1,6 @@
 from .data import CorpusType, get_data_corpora
-from .matching.util import MatchingScenario, MatchingApproach, store_candidates
+from .matching.util import MatchingScenario, MatchingApproach
+from .matching.io import store_candidate_alignment
 from .matching import initialize_matcher
 from impl.subject_entity import mention_detection
 
@@ -13,4 +14,4 @@ def run_evaluation(scenario: MatchingScenario, approach: MatchingApproach, corpu
     alignments = matcher.train(train_data, eval_data, save_alignment)
     alignments |= matcher.test(test_data)
     if save_alignment:
-        store_candidates(matcher.get_approach_name(), alignments)
+        store_candidate_alignment(matcher.get_approach_name(), alignments)

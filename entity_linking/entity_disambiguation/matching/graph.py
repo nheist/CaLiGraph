@@ -1,6 +1,6 @@
 from typing import Set, Tuple
 from collections import defaultdict
-from entity_linking.entity_disambiguation.data import Pair, DataCorpus
+from entity_linking.entity_disambiguation.data import CandidateAlignment, DataCorpus
 from entity_linking.entity_disambiguation.matching.matcher import MatcherWithCandidates
 from entity_linking.entity_disambiguation.matching.util import MatchingScenario
 from impl.caligraph.entity import ClgEntity
@@ -28,10 +28,13 @@ class PopularityMatcher(MatcherWithCandidates):
         ent_idx = ent_with_score[0]
         return self.entity_popularity[ent_idx]
 
-    def predict(self, eval_mode: str, data_corpus: DataCorpus) -> Set[Pair]:
+    def predict(self, eval_mode: str, data_corpus: DataCorpus) -> CandidateAlignment:
         assert self.scenario == MatchingScenario.MENTION_ENTITY, 'PopularityMatcher can only be applied in ME scenario.'
         candidates_by_mention = defaultdict(set)
-        for mention, ent, score in self.me_candidates[eval_mode]:
-            candidates_by_mention[mention].add((ent, score))
-        alignment = [(mention, *max(ents, key=self._get_entity_popularity)) for mention, ents in candidates_by_mention.items()]
-        return {Pair(source, target, score) for source, target, score in alignment}
+        for mention_id, ent_id, score in self.me_ca[eval_mode].get_me_candidates():
+            candidates_by_mention[mention_id].add((ent_id, score))
+        ca = CandidateAlignment()
+        for mention_id, ents in candidates_by_mention.items():
+            ent_id, score = max(ents, key=self._get_entity_popularity)
+            ca.add_candidate((mention_id, ent_id), score)
+        return ca
