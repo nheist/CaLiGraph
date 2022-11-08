@@ -2,6 +2,7 @@ from typing import Optional
 from torch.utils.tensorboard import SummaryWriter
 from entity_linking.entity_disambiguation.data import Alignment, CandidateAlignment
 from entity_linking.entity_disambiguation.matching.util import MatchingScenario
+import utils
 from impl.wikipedia import WikiPageStore
 
 
@@ -18,6 +19,7 @@ class PrecisionRecallF1Evaluator:
         self._compute_and_log_metrics_for_partition(prefix + '-nonNIL', prediction, alignment, runtime, False)
 
     def _compute_and_log_metrics_for_partition(self, prefix: str, prediction: CandidateAlignment, alignment: Alignment, runtime: int, nil_flag: Optional[bool]):
+        utils.get_logger().debug(f'Computing metrics for {prefix}..')
         if self.scenario.is_MM():
             pred_count = prediction.get_mm_candidate_count(nil_flag)
             actual_count = alignment.get_mm_match_count(nil_flag)

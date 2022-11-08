@@ -2,6 +2,7 @@ from typing import Set, List
 from collections import defaultdict
 import itertools
 import networkx as nx
+import utils
 from impl.wikipedia import MentionId
 from entity_linking.entity_disambiguation.data import CandidateAlignment, DataCorpus
 from entity_linking.entity_disambiguation.matching.matcher import MatcherWithCandidates
@@ -27,6 +28,7 @@ class TopDownFusionMatcher(MatcherWithCandidates):
         return ca
 
     def _get_alignment_graph(self, eval_mode: str) -> nx.Graph:
+        utils.get_logger().debug('Initializing alignment graph..')
         ag = nx.Graph()
         for (m_id, e_id), score in self.me_ca[eval_mode].get_me_candidates():
             ag.add_node(e_id, is_ent=True)
@@ -35,6 +37,7 @@ class TopDownFusionMatcher(MatcherWithCandidates):
         return ag
 
     def _compute_valid_subgraphs(self, ag: nx.Graph) -> List[nx.Graph]:
+        utils.get_logger().debug('Computing valid subgraphs..')
         valid_subgraphs = []
         for nodes in nx.connected_components(ag):
             sg = ag.subgraph(nodes)
@@ -56,6 +59,7 @@ class TopDownFusionMatcher(MatcherWithCandidates):
         return {node for node, is_ent in g.nodes(data='is_ent') if not is_ent}
 
     def _split_into_valid_subgraphs(self, ag: nx.Graph) -> List[nx.Graph]:
+        utils.get_logger().debug(f'Splitting graph of size {len(ag.nodes)} into valid subgraphs..')
         node_groups = defaultdict(set)
         weight_fct = lambda u, v, edge_attrs: 1 - edge_attrs['weight']  # use inversed weight
         for node, path in nx.multi_source_dijkstra_path(ag, self._get_entity_nodes(ag), weight=weight_fct).items():

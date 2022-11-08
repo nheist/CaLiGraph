@@ -57,14 +57,13 @@ class BiEncoderMatcher(Matcher):
             transformer_util.add_special_tokens(self.model)
         if self.epochs == 0:
             return  # skip training
-        utils.get_logger().debug('Preparing training data..')
         training_examples = []
         if self.scenario.is_MM():
             training_examples += transformer_util.generate_training_data(MatchingScenario.MENTION_MENTION, train_corpus, [], self.add_page_context, self.add_text_context, self.add_entity_abstract, self.add_kg_info)
         if self.scenario.is_ME():
             training_examples += transformer_util.generate_training_data(MatchingScenario.MENTION_ENTITY, train_corpus, [], self.add_page_context, self.add_text_context, self.add_entity_abstract, self.add_kg_info)
         train_dataloader = DataLoader(training_examples, shuffle=True, batch_size=self.batch_size)
-        utils.get_logger().debug('Starting training..')
+        utils.get_logger().debug('Training bi-encoder model..')
         utils.release_gpu()
         self.model.fit(train_objectives=[(train_dataloader, self._get_loss_function())], epochs=self.epochs, warmup_steps=self.warmup_steps, save_best_model=False)
         self.model.save(get_model_path(self.id))
@@ -104,4 +103,6 @@ class BiEncoderMatcher(Matcher):
         return ca
 
     def _compute_embeddings(self, inputs: List[str]) -> Tensor:
+        utils.get_logger().debug('Computing entity embeddings..')
+        utils.release_gpu()
         return self.model.encode(inputs, batch_size=self.batch_size, normalize_embeddings=True, convert_to_numpy=self.ans, convert_to_tensor=(not self.ans), show_progress_bar=True)

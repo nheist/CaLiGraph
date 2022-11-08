@@ -37,7 +37,7 @@ class Matcher(ABC):
         return {self.MODE_TEST: self._evaluate(self.MODE_TEST, test_corpus)}
 
     def _evaluate(self, eval_mode: str, data_corpus: DataCorpus) -> CandidateAlignment:
-        utils.release_gpu()
+        utils.get_logger().debug('Making predictions..')
         pred_start = process_time()
         prediction = self.predict(eval_mode, data_corpus)
         prediction_time_in_seconds = int(process_time() - pred_start)
@@ -48,6 +48,7 @@ class Matcher(ABC):
         return prediction
 
     def _evaluate_scenario(self, eval_mode: str, scenario: MatchingScenario, prediction: CandidateAlignment, alignment: Alignment, prediction_time: int):
+        utils.get_logger().debug(f'Running evaluation for scenario {scenario.name}..')
         mm_candidate_count = prediction.get_mm_candidate_count()
         me_candidate_count = prediction.get_me_candidate_count()
         scenario_candidate_count = mm_candidate_count if scenario.is_MM() else me_candidate_count

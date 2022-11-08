@@ -59,7 +59,6 @@ class CrossEncoderMatcher(MatcherWithCandidates):
             transformer_util.add_special_tokens(self.model)
         if self.epochs == 0:
             return  # skip training
-        utils.get_logger().debug('Preparing training data..')
         training_examples = []
         if self.scenario.is_MM():
             negatives = [pair for pair, _ in self.mm_ca[self.MODE_TRAIN].get_mm_candidates() if pair not in train_corpus.alignment]
@@ -70,7 +69,7 @@ class CrossEncoderMatcher(MatcherWithCandidates):
             negatives_sample = random.sample(negatives, min(len(negatives), train_corpus.alignment.sample_size * 2))
             training_examples += transformer_util.generate_training_data(MatchingScenario.MENTION_ENTITY, train_corpus, negatives_sample, self.add_page_context, self.add_text_context, self.add_entity_abstract, self.add_kg_info)
         train_dataloader = DataLoader(training_examples, shuffle=True, batch_size=self.batch_size)
-        utils.get_logger().debug('Starting training..')
+        utils.get_logger().debug('Training cross-encoder model..')
         utils.release_gpu()
         self.model.fit(train_dataloader=train_dataloader, epochs=self.epochs, warmup_steps=self.warmup_steps, save_best_model=False)
         self.model.save(get_model_path(self.id))
@@ -79,6 +78,7 @@ class CrossEncoderMatcher(MatcherWithCandidates):
         mention_input, _ = data_corpus.get_mention_input(self.add_page_context, self.add_text_context)
         ca = CandidateAlignment()
         if self.scenario.is_MM():
+            utils.get_logger().debug('Computing mention-mention matches..')
             mm_scored_pairs = self._score_pairs(self.mm_ca[eval_mode].get_mm_candidates(), mention_input, mention_input)
             for pair, score in mm_scored_pairs:
                 if score <= self.mm_threshold:
@@ -86,6 +86,7 @@ class CrossEncoderMatcher(MatcherWithCandidates):
                 ca.add_candidate(pair, score)
         if self.scenario.is_ME():
             entity_input = data_corpus.get_entity_input(self.add_entity_abstract, self.add_kg_info)
+            utils.get_logger().debug('Computing mention-entity matches..')
             me_scored_pairs = self._score_pairs(self.me_ca[eval_mode].get_me_candidates(), mention_input, entity_input)
             # take only the most likely match for an item (if higher than threshold)
             scored_pairs_by_mention = defaultdict(set)

@@ -96,6 +96,7 @@ class BottomUpFusionMatcher(CrossEncoderMatcher):
         return ca
 
     def _make_me_predictions(self, eval_mode: str, mention_input: Dict[MentionId, str], entity_input: Dict[int, str]) -> Dict[MentionId, Dict[int, float]]:
+        utils.get_logger().debug('Computing mention-entity matches..')
         candidates = [pair for pair, _ in self.me_ca[eval_mode].get_me_candidates()]
         candidate_scores = self._compute_scores_for_mention_candidates(candidates, mention_input, entity_input)
         predictions = defaultdict(dict)
@@ -116,6 +117,7 @@ class BottomUpFusionMatcher(CrossEncoderMatcher):
         return self.model.predict(model_input, batch_size=self.batch_size, show_progress_bar=True)
 
     def _init_clusters(self, eval_mode: str, predictions: Dict[MentionId, Dict[int, float]]) -> Tuple[List[FusionCluster], Dict[MentionId, FusionCluster]]:
+        utils.get_logger().debug('Initializing clusters..')
         # group mentions by matching entity
         me_mapping = {m_id: max(ents.items(), key=lambda x: x[1]) for m_id, ents in predictions.items()}
         me_mapping = {m_id: ent_id for m_id, (ent_id, score) in me_mapping.items() if score > self.me_threshold}

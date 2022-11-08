@@ -36,7 +36,7 @@ class ListingDataCorpus(DataCorpus):
         return mention_labels
 
     def get_mention_input(self, add_page_context: bool, add_text_context: bool) -> Tuple[Dict[MentionId, str], Dict[MentionId, bool]]:
-        utils.get_logger().debug('Preparing listing items..')
+        utils.get_logger().debug('Preparing mention input..')
         result = {}
         result_ent_known = {}
         if not add_page_context and not add_text_context:
