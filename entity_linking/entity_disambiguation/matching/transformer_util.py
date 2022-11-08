@@ -120,28 +120,28 @@ def semantic_search(ca: CandidateAlignment, query_embeddings: torch.Tensor, corp
 
 def approximate_paraphrase_mining_embeddings(ca: CandidateAlignment, mention_embeddings: torch.Tensor, mention_ids: List[MentionId], max_pairs: int = 500000, top_k: int = 100, add_best: bool = False):
     index = _build_ann_index(mention_embeddings, 400, 64, 100)
-
+    utils.get_logger().debug('Running MM ANN-search..')
     top_k += 1  # a sentence has the highest similarity to itself. Increase +1 as we are interest in distinct pairs
     best_pairs_per_item = defaultdict(lambda: (None, 0.0))
     top_pairs = queue.PriorityQueue()
     min_score = -1
     num_added = 0
-    for idx_a, mention_emb in tqdm(enumerate(mention_embeddings), desc='MM ann-search'):
-        mention_a = mention_ids[idx_a]
-        for idx_b, dist in zip(*index.knn_query(mention_emb, k=top_k)):
-            mention_b = mention_ids[idx_b]
-            if mention_a == mention_b:
+    for query_idx, (corpus_indices, distances) in enumerate(zip(*index.knn_query(mention_embeddings, k=top_k))):
+        query_mention = mention_ids[query_idx]
+        for corpus_idx, dist in zip(corpus_indices, distances):
+            corpus_mention = mention_ids[corpus_idx]
+            if query_mention == corpus_mention:
                 continue
             score = 1 - dist
             if add_best and score > .5:
                 # collect best pairs per item
-                if best_pairs_per_item[mention_a][1] < score:
-                    best_pairs_per_item[mention_a] = (mention_b, score)
-                if best_pairs_per_item[mention_b][1] < score:
-                    best_pairs_per_item[mention_b] = (mention_a, score)
+                if best_pairs_per_item[query_mention][1] < score:
+                    best_pairs_per_item[query_mention] = (corpus_mention, score)
+                if best_pairs_per_item[corpus_mention][1] < score:
+                    best_pairs_per_item[corpus_mention] = (query_mention, score)
             if score > min_score:
                 # collect overall top pairs
-                top_pairs.put((score, *sorted([mention_a, mention_b])))
+                top_pairs.put((score, query_mention, corpus_mention))
                 num_added += 1
                 if num_added >= max_pairs:
                     entry = top_pairs.get()
@@ -157,9 +157,10 @@ def approximate_paraphrase_mining_embeddings(ca: CandidateAlignment, mention_emb
 
 def approximate_semantic_search(ca: CandidateAlignment, mention_embeddings: torch.Tensor, entity_embeddings: torch.Tensor, mention_ids: List[MentionId], entity_ids: List[int], top_k: int = 10):
     index = _build_ann_index(entity_embeddings, 400, 64, 50)
-    for mention_idx, mention_emb in tqdm(enumerate(mention_embeddings), desc='ME ann-search'):
+    utils.get_logger().debug('Running ME ANN-search..')
+    for mention_idx, (entity_indices, distances) in enumerate(zip(*index.knn_query(mention_embeddings, k=top_k))):
         m_id = mention_ids[mention_idx]
-        for ent_idx, dist in zip(*index.knn_query(mention_emb, k=top_k)):
+        for ent_idx, dist in zip(entity_indices, distances):
             e_id = entity_ids[ent_idx]
             ca.add_candidate((m_id, e_id), 1 - dist)
 
