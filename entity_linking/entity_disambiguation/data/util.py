@@ -97,36 +97,33 @@ class CandidateAlignment:
         self.mention_to_target_mapping = defaultdict(dict)
 
     def add_candidate(self, pair: Pair, score: float):
-        item_a, item_b = pair
-        if isinstance(item_b, MentionId):
-            item_a, item_b = sorted([item_a, item_b])
+        item_a, item_b = sorted(pair) if isinstance(pair[1], MentionId) else pair
         self.mention_to_target_mapping[item_a][item_b] = score
 
-    def get_mm_candidates(self, nil_flag: Optional[bool] = None) -> Iterable[Tuple[Pair, float]]:
-        for m_id, targets in self.mention_to_target_mapping.items():
-            for t_id, score in targets.items():
-                pair = (m_id, t_id)
-                if isinstance(t_id, MentionId) and self._is_consistent_with_nil_flag(pair, nil_flag):
-                    yield (m_id, t_id), score
+    def get_mm_candidates(self, include_score: bool, nil_flag: Optional[bool] = None) -> Iterable[Union[Pair, Tuple[Pair, float]]]:
+        yield from self._get_candidates(MentionId, include_score, nil_flag)
 
-    def get_me_candidates(self, nil_flag: Optional[bool] = None) -> Iterable[Tuple[Pair, float]]:
+    def get_me_candidates(self, include_score: bool, nil_flag: Optional[bool] = None) -> Iterable[Union[Pair, Tuple[Pair, float]]]:
+        yield from self._get_candidates(int, include_score, nil_flag)
+
+    def _get_candidates(self, target_type, include_score: bool, nil_flag: Optional[bool]) -> Iterable[Union[Pair, Tuple[Pair, float]]]:
         for m_id, targets in self.mention_to_target_mapping.items():
             for t_id, score in targets.items():
                 pair = (m_id, t_id)
-                if isinstance(t_id, int) and self._is_consistent_with_nil_flag(pair, nil_flag):
-                    yield (m_id, t_id), score
+                if isinstance(t_id, target_type) and self._is_consistent_with_nil_flag(pair, nil_flag):
+                    yield ((m_id, t_id), score) if include_score else (m_id, t_id)
 
     def get_mm_candidate_count(self, nil_flag: Optional[bool] = None) -> int:
-        return sum(1 for pair, _ in self.get_mm_candidates() if self._is_consistent_with_nil_flag(pair, nil_flag))
+        return sum(1 for pair in self.get_mm_candidates(False) if self._is_consistent_with_nil_flag(pair, nil_flag))
 
     def get_me_candidate_count(self, nil_flag: Optional[bool] = None) -> int:
-        return sum(1 for pair, _ in self.get_me_candidates() if self._is_consistent_with_nil_flag(pair, nil_flag))
+        return sum(1 for pair in self.get_me_candidates(False) if self._is_consistent_with_nil_flag(pair, nil_flag))
 
     def get_mm_overlap(self, alignment: Alignment, nil_flag: Optional[bool] = None) -> int:
-        return sum(1 for pair, _ in self.get_mm_candidates(nil_flag) if pair in alignment)
+        return sum(1 for pair in self.get_mm_candidates(False, nil_flag) if pair in alignment)
 
     def get_me_overlap(self, alignment: Alignment, nil_flag: Optional[bool] = None) -> int:
-        return sum(1 for pair, _ in self.get_me_candidates(nil_flag) if pair in alignment)
+        return sum(1 for pair in self.get_me_candidates(False, nil_flag) if pair in alignment)
 
     @classmethod
     def _is_consistent_with_nil_flag(cls, pair: Pair, nil_flag: Optional[bool]) -> bool:

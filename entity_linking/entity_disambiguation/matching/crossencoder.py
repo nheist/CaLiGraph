@@ -1,4 +1,4 @@
-from typing import Set, Dict, Union, Tuple
+from typing import Set, Dict, Union, Tuple, Iterable
 from collections import defaultdict
 import os
 import random
@@ -61,11 +61,11 @@ class CrossEncoderMatcher(MatcherWithCandidates):
             return  # skip training
         training_examples = []
         if self.scenario.is_MM():
-            negatives = [pair for pair, _ in self.mm_ca[self.MODE_TRAIN].get_mm_candidates() if pair not in train_corpus.alignment]
+            negatives = [pair for pair in self.mm_ca[self.MODE_TRAIN].get_mm_candidates(False) if pair not in train_corpus.alignment]
             negatives_sample = random.sample(negatives, min(len(negatives), train_corpus.alignment.sample_size * 2))
             training_examples += transformer_util.generate_training_data(MatchingScenario.MENTION_MENTION, train_corpus, negatives_sample, self.add_page_context, self.add_text_context, self.add_entity_abstract, self.add_kg_info)
         if self.scenario.is_ME():
-            negatives = [pair for pair, _ in self.me_ca[self.MODE_TRAIN].get_me_candidates() if pair not in train_corpus.alignment]
+            negatives = [pair for pair in self.me_ca[self.MODE_TRAIN].get_me_candidates(False) if pair not in train_corpus.alignment]
             negatives_sample = random.sample(negatives, min(len(negatives), train_corpus.alignment.sample_size * 2))
             training_examples += transformer_util.generate_training_data(MatchingScenario.MENTION_ENTITY, train_corpus, negatives_sample, self.add_page_context, self.add_text_context, self.add_entity_abstract, self.add_kg_info)
         train_dataloader = DataLoader(training_examples, shuffle=True, batch_size=self.batch_size)
@@ -79,7 +79,7 @@ class CrossEncoderMatcher(MatcherWithCandidates):
         ca = CandidateAlignment()
         if self.scenario.is_MM():
             utils.get_logger().debug('Computing mention-mention matches..')
-            mm_scored_pairs = self._score_pairs(self.mm_ca[eval_mode].get_mm_candidates(), mention_input, mention_input)
+            mm_scored_pairs = self._score_pairs(self.mm_ca[eval_mode].get_mm_candidates(False), mention_input, mention_input)
             for pair, score in mm_scored_pairs:
                 if score <= self.mm_threshold:
                     continue
@@ -87,7 +87,7 @@ class CrossEncoderMatcher(MatcherWithCandidates):
         if self.scenario.is_ME():
             entity_input = data_corpus.get_entity_input(self.add_entity_abstract, self.add_kg_info)
             utils.get_logger().debug('Computing mention-entity matches..')
-            me_scored_pairs = self._score_pairs(self.me_ca[eval_mode].get_me_candidates(), mention_input, entity_input)
+            me_scored_pairs = self._score_pairs(self.me_ca[eval_mode].get_me_candidates(False), mention_input, entity_input)
             # take only the most likely match for an item (if higher than threshold)
             scored_pairs_by_mention = defaultdict(set)
             for pair, score in me_scored_pairs:
@@ -99,7 +99,7 @@ class CrossEncoderMatcher(MatcherWithCandidates):
                 ca.add_candidate(pair, score)
         return ca
 
-    def _score_pairs(self, pairs: Set[Pair], source_input: Dict[MentionId, str], target_input: Dict[Union[MentionId, int], str]) -> Set[Tuple[Pair, float]]:
+    def _score_pairs(self, pairs: Iterable[Pair], source_input: Dict[MentionId, str], target_input: Dict[Union[MentionId, int], str]) -> Set[Tuple[Pair, float]]:
         model_input = [[source_input[s_id], target_input[t_id]] for s_id, t_id in pairs]
         utils.release_gpu()
         predictions = self.model.predict(model_input, batch_size=self.batch_size, show_progress_bar=True)

@@ -97,7 +97,7 @@ class BottomUpFusionMatcher(CrossEncoderMatcher):
 
     def _make_me_predictions(self, eval_mode: str, mention_input: Dict[MentionId, str], entity_input: Dict[int, str]) -> Dict[MentionId, Dict[int, float]]:
         utils.get_logger().debug('Computing mention-entity matches..')
-        candidates = [pair for pair, _ in self.me_ca[eval_mode].get_me_candidates()]
+        candidates = list(self.me_ca[eval_mode].get_me_candidates(False))
         candidate_scores = self._compute_scores_for_mention_candidates(candidates, mention_input, entity_input)
         predictions = defaultdict(dict)
         for (mention_id, entity_id), score in zip(candidates, candidate_scores):
@@ -126,7 +126,7 @@ class BottomUpFusionMatcher(CrossEncoderMatcher):
             em_mapping[e_id].add(m_id)
         # group candidates by mention
         mention_candidates = defaultdict(dict)
-        for (mention_a, mention_b), score in self.mm_ca[eval_mode].get_mm_candidates():
+        for (mention_a, mention_b), score in self.mm_ca[eval_mode].get_mm_candidates(True):
             mention_candidates[mention_a][mention_b] = score
             mention_candidates[mention_b][mention_a] = score
         # form clusters with known entities

@@ -30,10 +30,10 @@ class TopDownFusionMatcher(MatcherWithCandidates):
     def _get_alignment_graph(self, eval_mode: str) -> nx.Graph:
         utils.get_logger().debug('Initializing alignment graph..')
         ag = nx.Graph()
-        for (m_id, e_id), score in self.me_ca[eval_mode].get_me_candidates():
+        for (m_id, e_id), score in self.me_ca[eval_mode].get_me_candidates(True):
             ag.add_node(e_id, is_ent=True)
             ag.add_edge(e_id, m_id, weight=score)
-        ag.add_weighted_edges_from([(u, v, score) for (u, v), score in self.mm_ca[eval_mode].get_mm_candidates()])
+        ag.add_weighted_edges_from([(u, v, score) for (u, v), score in self.mm_ca[eval_mode].get_mm_candidates(True)])
         return ag
 
     def _compute_valid_subgraphs(self, ag: nx.Graph) -> List[nx.Graph]:
