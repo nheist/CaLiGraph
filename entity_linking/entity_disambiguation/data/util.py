@@ -37,7 +37,7 @@ class Alignment:
         source, target = pair
         if isinstance(target, MentionId):
             if source not in self.mention_to_entity_mapping or target not in self.mention_to_entity_mapping:
-                return True
+                return False
             return self.mention_to_entity_mapping[source] == self.mention_to_entity_mapping[target]
         return source in self.mention_to_entity_mapping and self.mention_to_entity_mapping[source] == target
 
