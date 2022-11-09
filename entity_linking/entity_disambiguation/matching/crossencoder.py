@@ -1,4 +1,4 @@
-from typing import Set, Dict, Union, Tuple, Iterable
+from typing import Set, Dict, Union, Tuple, List
 from collections import defaultdict
 import os
 import random
@@ -79,27 +79,25 @@ class CrossEncoderMatcher(MatcherWithCandidates):
         ca = CandidateAlignment()
         if self.scenario.is_MM():
             utils.get_logger().debug('Computing mention-mention matches..')
-            mm_scored_pairs = self._score_pairs(self.mm_ca[eval_mode].get_mm_candidates(False), mention_input, mention_input)
-            for pair, score in mm_scored_pairs:
+            for pair, score in self._score_pairs(list(self.mm_ca[eval_mode].get_mm_candidates(False)), mention_input, mention_input):
                 if score <= self.mm_threshold:
                     continue
                 ca.add_candidate(pair, score)
         if self.scenario.is_ME():
             entity_input = data_corpus.get_entity_input(self.add_entity_abstract, self.add_kg_info)
             utils.get_logger().debug('Computing mention-entity matches..')
-            me_scored_pairs = self._score_pairs(self.me_ca[eval_mode].get_me_candidates(False), mention_input, entity_input)
             # take only the most likely match for an item (if higher than threshold)
             scored_pairs_by_mention = defaultdict(set)
-            for pair, score in me_scored_pairs:
+            for pair, score in self._score_pairs(list(self.me_ca[eval_mode].get_me_candidates(False)), mention_input, entity_input):
                 if score <= self.me_threshold:
                     continue
                 scored_pairs_by_mention[pair[0]].add((pair, score))
-            for mention_pairs in scored_pairs_by_mention.values():
-                pair, score = max(mention_pairs, key=lambda x: x[1])
+            for scored_pairs in scored_pairs_by_mention.values():
+                pair, score = max(scored_pairs, key=lambda x: x[1])
                 ca.add_candidate(pair, score)
         return ca
 
-    def _score_pairs(self, pairs: Iterable[Pair], source_input: Dict[MentionId, str], target_input: Dict[Union[MentionId, int], str]) -> Set[Tuple[Pair, float]]:
+    def _score_pairs(self, pairs: List[Pair], source_input: Dict[MentionId, str], target_input: Dict[Union[MentionId, int], str]) -> Set[Tuple[Pair, float]]:
         model_input = [[source_input[s_id], target_input[t_id]] for s_id, t_id in pairs]
         utils.release_gpu()
         predictions = self.model.predict(model_input, batch_size=self.batch_size, show_progress_bar=True)
