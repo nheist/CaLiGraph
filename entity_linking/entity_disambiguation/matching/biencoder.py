@@ -1,5 +1,6 @@
-from typing import List
+from typing import List, Union
 import os
+import numpy as np
 from torch import Tensor, nn
 from torch.utils.data import DataLoader
 from sentence_transformers import SentenceTransformer, losses
@@ -8,6 +9,7 @@ from entity_linking.entity_disambiguation.data import CandidateAlignment, DataCo
 from entity_linking.entity_disambiguation.matching.util import MatchingScenario
 from entity_linking.entity_disambiguation.matching.io import get_model_path
 from entity_linking.entity_disambiguation.matching.matcher import Matcher
+from entity_linking.entity_disambiguation.matching.lexical import ExactMatcher
 from entity_linking.entity_disambiguation.matching import transformer_util
 
 
@@ -22,6 +24,7 @@ class BiEncoderMatcher(Matcher):
         self.add_text_context = params['add_text_context']
         self.add_entity_abstract = params['add_entity_abstract']
         self.add_kg_info = params['add_kg_info']
+        self.init_exact = params['init_exact']
         # training params
         self.loss = params['loss']
         self.batch_size = params['batch_size']
@@ -40,6 +43,7 @@ class BiEncoderMatcher(Matcher):
             'atc': self.add_text_context,
             'aea': self.add_entity_abstract,
             'aki': self.add_kg_info,
+            'ie': self.init_exact,
             'l': self.loss,
             'bs': self.batch_size,
             'e': self.epochs,
@@ -81,12 +85,12 @@ class BiEncoderMatcher(Matcher):
         mention_input, mention_known = data_corpus.get_mention_input(self.add_page_context, self.add_text_context)
         mention_ids = list(mention_input)
         mention_embeddings = self._compute_embeddings(list(mention_input.values()))
-        ca = CandidateAlignment()
+        ca = ExactMatcher(self.scenario, {}).predict(eval_mode, data_corpus) if self.init_exact else CandidateAlignment()
         if self.scenario.is_MM():
             known_mask = [mention_known[m_id] for m_id in mention_ids]
             known_mention_ids = [m_id for m_id, known in zip(mention_ids, known_mask) if known]
             known_mention_embeddings = mention_embeddings[known_mask]
-            max_pairs = data_corpus.alignment.get_mm_match_count() * 50
+            max_pairs = ca.get_mm_candidate_count() * 2 if self.init_exact else data_corpus.alignment.get_mm_match_count() * 50
             if self.ans:
                 transformer_util.approximate_paraphrase_mining_embeddings(ca, known_mention_embeddings, known_mention_ids, max_pairs=max_pairs, top_k=50, add_best=True)
             else:
@@ -102,7 +106,7 @@ class BiEncoderMatcher(Matcher):
                 transformer_util.semantic_search(ca, mention_embeddings, self.entity_embeddings, mention_ids, self.entity_ids, top_k=self.top_k)
         return ca
 
-    def _compute_embeddings(self, inputs: List[str]) -> Tensor:
+    def _compute_embeddings(self, inputs: List[str]) -> Union[Tensor, np.ndarray]:
         utils.get_logger().debug('Computing embeddings..')
         utils.release_gpu()
         return self.model.encode(inputs, batch_size=self.batch_size, normalize_embeddings=True, convert_to_numpy=self.ans, convert_to_tensor=(not self.ans), show_progress_bar=True)
