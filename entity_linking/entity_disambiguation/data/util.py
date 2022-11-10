@@ -97,6 +97,13 @@ class CandidateAlignment:
     def __init__(self):
         self.mention_to_target_mapping = defaultdict(dict)
 
+    def __contains__(self, pair: Pair) -> bool:
+        if isinstance(pair[1], MentionId):
+            mention_a, mention_b = sorted(pair)
+            return mention_a in self.mention_to_target_mapping and mention_b in self.mention_to_target_mapping[mention_a]
+        mention, ent = pair
+        return mention in self.mention_to_target_mapping and ent in self.mention_to_target_mapping[mention]
+
     def add_candidate(self, pair: Pair, score: float):
         item_a, item_b = sorted(pair) if isinstance(pair[1], MentionId) else pair
         self.mention_to_target_mapping[item_a][item_b] = score
