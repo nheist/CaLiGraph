@@ -18,6 +18,7 @@ class BiEncoderMatcher(Matcher):
         super().__init__(scenario, params)
         # model params
         self.base_model = params['base_model']
+        self.train_sample = params['train_sample']
         self.top_k = params['top_k']
         self.ans = params['approximate_neighbor_search']
         self.add_page_context = params['add_page_context']
@@ -37,6 +38,7 @@ class BiEncoderMatcher(Matcher):
     def _get_param_dict(self) -> dict:
         params = {
             'bm': self.base_model,
+            'ts': self.train_sample,
             'k': self.top_k,
             'ans': self.ans,
             'apc': self.add_page_context,
@@ -63,9 +65,9 @@ class BiEncoderMatcher(Matcher):
             return  # skip training
         training_examples = []
         if self.scenario.is_MM():
-            training_examples += transformer_util.generate_training_data(MatchingScenario.MENTION_MENTION, train_corpus, [], self.add_page_context, self.add_text_context, self.add_entity_abstract, self.add_kg_info)
+            training_examples += transformer_util.generate_training_data(MatchingScenario.MENTION_MENTION, train_corpus, self.train_sample, [], self.add_page_context, self.add_text_context, self.add_entity_abstract, self.add_kg_info)
         if self.scenario.is_ME():
-            training_examples += transformer_util.generate_training_data(MatchingScenario.MENTION_ENTITY, train_corpus, [], self.add_page_context, self.add_text_context, self.add_entity_abstract, self.add_kg_info)
+            training_examples += transformer_util.generate_training_data(MatchingScenario.MENTION_ENTITY, train_corpus, self.train_sample, [], self.add_page_context, self.add_text_context, self.add_entity_abstract, self.add_kg_info)
         train_dataloader = DataLoader(training_examples, shuffle=True, batch_size=self.batch_size)
         utils.get_logger().debug('Training bi-encoder model..')
         utils.release_gpu()

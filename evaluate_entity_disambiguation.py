@@ -25,6 +25,7 @@ if __name__ == '__main__':
     parser.add_argument('--me_approach', type=str, help='Mention-entity approach (ID) used for candidate generation')
     # bi/cross-encoder
     parser.add_argument('-bm', '--base_model', type=str, default='all-MiniLM-L12-v2', help='Base model used for the bi/cross-encoder')
+    parser.add_argument('-ts', '--train_sample', type=int, default=1, help='Sample size to use for training (in millions)')
     parser.add_argument('-e', '--epochs', type=int, default=1, help='Number of epochs for training the bi/cross-encoder')
     parser.add_argument('-ws', '--warmup_steps', type=int, default=0, help='Number of warmup steps for training the bi/cross-encoder')
     parser.add_argument('-bs', '--batch_size', type=int, default=64, help='Batch size for training the bi/cross-encoder')
@@ -72,6 +73,7 @@ if __name__ == '__main__':
     params = {
         'id': approach_id,
         'base_model': args.base_model,
+        'train_sample': args.train_sample,
         'loss': args.loss,
         'epochs': args.epochs,
         'warmup_steps': args.warmup_steps,

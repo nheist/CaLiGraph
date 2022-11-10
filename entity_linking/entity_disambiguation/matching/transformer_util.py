@@ -28,16 +28,16 @@ def add_special_tokens(model: Union[SentenceTransformer, CrossEncoder]):
     transformer.resize_token_embeddings(len(tokenizer))
 
 
-def generate_training_data(scenario: MatchingScenario, data_corpus: DataCorpus, negatives: List[Pair], add_page_context: bool, add_text_context: bool, add_entity_abstract: bool, add_kg_info: bool) -> List[InputExample]:
+def generate_training_data(scenario: MatchingScenario, data_corpus: DataCorpus, sample_size: int, negatives: List[Pair], add_page_context: bool, add_text_context: bool, add_entity_abstract: bool, add_kg_info: bool) -> List[InputExample]:
     utils.get_logger().debug(f'Generating training data for scenario {scenario.name}..')
     mention_input, mention_known = data_corpus.get_mention_input(add_page_context, add_text_context)
     if scenario == MatchingScenario.MENTION_MENTION:
         mention_input = {m_id: m_input for m_id, m_input in mention_input.items() if mention_known[m_id]}
         target_input = mention_input
-        positives = data_corpus.alignment.sample_mm_matches()
+        positives = data_corpus.alignment.sample_mm_matches(sample_size)
     else:  # scenario: MENTION_ENTITY
         target_input = data_corpus.get_entity_input(add_entity_abstract, add_kg_info)
-        positives = data_corpus.alignment.sample_me_matches()
+        positives = data_corpus.alignment.sample_me_matches(sample_size)
     input_examples = [InputExample(texts=[mention_input[mention_id], target_input[target_id]], label=1) for mention_id, target_id in positives]
     input_examples.extend([InputExample(texts=[mention_input[mention_id], target_input[target_id]], label=0) for mention_id, target_id in negatives])
     return input_examples

@@ -31,7 +31,6 @@ class Alignment:
         self.entity_to_mention_mapping = entity_to_mention_mapping
         self.mention_to_entity_mapping = {m_id: e_id for e_id, m_ids in entity_to_mention_mapping.items() for m_id in m_ids}
         self.known_entities = known_entities
-        self.sample_size = int(1e6)
 
     def __contains__(self, pair: Pair) -> bool:
         source, target = pair
@@ -57,24 +56,26 @@ class Alignment:
         else:
             return len(set(self.entity_to_mention_mapping).intersection(self.known_entities))
 
-    def sample_mm_matches(self) -> List[Pair]:
+    def sample_mm_matches(self, sample_size: int) -> List[Pair]:
+        sample_size *= 10 ** 6
         mm_matches = []
-        if self.sample_size > self.get_mm_match_count(None):  # return all
+        if sample_size > self.get_mm_match_count(None):  # return all
             for mention_group in self.entity_to_mention_mapping.values():
                 mm_matches.extend([tuple(pair) for pair in itertools.combinations(mention_group, 2)])
         else:  # return sample
             sample_grps = [grp for grp in self.entity_to_mention_mapping.values() if len(grp) > 1]
             sample_grp_weights = list(itertools.accumulate([len(grp) for grp in sample_grps]))
-            for _ in tqdm(range(self.sample_size), desc='Sampling mention-mention matches'):
+            for _ in tqdm(range(sample_size), desc='Sampling mention-mention matches'):
                 grp = random.choices(sample_grps, cum_weights=sample_grp_weights)[0]
                 mm_matches.append(tuple(random.sample(grp, 2)))
         return mm_matches
 
-    def sample_me_matches(self) -> List[Pair]:
+    def sample_me_matches(self, sample_size: int) -> List[Pair]:
+        sample_size *= 10 ** 6
         known_mentions = [m_id for m_id, e_id in self.mention_to_entity_mapping.items() if e_id in self.known_entities]
-        if self.sample_size > len(known_mentions):  # return all
+        if sample_size > len(known_mentions):  # return all
             return [(m_id, self.mention_to_entity_mapping[m_id]) for m_id in known_mentions]
-        sample_mentions = random.sample(known_mentions, self.sample_size)
+        sample_mentions = random.sample(known_mentions, sample_size)
         return [(m_id, self.mention_to_entity_mapping[m_id]) for m_id in sample_mentions]
 
     def get_mm_match_count(self, nil_flag: Optional[bool] = None) -> int:

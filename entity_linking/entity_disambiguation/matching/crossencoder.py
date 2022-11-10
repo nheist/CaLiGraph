@@ -18,6 +18,7 @@ class CrossEncoderMatcher(MatcherWithCandidates):
         super().__init__(scenario, params)
         # model params
         self.base_model = params['base_model']
+        self.train_sample = params['train_sample']
         self.mm_threshold = params['mm_threshold']
         self.me_threshold = params['me_threshold']
         self.add_page_context = params['add_page_context']
@@ -32,6 +33,7 @@ class CrossEncoderMatcher(MatcherWithCandidates):
     def _get_param_dict(self) -> dict:
         params = {
             'bm': self.base_model,
+            'ts': self.train_sample,
             'mmt': self.mm_threshold,
             'met': self.me_threshold,
             'apc': self.add_page_context,
@@ -60,14 +62,15 @@ class CrossEncoderMatcher(MatcherWithCandidates):
         if self.epochs == 0:
             return  # skip training
         training_examples = []
+        negative_sample_size = 2 * self.train_sample * 10**6
         if self.scenario.is_MM():
             negatives = [pair for pair in self.mm_ca[self.MODE_TRAIN].get_mm_candidates(False) if pair not in train_corpus.alignment]
-            negatives_sample = random.sample(negatives, min(len(negatives), train_corpus.alignment.sample_size * 2))
-            training_examples += transformer_util.generate_training_data(MatchingScenario.MENTION_MENTION, train_corpus, negatives_sample, self.add_page_context, self.add_text_context, self.add_entity_abstract, self.add_kg_info)
+            negatives_sample = random.sample(negatives, min(len(negatives), negative_sample_size))
+            training_examples += transformer_util.generate_training_data(MatchingScenario.MENTION_MENTION, train_corpus, self.train_sample, negatives_sample, self.add_page_context, self.add_text_context, self.add_entity_abstract, self.add_kg_info)
         if self.scenario.is_ME():
             negatives = [pair for pair in self.me_ca[self.MODE_TRAIN].get_me_candidates(False) if pair not in train_corpus.alignment]
-            negatives_sample = random.sample(negatives, min(len(negatives), train_corpus.alignment.sample_size * 2))
-            training_examples += transformer_util.generate_training_data(MatchingScenario.MENTION_ENTITY, train_corpus, negatives_sample, self.add_page_context, self.add_text_context, self.add_entity_abstract, self.add_kg_info)
+            negatives_sample = random.sample(negatives, min(len(negatives), negative_sample_size))
+            training_examples += transformer_util.generate_training_data(MatchingScenario.MENTION_ENTITY, train_corpus, self.train_sample, negatives_sample, self.add_page_context, self.add_text_context, self.add_entity_abstract, self.add_kg_info)
         train_dataloader = DataLoader(training_examples, shuffle=True, batch_size=self.batch_size)
         utils.get_logger().debug('Training cross-encoder model..')
         utils.release_gpu()
