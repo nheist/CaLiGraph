@@ -98,13 +98,15 @@ def _create_corpus_from_pages(pages: List[WikiPage]) -> ListingDataCorpus:
     listings = [listing for page in pages for listing in page.get_listings() if listing.has_subject_entities()]
     listing_ids = [listing.get_id() for listing in listings]
     entity_to_mention_mapping = defaultdict(set)
+    clge = ClgEntityStore.instance()
     for listing in listings:
         for item in listing.get_items(has_subject_entity=True, has_known_entity=True):
             mention_id = MentionId(listing.page_idx, listing.idx, item.idx)
-            entity_to_mention_mapping[item.subject_entity.entity_idx].add(mention_id)
-    clge = ClgEntityStore.instance()
-    known_entities = {ent_id for ent_id in entity_to_mention_mapping if clge.has_entity_with_idx(ent_id)}
-    return ListingDataCorpus(listing_ids, Alignment(entity_to_mention_mapping, known_entities))
+            ent_id = item.subject_entity.entity_idx
+            if not clge.has_entity_with_idx(ent_id):
+                continue
+            entity_to_mention_mapping[ent_id].add(mention_id)
+    return ListingDataCorpus(listing_ids, Alignment(entity_to_mention_mapping, set(entity_to_mention_mapping)))
 
 
 def _load_page_data(sample_size: float) -> Tuple[List[WikiPage], List[WikiPage], List[WikiPage]]:
