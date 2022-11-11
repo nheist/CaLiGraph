@@ -32,14 +32,6 @@ class Alignment:
         self.mention_to_entity_mapping = {m_id: e_id for e_id, m_ids in entity_to_mention_mapping.items() for m_id in m_ids}
         self.known_entities = known_entities
 
-    def __contains__(self, pair: Pair) -> bool:
-        source, target = pair
-        if isinstance(target, MentionId):
-            if source not in self.mention_to_entity_mapping or target not in self.mention_to_entity_mapping:
-                return False
-            return self.mention_to_entity_mapping[source] == self.mention_to_entity_mapping[target]
-        return source in self.mention_to_entity_mapping and self.mention_to_entity_mapping[source] == target
-
     def mention_count(self, nil_flag: Optional[bool] = None) -> int:
         if nil_flag is None:
             return len(self.mention_to_entity_mapping)
@@ -55,6 +47,14 @@ class Alignment:
             return len(set(self.entity_to_mention_mapping).difference(self.known_entities))
         else:
             return len(set(self.entity_to_mention_mapping).intersection(self.known_entities))
+
+    def has_match(self, pair: Pair) -> bool:
+        source, target = pair
+        if isinstance(target, MentionId):
+            if source not in self.mention_to_entity_mapping or target not in self.mention_to_entity_mapping:
+                return False
+            return self.mention_to_entity_mapping[source] == self.mention_to_entity_mapping[target]
+        return source in self.mention_to_entity_mapping and self.mention_to_entity_mapping[source] == target
 
     def sample_mm_matches(self, sample_size: int) -> List[Pair]:
         sample_size *= 10 ** 6
@@ -97,16 +97,16 @@ class CandidateAlignment:
     def __init__(self):
         self.mention_to_target_mapping = defaultdict(dict)
 
-    def __contains__(self, pair: Pair) -> bool:
+    def add_candidate(self, pair: Pair, score: float):
+        item_a, item_b = sorted(pair) if isinstance(pair[1], MentionId) else pair
+        self.mention_to_target_mapping[item_a][item_b] = score
+
+    def has_candidate(self, pair: Pair) -> bool:
         if isinstance(pair[1], MentionId):
             mention_a, mention_b = sorted(pair)
             return mention_a in self.mention_to_target_mapping and mention_b in self.mention_to_target_mapping[mention_a]
         mention, ent = pair
         return mention in self.mention_to_target_mapping and ent in self.mention_to_target_mapping[mention]
-
-    def add_candidate(self, pair: Pair, score: float):
-        item_a, item_b = sorted(pair) if isinstance(pair[1], MentionId) else pair
-        self.mention_to_target_mapping[item_a][item_b] = score
 
     def get_mm_candidates(self, include_score: bool, nil_flag: Optional[bool] = None) -> Iterable[Union[Pair, Tuple[Pair, float]]]:
         yield from self._get_candidates(MentionId, include_score, nil_flag)
@@ -128,10 +128,10 @@ class CandidateAlignment:
         return sum(1 for pair in self.get_me_candidates(False) if self._is_consistent_with_nil_flag(pair, nil_flag))
 
     def get_mm_overlap(self, alignment: Alignment, nil_flag: Optional[bool] = None) -> int:
-        return sum(1 for pair in self.get_mm_candidates(False, nil_flag) if pair in alignment)
+        return sum(1 for pair in self.get_mm_candidates(False, nil_flag) if alignment.has_match(pair))
 
     def get_me_overlap(self, alignment: Alignment, nil_flag: Optional[bool] = None) -> int:
-        return sum(1 for pair in self.get_me_candidates(False, nil_flag) if pair in alignment)
+        return sum(1 for pair in self.get_me_candidates(False, nil_flag) if alignment.has_match(pair))
 
     @classmethod
     def _is_consistent_with_nil_flag(cls, pair: Pair, nil_flag: Optional[bool]) -> bool:

@@ -66,7 +66,7 @@ def paraphrase_mining_embeddings(ca: CandidateAlignment, embeddings: torch.Tenso
                 for top_k_idx, corpus_itr in enumerate(scores_top_k_idx[query_itr]):
                     corpus_mention = mention_ids[corpus_start_idx + corpus_itr]
                     pair = (query_mention, corpus_mention)
-                    if query_mention == corpus_mention or pair in ca:
+                    if query_mention == corpus_mention or ca.has_candidate(pair):
                         continue
                     score = scores_top_k_values[query_itr][top_k_idx]
                     if add_best and score > .5:
@@ -131,7 +131,7 @@ def approximate_paraphrase_mining_embeddings(ca: CandidateAlignment, mention_emb
         for corpus_idx, dist in zip(corpus_indices, distances):
             corpus_mention = mention_ids[corpus_idx]
             pair = (query_mention, corpus_mention)
-            if query_mention == corpus_mention or pair in ca:
+            if query_mention == corpus_mention or ca.has_candidate(pair):
                 continue
             score = 1 - dist
             if add_best and score > .5:
