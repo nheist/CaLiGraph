@@ -86,8 +86,6 @@ if __name__ == '__main__':
         'me_approach': args.me_approach,
         'mm_threshold': args.mm_threshold,
         'me_threshold': args.me_threshold,
-        'mm_weight': args.mm_weight,
-        'me_weight': args.me_weight,
         'cluster_comparisons': args.cluster_comparisons,
         'cluster_threshold': args.cluster_threshold,
     }
