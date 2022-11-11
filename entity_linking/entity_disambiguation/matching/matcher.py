@@ -26,7 +26,8 @@ class Matcher(ABC):
     def train(self, train_corpus: DataCorpus, eval_corpus: DataCorpus, eval_on_train: bool) -> Dict[str, CandidateAlignment]:
         utils.get_logger().info('Training matcher..')
         self._train_model(train_corpus, eval_corpus)
-        return {self.MODE_TRAIN: self._evaluate(self.MODE_TRAIN, train_corpus)} if eval_on_train else {}
+        utils.get_logger().info('Making predictions..')
+        return {self.MODE_TRAIN: self.predict(self.MODE_TRAIN, train_corpus)} if eval_on_train else {}
 
     @abstractmethod
     def _train_model(self, train_corpus: DataCorpus, eval_corpus: DataCorpus):
