@@ -64,11 +64,11 @@ class CrossEncoderMatcher(MatcherWithCandidates):
         training_examples = []
         negative_sample_size = 2 * self.train_sample * 10**6
         if self.scenario.is_MM():
-            negatives = [pair for pair in self.mm_ca[self.MODE_TRAIN].get_mm_candidates(False) if pair not in train_corpus.alignment]
+            negatives = [pair for pair in self.mm_ca[self.MODE_TRAIN].get_mm_candidates(False) if not train_corpus.alignment.has_match(pair)]
             negatives_sample = random.sample(negatives, min(len(negatives), negative_sample_size))
             training_examples += transformer_util.generate_training_data(MatchingScenario.MENTION_MENTION, train_corpus, self.train_sample, negatives_sample, self.add_page_context, self.add_text_context, self.add_entity_abstract, self.add_kg_info)
         if self.scenario.is_ME():
-            negatives = [pair for pair in self.me_ca[self.MODE_TRAIN].get_me_candidates(False) if pair not in train_corpus.alignment]
+            negatives = [pair for pair in self.me_ca[self.MODE_TRAIN].get_me_candidates(False) if not train_corpus.alignment.has_match(pair)]
             negatives_sample = random.sample(negatives, min(len(negatives), negative_sample_size))
             training_examples += transformer_util.generate_training_data(MatchingScenario.MENTION_ENTITY, train_corpus, self.train_sample, negatives_sample, self.add_page_context, self.add_text_context, self.add_entity_abstract, self.add_kg_info)
         train_dataloader = DataLoader(training_examples, shuffle=True, batch_size=self.batch_size)
