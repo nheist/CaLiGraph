@@ -17,6 +17,9 @@ class Matcher(ABC):
         self.id = params['id']
 
     def get_approach_name(self) -> str:
+        param_dict = self._get_param_dict()
+        if 'bm' in param_dict and param_dict['bm'].startswith('sentence-transformers/'):
+            param_dict['bm'] = param_dict['bm'][len('sentence-transformers/'):]
         approach_params = [self.id] + [f'{k}={v}' for k, v in self._get_param_dict().items()]
         return '_'.join(approach_params)
 
