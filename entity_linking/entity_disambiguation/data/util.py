@@ -122,10 +122,10 @@ class CandidateAlignment:
                     yield ((m_id, t_id), score) if include_score else (m_id, t_id)
 
     def get_mm_candidate_count(self, nil_flag: Optional[bool] = None) -> int:
-        return sum(1 for pair in self.get_mm_candidates(False) if self._is_consistent_with_nil_flag(pair, nil_flag))
+        return sum(1 for _ in self.get_mm_candidates(False, nil_flag))
 
     def get_me_candidate_count(self, nil_flag: Optional[bool] = None) -> int:
-        return sum(1 for pair in self.get_me_candidates(False) if self._is_consistent_with_nil_flag(pair, nil_flag))
+        return sum(1 for _ in self.get_me_candidates(False, nil_flag))
 
     def get_mm_overlap(self, alignment: Alignment, nil_flag: Optional[bool] = None) -> int:
         return sum(1 for pair in self.get_mm_candidates(False, nil_flag) if alignment.has_match(pair))
