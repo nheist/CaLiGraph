@@ -72,6 +72,7 @@ class BiEncoderMatcher(Matcher):
         utils.get_logger().debug('Training bi-encoder model..')
         utils.release_gpu()
         self.model.fit(train_objectives=[(train_dataloader, self._get_loss_function())], epochs=self.epochs, warmup_steps=self.warmup_steps, save_best_model=False)
+        utils.get_logger().debug(f'Storing model {self.id}..')
         self.model.save(get_model_path(self.id))
 
     def _get_loss_function(self) -> nn.Module:

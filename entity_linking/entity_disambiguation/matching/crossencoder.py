@@ -75,6 +75,7 @@ class CrossEncoderMatcher(MatcherWithCandidates):
         utils.get_logger().debug('Training cross-encoder model..')
         utils.release_gpu()
         self.model.fit(train_dataloader=train_dataloader, epochs=self.epochs, warmup_steps=self.warmup_steps, save_best_model=False)
+        utils.get_logger().debug(f'Storing model {self.id}..')
         self.model.save(get_model_path(self.id))
 
     def predict(self, eval_mode: str, data_corpus: DataCorpus) -> CandidateAlignment:
