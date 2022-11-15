@@ -1,6 +1,6 @@
 from typing import Dict
 from abc import ABC, abstractmethod
-from time import process_time
+from datetime import datetime
 import utils
 from entity_linking.entity_disambiguation.data import Alignment, CandidateAlignment, DataCorpus
 from entity_linking.entity_disambiguation.evaluation import PrecisionRecallF1Evaluator
@@ -42,9 +42,9 @@ class Matcher(ABC):
 
     def _evaluate(self, eval_mode: str, data_corpus: DataCorpus) -> CandidateAlignment:
         utils.get_logger().debug('Making predictions..')
-        pred_start = process_time()
+        pred_start = datetime.now()
         prediction = self.predict(eval_mode, data_corpus)
-        prediction_time_in_seconds = int(process_time() - pred_start)
+        prediction_time_in_seconds = (datetime.now() - pred_start).seconds
         if self.scenario.is_MM():
             self._evaluate_scenario(eval_mode, MatchingScenario.MENTION_MENTION, prediction, data_corpus.alignment, prediction_time_in_seconds)
         if self.scenario.is_ME():

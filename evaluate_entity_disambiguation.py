@@ -3,7 +3,7 @@ import configargparse
 import os
 
 
-VERSION = 2
+VERSION = 3
 
 
 if __name__ == '__main__':
@@ -33,8 +33,8 @@ if __name__ == '__main__':
     parser.add_argument('-atc', '--add_text_context', type=int, default=0, help='Other listing entities to append for disambiguation (M)')
     parser.add_argument('-aea', '--add_entity_abstract', action=argparse.BooleanOptionalAction, default=True, help='Use entity abstract for disambiguation (E)')
     parser.add_argument('-aki', '--add_kg_info', type=int, default=0, help='Types/properties to add from KG for disambiguation (E)')
-    parser.add_argument('-ie', '--init_exact', action=argparse.BooleanOptionalAction, default=False, help='Initialize candidates with exact matches (M)')
     # bi-encoder
+    parser.add_argument('-ie', '--init_exact', action=argparse.BooleanOptionalAction, default=False, help='Initialize candidates with exact matches (M)')
     parser.add_argument('-l', '--loss', type=str, choices=['COS', 'RL', 'SRL'], default='SRL', help='Loss function for training (only for bi-encoder)')
     parser.add_argument('-k', '--top_k', type=int, default=3, help='Number of ME matches to return per input (only for bi-encoder)')
     parser.add_argument('-ans', '--approximate_neighbor_search', action=argparse.BooleanOptionalAction, default=False, help='Use approximate nearest neighbor search')
