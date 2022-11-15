@@ -3,20 +3,20 @@ from torch.utils.tensorboard import SummaryWriter
 from entity_linking.entity_disambiguation.data import Alignment, CandidateAlignment
 from entity_linking.entity_disambiguation.matching.util import MatchingScenario
 import utils
-from impl.wikipedia import WikiPageStore
 
 
 class PrecisionRecallF1Evaluator:
-    def __init__(self, approach_name: str, scenario: MatchingScenario):
+    def __init__(self, approach_name: str, scenario: MatchingScenario, eval_nil: bool):
         self.approach_name = approach_name
         self.scenario = scenario
-        self.wps = WikiPageStore.instance()
+        self.eval_nil = eval_nil
 
     def compute_and_log_metrics(self, prefix: str, prediction: CandidateAlignment, alignment: Alignment, runtime: int):
         prefix += self.scenario.value
         self._compute_and_log_metrics_for_partition(prefix, prediction, alignment, runtime, None)
-        self._compute_and_log_metrics_for_partition(prefix + '-NIL', prediction, alignment, runtime, True)
-        self._compute_and_log_metrics_for_partition(prefix + '-nonNIL', prediction, alignment, runtime, False)
+        if self.eval_nil:
+            self._compute_and_log_metrics_for_partition(prefix + '-NIL', prediction, alignment, runtime, True)
+            self._compute_and_log_metrics_for_partition(prefix + '-nonNIL', prediction, alignment, runtime, False)
 
     def _compute_and_log_metrics_for_partition(self, prefix: str, prediction: CandidateAlignment, alignment: Alignment, runtime: int, nil_flag: Optional[bool]):
         utils.get_logger().debug(f'Computing metrics for {prefix}..')
