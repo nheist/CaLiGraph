@@ -19,6 +19,7 @@ if __name__ == '__main__':
     parser.add_argument('approach', type=str, help='Approach used for matching')
     parser.add_argument('corpus', type=str, choices=['LIST', 'NILK'], help='Data corpus to use for the experiments')
     parser.add_argument('-sa', '--save_alignment', action=argparse.BooleanOptionalAction, default=False, help='Whether to save the produced alignment for train/val/test')
+    parser.add_argument('-sta', '--save_test_alignment', action=argparse.BooleanOptionalAction, default=False, help='Whether to save the produced alignment for test')
     parser.add_argument('-ss', '--sample_size', type=int, choices=list(range(101)), default=5, help='Percentage of dataset to use')
     # matchers needing candidates
     parser.add_argument('--mm_approach', type=str, help='Mention-mention approach (ID) used for candidate generation')
@@ -91,4 +92,4 @@ if __name__ == '__main__':
     }
     # then import application-specific code and run it
     from entity_linking import entity_disambiguation
-    entity_disambiguation.run_evaluation(scenario, approach, corpus_type, args.sample_size, params, args.save_alignment)
+    entity_disambiguation.run_evaluation(scenario, approach, corpus_type, args.sample_size, params, args.save_alignment, args.save_test_alignment)
