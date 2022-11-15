@@ -73,10 +73,7 @@ class BottomUpFusionMatcher(CrossEncoderMatcher):
                     cluster_a.mentions |= cluster_b.mentions
                     merged_candidates = (set(cluster_a.candidates) | set(cluster_b.candidates)).difference(cluster_a.mentions)
                     cluster_a.candidates = defaultdict(float, {cand: max(cluster_a.candidates[cand], cluster_b.candidates[cand]) for cand in merged_candidates})
-                    try:
-                        clusters.remove(cluster_b)
-                    except ValueError:
-                        pass  # cluster already removed in another merge of this iteration
+                    clusters.discard(cluster_b)
                     cluster_by_id[cluster_b_id] = cluster_a
                     for m_id in cluster_b.mentions:
                         cluster_by_mid[m_id] = cluster_a
@@ -116,7 +113,7 @@ class BottomUpFusionMatcher(CrossEncoderMatcher):
         utils.release_gpu()
         return self.model.predict(model_input, batch_size=self.batch_size, show_progress_bar=True)
 
-    def _init_clusters(self, eval_mode: str, predictions: Dict[MentionId, Dict[int, float]]) -> Tuple[List[FusionCluster], Dict[MentionId, FusionCluster]]:
+    def _init_clusters(self, eval_mode: str, predictions: Dict[MentionId, Dict[int, float]]) -> Tuple[Set[FusionCluster], Dict[MentionId, FusionCluster]]:
         utils.get_logger().debug('Initializing clusters..')
         # group mentions by matching entity
         me_mapping = {m_id: max(ents.items(), key=lambda x: x[1]) for m_id, ents in predictions.items()}
@@ -130,7 +127,7 @@ class BottomUpFusionMatcher(CrossEncoderMatcher):
             mention_candidates[mention_a][mention_b] = score
             mention_candidates[mention_b][mention_a] = score
         # form clusters with known entities
-        clusters = []
+        clusters = set()
         cluster_by_mid = {}
         cluster_id = 0
         for e_id, mention_ids in em_mapping.items():
@@ -142,7 +139,7 @@ class BottomUpFusionMatcher(CrossEncoderMatcher):
                         continue  # discard candidates in same cluster
                     cluster_candidates[cand_id] = max(cluster_candidates[cand_id], score)
             cluster = FusionCluster(cluster_id, mention_ids, cluster_candidates, e_id)
-            clusters.append(cluster)
+            clusters.add(cluster)
             for m_id in mention_ids:
                 cluster_by_mid[m_id] = cluster
             cluster_id += 1
@@ -151,7 +148,7 @@ class BottomUpFusionMatcher(CrossEncoderMatcher):
             if m_id in cluster_by_mid:
                 continue
             cluster = FusionCluster(cluster_id, {m_id}, defaultdict(float, candidates))
-            clusters.append(cluster)
+            clusters.add(cluster)
             cluster_by_mid[m_id] = cluster
             cluster_id += 1
         return clusters, cluster_by_mid
