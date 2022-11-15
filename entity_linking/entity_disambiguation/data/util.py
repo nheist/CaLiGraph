@@ -121,17 +121,23 @@ class CandidateAlignment:
                 if isinstance(t_id, target_type) and self._is_consistent_with_nil_flag(pair, nil_flag):
                     yield ((m_id, t_id), score) if include_score else (m_id, t_id)
 
-    def get_mm_candidate_count(self, nil_flag: Optional[bool] = None) -> int:
-        return sum(1 for _ in self.get_mm_candidates(False, nil_flag))
+    def get_mm_candidate_count(self) -> int:
+        return sum(1 for _ in self.get_mm_candidates(False))
 
-    def get_me_candidate_count(self, nil_flag: Optional[bool] = None) -> int:
-        return sum(1 for _ in self.get_me_candidates(False, nil_flag))
+    def get_mm_preds_and_overlap(self, alignment: Alignment, nil_flag: Optional[bool] = None) -> Tuple[int, int]:
+        return self._get_preds_and_overlap(self.get_mm_candidates(False, nil_flag), alignment)
 
-    def get_mm_overlap(self, alignment: Alignment, nil_flag: Optional[bool] = None) -> int:
-        return sum(1 for pair in self.get_mm_candidates(False, nil_flag) if alignment.has_match(pair))
+    def get_me_preds_and_overlap(self, alignment: Alignment, nil_flag: Optional[bool] = None) -> Tuple[int, int]:
+        return self._get_preds_and_overlap(self.get_me_candidates(False, nil_flag), alignment)
 
-    def get_me_overlap(self, alignment: Alignment, nil_flag: Optional[bool] = None) -> int:
-        return sum(1 for pair in self.get_me_candidates(False, nil_flag) if alignment.has_match(pair))
+    @classmethod
+    def _get_preds_and_overlap(cls, candidates: Iterable, alignment: Alignment) -> Tuple[int, int]:
+        predictions, overlap = 0, 0
+        for pair in candidates:
+            predictions += 1
+            if alignment.has_match(pair):
+                overlap += 1
+        return predictions, overlap
 
     @classmethod
     def _is_consistent_with_nil_flag(cls, pair: Pair, nil_flag: Optional[bool]) -> bool:

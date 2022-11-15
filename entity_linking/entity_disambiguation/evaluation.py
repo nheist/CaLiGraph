@@ -21,13 +21,11 @@ class PrecisionRecallF1Evaluator:
     def _compute_and_log_metrics_for_partition(self, prefix: str, prediction: CandidateAlignment, alignment: Alignment, runtime: int, nil_flag: Optional[bool]):
         utils.get_logger().debug(f'Computing metrics for {prefix}..')
         if self.scenario.is_MM():
-            pred_count = prediction.get_mm_candidate_count(nil_flag)
             actual_count = alignment.get_mm_match_count(nil_flag)
-            tp = prediction.get_mm_overlap(alignment, nil_flag)
+            pred_count, tp = prediction.get_mm_preds_and_overlap(alignment, nil_flag)
         else:
-            pred_count = prediction.get_me_candidate_count(nil_flag)
             actual_count = alignment.get_me_match_count(nil_flag)
-            tp = prediction.get_me_overlap(alignment, nil_flag)
+            pred_count, tp = prediction.get_me_preds_and_overlap(alignment, nil_flag)
         mention_count = alignment.mention_count(nil_flag)
         entity_count = alignment.entity_count(nil_flag)
         metrics = self._compute_metrics(pred_count, actual_count, tp, runtime, mention_count, entity_count)
