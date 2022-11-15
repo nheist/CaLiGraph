@@ -11,7 +11,7 @@ if __name__ == '__main__':
     # config
     parser.add_argument('-c', '--config', is_config_file=True, help='Path to config file')
     parser.add_argument('-id', '--approach_id', type=str, help='ID to identify the approach')
-    parser.add_argument('-en', '--eval_nil', action=argparse.BooleanOptionalAction, default=False, help='Whether to evaluate on nil/non-nil basis')
+    parser.add_argument('-en', '--eval_nil', action=argparse.BooleanOptionalAction, default=True, help='Whether to evaluate on nil/non-nil basis')
     # machine-specific
     parser.add_argument('gpu', type=int, choices=range(-1, 8), help='Number of GPU to use')
     parser.add_argument('-gm', '--gpu_memory', type=int, default=46, help='Amount of GPU memory to reserve')

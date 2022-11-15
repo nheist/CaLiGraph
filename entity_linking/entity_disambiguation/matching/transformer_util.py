@@ -54,7 +54,7 @@ def paraphrase_mining_embeddings(ca: CandidateAlignment, embeddings: torch.Tenso
     min_score = -1
     num_added = 0
 
-    for corpus_start_idx in tqdm(range(0, len(embeddings), corpus_chunk_size), total=len(embeddings) // corpus_chunk_size, desc='MM nn-search'):
+    for corpus_start_idx in tqdm(range(0, len(embeddings), corpus_chunk_size), total=len(embeddings) // corpus_chunk_size, desc='paraphrase mining'):
         for query_start_idx in range(0, len(embeddings), query_chunk_size):
             scores = dot_score(embeddings[query_start_idx:query_start_idx+query_chunk_size], embeddings[corpus_start_idx:corpus_start_idx+corpus_chunk_size])
             scores_top_k_values, scores_top_k_idx = torch.topk(scores, min(top_k, len(scores[0])), dim=1, largest=True, sorted=False)
@@ -91,13 +91,13 @@ def paraphrase_mining_embeddings(ca: CandidateAlignment, embeddings: torch.Tenso
 
 
 # optimized version of function in sentence_transformers.util
-def semantic_search(ca: CandidateAlignment, query_embeddings: torch.Tensor, corpus_embeddings: torch.Tensor, mention_ids: List[MentionId], entity_ids: List[int], query_chunk_size: int = 100, corpus_chunk_size: int = 500000, top_k: int = 10):
+def semantic_search(ca: CandidateAlignment, query_embeddings: torch.Tensor, corpus_embeddings: torch.Tensor, query_ids: List[MentionId], corpus_ids: List[Union[MentionId, int]], query_chunk_size: int = 100, corpus_chunk_size: int = 500000, top_k: int = 10):
     # check that corpus and queries are on the same device
     if corpus_embeddings.device != query_embeddings.device:
         query_embeddings = query_embeddings.to(corpus_embeddings.device)
     # collect documents per query
     queries_result_list = defaultdict(dict)
-    for query_start_idx in tqdm(range(0, len(query_embeddings), query_chunk_size), total=len(query_embeddings) // query_chunk_size, desc='ME nn-search'):
+    for query_start_idx in tqdm(range(0, len(query_embeddings), query_chunk_size), total=len(query_embeddings) // query_chunk_size, desc='semantic search'):
         # iterate over chunks of the corpus
         for corpus_start_idx in range(0, len(corpus_embeddings), corpus_chunk_size):
             # compute similarities
@@ -107,20 +107,20 @@ def semantic_search(ca: CandidateAlignment, query_embeddings: torch.Tensor, corp
             cos_scores_top_k_values = cos_scores_top_k_values.cpu().tolist()
             cos_scores_top_k_idx = cos_scores_top_k_idx.cpu().tolist()
             for query_itr in range(len(cos_scores)):
-                mention_id = mention_ids[query_start_idx + query_itr]
-                for sub_corpus_id, score in zip(cos_scores_top_k_idx[query_itr], cos_scores_top_k_values[query_itr]):
-                    entity_id = entity_ids[corpus_start_idx + sub_corpus_id]
-                    queries_result_list[mention_id][entity_id] = score
+                query_id = query_ids[query_start_idx + query_itr]
+                for sub_corpus_idx, score in zip(cos_scores_top_k_idx[query_itr], cos_scores_top_k_values[query_itr]):
+                    corpus_id = corpus_ids[corpus_start_idx + sub_corpus_idx]
+                    queries_result_list[query_id][corpus_id] = score
     # sort and strip to top_k results; convert to original indices
-    for mention_id, entity_scores in queries_result_list.items():
-        top_k_entity_scores = sorted(entity_scores.items(), key=lambda x: x[1], reverse=True)[:top_k]
-        for entity_id, score in top_k_entity_scores:
-            ca.add_candidate((mention_id, entity_id), score)
+    for query_id, corpus_scores in queries_result_list.items():
+        top_k_entity_scores = sorted(corpus_scores.items(), key=lambda x: x[1], reverse=True)[:top_k]
+        for corpus_id, score in top_k_entity_scores:
+            ca.add_candidate((query_id, corpus_id), score)
 
 
 def approximate_paraphrase_mining_embeddings(ca: CandidateAlignment, mention_embeddings: np.ndarray, mention_ids: List[MentionId], max_pairs: int = 500000, top_k: int = 100, add_best: bool = False):
     index = _build_ann_index(mention_embeddings, 400, 64, 100)
-    utils.get_logger().debug('Running MM ANN-search..')
+    utils.get_logger().debug('Running approximate paraphrase mining..')
     top_k += 1  # a sentence has the highest similarity to itself. Increase +1 as we are interest in distinct pairs
     best_pairs_per_item = defaultdict(lambda: (None, 0.0))
     top_pairs = queue.PriorityQueue()
@@ -155,14 +155,12 @@ def approximate_paraphrase_mining_embeddings(ca: CandidateAlignment, mention_emb
         ca.add_candidate(pair, score)
 
 
-def approximate_semantic_search(ca: CandidateAlignment, mention_embeddings: np.ndarray, entity_embeddings: np.ndarray, mention_ids: List[MentionId], entity_ids: List[int], top_k: int = 10):
-    index = _build_ann_index(entity_embeddings, 400, 64, 50)
-    utils.get_logger().debug('Running ME ANN-search..')
-    for mention_idx, (entity_indices, distances) in enumerate(zip(*index.knn_query(mention_embeddings, k=top_k))):
-        m_id = mention_ids[mention_idx]
-        for ent_idx, dist in zip(entity_indices, distances):
-            e_id = entity_ids[ent_idx]
-            ca.add_candidate((m_id, e_id), 1 - dist)
+def approximate_semantic_search(ca: CandidateAlignment, query_embeddings: np.ndarray, corpus_embeddings: np.ndarray, query_ids: List[MentionId], corpus_ids: List[Union[MentionId, int]], top_k: int = 10):
+    index = _build_ann_index(corpus_embeddings, 400, 64, 50)
+    utils.get_logger().debug('Running approximate semantic search..')
+    for query_idx, (corpus_indices, distances) in enumerate(zip(*index.knn_query(query_embeddings, k=top_k))):
+        for ent_idx, dist in zip(corpus_indices, distances):
+            ca.add_candidate((query_ids[query_idx], corpus_ids[ent_idx]), 1 - dist)
 
 
 def _build_ann_index(embeddings: np.ndarray, ef_construction: int, M: int, ef: int) -> hnswlib.Index:

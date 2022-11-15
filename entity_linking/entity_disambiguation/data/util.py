@@ -99,7 +99,8 @@ class CandidateAlignment:
 
     def add_candidate(self, pair: Pair, score: float):
         item_a, item_b = sorted(pair) if isinstance(pair[1], MentionId) else pair
-        self.mention_to_target_mapping[item_a][item_b] = score
+        if item_a != item_b:
+            self.mention_to_target_mapping[item_a][item_b] = score
 
     def has_candidate(self, pair: Pair) -> bool:
         if isinstance(pair[1], MentionId):
