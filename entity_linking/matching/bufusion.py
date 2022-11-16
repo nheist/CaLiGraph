@@ -5,9 +5,9 @@ import itertools
 import numpy as np
 import utils
 from impl.wikipedia.page_parser import MentionId
-from entity_linking.entity_disambiguation.data import CandidateAlignment, DataCorpus, Pair
-from entity_linking.entity_disambiguation.matching.util import MatchingScenario
-from entity_linking.entity_disambiguation.matching.crossencoder import CrossEncoderMatcher
+from entity_linking.data import CandidateAlignment, DataCorpus, Pair
+from entity_linking.matching.util import MatchingScenario
+from entity_linking.matching.crossencoder import CrossEncoderMatcher
 
 
 class FusionCluster:

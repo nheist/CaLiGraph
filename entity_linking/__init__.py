@@ -1,7 +1,7 @@
-from .data import CorpusType, get_data_corpora
-from .matching.util import MatchingScenario, MatchingApproach
-from .matching.io import store_candidate_alignment
-from .matching import initialize_matcher
+from entity_linking.data import CorpusType, get_data_corpora
+from entity_linking.matching import MatchingScenario, MatchingApproach
+from entity_linking.matching.io import store_candidate_alignment
+from entity_linking.matching import initialize_matcher
 import utils
 from impl.subject_entity import mention_detection
 

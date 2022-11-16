@@ -4,8 +4,8 @@ import itertools
 import networkx as nx
 import utils
 from impl.wikipedia import MentionId
-from entity_linking.entity_disambiguation.data import CandidateAlignment, DataCorpus
-from entity_linking.entity_disambiguation.matching.matcher import MatcherWithCandidates
+from entity_linking.data import CandidateAlignment, DataCorpus
+from entity_linking.matching.matcher import MatcherWithCandidates
 
 
 class TopDownFusionMatcher(MatcherWithCandidates):

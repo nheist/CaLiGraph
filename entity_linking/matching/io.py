@@ -2,7 +2,7 @@ from typing import Dict
 import os
 import pickle
 import utils
-from entity_linking.entity_disambiguation.data import CandidateAlignment
+from entity_linking.data import CandidateAlignment
 
 
 def store_candidate_alignment(approach_name: str, candidates: Dict[str, CandidateAlignment]):

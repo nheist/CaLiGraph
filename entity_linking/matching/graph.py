@@ -1,8 +1,8 @@
 from typing import Set, Tuple
 from collections import defaultdict
-from entity_linking.entity_disambiguation.data import CandidateAlignment, DataCorpus
-from entity_linking.entity_disambiguation.matching.matcher import MatcherWithCandidates
-from entity_linking.entity_disambiguation.matching.util import MatchingScenario
+from entity_linking.data import CandidateAlignment, DataCorpus
+from entity_linking.matching.matcher import MatcherWithCandidates
+from entity_linking.matching.util import MatchingScenario
 from impl.caligraph.entity import ClgEntity
 
 

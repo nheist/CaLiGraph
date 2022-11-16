@@ -1,7 +1,7 @@
 from typing import Optional
 from torch.utils.tensorboard import SummaryWriter
-from entity_linking.entity_disambiguation.data import Alignment, CandidateAlignment
-from entity_linking.entity_disambiguation.matching.util import MatchingScenario
+from entity_linking.data import Alignment, CandidateAlignment
+from entity_linking.matching.util import MatchingScenario
 import utils
 
 

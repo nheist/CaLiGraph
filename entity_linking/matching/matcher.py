@@ -2,10 +2,10 @@ from typing import Dict
 from abc import ABC, abstractmethod
 from datetime import datetime
 import utils
-from entity_linking.entity_disambiguation.data import Alignment, CandidateAlignment, DataCorpus
-from entity_linking.entity_disambiguation.evaluation import PrecisionRecallF1Evaluator
-from entity_linking.entity_disambiguation.matching.util import MatchingScenario
-from entity_linking.entity_disambiguation.matching.io import load_candidate_alignment
+from entity_linking.data import Alignment, CandidateAlignment, DataCorpus
+from entity_linking.evaluation import PrecisionRecallF1Evaluator
+from entity_linking.matching.util import MatchingScenario
+from entity_linking.matching.io import load_candidate_alignment
 
 
 class Matcher(ABC):

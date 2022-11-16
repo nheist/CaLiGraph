@@ -9,9 +9,9 @@ from nltk.corpus import stopwords
 from fastbm25 import fastbm25
 from impl.util.string import make_alphanumeric
 from impl.wikipedia import MentionId
-from entity_linking.entity_disambiguation.data import CandidateAlignment, DataCorpus
-from entity_linking.entity_disambiguation.matching.util import MatchingScenario
-from entity_linking.entity_disambiguation.matching.matcher import Matcher
+from entity_linking.data import CandidateAlignment, DataCorpus
+from entity_linking.matching.util import MatchingScenario
+from entity_linking.matching.matcher import Matcher
 
 
 STOPWORDS = set(stopwords.words('english'))

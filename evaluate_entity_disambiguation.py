@@ -64,8 +64,8 @@ if __name__ == '__main__':
     np.random.seed(SEED)
     torch.manual_seed(SEED)
     # initialize parameters
-    from entity_linking.entity_disambiguation.matching import MatchingScenario, MatchingApproach
-    from entity_linking.entity_disambiguation.data import CorpusType
+    from entity_linking.matching import MatchingScenario, MatchingApproach
+    from entity_linking.data import CorpusType
     scenario = MatchingScenario(args.scenario)
     approach = MatchingApproach(args.approach)
     corpus_type = CorpusType(args.corpus)
@@ -93,5 +93,4 @@ if __name__ == '__main__':
         'cluster_threshold': args.cluster_threshold,
     }
     # then import application-specific code and run it
-    from entity_linking import entity_disambiguation
-    entity_disambiguation.run_evaluation(scenario, approach, corpus_type, args.sample_size, params, args.save_alignment, args.save_test_alignment)
+    entity_linking.run_evaluation(scenario, approach, corpus_type, args.sample_size, params, args.save_alignment, args.save_test_alignment)

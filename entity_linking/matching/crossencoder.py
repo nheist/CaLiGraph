@@ -6,11 +6,11 @@ from torch.utils.data import DataLoader
 from sentence_transformers import CrossEncoder
 import utils
 from impl.wikipedia import MentionId
-from entity_linking.entity_disambiguation.data import CandidateAlignment, DataCorpus, Pair
-from entity_linking.entity_disambiguation.matching.util import MatchingScenario
-from entity_linking.entity_disambiguation.matching.io import get_model_path
-from entity_linking.entity_disambiguation.matching.matcher import MatcherWithCandidates
-from entity_linking.entity_disambiguation.matching import transformer_util
+from entity_linking.data import CandidateAlignment, DataCorpus, Pair
+from entity_linking.matching.util import MatchingScenario
+from entity_linking.matching.io import get_model_path
+from entity_linking.matching.matcher import MatcherWithCandidates
+from entity_linking.matching import transformer_util
 
 
 class CrossEncoderMatcher(MatcherWithCandidates):

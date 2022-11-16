@@ -1,11 +1,11 @@
-from entity_linking.entity_disambiguation.matching.matcher import Matcher
-from entity_linking.entity_disambiguation.matching.util import MatchingScenario, MatchingApproach
-from entity_linking.entity_disambiguation.matching.lexical import ExactMatcher, WordMatcher, BM25Matcher
-from entity_linking.entity_disambiguation.matching.graph import PopularityMatcher
-from entity_linking.entity_disambiguation.matching.biencoder import BiEncoderMatcher
-from entity_linking.entity_disambiguation.matching.crossencoder import CrossEncoderMatcher
-from entity_linking.entity_disambiguation.matching.tdfusion import TopDownFusionMatcher
-from entity_linking.entity_disambiguation.matching.bufusion import BottomUpFusionMatcher, NastyLinker
+from entity_linking.matching.matcher import Matcher
+from entity_linking.matching.util import MatchingScenario, MatchingApproach
+from entity_linking.matching.lexical import ExactMatcher, WordMatcher, BM25Matcher
+from entity_linking.matching.graph import PopularityMatcher
+from entity_linking.matching.biencoder import BiEncoderMatcher
+from entity_linking.matching.crossencoder import CrossEncoderMatcher
+from entity_linking.matching.tdfusion import TopDownFusionMatcher
+from entity_linking.matching.bufusion import BottomUpFusionMatcher, NastyLinker
 import utils
 
 
