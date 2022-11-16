@@ -21,7 +21,7 @@ if __name__ == '__main__':
     parser.add_argument('corpus', type=str, choices=['LIST', 'NILK'], help='Data corpus to use for the experiments')
     parser.add_argument('-sa', '--save_alignment', action=argparse.BooleanOptionalAction, default=False, help='Whether to save the produced alignment for train/val/test')
     parser.add_argument('-sta', '--save_test_alignment', action=argparse.BooleanOptionalAction, default=False, help='Whether to save the produced alignment for test')
-    parser.add_argument('-ss', '--sample_size', type=int, choices=list(range(101)), default=5, help='Percentage of dataset to use')
+    parser.add_argument('-ss', '--sample_size', type=int, choices=list(range(5, 101, 5)), default=5, help='Percentage of dataset to use')
     # matchers needing candidates
     parser.add_argument('--mm_approach', type=str, help='Mention-mention approach (ID) used for candidate generation')
     parser.add_argument('--me_approach', type=str, help='Mention-entity approach (ID) used for candidate generation')

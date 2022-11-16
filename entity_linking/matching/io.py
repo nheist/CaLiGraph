@@ -18,11 +18,11 @@ def load_candidate_alignment(approach_id: str) -> Dict[str, CandidateAlignment]:
 
 
 def get_model_path(approach_name: str) -> str:
-    return os.path.join(utils._get_root_path(), 'entity_linking', 'data', approach_name)
+    return os.path.join(utils._get_root_path(), 'entity_linking', 'cache', approach_name)
 
 
 def _get_approach_path_by_id(approach_id: str) -> str:
-    data_dir = os.path.join(utils._get_root_path(), 'entity_linking', 'data')
+    data_dir = os.path.join(utils._get_root_path(), 'entity_linking', 'cache')
     for filename in os.listdir(data_dir):
         filepath = os.path.join(data_dir, filename)
         if os.path.isfile(filepath) and filename.startswith(approach_id):
