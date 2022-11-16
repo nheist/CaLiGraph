@@ -93,4 +93,5 @@ if __name__ == '__main__':
         'cluster_threshold': args.cluster_threshold,
     }
     # then import application-specific code and run it
-    entity_linking.run_evaluation(scenario, approach, corpus_type, args.sample_size, params, args.save_alignment, args.save_test_alignment)
+    from entity_linking import run_evaluation
+    run_evaluation(scenario, approach, corpus_type, args.sample_size, params, args.save_alignment, args.save_test_alignment)
