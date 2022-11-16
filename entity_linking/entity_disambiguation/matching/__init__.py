@@ -5,7 +5,7 @@ from entity_linking.entity_disambiguation.matching.graph import PopularityMatche
 from entity_linking.entity_disambiguation.matching.biencoder import BiEncoderMatcher
 from entity_linking.entity_disambiguation.matching.crossencoder import CrossEncoderMatcher
 from entity_linking.entity_disambiguation.matching.tdfusion import TopDownFusionMatcher
-from entity_linking.entity_disambiguation.matching.bufusion import BottomUpFusionMatcher
+from entity_linking.entity_disambiguation.matching.bufusion import BottomUpFusionMatcher, NastyLinker
 import utils
 
 
@@ -27,6 +27,8 @@ def initialize_matcher(scenario: MatchingScenario, approach: MatchingApproach, p
         matcher_factory = TopDownFusionMatcher
     elif approach == MatchingApproach.BOTTOM_UP_FUSION:
         matcher_factory = BottomUpFusionMatcher
+    elif approach == MatchingApproach.NASTY_LINKER:
+        matcher_factory = NastyLinker
     else:
         raise ValueError(f'Matching approach not implemented: {approach.value}')
     return matcher_factory(scenario, params)
