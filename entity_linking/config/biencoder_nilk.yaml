@@ -1,4 +1,4 @@
 base_model: sentence-transformers/all-MiniLM-L12-v2
-batch_size: 4096
+batch_size: 400
 add_text_context: 1
 approximate_neighbor_search: True
