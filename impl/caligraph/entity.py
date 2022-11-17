@@ -76,11 +76,10 @@ class ClgEntityStore:
         self.entities_by_idx = {e.idx: e for e in all_entities}
         self.entities_by_name = {e.name: e for e in all_entities}
 
-        self.labels = self._init_labels()
-        self.surface_forms = self._init_surface_forms()
-        self.types = self._init_types()
-        self._clean_types()
-        self.properties = self._init_properties()
+        self.labels = None
+        self.surface_forms = None
+        self.types = None
+        self.properties = None
         self.inverse_properties = None
         self.provenance_resources = defaultdict(set)
         self.entity_stats = None
@@ -98,6 +97,9 @@ class ClgEntityStore:
         return [ClgEntity(e.idx, e.name, False) for e in self.dbr.get_entities()]
 
     def add_subject_entities(self):
+        self._load_labels()
+        self._load_surface_forms()
+        self._load_types()
         self._reset_precomputed_attributes()
         subject_entity_info = defaultdict(lambda: {'labels': Counter(), 'types': set(), 'provenance': set()})
         # collect info about subject entities
@@ -122,9 +124,10 @@ class ClgEntityStore:
             self.surface_forms[ent].update(set(ent_info['labels']))
             self.provenance_resources[ent] = self.get_provenance_resources(ent) | ent_info['provenance']
             self.types[ent].update(ent_info['types'])
-        self._clean_types()
+        self._clean_types(self.types)
 
     def add_axiom_information(self, axiom_information: Dict[ClgType, Set[Tuple[ClgPredicate, Any, float]]]):
+        self._load_properties()
         self._reset_precomputed_attributes()
         self.axioms = defaultdict(set, {ct: {tuple(axiom[1:3]) for axiom in axioms} for ct, axioms in axiom_information.items()})
         # remove redundant axioms by first applying full transitivity to the axioms and then reducing bottom-up
@@ -160,7 +163,7 @@ class ClgEntityStore:
                     pred = self.clgo.get_class_by_idx(p)
                     sub = self.get_entity_by_idx(s)
                     self.properties[sub][pred].add(ent)
-        self._clean_types()
+        self._clean_types(self.types)
 
     def get_entities(self) -> Set[ClgEntity]:
         return set(self.entities_by_idx.values())
@@ -200,14 +203,27 @@ class ClgEntityStore:
             self.provenance_resources[ent].update({r for t in self.types[ent] for r in t.get_associated_dbp_resources()})
         return self.provenance_resources[ent]
 
+    def get_label(self, ent: ClgEntity) -> str:
+        self._load_labels()
+        return self.labels[ent]
+
+    def _load_labels(self):
+        if self.labels is None:
+            self.labels = utils.load_or_create_cache('caligraph_entity_labels', self._init_labels)
+
     def _init_labels(self) -> Dict[ClgEntity, str]:
         labels = {}
         for dbp_ent in self.dbr.get_entities():
             labels[self.get_entity_for_dbp_entity(dbp_ent)] = dbp_ent.get_label()
         return labels
 
-    def get_label(self, ent: ClgEntity) -> str:
-        return self.labels[ent]
+    def get_surface_forms(self, ent: ClgEntity) -> Set[str]:
+        self._load_surface_forms()
+        return self.surface_forms[ent]
+
+    def _load_surface_forms(self):
+        if self.surface_forms is None:
+            self.surface_forms = utils.load_or_create_cache('caligraph_entity_surface_forms', self._init_surface_forms)
 
     def _init_surface_forms(self) -> Dict[ClgEntity, Set[str]]:
         surface_forms = defaultdict(set)
@@ -215,8 +231,13 @@ class ClgEntityStore:
             surface_forms[self.get_entity_for_dbp_entity(dbp_ent)].update(dbp_ent.get_surface_forms())
         return surface_forms
 
-    def get_surface_forms(self, ent: ClgEntity) -> Set[str]:
-        return self.surface_forms[ent]
+    def get_types(self, ent: ClgEntity) -> Set[ClgType]:
+        self._load_types()
+        return self.types[ent]
+
+    def _load_types(self):
+        if self.types is None:
+            self.types = utils.load_or_create_cache('caligraph_entity_types', self._init_types)
 
     def _init_types(self) -> Dict[ClgEntity, Set[ClgType]]:
         types = defaultdict(set)
@@ -234,24 +255,30 @@ class ClgEntityStore:
             # discard types that are not in accordance with the DBpedia types of the entity
             disjoint_types = {dt for ct in types_from_dbpedia for dt in self.clgo.get_disjoint_types(ct)}
             types[ent].difference_update(disjoint_types)
+        self._clean_types(types)
         return types
 
-    def _clean_types(self):
+    def _clean_types(self, types: Dict[ClgEntity, Set[ClgType]]):
         # remove potential transitive types
-        for ent, ent_types in self.types.items():
-            self.types[ent].difference_update({tt for ct in ent_types for tt in self.clgo.get_transitive_supertypes(ct)})
+        for ent, ent_types in types.items():
+            types[ent].difference_update({tt for ct in ent_types for tt in self.clgo.get_transitive_supertypes(ct)})
         # remove remaining disjointnesses in types
-        for ent, ent_types in self.types.items():
-            self.types[ent].difference_update({dt for ct in ent_types for dt in self.clgo.get_disjoint_types(ct)})
-
-    def get_types(self, ent: ClgEntity) -> Set[ClgType]:
-        return self.types[ent]
+        for ent, ent_types in types.items():
+            types[ent].difference_update({dt for ct in ent_types for dt in self.clgo.get_disjoint_types(ct)})
 
     def get_transitive_types(self, ent: ClgEntity, include_root=False) -> Set[ClgType]:
         return {tt for t in self.types[ent] for tt in self.clgo.get_transitive_supertypes(t, include_root=include_root, include_self=True)}
 
     def get_independent_types(self, ent: ClgEntity) -> Set[ClgType]:
         return self.clgo.get_independent_types(self.get_types(ent))
+
+    def get_properties(self, ent: ClgEntity, as_tuple=False) -> Union[Dict[ClgPredicate, set], Set[Tuple[ClgPredicate, Any]]]:
+        self._load_properties()
+        return {(p, v) for p, vals in self.properties[ent].items() for v in vals} if as_tuple else self.properties[ent]
+
+    def _load_properties(self):
+        if self.properties is None:
+            self.properties = utils.load_or_create_cache('caligraph_entity_properties', self._init_properties)
 
     def _init_properties(self) -> Dict[ClgEntity, Dict[ClgPredicate, set]]:
         properties = defaultdict(lambda: defaultdict(set))
@@ -263,9 +290,6 @@ class ClgEntityStore:
                     vals = {self.get_entity_for_dbp_entity(v) for v in vals if self.has_entity_for_dbp_entity(v)}
                 properties[ent][pred].update(vals)
         return properties
-
-    def get_properties(self, ent: ClgEntity, as_tuple=False) -> Union[Dict[ClgPredicate, set], Set[Tuple[ClgPredicate, Any]]]:
-        return {(p, v) for p, vals in self.properties[ent].items() for v in vals} if as_tuple else self.properties[ent]
 
     def get_entity_properties(self) -> Dict[ClgEntity, Dict[ClgPredicate, set]]:
         return {e: self.get_properties(e) for e in self.get_entities()}
@@ -297,7 +321,6 @@ class ClgEntityStore:
                     for subtype in self.clgo.get_subtypes(t):
                         self.entity_stats[t]['transitive_entity_count'] += self.entity_stats[subtype]['transitive_entity_count']
                         self.entity_stats[t]['transitive_property_counts'] += self.entity_stats[subtype]['transitive_property_counts']
-
         stats = self.entity_stats[clg_type]
         entity_count = stats['entity_count']
         property_counts = stats['property_counts']

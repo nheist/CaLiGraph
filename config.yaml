@@ -279,6 +279,18 @@ cache:
   caligraph_entities:
     filename: 'caligraph-entities'
     version: 2
+  caligraph_entity_labels:
+    filename: 'caligraph-entity-labels'
+    version: 2
+  caligraph_entity_surface_forms:
+    filename: 'caligraph-entity-surface-forms'
+    version: 2
+  caligraph_entity_types:
+    filename: 'caligraph-entity-types'
+    version: 2
+  caligraph_entity_properties:
+    filename: 'caligraph-entity-properties'
+    version: 2
   cali2ax_axioms:
     filename: 'cali2ax-axioms'
     version: 3
