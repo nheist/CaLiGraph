@@ -1,5 +1,5 @@
 base_model: sentence-transformers/all-MiniLM-L12-v2
-batch_size: 4096
+batch_size: 256
 sample_size: 5
 approximate_neighbor_search: True
 add_text_context: 1
