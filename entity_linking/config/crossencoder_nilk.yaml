@@ -1,3 +1,3 @@
 base_model: distilbert-base-cased
-batch_size: 2048
+batch_size: 200
 add_text_context: 1
