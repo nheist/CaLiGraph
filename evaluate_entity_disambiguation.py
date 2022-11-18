@@ -40,7 +40,7 @@ if __name__ == '__main__':
     parser.add_argument('-l', '--loss', type=str, choices=['COS', 'RL', 'SRL'], default='SRL', help='Loss function for training (only for bi-encoder)')
     parser.add_argument('-k', '--top_k', type=int, default=3, help='Number of ME matches to return per input (only for bi-encoder)')
     parser.add_argument('-ans', '--approximate_neighbor_search', action=argparse.BooleanOptionalAction, default=False, help='Use approximate nearest neighbor search')
-    # cross-encoder
+    # cross-encoder / nasty linker / greedy clustering
     parser.add_argument('--mm_threshold', type=float, default=.5, help="Confidence threshold to filter MM predictions.")
     parser.add_argument('--me_threshold', type=float, default=.5, help="Confidence threshold to filter ME predictions.")
     # nasty linker

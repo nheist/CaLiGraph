@@ -46,8 +46,10 @@ class GreedyClusteringMatcher(MatcherWithCandidates):
         for (m_id, e_id), score in self.me_ca[eval_mode].get_me_candidates(True):
             if score <= self.me_threshold:
                 continue
+            if score >= 1:
+                print(m_id, e_id, score)
             ag.add_node(e_id, is_ent=True)
-            ag.add_edge(e_id, m_id, weight=score)
+            ag.add_edge(e_id, m_id, weight=1-score)
         ag.add_weighted_edges_from([(u, v, score) for (u, v), score in self.mm_ca[eval_mode].get_mm_candidates(True) if score > self.mm_threshold])
         return ag
 
@@ -76,8 +78,7 @@ class GreedyClusteringMatcher(MatcherWithCandidates):
     def _split_into_valid_subgraphs(self, ag: nx.Graph) -> List[nx.Graph]:
         utils.get_logger().debug(f'Splitting graph of size {len(ag.nodes)} into valid subgraphs..')
         node_groups = defaultdict(set)
-        weight_fct = lambda u, v, edge_attrs: 1 - edge_attrs['weight']  # use inversed weight
-        for node, path in nx.multi_source_dijkstra_path(ag, self._get_entity_nodes(ag), weight=weight_fct).items():
+        for node, path in nx.multi_source_dijkstra_path(ag, self._get_entity_nodes(ag)).items():
             ent_node = path[0]
             node_groups[ent_node].add(node)
         return [ag.subgraph(nodes) for nodes in node_groups.values()]
