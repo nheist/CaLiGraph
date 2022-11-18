@@ -16,8 +16,10 @@ class TopDownFusionMatcher(MatcherWithCandidates):
         ag = self._get_alignment_graph(eval_mode)
         valid_subgraphs = self._compute_valid_subgraphs(ag)
         ca = CandidateAlignment()
+        clustering = []
         for g in valid_subgraphs:
             mention_nodes = self._get_mention_nodes(g)
+            clustering.append(mention_nodes)
             for mention_pair in itertools.combinations(mention_nodes, 2):
                 ca.add_candidate(mention_pair, 1)
             ent_nodes = self._get_entity_nodes(g)
@@ -25,6 +27,7 @@ class TopDownFusionMatcher(MatcherWithCandidates):
                 ent_node = ent_nodes.pop()
                 for m_id in mention_nodes:
                     ca.add_candidate((m_id, ent_node), 1)
+        ca.add_entity_clustering(clustering)
         return ca
 
     def _get_alignment_graph(self, eval_mode: str) -> nx.Graph:

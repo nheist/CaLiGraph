@@ -5,7 +5,7 @@ from entity_linking.matching.graph import PopularityMatcher
 from entity_linking.matching.biencoder import BiEncoderMatcher
 from entity_linking.matching.crossencoder import CrossEncoderMatcher
 from entity_linking.matching.tdfusion import TopDownFusionMatcher
-from entity_linking.matching.bufusion import BottomUpFusionMatcher, NastyLinker
+from entity_linking.matching.nastylinker import NastyLinker
 import utils
 
 
@@ -25,8 +25,6 @@ def initialize_matcher(scenario: MatchingScenario, approach: MatchingApproach, p
         matcher_factory = CrossEncoderMatcher
     elif approach == MatchingApproach.TOP_DOWN_FUSION:
         matcher_factory = TopDownFusionMatcher
-    elif approach == MatchingApproach.BOTTOM_UP_FUSION:
-        matcher_factory = BottomUpFusionMatcher
     elif approach == MatchingApproach.NASTY_LINKER:
         matcher_factory = NastyLinker
     else:

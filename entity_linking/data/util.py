@@ -96,6 +96,7 @@ class Alignment:
 class CandidateAlignment:
     def __init__(self):
         self.mention_to_target_mapping = defaultdict(dict)
+        self.entity_clustering = None
 
     def add_candidate(self, pair: Pair, score: float):
         item_a, item_b = sorted(pair) if isinstance(pair[1], MentionId) else pair
@@ -108,6 +109,22 @@ class CandidateAlignment:
             return mention_a in self.mention_to_target_mapping and mention_b in self.mention_to_target_mapping[mention_a]
         mention, ent = pair
         return mention in self.mention_to_target_mapping and ent in self.mention_to_target_mapping[mention]
+
+    def add_entity_clustering(self, clustering: List[Set[MentionId]]):
+        self.entity_clustering = clustering
+
+    def get_entity_clusterings(self, alignment: Alignment, nil_flag: Optional[bool]) -> Optional[Tuple[List[int], List[int]]]:
+        if self.entity_clustering is None:
+            return None
+        pred, actual = [], []
+        for cluster_id, mention_cluster in enumerate(self.entity_clustering):
+            for mention in mention_cluster:
+                if nil_flag is None or nil_flag == self._is_nil_mention(mention):
+                    pred.append(cluster_id)
+                    if mention not in alignment.mention_to_entity_mapping:
+                        return None  # abort, if data corpus does not contain entity labels for all mentions
+                    actual.append(alignment.mention_to_entity_mapping[mention])
+        return pred, actual
 
     def get_mm_candidates(self, include_score: bool, nil_flag: Optional[bool] = None) -> Iterable[Union[Pair, Tuple[Pair, float]]]:
         yield from self._get_candidates(MentionId, include_score, nil_flag)

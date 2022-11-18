@@ -43,9 +43,8 @@ if __name__ == '__main__':
     # cross-encoder
     parser.add_argument('--mm_threshold', type=float, default=.5, help="Confidence threshold to filter MM predictions.")
     parser.add_argument('--me_threshold', type=float, default=.5, help="Confidence threshold to filter ME predictions.")
-    # bottom-up fusion
+    # nasty linker
     parser.add_argument('--cluster_comparisons', type=int, default=3, help='Number of mentions/entities per cluster that are considered for a merge')
-    parser.add_argument('--cluster_threshold', type=float, default=.5, help='Confidence threshold to filter cluster merges')
 
     args = parser.parse_args()
     # and set necessary environment variables
@@ -90,7 +89,6 @@ if __name__ == '__main__':
         'mm_threshold': args.mm_threshold,
         'me_threshold': args.me_threshold,
         'cluster_comparisons': args.cluster_comparisons,
-        'cluster_threshold': args.cluster_threshold,
     }
     # then import application-specific code and run it
     from entity_linking import run_evaluation
