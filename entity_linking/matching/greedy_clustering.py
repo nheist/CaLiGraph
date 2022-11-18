@@ -5,10 +5,20 @@ import networkx as nx
 import utils
 from impl.wikipedia import MentionId
 from entity_linking.data import CandidateAlignment, DataCorpus
+from entity_linking.matching.util import MatchingScenario
 from entity_linking.matching.matcher import MatcherWithCandidates
 
 
-class TopDownFusionMatcher(MatcherWithCandidates):
+class GreedyClusteringMatcher(MatcherWithCandidates):
+    def __init__(self, scenario: MatchingScenario, params: dict):
+        super().__init__(scenario, params)
+        # model params
+        self.mm_threshold = params['mm_threshold']
+        self.me_threshold = params['me_threshold']
+
+    def _get_param_dict(self) -> dict:
+        return super()._get_param_dict() | {'mmt': self.mm_threshold, 'met': self.me_threshold}
+
     def _train_model(self, train_corpus: DataCorpus, eval_corpus: DataCorpus):
         pass  # no training necessary
 
@@ -34,9 +44,11 @@ class TopDownFusionMatcher(MatcherWithCandidates):
         utils.get_logger().debug('Initializing alignment graph..')
         ag = nx.Graph()
         for (m_id, e_id), score in self.me_ca[eval_mode].get_me_candidates(True):
+            if score <= self.me_threshold:
+                continue
             ag.add_node(e_id, is_ent=True)
             ag.add_edge(e_id, m_id, weight=score)
-        ag.add_weighted_edges_from([(u, v, score) for (u, v), score in self.mm_ca[eval_mode].get_mm_candidates(True)])
+        ag.add_weighted_edges_from([(u, v, score) for (u, v), score in self.mm_ca[eval_mode].get_mm_candidates(True) if score > self.mm_threshold])
         return ag
 
     def _compute_valid_subgraphs(self, ag: nx.Graph) -> List[nx.Graph]:

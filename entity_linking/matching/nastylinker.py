@@ -10,7 +10,7 @@ from entity_linking.matching.util import MatchingScenario
 from entity_linking.matching.crossencoder import CrossEncoderMatcher
 
 
-class FusionCluster:
+class MentionCluster:
     idx: int
     mentions: Set[MentionId]
     candidates: Dict[MentionId, float]
@@ -91,7 +91,7 @@ class NastyLinker(CrossEncoderMatcher):
         utils.release_gpu()
         return self.model.predict(model_input, batch_size=self.batch_size, show_progress_bar=True)
 
-    def _init_clusters(self, eval_mode: str, predictions: Dict[MentionId, Dict[int, float]]) -> Tuple[Set[FusionCluster], Dict[MentionId, FusionCluster]]:
+    def _init_clusters(self, eval_mode: str, predictions: Dict[MentionId, Dict[int, float]]) -> Tuple[Set[MentionCluster], Dict[MentionId, MentionCluster]]:
         utils.get_logger().debug('Initializing clusters..')
         # group mentions by matching entity
         me_mapping = {m_id: max(ents.items(), key=lambda x: x[1]) for m_id, ents in predictions.items()}
@@ -109,7 +109,7 @@ class NastyLinker(CrossEncoderMatcher):
         cluster_by_mid = {}
         cluster_id = 0
         for e_id, mention_ids in em_mapping.items():
-            cluster = FusionCluster(cluster_id, mention_ids, defaultdict(float), e_id)
+            cluster = MentionCluster(cluster_id, mention_ids, defaultdict(float), e_id)
             clusters.add(cluster)
             for m_id in mention_ids:
                 cluster_by_mid[m_id] = cluster
@@ -118,13 +118,13 @@ class NastyLinker(CrossEncoderMatcher):
         for m_id, candidates in mention_candidates.items():
             if m_id in cluster_by_mid:
                 continue
-            cluster = FusionCluster(cluster_id, {m_id}, defaultdict(float, candidates))
+            cluster = MentionCluster(cluster_id, {m_id}, defaultdict(float, candidates))
             clusters.add(cluster)
             cluster_by_mid[m_id] = cluster
             cluster_id += 1
         return clusters, cluster_by_mid
 
-    def _find_me_cluster_merges(self, clusters: Set[FusionCluster], cluster_by_mid: Dict[MentionId, FusionCluster], me_predictions: Dict[MentionId, Dict[int, float]]) -> Tuple[List[Pair], List[Tuple[int, int]]]:
+    def _find_me_cluster_merges(self, clusters: Set[MentionCluster], cluster_by_mid: Dict[MentionId, MentionCluster], me_predictions: Dict[MentionId, Dict[int, float]]) -> Tuple[List[Pair], List[Tuple[int, int]]]:
         me_candidates, me_clusters = [], []
         for cluster in clusters:
             if cluster.entity is not None:
@@ -141,7 +141,7 @@ class NastyLinker(CrossEncoderMatcher):
             me_clusters.append(tuple(sorted([cluster.idx, top_ent_cluster.idx])))
         return me_candidates, me_clusters
 
-    def _find_mm_cluster_merges(self, clusters: Set[FusionCluster], cluster_by_mid: Dict[MentionId, FusionCluster]) -> Tuple[List[Pair], List[Tuple[int, int]]]:
+    def _find_mm_cluster_merges(self, clusters: Set[MentionCluster], cluster_by_mid: Dict[MentionId, MentionCluster]) -> Tuple[List[Pair], List[Tuple[int, int]]]:
         # use mention clusters to find top mention-cluster to merge with
         # make sure that cluster merge ids are sorted
         mm_candidates, mm_clusters = [], []
@@ -166,7 +166,7 @@ class NastyLinker(CrossEncoderMatcher):
             cluster_merge_scores[cluster_merge_id].append(score)
         return {cluster_merge_id: np.mean(scores) for cluster_merge_id, scores in cluster_merge_scores.items()}
 
-    def _merge_clusters(self, cluster_merge_scores: Dict[Tuple[int, int], float], threshold: float, clusters: Set[FusionCluster], cluster_by_mid: Dict[MentionId, FusionCluster], iteration: int = 0):
+    def _merge_clusters(self, cluster_merge_scores: Dict[Tuple[int, int], float], threshold: float, clusters: Set[MentionCluster], cluster_by_mid: Dict[MentionId, MentionCluster], iteration: int = 0):
         cluster_by_id = {cluster.idx: cluster for cluster in clusters}
         merge_conducted, merge_discarded = 0, 0
         # merge clusters starting with highest left cluster index (in the case of a merge, we keep the left index)
