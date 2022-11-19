@@ -7,7 +7,7 @@ from sentence_transformers import SentenceTransformer, losses
 import utils
 from entity_linking.data import CandidateAlignment, DataCorpus
 from entity_linking.matching.util import MatchingScenario
-from entity_linking.matching.io import get_model_path, store_embeddings
+from entity_linking.matching.io import get_model_path
 from entity_linking.matching.matcher import Matcher
 from entity_linking.matching.lexical import ExactMatcher
 from entity_linking.matching import transformer_util
