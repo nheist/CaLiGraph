@@ -31,8 +31,6 @@ class BiEncoderMatcher(Matcher):
         self.batch_size = params['batch_size']
         self.epochs = params['epochs']
         self.warmup_steps = params['warmup_steps']
-        # config params
-        self.save_embeddings = params['save_embeddings']
         # cache for entity ids and embeddings (as this is the same for all datasets and samples)
         self.entity_ids = None
         self.entity_embeddings = None
