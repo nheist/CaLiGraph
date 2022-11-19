@@ -80,6 +80,7 @@ if __name__ == '__main__':
         'batch_size': args.batch_size,
         'top_k': args.top_k,
         'approximate_neighbor_search': args.approximate_neighbor_search,
+        'save_embeddings': args.save_embeddings,
         'add_page_context': args.add_page_context,
         'add_text_context': args.add_text_context,
         'add_entity_abstract': args.add_entity_abstract,
