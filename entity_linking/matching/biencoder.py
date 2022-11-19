@@ -90,8 +90,6 @@ class BiEncoderMatcher(Matcher):
         mention_input, mention_known = data_corpus.get_mention_input(self.add_page_context, self.add_text_context)
         mention_ids = list(mention_input)
         mention_embeddings = self._compute_embeddings(list(mention_input.values()))
-        if eval_mode == self.MODE_TEST and self.save_embeddings:
-            store_embeddings(mention_embeddings)
         ca = ExactMatcher(self.scenario, {'id': None, 'eval_nil': False}).predict(eval_mode, data_corpus) if self.init_exact else CandidateAlignment()
         if self.scenario.is_MM():
             known_mask = [mention_known[m_id] for m_id in mention_ids]

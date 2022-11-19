@@ -17,18 +17,6 @@ def load_candidate_alignment(approach_id: str) -> Dict[str, CandidateAlignment]:
         return pickle.load(f)
 
 
-def store_embeddings(approach_name: str, embeddings):
-    utils.get_logger().debug(f'Storing embeddings for matcher with name "{approach_name}"..')
-    with open(get_model_path(approach_name) + '.embeddings', mode='wb') as f:
-        return pickle.dump(embeddings, f, protocol=pickle.HIGHEST_PROTOCOL)
-
-
-def load_embeddings(approach_id: str):
-    utils.get_logger().debug(f'Loading embeddings from matcher with id "{approach_id}"..')
-    with open(_get_approach_path_by_id(approach_id, '.embeddings'), mode='rb') as f:
-        return pickle.load(f)
-
-
 def get_model_path(approach_name: str) -> str:
     return os.path.join(utils._get_root_path(), 'entity_linking', 'cache', approach_name)
 
