@@ -7,7 +7,7 @@ from sentence_transformers import SentenceTransformer, losses
 import utils
 from entity_linking.data import CandidateAlignment, DataCorpus
 from entity_linking.matching.util import MatchingScenario
-from entity_linking.matching.io import get_model_path
+from entity_linking.matching.io import get_model_path, store_embeddings
 from entity_linking.matching.matcher import Matcher
 from entity_linking.matching.lexical import ExactMatcher
 from entity_linking.matching import transformer_util
@@ -31,6 +31,8 @@ class BiEncoderMatcher(Matcher):
         self.batch_size = params['batch_size']
         self.epochs = params['epochs']
         self.warmup_steps = params['warmup_steps']
+        # config params
+        self.save_embeddings = params['save_embeddings']
         # cache for entity ids and embeddings (as this is the same for all datasets and samples)
         self.entity_ids = None
         self.entity_embeddings = None
@@ -88,6 +90,8 @@ class BiEncoderMatcher(Matcher):
         mention_input, mention_known = data_corpus.get_mention_input(self.add_page_context, self.add_text_context)
         mention_ids = list(mention_input)
         mention_embeddings = self._compute_embeddings(list(mention_input.values()))
+        if eval_mode == self.MODE_TEST and self.save_embeddings:
+            store_embeddings(mention_embeddings)
         ca = ExactMatcher(self.scenario, {'id': None, 'eval_nil': False}).predict(eval_mode, data_corpus) if self.init_exact else CandidateAlignment()
         if self.scenario.is_MM():
             known_mask = [mention_known[m_id] for m_id in mention_ids]
