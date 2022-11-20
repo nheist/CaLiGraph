@@ -61,13 +61,8 @@ class AverageClusteringMatcher(CrossEncoderMatcher):
             self._merge_clusters(mm_cluster_scores, self.mm_threshold, clusters, cluster_by_mid, iteration)
             iteration += 1
         # compute final alignment
-        ca = CandidateAlignment()
-        for cluster in clusters:
-            for m_id in cluster.mentions:
-                ca.add_candidate((m_id, cluster.entity), 1)
-            for pair in itertools.combinations(cluster.mentions, 2):
-                ca.add_candidate(pair, 1)
-        ca.add_entity_clustering([cluster.mentions for cluster in clusters])
+        ca = CandidateAlignment(self.scenario)
+        ca.add_clustering([(cluster.mentions, cluster.entity) for cluster in clusters], data_corpus.alignment)
         return ca
 
     def _make_me_predictions(self, eval_mode: str, mention_input: Dict[MentionId, str], entity_input: Dict[int, str]) -> Dict[MentionId, Dict[int, float]]:

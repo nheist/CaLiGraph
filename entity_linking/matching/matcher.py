@@ -2,7 +2,7 @@ from typing import Dict
 from abc import ABC, abstractmethod
 from datetime import datetime
 import utils
-from entity_linking.data import Alignment, CandidateAlignment, DataCorpus
+from entity_linking.data import CandidateAlignment, DataCorpus
 from entity_linking.evaluation import PrecisionRecallF1Evaluator
 from entity_linking.matching.util import MatchingScenario
 from entity_linking.matching.io import load_candidate_alignment
@@ -45,16 +45,10 @@ class Matcher(ABC):
         pred_start = datetime.now()
         prediction = self.predict(eval_mode, data_corpus)
         prediction_time_in_seconds = (datetime.now() - pred_start).seconds
-        if self.scenario.is_MM():
-            self._evaluate_scenario(eval_mode, MatchingScenario.MENTION_MENTION, prediction, data_corpus.alignment, prediction_time_in_seconds)
-        if self.scenario.is_ME():
-            self._evaluate_scenario(eval_mode, MatchingScenario.MENTION_ENTITY, prediction, data_corpus.alignment, prediction_time_in_seconds)
+        utils.get_logger().debug(f'Running evaluation..')
+        evaluator = PrecisionRecallF1Evaluator(self.get_approach_name())
+        evaluator.compute_and_log_metrics(eval_mode, prediction, data_corpus.alignment, prediction_time_in_seconds)
         return prediction
-
-    def _evaluate_scenario(self, eval_mode: str, scenario: MatchingScenario, prediction: CandidateAlignment, alignment: Alignment, prediction_time: int):
-        utils.get_logger().debug(f'Running evaluation for scenario {scenario.name}..')
-        evaluator = PrecisionRecallF1Evaluator(self.get_approach_name(), scenario)
-        evaluator.compute_and_log_metrics(eval_mode, prediction, alignment, prediction_time)
 
     @abstractmethod
     def predict(self, eval_mode: str, data_corpus: DataCorpus) -> CandidateAlignment:

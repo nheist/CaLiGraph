@@ -86,7 +86,7 @@ class BiEncoderMatcher(Matcher):
         mention_input, mention_known = data_corpus.get_mention_input(self.add_page_context, self.add_text_context)
         mention_ids = list(mention_input)
         mention_embeddings = self._compute_embeddings(list(mention_input.values()))
-        ca = CandidateAlignment()
+        ca = CandidateAlignment(self.scenario)
         if self.scenario.is_MM():
             known_mask = [mention_known[m_id] for m_id in mention_ids]
             known_mention_ids = [m_id for m_id, known in zip(mention_ids, known_mask) if known]

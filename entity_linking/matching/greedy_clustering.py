@@ -1,7 +1,6 @@
-from typing import Set, List, Iterable, Tuple, Optional, Dict
+from typing import Set, List, Iterable, Optional, Dict
 from abc import ABC
 from collections import defaultdict, Counter
-import itertools
 import networkx as nx
 import utils
 from impl.wikipedia import MentionId
@@ -39,17 +38,6 @@ class GreedyClusteringMatcher(MatcherWithCandidates, ABC):
         for nodes in nx.connected_components(ag):
             yield ag.subgraph(nodes)
 
-    def _create_alignment(self, clusters: List[Tuple[Set[MentionId], Optional[int]]]) -> CandidateAlignment:
-        ca = CandidateAlignment()
-        for mentions, ent_id in clusters:
-            for mention_pair in itertools.combinations(mentions, 2):
-                ca.add_candidate(mention_pair, 1)
-            if ent_id is not None:
-                for m_id in mentions:
-                    ca.add_candidate((m_id, ent_id), 1)
-        ca.add_entity_clustering([mentions for mentions, _ in clusters])
-        return ca
-
     @classmethod
     def _get_mention_nodes(cls, g: nx.Graph) -> Set[MentionId]:
         return {node for node, is_ent in g.nodes(data='is_ent') if not is_ent}
@@ -60,7 +48,9 @@ class NastyLinker(GreedyClusteringMatcher):
         ag = self._get_alignment_graph(eval_mode, True)
         valid_subgraphs = self._compute_valid_subgraphs(ag)
         clusters = [(self._get_mention_nodes(g), self._get_entity_node(g)) for g in valid_subgraphs]
-        return self._create_alignment(clusters)
+        ca = CandidateAlignment(self.scenario)
+        ca.add_clustering(clusters, data_corpus.alignment)
+        return ca
 
     def _compute_valid_subgraphs(self, ag: nx.Graph) -> List[nx.Graph]:
         utils.get_logger().debug('Computing valid subgraphs..')
@@ -108,7 +98,9 @@ class EdinMatcher(GreedyClusteringMatcher):
                 if top_ent_score >= .7:  # assign entity to cluster only if it is closest entity for >= 70% of mentions
                     ent = top_ent
             clusters.append((mentions, ent))
-        return self._create_alignment(clusters)
+        ca = CandidateAlignment(self.scenario)
+        ca.add_clustering(clusters, data_corpus.alignment)
+        return ca
 
     def _get_top_entities_for_mentions(self, eval_mode: str) -> Dict[MentionId, int]:
         mention_ents = defaultdict(dict)

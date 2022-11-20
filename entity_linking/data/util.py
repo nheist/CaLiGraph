@@ -1,5 +1,5 @@
 from typing import List, Tuple, Union, Dict, Optional, Set, Iterable, TypeVar
-from collections import defaultdict
+from collections import defaultdict, Counter
 import random
 from tqdm import tqdm
 from abc import ABC, abstractmethod
@@ -87,39 +87,38 @@ class Alignment:
             grps = [grp for e_id, grp in self.entity_to_mention_mapping.items() if e_id in self.known_entities]
         return sum(comb(len(grp), 2) for grp in grps)
 
-    def get_me_match_count(self, nil_flag: Optional[bool] = None) -> int:
-        if nil_flag:
-            return 0
-        return len([m_id for m_id, e_id in self.mention_to_entity_mapping.items() if e_id in self.known_entities])
-
 
 class CandidateAlignment:
-    def __init__(self):
+    def __init__(self, scenario):
+        self.scenario = scenario
+        # for intermediate results (candidates)
         self.mention_to_target_mapping = defaultdict(dict)
-        self.entity_clustering = None
+        # for final results (prediction)
+        self.clustering = None
 
     def add_candidate(self, pair: Pair, score: float):
         item_a, item_b = sorted(pair) if isinstance(pair[1], MentionId) else pair
         if item_a != item_b:
             self.mention_to_target_mapping[item_a][item_b] = score
 
-    def has_candidate(self, pair: Pair) -> bool:
-        if isinstance(pair[1], MentionId):
-            mention_a, mention_b = sorted(pair)
-            return mention_a in self.mention_to_target_mapping and mention_b in self.mention_to_target_mapping[mention_a]
-        mention, ent = pair
-        return mention in self.mention_to_target_mapping and ent in self.mention_to_target_mapping[mention]
+    def add_clustering(self, clustering: List[Tuple[Set[MentionId], Optional[int]]], alignment: Alignment):
+        self.clustering = []
+        for cluster_mentions, cluster_ent in clustering:
+            if cluster_ent is None:
+                # assign most frequent actual entity of mentions to cluster, but prefer unknown entities
+                ent_count = Counter([alignment.mention_to_entity_mapping[m_id] for m_id in cluster_mentions])
+                unknown_ent_count = Counter({ent: cnt for ent, cnt in ent_count.items() if ent not in alignment.known_entities})
+                relevant_ent_count = unknown_ent_count if unknown_ent_count else ent_count
+                cluster_ent = relevant_ent_count.most_common(1)[0]
+            self.clustering.append((cluster_mentions, cluster_ent))
 
-    def add_entity_clustering(self, clustering: List[Set[MentionId]]):
-        self.entity_clustering = clustering
-
-    def get_entity_clusterings(self, alignment: Alignment, nil_flag: Optional[bool]) -> Optional[Tuple[List[int], List[int]]]:
-        if self.entity_clustering is None:
+    def get_mention_clusters(self, alignment: Alignment, nil_flag: Optional[bool]) -> Optional[Tuple[List[int], List[int]]]:
+        if self.clustering is None:
             return None
         pred, actual = [], []
-        for cluster_id, mention_cluster in enumerate(self.entity_clustering):
-            if nil_flag is None or any(nil_flag == self._is_nil_mention(mention) for mention in mention_cluster):
-                for mention in mention_cluster:
+        for cluster_id, (mentions, _) in enumerate(self.clustering):
+            if nil_flag is None or any(nil_flag == self._is_nil_mention(mention) for mention in mentions):
+                for mention in mentions:
                     pred.append(cluster_id)
                     if mention not in alignment.mention_to_entity_mapping:
                         return None  # abort, if data corpus does not contain entity labels for all mentions
@@ -133,14 +132,23 @@ class CandidateAlignment:
         yield from self._get_candidates(int, include_score, nil_flag)
 
     def _get_candidates(self, target_type, include_score: bool, nil_flag: Optional[bool]) -> Iterable[Union[Pair, Tuple[Pair, float]]]:
-        for m_id, targets in self.mention_to_target_mapping.items():
-            for t_id, score in targets.items():
-                pair = (m_id, t_id)
-                if isinstance(t_id, target_type) and self._is_consistent_with_nil_flag(pair, nil_flag):
-                    yield ((m_id, t_id), score) if include_score else (m_id, t_id)
-
-    def get_mm_candidate_count(self) -> int:
-        return sum(1 for _ in self.get_mm_candidates(False))
+        if self.clustering is None:
+            for m_id, targets in self.mention_to_target_mapping.items():
+                for t_id, score in targets.items():
+                    pair = (m_id, t_id)
+                    if isinstance(t_id, target_type) and self._is_consistent_with_nil_flag(pair, nil_flag):
+                        yield (pair, score) if include_score else pair
+        else:
+            for mention_ids, ent_id in self.clustering:
+                if isinstance(ent_id, target_type):  # Mention-Entity candidates
+                    for m_id in mention_ids:
+                        pair = (m_id, ent_id)
+                        if self._is_consistent_with_nil_flag(pair, nil_flag):
+                            yield (pair, 1) if include_score else pair
+                else:  # Mention-Mention candidates
+                    for pair in itertools.combinations(mention_ids, 2):
+                        if self._is_consistent_with_nil_flag(pair, nil_flag):
+                            yield (pair, 1) if include_score else pair
 
     def get_mm_preds_and_overlap(self, alignment: Alignment, nil_flag: Optional[bool] = None) -> Tuple[int, int]:
         return self._get_preds_and_overlap(self.get_mm_candidates(False, nil_flag), alignment)
