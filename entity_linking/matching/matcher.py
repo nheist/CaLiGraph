@@ -15,7 +15,6 @@ class Matcher(ABC):
         super().__init__()
         self.scenario = scenario
         self.id = params['id']
-        self.eval_nil = params['eval_nil']
 
     def get_approach_name(self) -> str:
         param_dict = self._get_param_dict()
@@ -54,7 +53,7 @@ class Matcher(ABC):
 
     def _evaluate_scenario(self, eval_mode: str, scenario: MatchingScenario, prediction: CandidateAlignment, alignment: Alignment, prediction_time: int):
         utils.get_logger().debug(f'Running evaluation for scenario {scenario.name}..')
-        evaluator = PrecisionRecallF1Evaluator(self.get_approach_name(), scenario, self.eval_nil)
+        evaluator = PrecisionRecallF1Evaluator(self.get_approach_name(), scenario)
         evaluator.compute_and_log_metrics(eval_mode, prediction, alignment, prediction_time)
 
     @abstractmethod

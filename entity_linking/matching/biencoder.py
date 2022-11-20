@@ -25,7 +25,6 @@ class BiEncoderMatcher(Matcher):
         self.add_text_context = params['add_text_context']
         self.add_entity_abstract = params['add_entity_abstract']
         self.add_kg_info = params['add_kg_info']
-        self.init_exact = params['init_exact']
         # training params
         self.loss = params['loss']
         self.batch_size = params['batch_size']
@@ -45,7 +44,6 @@ class BiEncoderMatcher(Matcher):
             'atc': self.add_text_context,
             'aea': self.add_entity_abstract,
             'aki': self.add_kg_info,
-            'ie': self.init_exact,
             'l': self.loss,
             'bs': self.batch_size,
             'e': self.epochs,
@@ -88,7 +86,7 @@ class BiEncoderMatcher(Matcher):
         mention_input, mention_known = data_corpus.get_mention_input(self.add_page_context, self.add_text_context)
         mention_ids = list(mention_input)
         mention_embeddings = self._compute_embeddings(list(mention_input.values()))
-        ca = ExactMatcher(self.scenario, {'id': None, 'eval_nil': False}).predict(eval_mode, data_corpus) if self.init_exact else CandidateAlignment()
+        ca = CandidateAlignment()
         if self.scenario.is_MM():
             known_mask = [mention_known[m_id] for m_id in mention_ids]
             known_mention_ids = [m_id for m_id, known in zip(mention_ids, known_mask) if known]

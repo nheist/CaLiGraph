@@ -7,17 +7,15 @@ import utils
 
 
 class PrecisionRecallF1Evaluator:
-    def __init__(self, approach_name: str, scenario: MatchingScenario, eval_nil: bool):
+    def __init__(self, approach_name: str, scenario: MatchingScenario):
         self.approach_name = approach_name
         self.scenario = scenario
-        self.eval_nil = eval_nil
 
     def compute_and_log_metrics(self, prefix: str, prediction: CandidateAlignment, alignment: Alignment, runtime: int):
         prefix += self.scenario.value
         self._compute_and_log_metrics_for_partition(prefix, prediction, alignment, runtime, None)
-        if self.eval_nil:
-            self._compute_and_log_metrics_for_partition(prefix + '-NIL', prediction, alignment, runtime, True)
-            self._compute_and_log_metrics_for_partition(prefix + '-nonNIL', prediction, alignment, runtime, False)
+        self._compute_and_log_metrics_for_partition(prefix + '-NIL', prediction, alignment, runtime, True)
+        self._compute_and_log_metrics_for_partition(prefix + '-nonNIL', prediction, alignment, runtime, False)
 
     def _compute_and_log_metrics_for_partition(self, prefix: str, prediction: CandidateAlignment, alignment: Alignment, runtime: int, nil_flag: Optional[bool]):
         utils.get_logger().debug(f'Computing metrics for {prefix}..')

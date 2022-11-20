@@ -11,7 +11,6 @@ if __name__ == '__main__':
     # config
     parser.add_argument('-c', '--config', is_config_file=True, help='Path to config file')
     parser.add_argument('-id', '--approach_id', type=str, help='ID to identify the approach')
-    parser.add_argument('-en', '--eval_nil', action=argparse.BooleanOptionalAction, default=True, help='Whether to evaluate on nil/non-nil basis')
     # machine-specific
     parser.add_argument('gpu', type=int, choices=range(-1, 8), help='Number of GPU to use')
     parser.add_argument('-gm', '--gpu_memory', type=int, default=46, help='Amount of GPU memory to reserve')
@@ -36,7 +35,6 @@ if __name__ == '__main__':
     parser.add_argument('-aea', '--add_entity_abstract', action=argparse.BooleanOptionalAction, default=True, help='Use entity abstract for disambiguation (E)')
     parser.add_argument('-aki', '--add_kg_info', type=int, default=0, help='Types/properties to add from KG for disambiguation (E)')
     # bi-encoder
-    parser.add_argument('-ie', '--init_exact', action=argparse.BooleanOptionalAction, default=False, help='Initialize candidates with exact matches (M)')
     parser.add_argument('-l', '--loss', type=str, choices=['COS', 'RL', 'SRL'], default='SRL', help='Loss function for training (only for bi-encoder)')
     parser.add_argument('-k', '--top_k', type=int, default=3, help='Number of ME matches to return per input (only for bi-encoder)')
     parser.add_argument('-ans', '--approximate_neighbor_search', action=argparse.BooleanOptionalAction, default=False, help='Use approximate nearest neighbor search')
@@ -70,7 +68,6 @@ if __name__ == '__main__':
     corpus_type = CorpusType(args.corpus)
     params = {
         'id': approach_id,
-        'eval_nil': args.eval_nil,
         'base_model': args.base_model,
         'train_sample': args.train_sample,
         'loss': args.loss,
@@ -83,7 +80,6 @@ if __name__ == '__main__':
         'add_text_context': args.add_text_context,
         'add_entity_abstract': args.add_entity_abstract,
         'add_kg_info': args.add_kg_info,
-        'init_exact': args.init_exact,
         'mm_approach': args.mm_approach,
         'me_approach': args.me_approach,
         'mm_threshold': args.mm_threshold,
