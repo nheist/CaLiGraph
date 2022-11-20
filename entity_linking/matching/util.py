@@ -20,5 +20,6 @@ class MatchingApproach(Enum):
     BIENCODER = 'biencoder'
     CROSSENCODER = 'crossencoder'
     POPULARITY = 'popularity'  # ME only!
-    GREEDY_CLUSTERING = 'gc'
     NASTY_LINKER = 'nl'
+    EDIN = 'edin'
+    AVERAGE_CLUSTERING = 'ac'

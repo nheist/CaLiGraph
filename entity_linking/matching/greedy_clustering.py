@@ -1,5 +1,6 @@
-from typing import Set, List, Iterable, Tuple, Optional
-from collections import defaultdict
+from typing import Set, List, Iterable, Tuple, Optional, Dict
+from abc import ABC
+from collections import defaultdict, Counter
 import itertools
 import networkx as nx
 import utils
@@ -9,7 +10,7 @@ from entity_linking.matching.util import MatchingScenario
 from entity_linking.matching.matcher import MatcherWithCandidates
 
 
-class GreedyClusteringMatcher(MatcherWithCandidates):
+class GreedyClusteringMatcher(MatcherWithCandidates, ABC):
     def __init__(self, scenario: MatchingScenario, params: dict):
         super().__init__(scenario, params)
         # model params
@@ -21,11 +22,6 @@ class GreedyClusteringMatcher(MatcherWithCandidates):
 
     def _train_model(self, train_corpus: DataCorpus, eval_corpus: DataCorpus):
         pass  # no training necessary
-
-    def predict(self, eval_mode: str, data_corpus: DataCorpus) -> CandidateAlignment:
-        ag = self._get_alignment_graph(eval_mode, True)
-        valid_subgraphs = self._compute_valid_subgraphs(ag)
-        return self._create_alignment([(self._get_mention_nodes(g), self._get_entity_node(g)) for g in valid_subgraphs])
 
     def _get_alignment_graph(self, eval_mode: str, add_entities: bool) -> nx.Graph:
         utils.get_logger().debug('Initializing alignment graph..')
@@ -54,6 +50,18 @@ class GreedyClusteringMatcher(MatcherWithCandidates):
         ca.add_entity_clustering([mentions for mentions, _ in clusters])
         return ca
 
+    @classmethod
+    def _get_mention_nodes(cls, g: nx.Graph) -> Set[MentionId]:
+        return {node for node, is_ent in g.nodes(data='is_ent') if not is_ent}
+
+
+class NastyLinker(GreedyClusteringMatcher):
+    def predict(self, eval_mode: str, data_corpus: DataCorpus) -> CandidateAlignment:
+        ag = self._get_alignment_graph(eval_mode, True)
+        valid_subgraphs = self._compute_valid_subgraphs(ag)
+        clusters = [(self._get_mention_nodes(g), self._get_entity_node(g)) for g in valid_subgraphs]
+        return self._create_alignment(clusters)
+
     def _compute_valid_subgraphs(self, ag: nx.Graph) -> List[nx.Graph]:
         utils.get_logger().debug('Computing valid subgraphs..')
         valid_subgraphs = []
@@ -69,19 +77,12 @@ class GreedyClusteringMatcher(MatcherWithCandidates):
 
     @classmethod
     def _get_entity_node(cls, g: nx.Graph) -> Optional[int]:
-        for node, is_ent in g.nodes(data='is_ent'):
-            if not is_ent:
-                continue
-            return node
-        return None
+        ent_nodes = cls._get_entity_nodes(g)
+        return ent_nodes[0] if ent_nodes else None
 
     @classmethod
-    def _get_entity_nodes(cls, g: nx.Graph) -> Set[int]:
-        return {node for node, is_ent in g.nodes(data='is_ent') if is_ent}
-
-    @classmethod
-    def _get_mention_nodes(cls, g: nx.Graph) -> Set[MentionId]:
-        return {node for node, is_ent in g.nodes(data='is_ent') if not is_ent}
+    def _get_entity_nodes(cls, g: nx.Graph) -> List[int]:
+        return [node for node, is_ent in g.nodes(data='is_ent') if is_ent]
 
     def _split_into_valid_subgraphs(self, ag: nx.Graph) -> List[nx.Graph]:
         utils.get_logger().debug(f'Splitting graph of size {len(ag.nodes)} into valid subgraphs..')
@@ -90,3 +91,28 @@ class GreedyClusteringMatcher(MatcherWithCandidates):
             ent_node = path[0]
             node_groups[ent_node].add(node)
         return [ag.subgraph(nodes) for nodes in node_groups.values()]
+
+
+class EdinMatcher(GreedyClusteringMatcher):
+    def predict(self, eval_mode: str, data_corpus: DataCorpus) -> CandidateAlignment:
+        mention_graph = self._get_alignment_graph(eval_mode, False)
+        mention_ents = self._get_top_entities_for_mentions(eval_mode)
+        clusters = []
+        for mention_cluster in self._get_subgraphs(mention_graph):
+            mentions = self._get_mention_nodes(mention_cluster)
+            ent_count = Counter([mention_ents[m_id] for m_id in mentions if m_id in mention_ents])
+            ent, ent_count = ent_count.most_common(1)[0]
+            ent_score = ent_count / len(mentions)
+            if ent_score < .7:  # assign entity to cluster only if it is closest entity for >= 70% of mentions
+                ent = None
+            clusters.append((mentions, ent))
+        return self._create_alignment(clusters)
+
+    def _get_top_entities_for_mentions(self, eval_mode: str) -> Dict[MentionId, int]:
+        mention_ents = defaultdict(dict)
+        for (m_id, e_id), score in self.me_ca[eval_mode].get_me_candidates(True):
+            if score <= self.me_threshold:
+                continue
+            mention_ents[m_id][e_id] = score
+        mention_ents = {m_id: max(ent_scores.items(), key=lambda x: x[1])[0] for m_id, ent_scores in mention_ents.items()}
+        return mention_ents

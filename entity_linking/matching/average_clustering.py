@@ -23,7 +23,7 @@ class MentionCluster:
         self.entity = entity
 
 
-class NastyLinker(CrossEncoderMatcher):
+class AverageClusteringMatcher(CrossEncoderMatcher):
     def __init__(self, scenario: MatchingScenario, params: dict):
         super().__init__(scenario, params)
         self.cluster_comparisons = params['cluster_comparisons']
@@ -72,10 +72,13 @@ class NastyLinker(CrossEncoderMatcher):
 
     def _make_me_predictions(self, eval_mode: str, mention_input: Dict[MentionId, str], entity_input: Dict[int, str]) -> Dict[MentionId, Dict[int, float]]:
         utils.get_logger().debug('Computing mention-entity matches..')
-        candidates = list(self.me_ca[eval_mode].get_me_candidates(False))
-        candidate_scores = self._compute_scores_for_candidates(candidates, mention_input, entity_input)
         predictions = defaultdict(dict)
-        for (mention_id, entity_id), score in zip(candidates, candidate_scores):
+#        candidates = list(self.me_ca[eval_mode].get_me_candidates(False))
+#        candidate_scores = self._compute_scores_for_candidates(candidates, mention_input, entity_input)
+#        for (mention_id, entity_id), score in zip(candidates, candidate_scores):
+#            predictions[mention_id][entity_id] = score
+        # TODO: use predictions from existing CE for quicker reuse (remove later)
+        for (mention_id, entity_id), score in self.me_ca[eval_mode].get_me_candidates(True):
             predictions[mention_id][entity_id] = score
         return predictions
 
