@@ -100,11 +100,13 @@ class EdinMatcher(GreedyClusteringMatcher):
         clusters = []
         for mention_cluster in self._get_subgraphs(mention_graph):
             mentions = self._get_mention_nodes(mention_cluster)
-            ent_count = Counter([mention_ents[m_id] for m_id in mentions if m_id in mention_ents])
-            ent, ent_count = ent_count.most_common(1)[0]
-            ent_score = ent_count / len(mentions)
-            if ent_score < .7:  # assign entity to cluster only if it is closest entity for >= 70% of mentions
-                ent = None
+            ent = None
+            ent_counts = Counter([mention_ents[m_id] for m_id in mentions if m_id in mention_ents])
+            if ent_counts:
+                top_ent, top_ent_count = ent_counts.most_common(1)[0]
+                top_ent_score = top_ent_count / len(mentions)
+                if top_ent_score >= .7:  # assign entity to cluster only if it is closest entity for >= 70% of mentions
+                    ent = top_ent
             clusters.append((mentions, ent))
         return self._create_alignment(clusters)
 
