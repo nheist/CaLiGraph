@@ -47,50 +47,6 @@ def generate_training_data(scenario: MatchingScenario, data_corpus: DataCorpus, 
 
 
 # optimized version of function in sentence_transformers.util
-def paraphrase_mining_embeddings(ca: CandidateAlignment, embeddings: torch.Tensor, mention_ids: List[MentionId], query_chunk_size: int = 5000, corpus_chunk_size: int = 100000, max_pairs: int = 500000, top_k: int = 100, add_best: bool = False):
-    top_k += 1  # a sentence has the highest similarity to itself. Increase +1 as we are interest in distinct pairs
-    best_pairs_per_item = defaultdict(lambda: (None, 0.0))
-    top_pairs = queue.PriorityQueue()
-    min_score = -1
-    num_added = 0
-
-    for corpus_start_idx in tqdm(range(0, len(embeddings), corpus_chunk_size), total=len(embeddings) // corpus_chunk_size, desc='paraphrase mining'):
-        for query_start_idx in range(0, len(embeddings), query_chunk_size):
-            scores = dot_score(embeddings[query_start_idx:query_start_idx+query_chunk_size], embeddings[corpus_start_idx:corpus_start_idx+corpus_chunk_size])
-            scores_top_k_values, scores_top_k_idx = torch.topk(scores, min(top_k, len(scores[0])), dim=1, largest=True, sorted=False)
-            scores_top_k_values = scores_top_k_values.cpu().tolist()
-            scores_top_k_idx = scores_top_k_idx.cpu().tolist()
-
-            for query_itr in range(len(scores)):
-                query_mention = mention_ids[query_start_idx + query_itr]
-                for top_k_idx, corpus_itr in enumerate(scores_top_k_idx[query_itr]):
-                    corpus_mention = mention_ids[corpus_start_idx + corpus_itr]
-                    pair = (query_mention, corpus_mention)
-                    if query_mention == corpus_mention or ca.has_candidate(pair):
-                        continue
-                    score = scores_top_k_values[query_itr][top_k_idx]
-                    if add_best and score > .5:
-                        # collect best pairs per item
-                        if best_pairs_per_item[query_mention][1] < score:
-                            best_pairs_per_item[query_mention] = (corpus_mention, score)
-                        if best_pairs_per_item[corpus_mention][1] < score:
-                            best_pairs_per_item[corpus_mention] = (query_mention, score)
-                    if score > min_score:
-                        # collect overall top pairs
-                        top_pairs.put((score, pair))
-                        num_added += 1
-                        if num_added >= max_pairs:
-                            min_score, _ = top_pairs.get()
-    # assemble the final pairs
-    if add_best:
-        for mention_a, (mention_b, score) in best_pairs_per_item.items():
-            ca.add_candidate((mention_a, mention_b), score)
-    while not top_pairs.empty():
-        score, pair = top_pairs.get()
-        ca.add_candidate(pair, score)
-
-
-# optimized version of function in sentence_transformers.util
 def semantic_search(ca: CandidateAlignment, query_embeddings: torch.Tensor, corpus_embeddings: torch.Tensor, query_ids: List[MentionId], corpus_ids: List[Union[MentionId, int]], query_chunk_size: int = 100, corpus_chunk_size: int = 500000, top_k: int = 10):
     # check that corpus and queries are on the same device
     if corpus_embeddings.device != query_embeddings.device:
@@ -116,43 +72,6 @@ def semantic_search(ca: CandidateAlignment, query_embeddings: torch.Tensor, corp
         top_k_entity_scores = sorted(corpus_scores.items(), key=lambda x: x[1], reverse=True)[:top_k]
         for corpus_id, score in top_k_entity_scores:
             ca.add_candidate((query_id, corpus_id), score)
-
-
-def approximate_paraphrase_mining_embeddings(ca: CandidateAlignment, mention_embeddings: np.ndarray, mention_ids: List[MentionId], max_pairs: int = 500000, top_k: int = 100, add_best: bool = False):
-    index = _build_ann_index(mention_embeddings, 400, 64, 100)
-    utils.get_logger().debug('Running approximate paraphrase mining..')
-    top_k += 1  # a sentence has the highest similarity to itself. Increase +1 as we are interest in distinct pairs
-    best_pairs_per_item = defaultdict(lambda: (None, 0.0))
-    top_pairs = queue.PriorityQueue()
-    min_score = -1
-    num_added = 0
-    for query_idx, (corpus_indices, distances) in enumerate(zip(*index.knn_query(mention_embeddings, k=top_k))):
-        query_mention = mention_ids[query_idx]
-        for corpus_idx, dist in zip(corpus_indices, distances):
-            corpus_mention = mention_ids[corpus_idx]
-            pair = (query_mention, corpus_mention)
-            if query_mention == corpus_mention or ca.has_candidate(pair):
-                continue
-            score = 1 - dist
-            if add_best and score > .5:
-                # collect best pairs per item
-                if best_pairs_per_item[query_mention][1] < score:
-                    best_pairs_per_item[query_mention] = (corpus_mention, score)
-                if best_pairs_per_item[corpus_mention][1] < score:
-                    best_pairs_per_item[corpus_mention] = (query_mention, score)
-            if score > min_score:
-                # collect overall top pairs
-                top_pairs.put((score, pair))
-                num_added += 1
-                if num_added >= max_pairs:
-                    min_score, _ = top_pairs.get()
-    # assemble the final pairs
-    if add_best:
-        for mention_a, (mention_b, score) in best_pairs_per_item.items():
-            ca.add_candidate((mention_a, mention_b), score)
-    while not top_pairs.empty():
-        score, pair = top_pairs.get()
-        ca.add_candidate(pair, score)
 
 
 def approximate_semantic_search(ca: CandidateAlignment, query_embeddings: np.ndarray, corpus_embeddings: np.ndarray, query_ids: List[MentionId], corpus_ids: List[Union[MentionId, int]], top_k: int = 10):

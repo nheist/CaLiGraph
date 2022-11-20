@@ -93,13 +93,10 @@ class BiEncoderMatcher(Matcher):
             known_mask = [mention_known[m_id] for m_id in mention_ids]
             known_mention_ids = [m_id for m_id, known in zip(mention_ids, known_mask) if known]
             known_mention_embeddings = mention_embeddings[known_mask]
-            #max_pairs = ca.get_mm_candidate_count() * 2 if self.init_exact else data_corpus.alignment.get_mm_match_count() * 50
             if self.ans:
                 transformer_util.approximate_semantic_search(ca, known_mention_embeddings, known_mention_embeddings, known_mention_ids, known_mention_ids, top_k=self.top_k + 1)
-                #transformer_util.approximate_paraphrase_mining_embeddings(ca, known_mention_embeddings, known_mention_ids, max_pairs=max_pairs, top_k=50, add_best=True)
             else:
                 transformer_util.semantic_search(ca, known_mention_embeddings, known_mention_embeddings, known_mention_ids, known_mention_ids, top_k=self.top_k + 1)
-                #transformer_util.paraphrase_mining_embeddings(ca, known_mention_embeddings, known_mention_ids, max_pairs=max_pairs, top_k=50, add_best=True)
         if self.scenario.is_ME():
             if self.entity_embeddings is None:  # init cached target embeddings
                 entity_input = data_corpus.get_entity_input(self.add_entity_abstract, self.add_kg_info)
