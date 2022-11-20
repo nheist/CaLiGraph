@@ -132,7 +132,7 @@ class CandidateAlignment:
         yield from self._get_candidates(int, include_score, nil_flag)
 
     def _get_candidates(self, target_type, include_score: bool, nil_flag: Optional[bool]) -> Iterable[Union[Pair, Tuple[Pair, float]]]:
-        if self.clustering is None:
+        if not hasattr(self, 'clustering') or self.clustering is None:
             for m_id, targets in self.mention_to_target_mapping.items():
                 for t_id, score in targets.items():
                     pair = (m_id, t_id)
