@@ -1,4 +1,4 @@
-from typing import Set, List
+from typing import Set, List, Iterable
 from collections import defaultdict
 import itertools
 import networkx as nx
@@ -23,7 +23,7 @@ class GreedyClusteringMatcher(MatcherWithCandidates):
         pass  # no training necessary
 
     def predict(self, eval_mode: str, data_corpus: DataCorpus) -> CandidateAlignment:
-        ag = self._get_alignment_graph(eval_mode)
+        ag = self._get_alignment_graph(eval_mode, True)
         valid_subgraphs = self._compute_valid_subgraphs(ag)
         ca = CandidateAlignment()
         clustering = []
@@ -40,22 +40,29 @@ class GreedyClusteringMatcher(MatcherWithCandidates):
         ca.add_entity_clustering(clustering)
         return ca
 
-    def _get_alignment_graph(self, eval_mode: str) -> nx.Graph:
+    def _get_alignment_graph(self, eval_mode: str, add_entities: bool) -> nx.Graph:
         utils.get_logger().debug('Initializing alignment graph..')
         ag = nx.Graph()
-        for (m_id, e_id), score in self.me_ca[eval_mode].get_me_candidates(True):
-            if score <= self.me_threshold:
-                continue
-            ag.add_node(e_id, is_ent=True)
-            ag.add_edge(e_id, m_id, weight=1-score)
+        if add_entities:
+            for (m_id, e_id), score in self.me_ca[eval_mode].get_me_candidates(True):
+                if score <= self.me_threshold:
+                    continue
+                ag.add_node(e_id, is_ent=True)
+                ag.add_edge(e_id, m_id, weight=1-score)
+        for (u, v), score in self.mm_ca[eval_mode].get_mm_candidates(True):
+            if score >= 1:
+                print(u, v, score)
         ag.add_weighted_edges_from([(u, v, 1-score) for (u, v), score in self.mm_ca[eval_mode].get_mm_candidates(True) if score > self.mm_threshold])
         return ag
+
+    def _get_subgraphs(self, ag: nx.Graph) -> Iterable[nx.Graph]:
+        for nodes in nx.connected_components(ag):
+            yield ag.subgraph(nodes)
 
     def _compute_valid_subgraphs(self, ag: nx.Graph) -> List[nx.Graph]:
         utils.get_logger().debug('Computing valid subgraphs..')
         valid_subgraphs = []
-        for nodes in nx.connected_components(ag):
-            sg = ag.subgraph(nodes)
+        for sg in self._get_subgraphs(ag):
             if self._is_valid_graph(sg):
                 valid_subgraphs.append(sg)
             else:
