@@ -46,11 +46,9 @@ class GreedyClusteringMatcher(MatcherWithCandidates):
         for (m_id, e_id), score in self.me_ca[eval_mode].get_me_candidates(True):
             if score <= self.me_threshold:
                 continue
-            if score >= 1:
-                print(m_id, e_id, score)
             ag.add_node(e_id, is_ent=True)
             ag.add_edge(e_id, m_id, weight=1-score)
-        ag.add_weighted_edges_from([(u, v, score) for (u, v), score in self.mm_ca[eval_mode].get_mm_candidates(True) if score > self.mm_threshold])
+        ag.add_weighted_edges_from([(u, v, 1-score) for (u, v), score in self.mm_ca[eval_mode].get_mm_candidates(True) if score > self.mm_threshold])
         return ag
 
     def _compute_valid_subgraphs(self, ag: nx.Graph) -> List[nx.Graph]:
