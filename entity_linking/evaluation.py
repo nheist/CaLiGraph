@@ -23,6 +23,7 @@ class PrecisionRecallF1Evaluator:
         }
         mention_clusters = prediction.get_mention_clusters(alignment, nil_flag)
         if mention_clusters is not None:
+            metrics['clusters'] = len(mention_clusters)
             metrics['NMI'] = normalized_mutual_info_score(*mention_clusters)
         if prediction.scenario.is_MM():
             actual_count = alignment.get_mm_match_count(nil_flag)
