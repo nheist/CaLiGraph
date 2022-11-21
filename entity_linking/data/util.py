@@ -125,6 +125,16 @@ class CandidateAlignment:
                     actual.append(alignment.mention_to_entity_mapping[mention])
         return pred, actual
 
+    def get_cluster_count(self, alignment: Alignment, nil_flag: Optional[bool]) -> Optional[int]:
+        if self.clustering is None:
+            return None
+        if nil_flag is None:
+            return len(self.clustering)
+        if nil_flag:
+            return sum(1 for _, ent_id in self.clustering if ent_id not in alignment.known_entities)
+        else:
+            return sum(1 for _, ent_id in self.clustering if ent_id in alignment.known_entities)
+
     def get_mm_candidates(self, include_score: bool, nil_flag: Optional[bool] = None) -> Iterable[Union[Pair, Tuple[Pair, float]]]:
         yield from self._get_candidates(MentionId, include_score, nil_flag)
 
