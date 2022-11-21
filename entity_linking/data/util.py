@@ -113,8 +113,6 @@ class CandidateAlignment:
                 unknown_ent_count = Counter({ent: cnt for ent, cnt in ent_count.items() if ent not in alignment.known_entities})
                 relevant_ent_count = unknown_ent_count if unknown_ent_count else ent_count
                 cluster_ent = relevant_ent_count.most_common(1)[0]
-                if not isinstance(cluster_ent, int):
-                    print('WRONG CLUSTER ENT!!!', cluster_ent, type(cluster_ent))
             self.clustering.append((cluster_mentions, cluster_ent))
 
     def get_mention_clusters(self, alignment: Alignment, nil_flag: Optional[bool]) -> Optional[Tuple[List[int], List[int]]]:
