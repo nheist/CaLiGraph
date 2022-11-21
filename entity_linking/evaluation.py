@@ -44,7 +44,7 @@ class PrecisionRecallF1Evaluator:
             f1 = 2 * precision * recall / (precision + recall) if precision > 0 and recall > 0 else 0
         else:
             precision = recall = f1 = 0.0
-        metrics = {f'{prefix}-P': precision, f'{prefix}-R': recall, f'{prefix}-F1': f1}
+        metrics = {f'{prefix}-predicted': pred_count, f'{prefix}-actual': actual_count, f'{prefix}-P': precision, f'{prefix}-R': recall, f'{prefix}-F1': f1}
         return metrics
 
     def _log_metrics(self, prefix: str, metrics: dict, step: int = 0):
