@@ -106,6 +106,9 @@ class CandidateAlignment:
         for cluster_mentions, cluster_ent in clustering:
             if cluster_ent is None:
                 # assign most frequent actual entity of mentions to cluster, but prefer unknown entities
+                for m_id in cluster_mentions:
+                    if not isinstance(alignment.mention_to_entity_mapping[m_id], int):
+                        print('WRONG MAPPING!!', m_id, alignment.mention_to_entity_mapping[m_id], type(alignment.mention_to_entity_mapping[m_id]))
                 ent_count = Counter([alignment.mention_to_entity_mapping[m_id] for m_id in cluster_mentions])
                 unknown_ent_count = Counter({ent: cnt for ent, cnt in ent_count.items() if ent not in alignment.known_entities})
                 relevant_ent_count = unknown_ent_count if unknown_ent_count else ent_count
@@ -141,16 +144,14 @@ class CandidateAlignment:
                     if isinstance(t_id, target_type) and self._is_consistent_with_nil_flag(pair, nil_flag):
                         yield (pair, score) if include_score else pair
         else:
-            for mention_ids, ent_id in self.clustering:
-                if target_type == int and not isinstance(ent_id, target_type):
-                    print('WTF WTF WTF')
-                    print(ent_id, type(ent_id), list(mention_ids)[0])
-                if isinstance(ent_id, target_type):  # Mention-Entity candidates
+            if target_type == int:  # Mention-Entity candidates
+                for mention_ids, ent_id in self.clustering:
                     for m_id in mention_ids:
                         pair = (m_id, ent_id)
                         if self._is_consistent_with_nil_flag(pair, nil_flag):
                             yield (pair, 1) if include_score else pair
-                else:  # Mention-Mention candidates
+            elif target_type == MentionId:  # Mention-Mention candidates
+                for mention_ids, ent_id in self.clustering:
                     for pair in itertools.combinations(mention_ids, 2):
                         if self._is_consistent_with_nil_flag(pair, nil_flag):
                             yield (pair, 1) if include_score else pair
