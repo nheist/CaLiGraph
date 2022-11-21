@@ -119,9 +119,9 @@ class CandidateAlignment:
         for cluster_id, (mentions, _) in enumerate(self.clustering):
             if nil_flag is None or any(nil_flag == self._is_nil_mention(mention) for mention in mentions):
                 for mention in mentions:
-                    pred.append(cluster_id)
                     if mention not in alignment.mention_to_entity_mapping:
                         return None  # abort, if data corpus does not contain entity labels for all mentions
+                    pred.append(cluster_id)
                     actual.append(alignment.mention_to_entity_mapping[mention])
         return pred, actual
 
