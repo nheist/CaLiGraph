@@ -140,6 +140,9 @@ class CandidateAlignment:
                         yield (pair, score) if include_score else pair
         else:
             for mention_ids, ent_id in self.clustering:
+                if target_type == int and not isinstance(ent_id, target_type):
+                    print('WTF WTF WTF')
+                    print(ent_id, type(ent_id), list(mention_ids)[0])
                 if isinstance(ent_id, target_type):  # Mention-Entity candidates
                     for m_id in mention_ids:
                         pair = (m_id, ent_id)
