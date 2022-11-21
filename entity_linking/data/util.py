@@ -103,14 +103,21 @@ class CandidateAlignment:
 
     def add_clustering(self, clustering: List[Tuple[Set[MentionId], Optional[int]]], alignment: Alignment):
         self.clustering = []
-        for cluster_mentions, cluster_ent in clustering:
+        entities_with_cluster = set()
+        for cluster_mentions, cluster_ent in sorted(clustering, key=lambda x: len(x[0]), reverse=True):
             if cluster_ent is None:
                 # assign most frequent actual entity of mentions to cluster, but prefer unknown entities
                 ent_count = Counter([alignment.mention_to_entity_mapping[m_id] for m_id in cluster_mentions])
                 unknown_ent_count = Counter({ent: cnt for ent, cnt in ent_count.items() if ent not in alignment.known_entities})
-                relevant_ent_count = unknown_ent_count if unknown_ent_count else ent_count
-                cluster_ent = relevant_ent_count.most_common(1)[0][0]
+                if not unknown_ent_count:
+                    continue
+                top_ent = unknown_ent_count.most_common(1)[0][0]
+                if top_ent in entities_with_cluster:
+                    continue
+                entities_with_cluster.add(cluster_ent)
+                cluster_ent = top_ent
             self.clustering.append((cluster_mentions, cluster_ent))
+
 
     def get_mention_clusters(self, alignment: Alignment, nil_flag: Optional[bool]) -> Optional[Tuple[List[int], List[int]]]:
         if self.clustering is None:
