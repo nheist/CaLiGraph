@@ -1,6 +1,8 @@
 from typing import List, Tuple, Union, Dict, Optional, Set, Iterable, TypeVar
 from collections import defaultdict, Counter
 import random
+import numpy as np
+from scipy.optimize import linear_sum_assignment
 from tqdm import tqdm
 from abc import ABC, abstractmethod
 from enum import Enum
@@ -102,20 +104,36 @@ class CandidateAlignment:
             self.mention_to_target_mapping[item_a][item_b] = score
 
     def add_clustering(self, clustering: List[Tuple[Set[MentionId], Optional[int]]], alignment: Alignment):
-        self.clustering = []
-        entities_with_cluster = set()
-        for cluster_mentions, cluster_ent in sorted(clustering, key=lambda x: len(x[0]), reverse=True):
-            if cluster_ent is None:
-                # assign most frequent actual unknown entity of mentions to cluster
-                ent_count = Counter([alignment.mention_to_entity_mapping[m_id] for m_id in cluster_mentions if alignment.mention_to_entity_mapping[m_id] not in alignment.known_entities])
-                if not ent_count:
-                    continue
-                top_ent, top_ent_score = ent_count.most_common(1)[0]
-                if top_ent in entities_with_cluster or top_ent_score <= .5:
-                    continue
-                cluster_ent = top_ent
-                entities_with_cluster.add(cluster_ent)
-            self.clustering.append((cluster_mentions, cluster_ent))
+        clusters_with_known_entity = [cluster for cluster in clustering if cluster[1] is not None]
+        # find optimal mapping of mention clusters to unknown ents with by treating it as Linear Sum Assignment Problem
+        mention_clusters = [mentions for mentions, ent in clustering if ent is None]
+        mention_cluster_assignment = self._compute_mention_cluster_assignment(mention_clusters, alignment)
+        clusters_with_unknown_entity = [(mentions, ent) for mentions, ent in zip(mention_clusters, mention_cluster_assignment)]
+        self.clustering = clusters_with_known_entity + clusters_with_unknown_entity
+
+    def _compute_mention_cluster_assignment(self, mention_clusters: List[Set[MentionId]], alignment: Alignment) -> List[Optional[int]]:
+        # compute count of actual linked entities per cluster
+        mention_cluster_entity_counts = []
+        for mentions in mention_clusters:
+            cluster_entities = [alignment.mention_to_entity_mapping[m_id] for m_id in mentions]
+            unknown_entity_counts = Counter([ent for ent in cluster_entities if ent not in alignment.known_entities])
+            mention_cluster_entity_counts.append(unknown_entity_counts)
+        # create cost matrix for every cluster based on entity counts (use negatives as we want to maximize entity hits)
+        unknown_entities = [ent for ent in alignment.entity_to_mention_mapping if ent not in alignment.known_entities]
+        unknown_entity_indices = {ent: idx for idx, ent in enumerate(unknown_entities)}
+        mention_cluster_costs = np.zeros((len(mention_clusters), len(unknown_entities)))
+        for cluster_idx, ent_counts in enumerate(mention_cluster_entity_counts):
+            for ent_id, cnt in ent_counts.items():
+                mention_cluster_costs[cluster_idx, unknown_entity_indices[ent_id]] = -cnt
+        # find optimal assignment of entities to clusters
+        cluster_entities = [None] * len(mention_clusters)
+        for cluster_idx, entity_idx in linear_sum_assignment(mention_cluster_costs):
+            ent_id = unknown_entities[entity_idx]
+            if mention_cluster_entity_counts[cluster_idx][ent_id] == 0:
+                # discard assignment of entity to cluster if no mention in the cluster is linked to the entity
+                continue
+            cluster_entities[cluster_idx] = ent_id
+        return cluster_entities
 
     def get_mention_clusters(self, alignment: Alignment, nil_flag: Optional[bool]) -> Optional[Tuple[List[int], List[int]]]:
         if self.clustering is None:
