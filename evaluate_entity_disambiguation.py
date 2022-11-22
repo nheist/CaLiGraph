@@ -90,5 +90,6 @@ if __name__ == '__main__':
     # then import application-specific code and run it
     from entity_linking import run_evaluation
     run_evaluation(scenario, approach, corpus_type, args.sample_size, params, args.save_alignment, args.save_test_alignment)
-    utils.reserve_gpu()
-    time.sleep(60 * 60 * 24)
+    if args.gpu >= 0:
+        utils.reserve_gpu(args.gpu_memory)
+        time.sleep(60 * 60 * 24)
