@@ -25,13 +25,12 @@ class GreedyClusteringMatcher(MatcherWithCandidates, ABC):
     def _get_alignment_graph(self, eval_mode: str, add_entities: bool) -> nx.Graph:
         utils.get_logger().debug('Initializing alignment graph..')
         ag = nx.Graph()
-        if add_entities:
-            for (m_id, e_id), score in self.me_ca[eval_mode].get_me_candidates(True):
-                if score <= self.me_threshold:
-                    continue
+        for (m_id, e_id), score in self.me_ca[eval_mode].get_me_candidates(True):
+            ag.add_node(m_id, is_ent=False)
+            if add_entities and score > self.me_threshold:
                 ag.add_node(e_id, is_ent=True)
-                ag.add_edge(e_id, m_id, weight=max(0, 1-score))
-        ag.add_weighted_edges_from([(u, v, max(0, 1-score)) for (u, v), score in self.mm_ca[eval_mode].get_mm_candidates(True) if score > self.mm_threshold])
+                ag.add_edge(m_id, e_id, weight=score)
+        ag.add_weighted_edges_from([(u, v, score) for (u, v), score in self.mm_ca[eval_mode].get_mm_candidates(True) if score > self.mm_threshold])
         return ag
 
     def _get_subgraphs(self, ag: nx.Graph) -> Iterable[nx.Graph]:
@@ -77,10 +76,14 @@ class NastyLinker(GreedyClusteringMatcher):
     def _split_into_valid_subgraphs(self, ag: nx.Graph) -> List[nx.Graph]:
         utils.get_logger().debug(f'Splitting graph of size {len(ag.nodes)} into valid subgraphs..')
         node_groups = defaultdict(set)
-        for node, path in nx.multi_source_dijkstra_path(ag, self._get_entity_nodes(ag)).items():
+        for node, path in nx.multi_source_dijkstra_path(ag, self._get_entity_nodes(ag), weight=_dijkstra_node_weight).items():
             ent_node = path[0]
             node_groups[ent_node].add(node)
         return [ag.subgraph(nodes) for nodes in node_groups.values()]
+
+
+def _dijkstra_node_weight(u, v, attrs):
+    return max(0, 1 - attrs['weight'])
 
 
 class EdinMatcher(GreedyClusteringMatcher):
