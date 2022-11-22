@@ -127,7 +127,7 @@ class CandidateAlignment:
                 mention_cluster_costs[cluster_idx, unknown_entity_indices[ent_id]] = -cnt
         # find optimal assignment of entities to clusters
         cluster_entities = [None] * len(mention_clusters)
-        for cluster_idx, entity_idx in linear_sum_assignment(mention_cluster_costs):
+        for cluster_idx, entity_idx in zip(*linear_sum_assignment(mention_cluster_costs)):
             ent_id = unknown_entities[entity_idx]
             if mention_cluster_entity_counts[cluster_idx][ent_id] == 0:
                 # discard assignment of entity to cluster if no mention in the cluster is linked to the entity
