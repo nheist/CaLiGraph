@@ -2,6 +2,7 @@ from typing import Set, List, Iterable, Optional, Dict
 from abc import ABC
 from collections import defaultdict, Counter
 import networkx as nx
+import math
 import utils
 from impl.wikipedia import MentionId
 from entity_linking.data import CandidateAlignment, DataCorpus
@@ -29,8 +30,8 @@ class GreedyClusteringMatcher(MatcherWithCandidates, ABC):
             ag.add_node(m_id, is_ent=False)
             if add_entities and score > self.me_threshold:
                 ag.add_node(e_id, is_ent=True)
-                ag.add_edge(m_id, e_id, weight=score)
-        ag.add_weighted_edges_from([(u, v, score) for (u, v), score in self.mm_ca[eval_mode].get_mm_candidates(True) if score > self.mm_threshold])
+                ag.add_edge(m_id, e_id, weight=min(score, 1))
+        ag.add_weighted_edges_from([(u, v, min(score, 1)) for (u, v), score in self.mm_ca[eval_mode].get_mm_candidates(True) if score > self.mm_threshold])
         return ag
 
     def _get_subgraphs(self, ag: nx.Graph) -> Iterable[nx.Graph]:
@@ -76,14 +77,14 @@ class NastyLinker(GreedyClusteringMatcher):
     def _split_into_valid_subgraphs(self, ag: nx.Graph) -> List[nx.Graph]:
         utils.get_logger().debug(f'Splitting graph of size {len(ag.nodes)} into valid subgraphs..')
         node_groups = defaultdict(set)
-        for node, path in nx.multi_source_dijkstra_path(ag, self._get_entity_nodes(ag), weight=_dijkstra_node_weight).items():
+        for node, path in nx.multi_source_dijkstra_path(ag, self._get_entity_nodes(ag), weight=_to_dijkstra_node_weight).items():
             ent_node = path[0]
             node_groups[ent_node].add(node)
         return [ag.subgraph(nodes) for nodes in node_groups.values()]
 
 
-def _dijkstra_node_weight(u, v, attrs):
-    return max(0, 1 - attrs['weight'])
+def _to_dijkstra_node_weight(u, v, attrs):
+    return -math.log2(attrs['weight'])
 
 
 class EdinMatcher(GreedyClusteringMatcher):
