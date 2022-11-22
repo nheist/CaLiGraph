@@ -42,6 +42,7 @@ if __name__ == '__main__':
     # cross-encoder / nasty linker / greedy clustering
     parser.add_argument('--mm_threshold', type=float, default=0.0, help="Confidence threshold to filter MM predictions.")
     parser.add_argument('--me_threshold', type=float, default=0.0, help="Confidence threshold to filter ME predictions.")
+    parser.add_argument('--path_threshold', type=float, default=0.0, help="Confidence threshold to filter graph paths.")
     # nasty linker
     parser.add_argument('--cluster_comparisons', type=int, default=3, help='Number of mentions/entities per cluster that are considered for a merge')
 
@@ -85,6 +86,7 @@ if __name__ == '__main__':
         'me_approach': args.me_approach,
         'mm_threshold': args.mm_threshold,
         'me_threshold': args.me_threshold,
+        'path_threshold': args.path_threshold,
         'cluster_comparisons': args.cluster_comparisons,
     }
     # then import application-specific code and run it

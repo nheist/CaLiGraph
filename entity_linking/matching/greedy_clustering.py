@@ -16,9 +16,10 @@ class GreedyClusteringMatcher(MatcherWithCandidates, ABC):
         # model params
         self.mm_threshold = params['mm_threshold']
         self.me_threshold = params['me_threshold']
+        self.path_threshold = params['path_threshold']
 
     def _get_param_dict(self) -> dict:
-        return super()._get_param_dict() | {'mmt': self.mm_threshold, 'met': self.me_threshold}
+        return super()._get_param_dict() | {'mmt': self.mm_threshold, 'met': self.me_threshold, 'pt': self.path_threshold}
 
     def _train_model(self, train_corpus: DataCorpus, eval_corpus: DataCorpus):
         pass  # no training necessary
@@ -76,15 +77,25 @@ class NastyLinker(GreedyClusteringMatcher):
 
     def _split_into_valid_subgraphs(self, ag: nx.Graph) -> List[nx.Graph]:
         utils.get_logger().debug(f'Splitting graph of size {len(ag.nodes)} into valid subgraphs..')
-        node_groups = defaultdict(set)
-        for node, path in nx.multi_source_dijkstra_path(ag, self._get_entity_nodes(ag), weight=_to_dijkstra_node_weight).items():
-            ent_node = path[0]
-            node_groups[ent_node].add(node)
-        return [ag.subgraph(nodes) for nodes in node_groups.values()]
+        ent_groups = defaultdict(set)
+        unassigned_mentions = set()
+        paths, lengths = nx.multi_source_dijkstra(ag, self._get_entity_nodes(ag), weight=_to_dijkstra_node_weight)
+        for node, path in paths.items():
+            score = _from_dijkstra_node_weight(lengths[node])
+            if score > self.path_threshold:
+                ent_node = path[0]
+                ent_groups[ent_node].add(node)
+            else:
+                unassigned_mentions.add(node)
+        return [ag.subgraph(nodes) for nodes in ent_groups.values()] + list(self._get_subgraphs(ag.subgraph(unassigned_mentions)))
 
 
-def _to_dijkstra_node_weight(u, v, attrs):
+def _to_dijkstra_node_weight(u, v, attrs: dict) -> float:
     return -math.log2(attrs['weight'])
+
+
+def _from_dijkstra_node_weight(weight: float) -> float:
+    return 2**(-weight)
 
 
 class EdinMatcher(GreedyClusteringMatcher):
