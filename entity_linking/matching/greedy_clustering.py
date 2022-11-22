@@ -79,9 +79,9 @@ class NastyLinker(GreedyClusteringMatcher):
         utils.get_logger().debug(f'Splitting graph of size {len(ag.nodes)} into valid subgraphs..')
         ent_groups = defaultdict(set)
         unassigned_mentions = set()
-        paths, lengths = nx.multi_source_dijkstra(ag, self._get_entity_nodes(ag), weight=_to_dijkstra_node_weight)
+        distances, paths = nx.multi_source_dijkstra(ag, self._get_entity_nodes(ag), weight=_to_dijkstra_node_weight)
         for node, path in paths.items():
-            score = _from_dijkstra_node_weight(lengths[node])
+            score = _from_dijkstra_node_weight(distances[node])
             if score > self.path_threshold:
                 ent_node = path[0]
                 ent_groups[ent_node].add(node)
