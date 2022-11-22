@@ -1,6 +1,7 @@
 import argparse
 import configargparse
 import os
+import time
 
 
 VERSION = 6
@@ -89,3 +90,5 @@ if __name__ == '__main__':
     # then import application-specific code and run it
     from entity_linking import run_evaluation
     run_evaluation(scenario, approach, corpus_type, args.sample_size, params, args.save_alignment, args.save_test_alignment)
+    utils.reserve_gpu()
+    time.sleep(60 * 60 * 24)
