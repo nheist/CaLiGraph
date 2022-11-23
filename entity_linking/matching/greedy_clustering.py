@@ -16,10 +16,9 @@ class GreedyClusteringMatcher(MatcherWithCandidates, ABC):
         # model params
         self.mm_threshold = params['mm_threshold']
         self.me_threshold = params['me_threshold']
-        self.path_threshold = params['path_threshold']
 
     def _get_param_dict(self) -> dict:
-        return super()._get_param_dict() | {'mmt': self.mm_threshold, 'met': self.me_threshold, 'pt': self.path_threshold}
+        return super()._get_param_dict() | {'mmt': self.mm_threshold, 'met': self.me_threshold}
 
     def _train_model(self, train_corpus: DataCorpus, eval_corpus: DataCorpus):
         pass  # no training necessary
@@ -45,6 +44,14 @@ class GreedyClusteringMatcher(MatcherWithCandidates, ABC):
 
 
 class NastyLinker(GreedyClusteringMatcher):
+    def __init__(self, scenario: MatchingScenario, params: dict):
+        super().__init__(scenario, params)
+        # model params
+        self.path_threshold = params['path_threshold']
+
+    def _get_param_dict(self) -> dict:
+        return super()._get_param_dict() | {'pt': self.path_threshold}
+
     def predict(self, eval_mode: str, data_corpus: DataCorpus) -> CandidateAlignment:
         ag = self._get_alignment_graph(eval_mode, True)
         valid_subgraphs = self._compute_valid_subgraphs(ag)

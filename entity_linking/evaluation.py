@@ -16,6 +16,12 @@ class PrecisionRecallF1Evaluator:
 
     def _compute_and_log_metrics_for_partition(self, prefix: str, prediction: CandidateAlignment, alignment: Alignment, runtime: int, nil_flag: Optional[bool]):
         utils.get_logger().debug(f'Computing metrics for {prefix}..')
+        metrics = self._compute_metrics_for_partition(prediction, alignment, runtime, nil_flag)
+        # ensure order in tensorboard by prefixing metrics with running index
+        metrics = {f'{idx}_{metric}': value for idx, (metric, value) in enumerate(metrics.items())}
+        self._log_metrics(prefix, metrics)
+
+    def _compute_metrics_for_partition(self, prediction: CandidateAlignment, alignment: Alignment, runtime: int, nil_flag: Optional[bool]) -> Dict[str, float]:
         metrics = {
             'runtime': runtime,
             'mentions': alignment.mention_count(nil_flag),
@@ -33,9 +39,7 @@ class PrecisionRecallF1Evaluator:
             actual_count = alignment.mention_count(nil_flag)
             pred_count, tp = prediction.get_me_preds_and_overlap(alignment, nil_flag)
             metrics |= self._compute_p_r_f1('me', pred_count, actual_count, tp)
-        # ensure order in tensorboard by prefixing metrics with running index
-        metrics = {f'{idx}_{metric}': value for idx, (metric, value) in enumerate(metrics.items())}
-        self._log_metrics(prefix, metrics)
+        return metrics
 
     @classmethod
     def _compute_p_r_f1(cls, prefix: str, pred_count: int, actual_count: int, tp: int) -> Dict[str, float]:
