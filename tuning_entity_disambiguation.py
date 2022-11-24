@@ -7,7 +7,6 @@ import pandas as pd
 import torch
 import itertools
 import multiprocessing as mp
-from operator import attrgetter
 from tqdm import tqdm
 from collections import namedtuple
 from typing import Tuple
@@ -97,6 +96,6 @@ if __name__ == '__main__':
     torch.manual_seed(SEED)
     # collect params
     param_names = ['mm_approach', 'me_approach', 'mm_threshold', 'me_threshold', 'path_threshold']
-    params = {n: attrgetter(args, n) for n in param_names if attrgetter(args, n) is not None}
+    params = {n: getattr(args, n) for n in param_names if getattr(args, n) is not None}
     # run tuning
     _eval_matcher(MatchingApproach(args.approach), CorpusType(args.corpus), args.sample_size, params, args.cpus)
