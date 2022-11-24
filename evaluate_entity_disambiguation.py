@@ -84,7 +84,6 @@ if __name__ == '__main__':
         'mm_threshold': args.mm_threshold,
         'me_threshold': args.me_threshold,
         'path_threshold': args.path_threshold,
-        'cluster_comparisons': args.cluster_comparisons,
     }
     # then import application-specific code and run it
     from entity_linking import run_evaluation
