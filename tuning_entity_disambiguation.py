@@ -7,6 +7,7 @@ import pandas as pd
 import torch
 import itertools
 import multiprocessing as mp
+from operator import attrgetter
 from tqdm import tqdm
 from collections import namedtuple
 from typing import Tuple
@@ -72,6 +73,10 @@ def _init_matcher(approach: MatchingApproach, params: dict) -> Matcher:
     raise ValueError(f'Unsupported approach: {approach.name}')
 
 
+def _collect_params(args, param_names: list) -> dict:
+    return {n: attrgetter(args, n) for n in param_names if attrgetter(args, n) is not None}
+
+
 if __name__ == '__main__':
     parser = configargparse.ArgumentParser(description='Run a grid search over entity disambiguation approaches.')
     parser.add_argument('config_file', is_config_file=True, help='Path to hyperparameter config file')
@@ -85,15 +90,13 @@ if __name__ == '__main__':
     parser.add_argument('--path_threshold', action='append', type=float, help="Confidence threshold to filter graph paths.")
     parser.add_argument('--cpus', type=int, default=40, help='Number of CPUs to use')
     args = parser.parse_args()
-    print(args.mm_threshold, type(args.mm_threshold))
-    print(args.path_threshold, type(args.path_threshold))
-    exit()
     # fix all seeds
     SEED = 310
     random.seed(SEED)
     np.random.seed(SEED)
     torch.manual_seed(SEED)
     # collect params
-
+    param_names = ['mm_approach', 'me_approach', 'mm_threshold', 'me_threshold', 'path_threshold']
+    params = {n: attrgetter(args, n) for n in param_names if attrgetter(args, n) is not None}
     # run tuning
     _eval_matcher(MatchingApproach(args.approach), CorpusType(args.corpus), args.sample_size, params, args.cpus)
