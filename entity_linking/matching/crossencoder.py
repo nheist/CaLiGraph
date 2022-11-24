@@ -8,7 +8,7 @@ import utils
 from impl.wikipedia import MentionId
 from entity_linking.data import CandidateAlignment, DataCorpus, Pair
 from entity_linking.matching.util import MatchingScenario
-from entity_linking.matching.io import get_model_path
+from entity_linking.matching.io import get_cache_path
 from entity_linking.matching.matcher import MatcherWithCandidates
 from entity_linking.matching import transformer_util
 
@@ -52,7 +52,7 @@ class CrossEncoderMatcher(MatcherWithCandidates):
         return {}  # never predict on the training set with the cross-encoder
 
     def _train_model(self, train_corpus: DataCorpus, eval_corpus: DataCorpus):
-        path_to_model = get_model_path(self.base_model)
+        path_to_model = get_cache_path(self.base_model)
         if os.path.exists(path_to_model):  # load local model
             self.model = CrossEncoder(path_to_model, num_labels=1)
             return
@@ -76,7 +76,7 @@ class CrossEncoderMatcher(MatcherWithCandidates):
         utils.release_gpu()
         self.model.fit(train_dataloader=train_dataloader, epochs=self.epochs, warmup_steps=self.warmup_steps, save_best_model=False)
         utils.get_logger().debug(f'Storing model {self.id}..')
-        self.model.save(get_model_path(self.id))
+        self.model.save(get_cache_path(self.id))
 
     def predict(self, eval_mode: str, data_corpus: DataCorpus) -> CandidateAlignment:
         mention_input, _ = data_corpus.get_mention_input(self.add_page_context, self.add_text_context)

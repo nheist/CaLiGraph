@@ -7,7 +7,7 @@ from sentence_transformers import SentenceTransformer, losses
 import utils
 from entity_linking.data import CandidateAlignment, DataCorpus
 from entity_linking.matching.util import MatchingScenario
-from entity_linking.matching.io import get_model_path
+from entity_linking.matching.io import get_cache_path
 from entity_linking.matching.matcher import Matcher
 from entity_linking.matching.lexical import ExactMatcher
 from entity_linking.matching import transformer_util
@@ -52,7 +52,7 @@ class BiEncoderMatcher(Matcher):
         return super()._get_param_dict() | params
 
     def _train_model(self, train_corpus: DataCorpus, eval_corpus: DataCorpus):
-        path_to_model = get_model_path(self.base_model)
+        path_to_model = get_cache_path(self.base_model)
         if os.path.exists(path_to_model):  # load local model
             self.model = SentenceTransformer(path_to_model)
             return
@@ -71,7 +71,7 @@ class BiEncoderMatcher(Matcher):
         utils.release_gpu()
         self.model.fit(train_objectives=[(train_dataloader, self._get_loss_function())], epochs=self.epochs, warmup_steps=self.warmup_steps, save_best_model=False)
         utils.get_logger().debug(f'Storing model {self.id}..')
-        self.model.save(get_model_path(self.id))
+        self.model.save(get_cache_path(self.id))
 
     def _get_loss_function(self) -> nn.Module:
         if self.loss == 'COS':

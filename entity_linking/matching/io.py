@@ -7,7 +7,7 @@ from entity_linking.data import CandidateAlignment
 
 def store_candidate_alignment(approach_name: str, candidates: Dict[str, CandidateAlignment]):
     utils.get_logger().debug(f'Storing candidates for matcher with name "{approach_name}"..')
-    with open(get_model_path(approach_name) + '.p', mode='wb') as f:
+    with open(get_cache_path(approach_name) + '.p', mode='wb') as f:
         return pickle.dump(candidates, f, protocol=pickle.HIGHEST_PROTOCOL)
 
 
@@ -17,7 +17,7 @@ def load_candidate_alignment(approach_id: str) -> Dict[str, CandidateAlignment]:
         return pickle.load(f)
 
 
-def get_model_path(approach_name: str) -> str:
+def get_cache_path(approach_name: str) -> str:
     return os.path.join(utils._get_root_path(), 'entity_linking', 'cache', approach_name)
 
 
