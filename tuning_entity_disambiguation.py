@@ -75,12 +75,23 @@ def _init_matcher(approach: MatchingApproach, params: dict) -> Matcher:
 if __name__ == '__main__':
     parser = configargparse.ArgumentParser(description='Run a grid search over entity disambiguation approaches.')
     parser.add_argument('config_file', is_config_file=True, help='Path to hyperparameter config file')
+    parser.add_argument('approach', type=str, help='Approach used for matching')
+    parser.add_argument('corpus', type=str, choices=['LIST', 'NILK'], help='Data corpus to use for the experiments')
+    parser.add_argument('-ss', '--sample_size', type=int, choices=list(range(5, 101, 5)), default=5, help='Percentage of dataset to use')
+    parser.add_argument('--mm_threshold', action='append', type=float, help="Confidence threshold to filter MM predictions.")
+    parser.add_argument('--me_threshold', action='append', type=float, help="Confidence threshold to filter ME predictions.")
+    parser.add_argument('--path_threshold', action='append', type=float, help="Confidence threshold to filter graph paths.")
     parser.add_argument('--cpus', type=int, choices=range(1, 100), default=40, help='Number of CPUs to use')
     args = parser.parse_args()
+    print(args.mm_threshold, type(args.mm_threshold))
+    print(args.path_threshold, type(args.path_threshold))
+    exit()
     # fix all seeds
     SEED = 310
     random.seed(SEED)
     np.random.seed(SEED)
     torch.manual_seed(SEED)
+    # collect params
+
     # run tuning
-    _eval_matcher(MatchingApproach(args.approach), CorpusType(args.corpus), args.sample_size, args.params, args.cpus)
+    _eval_matcher(MatchingApproach(args.approach), CorpusType(args.corpus), args.sample_size, params, args.cpus)
