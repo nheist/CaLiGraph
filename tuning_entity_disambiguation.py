@@ -78,6 +78,8 @@ if __name__ == '__main__':
     parser.add_argument('--approach', type=str, help='Approach used for matching')
     parser.add_argument('--corpus', type=str, choices=['LIST', 'NILK'], help='Data corpus to use for the experiments')
     parser.add_argument('-ss', '--sample_size', type=int, choices=list(range(5, 101, 5)), default=5, help='Percentage of dataset to use')
+    parser.add_argument('--mm_approach', action='append', type=str, help='Mention-mention approach (ID) used for candidate generation')
+    parser.add_argument('--me_approach', action='append', type=str, help='Mention-entity approach (ID) used for candidate generation')
     parser.add_argument('--mm_threshold', action='append', type=float, help="Confidence threshold to filter MM predictions.")
     parser.add_argument('--me_threshold', action='append', type=float, help="Confidence threshold to filter ME predictions.")
     parser.add_argument('--path_threshold', action='append', type=float, help="Confidence threshold to filter graph paths.")
