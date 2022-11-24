@@ -11,7 +11,6 @@ if __name__ == '__main__':
     parser = configargparse.ArgumentParser(description='Run the evaluation of entity disambiguation approaches.')
     # config
     parser.add_argument('-c', '--config', is_config_file=True, help='Path to config file')
-    parser.add_argument('-id', '--approach_id', type=str, help='ID to identify the approach')
     # machine-specific
     parser.add_argument('gpu', type=int, choices=range(-1, 8), help='Number of GPU to use')
     parser.add_argument('-gm', '--gpu_memory', type=int, default=46, help='Amount of GPU memory to reserve')
@@ -22,9 +21,10 @@ if __name__ == '__main__':
     parser.add_argument('-sa', '--save_alignment', action=argparse.BooleanOptionalAction, default=False, help='Whether to save the produced alignment for train/val/test')
     parser.add_argument('-sta', '--save_test_alignment', action=argparse.BooleanOptionalAction, default=False, help='Whether to save the produced alignment for test')
     parser.add_argument('-ss', '--sample_size', type=int, choices=list(range(5, 101, 5)), default=5, help='Percentage of dataset to use')
-    # matchers needing candidates
-    parser.add_argument('--mm_approach', type=str, help='Mention-mention approach (ID) used for candidate generation')
-    parser.add_argument('--me_approach', type=str, help='Mention-entity approach (ID) used for candidate generation')
+    # bi-encoder
+    parser.add_argument('-l', '--loss', type=str, choices=['COS', 'RL', 'SRL'], default='SRL', help='Loss function for training (only for bi-encoder)')
+    parser.add_argument('-k', '--top_k', type=int, default=4, help='Number of ME matches to return per input (only for bi-encoder)')
+    parser.add_argument('-ans', '--approximate_neighbor_search', action=argparse.BooleanOptionalAction, default=False, help='Use approximate nearest neighbor search')
     # bi/cross-encoder
     parser.add_argument('-bm', '--base_model', type=str, default='all-MiniLM-L12-v2', help='Base model used for the bi/cross-encoder')
     parser.add_argument('-ts', '--train_sample', type=int, default=1, help='Sample size to use for training (in millions)')
@@ -35,10 +35,9 @@ if __name__ == '__main__':
     parser.add_argument('-atc', '--add_text_context', type=int, default=0, help='Other listing entities to append for disambiguation (M)')
     parser.add_argument('-aea', '--add_entity_abstract', action=argparse.BooleanOptionalAction, default=True, help='Use entity abstract for disambiguation (E)')
     parser.add_argument('-aki', '--add_kg_info', type=int, default=0, help='Types/properties to add from KG for disambiguation (E)')
-    # bi-encoder
-    parser.add_argument('-l', '--loss', type=str, choices=['COS', 'RL', 'SRL'], default='SRL', help='Loss function for training (only for bi-encoder)')
-    parser.add_argument('-k', '--top_k', type=int, default=3, help='Number of ME matches to return per input (only for bi-encoder)')
-    parser.add_argument('-ans', '--approximate_neighbor_search', action=argparse.BooleanOptionalAction, default=False, help='Use approximate nearest neighbor search')
+    # matchers needing candidates
+    parser.add_argument('--mm_approach', type=str, help='Mention-mention approach (ID) used for candidate generation')
+    parser.add_argument('--me_approach', type=str, help='Mention-entity approach (ID) used for candidate generation')
     # nastylinker / edin
     parser.add_argument('--mm_threshold', type=float, default=0.0, help="Confidence threshold to filter MM predictions.")
     parser.add_argument('--me_threshold', type=float, default=0.0, help="Confidence threshold to filter ME predictions.")
@@ -55,7 +54,7 @@ if __name__ == '__main__':
     import random
     import numpy as np
     import torch
-    approach_id = args.approach_id or f'{args.corpus}{args.sample_size}v{VERSION}{args.scenario}{args.approach[:2]}{str(random.randint(0, 999)).zfill(3)}'
+    approach_id = f'{args.corpus}{args.sample_size}v{VERSION}{args.scenario}{args.approach[:2]}{str(random.randint(0, 999)).zfill(3)}'
     SEED = 310
     random.seed(SEED)
     np.random.seed(SEED)
