@@ -5,7 +5,6 @@ from entity_linking.matching.graph import PopularityMatcher
 from entity_linking.matching.biencoder import BiEncoderMatcher
 from entity_linking.matching.crossencoder import CrossEncoderMatcher
 from entity_linking.matching.greedy_clustering import NastyLinker, EdinMatcher
-from entity_linking.matching.average_clustering import AverageClusteringMatcher
 import utils
 
 
@@ -27,8 +26,6 @@ def initialize_matcher(scenario: MatchingScenario, approach: MatchingApproach, p
         matcher_factory = NastyLinker
     elif approach == MatchingApproach.EDIN:
         matcher_factory = EdinMatcher
-    elif approach == MatchingApproach.AVERAGE_CLUSTERING:
-        matcher_factory = AverageClusteringMatcher
     else:
         raise ValueError(f'Matching approach not implemented: {approach.value}')
     return matcher_factory(scenario, params)
