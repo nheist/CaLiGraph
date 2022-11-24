@@ -4,7 +4,7 @@ import os
 import time
 
 
-VERSION = 6
+VERSION = 1
 
 
 if __name__ == '__main__':
@@ -39,12 +39,10 @@ if __name__ == '__main__':
     parser.add_argument('-l', '--loss', type=str, choices=['COS', 'RL', 'SRL'], default='SRL', help='Loss function for training (only for bi-encoder)')
     parser.add_argument('-k', '--top_k', type=int, default=3, help='Number of ME matches to return per input (only for bi-encoder)')
     parser.add_argument('-ans', '--approximate_neighbor_search', action=argparse.BooleanOptionalAction, default=False, help='Use approximate nearest neighbor search')
-    # cross-encoder / nasty linker / greedy clustering
+    # nastylinker / edin
     parser.add_argument('--mm_threshold', type=float, default=0.0, help="Confidence threshold to filter MM predictions.")
     parser.add_argument('--me_threshold', type=float, default=0.0, help="Confidence threshold to filter ME predictions.")
     parser.add_argument('--path_threshold', type=float, default=0.0, help="Confidence threshold to filter graph paths.")
-    # nasty linker
-    parser.add_argument('--cluster_comparisons', type=int, default=3, help='Number of mentions/entities per cluster that are considered for a merge')
 
     args = parser.parse_args()
     # and set necessary environment variables

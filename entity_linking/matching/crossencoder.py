@@ -19,8 +19,6 @@ class CrossEncoderMatcher(MatcherWithCandidates):
         # model params
         self.base_model = params['base_model']
         self.train_sample = params['train_sample']
-        self.mm_threshold = params['mm_threshold']
-        self.me_threshold = params['me_threshold']
         self.add_page_context = params['add_page_context']
         self.add_text_context = params['add_text_context']
         self.add_entity_abstract = params['add_entity_abstract']
@@ -34,8 +32,6 @@ class CrossEncoderMatcher(MatcherWithCandidates):
         params = {
             'bm': self.base_model,
             'ts': self.train_sample,
-            'mmt': self.mm_threshold,
-            'met': self.me_threshold,
             'apc': self.add_page_context,
             'atc': self.add_text_context,
             'aea': self.add_entity_abstract,
@@ -84,8 +80,6 @@ class CrossEncoderMatcher(MatcherWithCandidates):
         if self.scenario.is_MM():
             utils.get_logger().debug('Computing mention-mention matches..')
             for pair, score in self._score_pairs(list(self.mm_ca[eval_mode].get_mm_candidates(False)), mention_input, mention_input):
-                if score <= self.mm_threshold:
-                    continue
                 ca.add_candidate(pair, score)
         if self.scenario.is_ME():
             entity_input = data_corpus.get_entity_input(self.add_entity_abstract, self.add_kg_info)
@@ -93,8 +87,6 @@ class CrossEncoderMatcher(MatcherWithCandidates):
             # take only the most likely match for an item (if higher than threshold)
             scored_pairs_by_mention = defaultdict(set)
             for pair, score in self._score_pairs(list(self.me_ca[eval_mode].get_me_candidates(False)), mention_input, entity_input):
-                if score <= self.me_threshold:
-                    continue
                 scored_pairs_by_mention[pair[0]].add((pair, score))
             for scored_pairs in scored_pairs_by_mention.values():
                 pair, score = max(scored_pairs, key=lambda x: x[1])
