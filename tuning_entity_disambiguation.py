@@ -72,10 +72,6 @@ def _init_matcher(approach: MatchingApproach, params: dict) -> Matcher:
     raise ValueError(f'Unsupported approach: {approach.name}')
 
 
-def _collect_params(args, param_names: list) -> dict:
-    return {n: attrgetter(args, n) for n in param_names if attrgetter(args, n) is not None}
-
-
 if __name__ == '__main__':
     parser = configargparse.ArgumentParser(description='Run a grid search over entity disambiguation approaches.')
     parser.add_argument('config_file', is_config_file=True, help='Path to hyperparameter config file')
