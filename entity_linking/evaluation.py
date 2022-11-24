@@ -31,10 +31,10 @@ class PrecisionRecallF1Evaluator:
         if mention_clusters is not None:
             metrics['clusters'] = prediction.get_cluster_count(alignment, nil_flag)
             metrics['NMI'] = normalized_mutual_info_score(*mention_clusters)
-        if prediction.scenario.is_MM():
-            actual_count = alignment.get_mm_match_count(nil_flag)
-            pred_count, tp = prediction.get_mm_preds_and_overlap(alignment, nil_flag)
-            metrics |= self._compute_p_r_f1('mm', pred_count, actual_count, tp)
+        #if prediction.scenario.is_MM():
+        #    actual_count = alignment.get_mm_match_count(nil_flag)
+        #    pred_count, tp = prediction.get_mm_preds_and_overlap(alignment, nil_flag)
+        #    metrics |= self._compute_p_r_f1('mm', pred_count, actual_count, tp)
         if prediction.scenario.is_ME():
             actual_count = alignment.mention_count(nil_flag)
             pred_count, tp = prediction.get_me_preds_and_overlap(alignment, nil_flag)
