@@ -2,7 +2,7 @@ approach: edin
 corpus: NILK
 sample_size: 5
 # params
-mm_approach: ['NILK5v3Fbi781', 'NILK5v6Fcr879']
-me_approach: ['NILK5v3Fbi781', 'NILK5v6Fcr879']
+mm_approach: [NILK5v3Fbi781, NILK5v6Fcr879]
+me_approach: [NILK5v3Fbi781, NILK5v6Fcr879]
 mm_threshold: [0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1]
 me_threshold: [0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1]
