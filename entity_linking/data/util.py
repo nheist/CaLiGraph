@@ -188,10 +188,15 @@ class CandidateAlignment:
         return self._get_preds_and_overlap(self.get_mm_candidates(False, nil_flag), alignment)
 
     def get_me_preds_and_overlap(self, alignment: Alignment, nil_flag: Optional[bool] = None) -> Tuple[int, int]:
-        return self._get_preds_and_overlap(self.get_me_candidates(False, nil_flag), alignment)
+        return self._get_preds_and_overlap(self.get_me_candidates(True, nil_flag), alignment, predict_best=True)
 
     @classmethod
-    def _get_preds_and_overlap(cls, candidates: Iterable, alignment: Alignment) -> Tuple[int, int]:
+    def _get_preds_and_overlap(cls, candidates: Iterable, alignment: Alignment, predict_best=False) -> Tuple[int, int]:
+        if predict_best:
+            pairs_by_mention = defaultdict(set)
+            for pair, score in candidates:
+                pairs_by_mention[pair[0]].add((pair, score))
+            candidates = [max(pairs, key=lambda x: x[1])[0] for pairs in pairs_by_mention.values()]
         predictions, overlap = 0, 0
         for pair in candidates:
             predictions += 1
