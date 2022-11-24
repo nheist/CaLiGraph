@@ -7,6 +7,7 @@ import pandas as pd
 import torch
 import itertools
 import multiprocessing as mp
+import utils
 from tqdm import tqdm
 from collections import namedtuple
 from typing import Tuple
@@ -90,6 +91,8 @@ if __name__ == '__main__':
     random.seed(SEED)
     np.random.seed(SEED)
     torch.manual_seed(SEED)
+    # disable debug logging
+    utils.get_logger().setLevel('INFO')
     # collect params
     param_names = ['mm_approach', 'me_approach', 'mm_threshold', 'me_threshold', 'path_threshold']
     params = {n: getattr(args, n) for n in param_names if getattr(args, n) is not None}
