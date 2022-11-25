@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 import utils
 from entity_linking.data import CandidateAlignment, DataCorpus, NilkDataCorpus
-from entity_linking.evaluation.metrics import MetricsCalculator
+from entity_linking.evaluation import MetricsCalculator
 from entity_linking.matching.util import MatchingScenario
 from entity_linking.matching.io import load_candidate_alignment
 

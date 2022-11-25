@@ -15,7 +15,7 @@ from entity_linking.matching import MatchingScenario, MatchingApproach, Matcher
 from entity_linking.matching.io import get_cache_path
 from entity_linking.data import CorpusType, DataCorpus, get_data_corpora
 from entity_linking.matching.greedy_clustering import NastyLinker, EdinMatcher
-from entity_linking.evaluation.metrics import MetricsCalculator, AlignmentComparison
+from entity_linking.evaluation import MetricsCalculator, AlignmentComparison
 
 
 VERSION = 1
