@@ -3,7 +3,6 @@ from collections import defaultdict
 from tqdm import tqdm
 import numpy as np
 import torch
-import queue
 import hnswlib
 from sentence_transformers import SentenceTransformer, CrossEncoder, InputExample
 from sentence_transformers.util import dot_score

@@ -4,13 +4,13 @@ from enum import Enum
 class MatchingScenario(Enum):
     MENTION_MENTION = 'MM'
     MENTION_ENTITY = 'ME'
-    FUSION = 'F'
+    FULL = 'F'
 
-    def is_MM(self) -> bool:
-        return self in [self.MENTION_MENTION, self.FUSION]
+    def is_mention_mention(self) -> bool:
+        return self in [self.MENTION_MENTION, self.FULL]
 
-    def is_ME(self) -> bool:
-        return self in [self.MENTION_ENTITY, self.FUSION]
+    def is_mention_entity(self) -> bool:
+        return self in [self.MENTION_ENTITY, self.FULL]
 
 
 class MatchingApproach(Enum):

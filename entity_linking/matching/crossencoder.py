@@ -59,11 +59,11 @@ class CrossEncoderMatcher(MatcherWithCandidates):
             return  # skip training
         training_examples = []
         negative_sample_size = 2 * self.train_sample * 10**6
-        if self.scenario.is_MM():
+        if self.scenario.is_mention_mention():
             negatives = [pair for pair in self.mm_ca[self.MODE_TRAIN].get_mm_candidates(False) if not train_corpus.alignment.has_match(pair)]
             negatives_sample = random.sample(negatives, min(len(negatives), negative_sample_size))
             training_examples += transformer_util.generate_training_data(MatchingScenario.MENTION_MENTION, train_corpus, self.train_sample, negatives_sample, self.add_page_context, self.add_text_context, self.add_entity_abstract, self.add_kg_info)
-        if self.scenario.is_ME():
+        if self.scenario.is_mention_entity():
             negatives = [pair for pair in self.me_ca[self.MODE_TRAIN].get_me_candidates(False) if not train_corpus.alignment.has_match(pair)]
             negatives_sample = random.sample(negatives, min(len(negatives), negative_sample_size))
             training_examples += transformer_util.generate_training_data(MatchingScenario.MENTION_ENTITY, train_corpus, self.train_sample, negatives_sample, self.add_page_context, self.add_text_context, self.add_entity_abstract, self.add_kg_info)
@@ -77,11 +77,11 @@ class CrossEncoderMatcher(MatcherWithCandidates):
     def predict(self, eval_mode: str, data_corpus: DataCorpus) -> CandidateAlignment:
         mention_input, _ = data_corpus.get_mention_input(self.add_page_context, self.add_text_context)
         ca = CandidateAlignment()
-        if self.scenario.is_MM():
+        if self.scenario.is_mention_mention():
             utils.get_logger().debug('Computing mention-mention matches..')
             for pair, score in self._score_pairs(list(self.mm_ca[eval_mode].get_mm_candidates(False)), mention_input, mention_input):
                 ca.add_candidate(pair, score)
-        if self.scenario.is_ME():
+        if self.scenario.is_mention_entity():
             entity_input = data_corpus.get_entity_input(self.add_entity_abstract, self.add_kg_info)
             utils.get_logger().debug('Computing mention-entity matches..')
             # take only the most likely match for an item (if higher than threshold)

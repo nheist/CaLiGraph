@@ -16,4 +16,4 @@ def run_evaluation(scenario: MatchingScenario, approach: MatchingApproach, corpu
     alignments |= matcher.test(test_data)
     if save_alignment or save_test_alignment:
         store_candidate_alignment(matcher.get_approach_name(), alignments)
-    utils.get_logger().info('DONE.')
+    utils.get_logger().info('Evaluation successful.')

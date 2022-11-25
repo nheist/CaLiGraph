@@ -1,7 +1,6 @@
 import argparse
 import configargparse
 import os
-import time
 
 
 VERSION = 1
@@ -86,8 +85,5 @@ if __name__ == '__main__':
         'path_threshold': args.path_threshold,
     }
     # then import application-specific code and run it
-    from entity_linking import run_evaluation
+    from entity_linking.evaluation import run_evaluation
     run_evaluation(scenario, approach, corpus_type, args.sample_size, params, args.save_alignment, args.save_test_alignment)
-    if args.gpu >= 0:
-        utils.reserve_gpu(args.gpu_memory)
-        time.sleep(60 * 60 * 24)

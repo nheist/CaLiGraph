@@ -61,9 +61,9 @@ class BiEncoderMatcher(Matcher):
         if self.epochs == 0:
             return  # skip training
         training_examples = []
-        if self.scenario.is_MM():
+        if self.scenario.is_mention_mention():
             training_examples += transformer_util.generate_training_data(MatchingScenario.MENTION_MENTION, train_corpus, self.train_sample, [], self.add_page_context, self.add_text_context, self.add_entity_abstract, self.add_kg_info)
-        if self.scenario.is_ME():
+        if self.scenario.is_mention_entity():
             training_examples += transformer_util.generate_training_data(MatchingScenario.MENTION_ENTITY, train_corpus, self.train_sample, [], self.add_page_context, self.add_text_context, self.add_entity_abstract, self.add_kg_info)
         train_dataloader = DataLoader(training_examples, shuffle=True, batch_size=self.batch_size)
         utils.get_logger().debug('Training bi-encoder model..')
@@ -86,7 +86,7 @@ class BiEncoderMatcher(Matcher):
         mention_ids = list(mention_input)
         mention_embeddings = self._compute_embeddings(list(mention_input.values()))
         ca = CandidateAlignment()
-        if self.scenario.is_MM():
+        if self.scenario.is_mention_mention():
             known_mask = [mention_known[m_id] for m_id in mention_ids]
             known_mention_ids = [m_id for m_id, known in zip(mention_ids, known_mask) if known]
             known_mention_embeddings = mention_embeddings[known_mask]
@@ -94,7 +94,7 @@ class BiEncoderMatcher(Matcher):
                 transformer_util.approximate_semantic_search(ca, known_mention_embeddings, known_mention_embeddings, known_mention_ids, known_mention_ids, top_k=self.top_k + 1)
             else:
                 transformer_util.semantic_search(ca, known_mention_embeddings, known_mention_embeddings, known_mention_ids, known_mention_ids, top_k=self.top_k + 1)
-        if self.scenario.is_ME():
+        if self.scenario.is_mention_entity():
             if self.entity_embeddings is None:  # init cached target embeddings
                 entity_input = data_corpus.get_entity_input(self.add_entity_abstract, self.add_kg_info)
                 self.entity_ids = list(entity_input)

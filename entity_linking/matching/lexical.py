@@ -21,12 +21,12 @@ class LexicalMatcher(Matcher, ABC):
 
     def predict(self, eval_mode: str, data_corpus: DataCorpus) -> CandidateAlignment:
         ca = CandidateAlignment()
-        if self.scenario.is_MM():
+        if self.scenario.is_mention_mention():
             mention_grouping = self._make_grouping(data_corpus.get_mention_labels(True))
             for mention_group in mention_grouping.values():
                 for mention_pair in itertools.combinations(mention_group, 2):
                     ca.add_candidate(mention_pair, 1)
-        if self.scenario.is_ME():
+        if self.scenario.is_mention_entity():
             mention_grouping = self._make_grouping(data_corpus.get_mention_labels())
             entity_grouping = self._make_grouping({res.idx: res.get_label() for res in data_corpus.get_entities()})
             for key in set(mention_grouping).intersection(set(entity_grouping)):
@@ -72,14 +72,14 @@ class BM25Matcher(Matcher):
 
     def predict(self, eval_mode: str, data_corpus: DataCorpus) -> CandidateAlignment:
         ca = CandidateAlignment()
-        if self.scenario.is_MM():
+        if self.scenario.is_mention_mention():
             tokenized_mentions = {m_id: _tokenize_label(label) for m_id, label in data_corpus.get_mention_labels(True).items()}
             mention_ids = list(tokenized_mentions)
             model = fastbm25(list(tokenized_mentions.values()))
             for m_id, tokens in tqdm(tokenized_mentions.items(), desc='BM25/MM'):
                 for _, idx, score in model.top_k_sentence(tokens, k=self.top_k + 1):
                     ca.add_candidate((m_id, mention_ids[idx]), score)
-        if self.scenario.is_ME():
+        if self.scenario.is_mention_entity():
             tokenized_mentions = {m_id: _tokenize_label(label) for m_id, label in data_corpus.get_mention_labels().items()}
             tokenized_ents = {e.idx: _tokenize_label(e.get_label()) for e in data_corpus.get_entities()}
             ent_ids = list(tokenized_ents)

@@ -15,10 +15,10 @@ from entity_linking.matching import MatchingScenario, MatchingApproach, Matcher
 from entity_linking.matching.io import get_cache_path
 from entity_linking.data import CorpusType, DataCorpus, get_data_corpora
 from entity_linking.matching.greedy_clustering import NastyLinker, EdinMatcher
-from entity_linking.evaluation import PrecisionRecallF1Evaluator
+from entity_linking.evaluation.metrics import MetricsCalculator, AlignmentComparison
 
 
-VERSION = 6
+VERSION = 1
 
 
 AlignmentCorpus = namedtuple('AlignmentCorpus', ['alignment'])
@@ -47,9 +47,10 @@ def _eval_param_config(args: Tuple[MatchingApproach, DataCorpus, tuple, tuple]):
     param_dict = dict(zip(param_names, param_config))
     matcher = _init_matcher(approach, param_dict)
     ca = matcher.predict(matcher.MODE_TEST, data_corpus)
-    evaluator = PrecisionRecallF1Evaluator(None)
-    metrics_known = evaluator._compute_metrics_for_partition(ca, data_corpus.alignment, 0, False)
-    metrics_unknown = evaluator._compute_metrics_for_partition(ca, data_corpus.alignment, 0, True)
+    evaluator = MetricsCalculator('', True)
+    alignment_comparison = AlignmentComparison(ca, data_corpus.alignment, True)
+    metrics_known = evaluator._compute_metrics_for_partition(alignment_comparison, 0, False)
+    metrics_unknown = evaluator._compute_metrics_for_partition(alignment_comparison, 0, True)
     return dict(zip(param_names, param_config)) | {
         'P_k': metrics_known['me-P'],
         'R_k': metrics_known['me-R'],
@@ -67,9 +68,9 @@ def _eval_param_config(args: Tuple[MatchingApproach, DataCorpus, tuple, tuple]):
 def _init_matcher(approach: MatchingApproach, params: dict) -> Matcher:
     matcher_params = {'id': None} | params
     if approach == MatchingApproach.NASTY_LINKER:
-        return NastyLinker(MatchingScenario.FUSION, matcher_params)
+        return NastyLinker(MatchingScenario.FULL, matcher_params)
     elif approach == MatchingApproach.EDIN:
-        return EdinMatcher(MatchingScenario.FUSION, matcher_params)
+        return EdinMatcher(MatchingScenario.FULL, matcher_params)
     raise ValueError(f'Unsupported approach: {approach.name}')
 
 
