@@ -45,9 +45,9 @@ if __name__ == '__main__':
     args = parser.parse_args()
     # and set necessary environment variables
     os.environ['DISABLE_SPACY_CACHE'] = '1'  # make sure that spaCy cache is disabled
+    import utils
     if args.gpu >= 0:
         os.environ['CUDA_VISIBLE_DEVICES'] = str(args.gpu)
-        import utils
         utils.reserve_gpu(args.gpu_memory)
     # then fix all seeds
     import random
