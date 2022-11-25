@@ -81,7 +81,7 @@ class AlignmentComparison:
     def get_me_preds_and_overlap(self, nil_flag: Optional[bool] = None) -> Tuple[int, int]:
         # select best entity per mention
         pairs_by_mention = defaultdict(set)
-        for pair, score in self.prediction.get_me_candidates(True, nil_flag):
+        for pair, score in self.get_me_candidates(nil_flag):
             pairs_by_mention[pair[0]].add((pair, score))
         candidates = [max(pairs, key=lambda x: x[1])[0] for pairs in pairs_by_mention.values()]
         # collect stats
