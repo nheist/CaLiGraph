@@ -93,13 +93,14 @@ class AlignmentComparison:
         return predictions, overlap
 
     def get_me_candidates(self, nil_flag: Optional[bool]) -> Iterable[Tuple[Pair, float]]:
-        if not self.has_clustering():
+        if self.has_clustering():
+            for mention_ids, ent_id in self.clustering:
+                for m_id in mention_ids:
+                    pair = (m_id, ent_id)
+                    if is_consistent_with_nil_flag(pair, nil_flag):
+                        yield pair, 1
+        else:
             yield from self.prediction.get_me_candidates(True, nil_flag)
-        for mention_ids, ent_id in self.clustering:
-            for m_id in mention_ids:
-                pair = (m_id, ent_id)
-                if is_consistent_with_nil_flag(pair, nil_flag):
-                    yield pair, 1
 
 
 class MetricsCalculator:
