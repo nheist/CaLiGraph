@@ -76,7 +76,7 @@ class CrossEncoderMatcher(MatcherWithCandidates):
 
     def predict(self, eval_mode: str, data_corpus: DataCorpus) -> CandidateAlignment:
         mention_input, _ = data_corpus.get_mention_input(self.add_page_context, self.add_text_context)
-        ca = CandidateAlignment(self.scenario)
+        ca = CandidateAlignment()
         if self.scenario.is_MM():
             utils.get_logger().debug('Computing mention-mention matches..')
             for pair, score in self._score_pairs(list(self.mm_ca[eval_mode].get_mm_candidates(False)), mention_input, mention_input):

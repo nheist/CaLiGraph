@@ -20,7 +20,7 @@ class LexicalMatcher(Matcher, ABC):
         pass  # no training necessary
 
     def predict(self, eval_mode: str, data_corpus: DataCorpus) -> CandidateAlignment:
-        ca = CandidateAlignment(self.scenario)
+        ca = CandidateAlignment()
         if self.scenario.is_MM():
             mention_grouping = self._make_grouping(data_corpus.get_mention_labels(True))
             for mention_group in mention_grouping.values():
@@ -71,7 +71,7 @@ class BM25Matcher(Matcher):
         pass  # no training necessary
 
     def predict(self, eval_mode: str, data_corpus: DataCorpus) -> CandidateAlignment:
-        ca = CandidateAlignment(self.scenario)
+        ca = CandidateAlignment()
         if self.scenario.is_MM():
             tokenized_mentions = {m_id: _tokenize_label(label) for m_id, label in data_corpus.get_mention_labels(True).items()}
             mention_ids = list(tokenized_mentions)

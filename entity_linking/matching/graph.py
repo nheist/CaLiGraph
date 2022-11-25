@@ -33,7 +33,7 @@ class PopularityMatcher(MatcherWithCandidates):
         candidates_by_mention = defaultdict(set)
         for (mention_id, ent_id), score in self.me_ca[eval_mode].get_me_candidates(True):
             candidates_by_mention[mention_id].add((ent_id, score))
-        ca = CandidateAlignment(self.scenario)
+        ca = CandidateAlignment()
         for mention_id, ents in candidates_by_mention.items():
             ent_id, score = max(ents, key=self._get_entity_popularity)
             ca.add_candidate((mention_id, ent_id), score)

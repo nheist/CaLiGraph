@@ -56,7 +56,7 @@ class NastyLinker(GreedyClusteringMatcher):
         ag = self._get_alignment_graph(eval_mode, True)
         valid_subgraphs = self._compute_valid_subgraphs(ag)
         clusters = [(self._get_mention_nodes(g), self._get_entity_node(g)) for g in valid_subgraphs]
-        ca = CandidateAlignment(self.scenario)
+        ca = CandidateAlignment()
         ca.add_clustering(clusters, data_corpus.alignment)
         return ca
 
@@ -120,7 +120,7 @@ class EdinMatcher(GreedyClusteringMatcher):
                 if top_ent_score >= .7:  # assign entity to cluster only if it is closest entity for >= 70% of mentions
                     ent = top_ent
             clusters.append((mentions, ent))
-        ca = CandidateAlignment(self.scenario)
+        ca = CandidateAlignment()
         ca.add_clustering(clusters, data_corpus.alignment)
         return ca
 

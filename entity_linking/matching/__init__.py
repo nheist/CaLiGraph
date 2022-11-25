@@ -9,7 +9,7 @@ import utils
 
 
 def initialize_matcher(scenario: MatchingScenario, approach: MatchingApproach, params: dict) -> Matcher:
-    utils.get_logger().info('Initializing matcher..')
+    utils.get_logger().info(f'Initializing matcher {approach.name}..')
     if approach == MatchingApproach.EXACT:
         matcher_factory = ExactMatcher
     elif approach == MatchingApproach.WORD:

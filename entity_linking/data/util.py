@@ -91,8 +91,7 @@ class Alignment:
 
 
 class CandidateAlignment:
-    def __init__(self, scenario):
-        self.scenario = scenario
+    def __init__(self):
         # for intermediate results (candidates)
         self.mention_to_target_mapping = defaultdict(dict)
         # for final results (prediction)
