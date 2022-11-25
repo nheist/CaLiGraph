@@ -9,8 +9,8 @@ from sentence_transformers.util import dot_score
 import utils
 from impl.util.transformer import SpecialToken
 from impl.wikipedia.page_parser import MentionId
-from entity_linking.matching.util import MatchingScenario
-from entity_linking.data import DataCorpus, Pair, CandidateAlignment
+from impl.subject_entity.entity_disambiguation.matching.util import MatchingScenario
+from impl.subject_entity.entity_disambiguation.data import DataCorpus, Pair, CandidateAlignment
 
 
 def add_special_tokens(model: Union[SentenceTransformer, CrossEncoder]):

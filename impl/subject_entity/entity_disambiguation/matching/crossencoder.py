@@ -6,11 +6,11 @@ from torch.utils.data import DataLoader
 from sentence_transformers import CrossEncoder
 import utils
 from impl.wikipedia import MentionId
-from entity_linking.data import CandidateAlignment, DataCorpus, Pair
-from entity_linking.matching.util import MatchingScenario
-from entity_linking.matching.io import get_cache_path
-from entity_linking.matching.matcher import MatcherWithCandidates
-from entity_linking.matching import transformer_util
+from impl.subject_entity.entity_disambiguation.data import CandidateAlignment, DataCorpus, Pair
+from impl.subject_entity.entity_disambiguation.matching.util import MatchingScenario
+from impl.subject_entity.entity_disambiguation.matching.io import get_cache_path
+from impl.subject_entity.entity_disambiguation.matching.matcher import MatcherWithCandidates
+from impl.subject_entity.entity_disambiguation.matching import transformer_util
 
 
 class CrossEncoderMatcher(MatcherWithCandidates):
@@ -42,14 +42,17 @@ class CrossEncoderMatcher(MatcherWithCandidates):
         }
         return super()._get_param_dict() | params
 
-    def train(self, train_corpus: DataCorpus, eval_corpus: DataCorpus, save_alignment: bool) -> Dict[str, CandidateAlignment]:
+    def train(self, train_corpus: DataCorpus, save_alignment: bool) -> Dict[str, CandidateAlignment]:
         utils.get_logger().info('Training matcher..')
-        self._train_model(train_corpus, eval_corpus)
+        self._train_model(train_corpus)
         return {}  # never predict on the training set with the cross-encoder
 
-    def _train_model(self, train_corpus: DataCorpus, eval_corpus: DataCorpus):
+    def is_model_ready(self) -> bool:
+        return os.path.exists(get_cache_path(self.base_model))
+
+    def _train_model(self, train_corpus: DataCorpus):
         path_to_model = get_cache_path(self.base_model)
-        if os.path.exists(path_to_model):  # load local model
+        if self.is_model_ready():  # load local model
             self.model = CrossEncoder(path_to_model, num_labels=1)
             return
         else:  # initialize model from huggingface hub

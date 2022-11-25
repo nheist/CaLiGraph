@@ -116,11 +116,13 @@ class ClgEntityStore:
                 ent = self.get_entity_by_idx(ent_idx)
             else:
                 # add entity and its label if not existing
-                ent_name = ent_info['labels'].most_common(1)[0][0]  # TODO: make sure to change duplicate names later
+                ent_label = ent_info['labels'].most_common(1)[0][0]
+                # TODO: for now, we ensure a unique entity name by appending its IDX => find more expressive name!
+                ent_name = f'{ent_label}_({ent_idx})'
                 ent = ClgEntity(ent_idx, ent_name, False)
                 self.entities_by_idx[ent_idx] = ent
                 self.entities_by_name[ent_name] = ent
-                self.labels[ent] = ent_name
+                self.labels[ent] = ent_label
             self.surface_forms[ent].update(set(ent_info['labels']))
             self.provenance_resources[ent] = self.get_provenance_resources(ent) | ent_info['provenance']
             self.types[ent].update(ent_info['types'])

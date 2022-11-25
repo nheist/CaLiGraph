@@ -59,8 +59,8 @@ if __name__ == '__main__':
     np.random.seed(SEED)
     torch.manual_seed(SEED)
     # initialize parameters
-    from entity_linking.matching import MatchingScenario, MatchingApproach
-    from entity_linking.data import CorpusType
+    from impl.subject_entity.entity_disambiguation.matching import MatchingScenario, MatchingApproach
+    from impl.subject_entity.entity_disambiguation.data import CorpusType
     scenario = MatchingScenario(args.scenario)
     approach = MatchingApproach(args.approach)
     corpus_type = CorpusType(args.corpus)
@@ -86,15 +86,15 @@ if __name__ == '__main__':
     }
     # then import application-specific code and run it
     from impl.subject_entity import mention_detection
-    from entity_linking.matching import initialize_matcher
-    from entity_linking.data import get_data_corpora
-    from entity_linking.matching.io import store_candidate_alignment
+    from impl.subject_entity.entity_disambiguation.matching import initialize_matcher
+    from impl.subject_entity.entity_disambiguation.data import get_data_corpora
+    from impl.subject_entity.entity_disambiguation.matching.io import store_candidate_alignment
     if corpus_type == CorpusType.LIST:  # make sure subject entities are initialized
         mention_detection.detect_mentions()
     matcher = initialize_matcher(scenario, approach, params)
-    train_data, eval_data, test_data = get_data_corpora(corpus_type, args.sample_size)
+    train_data, _, test_data = get_data_corpora(corpus_type, args.sample_size)
 
-    alignments = matcher.train(train_data, eval_data, args.save_alignment)
+    alignments = matcher.train(train_data, args.save_alignment)
     alignments |= matcher.test(test_data)
     if args.save_alignment or args.save_test_alignment:
         store_candidate_alignment(matcher.get_approach_name(), alignments)

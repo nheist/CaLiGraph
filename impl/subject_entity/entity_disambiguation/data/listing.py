@@ -1,4 +1,4 @@
-from typing import List, Set, Tuple, Dict
+from typing import List, Set, Tuple, Dict, Optional
 from collections import defaultdict
 from itertools import cycle, islice
 import random
@@ -14,7 +14,7 @@ from .util import DataCorpus, Alignment, CXS, CXE, ROW, COL
 
 
 class ListingDataCorpus(DataCorpus):
-    def __init__(self, listing_ids: List[ListingId], alignment: Alignment):
+    def __init__(self, listing_ids: List[ListingId], alignment: Optional[Alignment]):
         self.listing_ids = listing_ids
         self.alignment = alignment
 
@@ -89,24 +89,14 @@ class ListingDataCorpus(DataCorpus):
         return alternate_iters_to_string(tokens, whitespaces)
 
 
+def _init_listing_prediction_corpus() -> ListingDataCorpus:
+    wiki_pages = [wp for wp in WikiPageStore.instance().get_pages() if wp.has_subject_entities()]
+    return _create_corpus_from_pages(wiki_pages)
+
+
 def _init_listing_data_corpora(sample_size: int) -> Tuple[ListingDataCorpus, ListingDataCorpus, ListingDataCorpus]:
     train_pages, val_pages, test_pages = _load_page_data(sample_size)
     return _create_corpus_from_pages(train_pages), _create_corpus_from_pages(val_pages), _create_corpus_from_pages(test_pages)
-
-
-def _create_corpus_from_pages(pages: List[WikiPage]) -> ListingDataCorpus:
-    listings = [listing for page in pages for listing in page.get_listings() if listing.has_subject_entities()]
-    listing_ids = [listing.get_id() for listing in listings]
-    entity_to_mention_mapping = defaultdict(set)
-    clge = ClgEntityStore.instance()
-    for listing in listings:
-        for item in listing.get_items(has_subject_entity=True, has_known_entity=True):
-            mention_id = MentionId(listing.page_idx, listing.idx, item.idx)
-            ent_id = item.subject_entity.entity_idx
-            if not clge.has_entity_with_idx(ent_id):
-                continue
-            entity_to_mention_mapping[ent_id].add(mention_id)
-    return ListingDataCorpus(listing_ids, Alignment(entity_to_mention_mapping, set(entity_to_mention_mapping)))
 
 
 def _load_page_data(sample_size: float) -> Tuple[List[WikiPage], List[WikiPage], List[WikiPage]]:
@@ -122,3 +112,18 @@ def _load_page_data(sample_size: float) -> Tuple[List[WikiPage], List[WikiPage],
     val_pages = wiki_pages[val_start_idx:test_start_idx]
     test_pages = wiki_pages[test_start_idx:]
     return train_pages, val_pages, test_pages
+
+
+def _create_corpus_from_pages(pages: List[WikiPage]) -> ListingDataCorpus:
+    listings = [listing for page in pages for listing in page.get_listings() if listing.has_subject_entities()]
+    listing_ids = [listing.get_id() for listing in listings]
+    entity_to_mention_mapping = defaultdict(set)
+    clge = ClgEntityStore.instance()
+    for listing in listings:
+        for item in listing.get_items(has_subject_entity=True, has_known_entity=True):
+            mention_id = MentionId(listing.page_idx, listing.idx, item.idx)
+            ent_id = item.subject_entity.entity_idx
+            if not clge.has_entity_with_idx(ent_id):
+                continue
+            entity_to_mention_mapping[ent_id].add(mention_id)
+    return ListingDataCorpus(listing_ids, Alignment(entity_to_mention_mapping, set(entity_to_mention_mapping)))

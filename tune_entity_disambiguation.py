@@ -11,11 +11,11 @@ import utils
 from tqdm import tqdm
 from collections import namedtuple
 from typing import Tuple
-from entity_linking.matching import MatchingScenario, MatchingApproach, Matcher
-from entity_linking.matching.io import get_cache_path
-from entity_linking.data import CorpusType, DataCorpus, get_data_corpora
-from entity_linking.matching.greedy_clustering import NastyLinker, EdinMatcher
-from entity_linking.evaluation import MetricsCalculator, AlignmentComparison
+from impl.subject_entity.entity_disambiguation.matching import MatchingScenario, MatchingApproach, Matcher
+from impl.subject_entity.entity_disambiguation.matching.io import get_cache_path
+from impl.subject_entity.entity_disambiguation.data import CorpusType, DataCorpus, get_data_corpora
+from impl.subject_entity.entity_disambiguation.matching.greedy_clustering import NastyLinker, EdinMatcher
+from impl.subject_entity.entity_disambiguation.evaluation import MetricsCalculator, AlignmentComparison
 
 
 VERSION = 1

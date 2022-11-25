@@ -1,10 +1,10 @@
-from entity_linking.matching.matcher import Matcher
-from entity_linking.matching.util import MatchingScenario, MatchingApproach
-from entity_linking.matching.lexical import ExactMatcher, WordMatcher, BM25Matcher
-from entity_linking.matching.graph import PopularityMatcher
-from entity_linking.matching.biencoder import BiEncoderMatcher
-from entity_linking.matching.crossencoder import CrossEncoderMatcher
-from entity_linking.matching.greedy_clustering import NastyLinker, EdinMatcher
+from impl.subject_entity.entity_disambiguation.matching.matcher import Matcher
+from impl.subject_entity.entity_disambiguation.matching.util import MatchingScenario, MatchingApproach
+from impl.subject_entity.entity_disambiguation.matching.lexical import ExactMatcher, WordMatcher, BM25Matcher
+from impl.subject_entity.entity_disambiguation.matching.graph import PopularityMatcher
+from impl.subject_entity.entity_disambiguation.matching.biencoder import BiEncoderMatcher
+from impl.subject_entity.entity_disambiguation.matching.crossencoder import CrossEncoderMatcher
+from impl.subject_entity.entity_disambiguation.matching.greedy_clustering import NastyLinker, EdinMatcher
 import utils
 
 

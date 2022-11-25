@@ -2,14 +2,14 @@ from typing import Dict
 from abc import ABC, abstractmethod
 from datetime import datetime
 import utils
-from entity_linking.data import CandidateAlignment, DataCorpus, NilkDataCorpus
-from entity_linking.evaluation import MetricsCalculator
-from entity_linking.matching.util import MatchingScenario
-from entity_linking.matching.io import load_candidate_alignment
+from impl.subject_entity.entity_disambiguation.data import CandidateAlignment, DataCorpus, NilkDataCorpus
+from impl.subject_entity.entity_disambiguation.evaluation import MetricsCalculator
+from impl.subject_entity.entity_disambiguation.matching.util import MatchingScenario
+from impl.subject_entity.entity_disambiguation.matching.io import load_candidate_alignment
 
 
 class Matcher(ABC):
-    MODE_TRAIN, MODE_EVAL, MODE_TEST = 'train', 'eval', 'test'
+    MODE_TRAIN, MODE_EVAL, MODE_TEST, MODE_PREDICT = 'train', 'eval', 'test', 'predict'
 
     def __init__(self, scenario: MatchingScenario, params: dict):
         super().__init__()
@@ -26,14 +26,14 @@ class Matcher(ABC):
     def _get_param_dict(self) -> dict:
         return {}
 
-    def train(self, train_corpus: DataCorpus, eval_corpus: DataCorpus, eval_on_train: bool) -> Dict[str, CandidateAlignment]:
+    def train(self, train_corpus: DataCorpus, eval_on_train: bool) -> Dict[str, CandidateAlignment]:
         utils.get_logger().info('Training matcher..')
-        self._train_model(train_corpus, eval_corpus)
+        self._train_model(train_corpus)
         utils.get_logger().info('Making predictions..')
         return {self.MODE_TRAIN: self.predict(self.MODE_TRAIN, train_corpus)} if eval_on_train else {}
 
     @abstractmethod
-    def _train_model(self, train_corpus: DataCorpus, eval_corpus: DataCorpus):
+    def _train_model(self, train_corpus: DataCorpus):
         pass
 
     def test(self, test_corpus: DataCorpus) -> Dict[str, CandidateAlignment]:
@@ -58,10 +58,10 @@ class Matcher(ABC):
 class MatcherWithCandidates(Matcher, ABC):
     def __init__(self, scenario: MatchingScenario, params: dict):
         super().__init__(scenario, params)
-        if params['mm_approach']:
+        if 'mm_approach' in params and params['mm_approach']:
             self.mm_approach = params['mm_approach']
             self.mm_ca = load_candidate_alignment(self.mm_approach)
-        if params['me_approach']:
+        if 'me_approach' in params and params['me_approach']:
             self.me_approach = params['me_approach']
             single_approach = params['mm_approach'] == self.me_approach
             self.me_ca = self.mm_ca if single_approach else load_candidate_alignment(self.me_approach)

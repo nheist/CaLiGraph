@@ -4,7 +4,7 @@ import numpy as np
 from scipy.optimize import linear_sum_assignment
 from torch.utils.tensorboard import SummaryWriter
 from sklearn.metrics import normalized_mutual_info_score
-from entity_linking.data.util import is_nil_mention, is_consistent_with_nil_flag, Pair, Alignment, CandidateAlignment
+from impl.subject_entity.entity_disambiguation.data.util import is_nil_mention, is_consistent_with_nil_flag, Pair, Alignment, CandidateAlignment
 import utils
 from impl.wikipedia import MentionId
 

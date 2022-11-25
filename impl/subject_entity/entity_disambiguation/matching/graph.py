@@ -1,8 +1,8 @@
 from typing import Set, Tuple
 from collections import defaultdict
-from entity_linking.data import CandidateAlignment, DataCorpus
-from entity_linking.matching.matcher import MatcherWithCandidates
-from entity_linking.matching.util import MatchingScenario
+from impl.subject_entity.entity_disambiguation.data import CandidateAlignment, DataCorpus
+from impl.subject_entity.entity_disambiguation.matching.matcher import MatcherWithCandidates
+from impl.subject_entity.entity_disambiguation.matching.util import MatchingScenario
 from impl.caligraph.entity import ClgEntity
 
 
@@ -11,7 +11,7 @@ class PopularityMatcher(MatcherWithCandidates):
         super().__init__(scenario, params)
         self.entity_popularity = None
 
-    def _train_model(self, train_corpus: DataCorpus, eval_corpus: DataCorpus):
+    def _train_model(self, train_corpus: DataCorpus):
         self.entity_popularity = self._compute_entity_popularity(train_corpus.get_entities())
 
     @classmethod

@@ -5,11 +5,11 @@ from torch import Tensor, nn
 from torch.utils.data import DataLoader
 from sentence_transformers import SentenceTransformer, losses
 import utils
-from entity_linking.data import CandidateAlignment, DataCorpus
-from entity_linking.matching.util import MatchingScenario
-from entity_linking.matching.io import get_cache_path
-from entity_linking.matching.matcher import Matcher
-from entity_linking.matching import transformer_util
+from impl.subject_entity.entity_disambiguation.data import CandidateAlignment, DataCorpus
+from impl.subject_entity.entity_disambiguation.matching.util import MatchingScenario
+from impl.subject_entity.entity_disambiguation.matching.io import get_cache_path
+from impl.subject_entity.entity_disambiguation.matching.matcher import Matcher
+from impl.subject_entity.entity_disambiguation.matching import transformer_util
 
 
 class BiEncoderMatcher(Matcher):
@@ -50,9 +50,12 @@ class BiEncoderMatcher(Matcher):
         }
         return super()._get_param_dict() | params
 
-    def _train_model(self, train_corpus: DataCorpus, eval_corpus: DataCorpus):
+    def is_model_ready(self) -> bool:
+        return os.path.exists(get_cache_path(self.base_model))
+
+    def _train_model(self, train_corpus: DataCorpus):
         path_to_model = get_cache_path(self.base_model)
-        if os.path.exists(path_to_model):  # load local model
+        if self.is_model_ready():  # load local model
             self.model = SentenceTransformer(path_to_model)
             return
         else:  # initialize model from huggingface hub
@@ -84,7 +87,14 @@ class BiEncoderMatcher(Matcher):
     def predict(self, eval_mode: str, data_corpus: DataCorpus) -> CandidateAlignment:
         mention_input, mention_known = data_corpus.get_mention_input(self.add_page_context, self.add_text_context)
         mention_ids = list(mention_input)
+        # compute embeddings
         mention_embeddings = self._compute_embeddings(list(mention_input.values()))
+        if self.scenario.is_mention_entity():
+            if self.entity_embeddings is None:  # init cached target embeddings
+                entity_input = data_corpus.get_entity_input(self.add_entity_abstract, self.add_kg_info)
+                self.entity_ids = list(entity_input)
+                self.entity_embeddings = self._compute_embeddings(list(entity_input.values()))
+        # find nearest neighbors
         ca = CandidateAlignment()
         if self.scenario.is_mention_mention():
             known_mask = [mention_known[m_id] for m_id in mention_ids]
@@ -95,10 +105,6 @@ class BiEncoderMatcher(Matcher):
             else:
                 transformer_util.semantic_search(ca, known_mention_embeddings, known_mention_embeddings, known_mention_ids, known_mention_ids, top_k=self.top_k + 1)
         if self.scenario.is_mention_entity():
-            if self.entity_embeddings is None:  # init cached target embeddings
-                entity_input = data_corpus.get_entity_input(self.add_entity_abstract, self.add_kg_info)
-                self.entity_ids = list(entity_input)
-                self.entity_embeddings = self._compute_embeddings(list(entity_input.values()))
             if self.ans:
                 transformer_util.approximate_semantic_search(ca, mention_embeddings, self.entity_embeddings, mention_ids, self.entity_ids, top_k=self.top_k)
             else:

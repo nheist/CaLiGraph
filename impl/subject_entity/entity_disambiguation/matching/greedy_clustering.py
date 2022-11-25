@@ -5,9 +5,9 @@ import networkx as nx
 import math
 import utils
 from impl.wikipedia import MentionId
-from entity_linking.data import CandidateAlignment, DataCorpus
-from entity_linking.matching.util import MatchingScenario
-from entity_linking.matching.matcher import MatcherWithCandidates
+from impl.subject_entity.entity_disambiguation.data import CandidateAlignment, DataCorpus
+from impl.subject_entity.entity_disambiguation.matching.util import MatchingScenario
+from impl.subject_entity.entity_disambiguation.matching.matcher import MatcherWithCandidates
 
 
 class GreedyClusteringMatcher(MatcherWithCandidates, ABC):
@@ -20,7 +20,7 @@ class GreedyClusteringMatcher(MatcherWithCandidates, ABC):
     def _get_param_dict(self) -> dict:
         return super()._get_param_dict() | {'mmt': self.mm_threshold, 'met': self.me_threshold}
 
-    def _train_model(self, train_corpus: DataCorpus, eval_corpus: DataCorpus):
+    def _train_model(self, train_corpus: DataCorpus):
         pass  # no training necessary
 
     def _get_alignment_graph(self, eval_mode: str, add_entities: bool) -> nx.Graph:

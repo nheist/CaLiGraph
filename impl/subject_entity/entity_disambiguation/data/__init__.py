@@ -1,7 +1,7 @@
 from typing import Tuple
 import utils
 from .util import CorpusType, DataCorpus, Alignment, CandidateAlignment, Pair
-from .listing import ListingDataCorpus, _init_listing_data_corpora
+from .listing import ListingDataCorpus, _init_listing_data_corpora, _init_listing_prediction_corpus
 from .nilk import NilkDataCorpus, _init_nilk_data_corpora
 
 
@@ -11,3 +11,7 @@ def get_data_corpora(corpus_type: CorpusType, sample_size: int) -> Tuple[DataCor
     elif corpus_type == CorpusType.NILK:
         return utils.load_or_create_cache('ED_nilk_datasets', lambda: _init_nilk_data_corpora(sample_size), version=sample_size)
     raise ValueError(f'Unknown corpus type: {corpus_type.name}')
+
+
+def get_listing_prediction_corpus() -> ListingDataCorpus:
+    return _init_listing_prediction_corpus()

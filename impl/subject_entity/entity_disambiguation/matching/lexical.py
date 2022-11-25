@@ -7,16 +7,16 @@ from unidecode import unidecode
 from nltk.corpus import stopwords
 from fastbm25 import fastbm25
 from impl.util.string import make_alphanumeric
-from entity_linking.data import CandidateAlignment, DataCorpus
-from entity_linking.matching.util import MatchingScenario
-from entity_linking.matching.matcher import Matcher
+from impl.subject_entity.entity_disambiguation.data import CandidateAlignment, DataCorpus
+from impl.subject_entity.entity_disambiguation.matching.util import MatchingScenario
+from impl.subject_entity.entity_disambiguation.matching.matcher import Matcher
 
 
 STOPWORDS = set(stopwords.words('english'))
 
 
 class LexicalMatcher(Matcher, ABC):
-    def _train_model(self, train_corpus: DataCorpus, eval_corpus: DataCorpus):
+    def _train_model(self, train_corpus: DataCorpus):
         pass  # no training necessary
 
     def predict(self, eval_mode: str, data_corpus: DataCorpus) -> CandidateAlignment:
@@ -67,7 +67,7 @@ class BM25Matcher(Matcher):
     def _get_param_dict(self) -> dict:
         return super()._get_param_dict() | {'k': self.top_k}
 
-    def _train_model(self, train_corpus: DataCorpus, eval_corpus: DataCorpus):
+    def _train_model(self, train_corpus: DataCorpus):
         pass  # no training necessary
 
     def predict(self, eval_mode: str, data_corpus: DataCorpus) -> CandidateAlignment:
