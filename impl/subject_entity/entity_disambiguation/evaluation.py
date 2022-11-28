@@ -70,6 +70,16 @@ class AlignmentComparison:
                     actual.append(self.actual.mention_to_entity_mapping[mention])
         return pred, actual
 
+    def get_entity_clusters(self, nil_flag: Optional[bool]) -> Tuple[List[int], List[int]]:
+        pred, actual = [], []
+        for cluster_id, (mentions, ent) in enumerate(self.clustering):
+            cluster_has_nil_entity = ent not in self.actual.known_entities
+            if nil_flag is None or nil_flag == cluster_has_nil_entity:
+                for mention in mentions:
+                    pred.append(cluster_id)
+                    actual.append(self.actual.mention_to_entity_mapping[mention])
+        return pred, actual
+
     def get_cluster_count(self, nil_flag: Optional[bool]) -> int:
         if nil_flag is None:
             return len(self.clustering)
@@ -133,8 +143,10 @@ class MetricsCalculator:
         metrics |= self._compute_p_r_f1('me', pred_count, actual_mention_count, tp)
         if alignment_comparison.has_clustering():
             metrics['clusters'] = alignment_comparison.get_cluster_count(nil_flag)
-            true_clusters, predicted_clusters = alignment_comparison.get_mention_clusters(nil_flag)
-            metrics['NMI'] = normalized_mutual_info_score(true_clusters, predicted_clusters)
+            # entity-focused NMI
+            metrics['eNMI'] = normalized_mutual_info_score(*alignment_comparison.get_entity_clusters(nil_flag))
+            # mention-focused NMI
+            metrics['mNMI'] = normalized_mutual_info_score(*alignment_comparison.get_mention_clusters(nil_flag))
         return metrics
 
     @classmethod
