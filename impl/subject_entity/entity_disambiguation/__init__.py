@@ -1,5 +1,6 @@
 from typing import Dict, List, Set, Tuple, Optional
 from collections import defaultdict
+import utils
 from impl.dbpedia.resource import DbpResourceStore
 from impl.wikipedia import WikiPageStore, MentionId
 from impl.subject_entity.entity_disambiguation.matching.util import MatchingScenario
@@ -10,7 +11,7 @@ from impl.subject_entity.entity_disambiguation.matching.greedy_clustering import
 
 
 def disambiguate_subject_entities():
-    disambiguated_subject_entities = _disambiguate_subject_entity_mentions()
+    disambiguated_subject_entities = utils.load_or_create_cache('disambiguated_subject_entity_mentions', _disambiguate_subject_entity_mentions)
     WikiPageStore.instance().add_disambiguated_subject_entities(disambiguated_subject_entities)
 
 

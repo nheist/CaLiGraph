@@ -265,6 +265,9 @@ cache:
   subject_entity_mentions:
     filename: 'subject-entity-mentions'
     version: 4
+  disambiguated_subject_entity_mentions:
+    filename: 'disambiguated-subject-entity-mentions'
+    version: 4
   transformer_for_listpage_mention_detection:
     filename: 'transformer-for-listpage-mention-detection'
     version: 4
