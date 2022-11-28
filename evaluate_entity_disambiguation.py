@@ -40,7 +40,8 @@ if __name__ == '__main__':
     # nastylinker / edin
     parser.add_argument('--mm_threshold', type=float, default=0.0, help="Confidence threshold to filter MM predictions.")
     parser.add_argument('--me_threshold', type=float, default=0.0, help="Confidence threshold to filter ME predictions.")
-    parser.add_argument('--path_threshold', type=float, default=0.0, help="Confidence threshold to filter graph paths.")
+    parser.add_argument('--path_threshold', type=float, default=0.0, help="Confidence threshold to filter graph paths (NastyLinker only).")
+    parser.add_argument('--me_cluster_threshold', type=float, default=0.7, help="Confidence threshold to filter graph paths (EDIN only).")
 
     args = parser.parse_args()
     # and set necessary environment variables
@@ -83,6 +84,7 @@ if __name__ == '__main__':
         'mm_threshold': args.mm_threshold,
         'me_threshold': args.me_threshold,
         'path_threshold': args.path_threshold,
+        'me_cluster_threshold': args.me_cluster_threshold,
     }
     # then import application-specific code and run it
     from impl.subject_entity import mention_detection

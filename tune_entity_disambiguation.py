@@ -84,7 +84,8 @@ if __name__ == '__main__':
     parser.add_argument('--me_approach', action='append', type=str, help='Mention-entity approach (ID) used for candidate generation')
     parser.add_argument('--mm_threshold', action='append', type=float, help="Confidence threshold to filter MM predictions.")
     parser.add_argument('--me_threshold', action='append', type=float, help="Confidence threshold to filter ME predictions.")
-    parser.add_argument('--path_threshold', action='append', type=float, help="Confidence threshold to filter graph paths.")
+    parser.add_argument('--path_threshold', action='append', type=float, help="Confidence threshold to filter graph paths (NastyLinker only).")
+    parser.add_argument('--me_cluster_threshold', action='append', type=float, help="Confidence threshold to filter graph paths (EDIN only).")
     parser.add_argument('--cpus', type=int, default=40, help='Number of CPUs to use')
     args = parser.parse_args()
     # fix all seeds
@@ -95,7 +96,7 @@ if __name__ == '__main__':
     # disable debug logging
     utils.get_logger().setLevel('INFO')
     # collect params
-    param_names = ['mm_approach', 'me_approach', 'mm_threshold', 'me_threshold', 'path_threshold']
+    param_names = ['mm_approach', 'me_approach', 'mm_threshold', 'me_threshold', 'path_threshold', 'me_cluster_threshold']
     params = {n: getattr(args, n) for n in param_names if getattr(args, n) is not None}
     # run tuning
     _eval_matcher(MatchingApproach(args.approach), CorpusType(args.corpus), args.sample_size, params, args.cpus)

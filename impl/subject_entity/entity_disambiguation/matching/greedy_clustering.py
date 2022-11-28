@@ -104,6 +104,14 @@ def _from_dijkstra_node_weight(weight: float) -> float:
 
 
 class EdinMatcher(GreedyClusteringMatcher):
+    def __init__(self, scenario: MatchingScenario, params: dict):
+        super().__init__(scenario, params)
+        # model params
+        self.me_cluster_threshold = params['me_cluster_threshold']
+
+    def _get_param_dict(self) -> dict:
+        return super()._get_param_dict() | {'mct': self.me_cluster_threshold}
+
     def predict(self, eval_mode: str, data_corpus: DataCorpus) -> CandidateAlignment:
         mention_graph = self._get_alignment_graph(eval_mode, False)
         mention_ents = self._get_top_entities_for_mentions(eval_mode)
@@ -112,10 +120,10 @@ class EdinMatcher(GreedyClusteringMatcher):
             mentions = self._get_mention_nodes(mention_cluster)
             ent = None
             ent_counts = Counter([mention_ents[m_id] for m_id in mentions if m_id in mention_ents])
-            if ent_counts:
+            if ent_counts:  # assign entity to cluster only if it is closest entity for >= X% of mentions
                 top_ent, top_ent_count = ent_counts.most_common(1)[0]
                 top_ent_score = top_ent_count / len(mentions)
-                if top_ent_score >= .7:  # assign entity to cluster only if it is closest entity for >= 70% of mentions
+                if top_ent_score >= self.me_cluster_threshold:
                     ent = top_ent
             clusters.append((mentions, ent))
         return CandidateAlignment(clusters)
