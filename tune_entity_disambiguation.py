@@ -37,7 +37,8 @@ def _eval_matcher(approach: MatchingApproach, corpus_type: CorpusType, sample_si
     df['R'] = (df['R_k'] + df['R_u']) / 2
     df['F1'] = (df['F1_k'] + df['F1_u']) / 2
     df['C'] = df['C_k'] + df['C_u']
-    df['NMI'] = (df['NMI_k'] + df['NMI_u']) / 2
+    df['eNMI'] = (df['eNMI_k'] + df['eNMI_u']) / 2
+    df['mNMI'] = (df['mNMI_k'] + df['mNMI_u']) / 2
     # store
     df.to_csv(get_cache_path(f'hyperparams_{approach.name}_v{VERSION}.csv'), sep=';')
 
@@ -56,12 +57,14 @@ def _eval_param_config(args: Tuple[MatchingApproach, DataCorpus, tuple, tuple]):
         'R_k': metrics_known['me-R'],
         'F1_k': metrics_known['me-F1'],
         'C_k': metrics_known['clusters'],
-        'NMI_k': metrics_known['NMI'],
+        'eNMI_k': metrics_known['eNMI'],
+        'mNMI_k': metrics_known['mNMI'],
         'P_u': metrics_unknown['me-P'],
         'R_u': metrics_unknown['me-R'],
         'F1_u': metrics_unknown['me-F1'],
         'C_u': metrics_unknown['clusters'],
-        'NMI_u': metrics_unknown['NMI'],
+        'eNMI_u': metrics_unknown['eNMI'],
+        'mNMI_u': metrics_unknown['mNMI'],
     }
 
 
