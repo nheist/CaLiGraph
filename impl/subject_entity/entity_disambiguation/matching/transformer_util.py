@@ -76,7 +76,7 @@ def semantic_search(ca: CandidateAlignment, query_embeddings: torch.Tensor, corp
 def approximate_semantic_search(ca: CandidateAlignment, query_embeddings: np.ndarray, corpus_embeddings: np.ndarray, query_ids: List[MentionId], corpus_ids: List[Union[MentionId, int]], top_k: int = 10):
     index = _build_ann_index(corpus_embeddings, 400, 64, 50)
     utils.get_logger().debug('Running approximate semantic search..')
-    for query_idx, (corpus_indices, distances) in enumerate(zip(*index.knn_query(query_embeddings, k=top_k))):
+    for query_idx, (corpus_indices, distances) in enumerate(zip(*index.knn_query(query_embeddings, k=top_k, num_threads=40))):
         for ent_idx, dist in zip(corpus_indices, distances):
             ca.add_candidate((query_ids[query_idx], corpus_ids[ent_idx]), 1 - dist)
 
