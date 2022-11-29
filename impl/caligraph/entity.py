@@ -1,5 +1,6 @@
 from typing import Set, Dict, Union, Tuple, Any, List, Optional
 from collections import defaultdict, Counter
+from functools import partial
 import utils
 from impl.util.singleton import Singleton
 from impl.util.rdf import Namespace, RdfResource
@@ -283,7 +284,7 @@ class ClgEntityStore:
             self.properties = utils.load_or_create_cache('caligraph_entity_properties', self._init_properties)
 
     def _init_properties(self) -> Dict[ClgEntity, Dict[ClgPredicate, set]]:
-        properties = defaultdict(lambda: defaultdict(set))
+        properties = defaultdict(partial(defaultdict, set))
         for dbp_ent, props in self.dbr.get_entity_properties().items():
             ent = self.get_entity_for_dbp_entity(dbp_ent)
             for dbp_pred, vals in props.items():
