@@ -66,6 +66,8 @@ class AlignmentComparison:
         for cluster_id, (mentions, _) in enumerate(self.clustering):
             if nil_flag is None or any(nil_flag == is_nil_mention(mention) for mention in mentions):
                 for mention in mentions:
+                    if mention not in self.actual.mention_to_entity_mapping:
+                        continue  # ignore mentions that can't be mapped
                     pred.append(cluster_id)
                     actual.append(self.actual.mention_to_entity_mapping[mention])
         return pred, actual
@@ -76,6 +78,8 @@ class AlignmentComparison:
             cluster_has_nil_entity = ent not in self.actual.known_entities
             if nil_flag is None or nil_flag == cluster_has_nil_entity:
                 for mention in mentions:
+                    if mention not in self.actual.mention_to_entity_mapping:
+                        continue  # ignore mentions that can't be mapped
                     pred.append(cluster_id)
                     actual.append(self.actual.mention_to_entity_mapping[mention])
         return pred, actual
