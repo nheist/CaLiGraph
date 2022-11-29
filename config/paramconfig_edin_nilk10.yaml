@@ -1,9 +1,9 @@
 approach: edin
 corpus: NILK
-sample_size: 50
+sample_size: 10
 # params
-mm_approach: [NILK50v1Fbi941]
-me_approach: [NILK50v1Fbi941, NILK50v1MEcr089]
+mm_approach: [NILK10v1Fbi820]
+me_approach: [NILK10v1Fbi820, NILK10v1MEcr316]
 mm_threshold: [0.75, 0.8, 0.85, 0.9, 0.95]
 me_threshold: [0.75, 0.8, 0.85, 0.9, 0.95]
 me_cluster_threshold: [0.7, 0.8, 0.9]
