@@ -35,12 +35,11 @@ def _disambiguate_subject_entity_mentions() -> Dict[int, Dict[int, Dict[int, int
 def _init_models() -> Tuple[BiEncoderMatcher, CrossEncoderMatcher, NastyLinker]:
     train_corpus, _, _ = get_data_corpora(CorpusType.LIST, 20)
     biencoder = BiEncoderMatcher(MatchingScenario.FULL, _get_biencoder_config())
-    if not biencoder.is_model_ready():
-        biencoder._train_model(train_corpus)
+    biencoder._train_model(train_corpus)
     crossencoder = CrossEncoderMatcher(MatchingScenario.MENTION_ENTITY, _get_crossencoder_config())
     if not crossencoder.is_model_ready():
         crossencoder.me_ca = {crossencoder.MODE_TRAIN: biencoder.predict(biencoder.MODE_TRAIN, train_corpus)}
-        crossencoder._train_model(train_corpus)
+    crossencoder._train_model(train_corpus)
     nastylinker = NastyLinker(MatchingScenario.FULL, _get_nastylinker_config())
     return biencoder, crossencoder, nastylinker
 
