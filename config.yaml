@@ -296,10 +296,10 @@ cache:
     version: 2
   cali2ax_axioms:
     filename: 'cali2ax-axioms'
-    version: 3
+    version: 4
   listing_page_entities:
     filename: 'listing-page-entities'
-    version: 3
+    version: 4
 
 # WIP
   word_blocker_exact:
