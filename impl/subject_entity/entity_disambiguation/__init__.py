@@ -46,18 +46,18 @@ def _init_models() -> Tuple[BiEncoderMatcher, CrossEncoderMatcher, NastyLinker]:
 
 
 def _get_biencoder_config() -> dict:
-    biencoder_id = 'biencoder_full'
+    be_id = 'biencoder_full'
     return {
-        'id': biencoder_id, 'base_model': biencoder_id, 'train_sample': 1, 'top_k': 4, 'ans': True,
+        'id': be_id, 'base_model': be_id, 'train_sample': 1, 'top_k': 4, 'approximate_neighbor_search': True,
         'add_page_context': True, 'add_text_context': False, 'add_entity_abstract': True, 'add_kg_info': False,
         'loss': 'SRL', 'batch_size': 384, 'epochs': 1, 'warmup_steps': 0
     }
 
 
 def _get_crossencoder_config() -> dict:
-    crossencoder_id = 'crossencoder_me'
+    ce_id = 'crossencoder_me'
     return {
-        'id': crossencoder_id, 'base_model': crossencoder_id, 'train_sample': 1,
+        'id': ce_id, 'base_model': ce_id, 'train_sample': 1,
         'add_page_context': True, 'add_text_context': False, 'add_entity_abstract': True, 'add_kg_info': False,
         'batch_size': 384, 'epochs': 1, 'warmup_steps': 0
     }
