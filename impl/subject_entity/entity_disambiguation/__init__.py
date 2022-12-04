@@ -1,5 +1,6 @@
 from typing import Dict, List, Set, Tuple, Optional
 from collections import defaultdict
+from functools import partial
 import utils
 from impl.dbpedia.resource import DbpResourceStore
 from impl.wikipedia import WikiPageStore, MentionId
@@ -20,7 +21,7 @@ def _disambiguate_subject_entity_mentions() -> Dict[int, Dict[int, Dict[int, int
     biencoder, crossencoder, nastylinker = _init_models()
     mention_clusters = _compute_mention_clusters(biencoder, crossencoder, nastylinker)
     # assign new entity IDs to mention clusters with unknown entity
-    disambiguated_subject_entities = defaultdict(lambda: defaultdict(dict))
+    disambiguated_subject_entities = defaultdict(partial(defaultdict, dict))
     current_entity_idx = DbpResourceStore.instance().get_highest_resource_idx()
     for mention_cluster, ent in mention_clusters:
         if ent is None:  # assigning new entity to cluster if it has none
