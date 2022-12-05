@@ -41,6 +41,8 @@ class BottomUpClusteringMatcher(MatcherWithCandidates):
                 c_one, c_two = clusters_by_mid[u], clusters_by_mid[v]
                 if c_one.entity is not None and c_two.entity is not None:
                     continue
+                if len(c_one.mentions) < len(c_two.mentions):
+                    c_one, c_two = c_two, c_one  # merge smaller cluster into bigger one
                 c_one.mentions = c_one.mentions | c_two.mentions
                 if c_one.entity is None:
                     c_one.entity = c_two.entity
