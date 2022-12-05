@@ -43,13 +43,14 @@ class BottomUpClusteringMatcher(MatcherWithCandidates):
 
     def _init_clusters_and_edges(self, eval_mode: str) -> Tuple[Dict[MentionId, Cluster], List[Tuple[MentionId, Union[MentionId, int]]]]:
         utils.get_logger().debug('Initializing base graph..')
+        clusters_by_mid = {}
         # find best entity match per mention
         me_edges = defaultdict(dict)
         for (m_id, e_id), score in self.me_ca[eval_mode].get_me_candidates(True):
+            if m_id not in clusters_by_mid:
+                clusters_by_mid[m_id] = Cluster({m_id}, None)
             if score > self.me_threshold:
                 me_edges[m_id][e_id] = score
-        # init clusters
-        clusters_by_mid = {m_id: Cluster({m_id}, None) for m_id in me_edges}
         # collect all potential edges
         edges = [(m_id, *max(ent_scores.items(), key=lambda x: x[1])) for m_id, ent_scores in me_edges.items()]
         for (m_one, m_two), score in self.mm_ca[eval_mode].get_mm_candidates(True):
