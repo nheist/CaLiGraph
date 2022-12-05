@@ -1,5 +1,5 @@
 from typing import Tuple, List, Union, Optional, Set, Iterable
-import numpy as np
+from tqdm import tqdm
 import networkx as nx
 import utils
 from impl.wikipedia import MentionId
@@ -23,7 +23,7 @@ class BottomUpClusteringMatcher(MatcherWithCandidates):
 
     def predict(self, eval_mode: str, data_corpus: DataCorpus) -> CandidateAlignment:
         ag, edges = self._get_base_graph_and_edges(eval_mode)
-        for u, v in edges:
+        for u, v in tqdm(edges, desc='Processing edges'):
             ag.add_edge(u, v)
             if self._has_invalid_subgraph(ag, u):
                 ag.remove_edge(u, v)
@@ -31,7 +31,7 @@ class BottomUpClusteringMatcher(MatcherWithCandidates):
         return CandidateAlignment(clusters)
 
     def _get_base_graph_and_edges(self, eval_mode: str) -> Tuple[nx.Graph, List[Tuple[MentionId, Union[MentionId, int]]]]:
-        utils.get_logger().debug('Initializing alignment graph..')
+        utils.get_logger().debug('Initializing base graph..')
         ag = nx.Graph()
         edges = []
         for (m_id, e_id), score in self.me_ca[eval_mode].get_me_candidates(True):
