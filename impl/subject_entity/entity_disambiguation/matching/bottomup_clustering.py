@@ -1,12 +1,14 @@
-from typing import Tuple, List, Union, Optional, Set, Iterable
-from collections import defaultdict
+from typing import Tuple, List, Union, Dict
+from collections import defaultdict, namedtuple
 from tqdm import tqdm
-import networkx as nx
 import utils
 from impl.wikipedia import MentionId
 from impl.subject_entity.entity_disambiguation.data import CandidateAlignment, DataCorpus
 from impl.subject_entity.entity_disambiguation.matching.util import MatchingScenario
 from impl.subject_entity.entity_disambiguation.matching.matcher import MatcherWithCandidates
+
+
+Cluster = namedtuple('Cluster', ['mentions', 'entity'])
 
 
 class BottomUpClusteringMatcher(MatcherWithCandidates):
@@ -23,53 +25,35 @@ class BottomUpClusteringMatcher(MatcherWithCandidates):
         pass  # no training necessary
 
     def predict(self, eval_mode: str, data_corpus: DataCorpus) -> CandidateAlignment:
-        ag, edges = self._get_base_graph_and_edges(eval_mode)
+        clusters_by_mid, edges = self._init_clusters_and_edges(eval_mode)
         for u, v in tqdm(edges, desc='Processing edges'):
-            ag.add_edge(u, v)
-            if self._has_invalid_subgraph(ag, u):
-                ag.remove_edge(u, v)
-        clusters = [(self._get_mention_nodes(sg), self._get_entity_node(sg)) for sg in self._get_subgraphs(ag)]
+            if isinstance(v, int):  # ME edge
+                c = clusters_by_mid[u]
+                if c.entity is None:
+                    c.entity = v
+            else:  # MM edge
+                c_one, c_two = clusters_by_mid[u], clusters_by_mid[v]
+                if c_one.entity is not None and c_two.entity is not None:
+                    continue
+                c_common = Cluster(c_one.mentions | c_two.mentions, c_one.entity if c_two.entity is None else c_two.entity)
+                for m_id in c_common.mentions:
+                    clusters_by_mid[m_id] = c_common
+        clusters = [(c.mentions, c.entity) for c in set(clusters_by_mid.values())]
         return CandidateAlignment(clusters)
 
-    def _get_base_graph_and_edges(self, eval_mode: str) -> Tuple[nx.Graph, List[Tuple[MentionId, Union[MentionId, int]]]]:
+    def _init_clusters_and_edges(self, eval_mode: str) -> Tuple[Dict[MentionId, Cluster], List[Tuple[MentionId, Union[MentionId, int]]]]:
         utils.get_logger().debug('Initializing base graph..')
-        ag = nx.Graph()
+        # find best entity match per mention
         me_edges = defaultdict(dict)
         for (m_id, e_id), score in self.me_ca[eval_mode].get_me_candidates(True):
-            ag.add_node(m_id, is_ent=False)
-            ag.add_node(e_id, is_ent=True)
             if score > self.me_threshold:
                 me_edges[m_id][e_id] = score
+        # init clusters
+        clusters_by_mid = {m_id: Cluster({m_id}, None) for m_id in me_edges}
+        # collect all potential edges
         edges = [(m_id, *max(ent_scores.items(), key=lambda x: x[1])) for m_id, ent_scores in me_edges.items()]
         for (m_one, m_two), score in self.mm_ca[eval_mode].get_mm_candidates(True):
-            ag.add_node(m_one, is_ent=False)
-            ag.add_node(m_two, is_ent=False)
             if score > self.mm_threshold:
                 edges.append((m_one, m_two, score))
         ordered_edges = [(u, v) for u, v, _ in sorted(edges, key=lambda x: x[2], reverse=True)]
-        return ag, ordered_edges
-
-    def _has_invalid_subgraph(self, g: nx.Graph, node: MentionId) -> bool:
-        node_subgraph = g.subgraph(nx.node_connected_component(g, node))
-        return not self._is_valid_graph(node_subgraph)
-
-    def _is_valid_graph(self, ag: nx.Graph) -> bool:
-        return len(self._get_entity_nodes(ag)) <= 1
-
-    @classmethod
-    def _get_subgraphs(cls, g: nx.Graph) -> Iterable[nx.Graph]:
-        for nodes in nx.connected_components(g):
-            yield g.subgraph(nodes)
-
-    @classmethod
-    def _get_mention_nodes(cls, g: nx.Graph) -> Set[MentionId]:
-        return {node for node, is_ent in g.nodes(data='is_ent') if not is_ent}
-
-    @classmethod
-    def _get_entity_nodes(cls, g: nx.Graph) -> List[int]:
-        return [node for node, is_ent in g.nodes(data='is_ent') if is_ent]
-
-    @classmethod
-    def _get_entity_node(cls, g: nx.Graph) -> Optional[int]:
-        ent_nodes = cls._get_entity_nodes(g)
-        return ent_nodes[0] if ent_nodes else None
+        return clusters_by_mid, ordered_edges
