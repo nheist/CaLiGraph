@@ -30,7 +30,9 @@ class BottomUpClusteringMatcher(MatcherWithCandidates):
             if isinstance(v, int):  # ME edge
                 c = clusters_by_mid[u]
                 if c.entity is None:
-                    c.entity = v
+                    c_new = Cluster(c.mentions, v)
+                    for m_id in c_new.mentions:
+                        clusters_by_mid[m_id] = c_new
             else:  # MM edge
                 c_one, c_two = clusters_by_mid[u], clusters_by_mid[v]
                 if c_one.entity is not None and c_two.entity is not None:
