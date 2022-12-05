@@ -1,5 +1,5 @@
-from typing import Tuple, List, Union, Dict
-from collections import defaultdict, namedtuple
+from typing import Tuple, List, Union, Dict, Optional
+from collections import defaultdict
 from tqdm import tqdm
 import utils
 from impl.wikipedia import MentionId
@@ -8,7 +8,13 @@ from impl.subject_entity.entity_disambiguation.matching.util import MatchingScen
 from impl.subject_entity.entity_disambiguation.matching.matcher import MatcherWithCandidates
 
 
-Cluster = namedtuple('Cluster', ['mentions', 'entity'])
+class Cluster:
+    mentions: set
+    entity: Optional[int]
+
+    def __init__(self, mentions: set, entity: Optional[int]):
+        self.mentions = mentions
+        self.entity = entity
 
 
 class BottomUpClusteringMatcher(MatcherWithCandidates):
@@ -30,16 +36,16 @@ class BottomUpClusteringMatcher(MatcherWithCandidates):
             if isinstance(v, int):  # ME edge
                 c = clusters_by_mid[u]
                 if c.entity is None:
-                    c_new = Cluster(c.mentions, v)
-                    for m_id in c_new.mentions:
-                        clusters_by_mid[m_id] = c_new
+                    c.entity = v
             else:  # MM edge
                 c_one, c_two = clusters_by_mid[u], clusters_by_mid[v]
                 if c_one.entity is not None and c_two.entity is not None:
                     continue
-                c_common = Cluster(c_one.mentions | c_two.mentions, c_one.entity if c_two.entity is None else c_two.entity)
-                for m_id in c_common.mentions:
-                    clusters_by_mid[m_id] = c_common
+                c_one.mentions = c_one.mentions | c_two.mentions
+                if c_one.entity is None:
+                    c_one.entity = c_two.entity
+                for m_id in c_two.mentions:
+                    clusters_by_mid[m_id] = c_one
         clusters = [(c.mentions, c.entity) for c in set(clusters_by_mid.values())]
         return CandidateAlignment(clusters)
 
