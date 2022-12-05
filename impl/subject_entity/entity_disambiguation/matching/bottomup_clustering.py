@@ -1,4 +1,5 @@
 from typing import Tuple, List, Union, Optional, Set, Iterable
+import numpy as np
 import networkx as nx
 import utils
 from impl.wikipedia import MentionId
@@ -27,7 +28,9 @@ class BottomUpClusteringMatcher(MatcherWithCandidates):
             if self._has_invalid_subgraph(ag, u):
                 ag.remove_edge(u, v)
         clusters = [(self._get_mention_nodes(sg), self._get_entity_node(sg)) for sg in self._get_subgraphs(ag)]
-        return CandidateAlignment(clusters)
+        print('Cluster count ', len(clusters))
+        print('Avg size ', np.mean([len(c[0]) for c in clusters]))
+        return CandidateAlignment()
 
     def _get_base_graph_and_edges(self, eval_mode: str) -> Tuple[nx.Graph, List[Tuple[MentionId, Union[MentionId, int]]]]:
         utils.get_logger().debug('Initializing alignment graph..')
