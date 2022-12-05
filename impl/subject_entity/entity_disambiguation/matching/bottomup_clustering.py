@@ -28,30 +28,28 @@ class BottomUpClusteringMatcher(MatcherWithCandidates):
             if self._has_invalid_subgraph(ag, u):
                 ag.remove_edge(u, v)
         clusters = [(self._get_mention_nodes(sg), self._get_entity_node(sg)) for sg in self._get_subgraphs(ag)]
-        print('Cluster count ', len(clusters))
-        print('Avg size ', np.mean([len(c[0]) for c in clusters]))
-        return CandidateAlignment()
+        return CandidateAlignment(clusters)
 
     def _get_base_graph_and_edges(self, eval_mode: str) -> Tuple[nx.Graph, List[Tuple[MentionId, Union[MentionId, int]]]]:
         utils.get_logger().debug('Initializing alignment graph..')
         ag = nx.Graph()
         edges = []
         for (m_id, e_id), score in self.me_ca[eval_mode].get_me_candidates(True):
+            ag.add_node(m_id, is_ent=False)
+            ag.add_node(e_id, is_ent=True)
             if score > self.me_threshold:
-                ag.add_node(m_id, is_ent=False)
-                ag.add_node(e_id, is_ent=True)
                 edges.append((m_id, e_id, score))
         for (m_one, m_two), score in self.mm_ca[eval_mode].get_mm_candidates(True):
+            ag.add_node(m_one, is_ent=False)
+            ag.add_node(m_two, is_ent=False)
             if score > self.mm_threshold:
-                ag.add_node(m_one, is_ent=False)
-                ag.add_node(m_two, is_ent=False)
                 edges.append((m_one, m_two, score))
         ordered_edges = [(u, v) for u, v, _ in sorted(edges, key=lambda x: x[2], reverse=True)]
         return ag, ordered_edges
 
     def _has_invalid_subgraph(self, g: nx.Graph, node: MentionId) -> bool:
         node_subgraph = g.subgraph(nx.node_connected_component(g, node))
-        return self._is_valid_graph(node_subgraph)
+        return not self._is_valid_graph(node_subgraph)
 
     def _is_valid_graph(self, ag: nx.Graph) -> bool:
         return len(self._get_entity_nodes(ag)) <= 1
