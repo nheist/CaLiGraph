@@ -5,6 +5,7 @@ from impl.subject_entity.entity_disambiguation.matching.graph import PopularityM
 from impl.subject_entity.entity_disambiguation.matching.biencoder import BiEncoderMatcher
 from impl.subject_entity.entity_disambiguation.matching.crossencoder import CrossEncoderMatcher
 from impl.subject_entity.entity_disambiguation.matching.greedy_clustering import NastyLinker, EdinMatcher
+from impl.subject_entity.entity_disambiguation.matching.bottomup_clustering import BottomUpClusteringMatcher
 import utils
 
 
@@ -26,6 +27,8 @@ def initialize_matcher(scenario: MatchingScenario, approach: MatchingApproach, p
         matcher_factory = NastyLinker
     elif approach == MatchingApproach.EDIN:
         matcher_factory = EdinMatcher
+    elif approach == MatchingApproach.BOTTOM_UP_CLUSTERING:
+        matcher_factory = BottomUpClusteringMatcher
     else:
         raise ValueError(f'Matching approach not implemented: {approach.value}')
     return matcher_factory(scenario, params)

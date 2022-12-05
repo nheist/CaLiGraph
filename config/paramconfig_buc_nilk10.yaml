@@ -1,0 +1,8 @@
+approach: buc
+corpus: NILK
+sample_size: 10
+# params
+mm_approach: [NILK10v1Fbi820]
+me_approach: [NILK10v1Fbi820, NILK10v1MEcr316]
+mm_threshold: [0.6, 0.7, 0.8, 0.9]
+me_threshold: [0.6, 0.7, 0.8, 0.9]

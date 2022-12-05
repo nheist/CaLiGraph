@@ -22,3 +22,4 @@ class MatchingApproach(Enum):
     POPULARITY = 'popularity'  # ME only!
     NASTY_LINKER = 'nl'
     EDIN = 'edin'
+    BOTTOM_UP_CLUSTERING = 'buc'
