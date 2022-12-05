@@ -1,4 +1,5 @@
 from typing import Tuple, List, Union, Optional, Set, Iterable
+from collections import defaultdict
 from tqdm import tqdm
 import networkx as nx
 import utils
@@ -33,12 +34,13 @@ class BottomUpClusteringMatcher(MatcherWithCandidates):
     def _get_base_graph_and_edges(self, eval_mode: str) -> Tuple[nx.Graph, List[Tuple[MentionId, Union[MentionId, int]]]]:
         utils.get_logger().debug('Initializing base graph..')
         ag = nx.Graph()
-        edges = []
+        me_edges = defaultdict(dict)
         for (m_id, e_id), score in self.me_ca[eval_mode].get_me_candidates(True):
             ag.add_node(m_id, is_ent=False)
             ag.add_node(e_id, is_ent=True)
             if score > self.me_threshold:
-                edges.append((m_id, e_id, score))
+                me_edges[m_id][e_id] = score
+        edges = [(m_id, *max(ent_scores.items(), key=lambda x: x[1])) for m_id, ent_scores in me_edges.items()]
         for (m_one, m_two), score in self.mm_ca[eval_mode].get_mm_candidates(True):
             ag.add_node(m_one, is_ent=False)
             ag.add_node(m_two, is_ent=False)
