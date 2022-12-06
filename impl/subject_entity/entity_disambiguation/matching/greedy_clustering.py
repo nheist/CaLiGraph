@@ -62,10 +62,10 @@ class NastyLinker(GreedyClusteringMatcher):
         utils.get_logger().debug('Computing valid subgraphs..')
         valid_subgraphs = []
         for sg in self._get_subgraphs(ag):
-            if len(self._get_entity_nodes(sg)) == 0:
-                valid_subgraphs.append(sg)
-            else:
-                valid_subgraphs.extend(self._split_into_valid_subgraphs(sg))
+#            if self._is_valid_graph(sg):
+#                valid_subgraphs.append(sg)
+#            else:
+            valid_subgraphs.extend(self._split_into_valid_subgraphs(sg))
         return valid_subgraphs
 
     def _is_valid_graph(self, ag: nx.Graph) -> bool:
