@@ -3,7 +3,6 @@ from abc import ABC
 from collections import defaultdict, Counter
 import networkx as nx
 import math
-from tqdm import tqdm
 import utils
 from impl.wikipedia import MentionId
 from impl.subject_entity.entity_disambiguation.data import CandidateAlignment, DataCorpus
@@ -62,7 +61,7 @@ class NastyLinker(GreedyClusteringMatcher):
     def _compute_valid_subgraphs(self, ag: nx.Graph) -> List[nx.Graph]:
         utils.get_logger().debug('Computing valid subgraphs..')
         valid_subgraphs = []
-        for sg in tqdm(self._get_subgraphs(ag), desc='Processing subgraphs'):
+        for sg in self._get_subgraphs(ag):
             if len(self._get_entity_nodes(sg)) == 0:
                 valid_subgraphs.append(sg)
             else:
@@ -82,6 +81,7 @@ class NastyLinker(GreedyClusteringMatcher):
         return [node for node, is_ent in g.nodes(data='is_ent') if is_ent]
 
     def _split_into_valid_subgraphs(self, ag: nx.Graph) -> List[nx.Graph]:
+        utils.get_logger().debug(f'Splitting graph of size {len(ag.nodes)} into valid subgraphs..')
         ent_groups = defaultdict(set)
         unassigned_mentions = set()
         distances, paths = nx.multi_source_dijkstra(ag, self._get_entity_nodes(ag), weight=_to_dijkstra_node_weight)

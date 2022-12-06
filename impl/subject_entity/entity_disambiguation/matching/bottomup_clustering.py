@@ -94,7 +94,7 @@ class BottomUpClusteringMatcher(MatcherWithCandidates):
 
     def _filter_clusters_by_path_similarity(self, ag: nx.Graph, clusters: Set[Cluster], me_edges: dict) -> Set[Cluster]:
         filtered_clusters = set()
-        for c in tqdm(clusters, desc='Filtering clusters'):
+        for c in clusters:
             if c.entity is None:
                 filtered_clusters.add(c)
                 continue
