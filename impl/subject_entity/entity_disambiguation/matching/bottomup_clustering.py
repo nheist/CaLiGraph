@@ -1,4 +1,4 @@
-from typing import Tuple, List, Union, Dict, Optional
+from typing import Tuple, List, Union, Dict, Optional, Set
 from collections import defaultdict
 from tqdm import tqdm
 import utils
@@ -48,8 +48,8 @@ class BottomUpClusteringMatcher(MatcherWithCandidates):
                     c_one.entity = c_two.entity
                 for m_id in c_two.mentions:
                     clusters_by_mid[m_id] = c_one
-        clusters = [(c.mentions, c.entity) for c in set(clusters_by_mid.values())]
-        return CandidateAlignment(clusters)
+        clusters = self._collapse_clusters(set(clusters_by_mid.values()))
+        return CandidateAlignment([(c.mentions, c.entity) for c in clusters])
 
     def _init_clusters_and_edges(self, eval_mode: str) -> Tuple[Dict[MentionId, Cluster], List[Tuple[MentionId, Union[MentionId, int]]]]:
         utils.get_logger().debug('Initializing base graph..')
@@ -68,3 +68,16 @@ class BottomUpClusteringMatcher(MatcherWithCandidates):
                 edges.append((m_one, m_two, score))
         ordered_edges = [(u, v) for u, v, _ in sorted(edges, key=lambda x: x[2], reverse=True)]
         return clusters_by_mid, ordered_edges
+
+    @classmethod
+    def _collapse_clusters(cls, clusters: Set[Cluster]) -> Set[Cluster]:
+        cluster_by_ent = defaultdict(set)
+        for c in clusters:
+            cluster_by_ent[c.entity].add(c)
+        collapsed_clusters = set()
+        for ent, clusters in cluster_by_ent.items():
+            if ent is None:
+                collapsed_clusters.update(clusters)
+            else:
+                collapsed_clusters.add(Cluster({m for c in clusters for m in c.mentions}, ent))
+        return collapsed_clusters
