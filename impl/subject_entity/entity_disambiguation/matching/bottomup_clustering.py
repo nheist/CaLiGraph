@@ -1,9 +1,9 @@
-from typing import Optional, Set
+from typing import List, Optional, Set, Iterable
 from collections import defaultdict
 from tqdm import tqdm
-import math
 import networkx as nx
 import utils
+from impl.wikipedia import MentionId
 from impl.subject_entity.entity_disambiguation.data import CandidateAlignment, DataCorpus
 from impl.subject_entity.entity_disambiguation.matching.util import MatchingScenario
 from impl.subject_entity.entity_disambiguation.matching.matcher import MatcherWithCandidates
@@ -25,7 +25,6 @@ class BottomUpClusteringMatcher(MatcherWithCandidates):
         self.mm_threshold = params['mm_threshold']
         self.me_threshold = params['me_threshold']
         self.me_cluster_threshold = params['me_cluster_threshold']
-        self.path_threshold = params['path_threshold']
 
     def _get_param_dict(self) -> dict:
         return super()._get_param_dict() | {'mmt': self.mm_threshold, 'met': self.me_threshold, 'mct': self.me_cluster_threshold}
@@ -68,11 +67,8 @@ class BottomUpClusteringMatcher(MatcherWithCandidates):
                 for m_id in c_two.mentions:
                     clusters_by_mid[m_id] = c_one
         clusters = set(clusters_by_mid.values())
-        if self.path_threshold > 0 and self.me_cluster_threshold > 0:
-            ag = self._get_alignment_graph(eval_mode)
-            clusters = self._filter_clusters_by_path_similarity(ag, clusters, me_edges)
-        elif self.me_cluster_threshold > 0:
-            clusters = self._filter_clusters_by_entity_frequency(clusters, me_edges)
+        if self.me_cluster_threshold > 0:
+            self._filter_clusters_by_entity_frequency(clusters, me_edges)
         clusters = self._collapse_clusters(clusters)
         # initialize and return candidate alignment
         return CandidateAlignment([(c.mentions, c.entity) for c in clusters])
@@ -90,36 +86,12 @@ class BottomUpClusteringMatcher(MatcherWithCandidates):
                 collapsed_clusters.add(Cluster({m for c in clusters for m in c.mentions}, ent))
         return collapsed_clusters
 
-    def _filter_clusters_by_path_similarity(self, ag: nx.Graph, clusters: Set[Cluster], me_edges: dict) -> Set[Cluster]:
-        filtered_clusters = set()
-        for c in clusters:
-            if c.entity is None:
-                filtered_clusters.add(c)
-                continue
-            ent_count = sum(1 for m in c.mentions if m in me_edges and c.entity == me_edges[m][0])
-            ent_freq = ent_count / len(c.mentions)
-            if ent_freq > self.me_cluster_threshold:
-                filtered_clusters.add(c)
-                continue
-            filtered_clusters.update(self._split_into_valid_subclusters(ag, c))
-        return filtered_clusters
-
-    def _split_into_valid_subclusters(self, ag: nx.Graph, cluster: Cluster) -> Set[Cluster]:
-        sg = ag.subgraph(cluster.mentions | {cluster.entity})
-        threshold = _to_dijkstra_node_weight(None, None, self.path_threshold)
-        ent_mentions = set(nx.single_source_dijkstra_path(sg, cluster.entity, weight=_to_dijkstra_node_weight, cutoff=threshold))
-        clusters = {Cluster(ent_mentions, cluster.entity)}
-        unassigned_mentions = cluster.mentions.difference(ent_mentions)
-        clusters.update({Cluster(mentions, None) for mentions in nx.connected_components(ag.subgraph(unassigned_mentions))})
-        return clusters
-
-    def _filter_clusters_by_entity_frequency(self, clusters: Set[Cluster], me_edges: dict) -> Set[Cluster]:
+    def _filter_clusters_by_entity_frequency(self, clusters: Set[Cluster], me_edges: dict):
         for c in clusters:
             ent_count = sum(1 for m in c.mentions if m in me_edges and c.entity == me_edges[m][0])
             ent_freq = ent_count / len(c.mentions)
             if ent_freq <= self.me_cluster_threshold:
                 c.entity = None
-        return clusters
 
     def _get_alignment_graph(self, eval_mode: str) -> nx.Graph:
         utils.get_logger().debug('Initializing alignment graph..')
@@ -132,6 +104,19 @@ class BottomUpClusteringMatcher(MatcherWithCandidates):
         ag.add_weighted_edges_from([(u, v, min(score, 1)) for (u, v), score in self.mm_ca[eval_mode].get_mm_candidates(True) if score > self.mm_threshold])
         return ag
 
+    @classmethod
+    def _get_entity_node(cls, g: nx.Graph) -> Optional[int]:
+        ent_nodes = cls._get_entity_nodes(g)
+        return ent_nodes[0] if ent_nodes else None
 
-def _to_dijkstra_node_weight(u, v, attrs: dict) -> float:
-    return -math.log2(attrs['weight'])
+    @classmethod
+    def _get_entity_nodes(cls, g: nx.Graph) -> List[int]:
+        return [node for node, is_ent in g.nodes(data='is_ent') if is_ent]
+
+    @classmethod
+    def _get_mention_nodes(cls, g: nx.Graph) -> Set[MentionId]:
+        return {node for node, is_ent in g.nodes(data='is_ent') if not is_ent}
+
+    def _get_subgraphs(self, ag: nx.Graph) -> Iterable[nx.Graph]:
+        for nodes in nx.connected_components(ag):
+            yield ag.subgraph(nodes)
