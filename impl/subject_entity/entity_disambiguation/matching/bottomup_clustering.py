@@ -98,11 +98,11 @@ class BottomUpClusteringMatcher(MatcherWithCandidates):
             if c.entity is None:
                 filtered_clusters.add(c)
                 continue
-#            ent_count = sum(1 for m in c.mentions if m in me_edges and c.entity == me_edges[m][0])
-#            ent_freq = ent_count / len(c.mentions)
-#            if ent_freq > self.me_cluster_threshold:
-#                filtered_clusters.add(c)
-#                continue
+            ent_count = sum(1 for m in c.mentions if m in me_edges and c.entity == me_edges[m][0])
+            ent_freq = ent_count / len(c.mentions)
+            if ent_freq > self.me_cluster_threshold:
+                filtered_clusters.add(c)
+                continue
             filtered_clusters.update(self._split_into_valid_subclusters(ag, c))
         return filtered_clusters
 
