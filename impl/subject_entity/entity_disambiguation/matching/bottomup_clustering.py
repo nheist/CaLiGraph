@@ -82,7 +82,8 @@ class BottomUpClusteringMatcher(MatcherWithCandidates):
         for ent, clusters in cluster_by_ent.items():
             if ent is None:
                 collapsed_clusters.update(clusters)
-            collapsed_clusters.add(Cluster({m for c in clusters for m in c.mentions}, ent))
+            else:
+                collapsed_clusters.add(Cluster({m for c in clusters for m in c.mentions}, ent))
         return collapsed_clusters
 
     def _filter_clusters_by_entity_frequency(self, clusters: Set[Cluster], me_edges: dict):
