@@ -29,8 +29,7 @@ class BottomUpClusteringMatcher(MatcherWithCandidates):
         self.path_threshold = params['path_threshold']
 
     def _get_param_dict(self) -> dict:
-        params = {'mmt': self.mm_threshold, 'met': self.me_threshold, 'mct': self.me_cluster_threshold, 'pt': self.path_threshold}
-        return super()._get_param_dict() | params
+        return super()._get_param_dict() | {'mmt': self.mm_threshold, 'met': self.me_threshold, 'mct': self.me_cluster_threshold}
 
     def _train_model(self, train_corpus: DataCorpus):
         pass  # no training necessary
