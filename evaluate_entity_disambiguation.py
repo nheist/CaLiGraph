@@ -41,7 +41,7 @@ if __name__ == '__main__':
     parser.add_argument('--mm_threshold', type=float, default=0.0, help="Confidence threshold to filter MM predictions.")
     parser.add_argument('--me_threshold', type=float, default=0.0, help="Confidence threshold to filter ME predictions.")
     parser.add_argument('--path_threshold', type=float, default=0.0, help="Confidence threshold to filter graph paths (NastyLinker only).")
-    parser.add_argument('--me_cluster_threshold', type=float, default=0.7, help="Confidence threshold to filter graph paths (EDIN only).")
+    parser.add_argument('--me_cluster_threshold', type=float, default=0.0, help="Confidence threshold to filter graph paths (EDIN only).")
 
     args = parser.parse_args()
     # and set necessary environment variables
