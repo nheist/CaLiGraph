@@ -4,6 +4,7 @@ from tqdm import tqdm
 import math
 import networkx as nx
 import utils
+from impl.wikipedia import MentionId
 from impl.subject_entity.entity_disambiguation.data import CandidateAlignment, DataCorpus
 from impl.subject_entity.entity_disambiguation.matching.util import MatchingScenario
 from impl.subject_entity.entity_disambiguation.matching.matcher import MatcherWithCandidates
@@ -107,6 +108,7 @@ class BottomUpClusteringMatcher(MatcherWithCandidates):
     def _split_into_valid_subclusters(self, ag: nx.Graph, cluster: Cluster) -> Set[Cluster]:
         sg = ag.subgraph(cluster.mentions | {cluster.entity})
         ent_mentions = set(nx.single_source_dijkstra_path(sg, cluster.entity, weight=_to_dijkstra_node_weight, cutoff=-math.log2(self.path_threshold)))
+        ent_mentions = {m for m in ent_mentions if isinstance(m, MentionId)}  # get rid of potential entity id
         clusters = {Cluster(ent_mentions, cluster.entity)}
         unassigned_mentions = cluster.mentions.difference(ent_mentions)
         clusters.update({Cluster(mentions, None) for mentions in nx.connected_components(ag.subgraph(unassigned_mentions))})
