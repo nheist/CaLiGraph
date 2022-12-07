@@ -66,7 +66,7 @@ class BottomUpClusteringMatcher(MatcherWithCandidates):
         for (m_one, m_two), score in self.mm_ca[eval_mode].get_mm_candidates(True):
             if score > self.mm_threshold:
                 edges.append((m_one, m_two, score))
-        ordered_edges = [(u, v) for u, v, _ in sorted(edges, key=lambda x: x[2], reverse=True)]
+        ordered_edges = [(u, v) for u, v, _ in sorted(edges, key=lambda x: x[1], reverse=True)]
         return clusters_by_mid, ordered_edges
 
     @classmethod
