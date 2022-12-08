@@ -169,7 +169,7 @@ def _get_type_surface_scores(words: list, lemmatize=True) -> Dict[DbpType, float
     for lemma in word_lemmas:
         for t, score in dbo.get_type_lexicalisations(lemma).items():
             lexicalisation_scores[t] += score
-    type_surface_scores = defaultdict(float, {t: score / lexicalisation_scores.total() for t, score in lexicalisation_scores.items()})
+    type_surface_scores = defaultdict(float, {t: score / sum(lexicalisation_scores.values()) for t, score in lexicalisation_scores.items()})
 
     # make sure that exact matches get at least appropriate probability
     for lemma in word_lemmas:

@@ -193,7 +193,7 @@ class DbpResourceStore:
                 if res != redirect_res:
                     sf_reference_counts[lex][redirect_res] += sf_reference_counts[lex][res]
                     del sf_reference_counts[lex][res]
-        sf_reference_frequencies = {sub: {obj.idx: count / obj_counts.total() for obj, count in obj_counts.items()} for sub, obj_counts in sf_reference_counts.items()}
+        sf_reference_frequencies = {sub: {obj.idx: count / sum(obj_counts.values()) for obj, count in obj_counts.items()} for sub, obj_counts in sf_reference_counts.items()}
         return sf_reference_frequencies
 
     def get_abstract(self, res: DbpResource) -> Optional[str]:
