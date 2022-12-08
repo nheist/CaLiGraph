@@ -6,6 +6,7 @@ from impl.dbpedia.resource import DbpResourceStore
 from impl.wikipedia import WikiPageStore, MentionId
 from impl.subject_entity.entity_disambiguation.matching.util import MatchingScenario
 from impl.subject_entity.entity_disambiguation.data import get_listing_prediction_corpus, get_data_corpora, CorpusType
+from impl.subject_entity.entity_disambiguation.matching.io import store_candidate_alignment
 from impl.subject_entity.entity_disambiguation.matching.biencoder import BiEncoderMatcher
 from impl.subject_entity.entity_disambiguation.matching.crossencoder import CrossEncoderMatcher
 from impl.subject_entity.entity_disambiguation.matching.greedy_clustering import NastyLinker
@@ -71,8 +72,10 @@ def _compute_mention_clusters(biencoder: BiEncoderMatcher, crossencoder: CrossEn
     # make predictions
     corpus = get_listing_prediction_corpus()
     biencoder_ca = biencoder.predict(biencoder.MODE_PREDICT, corpus)
+    store_candidate_alignment(biencoder.id, {biencoder.MODE_PREDICT: biencoder_ca})
     crossencoder.me_ca = {crossencoder.MODE_PREDICT: biencoder_ca}
     crossencoder_ca = crossencoder.predict(crossencoder.MODE_PREDICT, corpus)
+    store_candidate_alignment(crossencoder.id, {crossencoder.MODE_PREDICT: crossencoder_ca})
     nastylinker.mm_ca = {nastylinker.MODE_PREDICT: biencoder_ca}
     nastylinker.me_ca = {nastylinker.MODE_PREDICT: crossencoder_ca}
     nastylinker_ca = nastylinker.predict(nastylinker.MODE_PREDICT, corpus)
