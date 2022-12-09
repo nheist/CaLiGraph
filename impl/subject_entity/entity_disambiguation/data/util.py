@@ -140,7 +140,7 @@ class DataCorpus(ABC):
         pass
 
     @abstractmethod
-    def get_mention_input(self, add_page_context: bool, add_text_context: bool) -> Tuple[Dict[MentionId, str], Dict[MentionId, bool]]:
+    def get_mention_input(self, add_page_context: bool, add_text_context: bool) -> Dict[MentionId, str]:
         pass
 
     @abstractmethod

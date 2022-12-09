@@ -85,7 +85,7 @@ class BiEncoderMatcher(Matcher):
         raise ValueError(f'Unknown loss identifier: {self.loss}')
 
     def predict(self, eval_mode: str, data_corpus: DataCorpus) -> CandidateAlignment:
-        mention_input, mention_known = data_corpus.get_mention_input(self.add_page_context, self.add_text_context)
+        mention_input = data_corpus.get_mention_input(self.add_page_context, self.add_text_context)
         mention_ids = list(mention_input)
         # compute embeddings
         mention_embeddings = self._compute_embeddings(list(mention_input.values()))
@@ -97,13 +97,10 @@ class BiEncoderMatcher(Matcher):
         # find nearest neighbors
         ca = CandidateAlignment()
         if self.scenario.is_mention_mention():
-            known_mask = [mention_known[m_id] for m_id in mention_ids]
-            known_mention_ids = [m_id for m_id, known in zip(mention_ids, known_mask) if known]
-            known_mention_embeddings = mention_embeddings[known_mask]
             if self.ans:
-                transformer_util.approximate_semantic_search(ca, known_mention_embeddings, known_mention_embeddings, known_mention_ids, known_mention_ids, top_k=self.top_k + 1)
+                transformer_util.approximate_semantic_search(ca, mention_embeddings, mention_embeddings, mention_ids, mention_ids, top_k=self.top_k + 1)
             else:
-                transformer_util.semantic_search(ca, known_mention_embeddings, known_mention_embeddings, known_mention_ids, known_mention_ids, top_k=self.top_k + 1)
+                transformer_util.semantic_search(ca, mention_embeddings, mention_embeddings, mention_ids, mention_ids, top_k=self.top_k + 1)
         if self.scenario.is_mention_entity():
             if self.ans:
                 transformer_util.approximate_semantic_search(ca, mention_embeddings, self.entity_embeddings, mention_ids, self.entity_ids, top_k=self.top_k)

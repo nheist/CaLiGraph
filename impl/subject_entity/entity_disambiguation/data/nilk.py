@@ -34,17 +34,15 @@ class NilkDataCorpus(DataCorpus):
     def get_mention_labels(self, discard_unknown: bool = False) -> Dict[MentionId, str]:
         return self.mention_labels
 
-    def get_mention_input(self, add_page_context: bool, add_text_context: int) -> Tuple[Dict[MentionId, str], Dict[MentionId, bool]]:
+    def get_mention_input(self, add_page_context: bool, add_text_context: int) -> Dict[MentionId, str]:
         result = {}
-        result_ent_known = {}
         for m_id, label in tqdm(self.mention_labels.items(), desc='Preparing mention input'):
             result[m_id] = label
             if add_page_context:
                 result[m_id] += self._prepare_page_context(self.mention_pages[m_id])
             if add_text_context:
                 result[m_id] += f' {CXE} {self.mention_left_text[m_id]} {TXS} {self.mention_right_text[m_id]}'
-            result_ent_known[m_id] = True
-        return result, result_ent_known
+        return result
 
     @classmethod
     def _prepare_page_context(cls, page_idx: int) -> str:

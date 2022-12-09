@@ -35,18 +35,16 @@ class ListingDataCorpus(DataCorpus):
                 mention_labels[mention_id] = item.subject_entity.label
         return mention_labels
 
-    def get_mention_input(self, add_page_context: bool, add_text_context: bool) -> Tuple[Dict[MentionId, str], Dict[MentionId, bool]]:
+    def get_mention_input(self, add_page_context: bool, add_text_context: bool) -> Dict[MentionId, str]:
         utils.get_logger().debug('Preparing mention input..')
         result = {}
-        result_ent_known = {}
         if not add_page_context and not add_text_context:
             for l in self.get_listings():
                 for i in l.get_items(has_subject_entity=True):
                     mention_id = MentionId(l.page_idx, l.idx, i.idx)
                     se = i.subject_entity
                     result[mention_id] = f'{se.label} {SpecialToken.get_type_token(se.entity_type)}'
-                    result_ent_known[mention_id] = se.entity_idx != EntityIndex.NEW_ENTITY
-            return result, result_ent_known
+            return result
         for listing in self.get_listings():
             prepared_context = self._prepare_listing_context(listing)
             prepared_items = [self._prepare_listing_item(item) for item in listing.get_items()]
@@ -58,8 +56,7 @@ class ListingDataCorpus(DataCorpus):
                 # add item and `add_text_context` subsequent items (add items from start if no subsequent items left)
                 item_content += ''.join(islice(cycle(prepared_items), idx, idx + add_text_context + 1))
                 result[mention_id] = item_content
-                result_ent_known[mention_id] = item_se.entity_idx != EntityIndex.NEW_ENTITY
-        return result, result_ent_known
+        return result
 
     @classmethod
     def _prepare_listing_context(cls, listing: WikiListing) -> str:
