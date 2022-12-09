@@ -3,7 +3,7 @@ import configargparse
 import os
 
 
-VERSION = 1
+VERSION = 2
 
 
 if __name__ == '__main__':
