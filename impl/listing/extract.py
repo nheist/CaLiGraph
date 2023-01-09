@@ -40,10 +40,10 @@ def extract_listing_entity_information() -> Dict[ClgEntity, Dict[Tuple[DbpResour
                 ent_idx = row['E_ent']
                 page_entities[ent_idx][origin]['labels'].add(row['E_text'])
                 page_entities[ent_idx][origin]['types'].update(clg_types)
-
     df = df.loc[df['P_type'] != context.PAGE_TYPE_LIST]  # ignore list pages in subsequent steps
 
     # compute valid combinations of types and NE tags
+    get_logger().debug('Preparing data for type and relation extraction..')
     df_types = context.get_entity_types(df)
     dft = pd.merge(left=df, right=df_types, on='E_ent')
     valid_tags = context.get_valid_tags_for_entity_types(dft, utils.get_config('listing.valid_tag_threshold'))
