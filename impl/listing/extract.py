@@ -30,7 +30,7 @@ def extract_listing_entity_information() -> Dict[ClgEntity, Dict[Tuple[DbpResour
 
     # extract list page entities
     get_logger().debug('Extracting types of list page entities..')
-    df_lps = df[df['P_type'] == 'List']
+    df_lps = df[df['P_type'] == context.PAGE_TYPE_LIST]
     for lp_idx, df_lp in df_lps.groupby(by='P'):
         origin = _get_origin(lp_idx, None)
         lp = dbr.get_resource_by_idx(lp_idx)
@@ -41,7 +41,7 @@ def extract_listing_entity_information() -> Dict[ClgEntity, Dict[Tuple[DbpResour
                 page_entities[ent_idx][origin]['labels'].add(row['E_text'])
                 page_entities[ent_idx][origin]['types'].update(clg_types)
 
-    df = df.loc[df['P_type'] != 'List']  # ignore list pages in subsequent steps
+    df = df.loc[df['P_type'] != context.PAGE_TYPE_LIST]  # ignore list pages in subsequent steps
 
     # compute valid combinations of types and NE tags
     df_types = context.get_entity_types(df)

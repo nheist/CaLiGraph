@@ -8,6 +8,10 @@ from impl.caligraph.ontology import ClgType, ClgOntologyStore
 from impl.caligraph.entity import ClgEntity, ClgEntityStore
 
 
+PAGE_TYPE_LIST = -1
+PAGE_TYPE_OTHER = -2
+
+
 # RETRIEVE ENTITY CONTEXT ON PAGES
 
 def retrieve_page_entity_context() -> pd.DataFrame:
@@ -82,22 +86,22 @@ def _align_section_entity_types(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def _assign_pagetypes(df: pd.DataFrame) -> pd.DataFrame:
-    """Assign (most basic and most specific) page types to the existing dataframe."""
+    """Assign the most basic page types to the existing dataframe."""
     dbr = DbpResourceStore.instance()
     data = []
     for page_idx in df['P'].unique():
         res = dbr.get_resource_by_idx(page_idx)
         if isinstance(res, DbpListpage):
-            data.append((page_idx, 'List', 'List'))
+            data.append((page_idx, PAGE_TYPE_LIST))
             continue
         page_types = res.get_independent_types()
         if not page_types:
-            data.append((page_idx, 'Other', 'Other'))
+            data.append((page_idx, PAGE_TYPE_OTHER))
             continue
         page_type = sorted(page_types)[0]
         page_basetype = _get_basetype(page_type)
-        data.append((page_idx, page_type.name, page_basetype.name))
-    return pd.merge(left=df, right=pd.DataFrame(data, columns=['P', 'P_type', 'P_basetype']), on='P')
+        data.append((page_idx, page_basetype.idx))
+    return pd.merge(left=df, right=pd.DataFrame(data, columns=['P', 'P_type']), on='P')
 
 
 def _get_basetype(dbp_type: DbpType) -> DbpType:
