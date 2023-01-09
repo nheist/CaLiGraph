@@ -1,6 +1,7 @@
 from typing import Set, Dict
 from collections import Counter
 import pandas as pd
+from utils import get_logger
 from impl.wikipedia import WikiPageStore
 from impl.dbpedia.ontology import DbpType, DbpOntologyStore
 from impl.dbpedia.resource import DbpListpage, DbpResourceStore
@@ -17,6 +18,7 @@ PAGE_TYPE_OTHER = -2
 def retrieve_page_entity_context() -> pd.DataFrame:
     """Retrieve all subject entities on pages together with their context information (i.e. where they occur)"""
     # gather data about subject entities in listings
+    get_logger().debug('Initializing context..')
     columns = ['P', 'TS_text', 'TS_ent', 'S_text', 'S_ent', 'E_text', 'E_tag', 'E_ent']
     data = []
     for wp in WikiPageStore.instance().get_pages():
