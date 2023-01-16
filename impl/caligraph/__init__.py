@@ -1,6 +1,5 @@
 """Functionality to retrieve cached versions of caligraph in several stages."""
 
-from impl.caligraph.graph import CaLiGraph
 from impl.caligraph.ontology import ClgOntologyStore
 from impl.caligraph.entity import ClgEntityStore
 import impl.caligraph.serialize as clg_serialize
