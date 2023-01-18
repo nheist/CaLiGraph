@@ -101,8 +101,7 @@ def _assign_pagetypes(df: pd.DataFrame) -> pd.DataFrame:
             data.append((page_idx, PAGE_TYPE_OTHER))
             continue
         page_type = sorted(page_types)[0]
-        page_basetype = _get_basetype(page_type)
-        data.append((page_idx, page_basetype.idx))
+        data.append((page_idx, _get_basetype(page_type).idx))
     return pd.merge(left=df, right=pd.DataFrame(data, columns=['P', 'P_type']), on='P')
 
 

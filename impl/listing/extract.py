@@ -10,11 +10,11 @@ from impl.caligraph.ontology import ClgOntologyStore
 from impl.caligraph.entity import ClgEntity, ClgEntityStore
 
 RULE_PATTERNS = {
-    'pattern_TS': ['P_basetype', 'TS_text'],
-    'pattern_TSent': ['P_basetype', 'TS_enttype'],
-    'pattern_TSent-S': ['P_basetype', 'TS_enttype', 'S_text'],
-    'pattern_TS-S': ['P_basetype', 'TS_text', 'S_text'],
-    'pattern_TS-Sent': ['P_basetype', 'TS_text', 'S_enttype']
+    'pattern_TS': ['P_type', 'TS_text'],
+    'pattern_TS-S': ['P_type', 'TS_text', 'S_text'],
+    'pattern_TS-Sent': ['P_type', 'TS_text', 'S_enttype'],
+    'pattern_TSent': ['P_type', 'TS_enttype'],
+    'pattern_TSent-S': ['P_type', 'TS_enttype', 'S_text'],
 }
 
 
@@ -36,9 +36,8 @@ def extract_listing_entity_information() -> Dict[ClgEntity, Dict[Tuple[DbpResour
         lp = dbr.get_resource_by_idx(lp_idx)
         clg_types = {t.idx for t in clgo.get_types_for_associated_dbp_resource(lp)}
         if clg_types:
-            for _, row in df_lp.iterrows():
-                ent_idx = row['E_ent']
-                page_entities[ent_idx][origin]['labels'].add(row['E_text'])
+            for ent_idx, ent_text in df_lp[['E_ent', 'E_text']].itertuples(index=False):
+                page_entities[ent_idx][origin]['labels'].add(ent_text)
                 page_entities[ent_idx][origin]['types'].update(clg_types)
     df = df.loc[df['P_type'] != context.PAGE_TYPE_LIST]  # ignore list pages in subsequent steps
 
