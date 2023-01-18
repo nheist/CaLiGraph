@@ -68,7 +68,7 @@ class ClgOntologyStore:
         self.graph = graph
         self.type_depths = None
         self.disjoint_types = None
-        self.transitive_disjoint_Types = None
+        self.transitive_types = None
 
     def _init_class_cache(self) -> Tuple[Set[ClgClass], CaLiGraph]:
         graph = CaLiGraph.build_graph().merge_ontology().remove_transitive_edges()
@@ -115,9 +115,13 @@ class ClgOntologyStore:
         return supertypes
 
     def get_transitive_supertypes(self, clg_type: ClgType, include_root=True, include_self=False) -> Set[ClgType]:
-        tt = {self.get_class_by_name(p) for p in self.graph.ancestors(clg_type.name)}
-        tt = tt | {clg_type} if include_self else tt
+        if clg_type not in self.transitive_types:
+            parents = {self.get_class_by_name(p) for p in self.graph.parents(clg_type.name)}
+            ancestors = {t for p in parents for t in self.get_transitive_supertypes(p)}
+            self.transitive_types[clg_type] = {p.idx for p in parents} | ancestors
+        tt = {self.get_class_by_idx(idx) for idx in self.transitive_types[clg_type]}
         tt = tt if include_root else tt.difference({self.get_type_root()})
+        tt = tt | {clg_type} if include_self else tt
         return tt
 
     def get_subtypes(self, clg_type: ClgType) -> Set[ClgType]:
