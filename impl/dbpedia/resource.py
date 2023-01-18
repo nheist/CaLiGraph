@@ -19,8 +19,8 @@ class DbpResource(RdfResource):
     def get_types(self) -> Set[DbpType]:
         return self._get_store().get_types(self)
 
-    def get_independent_types(self) -> Set[DbpType]:
-        return self._get_store().get_independent_types(self)
+    def get_independent_types(self, exclude_root: bool = False) -> Set[DbpType]:
+        return self._get_store().get_independent_types(self, exclude_root)
 
     def get_transitive_types(self, include_root=False) -> Set[DbpType]:
         return self._get_store().get_transitive_types(self, include_root=include_root)
@@ -218,8 +218,8 @@ class DbpResourceStore:
     def get_transitive_types(self, res: DbpResource, include_root=False) -> Set[DbpType]:
         return {tt for t in res.get_types() for tt in self.dbo.get_transitive_supertypes(t, include_root=include_root, include_self=True)}
 
-    def get_independent_types(self, res: DbpResource) -> Set[DbpType]:
-        return self.dbo.get_independent_types(res.get_types())
+    def get_independent_types(self, res: DbpResource, exclude_root: bool = False) -> Set[DbpType]:
+        return self.dbo.get_independent_types(res.get_types(), exclude_root)
 
     def get_entities_of_type(self, t: DbpType) -> Set[DbpEntity]:
         if self.entities_of_type is None:

@@ -96,7 +96,7 @@ def _assign_pagetypes(df: pd.DataFrame) -> pd.DataFrame:
         if isinstance(res, DbpListpage):
             data.append((page_idx, PAGE_TYPE_LIST))
             continue
-        page_types = res.get_independent_types()
+        page_types = res.get_independent_types(exclude_root=True)
         if not page_types:
             data.append((page_idx, PAGE_TYPE_OTHER))
             continue

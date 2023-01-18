@@ -141,8 +141,9 @@ class DbpOntologyStore:
                 self.label_to_types[self.get_label(t).lower().split()[-1]].add(t)
         return self.label_to_types[label.lower()]
 
-    def get_independent_types(self, dbp_types: Set[DbpType]) -> Set[DbpType]:
-        return dbp_types.difference({st for t in dbp_types for st in self.get_transitive_supertypes(t)})
+    def get_independent_types(self, dbp_types: Set[DbpType], exclude_root: bool = False) -> Set[DbpType]:
+        independent_types = dbp_types.difference({st for t in dbp_types for st in self.get_transitive_supertypes(t)})
+        return independent_types.difference({self.get_type_root()}) if exclude_root else independent_types
 
     def get_supertypes(self, t: DbpType) -> Set[DbpType]:
         return set(self.type_graph.predecessors(t)) if t in self.type_graph else set()
