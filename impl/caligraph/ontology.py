@@ -68,7 +68,7 @@ class ClgOntologyStore:
         self.graph = graph
         self.type_depths = None
         self.disjoint_types = None
-        self.transitive_types = None
+        self.transitive_types = {}
 
     def _init_class_cache(self) -> Tuple[Set[ClgClass], CaLiGraph]:
         graph = CaLiGraph.build_graph().merge_ontology().remove_transitive_edges()
