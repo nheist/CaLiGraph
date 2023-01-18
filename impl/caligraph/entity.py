@@ -124,7 +124,7 @@ class ClgEntityStore:
                 self.entities_by_idx[ent_idx] = ent
                 self.entities_by_name[ent_name] = ent
                 self.labels[ent] = ent_label
-            self.surface_forms[ent].update(set(ent_info['labels']))
+            self.surface_forms[ent].update({label for label, cnt in ent_info['labels'].items() if cnt > 2})
             self.provenance_resources[ent] = self.get_provenance_resources(ent) | ent_info['provenance']
             self.types[ent].update(ent_info['types'])
         self._clean_types(self.types)
