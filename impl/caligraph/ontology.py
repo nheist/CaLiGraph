@@ -118,7 +118,7 @@ class ClgOntologyStore:
         if clg_type not in self.transitive_types:
             parents = {self.get_class_by_name(p) for p in self.graph.parents(clg_type.name)}
             ancestors = {t for p in parents for t in self.get_transitive_supertypes(p)}
-            self.transitive_types[clg_type] = {p.idx for p in parents} | ancestors
+            self.transitive_types[clg_type] = {t.idx for t in (parents | ancestors)}
         tt = {self.get_class_by_idx(idx) for idx in self.transitive_types[clg_type]}
         tt = tt if include_root else tt.difference({self.get_type_root()})
         tt = tt | {clg_type} if include_self else tt
