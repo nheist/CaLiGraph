@@ -1,62 +1,59 @@
-from typing import Dict, Set, Tuple, Optional
+from typing import Dict, Set, Tuple
 import pandas as pd
 import numpy as np
 from collections import defaultdict, Counter
 import utils
 from utils import get_logger
 from impl.listing import context
-from impl.dbpedia.resource import DbpResource, DbpResourceStore
+from impl.dbpedia.resource import DbpResourceStore
 from impl.caligraph.ontology import ClgOntologyStore
-from impl.caligraph.entity import ClgEntity, ClgEntityStore
+from impl.caligraph.entity import ClgEntityStore
 
 RULE_PATTERNS = {
-    'pattern_TS': ['P_type', 'TS_text'],
-    'pattern_TS-S': ['P_type', 'TS_text', 'S_text'],
-    'pattern_TS-Sent': ['P_type', 'TS_text', 'S_enttype'],
+    'pattern_TS': ['P_type', 'TS_id'],
+    'pattern_TS-S': ['P_type', 'TS_id', 'S_id'],
+    'pattern_TS-Sent': ['P_type', 'TS_id', 'S_enttype'],
     'pattern_TSent': ['P_type', 'TS_enttype'],
-    'pattern_TSent-S': ['P_type', 'TS_enttype', 'S_text'],
+    'pattern_TSent-S': ['P_type', 'TS_enttype', 'S_id'],
 }
 
 
-def extract_listing_entity_information() -> Dict[ClgEntity, Dict[Tuple[DbpResource, str], dict]]:
+def extract_listing_entity_information() -> Dict[int, Dict[Tuple[int, str], dict]]:
     get_logger().info('Extracting types and relations for page entities..')
     dbr = DbpResourceStore.instance()
     clgo = ClgOntologyStore.instance()
+    clge = ClgEntityStore.instance()
 
-    # format: entity -> origin -> (labels, types, in, out)
+    # format: entity_idx -> (page_idx, listing_idx) -> (labels, types, in, out)
     page_entities = defaultdict(lambda: defaultdict(lambda: {'labels': set(), 'types': set(), 'in': set(), 'out': set()}))
 
-    df = context.retrieve_page_entity_context()
+    df, entity_labels = context.retrieve_page_entity_context()
+    entity_types = {ent_idx: {t.idx for t in clge.get_entity_by_idx(ent_idx).get_transitive_types()} for ent_idx in df['E_ent'].unique()}
 
     # extract list page entities
     get_logger().debug('Extracting types of list page entities..')
     df_lps = df[df['P_type'] == context.PAGE_TYPE_LIST]
-    for lp_idx, df_lp in df_lps.groupby(by='P'):
-        origin = _get_origin(lp_idx, None)
-        lp = dbr.get_resource_by_idx(lp_idx)
+    for origin, df_lp in df_lps.groupby(by=['P', 'L']):
+        lp = dbr.get_resource_by_idx(origin[0])
         clg_types = {t.idx for t in clgo.get_types_for_associated_dbp_resource(lp)}
         if clg_types:
-            for ent_idx, ent_text in df_lp[['E_ent', 'E_text']].itertuples(index=False):
-                page_entities[ent_idx][origin]['labels'].add(ent_text)
+            for ent_idx in df_lp['E_ent']:
+                page_entities[ent_idx][origin]['labels'].add(entity_labels[origin])
                 page_entities[ent_idx][origin]['types'].update(clg_types)
     df = df.loc[df['P_type'] != context.PAGE_TYPE_LIST]  # ignore list pages in subsequent steps
 
     # compute valid combinations of types and NE tags
     get_logger().debug('Preparing data for type and relation extraction..')
-    df_types = context.get_entity_types(df)
-    dft = pd.merge(left=df, right=df_types, on='E_ent')
-    valid_tags = context.get_valid_tags_for_entity_types(dft, utils.get_config('listing.valid_tag_threshold'))
+    valid_tags = context.get_valid_tags_for_entity_types(df, entity_types, utils.get_config('listing.valid_tag_threshold'))
 
     # extract types
     get_logger().debug('Extracting types of page entities..')
-    df_new_types = _compute_new_types(df, dft, df_types, valid_tags)
-    for ent_idx, df_ent in df_new_types.groupby(by='E_ent'):
-        for (page_idx, section_text), df_entorigin in df_ent.groupby(by=['P', 'S_text']):
-            origin = _get_origin(page_idx, section_text)
-            page_entities[ent_idx][origin]['labels'].update(set(df_entorigin['E_text'].unique()))
-            new_types = {clgo.get_class_by_idx(t_idx) for t_idx in set(df_entorigin['E_enttype'].unique())}
-            new_types = new_types.difference({tt for t in new_types for tt in clgo.get_transitive_supertypes(t, include_root=True)})
-            page_entities[ent_idx][origin]['types'].update({t.idx for t in new_types})
+    for ent_idx, types_by_origin in _compute_new_types(df, entity_types, valid_tags).items():
+        for origin, types in types_by_origin.items():
+            page_entities[ent_idx][origin]['labels'].add(entity_labels[origin])
+            new_types = {clgo.get_class_by_idx(t_idx) for t_idx in types}
+            new_type_indices = {t.idx for t in clgo.get_independent_types(new_types)}
+            page_entities[ent_idx][origin]['types'].update(new_type_indices)
 
     # extract relations
     get_logger().debug('Extracting relations of page entities..')
@@ -65,9 +62,8 @@ def extract_listing_entity_information() -> Dict[ClgEntity, Dict[Tuple[DbpResour
     df_new_relations = pd.concat([df_new_relations, _compute_new_relations(df, df_rels, 'TS_ent', valid_tags)])
     df_new_relations = pd.concat([df_new_relations, _compute_new_relations(df, df_rels, 'S_ent', valid_tags)])
     for ent_idx, df_ent in df_new_relations.groupby(by='E_ent'):
-        for (page_idx, section_text), df_entorigin in df_ent.groupby(by=['P', 'S_text']):
-            origin = _get_origin(page_idx, section_text)
-            page_entities[ent_idx][origin]['labels'].update(set(df_entorigin['E_text'].unique()))
+        for origin, df_entorigin in df_ent.groupby(by=['P', 'L']):
+            page_entities[ent_idx][origin]['labels'].add(entity_labels[origin])
             rels_in = set(map(tuple, df_entorigin[~df_entorigin['inv']][['pred', 'target']].values))
             page_entities[ent_idx][origin]['in'].update(rels_in)
             rels_out = set(map(tuple, df_entorigin[df_entorigin['inv']][['pred', 'target']].values))
@@ -76,34 +72,35 @@ def extract_listing_entity_information() -> Dict[ClgEntity, Dict[Tuple[DbpResour
     return {e: dict(origin_data) for e, origin_data in page_entities.items()}  # convert defaultdicts to plain dicts
 
 
-def _get_origin(page_idx: int, section_text: Optional[str]) -> Tuple[int, str]:
-    section_name = section_text if section_text and section_text != 'Main' else None
-    return page_idx, section_name
-
-
 # EXTRACT TYPES
 
 
-def _compute_new_types(df: pd.DataFrame, dft: pd.DataFrame, df_types: pd.DataFrame, valid_tags: Dict[str, Set[str]]) -> pd.DataFrame:
+def _compute_new_types(df: pd.DataFrame, ent_types: Dict[int, Set[int]], valid_tags: Dict[int, Set[int]]) -> Dict[int, Dict[Tuple[int, int], set]]:
     """Compute all new type assertions."""
     rule_dfs = {}
     for rule_name, rule_pattern in RULE_PATTERNS.items():
-        dft_by_page = _aggregate_types_by_page(dft, rule_pattern)
+        dft_by_page = _aggregate_types_by_page(df, rule_pattern, ent_types)
         rule_dfs[rule_name] = _aggregate_types_by_section(dft_by_page, rule_pattern)
-    new_types = _extract_new_types_with_threshold(df, df_types, rule_dfs)
-    filtered_types = _filter_new_types_by_tag(new_types, valid_tags)
-    return filtered_types
+    return _extract_new_types_with_threshold(df, rule_dfs, ent_types, valid_tags)
 
 
-def _aggregate_types_by_page(dft: pd.DataFrame, section_grouping: list) -> pd.DataFrame:
+def _aggregate_types_by_page(df: pd.DataFrame, section_grouping: list, ent_types: Dict[int, Set[int]]) -> pd.DataFrame:
     """Aggregate the type data by Wikipedia page."""
-    dft = dft.dropna(subset=section_grouping)
+    df = df.dropna(subset=section_grouping)
     page_grouping = section_grouping + ['P']
-    # compute type count
-    dftP = dft.groupby(page_grouping)['E_enttype'].value_counts().rename('type_count').reset_index(level='E_enttype')
-    # compute entity count
-    ent_counts = dft.groupby(page_grouping)['idx'].nunique().rename('ent_count')
-    dftP = pd.merge(dftP, ent_counts, left_index=True, right_index=True, copy=False)
+    # collect type and entity counts per page
+    type_counter = defaultdict(Counter)
+    entity_counter = Counter()
+    for grp, grp_df in df.groupby(page_grouping):
+        for ent_idx in grp_df['E_ent']:
+            for t in ent_types[ent_idx]:
+                type_counter[grp][t] += 1
+            entity_counter[grp] += 1
+    type_counts = np.asarray([(*grp, t, cnt) for grp, type_counts in type_counter.items() for t, cnt in type_counts.items()])
+    type_counts = pd.DataFrame(type_counts, columns=page_grouping + ['E_enttype', 'type_count']).set_index(page_grouping)
+    ent_counts = np.asarray([(*grp, cnt) for grp, cnt in entity_counter.items()])
+    ent_counts = pd.DataFrame(ent_counts, columns=page_grouping + ['ent_count']).set_index(page_grouping)
+    dftP = pd.merge(type_counts, ent_counts, left_index=True, right_index=True, copy=False)
     # compute type confidence
     dftP['type_conf'] = (dftP['type_count'] / dftP['ent_count']).fillna(0).clip(0, 1)
     return dftP[dftP['ent_count'] > 2]
@@ -137,37 +134,34 @@ def _aggregate_types_by_section(dfp: pd.DataFrame, section_grouping: list) -> pd
     return result.set_index(grp)
 
 
-def _extract_new_types_with_threshold(df: pd.DataFrame, df_types: pd.DataFrame, rule_dfs: dict) -> pd.DataFrame:
+def _extract_new_types_with_threshold(df: pd.DataFrame, rule_dfs: dict, ent_types: Dict[int, Set[int]], valid_tags: Dict[int, Set[int]]) -> Dict[int, Dict[Tuple[int, int], set]]:
     """Extract new types from rules based on confidence and consistency thresholds."""
     mean_threshold = utils.get_config('listing.type_mean_threshold')
     std_threshold = utils.get_config('listing.type_std_threshold')
     valid_rule_dfs = [rule_dfs[rule_name].query(f'micro_mean > {mean_threshold} & micro_std < {std_threshold}').reset_index()[rule_pattern + ['E_enttype', 'micro_mean', 'micro_std']].drop_duplicates() for rule_name, rule_pattern in RULE_PATTERNS.items()]
-    return _extract_new_types(valid_rule_dfs, df, df_types)
+    return _extract_new_types(valid_rule_dfs, df, ent_types, valid_tags)
 
 
-def _extract_new_types(valid_rule_dfs: list, source_df: pd.DataFrame, existing_types: pd.DataFrame) -> pd.DataFrame:
+def _extract_new_types(valid_rule_dfs: list, source_df: pd.DataFrame, ent_types: Dict[int, Set[int]], valid_tags: Dict[int, Set[int]]) -> Dict[int, Dict[Tuple[int, int], set]]:
     """Apply valid rules to the initial df to extract new type assertions."""
     # extract new types
-    result_df = pd.DataFrame()
+    new_types = defaultdict(lambda: defaultdict(set))
     for dfr in valid_rule_dfs:
         key_cols = list(set(dfr.columns).difference({'E_enttype', 'micro_mean', 'micro_std'}))
-        result_df = pd.concat([result_df, pd.merge(how='left', left=dfr, right=source_df, on=key_cols)])
-    # filter out duplicate extractions
-    result_df = result_df.drop_duplicates(['E_ent', 'E_enttype'])
+        df_result = pd.merge(how='left', left=dfr, right=source_df, on=key_cols)
+        for page_idx, listing_idx, ent_idx, ent_tag, ent_type in df_result[['P', 'L', 'E_ent', 'E_tag', 'E_enttype']].itertuples(index=False):
+            if ent_type not in valid_tags or ent_tag not in valid_tags[ent_type]:
+                continue  # filter out entities with a NE tag that is not in `valid_tags`
+            new_types[ent_idx][(page_idx, listing_idx)].add(ent_type)
     # filter out existing types
-    result_df = pd.merge(result_df, existing_types, on=['E_ent', 'E_enttype'], indicator=True, how='outer').query('_merge=="left_only"').drop(columns='_merge')
-    return result_df
-
-
-def _filter_new_types_by_tag(df: pd.DataFrame, valid_tags: Dict[str, Set[str]]) -> pd.DataFrame:
-    """Filter out entities with a NE tag that is not in `valid_tags`."""
-    return df[df.apply(lambda row: row['E_enttype'] in valid_tags and row['E_tag'] in valid_tags[row['E_enttype']], axis=1)]
+    new_types = {ent_idx: {o: types.difference(ent_types[ent_idx]) for o, types in types_per_origin.items()} for ent_idx, types_per_origin in new_types.items()}
+    return new_types
 
 
 # EXTRACT RELATIONS
 
 
-def _compute_new_relations(df: pd.DataFrame, df_rels: pd.DataFrame, target_identifier: str, valid_tags: Dict[str, Set[str]]) -> pd.DataFrame:
+def _compute_new_relations(df: pd.DataFrame, df_rels: pd.DataFrame, target_identifier: str, valid_tags: Dict[int, Set[int]]) -> pd.DataFrame:
     """Retrieve relation assertions from the initial dataframe."""
     rule_dfs = {}
     dfr = _create_relation_df(df, df_rels, target_identifier)
@@ -295,7 +289,7 @@ def _remove_relations_with_invalid_targets(df: pd.DataFrame, target_identifier: 
     return df[df[target_identifier].isin(valid_targets)]
 
 
-def _filter_new_relations_by_tag(df: pd.DataFrame, valid_tags: Dict[str, Set[str]]) -> pd.DataFrame:
+def _filter_new_relations_by_tag(df: pd.DataFrame, valid_tags: Dict[int, Set[int]]) -> pd.DataFrame:
     """Filter out entities with a NE tag that is not in `valid_tags` of the domain/range."""
     return df[df.apply(lambda row: row['E_predtype'] in valid_tags and row['E_tag'] in valid_tags[row['E_predtype']], axis=1)]
 

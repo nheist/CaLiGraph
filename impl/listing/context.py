@@ -1,5 +1,7 @@
-from typing import Set, Dict
-from collections import Counter
+from typing import Tuple, Dict, Set
+from collections import defaultdict, Counter
+from tqdm import tqdm
+import numpy as np
 import pandas as pd
 from utils import get_logger
 from impl.wikipedia import WikiPageStore
@@ -15,35 +17,45 @@ PAGE_TYPE_OTHER = -2
 
 # RETRIEVE ENTITY CONTEXT ON PAGES
 
-def retrieve_page_entity_context() -> pd.DataFrame:
+def retrieve_page_entity_context() -> Tuple[pd.DataFrame, Dict[Tuple[int, int], str]]:
     """Retrieve all subject entities on pages together with their context information (i.e. where they occur)"""
     # gather data about subject entities in listings
     get_logger().debug('Initializing context..')
-    columns = ['P', 'TS_text', 'TS_ent', 'S_text', 'S_ent', 'E_text', 'E_tag', 'E_ent']
+    section_title_ids = {}
+    entity_labels = {}
+    columns = ['P', 'L', 'TS_id', 'TS_ent', 'S_id', 'S_ent', 'E_tag', 'E_ent']
     data = []
     for wp in WikiPageStore.instance().get_pages():
         for listing in wp.get_listings():
+            topsection = listing.topsection
+            section = listing.section
+            if len(topsection.title) <= 1 or len(section.title) <= 1:
+                # get rid of all single-letter (sub)sections distorting results
+                continue
+            if topsection.title not in section_title_ids:
+                section_title_ids[topsection.title] = len(section_title_ids)
+            if section.title not in section_title_ids:
+                section_title_ids[section.title] = len(section_title_ids)
             for se_mention in listing.get_subject_entities():
+                entity_labels[(wp.idx, listing.idx)] = se_mention.label
                 data.append((
                     wp.idx,
-                    listing.topsection.title,
-                    listing.topsection.entity_idx,
-                    listing.section.title,
-                    listing.section.entity_idx,
-                    se_mention.label,
+                    listing.idx,
+                    section_title_ids[topsection.title],
+                    topsection.entity_idx or np.nan,
+                    section_title_ids[section.title],
+                    section.entity_idx or np.nan,
                     se_mention.entity_type.value,
                     se_mention.entity_idx
                 ))
     # create frame and add further features
-    df = pd.DataFrame(data=data, columns=columns)
+    df = pd.DataFrame(data=np.asarray(data), columns=columns)
     df['idx'] = df.index.values
     df = _assign_entity_types_for_section(df, 'TS')
     df = _assign_entity_types_for_section(df, 'S')
     df = _align_section_entity_types(df)
     df = _assign_pagetypes(df)
-    # get rid of all single-letter (sub)sections distorting results
-    df = df.drop(index=df[(df['TS_text'].str.len() <= 1) | (df['S_text'].str.len() <= 1)].index)
-    return df
+    return df, entity_labels
 
 
 def _assign_entity_types_for_section(df: pd.DataFrame, section_id: str) -> pd.DataFrame:
@@ -67,7 +79,7 @@ def _align_section_entity_types(df: pd.DataFrame) -> pd.DataFrame:
     clge = ClgEntityStore.instance()
     
     section_types = {}
-    for ts, s_df in df.groupby('TS_text'):
+    for ts, s_df in df.groupby('TS_id'):
         type_counter = Counter()
         section_ent_indices = s_df['S_ent'].unique()
         for s_ent in section_ent_indices:
@@ -82,7 +94,7 @@ def _align_section_entity_types(df: pd.DataFrame) -> pd.DataFrame:
             top_type = sorted(top_types)[0]
             section_types.update({(ts, sei): top_type.idx for sei in section_ent_indices if clge.has_entity_with_idx(sei) and top_type in clge.get_entity_by_idx(sei).get_transitive_types()})
     section_types = pd.Series(section_types, name='S_enttype_new')
-    df = pd.merge(how='left', left=df, right=section_types, left_on=['TS_text', 'S_ent'], right_index=True)
+    df = pd.merge(how='left', left=df, right=section_types, left_on=['TS_id', 'S_ent'], right_index=True)
     df['S_enttype_new'].fillna(df['S_enttype'], inplace=True)
     return df.drop(columns='S_enttype').rename(columns={'S_enttype_new': 'S_enttype'})
 
@@ -119,41 +131,44 @@ def _get_basetype(dbp_type: DbpType) -> DbpType:
 # ENTITY TYPES
 
 
-def get_entity_types(df: pd.DataFrame) -> pd.DataFrame:
-    clge = ClgEntityStore.instance()
-    return pd.DataFrame([{'E_ent': ent_idx, 'E_enttype': t.idx} for ent_idx in df['E_ent'].unique() for t in clge.get_entity_by_idx(ent_idx).get_transitive_types()])
-
-
-def get_valid_tags_for_entity_types(dft: pd.DataFrame, threshold: float) -> Dict[str, Set[str]]:
+def get_valid_tags_for_entity_types(df: pd.DataFrame, ent_types: Dict[int, Set[int]], threshold: float) -> Dict[int, Set[int]]:
     """Compute NE tags that are acceptable for a given type. E.g. for the type Building we would want the tag FAC."""
-    clgo = ClgOntologyStore.instance()
-
-    tag_probabilities = _get_tag_probabilities(dft)
-    valid_tags = tag_probabilities[tag_probabilities['tag_fit'] >= threshold].groupby('E_enttype')['E_tag'].apply(lambda x: x.values.tolist()).to_dict()
-    for type_idx in set(valid_tags):  # assign tags of parents to types without tags (to avoid inconsistencies)
-        valid_tags[type_idx] = _compute_valid_tags_for_type(clgo.get_class_by_idx(type_idx), valid_tags)
+    # find most likely tags (if probability higher than threshold)
+    valid_tags = defaultdict(set)
+    for t, tag_probas in _get_tag_probabilities(df, ent_types).items():
+        for tag, proba in tag_probas.items():
+            if proba >= threshold:
+                valid_tags[t].add(tag)
+    # assign tags of parents to types without tags (to avoid inconsistencies)
+    for type_idx in set(valid_tags):
+        valid_tags[type_idx] = _compute_valid_tags_for_type(type_idx, valid_tags)
     return valid_tags
 
 
-def _get_tag_probabilities(dft: pd.DataFrame) -> pd.DataFrame:
+def _get_tag_probabilities(df: pd.DataFrame, ent_types: Dict[int, Set[int]]) -> Dict[int, Dict[int, float]]:
     """Compute simple tag probabilities (frequencies of tags per entity type)."""
-    tag_count = dft.groupby('E_enttype')['E_tag'].value_counts().rename('tag_count').reset_index('E_tag')
-    entity_count = dft.groupby('E_enttype')['idx'].nunique().rename('entity_count')
-    simple_tag_probabilities = pd.merge(left=tag_count, right=entity_count, left_index=True, right_index=True)
-    simple_tag_probabilities['tag_proba'] = simple_tag_probabilities['tag_count'] / simple_tag_probabilities['entity_count']
-    simple_tag_proba_dict = {grp: df.set_index('E_tag')['tag_proba'].to_dict() for grp, df in simple_tag_probabilities.groupby('E_enttype')}
-    tag_probabilities = [(t, tag, proba) for t, tag_probas in simple_tag_proba_dict.items() for tag, proba in tag_probas.items()]
-    return pd.DataFrame(data=tag_probabilities, columns=['E_enttype', 'E_tag', 'tag_fit'])
+    # collect tag and entity counts per type
+    tag_counter = defaultdict(Counter)
+    entity_counter = Counter()
+    for ent_idx, df_tag in tqdm(df[['E_ent', 'E_tag']].groupby('E_ent'), total=df['E_ent'].nunique(), desc='Tag probabilities'):
+        tag_count = Counter(df_tag.value_counts('E_tag').to_dict())
+        ent_count = len(df_tag)
+        for t in ent_types[ent_idx]:
+            tag_counter[t] += tag_count
+            entity_counter[t] += ent_count
+    # compute tag probabilities per type
+    tag_probabilities = {t: {tag: tag_count / ent_count for tag, tag_count in tag_counter[t].items()} for t, ent_count in entity_counter.items()}
+    return tag_probabilities
 
 
-def _compute_valid_tags_for_type(clg_type: ClgType, valid_tags: Dict[int, Set[str]]) -> Set[str]:
+def _compute_valid_tags_for_type(type_idx: int, valid_tags: Dict[int, Set[int]]) -> Set[int]:
     clgo = ClgOntologyStore.instance()
-
-    if clg_type.idx not in valid_tags:
+    if type_idx not in valid_tags:
         return set()
-    if not valid_tags[clg_type.idx]:
-        valid_tags[clg_type.idx] = {tag for ptype in clgo.get_supertypes(clg_type, include_root=False) for tag in _compute_valid_tags_for_type(ptype, valid_tags)}
-    return valid_tags[clg_type.idx]
+    if not valid_tags[type_idx]:
+        clg_type = clgo.get_class_by_idx(type_idx)
+        valid_tags[type_idx] = {tag for ptype in clgo.get_supertypes(clg_type, include_root=False) for tag in _compute_valid_tags_for_type(ptype.idx, valid_tags)}
+    return valid_tags[type_idx]
 
 
 # ENTITY RELATIONS
