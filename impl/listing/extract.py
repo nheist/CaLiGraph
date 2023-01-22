@@ -2,6 +2,7 @@ from typing import Dict, Set, Tuple
 import pandas as pd
 import numpy as np
 from collections import defaultdict, Counter
+from tqdm import tqdm
 import utils
 from utils import get_logger
 from impl.listing import context
@@ -48,9 +49,9 @@ def extract_listing_entity_information() -> Dict[int, Dict[Tuple[int, str], dict
 
     # extract types
     get_logger().debug('Extracting types of page entities..')
-    for ent_idx, types_by_origin in _compute_new_types(df, entity_types, valid_tags).items():
+    for ent_idx, types_by_origin in tqdm(_compute_new_types(df, entity_types, valid_tags).items(), desc='Processing new types'):
         for origin, types in types_by_origin.items():
-            page_entities[ent_idx][origin]['labels'].add(entity_labels[origin])
+            page_entities[ent_idx][origin]['labels'].add(entity_labels[ent_idx][origin])
             new_types = {clgo.get_class_by_idx(t_idx) for t_idx in types}
             new_type_indices = {t.idx for t in clgo.get_independent_types(new_types)}
             page_entities[ent_idx][origin]['types'].update(new_type_indices)
@@ -61,9 +62,9 @@ def extract_listing_entity_information() -> Dict[int, Dict[Tuple[int, str], dict
     df_new_relations = _compute_new_relations(df, df_rels, 'P', valid_tags)
     df_new_relations = pd.concat([df_new_relations, _compute_new_relations(df, df_rels, 'TS_ent', valid_tags)])
     df_new_relations = pd.concat([df_new_relations, _compute_new_relations(df, df_rels, 'S_ent', valid_tags)])
-    for ent_idx, df_ent in df_new_relations.groupby(by='E_ent'):
+    for ent_idx, df_ent in tqdm(df_new_relations.groupby(by='E_ent'), desc='Processing new relations'):
         for origin, df_entorigin in df_ent.groupby(by=['P', 'L']):
-            page_entities[ent_idx][origin]['labels'].add(entity_labels[origin])
+            page_entities[ent_idx][origin]['labels'].add(entity_labels[ent_idx][origin])
             rels_in = set(map(tuple, df_entorigin[~df_entorigin['inv']][['pred', 'target']].values))
             page_entities[ent_idx][origin]['in'].update(rels_in)
             rels_out = set(map(tuple, df_entorigin[df_entorigin['inv']][['pred', 'target']].values))
@@ -79,8 +80,10 @@ def _compute_new_types(df: pd.DataFrame, ent_types: Dict[int, Set[int]], valid_t
     """Compute all new type assertions."""
     rule_dfs = {}
     for rule_name, rule_pattern in RULE_PATTERNS.items():
+        get_logger().debug(f'> Finding patterns for rule {rule_name}..')
         dft_by_page = _aggregate_types_by_page(df, rule_pattern, ent_types)
         rule_dfs[rule_name] = _aggregate_types_by_section(dft_by_page, rule_pattern)
+    get_logger().debug(f'> Finding new types from patterns..')
     return _extract_new_types_with_threshold(df, rule_dfs, ent_types, valid_tags)
 
 
@@ -150,11 +153,11 @@ def _extract_new_types(valid_rule_dfs: list, source_df: pd.DataFrame, ent_types:
         key_cols = list(set(dfr.columns).difference({'E_enttype', 'micro_mean', 'micro_std'}))
         df_result = pd.merge(how='left', left=dfr, right=source_df, on=key_cols)
         for page_idx, listing_idx, ent_idx, ent_tag, ent_type in df_result[['P', 'L', 'E_ent', 'E_tag', 'E_enttype']].itertuples(index=False):
+            if ent_type in ent_types[ent_idx]:
+                continue  # discard existing types
             if ent_type not in valid_tags or ent_tag not in valid_tags[ent_type]:
                 continue  # filter out entities with a NE tag that is not in `valid_tags`
             new_types[ent_idx][(page_idx, listing_idx)].add(ent_type)
-    # filter out existing types
-    new_types = {ent_idx: {o: types.difference(ent_types[ent_idx]) for o, types in types_per_origin.items()} for ent_idx, types_per_origin in new_types.items()}
     return new_types
 
 

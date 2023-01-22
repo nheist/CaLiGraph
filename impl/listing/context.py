@@ -17,12 +17,12 @@ PAGE_TYPE_OTHER = -2
 
 # RETRIEVE ENTITY CONTEXT ON PAGES
 
-def retrieve_page_entity_context() -> Tuple[pd.DataFrame, Dict[Tuple[int, int], str]]:
+def retrieve_page_entity_context() -> Tuple[pd.DataFrame, Dict[int, Dict[Tuple[int, int], str]]]:
     """Retrieve all subject entities on pages together with their context information (i.e. where they occur)"""
     # gather data about subject entities in listings
     get_logger().debug('Initializing context..')
     section_title_ids = {}
-    entity_labels = {}
+    entity_labels = defaultdict(dict)
     columns = ['P', 'L', 'TS_id', 'TS_ent', 'S_id', 'S_ent', 'E_tag', 'E_ent']
     data = []
     for wp in WikiPageStore.instance().get_pages():
@@ -37,7 +37,7 @@ def retrieve_page_entity_context() -> Tuple[pd.DataFrame, Dict[Tuple[int, int], 
             if section.title not in section_title_ids:
                 section_title_ids[section.title] = len(section_title_ids)
             for se_mention in listing.get_subject_entities():
-                entity_labels[(wp.idx, listing.idx)] = se_mention.label
+                entity_labels[se_mention.entity_idx][(wp.idx, listing.idx)] = se_mention.label
                 data.append((
                     wp.idx,
                     listing.idx,
