@@ -39,7 +39,7 @@ def extract_listing_entity_information() -> Dict[int, Dict[Tuple[int, str], dict
         clg_types = {t.idx for t in clgo.get_types_for_associated_dbp_resource(lp)}
         if clg_types:
             for ent_idx in df_lp['E_ent']:
-                page_entities[ent_idx][origin]['labels'].add(entity_labels[origin])
+                page_entities[ent_idx][origin]['labels'].add(entity_labels[ent_idx][origin])
                 page_entities[ent_idx][origin]['types'].update(clg_types)
     df = df.loc[df['P_type'] != context.PAGE_TYPE_LIST]  # ignore list pages in subsequent steps
 
