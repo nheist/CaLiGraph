@@ -89,6 +89,7 @@ def _compute_new_types(df: pd.DataFrame, ent_types: Dict[int, Set[int]], valid_t
 
 def _aggregate_types_by_page(df: pd.DataFrame, section_grouping: list, ent_types: Dict[int, Set[int]]) -> pd.DataFrame:
     """Aggregate the type data by Wikipedia page."""
+    get_logger().debug('>> Aggregating by page..')
     df = df.dropna(subset=section_grouping)
     page_grouping = section_grouping + ['P']
     # collect type and entity counts per page
@@ -111,28 +112,34 @@ def _aggregate_types_by_page(df: pd.DataFrame, section_grouping: list, ent_types
 
 def _aggregate_types_by_section(dfp: pd.DataFrame, section_grouping: list) -> pd.DataFrame:
     """Aggregate the type data by (top-)section."""
+    get_logger().debug('>> Aggregating by section..')
     page_grouping = section_grouping + ['P']
     grp = section_grouping + ['E_enttype']
     dfp = dfp.reset_index()
     # compute micro mean
+    get_logger().debug('>> Computing micro mean..')
     section_type_count = dfp.groupby(grp)['type_count'].sum().reset_index(level='E_enttype')
     section_ent_count = dfp.drop_duplicates(page_grouping).groupby(section_grouping)['ent_count'].sum()
     result = pd.merge(section_type_count, section_ent_count, left_index=True, right_index=True).reset_index()
     result['micro_mean'] = (result['type_count'] / result['ent_count']).clip(0, 1)
     result.drop(columns=['type_count', 'ent_count'], inplace=True)
     # compute macro mean
+    get_logger().debug('>> Computing macro mean..')
     section_type_confidences = dfp.groupby(grp)['type_conf'].sum().rename('section_type_conf').reset_index(level='E_enttype')
     section_page_count = dfp.groupby(section_grouping)['P'].nunique().rename('section_page_count')
     macro_df = pd.merge(section_type_confidences, section_page_count, left_index=True, right_index=True).reset_index().set_index(grp)
     macro_df['macro_mean'] = macro_df['section_type_conf'] / macro_df['section_page_count']
     result = pd.merge(left=result, right=macro_df['macro_mean'], left_on=grp, right_index=True)
     # add page count
+    get_logger().debug('>> Computing page count..')
     page_count = dfp.groupby(section_grouping)['P'].nunique().rename('page_count').reset_index()
     result = pd.merge(left=result, right=page_count, on=section_grouping)
     # compute micro_std
+    get_logger().debug('>> Computing micro std..')
     confidence_deviations = pd.merge(how='left', left=dfp, right=result, on=grp)
     confidence_deviations['dev'] = np.absolute(confidence_deviations['micro_mean'] - confidence_deviations['type_conf'])
     micro_std = confidence_deviations.groupby(grp).apply(lambda x: (x['dev'].sum() + (x['page_count'].mean() - len(x)) * x['micro_mean'].mean()) / x['page_count'].mean()).rename('micro_std').reset_index()
+    get_logger().debug('>> Merging metrics..')
     result = pd.merge(left=result, right=micro_std, on=grp)
     return result.set_index(grp)
 
