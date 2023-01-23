@@ -100,14 +100,11 @@ def _aggregate_types_by_page(df: pd.DataFrame, section_grouping: list, ent_types
             for t in ent_types[ent_idx]:
                 type_counter[grp][t] += 1
             entity_counter[grp] += 1
-    type_counts = np.asarray([(*grp, t, cnt) for grp, type_counts in type_counter.items() for t, cnt in type_counts.items()])
-    type_counts = pd.DataFrame(type_counts, columns=page_grouping + ['E_enttype', 'type_count']).set_index(page_grouping)
-    ent_counts = np.asarray([(*grp, cnt) for grp, cnt in entity_counter.items()])
-    ent_counts = pd.DataFrame(ent_counts, columns=page_grouping + ['ent_count']).set_index(page_grouping)
-    dftP = pd.merge(type_counts, ent_counts, left_index=True, right_index=True, copy=False)
+    page_stats = [(*grp, t, cnt, entity_counter[grp]) for grp, type_counts in type_counter.items() for t, cnt in type_counts.items() if entity_counter[grp] > 2]
+    dftP = pd.DataFrame(np.asarray(page_stats), columns=page_grouping + ['E_enttype', 'type_count', 'ent_count'])
     # compute type confidence
     dftP['type_conf'] = (dftP['type_count'] / dftP['ent_count']).fillna(0).clip(0, 1)
-    return dftP[dftP['ent_count'] > 2]
+    return dftP
 
 
 def _aggregate_types_by_section(dfp: pd.DataFrame, section_grouping: list) -> pd.DataFrame:
@@ -115,7 +112,6 @@ def _aggregate_types_by_section(dfp: pd.DataFrame, section_grouping: list) -> pd
     get_logger().debug('>> Aggregating by section..')
     page_grouping = section_grouping + ['P']
     grp = section_grouping + ['E_enttype']
-    dfp = dfp.reset_index()
     # compute micro mean
     get_logger().debug('>> Computing micro mean..')
     section_type_count = dfp.groupby(grp)['type_count'].sum().reset_index(level='E_enttype')
