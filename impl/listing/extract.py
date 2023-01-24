@@ -100,7 +100,7 @@ def _aggregate_types_by_page(df: pd.DataFrame, section_grouping: list, ent_types
             for t in ent_types[ent_idx]:
                 type_counter[grp][t] += 1
             entity_counter[grp] += 1
-    page_stats = [(*grp, t, cnt, entity_counter[grp]) for grp, type_counts in type_counter.items() for t, cnt in type_counts.items() if entity_counter[grp] > 2]
+    page_stats = [(*grp, t, cnt, entity_counter[grp]) for grp, type_counts in tqdm(type_counter.items(), desc='page stats', total=len(type_counter)) for t, cnt in type_counts.items() if entity_counter[grp] > 2]
     dftP = pd.DataFrame(np.asarray(page_stats), columns=page_grouping + ['E_enttype', 'type_count', 'ent_count'])
     # compute type confidence
     dftP['type_conf'] = (dftP['type_count'] / dftP['ent_count']).fillna(0).clip(0, 1)
