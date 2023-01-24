@@ -44,7 +44,7 @@ def extract_listing_entity_information() -> Dict[int, Dict[Tuple[int, str], dict
     df = df.loc[df['P_type'] != context.PAGE_TYPE_LIST]  # ignore list pages in subsequent steps
 
     get_logger().debug('Preparing data for type and relation extraction..')
-    df_train = df[df['E_ent'].isin(clge.new_entities)]
+    df_train = df[~df['E_ent'].isin(clge.new_entities)]
     valid_tags = context.get_valid_tags_for_entity_types(df_train, entity_types, utils.get_config('listing.valid_tag_threshold'))
 
     # extract types
