@@ -77,6 +77,7 @@ class ClgEntityStore:
         self.entities_by_idx = {e.idx: e for e in all_entities}
         self.entities_by_name = {e.name: e for e in all_entities}
 
+        self.new_entities = set()
         self.labels = None
         self.surface_forms = None
         self.types = None
@@ -123,6 +124,7 @@ class ClgEntityStore:
                 ent = ClgEntity(ent_idx, ent_name, False)
                 self.entities_by_idx[ent_idx] = ent
                 self.entities_by_name[ent_name] = ent
+                self.new_entities.add(ent_idx)
                 self.labels[ent] = ent_label
             self.surface_forms[ent].update({label for label, cnt in ent_info['labels'].items() if cnt > 2})
             self.provenance_resources[ent] = self.get_provenance_resources(ent) | ent_info['provenance']

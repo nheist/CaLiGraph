@@ -43,13 +43,13 @@ def extract_listing_entity_information() -> Dict[int, Dict[Tuple[int, str], dict
                 page_entities[ent_idx][origin]['types'].update(clg_types)
     df = df.loc[df['P_type'] != context.PAGE_TYPE_LIST]  # ignore list pages in subsequent steps
 
-    # compute valid combinations of types and NE tags
     get_logger().debug('Preparing data for type and relation extraction..')
-    valid_tags = context.get_valid_tags_for_entity_types(df, entity_types, utils.get_config('listing.valid_tag_threshold'))
+    df_train = df[df['E_ent'].isin(clge.new_entities)]
+    valid_tags = context.get_valid_tags_for_entity_types(df_train, entity_types, utils.get_config('listing.valid_tag_threshold'))
 
     # extract types
     get_logger().debug('Extracting types of page entities..')
-    for ent_idx, types_by_origin in tqdm(_compute_new_types(df, entity_types, valid_tags).items(), desc='Processing new types'):
+    for ent_idx, types_by_origin in tqdm(_compute_new_types(df, df_train, entity_types, valid_tags).items(), desc='Processing new types'):
         for origin, types in types_by_origin.items():
             page_entities[ent_idx][origin]['labels'].add(entity_labels[ent_idx][origin])
             new_types = {clgo.get_class_by_idx(t_idx) for t_idx in types}
@@ -59,9 +59,9 @@ def extract_listing_entity_information() -> Dict[int, Dict[Tuple[int, str], dict
     # extract relations
     get_logger().debug('Extracting relations of page entities..')
     df_rels = context.get_entity_relations()
-    df_new_relations = _compute_new_relations(df, df_rels, 'P', valid_tags)
-    df_new_relations = pd.concat([df_new_relations, _compute_new_relations(df, df_rels, 'TS_ent', valid_tags)])
-    df_new_relations = pd.concat([df_new_relations, _compute_new_relations(df, df_rels, 'S_ent', valid_tags)])
+    df_new_relations = _compute_new_relations(df, df_train, df_rels, 'P', valid_tags)
+    df_new_relations = pd.concat([df_new_relations, _compute_new_relations(df, df_train, df_rels, 'TS_ent', valid_tags)])
+    df_new_relations = pd.concat([df_new_relations, _compute_new_relations(df, df_train, df_rels, 'S_ent', valid_tags)])
     for ent_idx, df_ent in tqdm(df_new_relations.groupby(by='E_ent'), desc='Processing new relations'):
         for origin, df_entorigin in df_ent.groupby(by=['P', 'L']):
             page_entities[ent_idx][origin]['labels'].add(entity_labels[ent_idx][origin])
@@ -76,12 +76,12 @@ def extract_listing_entity_information() -> Dict[int, Dict[Tuple[int, str], dict
 # EXTRACT TYPES
 
 
-def _compute_new_types(df: pd.DataFrame, ent_types: Dict[int, Set[int]], valid_tags: Dict[int, Set[int]]) -> Dict[int, Dict[Tuple[int, int], set]]:
+def _compute_new_types(df: pd.DataFrame, df_train: pd.DataFrame, ent_types: Dict[int, Set[int]], valid_tags: Dict[int, Set[int]]) -> Dict[int, Dict[Tuple[int, int], set]]:
     """Compute all new type assertions."""
     rule_dfs = {}
     for rule_name, rule_pattern in RULE_PATTERNS.items():
         get_logger().debug(f'> Finding patterns for rule {rule_name}..')
-        dft_by_page = _aggregate_types_by_page(df, rule_pattern, ent_types)
+        dft_by_page = _aggregate_types_by_page(df_train, rule_pattern, ent_types)
         rule_dfs[rule_name] = _aggregate_types_by_section(dft_by_page, rule_pattern)
     get_logger().debug(f'> Finding new types from patterns..')
     return _extract_new_types_with_threshold(df, rule_dfs, ent_types, valid_tags)
@@ -167,13 +167,13 @@ def _extract_new_types(valid_rule_dfs: list, source_df: pd.DataFrame, ent_types:
 # EXTRACT RELATIONS
 
 
-def _compute_new_relations(df: pd.DataFrame, df_rels: pd.DataFrame, target_identifier: str, valid_tags: Dict[int, Set[int]]) -> pd.DataFrame:
+def _compute_new_relations(df: pd.DataFrame, df_train: pd.DataFrame, df_rels: pd.DataFrame, target_identifier: str, valid_tags: Dict[int, Set[int]]) -> pd.DataFrame:
     """Retrieve relation assertions from the initial dataframe."""
     rule_dfs = {}
-    dfr = _create_relation_df(df, df_rels, target_identifier)
+    dfr = _create_relation_df(df_train, df_rels, target_identifier)
     dfr_types = _create_relation_type_df(dfr)
     for rule_name, rule_pattern in RULE_PATTERNS.items():
-        dfr_by_page = _aggregate_relations_by_page(df, dfr, df_rels, rule_pattern)
+        dfr_by_page = _aggregate_relations_by_page(df_train, dfr, df_rels, rule_pattern)
         rule_dfs[rule_name] = _aggregate_relations_by_section(dfr_by_page, rule_pattern)
     new_relations = _extract_new_relations_with_threshold(df, dfr_types, df_rels, target_identifier, rule_dfs)
     filtered_relations = _filter_new_relations_by_tag(new_relations, valid_tags)

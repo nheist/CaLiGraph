@@ -7,7 +7,7 @@ from utils import get_logger
 from impl.wikipedia import WikiPageStore
 from impl.dbpedia.ontology import DbpType, DbpOntologyStore
 from impl.dbpedia.resource import DbpListpage, DbpResourceStore
-from impl.caligraph.ontology import ClgType, ClgOntologyStore
+from impl.caligraph.ontology import ClgOntologyStore
 from impl.caligraph.entity import ClgEntity, ClgEntityStore
 
 
