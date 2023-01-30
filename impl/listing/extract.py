@@ -129,15 +129,14 @@ def _aggregate_types_by_section(dfp: pd.DataFrame, section_grouping: list) -> pd
     # add page count
     get_logger().debug('>> Computing page count..')
     page_count = dfp.groupby(section_grouping)['P'].nunique().rename('page_count').reset_index()
-    result = pd.merge(left=result, right=page_count, on=section_grouping)
+    result = pd.merge(left=result, right=page_count, on=section_grouping).set_index(grp)
     # compute micro_std
     get_logger().debug('>> Computing micro std..')
-    confidence_deviations = pd.merge(how='left', left=dfp, right=result, on=grp)
+    confidence_deviations = pd.merge(how='left', left=dfp, right=result, left_on=grp, right_index=True)
     confidence_deviations['dev'] = np.absolute(confidence_deviations['micro_mean'] - confidence_deviations['type_conf'])
-    micro_std = confidence_deviations.groupby(grp).apply(lambda x: (x['dev'].sum() + (x['page_count'].mean() - len(x)) * x['micro_mean'].mean()) / x['page_count'].mean()).rename('micro_std').reset_index()
-    get_logger().debug('>> Merging metrics..')
-    result = pd.merge(left=result, right=micro_std, on=grp)
-    return result.set_index(grp)
+    cdg = confidence_deviations.groupby(grp)
+    result['micro_std'] = (cdg['dev'].sum() + (cdg['page_count'].mean() - cdg['page_count'].count()) * cdg['micro_mean'].mean()) / cdg['page_count'].mean()
+    return result
 
 
 def _extract_new_types_with_threshold(df: pd.DataFrame, rule_dfs: dict, ent_types: Dict[int, Set[int]], valid_tags: Dict[int, Set[int]]) -> Dict[int, Dict[Tuple[int, int], set]]:
@@ -222,7 +221,7 @@ def _aggregate_relations_by_page(df: pd.DataFrame, dfr: pd.DataFrame, df_rels: p
     for grp, df_grp in df.groupby(page_grouping):
         rels = Counter()
         invrels = Counter()
-        for _, ent in df_grp['E_ent'].iteritems():
+        for ent in df_grp['E_ent']:
             rels.update(entity_preds[ent])
             invrels.update(entity_invpreds[ent])
         for r, cnt in rels.items():
