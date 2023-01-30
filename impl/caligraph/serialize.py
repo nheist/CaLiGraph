@@ -360,7 +360,7 @@ def _print_statistics(clgo, clge) -> str:
 
     entities = clge.get_entities()
     types_per_entity = np.mean([len(clge.get_transitive_types(e, include_root=True)) for e in entities])
-    relations = {(e, p, v) for e, props in clge.get_entity_properties() for p, v in props.items()}
+    relations = {(e, p, v) for e, props in clge.get_entity_properties().items() for p, v in props.items()}
     resource_relation_count = len({r for r in relations if isinstance(r[2], ClgEntity)})
     literal_relation_count = len(relations) - resource_relation_count
     in_degree = resource_relation_count / len(entities)
