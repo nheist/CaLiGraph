@@ -1,5 +1,6 @@
 from typing import Optional, Dict, Tuple, List, Set, Iterable
 from collections import Counter, defaultdict
+import csv
 import numpy as np
 from scipy.optimize import linear_sum_assignment
 from torch.utils.tensorboard import SummaryWriter
@@ -150,10 +151,7 @@ class MetricsCalculator:
             metrics['clusters'] = alignment_comparison.get_cluster_count(nil_flag)
             # entity-focused cluster metrics
             e_pred, e_actual = alignment_comparison.get_entity_clusters(nil_flag)
-            evalator_results = Evaluate(self._to_neleval_format(e_pred), self._to_neleval_format(e_actual), {"b_cubed_plus", "entity_ceaf", "muc"})()
-            metrics['B3+'] = evalator_results["b_cubed"]["fscore"]
-            metrics['CEAF'] = evalator_results["entity_ceaf"]["fscore"]
-            metrics['MUC'] = evalator_results["muc"]["fscore"]
+            metrics |= self._get_neleval_metrics(e_pred, e_actual)
             metrics['eNMI'] = normalized_mutual_info_score(e_actual, e_pred)
             metrics['ARI'] = adjusted_rand_score(e_actual, e_pred)
             # mention-focused NMI
@@ -161,8 +159,17 @@ class MetricsCalculator:
             metrics['mNMI'] = normalized_mutual_info_score(m_actual, m_pred)
         return metrics
 
-    def _to_neleval_format(self, cluster_ids: list) -> list:
-        return [(0, m_id*2, m_id*2+1, f'NIL{c_id}', 1.0, 'MISC') for m_id, c_id in enumerate(cluster_ids)]
+    def _get_neleval_metrics(self, pred: list, actual: list) -> dict:
+        pred_file, actual_file = 'neleval_pred.tsv', 'neleval_actual.tsv'
+        self._create_neleval_file(pred, pred_file)
+        self._create_neleval_file(actual, actual_file)
+        res = Evaluate(pred_file, actual_file, {"b_cubed_plus", "entity_ceaf", "muc"})()
+        return {'B3+': res["b_cubed_plus"]["fscore"], 'CEAF': res["entity_ceaf"]["fscore"], 'MUC': res["muc"]["fscore"]}
+
+    def _create_neleval_file(self, cluster_ids: list, filename: str):
+        with open(filename, 'w', newline='') as tsvfile:
+            writer = csv.writer(tsvfile, delimiter='\t', lineterminator='\n')
+            writer.writerows([(0, m_id*2, m_id*2+1, f'NIL{c_id}', 1.0, 'MISC') for m_id, c_id in enumerate(cluster_ids)])
 
     @classmethod
     def _compute_p_r_f1(cls, prefix: str, pred_count: int, actual_count: int, tp: int) -> Dict[str, float]:
