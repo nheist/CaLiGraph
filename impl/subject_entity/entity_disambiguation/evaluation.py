@@ -150,7 +150,7 @@ class MetricsCalculator:
             metrics['clusters'] = alignment_comparison.get_cluster_count(nil_flag)
             # entity-focused cluster metrics
             e_pred, e_actual = alignment_comparison.get_entity_clusters(nil_flag)
-            evalator_results = Evaluate(e_pred, e_actual, {"b_cubed_plus", "entity_ceaf", "muc"})()
+            evalator_results = Evaluate(self._to_neleval_format(e_pred), self._to_neleval_format(e_actual), {"b_cubed_plus", "entity_ceaf", "muc"})()
             metrics['B3+'] = evalator_results["b_cubed"]["fscore"]
             metrics['CEAF'] = evalator_results["entity_ceaf"]["fscore"]
             metrics['MUC'] = evalator_results["muc"]["fscore"]
@@ -160,6 +160,9 @@ class MetricsCalculator:
             m_pred, m_actual = alignment_comparison.get_mention_clusters(nil_flag)
             metrics['mNMI'] = normalized_mutual_info_score(m_actual, m_pred)
         return metrics
+
+    def _to_neleval_format(self, cluster_ids: list) -> list:
+        return [(0, m_id*2, m_id*2+1, f'NIL{c_id}', 1.0, 'MISC') for m_id, c_id in enumerate(cluster_ids)]
 
     @classmethod
     def _compute_p_r_f1(cls, prefix: str, pred_count: int, actual_count: int, tp: int) -> Dict[str, float]:
