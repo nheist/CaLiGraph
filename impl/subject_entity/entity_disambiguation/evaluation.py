@@ -3,7 +3,8 @@ from collections import Counter, defaultdict
 import numpy as np
 from scipy.optimize import linear_sum_assignment
 from torch.utils.tensorboard import SummaryWriter
-from sklearn.metrics import normalized_mutual_info_score
+from sklearn.metrics import normalized_mutual_info_score, adjusted_rand_score
+from neleval.evaluate import Evaluate
 from impl.subject_entity.entity_disambiguation.data.util import is_nil_mention, is_consistent_with_nil_flag, Pair, Alignment, CandidateAlignment
 import utils
 from impl.wikipedia import MentionId
@@ -147,10 +148,17 @@ class MetricsCalculator:
         metrics |= self._compute_p_r_f1('me', pred_count, actual_mention_count, tp)
         if alignment_comparison.has_clustering():
             metrics['clusters'] = alignment_comparison.get_cluster_count(nil_flag)
-            # entity-focused NMI
-            metrics['eNMI'] = normalized_mutual_info_score(*alignment_comparison.get_entity_clusters(nil_flag))
+            # entity-focused cluster metrics
+            e_pred, e_actual = alignment_comparison.get_entity_clusters(nil_flag)
+            evalator_results = Evaluate(e_pred, e_actual, {"b_cubed_plus", "entity_ceaf", "muc"})()
+            metrics['B3+'] = evalator_results["b_cubed"]["fscore"]
+            metrics['CEAF'] = evalator_results["entity_ceaf"]["fscore"]
+            metrics['MUC'] = evalator_results["muc"]["fscore"]
+            metrics['eNMI'] = normalized_mutual_info_score(e_actual, e_pred)
+            metrics['ARI'] = adjusted_rand_score(e_actual, e_pred)
             # mention-focused NMI
-            metrics['mNMI'] = normalized_mutual_info_score(*alignment_comparison.get_mention_clusters(nil_flag))
+            m_pred, m_actual = alignment_comparison.get_mention_clusters(nil_flag)
+            metrics['mNMI'] = normalized_mutual_info_score(m_actual, m_pred)
         return metrics
 
     @classmethod
