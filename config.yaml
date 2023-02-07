@@ -3,8 +3,8 @@ max_cpus: 20
 
 # -- CALIGRAPH CONFIGURATION --
 caligraph:
-  version: '2.2.0'
-  creation_date: '2022-04-05'
+  version: '3.0.0'
+  creation_date: '2023-02-01'
   root_node: 'Thing'
 dbpedia:
   disjointness_threshold: 0.132  # in the original paper: 0.17
@@ -28,7 +28,7 @@ listing:
 logging:
   level: 'DEBUG'
   to_file: False
-  filename: 'caligraph_v2_2_0'
+  filename: 'caligraph_v3_0_0'
 
 # -- ERROR-MAILER CONFIGURATION --
 # -> add information about your mail accounts here and enable the `success` or `error` switches
@@ -47,62 +47,59 @@ files:
   wikipedia:
     pages:
       filename: 'pages_articles_en.xml.bz2'
-      url: 'https://dumps.wikimedia.org/enwiki/20201001/enwiki-20201001-pages-articles-multistream.xml.bz2'
+      url: 'http://data.dws.informatik.uni-mannheim.de/CaLiGraph/data/pages_articles_en_20220820.xml.bz'
   dbpedia:
     taxonomy:
       filename: 'dbpedia_ontology.nt'
-      url: 'http://akswnc7.informatik.uni-leipzig.de/dstreitmatter/archivo/dbpedia.org/ontology--DEV/2020.12.02-031001/ontology--DEV_type=parsed.nt'
+      url: 'http://akswnc7.informatik.uni-leipzig.de/dstreitmatter/archivo/dbpedia.org/ontology/2022.09.02-100003/ontology_type=parsed.nt'
     labels:
-      filename: 'labels_lang=en.ttl.bz2'
-      url: 'https://downloads.dbpedia.org/repo/dbpedia/generic/labels/2020.10.01/labels_lang=en.ttl.bz2'
+      filename: 'labels_en.ttl.bz2'
+      url: 'https://downloads.dbpedia.org/repo/dbpedia/generic/labels/2022.09.01/labels_lang=en.ttl.bz2'
     category_articles:
-      filename: 'categories_lang=en_articles.ttl.bz2'
-      url: 'https://downloads.dbpedia.org/repo/dbpedia/generic/categories/2020.10.01/categories_lang=en_articles.ttl.bz2'
+      filename: 'categories_en_articles.ttl.bz2'
+      url: 'https://downloads.dbpedia.org/repo/dbpedia/generic/categories/2022.09.01/categories_lang=en_articles.ttl.bz2'
     category_skos:
-      filename: 'categories_lang=en_skos.ttl.bz2'
-      url: 'https://downloads.dbpedia.org/repo/dbpedia/generic/categories/2020.10.01/categories_lang=en_skos.ttl.bz2'
+      filename: 'categories_en_skos.ttl.bz2'
+      url: 'https://downloads.dbpedia.org/repo/dbpedia/generic/categories/2022.09.01/categories_lang=en_skos.ttl.bz2'
     topical_concepts:
-      filename: 'topical_concepts_lang=en.ttl.bz2'
-      url: 'https://downloads.dbpedia.org/repo/dbpedia/generic/topical-concepts/2020.10.01/topical-concepts_lang=en.ttl.bz2'
+      filename: 'topical_concepts_en.ttl.bz2'
+      url: 'https://downloads.dbpedia.org/repo/dbpedia/generic/topical-concepts/2022.03.01/topical-concepts_lang=en.ttl.bz2'
     instance_types:
-      filename: 'instance-types_lang=en_specific.ttl.bz2'
-      url: 'https://downloads.dbpedia.org/repo/dbpedia/mappings/instance-types/2020.10.01/instance-types_lang=en_specific.ttl.bz2'
+      filename: 'instance-types_en_specific.ttl.bz2'
+      url: 'https://downloads.dbpedia.org/repo/dbpedia/mappings/instance-types/2022.09.01/instance-types_lang=en_specific.ttl.bz2'
     mappingbased_literals:
-      filename: 'mappingbased-literals_lang=en.ttl.bz2'
-      url: 'https://downloads.dbpedia.org/repo/dbpedia/mappings/mappingbased-literals/2020.10.01/mappingbased-literals_lang=en.ttl.bz2'
+      filename: 'mappingbased-literals_en.ttl.bz2'
+      url: 'https://downloads.dbpedia.org/repo/dbpedia/mappings/mappingbased-literals/2022.09.01/mappingbased-literals_lang=en.ttl.bz2'
     mappingbased_objects:
-      filename: 'mappingbased-objects_lang=en.ttl.bz2'
-      url: 'https://downloads.dbpedia.org/repo/dbpedia/mappings/mappingbased-objects/2020.10.01/mappingbased-objects_lang=en.ttl.bz2'
+      filename: 'mappingbased-objects_en.ttl.bz2'
+      url: 'https://downloads.dbpedia.org/repo/dbpedia/mappings/mappingbased-objects/2022.09.01/mappingbased-objects_lang=en.ttl.bz2'
     anchor_texts:
       filename: 'anchor_text_en.ttl.bz2'
-      url: 'https://downloads.dbpedia.org/repo/dbpedia/generic/anchor-text/2020.10.01/anchor-text_lang=en.ttl.bz2'
+      url: 'https://downloads.dbpedia.org/repo/dbpedia/generic/anchor-text/2022.09.01/anchor-text_lang=en.ttl.bz2'
     redirects:
-      filename: 'redirects_lang=en.ttl.bz2'
-      url: 'https://downloads.dbpedia.org/repo/dbpedia/generic/redirects/2020.10.01/redirects_lang=en_transitive.ttl.bz2'
+      filename: 'redirects_en.ttl.bz2'
+      url: 'https://downloads.dbpedia.org/repo/dbpedia/generic/redirects/2022.09.01/redirects_lang=en_transitive.ttl.bz2'
     disambiguations:
-      filename: 'disambiguations_lang=en.ttl.bz2'
-      url: 'https://downloads.dbpedia.org/repo/dbpedia/generic/disambiguations/2020.10.01/disambiguations_lang=en.ttl.bz2'
+      filename: 'disambiguations_en.ttl.bz2'
+      url: 'https://downloads.dbpedia.org/repo/dbpedia/generic/disambiguations/2022.09.01/disambiguations_lang=en.ttl.bz2'
     nif_context:
-      filename: 'nif-context_lang=en.ttl.bz2'
+      filename: 'nif-context_en.ttl.bz2'
       url: 'https://downloads.dbpedia.org/repo/dbpedia/text/nif-context/2020.07.01/nif-context_lang=en.ttl.bz2'
     short_abstracts:
-      filename: 'short-abstracts_lang=en.ttl.bz2'
-      url: 'https://downloads.dbpedia.org/repo/dbpedia/text/short-abstracts/2020.07.01/short-abstracts_lang=en.ttl.bz2'
-    wikilinks:  # CURRENTLY UNUSED!
-      filename: 'wikilinks_lang=en.ttl.bz2'
-      url: 'https://downloads.dbpedia.org/repo/dbpedia/generic/wikilinks/2020.10.01/wikilinks_lang=en.ttl.bz2'
-    embedding_vectors:
-      filename: 'embeddings_dbpedia2020_rdf2vec.txt.bz2'
-      url: 'http://data.dws.informatik.uni-mannheim.de/CaLiGraph/data/embeddings_dbpedia2020_rdf2vec.txt.bz2'
+      filename: 'short-abstracts_en.ttl.bz2'
+      url: 'https://downloads.dbpedia.org/repo/dbpedia/text/short-abstracts/2022.09.01/short-abstracts_lang=en.ttl.bz2'
+    page_ids:
+      filename: 'page_en_ids.ttl.bz2'
+      url: 'https://downloads.dbpedia.org/repo/dbpedia/generic/page/2022.09.01/page_lang=en_ids.ttl.bz2'
+    wikidata_links:
+      filename: 'sameas-all-wikis.ttl.bz2'
+      url: 'https://downloads.dbpedia.org/repo/dbpedia/wikidata/sameas-all-wikis/2022.09.01/sameas-all-wikis.ttl.bz2'
     webisalod_hypernyms:
       filename: 'webisalod_hypernyms.p.bz2'
       url: 'http://data.dws.informatik.uni-mannheim.de/CaLiGraph/data/webisalod_hypernyms.p.bz2'
-    page_ids:
-      filename: 'page_lang=en_ids.ttl.bz2'
-      url: 'https://downloads.dbpedia.org/repo/dbpedia/generic/page/2020.10.01/page_lang=en_ids.ttl.bz2'
-    wikidata_links:
-      filename: 'sameas-all-wikis.ttl.bz2'
-      url: 'https://downloads.dbpedia.org/repo/dbpedia/wikidata/sameas-all-wikis/2020.07.01/sameas-all-wikis.ttl.bz2'
+    wikilinks:  # unused
+      filename: 'wikilinks_en.ttl.bz2'
+      url: 'https://downloads.dbpedia.org/repo/dbpedia/generic/wikilinks/2022.09.01/wikilinks_lang=en.ttl.bz2'
   listpages:
     goldstandard_named-entity-tagging:
       filename: 'goldstandard_list-page-named-entity-tagging.json'
@@ -144,185 +141,177 @@ results:
 cache:
   spacy_cache:
     filename: 'spacy-cache'
-    version: 2
+    version: 1
   wikipedia_raw_markup:
     filename: 'wikipedia-raw-markup'
-    version: 2
+    version: 1
     compress: True
   wikipedia_parent_categories:
     filename: 'wikipedia-parent-categories'
-    version: 2
+    version: 1
   wikipedia_parsed_pages:
     filename: 'wikipedia-parsed-pages'
-    version: 3
+    version: 1
   wikipedia_type_lexicalisations:
     filename: 'wikipedia-type-lexicalisations'
-    version: 2
+    version: 1
   wikipedia_hypernyms:
     filename: 'wikipedia-hypernyms'
-    version: 2
+    version: 1
   wikitaxonomy_hypernyms:
     filename: 'wikitaxonomy-hypernyms'
-    version: 2
+    version: 1
     compress: True
   dbpedia_classes:
     filename: 'dbpedia-classes'
-    version: 2
+    version: 1
   dbpedia_resources:
     filename: 'dbpedia-resources'
-    version: 2
+    version: 1
   dbpedia_resource_labels:
     filename: 'dbpedia-resource-labels'
-    version: 2
+    version: 1
   dbpedia_resource_surface_forms:
     filename: 'dbpedia-resource-surface-forms'
-    version: 2
+    version: 1
   dbpedia_resource_surface_form_references:
     filename: 'dbpedia-resource-surface-form-references'
-    version: 2
+    version: 1
   dbpedia_resource_abstracts:
     filename: 'dbpedia-resource-abstracts'
-    version: 2
-  dbpedia_resource_wikilinks:
+    version: 1
+  dbpedia_resource_wikilinks:  # unused
     filename: 'dbpedia-resource-wikilinks'
-    version: 2
+    version: 1
   dbpedia_resource_types:
     filename: 'dbpedia-resource-types'
-    version: 2
+    version: 1
   dbpedia_resource_typelabels:
     filename: 'dbpedia-resource-typelabels'
-    version: 2
+    version: 1
   dbpedia_resource_properties:
     filename: 'dbpedia-resource-properties'
-    version: 2
+    version: 1
   dbpedia_resource_redirects:
     filename: 'dbpedia-resource-redirects'
-    version: 2
-  dbpedia_resource_embeddings:
-    filename: 'dbpedia-resource-embeddings'
-    version: RDF2vec
+    version: 1
   dbpedia_categories:
     filename: 'dbpedia-categories'
-    version: 2
+    version: 1
   dbpedia_category_children:
     filename: 'dbpedia-category-children'
-    version: 2
+    version: 1
   dbpedia_category_labels:
     filename: 'dbpedia-category-labels'
-    version: 2
+    version: 1
   dbpedia_category_resources:
     filename: 'dbpedia-category-resources'
-    version: 2
+    version: 1
   dbpedia_category_sets:
     filename: 'dbpedia-category-sets'
-    version: 2
+    version: 1
   dbpedia_heuristic_domains:
     filename: 'dbpedia-heuristic-domains'
-    version: 2
+    version: 1
   dbpedia_heuristic_ranges:
     filename: 'dbpedia-heuristic-ranges'
-    version: 2
+    version: 1
   dbpedia_heuristic_disjoint_types:
     filename: 'dbpedia-heuristic-disjoint-types'
-    version: 2
+    version: 1
   dbpedia_list_equivalents:
     filename: 'dbpedia-list-equivalents'
-    version: 2
+    version: 1
   dbpedia_list_parents:
     filename: 'dbpedia-list-parents'
-    version: 2
+    version: 1
   cat2ax_axioms:
     filename: 'cat2ax-axioms'
-    version: 2
+    version: 1
   catgraph_conceptual:
     filename: 'catgraph-conceptual'
-    version: 2
+    version: 1
   catgraph_wikitaxonomy:
     filename: 'catgraph-wikitaxonomy'
-    version: 2
+    version: 1
   catgraph_merged:
     filename: 'catgraph-merged'
-    version: 2
+    version: 1
   listgraph_base:
     filename: 'listgraph-base'
-    version: 2
+    version: 1
   listgraph_wikitaxonomy:
     filename: 'listgraph-wikitaxonomy'
-    version: 2
+    version: 1
   listgraph_merged:
     filename: 'listgraph-merged'
-    version: 2
+    version: 1
   spacy_listpage_ne-tagging:
     filename: 'spacy_listpage_ne-tagging'
-    version: 2
+    version: 1
     store_as_folder: True
   subject_entity_listpage_labels:
     filename: 'subject-entity-listpage-labels'
-    version: 4
+    version: 1
   subject_entity_mentions_noisy:
     filename: 'subject-entity-mentions-noisy'
-    version: 4
+    version: 1
   subject_entity_mentions:
     filename: 'subject-entity-mentions'
-    version: 4
+    version: 1
   disambiguated_subject_entity_mentions:
     filename: 'disambiguated-subject-entity-mentions'
-    version: 4
+    version: 1
   transformer_for_listpage_mention_detection:
     filename: 'transformer-for-listpage-mention-detection'
-    version: 4
+    version: 1
     store_as_folder: True
   transformer_for_page_mention_detection:
     filename: 'transformer-for-page-mention-detection'
-    version: 4
+    version: 1
     store_as_folder: True
   caligraph_ontology:
     filename: 'caligraph-ontology'
-    version: 2
+    version: 1
   caligraph_entities:
     filename: 'caligraph-entities'
-    version: 2
+    version: 1
   caligraph_entity_labels:
     filename: 'caligraph-entity-labels'
-    version: 2
+    version: 1
   caligraph_entity_surface_forms:
     filename: 'caligraph-entity-surface-forms'
-    version: 2
+    version: 1
   caligraph_entity_types:
     filename: 'caligraph-entity-types'
-    version: 2
+    version: 1
   caligraph_entity_properties:
     filename: 'caligraph-entity-properties'
-    version: 2
+    version: 1
   cali2ax_axioms:
     filename: 'cali2ax-axioms'
-    version: 4
+    version: 1
   listing_page_entities:
     filename: 'listing-page-entities'
-    version: 4
-
-# WIP
-  word_blocker_exact:
-    filename: 'word-blocker-exact'
-    version: RDF2vec
+    version: 1
   MD_listpage_data:
     filename: 'MD-listpage-data'
-    version: 5
+    version: 1
   MD_listpage_train:
     filename: 'MD-listpage-train'
-    version: 5
+    version: 1
   MD_listpage_eval:
     filename: 'MD-listpage-eval'
-    version: 5
+    version: 1
   MD_page_train:
     filename: 'MD-page-train'
-    version: 5
+    version: 1
   MD_page_test:
     filename: 'MD-page-test'
-    version: 5
+    version: 1
   ED_datasets:
     filename: 'ED-datasets'
-    version: 2
+    version: 1
   ED_nilk_datasets:
     filename: 'ED-nilk-datasets'
     version: 1

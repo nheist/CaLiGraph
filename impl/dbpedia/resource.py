@@ -44,9 +44,6 @@ class DbpEntity(DbpResource):
     def get_abstract(self) -> Optional[str]:
         return self._get_store().get_abstract(self)
 
-    def get_embedding_vector(self) -> Optional[List[float]]:
-        return self._get_store().get_embedding_vectors()[self.idx]
-
 
 class DbpListpage(DbpResource):
     def get_label(self) -> str:
@@ -315,11 +312,6 @@ class DbpResourceStore:
             wikidata_to_res = {wd_url[wd_url.rindex('/')+1:]: self.get_resource_by_iri(res_iri) for wd_url, res_iris in wikidata_to_res.items() for res_iri in res_iris if self.has_resource_with_iri(res_iri)}
             self.wikidata_links = defaultdict(lambda: None, wikidata_to_res)
         return self.wikidata_links[wikidata_id]
-
-    def get_embedding_vectors(self) -> Dict[int, List[float]]:
-        if self.embedding_vectors is None:
-            self.embedding_vectors = defaultdict(lambda: None, utils.load_or_create_cache('dbpedia_resource_embeddings', self._init_embedding_cache))
-        return self.embedding_vectors
 
     def _init_embedding_cache(self) -> Dict[int, List[float]]:
         embedding_vectors = {}
