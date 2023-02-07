@@ -74,6 +74,7 @@ class DbpOntologyStore:
         all_classes.update({DbpDatatypePredicate(idx, dbp_util.class_iri2name(uri), False) for idx, uri in enumerate(datatype_predicate_uris, start=len(all_classes))})
         # types
         all_type_uris = rdf_util.create_set_from_rdf([utils.get_data_file('files.dbpedia.taxonomy')], RdfPredicate.TYPE, RdfClass.OWL_CLASS.value)
+        all_type_uris.update(rdf_util.create_set_from_rdf([utils.get_data_file('files.dbpedia.taxonomy')], RdfPredicate.SUBCLASS_OF, None))
         all_type_uris = {t for t in all_type_uris if dbp_util.is_class_iri(t)}
         all_classes.update({DbpType(idx, dbp_util.class_iri2name(uri), False) for idx, uri in enumerate(all_type_uris, start=len(all_classes))})
         return all_classes
