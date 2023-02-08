@@ -47,7 +47,7 @@ files:
   wikipedia:
     pages:
       filename: 'pages_articles_en.xml.bz2'
-      url: 'http://data.dws.informatik.uni-mannheim.de/CaLiGraph/data/pages_articles_en_20220820.xml.bz'
+      url: 'http://data.dws.informatik.uni-mannheim.de/CaLiGraph/data/pages_articles_en_20220820.xml.bz2'
   dbpedia:
     taxonomy:
       filename: 'dbpedia_ontology.nt'
