@@ -51,7 +51,7 @@ files:
   dbpedia:
     taxonomy:
       filename: 'dbpedia_ontology.nt'
-      url: 'http://akswnc7.informatik.uni-leipzig.de/dstreitmatter/archivo/dbpedia.org/ontology/2022.09.02-100003/ontology_type=parsed.nt'
+      url: 'http://akswnc7.informatik.uni-leipzig.de/dstreitmatter/archivo/dbpedia.org/ontology--DEV/2022.10.09-192003/ontology--DEV_type=parsed.nt'
     labels:
       filename: 'labels_en.ttl.bz2'
       url: 'https://downloads.dbpedia.org/repo/dbpedia/generic/labels/2022.09.01/labels_lang=en.ttl.bz2'
