@@ -9,10 +9,6 @@ import utils
 
 
 class DbpClass(RdfResource):
-    def get_label(self) -> str:
-        label = super().get_label()
-        return label or self.name[len(self.get_namespace()):]
-
     @classmethod
     def _get_store(cls) -> str:
         return DbpOntologyStore.instance()
