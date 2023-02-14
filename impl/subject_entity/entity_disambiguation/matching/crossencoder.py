@@ -48,16 +48,17 @@ class CrossEncoderMatcher(MatcherWithCandidates):
         return {}  # never predict on the training set with the cross-encoder
 
     def is_model_ready(self) -> bool:
-        return os.path.exists(get_cache_path(self.base_model))
+        return os.path.exists(get_cache_path(self.id))
 
     def _train_model(self, train_corpus: DataCorpus):
-        path_to_model = get_cache_path(self.base_model)
-        if self.is_model_ready():  # load local model
+        # load local model, if available
+        path_to_model = get_cache_path(self.id)
+        if self.is_model_ready():
             self.model = CrossEncoder(path_to_model, num_labels=1)
             return
-        else:  # initialize model from huggingface hub
-            self.model = CrossEncoder(self.base_model, num_labels=1)
-            transformer_util.add_special_tokens(self.model)
+        # initialize model from huggingface hub
+        self.model = CrossEncoder(self.base_model, num_labels=1)
+        transformer_util.add_special_tokens(self.model)
         if self.epochs == 0:
             return  # skip training
         training_examples = []
@@ -75,7 +76,7 @@ class CrossEncoderMatcher(MatcherWithCandidates):
         utils.release_gpu()
         self.model.fit(train_dataloader=train_dataloader, epochs=self.epochs, warmup_steps=self.warmup_steps, save_best_model=False)
         utils.get_logger().debug(f'Storing model {self.id}..')
-        self.model.save(get_cache_path(self.id))
+        self.model.save(path_to_model)
 
     def predict(self, eval_mode: str, data_corpus: DataCorpus) -> CandidateAlignment:
         mention_input = data_corpus.get_mention_input(self.add_page_context, self.add_text_context)

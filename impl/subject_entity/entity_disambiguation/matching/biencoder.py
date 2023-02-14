@@ -50,17 +50,15 @@ class BiEncoderMatcher(Matcher):
         }
         return super()._get_param_dict() | params
 
-    def is_model_ready(self) -> bool:
-        return os.path.exists(get_cache_path(self.base_model))
-
     def _train_model(self, train_corpus: DataCorpus):
-        path_to_model = get_cache_path(self.base_model)
-        if self.is_model_ready():  # load local model
+        # load local model, if available
+        path_to_model = get_cache_path(self.id)
+        if os.path.exists(path_to_model):
             self.model = SentenceTransformer(path_to_model)
             return
-        else:  # initialize model from huggingface hub
-            self.model = SentenceTransformer(self.base_model)
-            transformer_util.add_special_tokens(self.model)
+        # initialize model from huggingface hub
+        self.model = SentenceTransformer(self.base_model)
+        transformer_util.add_special_tokens(self.model)
         if self.epochs == 0:
             return  # skip training
         training_examples = []
