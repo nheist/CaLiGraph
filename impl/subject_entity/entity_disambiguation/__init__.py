@@ -51,7 +51,8 @@ def _get_biencoder_config() -> dict:
     return {
         'id': be_id, 'base_model': 'all-MiniLM-L12-v2', 'train_sample': 1, 'top_k': 4,
         'approximate_neighbor_search': True, 'add_page_context': True, 'add_text_context': False,
-        'add_entity_abstract': True, 'add_kg_info': False, 'loss': 'SRL', 'batch_size': 384, 'epochs': 1, 'warmup_steps': 0
+        'add_entity_abstract': True, 'add_kg_info': False, 'loss': 'SRL', 'batch_size': 384, 'epochs': 1,
+        'warmup_steps': 0
     }
 
 
@@ -60,7 +61,7 @@ def _get_crossencoder_config() -> dict:
     return {
         'id': ce_id, 'base_model': 'distilbert-base-cased', 'train_sample': 1,
         'add_page_context': True, 'add_text_context': False, 'add_entity_abstract': True, 'add_kg_info': False,
-        'batch_size': 384, 'epochs': 1, 'warmup_steps': 0
+        'batch_size': 256, 'epochs': 1, 'warmup_steps': 0
     }
 
 
