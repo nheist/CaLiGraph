@@ -61,7 +61,7 @@ def _get_crossencoder_config() -> dict:
     return {
         'id': ce_id, 'base_model': 'distilbert-base-cased', 'train_sample': 1,
         'add_page_context': True, 'add_text_context': False, 'add_entity_abstract': True, 'add_kg_info': False,
-        'batch_size': 256, 'epochs': 1, 'warmup_steps': 0
+        'batch_size': 128, 'epochs': 1, 'warmup_steps': 0
     }
 
 
