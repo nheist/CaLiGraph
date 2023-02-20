@@ -149,10 +149,15 @@ class ClgEntityStore:
         for ent in self.get_entities():
             for t in ent.get_transitive_types():
                 for pred, val in self.axioms[t]:
+                    # DEBUG
+                    if not isinstance(pred, ClgPredicate):
+                        raise ValueError(f'WTFFFFFF -> {pred} ; {val}')
+                    # /DEBUG
                     self.axiom_properties[ent][pred].add(val)
                     self.properties[ent][pred].add(val)
 
     def add_listing_information(self, listing_information: Dict[int, Dict[Tuple[int, str], dict]]):
+        self._load_properties()
         self._reset_precomputed_attributes()
         for ent_idx, origin_data in listing_information.items():
             for (res_idx, section_name), data in origin_data.items():
@@ -162,10 +167,18 @@ class ClgEntityStore:
                 self.types[ent].update({self.clgo.get_class_by_idx(tidx) for tidx in data['types']})
                 for p, v in data['out']:
                     pred = self.clgo.get_class_by_idx(p)
+                    # DEBUG
+                    if not isinstance(pred, ClgPredicate):
+                        raise ValueError(f'WTFFFFFF -> {p} ; {pred} ; {v}')
+                    # /DEBUG
                     val = self.get_entity_by_idx(v)
                     self.properties[ent][pred].add(val)
                 for p, s in data['in']:
                     pred = self.clgo.get_class_by_idx(p)
+                    # DEBUG
+                    if not isinstance(pred, ClgPredicate):
+                        raise ValueError(f'WTFFFFFF -> {p} ; {pred} ; {s}')
+                    # /DEBUG
                     sub = self.get_entity_by_idx(s)
                     self.properties[sub][pred].add(ent)
         self._clean_types(self.types)
