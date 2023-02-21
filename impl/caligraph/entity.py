@@ -297,6 +297,12 @@ class ClgEntityStore:
     def _load_properties(self):
         if self.properties is None:
             self.properties = utils.load_or_create_cache('caligraph_entity_properties', self._init_properties)
+        # DEBUG
+        for e, props in self.properties.items():
+            for pred, vals in props.items():
+                if not isinstance(pred, ClgPredicate):
+                    raise ValueError(f'WTFFFFFF -> {e.name} ({type(e)}) ; {pred.name} ({type(pred)}) ; {[v.name if isinstance(v, ClgEntity) else v for v in vals]}')
+        # /DEBUG
 
     def _init_properties(self) -> Dict[ClgEntity, Dict[ClgPredicate, set]]:
         properties = defaultdict(partial(defaultdict, set))
