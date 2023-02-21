@@ -256,6 +256,8 @@ class DbpResourceStore:
                 if not self.dbo.has_class_with_iri(pred):
                     continue
                 pred = self.dbo.get_class_by_iri(pred)
+                if not isinstance(pred, DbpPredicate):
+                    continue
                 properties[sub.idx][pred] = vals
         literal_property_uris = rdf_util.create_dict_from_rdf([utils.get_data_file('files.dbpedia.mappingbased_literals')], casting_fn=self.get_resource_by_iri)
         for sub, props in literal_property_uris.items():
@@ -263,6 +265,8 @@ class DbpResourceStore:
                 if not self.dbo.has_class_with_iri(pred):
                     continue
                 pred = self.dbo.get_class_by_iri(pred)
+                if not isinstance(pred, DbpPredicate):
+                    continue
                 properties[sub.idx][pred] = vals
         return dict(properties)
 

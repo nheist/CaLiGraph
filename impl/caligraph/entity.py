@@ -149,10 +149,6 @@ class ClgEntityStore:
         for ent in self.get_entities():
             for t in ent.get_transitive_types():
                 for pred, val in self.axioms[t]:
-                    # DEBUG
-                    if not isinstance(pred, ClgPredicate):
-                        raise ValueError(f'WTFFFFFF -> {pred} ; {val}')
-                    # /DEBUG
                     self.axiom_properties[ent][pred].add(val)
                     self.properties[ent][pred].add(val)
 
@@ -167,18 +163,10 @@ class ClgEntityStore:
                 self.types[ent].update({self.clgo.get_class_by_idx(tidx) for tidx in data['types']})
                 for p, v in data['out']:
                     pred = self.clgo.get_class_by_idx(p)
-                    # DEBUG
-                    if not isinstance(pred, ClgPredicate):
-                        raise ValueError(f'WTFFFFFF -> {p} ; {pred} ; {v}')
-                    # /DEBUG
                     val = self.get_entity_by_idx(v)
                     self.properties[ent][pred].add(val)
                 for p, s in data['in']:
                     pred = self.clgo.get_class_by_idx(p)
-                    # DEBUG
-                    if not isinstance(pred, ClgPredicate):
-                        raise ValueError(f'WTFFFFFF -> {p} ; {pred} ; {s}')
-                    # /DEBUG
                     sub = self.get_entity_by_idx(s)
                     self.properties[sub][pred].add(ent)
         self._clean_types(self.types)
@@ -297,12 +285,6 @@ class ClgEntityStore:
     def _load_properties(self):
         if self.properties is None:
             self.properties = utils.load_or_create_cache('caligraph_entity_properties', self._init_properties)
-        # DEBUG
-        for e, props in self.properties.items():
-            for pred, vals in props.items():
-                if not isinstance(pred, ClgPredicate):
-                    raise ValueError(f'WTFFFFFF -> {e.name} ({type(e)}) ; {pred.name} ({type(pred)}) ; {[v.name if isinstance(v, ClgEntity) else v for v in vals]}')
-        # /DEBUG
 
     def _init_properties(self) -> Dict[ClgEntity, Dict[ClgPredicate, set]]:
         properties = defaultdict(partial(defaultdict, set))
