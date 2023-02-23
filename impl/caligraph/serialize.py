@@ -370,7 +370,7 @@ def _print_statistics(clgo, clge) -> str:
         '{:^40}'.format('STATISTICS'),
         '=' * 40,
         '{:<30} | {:>7}'.format('types', len(clgo.get_types())),
-        '{:<30} | {:>7}'.format('types below root', len(clgo.get_type_root().get_subtypes())),
+        '{:<30} | {:>7}'.format('types below root', len(clgo.get_subtypes(clgo.get_type_root()))),
         '{:<30} | {:>7}'.format('types connected to DBpedia', types_connected_to_dbpedia_count),
         '{:<30} | {:>7}'.format('subtype relations', len(clgo.graph.edges)),
         '{:<30} | {:>7}'.format('predicates', len(clgo.get_predicates())),
