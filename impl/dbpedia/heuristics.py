@@ -104,7 +104,7 @@ def _compute_disjoint_types(type_threshold: float) -> Dict[DbpType, Set[DbpType]
     # make sure that there are no disjointnesses between place and organisation
     dbo_place = dbo.get_class_by_name('Place')
     place_types = dbo.get_transitive_subtypes(dbo_place, include_self=True) | dbo.get_equivalents(dbo_place)
-    dbo_organisation = dbo.get_class_by_name('Organisation')
+    dbo_organisation = dbo.get_class_by_name('Organization') or dbo.get_class_by_name('Organisation')
     orga_types = dbo.get_transitive_subtypes(dbo_organisation, include_self=True) | dbo.get_supertypes(dbo_organisation)
     for pt in place_types:
         disjoint_types[pt] = disjoint_types[pt].difference(orga_types)

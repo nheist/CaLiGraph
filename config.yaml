@@ -3,8 +3,8 @@ max_cpus: 20
 
 # -- CALIGRAPH CONFIGURATION --
 caligraph:
-  version: '3.0.0'
-  creation_date: '2023-02-01'
+  version: '3.0.1'
+  creation_date: '2023-04-01'
   root_node: 'Thing'
 dbpedia:
   disjointness_threshold: 0.132  # in the original paper: 0.17
@@ -28,7 +28,7 @@ listing:
 logging:
   level: 'DEBUG'
   to_file: False
-  filename: 'caligraph_v3_0_0'
+  filename: 'caligraph_v3_0_1'
 
 # -- ERROR-MAILER CONFIGURATION --
 # -> add information about your mail accounts here and enable the `success` or `error` switches
@@ -160,7 +160,7 @@ cache:
     version: 1
   wikitaxonomy_hypernyms:
     filename: 'wikitaxonomy-hypernyms'
-    version: 1
+    version: 2
     compress: True
   dbpedia_classes:
     filename: 'dbpedia-classes'
@@ -218,100 +218,100 @@ cache:
     version: 1
   dbpedia_heuristic_disjoint_types:
     filename: 'dbpedia-heuristic-disjoint-types'
-    version: 1
+    version: 2
   dbpedia_list_equivalents:
     filename: 'dbpedia-list-equivalents'
-    version: 1
+    version: 2
   dbpedia_list_parents:
     filename: 'dbpedia-list-parents'
-    version: 1
+    version: 2
   cat2ax_axioms:
     filename: 'cat2ax-axioms'
-    version: 1
+    version: 2
   catgraph_conceptual:
     filename: 'catgraph-conceptual'
-    version: 1
+    version: 2
   catgraph_wikitaxonomy:
     filename: 'catgraph-wikitaxonomy'
-    version: 1
+    version: 2
   catgraph_merged:
     filename: 'catgraph-merged'
-    version: 1
+    version: 2
   listgraph_base:
     filename: 'listgraph-base'
-    version: 1
+    version: 2
   listgraph_wikitaxonomy:
     filename: 'listgraph-wikitaxonomy'
-    version: 1
+    version: 2
   listgraph_merged:
     filename: 'listgraph-merged'
-    version: 1
+    version: 2
   spacy_listpage_ne-tagging:
     filename: 'spacy_listpage_ne-tagging'
     version: 1
     store_as_folder: True
   subject_entity_listpage_labels:
     filename: 'subject-entity-listpage-labels'
-    version: 1
+    version: 2
   subject_entity_mentions_noisy:
     filename: 'subject-entity-mentions-noisy'
-    version: 1
+    version: 2
   subject_entity_mentions:
     filename: 'subject-entity-mentions'
-    version: 1
+    version: 2
   disambiguated_subject_entity_mentions:
     filename: 'disambiguated-subject-entity-mentions'
-    version: 1
+    version: 2
   transformer_for_listpage_mention_detection:
     filename: 'transformer-for-listpage-mention-detection'
-    version: 1
+    version: 2
     store_as_folder: True
   transformer_for_page_mention_detection:
     filename: 'transformer-for-page-mention-detection'
-    version: 1
+    version: 2
     store_as_folder: True
   caligraph_ontology:
     filename: 'caligraph-ontology'
-    version: 1
+    version: 2
   caligraph_entities:
     filename: 'caligraph-entities'
-    version: 1
+    version: 2
   caligraph_entity_labels:
     filename: 'caligraph-entity-labels'
-    version: 1
+    version: 2
   caligraph_entity_surface_forms:
     filename: 'caligraph-entity-surface-forms'
-    version: 1
+    version: 2
   caligraph_entity_types:
     filename: 'caligraph-entity-types'
-    version: 1
+    version: 2
   caligraph_entity_properties:
     filename: 'caligraph-entity-properties'
-    version: 1
+    version: 2
   cali2ax_axioms:
     filename: 'cali2ax-axioms'
-    version: 1
+    version: 2
   listing_page_entities:
     filename: 'listing-page-entities'
-    version: 1
+    version: 2
   MD_listpage_data:
     filename: 'MD-listpage-data'
-    version: 1
+    version: 2
   MD_listpage_train:
     filename: 'MD-listpage-train'
-    version: 1
+    version: 2
   MD_listpage_eval:
     filename: 'MD-listpage-eval'
-    version: 1
+    version: 2
   MD_page_train:
     filename: 'MD-page-train'
-    version: 1
+    version: 2
   MD_page_test:
     filename: 'MD-page-test'
-    version: 1
+    version: 2
   ED_datasets:
     filename: 'ED-datasets'
-    version: 1
+    version: 2
   ED_nilk_datasets:
     filename: 'ED-nilk-datasets'
     version: 1

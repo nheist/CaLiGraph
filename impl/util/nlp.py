@@ -40,6 +40,7 @@ TYPE_TO_LABEL_MAPPING = {
     'Monument': EntityTypeLabel.FAC,
     # ORG
     'Organisation': EntityTypeLabel.ORG,
+    'Organization': EntityTypeLabel.ORG,
     # GPE
     'PopulatedPlace': EntityTypeLabel.GPE,
     # LOC
