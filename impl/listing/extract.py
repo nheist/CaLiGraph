@@ -11,10 +11,10 @@ from impl.caligraph.ontology import ClgOntologyStore
 from impl.caligraph.entity import ClgEntityStore
 
 RULE_PATTERNS = {
-    'pattern_TS': ['P_type', 'TS_id'],
+#    'pattern_TS': ['P_type', 'TS_id'],
     'pattern_TS-S': ['P_type', 'TS_id', 'S_id'],
     'pattern_TS-Sent': ['P_type', 'TS_id', 'S_enttype'],
-    'pattern_TSent': ['P_type', 'TS_enttype'],
+#    'pattern_TSent': ['P_type', 'TS_enttype'],
     'pattern_TSent-S': ['P_type', 'TS_enttype', 'S_id'],
 }
 
