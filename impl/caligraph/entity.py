@@ -156,11 +156,15 @@ class ClgEntityStore:
         self._load_properties()
         self._reset_precomputed_attributes()
         for ent_idx, origin_data in listing_information.items():
-            for (res_idx, section_name), data in origin_data.items():
-                ent = self.get_entity_by_idx(ent_idx)
+            ent = self.get_entity_by_idx(ent_idx)
+            disjoint_ent_types = {dt for t in ent.get_types() for dt in self.clgo.get_disjoint_types(t)}
+            for (res_idx, section_idx), data in origin_data.items():
+                new_types = {self.clgo.get_class_by_idx(tidx) for tidx in data['types']}
+                if new_types.intersection(disjoint_ent_types):
+                    continue  # skip the origin for this entity if conflicts are discovered
                 self.provenance_resources[ent].add(self.dbr.get_resource_by_idx(res_idx))
                 self.surface_forms[ent].update(data['labels'])
-                self.types[ent].update({self.clgo.get_class_by_idx(tidx) for tidx in data['types']})
+                self.types[ent].update(new_types)
                 for p, v in data['out']:
                     pred = self.clgo.get_class_by_idx(p)
                     val = self.get_entity_by_idx(v)
@@ -273,7 +277,7 @@ class ClgEntityStore:
             types[ent].difference_update({dt for ct in ent_types for dt in self.clgo.get_disjoint_types(ct)})
 
     def get_transitive_types(self, ent: ClgEntity, include_root=False) -> Set[ClgType]:
-        return {tt for t in self.types[ent] for tt in self.clgo.get_transitive_supertypes(t, include_root=include_root, include_self=True)}
+        return {tt for t in self.get_types(ent) for tt in self.clgo.get_transitive_supertypes(t, include_root=include_root, include_self=True)}
 
     def get_independent_types(self, ent: ClgEntity) -> Set[ClgType]:
         return self.clgo.get_independent_types(self.get_types(ent))
