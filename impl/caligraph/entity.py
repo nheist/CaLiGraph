@@ -157,7 +157,19 @@ class ClgEntityStore:
         self._reset_precomputed_attributes()
         for ent_idx, origin_data in listing_information.items():
             ent = self.get_entity_by_idx(ent_idx)
+            # collect type information first, to discard origins with conflicting types
+            # - gather existing disjoint types for the entity
+            # - sort types by numbers of occurrence (types that occur more often are more likely to be true)
+            # - successively add types as long as they do not conflict with existing types
             disjoint_ent_types = {dt for t in ent.get_types() for dt in self.clgo.get_disjoint_types(t)}
+            type_counts = defaultdict(int)
+            for data in origin_data.values():
+                for tidx in data['types']:
+                    type_counts[self.clgo.get_class_by_idx(tidx)] += 1
+            for t, _ in sorted(type_counts.items(), key=lambda x: x[1], reverse=True):
+                if t not in disjoint_ent_types:
+                    disjoint_ent_types.update(self.clgo.get_disjoint_types(t))
+            # then add all information from origins, discarding those with conflicting type information
             for (res_idx, section_idx), data in origin_data.items():
                 new_types = {self.clgo.get_class_by_idx(tidx) for tidx in data['types']}
                 if new_types.intersection(disjoint_ent_types):
