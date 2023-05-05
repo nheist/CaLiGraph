@@ -152,8 +152,8 @@ class DbpOntologyStore:
         if t not in self.transitive_supertypes:
             self.transitive_supertypes[t] = nx.ancestors(self.type_graph, t) if t in self.type_graph else set()
         tt = self.transitive_supertypes[t]
-        tt = tt if include_root else tt.difference({self.get_type_root()})
         tt = tt | {t} if include_self else tt
+        tt = tt if include_root else tt.difference({self.get_type_root()})
         return tt
 
     def get_subtypes(self, t: DbpType) -> Set[DbpType]:
