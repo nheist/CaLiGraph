@@ -1,4 +1,4 @@
-from typing import Set, Union, Tuple, Optional
+from typing import Set, Union, Tuple
 from collections import defaultdict
 import utils
 from impl.util.rdf import Namespace, RdfResource, name2label

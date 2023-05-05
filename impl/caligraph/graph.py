@@ -356,7 +356,8 @@ class CaLiGraph(HierarchyGraph):
             for tt in DbpOntologyStore.instance().get_transitive_supertypes(t, include_self=True):
                 result[tt] = max(result[tt], score)
 
-        result = defaultdict(float, {t: score for t, score in result.items() if not dbp_heur.get_all_disjoint_types(t).intersection(set(result))})
+        result_disjoint_types = {dt for t in result for dt in dbp_heur.get_all_disjoint_types(t)}
+        result = defaultdict(float, {t: score for t, score in result.items() if t not in result_disjoint_types})
         return result
 
     def _compute_type_lexicalisation_scores(self, node: str) -> Dict[DbpType, float]:
@@ -378,8 +379,9 @@ class CaLiGraph(HierarchyGraph):
     def _get_dbp_entities_from_categories(self, node: str) -> Set[DbpEntity]:
         """Return all DBpedia entities directly associated with the node through Wikipedia categories."""
         if node not in self._node_direct_cat_entities:
+            dbr = DbpResourceStore.instance()
             cat_entities = {e for cat in self.get_category_parts(node) for e in cat.get_entities()}
-            cat_entities = {DbpResourceStore.instance().resolve_spelling_redirect(e) for e in cat_entities}
+            cat_entities = {dbr.resolve_spelling_redirect(e) for e in cat_entities}
             self._node_direct_cat_entities[node] = cat_entities
         return set(self._node_direct_cat_entities[node])
 
