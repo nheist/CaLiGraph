@@ -317,7 +317,6 @@ class CaLiGraph(HierarchyGraph):
             parents = self.parents(node)
             coherent_type_sets = self._find_coherent_type_sets({t: 1 for t in self.get_transitive_dbpedia_types(node, force_recompute=True)})
             if len(coherent_type_sets) > 1:
-                transitive_types = {tt for ts in coherent_type_sets for t in ts for tt in dbo.get_transitive_supertypes(t, include_self=True)}
                 direct_types = {t for t in self._find_dbpedia_parents(node, False)}
                 if not direct_types:
                     # compute direct types by finding the best matching type from lex score
@@ -331,7 +330,8 @@ class CaLiGraph(HierarchyGraph):
                 direct_types = (direct_types | part_types).difference({dt for t in part_types for dt in dbp_heur.get_all_disjoint_types(t)})
                 direct_types = {tt for t in direct_types for tt in dbo.get_transitive_supertypes(t, include_self=True)}
 
-                invalid_types = transitive_types.difference(direct_types)
+                all_types = {t for ts in coherent_type_sets for t in ts}
+                invalid_types = all_types.difference(direct_types)
                 new_parents = {p for p in parents if not invalid_types.intersection(self.get_transitive_dbpedia_types(p))}
                 self._remove_edges({(p, node) for p in parents.difference(new_parents)})
                 if not new_parents and direct_types:
@@ -410,14 +410,10 @@ class CaLiGraph(HierarchyGraph):
                         cs[t] = score
 
             # remove types that exist in all sets, as they are not disjoint with anything
-            # finally, add them as individual set in case that they have the highest score
-            all_set_types = {}
             for t in dbp_types:
                 if all(t in cs for cs in coherent_sets):
                     for cs in coherent_sets:
-                        all_set_types[t] = cs[t]
                         del cs[t]
-            coherent_sets.append(all_set_types)
             coherent_sets = [cs for cs in coherent_sets if cs]  # remove possibly empty coherent sets
 
         return coherent_sets
@@ -427,7 +423,7 @@ class CaLiGraph(HierarchyGraph):
         dbo = DbpOntologyStore.instance()
         types_to_remove = {tt: score for t, score in types_to_remove.items() for tt in dbo.get_transitive_subtypes(t, include_self=True)}
 
-        node_closure = self.ancestors(node)
+        node_closure = self.ancestors(node).difference({self.root_node})
         node_closure.update({d for n in node_closure for d in self.descendants(n)})
         for n in node_closure:
             mappings[n] = {t: score for t, score in mappings[n].items() if t not in types_to_remove or score > types_to_remove[t]}
