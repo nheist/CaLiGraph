@@ -140,9 +140,14 @@ class DbpCategoryStore:
     def _init_category_children_cache(self) -> Dict[int, Set[int]]:
         category_children = defaultdict(set)
         for p_iri, c_iri in self._load_category_children_iris():
-            if not (self.has_category_with_iri(p_iri) and self.has_category_with_iri(c_iri)):
+            if not self.has_category_with_iri(p_iri) or not self.has_category_with_iri(c_iri):
                 continue
-            category_children[self.get_category_by_iri(p_iri).idx].add(self.get_category_by_iri(c_iri).idx)
+            p_cat = self.get_category_by_iri(p_iri)
+            c_cat = self.get_category_by_iri(c_iri)
+            # HOTFIX: Make sure that Person and Ethnic_group are not directly connected
+            if p_cat.name == 'Category:Ethnic_groups' and c_cat.name == 'Category:People_by_ethnicity':
+                continue
+            category_children[p_cat.idx].add(c_cat.idx)
         return category_children
 
     def get_parents(self, cat: DbpCategory, include_meta=False, include_listcategories=False) -> Set[DbpCategory]:
