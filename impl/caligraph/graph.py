@@ -421,9 +421,6 @@ class CaLiGraph(HierarchyGraph):
     def _remove_types_from_mapping(self, mappings: Dict[str, Dict[DbpType, float]], node: str, types_to_remove: Dict[DbpType, float]):
         """Remove `types_to_remove` from a mapping for a node in order to resolve disjointnesses."""
         dbo = DbpOntologyStore.instance()
-        types_to_remove = {tt: score for t, score in types_to_remove.items() for tt in dbo.get_transitive_subtypes(t, include_self=True)}
-
-        node_closure = self.ancestors(node).difference({self.root_node})
-        node_closure.update({d for n in node_closure for d in self.descendants(n)})
-        for n in node_closure:
-            mappings[n] = {t: score for t, score in mappings[n].items() if t not in types_to_remove or score > types_to_remove[t]}
+        types_to_remove = {tt for t in types_to_remove for tt in dbo.get_transitive_subtypes(t, include_self=True)}
+        for n in {node} | self.ancestors(node):
+            mappings[n] = {t: score for t, score in mappings[n].items() if t not in types_to_remove}
