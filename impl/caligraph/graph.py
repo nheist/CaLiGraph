@@ -300,7 +300,7 @@ class CaLiGraph(HierarchyGraph):
                 types_to_remove = {t: mappings[node][t] for cs in coherent_type_sets for t in cs[0]}
             else:  # there is one superior set -> remove types from all sets except for superior set
                 types_to_remove = {t: mappings[node][t] for cs in coherent_type_sets for t in cs[0] if cs[1] < max_set_score}
-            self._remove_types_from_mapping(mappings, node, types_to_remove)
+            mappings[node] = {t: score for t, score in mappings[node].items() if t not in types_to_remove}
 
         # remove transitivity from the mappings and create sets of types
         for node in self.traverse_nodes_bottomup():
@@ -417,10 +417,3 @@ class CaLiGraph(HierarchyGraph):
             coherent_sets = [cs for cs in coherent_sets if cs]  # remove possibly empty coherent sets
 
         return coherent_sets
-
-    def _remove_types_from_mapping(self, mappings: Dict[str, Dict[DbpType, float]], node: str, types_to_remove: Dict[DbpType, float]):
-        """Remove `types_to_remove` from a mapping for a node in order to resolve disjointnesses."""
-        dbo = DbpOntologyStore.instance()
-        types_to_remove = {tt for t in types_to_remove for tt in dbo.get_transitive_subtypes(t, include_self=True)}
-        for n in {node} | self.ancestors(node):
-            mappings[n] = {t: score for t, score in mappings[n].items() if t not in types_to_remove}
