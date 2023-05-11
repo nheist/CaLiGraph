@@ -164,58 +164,58 @@ cache:
     compress: True
   dbpedia_classes:
     filename: 'dbpedia-classes'
-    version: 1
+    version: 3
   dbpedia_resources:
     filename: 'dbpedia-resources'
-    version: 1
+    version: 3
   dbpedia_resource_labels:
     filename: 'dbpedia-resource-labels'
-    version: 1
+    version: 3
   dbpedia_resource_surface_forms:
     filename: 'dbpedia-resource-surface-forms'
-    version: 1
+    version: 3
   dbpedia_resource_surface_form_references:
     filename: 'dbpedia-resource-surface-form-references'
-    version: 1
+    version: 3
   dbpedia_resource_abstracts:
     filename: 'dbpedia-resource-abstracts'
-    version: 1
+    version: 3
   dbpedia_resource_wikilinks:  # unused
     filename: 'dbpedia-resource-wikilinks'
-    version: 1
+    version: 3
   dbpedia_resource_types:
     filename: 'dbpedia-resource-types'
-    version: 1
+    version: 3
   dbpedia_resource_typelabels:
     filename: 'dbpedia-resource-typelabels'
-    version: 1
+    version: 3
   dbpedia_resource_properties:
     filename: 'dbpedia-resource-properties'
-    version: 1
+    version: 3
   dbpedia_resource_redirects:
     filename: 'dbpedia-resource-redirects'
-    version: 1
+    version: 3
   dbpedia_categories:
     filename: 'dbpedia-categories'
-    version: 1
+    version: 3
   dbpedia_category_children:
     filename: 'dbpedia-category-children'
     version: 3
   dbpedia_category_labels:
     filename: 'dbpedia-category-labels'
-    version: 1
+    version: 3
   dbpedia_category_resources:
     filename: 'dbpedia-category-resources'
-    version: 1
+    version: 3
   dbpedia_category_sets:
     filename: 'dbpedia-category-sets'
     version: 3
   dbpedia_heuristic_domains:
     filename: 'dbpedia-heuristic-domains'
-    version: 1
+    version: 3
   dbpedia_heuristic_ranges:
     filename: 'dbpedia-heuristic-ranges'
-    version: 1
+    version: 3
   dbpedia_heuristic_disjoint_types:
     filename: 'dbpedia-heuristic-disjoint-types'
     version: 3
