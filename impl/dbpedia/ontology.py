@@ -60,7 +60,8 @@ class DbpOntologyStore:
         self.ranges = None
 
     def _init_class_cache(self) -> Set[Union[DbpType, DbpPredicate]]:
-        all_classes = {DbpType(0, 'Thing', False)}  # initialize root type with 0
+        root_type_name = 'Thing'
+        all_classes = {DbpType(0, root_type_name, False)}  # initialize root type with 0
         # predicates
         object_predicate_uris = rdf_util.create_set_from_rdf([utils.get_data_file('files.dbpedia.taxonomy')], RdfPredicate.TYPE, RdfClass.OWL_OBJECT_PROPERTY.value)
         object_predicate_uris = {p for p in object_predicate_uris if dbp_util.is_class_iri(p)}
@@ -74,7 +75,7 @@ class DbpOntologyStore:
         all_type_uris.update(set(rdf_util.create_multi_val_dict_from_rdf([utils.get_data_file('files.dbpedia.taxonomy')], RdfPredicate.DOMAIN, reverse_key=True)))
         all_type_uris.update(set(rdf_util.create_multi_val_dict_from_rdf([utils.get_data_file('files.dbpedia.taxonomy')], RdfPredicate.RANGE, reverse_key=True)))
         all_type_uris.update(set(rdf_util.create_multi_val_dict_from_rdf([utils.get_data_file('files.dbpedia.instance_types')], RdfPredicate.TYPE, reverse_key=True)))
-        all_type_uris = {t for t in all_type_uris if dbp_util.is_class_iri(t)}
+        all_type_uris = {t for t in all_type_uris if dbp_util.is_class_iri(t) and dbp_util.class_iri2name(t) != root_type_name}
         all_classes.update({DbpType(idx, dbp_util.class_iri2name(uri), False) for idx, uri in enumerate(all_type_uris, start=len(all_classes))})
         return all_classes
 
