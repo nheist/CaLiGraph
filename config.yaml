@@ -151,7 +151,7 @@ cache:
     version: 1
   wikipedia_parsed_pages:
     filename: 'wikipedia-parsed-pages'
-    version: 1
+    version: 3
   wikipedia_type_lexicalisations:
     filename: 'wikipedia-type-lexicalisations'
     version: 1
