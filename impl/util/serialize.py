@@ -10,6 +10,7 @@ from impl.util.rdf import RdfResource
 TYPE_RESOURCE = 'type_resource'
 POSTFIXES = {
     int: 'http://www.w3.org/2001/XMLSchema#integer',
+    float: 'http://www.w3.org/2001/XMLSchema#float',
     datetime.datetime: 'http://www.w3.org/2001/XMLSchema#date'
 }
 RESOURCE_ENCODING_EXCEPTIONS = ['#', ':', ',', ';', '(', ')', '\'', '&', '!', '*', '=', '$']

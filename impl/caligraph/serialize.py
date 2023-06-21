@@ -124,23 +124,23 @@ def _get_creation_date() -> datetime.datetime:
 def _serialize_restriction(sub: ClgEntity, pred: ClgPredicate, val: Union[ClgEntity, str], restriction_is_defined: bool) -> list:
     """Serialize the restrictions (i.e. relation axioms)."""
     val_label = val.get_label() if isinstance(val, ClgEntity) else val
-    restriction_iri = f'{Namespace.CLG_ONTOLOGY.value}RestrictionHasValue_{pred.name}_{val_label}'
+    restriction_res = ClgType(-1, f'RestrictionHasValue_{pred.name}_{val_label}', True)
     restriction_label = f'Restriction onProperty={pred.name} hasValue={val_label}'
 
     if restriction_is_defined:
         result = []
     else:
         result = [
-            serialize_util.as_object_triple(restriction_iri, RdfPredicate.TYPE, 'http://www.w3.org/2002/07/owl#Restriction'),
-            serialize_util.as_literal_triple(restriction_iri, RdfPredicate.LABEL, restriction_label),
-            serialize_util.as_object_triple(restriction_iri, 'http://www.w3.org/2002/07/owl#onProperty', pred),
+            serialize_util.as_object_triple(restriction_res, RdfPredicate.TYPE, 'http://www.w3.org/2002/07/owl#Restriction'),
+            serialize_util.as_literal_triple(restriction_res, RdfPredicate.LABEL, restriction_label),
+            serialize_util.as_object_triple(restriction_res, 'http://www.w3.org/2002/07/owl#onProperty', pred),
         ]
         if isinstance(val, ClgEntity):
-            result.append(serialize_util.as_object_triple(restriction_iri, 'http://www.w3.org/2002/07/owl#hasValue', val))
+            result.append(serialize_util.as_object_triple(restriction_res, 'http://www.w3.org/2002/07/owl#hasValue', val))
         else:
-            result.append(serialize_util.as_literal_triple(restriction_iri, 'http://www.w3.org/2002/07/owl#hasValue', val))
+            result.append(serialize_util.as_literal_triple(restriction_res, 'http://www.w3.org/2002/07/owl#hasValue', val))
 
-    result.append(serialize_util.as_object_triple(sub, RdfPredicate.SUBCLASS_OF, restriction_iri))
+    result.append(serialize_util.as_object_triple(sub, RdfPredicate.SUBCLASS_OF, restriction_res))
     return result
 
 
